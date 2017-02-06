@@ -60,6 +60,8 @@ class EditBookmarkWidget(Gtk.Bin):
         for (tag_id, title) in El().bookmarks.get_tags():
             self.__model.append([title, El().bookmarks.has_tag(bookmark_id,
                                                                title)])
+        # Some magic here but look ok when removing button
+        # May need a better tweak later
         if not back_enabled:
             builder.get_object("back_button").hide()
             self.set_margin_start(20)
