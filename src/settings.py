@@ -118,7 +118,7 @@ class SettingsDialog:
 
         monitor_model = get_current_monitor_model()
         zoom_levels = El().settings.get_value("default-zoom-level")
-        zoom_level = 1.0
+        wanted_zoom_level = 1.0
         try:
             for zoom_level in zoom_levels:
                 zoom_splited = zoom_level.split('@')
