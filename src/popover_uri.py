@@ -436,9 +436,6 @@ class UriPopover(Gtk.Popover):
                       (Type.NONE,
                        _("Unclassified"))]
             self.__add_tags(static + El().bookmarks.get_tags())
-        if self.__tags_box.get_children():
-            self.__tags_box.select_row(self.__tags_box.get_children()[0])
-            self.__set_bookmarks(Type.POPULARS)
 
     def _on_day_selected(self, calendar):
         """
@@ -510,6 +507,9 @@ class UriPopover(Gtk.Popover):
             child.show()
             self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags)
+        else:
+            self.__tags_box.select_row(self.__tags_box.get_children()[0])
+            self.__set_bookmarks(Type.POPULARS)
 
     def __add_history_items(self, items):
         """
