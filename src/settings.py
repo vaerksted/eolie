@@ -87,7 +87,7 @@ class SettingsDialog:
         combo_engine.set_active_id(
                         El().settings.get_value("search-engine").get_string())
 
-        remember_session = builder.get_object("remember_session_check")
+        remember_session = builder.get_object("remember_sessions_check")
         remember_session.set_active(
                                 El().settings.get_value("remember-session"))
 
@@ -132,6 +132,10 @@ class SettingsDialog:
         cookies_combo = builder.get_object("cookies_combo")
         storage = El().settings.get_enum("cookie-storage")
         cookies_combo.set_active_id(str(storage))
+
+        remember_passwords = builder.get_object("remember_passwords_check")
+        remember_passwords.set_active(
+                                El().settings.get_value("remember-passwords"))
 
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
@@ -244,7 +248,15 @@ class SettingsDialog:
         El().settings.set_value("enable-plugins", value)
         El().set_setting("enable-plugins", button.get_active())
 
-    def _on_remember_session_toggled(self, button):
+    def _on_remember_passwords_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        El().settings.set_value("remember-passwords",
+                                GLib.Variant("b", button.get_active()))
+
+    def _on_remember_sessions_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton

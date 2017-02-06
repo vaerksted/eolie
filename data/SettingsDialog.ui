@@ -240,7 +240,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="remember_session_check">
+              <object class="GtkCheckButton" id="remember_sessions_check">
                 <property name="label" translatable="yes">Remember previous tabs on startup</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -248,7 +248,7 @@
                 <property name="halign">start</property>
                 <property name="margin_left">15</property>
                 <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="_on_remember_session_toggled" swapped="no"/>
+                <signal name="toggled" handler="_on_remember_sessions_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -603,7 +603,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="passwords_check">
+              <object class="GtkCheckButton" id="remember_passwords_check">
                 <property name="label" translatable="yes">Remember passwords</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -611,6 +611,7 @@
                 <property name="halign">start</property>
                 <property name="margin_left">15</property>
                 <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="_on_remember_passwords_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>

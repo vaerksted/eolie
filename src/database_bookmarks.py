@@ -64,6 +64,7 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_tags)
                     sql.execute(self.__create_bookmarks_tags)
                     sql.commit()
+                self.import_firefox()
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 

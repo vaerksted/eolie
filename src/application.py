@@ -98,7 +98,6 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
-        self.bookmarks.import_firefox()
         adblock = DatabaseAdblock()
         adblock.update()
         self.art = Art()

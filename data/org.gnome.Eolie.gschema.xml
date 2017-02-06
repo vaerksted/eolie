@@ -51,6 +51,11 @@
             <summary>Remember sessions</summary>
             <description></description>
         </key>
+	    <key type="b" name="remember-passwords">
+            <default>false</default>
+            <summary>Remember passwords</summary>
+            <description></description>
+        </key>
 	    <key type="b" name="enable-plugins">
             <default>false</default>
             <summary>Enable plugins</summary>
