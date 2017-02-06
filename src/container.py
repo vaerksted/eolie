@@ -187,12 +187,10 @@ class Container(Gtk.Paned):
             self.window.toolbar.actions.set_actions(view)
         # Update history
         if title:
-            striped_uri = strip_uri(uri)
-            striped_loaded_uri = strip_uri(view.loaded_uri)
-            El().history.add(title, striped_uri)
+            El().history.add(title, strip_uri(uri))
             # Update loaded uri too allowing user's bookmarks popularity
-            if striped_uri != striped_loaded_uri:
-                El().history.add(title, striped_loaded_uri)
+            if strip_uri(uri, False) != strip_uri(view.loaded_uri, False):
+                El().history.add(title, strip_uri(view.loaded_uri))
 
     def __on_enter_fullscreen(self, view):
         """
