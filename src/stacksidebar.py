@@ -238,6 +238,8 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_icon_name('applications-internet',
                                                   Gtk.IconSize.MENU)
             return
+        # We save favicon twice. If user have https://www.google.com as
+        # bookmark, it will be directed and wont save bookmark's favicon
         El().art.save_artwork(self.__view.get_uri(), surface, "favicon")
         El().art.save_artwork(self.__view.loaded_uri, surface, "favicon")
         self.__image_close.set_from_surface(surface)
@@ -270,7 +272,6 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__image.set_from_surface(surface)
         if save:
             El().art.save_artwork(self.__view.get_uri(), surface, "preview")
-            El().art.save_artwork(self.__view.loaded_uri, surface, "preview")
         del surface
         self.set_offscreen(False)
 

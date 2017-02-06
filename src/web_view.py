@@ -72,9 +72,9 @@ class WebView(WebKit2.WebView):
             Load uri
             @param uri as str
         """
-        self.__loaded_uri = uri
         if not uri.startswith("http://") and not uri.startswith("https://"):
             uri = "http://" + uri
+        self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
 
     def set_setting(self, key, value):

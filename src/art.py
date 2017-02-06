@@ -83,8 +83,8 @@ class Art:
             @return bytes
         """
         parsed = urlparse(uri)
-        scheme = "%s://" % parsed.scheme
-        return parsed.geturl().replace(scheme, '', 1).encode("utf-8")
+        new_uri = "%s%s" % (parsed.netloc, parsed.path)
+        return new_uri.encode("utf-8")
 
     def __create_cache(self):
         """
