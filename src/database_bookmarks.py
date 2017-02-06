@@ -216,6 +216,8 @@ class DatabaseBookmarks:
                                 AND bookmarks.type=1\
                                 AND tag.id=bookmarks.parent")
             for (title, uri,  tag) in list(result):
+                if not uri.startswith('http'):
+                    continue
                 rowid = self.get_id(uri)
                 if rowid is None:
                     self.add(title, uri, [tag])
