@@ -58,6 +58,10 @@
     color: shade(red, 0.8)
 }
 
+.bold {
+    font-weight: bold;
+}
+
 .downloadrow {
     padding: 0px;
     background-color: transparent;

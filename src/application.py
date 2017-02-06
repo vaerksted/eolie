@@ -211,6 +211,13 @@ class Application(Gtk.Application):
         """
         return self.__windows
 
+    @property
+    def cookies_path(self):
+        """
+            Cookies sqlite db path
+        """
+        return self.__COOKIES_PATH
+
 #######################
 # PRIVATE             #
 #######################

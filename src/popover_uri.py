@@ -16,16 +16,20 @@ from gettext import gettext as _
 from time import mktime
 from datetime import datetime
 
-from eolie.define import El, ArtSize, BookmarksType
+from eolie.define import El, ArtSize, Type
 
 
 class Item(GObject.GObject):
     id = GObject.Property(type=int,
-                          default=BookmarksType.URI)
+                          default=Type.URI)
     title = GObject.Property(type=str,
+                             default='')
+    value = GObject.Property(type=str,
                              default='')
     uri = GObject.Property(type=str,
                            default='')
+    date = GObject.Property(type=str,
+                            default='')
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -42,15 +46,16 @@ class Row(Gtk.ListBoxRow):
         """
         self.__item = item
         self.__eventbox = None
+        favicon = None
         Gtk.ListBoxRow.__init__(self)
-        item_id = item.get_property("id")
-        uri = item.get_property("uri")
-        title = item.get_property("title")
+        item_id = item.get_property('id')
+        uri = item.get_property('uri')
+        title = item.get_property('title')
         grid = Gtk.Grid()
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property('valign', Gtk.Align.CENTER)
-        if item_id == BookmarksType.URI:
+        if item_id == Type.URI:
             surface = El().art.get_artwork(uri,
                                            "favicon",
                                            self.get_scale_factor(),
@@ -62,31 +67,47 @@ class Row(Gtk.ListBoxRow):
                                            Gtk.IconSize.MENU)
             else:
                 del surface
-        elif item_id == BookmarksType.SEARCH:
+        elif item_id == Type.SEARCH:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
+        elif item_id == Type.COOKIES:
+            pass
         else:
-            if item_id == BookmarksType.POPULARS:
+            if item_id == Type.POPULARS:
                 icon_name = "starred-symbolic"
-            elif item_id == BookmarksType.RECENTS:
+            elif item_id == Type.RECENTS:
                 icon_name = "document-open-recent-symbolic"
             else:
                 icon_name = "folder-symbolic"
             favicon = Gtk.Image.new_from_icon_name(icon_name,
                                                    Gtk.IconSize.MENU)
-        favicon.show()
         title = Gtk.Label.new(title)
         title.set_ellipsize(Pango.EllipsizeMode.END)
         title.set_property('halign', Gtk.Align.START)
-        title.set_hexpand(True)
-        uri = Gtk.Label.new(item.get_property("uri"))
+        # More informations for cookies
+        if item_id == Type.COOKIES:
+            value = Gtk.Label.new(item.get_property('value'))
+            value.get_style_context().add_class('bold')
+            value.set_property('halign', Gtk.Align.START)
+            value.set_ellipsize(Pango.EllipsizeMode.END)
+            value.set_hexpand(True)
+            date = Gtk.Label.new(item.get_property('date'))
+            date.set_ellipsize(Pango.EllipsizeMode.END)
+        else:
+            title.set_hexpand(True)
+        uri = Gtk.Label.new(item.get_property('uri'))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property('halign', Gtk.Align.END)
         uri.get_style_context().add_class('dim-label')
         uri.set_max_width_chars(40)
-        grid.add(favicon)
+        if favicon is not None:
+            grid.add(favicon)
         grid.add(title)
+        if item_id == Type.COOKIES:
+            grid.add(value)
         grid.add(uri)
+        if item_id == Type.COOKIES:
+            grid.add(date)
         grid.show_all()
         self.__eventbox = Gtk.EventBox()
         self.__eventbox.add(grid)
@@ -137,7 +158,12 @@ class UriPopover(Gtk.Popover):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
         builder.connect_signals(self)
+        self.__action_button = builder.get_object('action_button')
         self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
+        self.__cookies_model = Gio.ListStore()
+        self.__cookies_box = builder.get_object('cookies_box')
+        self.__cookies_box.bind_model(self.__cookies_model,
+                                      self.__on_item_create)
         self.__history_model = Gio.ListStore()
         self.__history_box = builder.get_object('history_box')
         self.__history_box.bind_model(self.__history_model,
@@ -159,6 +185,7 @@ class UriPopover(Gtk.Popover):
         self.__calendar = builder.get_object('calendar')
         self.add(builder.get_object('widget'))
         self.connect('map', self.__on_map)
+        self.connect('unmap', self.__on_unmap)
 
     @property
     def input(self):
@@ -185,9 +212,9 @@ class UriPopover(Gtk.Popover):
         if self.__stack.get_visible_child_name() != "search":
             return
         item = Item()
-        item.set_property("id", BookmarksType.SEARCH)
-        item.set_property("title", words)
-        item.set_property("uri", El().search.get_search_uri(words))
+        item.set_property('id', Type.SEARCH)
+        item.set_property('title', words)
+        item.set_property('uri', El().search.get_search_uri(words))
         self.__search_model.append(item)
 
     def forward_event(self, event):
@@ -239,7 +266,7 @@ class UriPopover(Gtk.Popover):
             if selected is None:
                 box.select_row(rows[0])
                 if self.__input == Input.TAGS:
-                    item_id = rows[0].item.get_property("id")
+                    item_id = rows[0].item.get_property('id')
                     self.__set_bookmarks(item_id)
             else:
                 idx = -1 if event.keyval == Gdk.KEY_Up else 1
@@ -250,7 +277,7 @@ class UriPopover(Gtk.Popover):
                 if idx >= len(rows):
                     box.select_row(rows[0])
                     if self.__input == Input.TAGS:
-                        item_id = rows[0].item.get_property("id")
+                        item_id = rows[0].item.get_property('id')
                         self.__set_bookmarks(item_id)
                     return True
                 elif idx < 0:
@@ -266,7 +293,7 @@ class UriPopover(Gtk.Popover):
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
-                        item_id = rows[idx].item.get_property("id")
+                        item_id = rows[idx].item.get_property('id')
                         self.__set_bookmarks(item_id)
                     return True
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
@@ -274,7 +301,7 @@ class UriPopover(Gtk.Popover):
             if box is not None:
                 selected = box.get_selected_row()
                 if selected is not None:
-                    uri = selected.item.get_property("uri")
+                    uri = selected.item.get_property('uri')
                     if uri:
                         El().active_window.toolbar.title.hide_popover()
                         El().active_window.container.current.load_uri(uri)
@@ -297,20 +324,27 @@ class UriPopover(Gtk.Popover):
         """
         if row is None:
             return
-        scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
-        if scrolled is None:
-            return
-        y = row.translate_coordinates(listbox, 0, 0)[1]
-        if y + row.get_allocated_height() > scrolled.get_allocated_height() or\
-                y - row.get_allocated_height() < 0:
-            scrolled.get_vadjustment().set_value(y)
+        if row.item.get_property('id') == Type.COOKIES:
+            if len(listbox.get_selected_rows()) > 1:
+                self.__action_button.set_label(_("Remove cookies"))
+            else:
+                self.__action_button.set_label(_("Remove cookie"))
+        else:
+            scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
+            if scrolled is None:
+                return
+            y = row.translate_coordinates(listbox, 0, 0)[1]
+            if y + row.get_allocated_height() >\
+                    scrolled.get_allocated_height() or\
+                    y - row.get_allocated_height() < 0:
+                scrolled.get_vadjustment().set_value(y)
 
     def _on_search_map(self, widget):
         """
             Init search
             @param widget as Gtk.Widget
         """
-        self.__input == Input.SEARCH
+        self.__input = Input.SEARCH
         self.set_search_text("")
 
     def _on_history_map(self, widget):
@@ -318,7 +352,7 @@ class UriPopover(Gtk.Popover):
             Init search
             @param widget as Gtk.Widget
         """
-        self.__input == Input.SEARCH
+        self.__input = Input.NONE
         now = datetime.now()
         self.__calendar.select_month(now.month, now.year)
         self.__calendar.select_day(now.day)
@@ -330,18 +364,47 @@ class UriPopover(Gtk.Popover):
         """
         self.__input == Input.TAGS
         if not self.__tags_box.get_children():
-            static = [(BookmarksType.POPULARS,
+            static = [(Type.POPULARS,
                        _("Populars")),
-                      (BookmarksType.RECENTS,
+                      (Type.RECENTS,
                        _("Recents"))]
             for (tag_id, title) in static + El().bookmarks.get_tags():
                 item = Item()
-                item.set_property("id", tag_id)
-                item.set_property("title", title)
+                item.set_property('id', tag_id)
+                item.set_property('title', title)
                 self.__tags_model.append(item)
         if self.__tags_box.get_children():
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
-            self.__set_bookmarks(BookmarksType.POPULARS)
+            self.__set_bookmarks(Type.POPULARS)
+
+    def _on_cookies_map(self, widget):
+        """
+            Init cookies
+            @param widget as Gtk.Widget
+        """
+        self.__input = Input.NONE
+        try:
+            import sqlite3
+            sql = sqlite3.connect(El().cookies_path, 600.0)
+            result = sql.execute("SELECT name, value, host, expiry\
+                                 FROM moz_cookies")
+            self.__cookies_model.remove_all()
+            for (name, value, host, expiry) in list(result):
+                item = Item()
+                item.set_property('id', Type.COOKIES)
+                item.set_property('title', name)
+                item.set_property('uri', host)
+                item.set_property('value', value)
+                item.set_property('date',
+                                  datetime.fromtimestamp(
+                                      int(expiry)).strftime('%H:%M, %d/%m/%Y'))
+                self.__cookies_model.append(item)
+            self.__action_button.set_label(_("Remove all cookies"))
+            self.__action_button.get_style_context().add_class(
+                                                          'destructive-action')
+            self.__action_button.show()
+        except Exception as e:
+            print("UriPopover::_on_cookies_map()", e)
 
     def _on_day_selected(self, calendar):
         """
@@ -349,15 +412,42 @@ class UriPopover(Gtk.Popover):
             @param calendar as Gtk.Calendar
         """
         (year, month, day) = calendar.get_date()
-        date = "%s/%s/%s" % (day, month, year)
-        mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
+        date = '%s/%s/%s' % (day, month, year)
+        mtime = mktime(datetime.strptime(date, '%d/%m/%Y').timetuple())
         result = El().history.get(mtime)
         self.__history_model.remove_all()
         for (title, uri, mtime) in result:
             item = Item()
-            item.set_property("title", title)
-            item.set_property("uri", uri)
+            item.set_property('title', title)
+            item.set_property('uri', uri)
             self.__history_model.append(item)
+
+    def _on_action_clicked(self, stack):
+        """
+            Execute context action
+            @param stack as Gtk.Stack
+        """
+        try:
+            if stack.get_visible_child_name() == 'cookies':
+                import sqlite3
+                sql = sqlite3.connect(El().cookies_path, 600.0)
+                if not self.__cookies_box.get_selected_rows():
+                    sql.execute("DELETE FROM moz_cookies")
+                    self.__cookies_model.remove_all()
+                else:
+                    for row in self.__cookies_box.get_selected_rows():
+                        title = row.item.get_property('title')
+                        uri = row.item.get_property('uri')
+                        value = row.item.get_property('value')
+                        sql.execute("DELETE FROM moz_cookies\
+                                     WHERE name=?\
+                                     AND value=?\
+                                     AND host=?",
+                                    (title, value, uri))
+                        self.__cookies_box.remove(row)
+                sql.commit()
+        except Exception as e:
+            print("UriPopover::_on_action_clicked:", e)
 
 #######################
 # PRIVATE             #
@@ -381,15 +471,15 @@ class UriPopover(Gtk.Popover):
             Set search model
             @param search as str
         """
-        if search == "":
+        if search == '':
             limit = 50
         else:
             limit = 10
         result = El().history.search(search, limit)
         for (title, uri) in result:
             item = Item()
-            item.set_property("title", title)
-            item.set_property("uri", uri)
+            item.set_property('title', title)
+            item.set_property('uri', uri)
             self.__search_model.append(item)
 
     def __set_bookmarks(self, tag_id):
@@ -398,16 +488,16 @@ class UriPopover(Gtk.Popover):
             @param tag id as int
         """
         self.__bookmarks_model.remove_all()
-        if tag_id == BookmarksType.POPULARS:
+        if tag_id == Type.POPULARS:
             items = El().bookmarks.get_populars()
-        elif tag_id == BookmarksType.RECENTS:
+        elif tag_id == Type.RECENTS:
             items = El().bookmarks.get_recents()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
         for (bookmark_id, title, uri) in items:
             item = Item()
-            item.set_property("title", title)
-            item.set_property("uri", uri)
+            item.set_property('title', title)
+            item.set_property('uri', uri)
             self.__bookmarks_model.append(item)
 
     def __on_button_release(self, eventbox, event, item):
@@ -417,9 +507,9 @@ class UriPopover(Gtk.Popover):
             @param event as Gdk.Event
             @param item as Item
         """
-        uri = item.get_property("uri")
-        item_id = item.get_property("id")
-        if item_id in [BookmarksType.URI, BookmarksType.SEARCH]:
+        uri = item.get_property('uri')
+        item_id = item.get_property('id')
+        if item_id in [Type.URI, Type.SEARCH]:
             if event.button == 1:
                 El().active_window.container.current.load_uri(uri)
             else:
@@ -437,10 +527,16 @@ class UriPopover(Gtk.Popover):
         self.__search_box.get_style_context().remove_class('input')
         self.__bookmarks_box.get_style_context().remove_class('input')
         self.__tags_box.get_style_context().remove_class('input')
-        self.__stack.set_visible_child_name('bookmarks')
         size = El().active_window.get_size()
         self.set_size_request(size[0]*0.5, size[1]*0.7)
         self.__scrolled_bookmarks.set_size_request(size[1]*0.7*0.5, -1)
+
+    def __on_unmap(self, widget):
+        """
+            Switch to bookmarks
+            @param widget as Gtk.Widget
+        """
+        self.__stack.set_visible_child_name('bookmarks')
 
     def __on_item_create(self, item):
         """

@@ -21,9 +21,10 @@ class ArtSize:
     PREVIEW_WIDTH_MARGIN = 10
 
 
-class BookmarksType:
+class Type:
     POPULARS = -1
     RECENTS = -2
     URI = -3
     SEARCH = -4
-    SEPARATOR = -5
+    COOKIES = -5
+    SEPARATOR = -6
