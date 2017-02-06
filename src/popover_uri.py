@@ -357,6 +357,7 @@ class UriPopover(Gtk.Popover):
         now = datetime.now()
         self.__calendar.select_month(now.month, now.year)
         self.__calendar.select_day(now.day)
+        self.__action_button.hide()
 
     def _on_bookmarks_map(self, widget):
         """
@@ -529,7 +530,7 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box.get_style_context().remove_class('input')
         self.__tags_box.get_style_context().remove_class('input')
         size = El().active_window.get_size()
-        self.set_size_request(size[0]*0.5, size[1]*0.7)
+        self.set_size_request(size[0]*0.5, size[1]*0.8)
         self.__scrolled_bookmarks.set_size_request(size[1]*0.7*0.5, -1)
 
     def __on_unmap(self, widget):
