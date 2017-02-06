@@ -360,6 +360,8 @@ class StackSidebar(Gtk.Grid):
         for child in self.__listbox.get_children():
             if child.view == visible:
                 child.get_style_context().add_class('sidebar-item-selected')
+                # Wait loop empty: will fails otherwise if child just created
+                GLib.idle_add(self.__scroll_to_row, child)
             else:
                 child.get_style_context().remove_class('sidebar-item-selected')
 
@@ -441,6 +443,20 @@ class StackSidebar(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __scroll_to_row(self, row):
+        """
+            Scroll to row
+            @param row as Row
+        """
+        scrolled = self.__listbox.get_ancestor(Gtk.ScrolledWindow)
+        if scrolled is None:
+            return
+        y = row.translate_coordinates(self.__listbox, 0, 0)[1]
+        if y + row.get_allocated_height() >\
+                scrolled.get_allocated_height() or\
+                y - row.get_allocated_height() < 0:
+            scrolled.get_vadjustment().set_value(y)
+
     def __get_index(self, view):
         """
             Get view index
