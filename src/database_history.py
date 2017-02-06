@@ -87,10 +87,11 @@ class DatabaseHistory:
                             (title, uri, mtime, 0))
             sql.commit()
 
-    def search(self, search):
+    def search(self, search, limit):
         """
             Search string in db (uri and title)
             @param search as str
+            @param limit as int
         """
         with SqlCursor(self) as sql:
             filter = '%' + search + '%'
@@ -99,8 +100,8 @@ class DatabaseHistory:
                                   WHERE title LIKE ?\
                                    OR uri LIKE ?\
                                   ORDER BY popularity DESC,\
-                                  mtime DESC LIMIT 50",
-                                 (filter, filter))
+                                  mtime DESC LIMIT ?",
+                                 (filter, filter, limit))
             return list(result)
 
     def get_cursor(self):
