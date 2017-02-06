@@ -555,7 +555,8 @@ class UriPopover(Gtk.Popover):
             @param tag id as int
         """
         self.__bookmarks_model.remove_all()
-        self.__tag_entry.hide()
+        self.__tag_entry.set_sensitive(False)
+        self.__tag_entry.set_opacity(0)
         if tag_id == Type.POPULARS:
             items = El().bookmarks.get_populars()
         elif tag_id == Type.RECENTS:
@@ -567,7 +568,8 @@ class UriPopover(Gtk.Popover):
             self.__tag_entry.set_text(El().bookmarks.get_tag_title(tag_id))
             self.__tag_entry_signal_id = self.__tag_entry.connect(
                                         "changed", self.__on_tag_entry_changed)
-            self.__tag_entry.show()
+            self.__tag_entry.set_sensitive(True)
+            self.__tag_entry.set_opacity(1)
         self.__bookmarks_count.set_text("%s bookmarks" % len(items))
         self.__add_bookmarks(items)
 
@@ -595,7 +597,7 @@ class UriPopover(Gtk.Popover):
         self.__tags_box.get_style_context().remove_class("input")
         size = El().active_window.get_size()
         self.set_size_request(size[0]*0.5, size[1]*0.8)
-        self.__scrolled_bookmarks.set_size_request(size[1]*0.7*0.5, -1)
+        self.__scrolled_bookmarks.set_size_request(size[1]*0.6*0.5, -1)
 
     def __on_unmap(self, widget):
         """
