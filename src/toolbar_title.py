@@ -44,6 +44,12 @@ class ToolbarTitle(Gtk.Bin):
         self.__popover = UriPopover()
         self.__action_image = builder.get_object('action_image')
         self.add(builder.get_object('widget'))
+        # Some on the fly css styling
+        context = self.__entry.get_style_context()
+        self.__css_provider = Gtk.CssProvider()
+        context.add_provider_for_screen(Gdk.Screen.get_default(),
+                                        self.__css_provider,
+                                        Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
     def set_width(self, width):
         """
@@ -165,6 +171,14 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
+    def _on_size_allocate(self, grid, allocation):
+        """
+            Update entry padding
+        """
+        # 5 is eventbox margin (see ui file)
+        css = ".uribar { padding-right: %spx; }" % (allocation.width + 5)
+        self.__css_provider.load_from_data(css.encode("utf-8"))
+
     def _on_enter_notify(self, eventbox, event):
         """
             Show uri
