@@ -141,8 +141,9 @@ class SettingsDialog:
             Save size
             @param button as Gtk.SpinButton
         """
-        El().settings.set_value('min-font-size',
-                                GLib.Variant('i', button.get_value()))
+        value = GLib.Variant('i', button.get_value())
+        El().settings.set_value('min-font-size', value)
+        El().set_setting('minimum-font-size', button.get_value())
 
     def _on_system_fonts_toggled(self, button):
         """
@@ -158,32 +159,36 @@ class SettingsDialog:
             Save font setting
             @param fontchooser as Gtk.FontButton
         """
-        El().settings.set_value('font-sans-serif',
-                                GLib.Variant('s', fontbutton.get_font_name()))
+        value = GLib.Variant('s', fontbutton.get_font_name())
+        El().settings.set_value('font-sans-serif', value)
+        El().set_setting('sans-serif-font-family', fontbutton.get_font_name())
 
     def _on_font_serif_set(self, fontbutton):
         """
             Save font setting
             @param fontchooser as Gtk.FontButton
         """
-        El().settings.set_value('font-serif',
-                                GLib.Variant('s', fontbutton.get_font_name()))
+        value = GLib.Variant('s', fontbutton.get_font_name())
+        El().settings.set_value('font-serif', value)
+        El().set_setting('serif-font-family', fontbutton.get_font_name())
 
     def _on_font_monospace_set(self, fontbutton):
         """
             Save font setting
             @param fontchooser as Gtk.FontButton
         """
-        El().settings.set_value('font-monospace',
-                                GLib.Variant('s', fontbutton.get_font_name()))
+        value = GLib.Variant('s', fontbutton.get_font_name())
+        El().settings.set_value('font-monospace', value)
+        El().set_setting('monospace-font-family', fontbutton.get_font_name())
 
     def _on_plugins_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value('enable-plugins',
-                                GLib.Variant('b', button.get_active()))
+        value = GLib.Variant('b', button.get_active())
+        El().settings.set_value('enable-plugins', value)
+        El().set_setting('enable-plugins', button.get_active())
 
     def _on_remember_session_toggled(self, button):
         """

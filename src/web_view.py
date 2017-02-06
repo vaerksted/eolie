@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2
+from gi.repository import WebKit2, Gio
 
 from eolie.define import El
 
@@ -19,7 +19,6 @@ class WebView(WebKit2.WebView):
     """
         WebKit view
     """
-
     def __init__(self):
         """
             Init view
@@ -27,16 +26,33 @@ class WebView(WebKit2.WebView):
         WebKit2.WebView.__init__(self)
         self.__loaded_uri = ""
         settings = self.get_settings()
+        settings.set_property('enable-java',
+                              El().settings.get_value('enable-plugins'))
+        settings.set_property('enable-plugins',
+                              El().settings.get_value('enable-plugins'))
+        settings.set_property('minimum-font-size',
+                              El().settings.get_value(
+                                'min-font-size').get_int32())
+        if El().settings.get_value('use-system-fonts'):
+            self.__set_system_fonts(settings)
+        else:
+            settings.set_property('monospace-font-family',
+                                  El().settings.get_value(
+                                    'font-monospace').get_string())
+            settings.set_property('sans-serif-font-family',
+                                  El().settings.get_value(
+                                    'font-sans-serif').get_string())
+            settings.set_property('serif-font-family',
+                                  El().settings.get_value(
+                                    'font-serif').get_string())
         settings.set_property("allow-file-access-from-file-urls",
                               False)
         settings.set_property("auto-load-images", True)
-        settings.set_property("enable-java", False)
         settings.set_property("enable-javascript", True)
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-mediasource", True)
         settings.set_property("enable-offline-web-application-cache", True)
         settings.set_property("enable-page-cache", True)
-        settings.set_property("enable-plugins", True)
         settings.set_property("enable-resizable-text-areas", True)
         settings.set_property("enable-smooth-scrolling", True)
         settings.set_property("enable-webaudio", True)
@@ -61,6 +77,19 @@ class WebView(WebKit2.WebView):
             uri = "http://" + uri
         WebKit2.WebView.load_uri(self, uri)
 
+    def set_setting(self, key, value):
+        """
+            Set setting to value
+            @param key as str
+            @param value as GLib.Variant
+        """
+        settings = self.get_settings()
+        if key == 'use-system-fonts':
+            self.__set_system_fonts(settings)
+        else:
+            settings.set_property(key, value)
+        self.set_settings(settings)
+
     @property
     def loaded_uri(self):
         """
@@ -72,6 +101,22 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
+    def __set_system_fonts(self, settings):
+        """
+            Set system font
+            @param settings as WebKit2.Settings
+        """
+        system = Gio.Settings.new('org.gnome.desktop.interface')
+        settings.set_property(
+                        'monospace-font-family',
+                        system.get_value('monospace-font-name').get_string())
+        settings.set_property(
+                        'sans-serif-font-family',
+                        system.get_value('document-font-name').get_string())
+        settings.set_property(
+                        'serif-font-family',
+                        system.get_value('font-name').get_string())
+
     def __on_download_started(self, context, download):
         """
             A new download started, handle signals

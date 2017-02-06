@@ -166,6 +166,16 @@ class Application(Gtk.Application):
         for window in self.__windows:
             window.destroy()
 
+    def set_setting(self, key, value):
+        """
+            Set setting for all view
+            @param key as str
+            @param value as GLib.Variant
+        """
+        for window in self.__windows:
+            for view in window.container.views:
+                view.set_setting(key, value)
+
     @property
     def active_window(self):
         """
