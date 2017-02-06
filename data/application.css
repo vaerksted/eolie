@@ -25,9 +25,8 @@
 }
 
 .sidebar-close {
-    background-color: black;
-    color: white;
-    border-radius: 30px;
+    background-color: transparent;
+    color: black;
 }
 
 .sidebar-item {
