@@ -42,7 +42,7 @@ class Row(Gtk.ListBoxRow):
     """
     __gsignals__ = {
         'edit': (GObject.SignalFlags.RUN_FIRST, None, ()),
-        'move': (GObject.SignalFlags.RUN_FIRST, None, (int, int))
+        'move': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
     }
 
     def __init__(self, item):
@@ -194,10 +194,14 @@ class Row(Gtk.ListBoxRow):
             @param time as int
         """
         try:
+            items = []
             for rowid in data.get_text().split("@"):
+                if not rowid:
+                    continue
                 bookmark_id = int(rowid)
                 tag_id = self.__item.get_property("id")
-                self.emit("move", bookmark_id, tag_id)
+                items.append((bookmark_id, tag_id))
+            self.emit("move", GLib.Variant("aai", items))
         except:
             pass
 
@@ -698,18 +702,19 @@ class UriPopover(Gtk.Popover):
         item_id = row.item.get_property("id")
         self.__set_bookmarks(item_id)
 
-    def __on_row_moved(self, row, bookmark_id, tag_id):
+    def __on_row_moved(self, row, items):
         """
             Move bookmark from current selected tag to tag
             @param row as Row
-            @param bookmark_id as int
+            @param items [(bookmark_id, tag_id)] as [(int, int)]
             @param tag id as int
         """
         tag_row = self.__tags_box.get_selected_row()
         current_tag_id = tag_row.item.get_property("id")
-        if current_tag_id >= 0:
-            El().bookmarks.del_tag_from(current_tag_id, bookmark_id)
-        El().bookmarks.add_tag_to(tag_id, bookmark_id)
+        for item in items:
+            if current_tag_id >= 0:
+                El().bookmarks.del_tag_from(current_tag_id, item[0])
+            El().bookmarks.add_tag_to(item[1], item[0])
         self.__on_row_activated(tag_row)
 
     def __on_row_edited(self, row):
