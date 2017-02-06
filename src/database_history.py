@@ -87,11 +87,27 @@ class DatabaseHistory:
                             (title, uri, mtime, 0))
             sql.commit()
 
+    def get(self, mtime):
+        """
+            Get history
+            @param mtime as int
+            @return (str, str, int)
+        """
+        one_day = 86400
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT title, uri, mtime\
+                                  FROM history\
+                                  WHERE mtime >= ? AND mtime <= ?\
+                                  ORDER BY mtime DESC LIMIT ?",
+                                 (mtime, mtime + one_day, mtime))
+            return list(result)
+
     def search(self, search, limit):
         """
             Search string in db (uri and title)
             @param search as str
             @param limit as int
+            @return (str, str)
         """
         with SqlCursor(self) as sql:
             filter = '%' + search + '%'

@@ -13,6 +13,8 @@
 from gi.repository import Gtk, Gdk, GObject, Gio, Pango
 
 from gettext import gettext as _
+from time import mktime
+from datetime import datetime
 
 from eolie.define import El, ArtSize, BookmarksType
 
@@ -136,6 +138,10 @@ class UriPopover(Gtk.Popover):
         builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
         builder.connect_signals(self)
         self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
+        self.__history_model = Gio.ListStore()
+        self.__history_box = builder.get_object('history_box')
+        self.__history_box.bind_model(self.__history_model,
+                                      self.__on_item_create)
         self.__search_model = Gio.ListStore()
         self.__search_box = builder.get_object('search_box')
         self.__stack = builder.get_object('stack')
@@ -150,6 +156,7 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box = builder.get_object('bookmarks_box')
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
                                         self.__on_item_create)
+        self.__calendar = builder.get_object('calendar')
         self.add(builder.get_object('widget'))
         self.connect('map', self.__on_map)
 
@@ -180,7 +187,7 @@ class UriPopover(Gtk.Popover):
         item = Item()
         item.set_property("id", BookmarksType.SEARCH)
         item.set_property("title", words)
-        item.set_property("uri", El().history.get_search_uri(words))
+        item.set_property("uri", El().search.get_search_uri(words))
         self.__search_model.append(item)
 
     def forward_event(self, event):
@@ -306,6 +313,16 @@ class UriPopover(Gtk.Popover):
         self.__input == Input.SEARCH
         self.set_search_text("")
 
+    def _on_history_map(self, widget):
+        """
+            Init search
+            @param widget as Gtk.Widget
+        """
+        self.__input == Input.SEARCH
+        now = datetime.now()
+        self.__calendar.select_month(now.month, now.year)
+        self.__calendar.select_day(now.day)
+
     def _on_bookmarks_map(self, widget):
         """
             Init bookmarks
@@ -325,6 +342,22 @@ class UriPopover(Gtk.Popover):
         if self.__tags_box.get_children():
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
             self.__set_bookmarks(BookmarksType.POPULARS)
+
+    def _on_day_selected(self, calendar):
+        """
+            Show history for day
+            @param calendar as Gtk.Calendar
+        """
+        (year, month, day) = calendar.get_date()
+        date = "%s/%s/%s" % (day, month, year)
+        mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
+        result = El().history.get(mtime)
+        self.__history_model.remove_all()
+        for (title, uri, mtime) in result:
+            item = Item()
+            item.set_property("title", title)
+            item.set_property("uri", uri)
+            self.__history_model.append(item)
 
 #######################
 # PRIVATE             #

@@ -117,6 +117,57 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkGrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkListBox" id="history_box">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <signal name="map" handler="_on_history_map" swapped="no"/>
+                        <signal name="row-selected" handler="_on_row_selected" swapped="no"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCalendar" id="calendar">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="show_details">False</property>
+                <signal name="day-selected" handler="_on_day_selected" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">history</property>
+            <property name="title" translatable="yes">History</property>
+            <property name="icon_name">document-open-recent-symbolic</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="left_attach">0</property>

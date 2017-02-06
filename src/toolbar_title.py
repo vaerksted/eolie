@@ -277,9 +277,9 @@ class ToolbarTitle(Gtk.Bin):
         """
         value = entry.get_text()
         if value == self.__uri:
-            self.__popover.set_history_text("")
+            self.__popover.set_search_text("")
         else:
-            self.__popover.set_history_text(value)
+            self.__popover.set_search_text(value)
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
         if Gio.NetworkMonitor.get_default().get_network_available():
