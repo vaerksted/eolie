@@ -231,7 +231,11 @@ class Row(Gtk.ListBoxRow):
         # Lets user select item
         if event.state & Gdk.ModifierType.CONTROL_MASK or\
                 event.state & Gdk.ModifierType.SHIFT_MASK:
-            return False
+            if self.is_selected():
+                self.get_parent().unselect_row(self)
+            else:
+                self.get_parent().select_row(self)
+            return True
         # Event is for internal button
         if eventbox.get_window() != event.window:
             return True
