@@ -456,6 +456,7 @@
               <object class="GtkSpinButton" id="default_zoom_level">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="margin_right">10</property>
                 <property name="adjustment">adjustment2</property>
                 <property name="digits">1</property>
                 <signal name="value-changed" handler="_on_default_zoom_changed" swapped="no"/>
