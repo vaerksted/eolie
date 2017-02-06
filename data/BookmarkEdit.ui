@@ -77,7 +77,6 @@
                 <property name="model">model</property>
                 <property name="headers_visible">False</property>
                 <property name="enable_search">False</property>
-                <property name="rubber_banding">True</property>
                 <property name="activate_on_single_click">True</property>
                 <signal name="row-activated" handler="_on_row_activated" swapped="no"/>
                 <child internal-child="selection">

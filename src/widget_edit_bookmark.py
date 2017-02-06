@@ -50,6 +50,8 @@ class EditBookmarkWidget(Gtk.Bin):
         renderer1 = Gtk.CellRendererText()
         renderer1.set_property('ellipsize-set', True)
         renderer1.set_property('ellipsize', Pango.EllipsizeMode.END)
+        renderer1.set_property('editable', True)
+        renderer1.connect('edited', self.__on_tag_edited)
         column1 = Gtk.TreeViewColumn("", renderer1, markup=0)
         column1.set_expand(True)
         self.__treeview.append_column(column0)
@@ -130,6 +132,22 @@ class EditBookmarkWidget(Gtk.Bin):
         a = model.get_value(itera, 0)
         b = model.get_value(iterb, 0)
         return strcoll(a, b)
+
+    def __on_tag_edited(self, widget, path, name):
+        """
+            Rename tag
+            @param widget as cell renderer
+            @param path as str representation of Gtk.TreePath
+            @param name as str
+        """
+        tag_id = El().bookmarks.get_tag_id(name)
+        if tag_id is not None:
+            return
+        iterator = self.__model.get_iter(path)
+        old_name = self.__model.get_value(iterator, 0)
+        self.__model.remove(iterator)
+        self.__model.append([name, False])
+        El().bookmarks.rename_tag(old_name, name)
 
     def __on_item_toggled(self, view, path):
         """

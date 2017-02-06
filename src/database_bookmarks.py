@@ -137,6 +137,16 @@ class DatabaseBookmarks:
             if commit:
                 sql.commit()
 
+    def rename_tag(self, old, new):
+        """
+            Rename tag
+            @param old as str
+            @param new as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE tags set title=? WHERE title=?", (new, old))
+            sql.commit()
+
     def has_tag(self, bookmark_id, tag):
         """
             Return True if bookmark id as tag
