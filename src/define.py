@@ -22,12 +22,13 @@ class ArtSize:
 
 
 class Type:
-    POPULARS = -1
-    RECENTS = -2
-    BOOKMARK = -3
-    KEYWORDS = -4
-    HISTORY = -5
-    SEPARATOR = -6
+    NONE = -1
+    POPULARS = -2
+    RECENTS = -3
+    BOOKMARK = -4
+    KEYWORDS = -5
+    HISTORY = -6
+    SEPARATOR = -7
 
 
 LOGINS = ["login", "username", "user"]

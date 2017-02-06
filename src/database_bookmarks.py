@@ -250,6 +250,7 @@ class DatabaseBookmarks:
     def get_populars(self):
         """
             Get popular bookmarks
+            @return [(id, title, uri)]
         """
         with SqlCursor(self) as sql:
             result = sql.execute("\
@@ -261,9 +262,28 @@ class DatabaseBookmarks:
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
 
+    def get_unclassified(self):
+        """
+            Get bookmarks without tag
+            @return [(id, title, uri)]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("\
+                            SELECT bookmarks.rowid,\
+                                   bookmarks.title,\
+                                   bookmarks.uri\
+                            FROM bookmarks\
+                            WHERE bookmarks.popularity!=0\
+                            AND NOT EXISTS (\
+                                SELECT bookmark_id FROM bookmarks_tags\
+                                WHERE bookmark_id=bookmarks.rowid)\
+                            ORDER BY bookmarks.popularity DESC")
+            return list(result)
+
     def get_recents(self):
         """
             Get recents bookmarks
+            @return [(id, title, uri)]
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT bookmarks.rowid,\
@@ -344,7 +364,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("DELETE from tags\
                          WHERE NOT EXISTS (\
-                            SELECT rowid from bookmarks_tags\
+                            SELECT rowid FROM bookmarks_tags\
                             WHERE tags.rowid = bookmarks_tags.tag_id)")
             sql.commit()
 
@@ -385,10 +405,11 @@ class DatabaseBookmarks:
                 if rowid is None:
                     self.add(title, uri, [tag], 0)
 
-    def search(self, search):
+    def search(self, search, limit):
         """
             Search string in db (uri and title)
             @param search as str
+            @param limit as int
         """
         with SqlCursor(self) as sql:
             filter = '%' + search + '%'
@@ -396,8 +417,9 @@ class DatabaseBookmarks:
                                   FROM bookmarks\
                                   WHERE title LIKE ?\
                                    OR uri LIKE ?\
-                                  ORDER BY popularity DESC, atime DESC",
-                                 (filter, filter))
+                                  ORDER BY popularity DESC, atime DESC\
+                                  LIMIT ?",
+                                 (filter, filter, limit))
             return list(result)
 
     def get_cursor(self):

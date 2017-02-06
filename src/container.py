@@ -14,7 +14,6 @@ from gi.repository import Gtk, WebKit2, GLib
 
 from eolie.stacksidebar import StackSidebar
 from eolie.define import El
-from eolie.utils import strip_uri
 
 
 class Container(Gtk.Paned):
@@ -238,7 +237,7 @@ class Container(Gtk.Paned):
             self.window.toolbar.actions.set_actions(view)
         # Update history
         if title:
-            El().history.add(title, strip_uri(uri))
+            El().history.add(title, uri)
 
     def __on_enter_fullscreen(self, internal, view):
         """

@@ -78,7 +78,9 @@ class Row(Gtk.ListBoxRow):
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
         else:
-            if item_id == Type.POPULARS:
+            if item_id == Type.NONE:
+                icon_name = "folder-visiting-symbolic"
+            elif item_id == Type.POPULARS:
                 icon_name = "starred-symbolic"
             elif item_id == Type.RECENTS:
                 icon_name = "document-open-recent-symbolic"
@@ -434,7 +436,9 @@ class UriPopover(Gtk.Popover):
             static = [(Type.POPULARS,
                        _("Populars")),
                       (Type.RECENTS,
-                       _("Recents"))]
+                       _("Recents")),
+                      (Type.NONE,
+                       _("Unclassified"))]
             self.__add_tags(static + El().bookmarks.get_tags())
         if self.__tags_box.get_children():
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
@@ -464,10 +468,11 @@ class UriPopover(Gtk.Popover):
         return strcoll(row1.item.get_property("title"),
                        row2.item.get_property("title"))
 
-    def __add_searches(self, searches):
+    def __add_searches(self, searches, added=[]):
         """
             Add searches to model
             @param [(title, uri)] as [(str, str)]
+            @internal added
         """
         if searches:
             (title, uri) = searches.pop(0)
@@ -475,8 +480,9 @@ class UriPopover(Gtk.Popover):
             item.set_property("type", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
+            added.append(uri)
             self.__search_model.append(item)
-            GLib.idle_add(self.__add_searches, searches)
+            GLib.idle_add(self.__add_searches, searches, added)
 
     def __add_bookmarks(self, bookmarks):
         """
@@ -543,10 +549,10 @@ class UriPopover(Gtk.Popover):
             @param search as str
         """
         if search == '':
-            limit = 50
+            result = El().history.search(search, 50)
         else:
-            limit = 10
-        result = El().history.search(search, limit)
+            result = El().bookmarks.search(search, 10)
+            result += El().history.search(search, 10)
         self.__add_searches(result)
 
     def __set_bookmarks(self, tag_id):
@@ -561,6 +567,8 @@ class UriPopover(Gtk.Popover):
             items = El().bookmarks.get_populars()
         elif tag_id == Type.RECENTS:
             items = El().bookmarks.get_recents()
+        elif tag_id == Type.NONE:
+            items = El().bookmarks.get_unclassified()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
             if self.__tag_entry_signal_id is not None:
