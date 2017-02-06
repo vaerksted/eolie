@@ -148,6 +148,9 @@ class Row(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        # Lets user select item
+        if event.state & Gdk.ModifierType.CONTROL_MASK:
+            return False
         # Event is for internal button
         if eventbox.get_window() != event.window:
             return True
@@ -190,7 +193,6 @@ class UriPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.__input = False
-        self.__tag_entry_signal_id = None
         self.set_modal(False)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverUri.ui")
@@ -209,8 +211,7 @@ class UriPopover(Gtk.Popover):
         self.__tags = builder.get_object("tags")
         self.__tags_box = builder.get_object("tags_box")
         self.__tags_box.set_sort_func(self.__sort_tags)
-        self.__tag_entry = builder.get_object("tag_entry")
-        self.__save_tag_button = builder.get_object("save_tag_button")
+        self.__remove_button = builder.get_object("remove_button")
         self.__bookmarks_count = builder.get_object("count")
         self.__bookmarks_box = builder.get_object("bookmarks_box")
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
@@ -352,28 +353,12 @@ class UriPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
-    def _on_save_tag_clicked(self, button):
+    def _on_remove_button_clicked(self, button):
         """
             Save bookmarks to tag
+            @param button as Gtk.Button
         """
-        current = self.__tags_box.get_selected_row()
-        value = self.__tag_entry.get_text()
-        tag_id = El().bookmarks.get_tag_id(value)
-        # We need to move all items from current tag to new tag
-        if tag_id is not None:
-            current_tag_id = current.item.get_property("type")
-            for (rowid, title, uri) in El().bookmarks.get_bookmarks(
-                                                               current_tag_id):
-                El().bookmarks.add_tag_to(tag_id, rowid, False)
-                El().bookmarks.del_tag_from(current_tag_id, rowid, False)
-            current.destroy()
-            self.__set_bookmarks(Type.POPULARS)
-        else:
-            tag_id = current.item.get_property("type")
-            El().bookmarks.set_tag_title(tag_id, value)
-            current.set_title(value)
-        button.hide()
-        self.__tags_box.invalidate_sort()
+        print("click")
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
@@ -390,6 +375,13 @@ class UriPopover(Gtk.Popover):
             @param event as Gdk.Event
         """
         entry.get_style_context().add_class('tag-edit')
+
+    def _on_selected_rows_changed(self, listbox):
+        """
+            Show delete button if needed
+            @param listbox as Gtk.ListBox
+        """
+        self.__remove_button.show()
 
     def _on_row_selected(self, listbox, row):
         """
@@ -561,8 +553,7 @@ class UriPopover(Gtk.Popover):
             @param tag id as int
         """
         self.__bookmarks_model.remove_all()
-        self.__tag_entry.set_sensitive(False)
-        self.__tag_entry.set_opacity(0)
+        self.__remove_button.hide()
         if tag_id == Type.POPULARS:
             items = El().bookmarks.get_populars()
         elif tag_id == Type.RECENTS:
@@ -571,13 +562,6 @@ class UriPopover(Gtk.Popover):
             items = El().bookmarks.get_unclassified()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
-            if self.__tag_entry_signal_id is not None:
-                self.__tag_entry.disconnect(self.__tag_entry_signal_id)
-            self.__tag_entry.set_text(El().bookmarks.get_tag_title(tag_id))
-            self.__tag_entry_signal_id = self.__tag_entry.connect(
-                                        "changed", self.__on_tag_entry_changed)
-            self.__tag_entry.set_sensitive(True)
-            self.__tag_entry.set_opacity(1)
         self.__bookmarks_count.set_text("%s bookmarks" % len(items))
         self.__add_bookmarks(items)
 
@@ -590,9 +574,9 @@ class UriPopover(Gtk.Popover):
         value = entry.get_text()
         current_title = current.item.get_property("title")
         if current_title != value:
-            self.__save_tag_button.show()
+            self.__remove_button.show()
         else:
-            self.__save_tag_button.hide()
+            self.__remove_button.hide()
 
     def __on_map(self, widget):
         """
@@ -612,9 +596,6 @@ class UriPopover(Gtk.Popover):
             Switch to bookmarks
             @param widget as Gtk.Widget
         """
-        if self.__tag_entry_signal_id is not None:
-            self.__tag_entry.disconnect(self.__tag_entry_signal_id)
-            self.__tag_entry_signal_id = None
         self.__stack.set_visible_child_name("bookmarks")
 
     def __on_row_activated(self, row):
