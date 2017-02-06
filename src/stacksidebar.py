@@ -115,6 +115,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         if event.button == 2:
             self.__container.sidebar.close_view(self.__view)
+        El().active_window.toolbar.title.hide_popover()
 
     def _on_close_button_press(self, button, event):
         """
