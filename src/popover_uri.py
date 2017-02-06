@@ -704,6 +704,10 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
         """
         self.__stack.set_visible_child_name("bookmarks")
+        self.__search_model.remove_all()
+        self.__bookmarks_model.remove_all()
+        for child in self.__tags_box.get_children():
+            self.__tags_box.remove(child)
 
     def __on_row_activated(self, row):
         """
