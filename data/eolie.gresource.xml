@@ -6,6 +6,7 @@
     <file>application.css</file>
     <file>application-legacy.css</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">PopoverPassword.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">RowDownload.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">SettingsDialog.ui</file>

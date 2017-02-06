@@ -114,6 +114,20 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.get_toplevel().set_focus(self.__entry)
 
+    def save_password(self, username, password, uri):
+        """
+            Show a popover allowing user to save password
+            @param username as str
+            @param password as str
+            @param uri as str
+        """
+        from eolie.popover_password import PasswordPopover
+        popover = PasswordPopover(username, password, uri)
+        popover.set_relative_to(self.__entry)
+        popover.set_pointing_to(self.__entry.get_icon_area(
+                                                Gtk.EntryIconPosition.PRIMARY))
+        popover.show()
+
     def on_load_changed(self, view, event):
         """
             Update action image

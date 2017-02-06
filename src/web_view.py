@@ -12,7 +12,10 @@
 
 from gi.repository import WebKit2, Gio, Gtk
 
-from eolie.define import El
+import ctypes
+from urllib.parse import urlparse
+
+from eolie.define import El, LOGINS, PASSWORDS
 
 
 class WebView(WebKit2.WebView):
@@ -63,8 +66,9 @@ class WebView(WebKit2.WebView):
         settings.set_property("media-playback-allows-inline", True)
         self.set_settings(settings)
         self.show()
-        self.connect('decide-policy', self.__on_decide_policy)
-        self.get_context().connect('download-started',
+        self.connect("decide-policy", self.__on_decide_policy)
+        self.connect("submit-form", self.__on_submit_form)
+        self.get_context().connect("download-started",
                                    self.__on_download_started)
 
     def load_uri(self, uri):
@@ -124,6 +128,45 @@ class WebView(WebKit2.WebView):
         settings.set_property(
                         'serif-font-family',
                         system.get_value('font-name').get_string())
+
+    def __read_auth_request(self, request):
+        """
+            Read request for authentification
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        auth = False
+        username = ""
+        password = ""
+        fields = request.get_text_fields()
+        if fields is None:
+            return (username, password, auth)
+        for k, v in fields.items():
+            name = ctypes.string_at(k).decode("utf-8")
+            for search in LOGINS:
+                if search in name.lower():
+                    username = ctypes.string_at(v).decode("utf-8")
+                    break
+            for search in PASSWORDS:
+                if search in name.lower():
+                    password = ctypes.string_at(v).decode("utf-8")
+                    break
+            if username and password:
+                auth = True
+                break
+        return (auth, username, password)
+
+    def __on_submit_form(self, view, request):
+        """
+            Check for auth forms
+            @param view as WebKit2.WebView
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        (auth, username, password) = self.__read_auth_request(request)
+        if not auth:
+            return
+        parsed = urlparse(view.get_uri())
+        El().active_window.toolbar.title.save_password(
+                                 username, password, parsed.netloc)
 
     def __on_download_started(self, context, download):
         """

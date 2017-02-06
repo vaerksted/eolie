@@ -11,6 +11,7 @@ app_PYTHON = \
     define.py\
     localized.py\
     popover_downloads.py\
+    popover_password.py\
     popover_uri.py\
     search.py\
     settings.py\

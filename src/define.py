@@ -28,3 +28,7 @@ class Type:
     SEARCH = -4
     COOKIES = -5
     SEPARATOR = -6
+
+
+LOGINS = ["login", "username", "user"]
+PASSWORDS = ["password", "passwd", "pass"]

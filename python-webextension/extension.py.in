@@ -16,11 +16,32 @@ sys.path.insert(1, '@pyexecdir@')
 # Make sure we'll find the eolie modules, even in JHBuild
 sys.path.insert(1, '@pythondir@')
 
-from gi.repository import Gio
+import gi
+gi.require_version('Secret', '1')
+from gi.repository import Gio, Secret
+
+from urllib.parse import urlparse
 
 from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
 from eolie.sqlcursor import SqlCursor
+from eolie.define import LOGINS, PASSWORDS
+from eolie.utils import strip_uri
+
+secret = None
+
+
+def on_get_secret(source, result):
+    """
+        Store secret proxy
+        @param source as GObject.Object
+        @param result as Gio.AsyncResult
+    """
+    global secret
+    try:
+        secret = Secret.Service.get_finish(result)
+    except:
+        pass
 
 
 class Application(Gio.Application):
@@ -37,6 +58,8 @@ app = Application.new()
 settings = Settings.new()
 adblock = DatabaseAdblock()
 
+Secret.Service.get(Secret.ServiceFlags.NONE, None, on_get_secret)
+
 
 def on_send_request(webpage, request, redirect):
     """
@@ -48,7 +71,90 @@ def on_send_request(webpage, request, redirect):
     uri = request.get_uri()
     if settings.get_value('adblock') and adblock.is_blocked(uri):
         return True
-    
+
+
+def on_load_secret(source, result, username_input, password_input):
+    """
+        Set username/password input
+        @param source as GObject.Object
+        @param result as Gio.AsyncResult
+        @param username_input as WebKit2WebExtension.DOMElement
+        @param password_input as WebKit2WebExtension.DOMElement
+    """
+    try:
+        secret = source.get_secret()
+        if secret is not None:
+            username_input.set_value(
+                source.get_label().replace("org.gnome.Eolie.", ""))
+            password_input.set_value(secret.get().decode('utf-8'))
+    except:
+        pass
+
+
+def on_secret_search(source, result, username_input, password_input):
+    """
+        Set username/password input
+        @param source as GObject.Object
+        @param result as Gio.AsyncResult
+        @param username_input as WebKit2WebExtension.DOMElement
+        @param password_input as WebKit2WebExtension.DOMElement
+    """
+    try:
+        if result is not None:
+            items = secret.search_finish(result)
+            if not items:
+                return
+            items[0].load_secret(None,
+                                 on_load_secret,
+                                 username_input,
+                                 password_input)
+    except:
+        pass
+
+
+def on_document_loaded(webpage):
+    """
+        Restore forms
+        @param webpage as WebKit2WebExtension.WebPage
+    """
+    inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
+    i = 0
+    username_input = None
+    password_input = None
+    while i < inputs.get_length():
+        name = inputs.item(i).get_attribute('name')
+        if name is None:
+            i += 1
+            continue
+        for search in LOGINS:
+            if search in name.lower():
+                username_input = inputs.item(i)
+                break
+        for search in PASSWORDS:
+            if search in name.lower():
+                password_input = inputs.item(i)
+                break
+        i += 1
+
+    if username_input is None or password_input is None:
+        return
+    SecretSchema = {
+        "uri": Secret.SchemaAttributeType.STRING
+    }
+    parsed = urlparse(webpage.get_uri())
+    SecretAttributes = {
+        "uri": parsed.netloc,
+    }
+
+    schema = Secret.Schema.new("org.gnome.Eolie",
+                               Secret.SchemaFlags.NONE,
+                               SecretSchema)
+    secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
+                           None,
+                           on_secret_search,
+                           username_input,
+                           password_input)
+
 def on_page_created(extension, webpage):
     """
         Connect to send request
@@ -56,7 +162,7 @@ def on_page_created(extension, webpage):
         @param webpage as WebKit2WebExtension.WebPage
     """
     webpage.connect("send-request", on_send_request)
-
+    webpage.connect("document-loaded", on_document_loaded)
 
 def initialize(extension, arguments):
     """
