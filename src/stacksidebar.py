@@ -96,13 +96,13 @@ class SidebarChild(Gtk.ListBoxRow):
             Destroy self
         """
         if event.button == 2:
-            self.__container.sidebar.close_current()
+            self.__container.sidebar.close_view(self.__view)
 
     def _on_close_button_press(self, button, event):
         """
             Destroy self
         """
-        self.__container.sidebar.close_current()
+        self.__container.sidebar.close_view(self.__view)
 
     def _on_enter_notify(self, eventbox, event):
         """
@@ -408,12 +408,13 @@ class StackSidebar(Gtk.Grid):
             self.__container.set_visible_view(next_row.view)
         self.update_visible_child()
 
-    def close_current(self):
+    def close_view(self, view):
         """
             close current view
+            @param view as WebView
             @return child SidebarChild
         """
-        index = self.__get_index(self.__container.current)
+        index = self.__get_index(view)
         next_row = None
         # Delay view destroy to allow stack animation
         child = self.__listbox.get_row_at_index(index)

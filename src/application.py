@@ -417,7 +417,7 @@ class Application(Gtk.Application):
         elif string == "new_page":
             window.container.add_web_view(self.start_page, True)
         elif string == "close_page":
-            window.container.sidebar.close_current()
+            window.container.sidebar.close_view(window.container.current)
         elif string == "reload":
             window.container.container.current.reload()
         elif string == "find":
