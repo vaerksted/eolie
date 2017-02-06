@@ -13,7 +13,7 @@
 from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
 
 from gettext import gettext as _
-from time import mktime
+from time import mktime, time
 from datetime import datetime
 
 from eolie.define import El, ArtSize, Type
@@ -472,6 +472,8 @@ class UriPopover(Gtk.Popover):
                 El().active_window.container.current.load_uri(uri)
             else:
                 El().active_window.container.add_web_view(uri, True)
+            El().bookmarks.set_access_time(uri, int(time()))
+            El().bookmarks.set_more_popular(uri)
             El().active_window.toolbar.title.hide_popover()
         else:
             self.__set_bookmarks(item_id)

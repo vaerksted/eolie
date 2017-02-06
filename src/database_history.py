@@ -39,7 +39,7 @@ class DatabaseHistory:
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
-                                               mtime INT NOT NULL,
+                                               atime INT NOT NULL,
                                                popularity INT NOT NULL
                                                )'''
 
@@ -60,46 +60,46 @@ class DatabaseHistory:
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
 
-    def add(self, title, uri, mtime=None):
+    def add(self, title, uri, atime=None):
         """
             Add a new entry to history, if exists, update it
             @param title as str
             @param uri as str
-            @param mtime as int
+            @param atime as int
         """
         if not uri:
             return
         if title is None:
             title = ""
-        if mtime is None:
-            mtime = int(time())
+        if atime is None:
+            atime = int(time())
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT popularity FROM history\
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
             if v is not None:
-                sql.execute("UPDATE history set mtime=?, popularity=?\
+                sql.execute("UPDATE history set atime=?, popularity=?\
                              WHERE uri=?", (int(time()), v[0]+1, uri))
             else:
                 sql.execute("INSERT INTO history\
-                                  (title, uri, mtime, popularity)\
+                                  (title, uri, atime, popularity)\
                                   VALUES (?, ?, ?, ?)",
-                            (title, uri, mtime, 0))
+                            (title, uri, atime, 0))
             sql.commit()
 
-    def get(self, mtime):
+    def get(self, atime):
         """
             Get history
-            @param mtime as int
+            @param atime as int
             @return (str, str, int)
         """
         one_day = 86400
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT title, uri, mtime\
+            result = sql.execute("SELECT title, uri, atime\
                                   FROM history\
-                                  WHERE mtime >= ? AND mtime <= ?\
-                                  ORDER BY mtime DESC LIMIT ?",
-                                 (mtime, mtime + one_day, mtime))
+                                  WHERE atime >= ? AND atime <= ?\
+                                  ORDER BY atime DESC LIMIT ?",
+                                 (atime, atime + one_day, atime))
             return list(result)
 
     def search(self, search, limit):
@@ -116,7 +116,7 @@ class DatabaseHistory:
                                   WHERE title LIKE ?\
                                    OR uri LIKE ?\
                                   ORDER BY popularity DESC,\
-                                  mtime DESC LIMIT ?",
+                                  atime DESC LIMIT ?",
                                  (filter, filter, limit))
             return list(result)
 

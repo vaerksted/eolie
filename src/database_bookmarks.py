@@ -17,8 +17,6 @@ import sqlite3
 from eolie.utils import noaccents
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
-from eolie.database_history import DatabaseHistory
-from eolie.define import El
 
 
 class DatabaseBookmarks:
@@ -39,7 +37,9 @@ class DatabaseBookmarks:
     __create_bookmarks = '''CREATE TABLE bookmarks (
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
-                                               uri TEXT NOT NULL
+                                               uri TEXT NOT NULL,
+                                               popularity INT NOT NULL,
+                                               atime INT NOT NULL
                                                )'''
     __create_tags = '''CREATE TABLE tags (id INTEGER PRIMARY KEY,
                                           title TEXT NOT NULL)'''
@@ -67,20 +67,21 @@ class DatabaseBookmarks:
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 
-    def add(self, title, uri, tags):
+    def add(self, title, uri, tags, atime=0):
         """
             Add a new bookmark
             @param title as str
             @param uri as str
             @param tags as [str]
+            @param ctime as int
         """
         if not uri or not title:
             return
         with SqlCursor(self) as sql:
             result = sql.execute("INSERT INTO bookmarks\
-                                  (title, uri)\
-                                  VALUES (?, ?)",
-                                 (title, uri))
+                                  (title, uri, popularity, atime)\
+                                  VALUES (?, ?, ?, ?)",
+                                 (title, uri, 0, atime))
             bookmarks_id = result.lastrowid
             for tag in tags:
                 if not tag:
@@ -95,8 +96,6 @@ class DatabaseBookmarks:
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
             sql.commit()
-            # We need this as current db is attached to history
-            El().history.add(title, uri, 0)
 
     def get_id(self, uri):
         """
@@ -148,12 +147,10 @@ class DatabaseBookmarks:
                             SELECT bookmarks.rowid,\
                                    bookmarks.title,\
                                    bookmarks.uri\
-                            FROM bookmarks, bookmarks_tags, history.history\
+                            FROM bookmarks, bookmarks_tags\
                             WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
                             AND bookmarks_tags.tag_id=?\
-                            AND history.uri=bookmarks.uri\
-                            ORDER BY history.popularity DESC",
-                                 (tag_id,))
+                            ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
 
     def get_populars(self):
@@ -165,10 +162,9 @@ class DatabaseBookmarks:
                             SELECT bookmarks.rowid,\
                                    bookmarks.title,\
                                    bookmarks.uri\
-                            FROM bookmarks, history.history\
-                            WHERE history.uri=bookmarks.uri\
-                            AND history.popularity!=0\
-                            ORDER BY history.popularity DESC")
+                            FROM bookmarks\
+                            WHERE bookmarks.popularity!=0\
+                            ORDER BY bookmarks.popularity DESC")
             return list(result)
 
     def get_recents(self):
@@ -176,15 +172,38 @@ class DatabaseBookmarks:
             Get recents bookmarks
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("\
-                            SELECT bookmarks.rowid,\
-                                   bookmarks.title,\
-                                   bookmarks.uri\
-                            FROM bookmarks, history.history\
-                            WHERE history.uri=bookmarks.uri\
-                            AND history.mtime != 0\
-                            ORDER BY history.mtime DESC")
+            result = sql.execute("SELECT bookmarks.rowid,\
+                                  bookmarks.title,\
+                                  bookmarks.uri\
+                                  FROM bookmarks\
+                                  WHERE bookmarks.atime != 0\
+                                  ORDER BY bookmarks.atime DESC")
             return list(result)
+
+    def set_access_time(self, uri, atime):
+        """
+            Set bookmark access time
+            @param uri as str
+            @param atime as int
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET atime=? where uri=?", (atime, uri))
+            sql.commit()
+
+    def set_more_popular(self, uri):
+        """
+            Increment bookmark popularity
+            @param uri as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT popularity FROM bookmarks\
+                                  WHERE uri=?", (uri,))
+            v = result.fetchone()
+            if v is not None:
+                sql.execute("UPDATE bookmarks set popularity=?\
+                             WHERE uri=?", (v[0]+1, uri))
+                sql.commit()
 
     def import_firefox(self):
         """
@@ -221,7 +240,7 @@ class DatabaseBookmarks:
                 uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
-                    self.add(title, uri, [tag])
+                    self.add(title, uri, [tag], 0)
 
     def search(self, search):
         """
@@ -234,7 +253,7 @@ class DatabaseBookmarks:
                                   FROM bookmarks\
                                   WHERE title LIKE ?\
                                    OR uri LIKE ?\
-                                  ORDER BY popularity DESC, mtime DESC",
+                                  ORDER BY popularity DESC, atime DESC",
                                  (filter, filter))
             return list(result)
 
@@ -245,8 +264,6 @@ class DatabaseBookmarks:
         try:
             c = sqlite3.connect(self.DB_PATH, 600.0)
             c.create_collation('LOCALIZED', LocalizedCollation())
-            c.execute("ATTACH DATABASE '%s' AS history" %
-                      DatabaseHistory.DB_PATH)
             c.create_function("noaccents", 1, noaccents)
             return c
         except:

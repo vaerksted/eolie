@@ -239,9 +239,6 @@ class Container(Gtk.Paned):
         # Update history
         if title:
             El().history.add(title, strip_uri(uri))
-            # Update loaded uri too allowing user's bookmarks popularity
-            if strip_uri(uri, False) != strip_uri(view.loaded_uri, False):
-                El().history.add(title, strip_uri(view.loaded_uri))
 
     def __on_enter_fullscreen(self, internal, view):
         """
