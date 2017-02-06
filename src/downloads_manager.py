@@ -13,6 +13,7 @@
 from gi.repository import GObject, GLib, Gio
 
 from re import search
+from eolie.definie import El
 
 
 class DownloadsManager(GObject.GObject):
@@ -64,9 +65,11 @@ class DownloadsManager(GObject.GObject):
             @param download as WebKit2.Download
             @param filename as str
         """
-        directory = GLib.get_user_special_dir(
+        directory_uri = El().settings.get_value('download-uri').get_string()
+        if not directory_uri:
+            directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
-        directory_uri = GLib.filename_to_uri(directory, None)
+            directory_uri = GLib.filename_to_uri(directory, None)
         destination_uri = "%s/%s" % (directory_uri, filename)
         not_ok = True
         i = 1
