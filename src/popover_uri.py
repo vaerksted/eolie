@@ -350,7 +350,11 @@ class UriPopover(Gtk.Popover):
             Set history model
             @param search as str
         """
-        result = El().history.search(search, 10)
+        if search == "":
+            limit = 50
+        else:
+            limit = 10
+        result = El().history.search(search, limit)
         for (title, uri) in result:
             item = Item()
             item.set_property("title", title)
