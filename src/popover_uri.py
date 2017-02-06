@@ -122,7 +122,7 @@ class Input:
 
 class UriPopover(Gtk.Popover):
     """
-        Show user bookmarks or history
+        Show user bookmarks or search
     """
 
     def __init__(self):
@@ -136,13 +136,11 @@ class UriPopover(Gtk.Popover):
         builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
         builder.connect_signals(self)
         self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
-        # Sorting is broken when using a model
-        # We should be using Gio.ListStore insert_sorted() but seems broken too
-        self.__history_model = Gio.ListStore()
-        self.__history_box = builder.get_object('history_box')
+        self.__search_model = Gio.ListStore()
+        self.__search_box = builder.get_object('search_box')
         self.__stack = builder.get_object('stack')
-        self.__history_box.bind_model(self.__history_model,
-                                      self.__on_item_create)
+        self.__search_box.bind_model(self.__search_model,
+                                     self.__on_item_create)
         self.__bookmarks_model = Gio.ListStore()
         self.__tags_model = Gio.ListStore()
         self.__tags = builder.get_object('tags')
@@ -163,14 +161,14 @@ class UriPopover(Gtk.Popover):
         """
         return self.__input
 
-    def set_history_text(self, search):
+    def set_search_text(self, search):
         """
-            Set history model
+            Set search model
             @param search as str
         """
-        self.__history_model.remove_all()
+        self.__search_model.remove_all()
         self.__stack.set_visible_child_name("search")
-        self.__set_history_text(search)
+        self.__set_search_text(search)
 
     def add_keywords(self, words):
         """
@@ -182,8 +180,8 @@ class UriPopover(Gtk.Popover):
         item = Item()
         item.set_property("id", BookmarksType.SEARCH)
         item.set_property("title", words)
-        item.set_property("uri", El().search.get_search_uri(words))
-        self.__history_model.append(item)
+        item.set_property("uri", El().history.get_search_uri(words))
+        self.__search_model.append(item)
 
     def forward_event(self, event):
         """
@@ -300,13 +298,13 @@ class UriPopover(Gtk.Popover):
                 y - row.get_allocated_height() < 0:
             scrolled.get_vadjustment().set_value(y)
 
-    def _on_history_map(self, widget):
+    def _on_search_map(self, widget):
         """
-            Init history
+            Init search
             @param widget as Gtk.Widget
         """
         self.__input == Input.SEARCH
-        self.set_history_text("")
+        self.set_search_text("")
 
     def _on_bookmarks_map(self, widget):
         """
@@ -338,16 +336,16 @@ class UriPopover(Gtk.Popover):
         """
         box = None
         if self.__input == Input.SEARCH:
-            box = self.__history_box
+            box = self.__search_box
         elif self.__input == Input.TAGS:
             box = self.__tags_box
         elif self.__input == Input.BOOKMARKS:
             box = self.__bookmarks_box
         return box
 
-    def __set_history_text(self, search):
+    def __set_search_text(self, search):
         """
-            Set history model
+            Set search model
             @param search as str
         """
         if search == "":
@@ -359,7 +357,7 @@ class UriPopover(Gtk.Popover):
             item = Item()
             item.set_property("title", title)
             item.set_property("uri", uri)
-            self.__history_model.append(item)
+            self.__search_model.append(item)
 
     def __set_bookmarks(self, tag_id):
         """
@@ -403,7 +401,7 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
         """
         self.__input = Input.NONE
-        self.__history_box.get_style_context().remove_class('input')
+        self.__search_box.get_style_context().remove_class('input')
         self.__bookmarks_box.get_style_context().remove_class('input')
         self.__tags_box.get_style_context().remove_class('input')
         self.__stack.set_visible_child_name('bookmarks')
