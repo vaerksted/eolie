@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, Gio
 
 from threading import Thread
 from gettext import gettext as _
+from urllib.parse import urlparse
 
 from eolie.define import El
 from eolie.popover_uri import UriPopover
@@ -296,7 +297,9 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text(value)
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        parsed = urlparse(value)
+        if not parsed.scheme.startswith("http") and\
+                Gio.NetworkMonitor.get_default().get_network_available():
             self.__keywords_timeout = GLib.timeout_add(
                                                  500,
                                                  self.__search_keywords_thread,
