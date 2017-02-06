@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, GObject, Gio, Pango
+from gi.repository import Gtk, Gdk, GObject, Gio, Pango
 
 from gettext import gettext as _
 
@@ -379,22 +379,6 @@ class UriPopover(Gtk.Popover):
             item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
 
-    def __handle_click(self, button, item):
-        """
-            Handle click
-            @param button as int
-            @param item as Item
-        """
-        uri = item.get_property("uri")
-        item_id = item.get_property("id")
-        if item_id == BookmarksType.URI:
-            if button == 1:
-                El().active_window.container.current.load_uri(uri)
-            else:
-                El().active_window.container.add_web_view(uri, True)
-        else:
-            self.__set_bookmarks(item_id)
-
     def __on_button_release(self, eventbox, event, item):
         """
             Got to uri
@@ -402,10 +386,16 @@ class UriPopover(Gtk.Popover):
             @param event as Gdk.Event
             @param item as Item
         """
-        if item.get_property("id") == BookmarksType.URI:
+        uri = item.get_property("uri")
+        item_id = item.get_property("id")
+        if item_id in [BookmarksType.URI, BookmarksType.SEARCH]:
+            if event.button == 1:
+                El().active_window.container.current.load_uri(uri)
+            else:
+                El().active_window.container.add_web_view(uri, True)
             El().active_window.toolbar.title.hide_popover()
-        # Needed to not conflict with popover hidding
-        GLib.idle_add(self.__handle_click, event.button, item)
+        else:
+            self.__set_bookmarks(item_id)
 
     def __on_map(self, widget):
         """

@@ -205,6 +205,7 @@ class SettingsDialog:
         """
         El().settings.set_value('search-engine',
                                 GLib.Variant('s', combo.get_active_id()))
+        El().search.update_default_engine()
 
     def _on_auto_download_toggled(self, button):
         """

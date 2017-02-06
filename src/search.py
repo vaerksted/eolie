@@ -12,17 +12,34 @@
 
 from gi.repository import Soup
 
+from eolie.define import El
+
 
 class Search:
     """
         Eolie search engines
     """
-    # https://ca.search.yahoo.com/sugg/
-    # ff?command={%22llinux%22}&output=fxjson&appid=fd
     __ENGINES = {
         'Google': [
-            'https://www.google.fr/search?q=%s&ie=utf-8&oe=utf-8',
-            'https://www.google.com/complete/search?client=firefox&q={"%s"}'
+            'https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8',
+            'https://www.google.com/complete/search?client=firefox&q=%s',
+            'unicode_escape'
+            ],
+        'DuckDuckGo': [
+            'https://duckduckgo.com/?q=%s',
+            'https://ac.duckduckgo.com/ac/?q=%s&type=list',
+            'utf-8'
+            ],
+        'Yahoo': [
+            'https://search.yahoo.com/yhs/search?p=%s&ei=UTF-8',
+            'https://ca.search.yahoo.com/sugg/ff?'
+            'command=%s&output=fxjson&appid=fd',
+            'utf-8'
+            ],
+        'Bing': [
+            'https://www.bing.com/search?q=%s',
+            'https://www.bing.com/osjson.aspx?query=%s&form=OSDJAS',
+            'utf-8'
             ]
         }
 
@@ -36,11 +53,12 @@ class Search:
         """
             Update default engine based on user settings
         """
-        wanted = "Google"
+        wanted = El().settings.get_value('search-engine').get_string()
         for engine in self.__ENGINES:
             if engine == wanted:
                 self.__search = self.__ENGINES[engine][0]
                 self.__keywords = self.__ENGINES[engine][1]
+                self.__encoding = self.__ENGINES[engine][2]
                 break
 
     def get_search_uri(self, words):
@@ -61,6 +79,7 @@ class Search:
         try:
             uri = self.__keywords % words
             session = Soup.Session.new()
+            session.set_property('accept-language-auto', True)
             request = session.request(uri)
             stream = request.send(cancellable)
             bytes = bytearray(0)
@@ -68,7 +87,7 @@ class Search:
             while buf:
                 bytes += buf
                 buf = stream.read_bytes(1024, cancellable).get_data()
-            string = bytes.decode('unicode_escape')
+            string = bytes.decode(self.__encoding)
             # format: '["{"words"}",["result1","result2"]]'
             keywords = string.replace('[', '').replace(']', '').split(',')[1:]
             return keywords

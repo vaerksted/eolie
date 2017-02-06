@@ -128,7 +128,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <items>
-                  <item id="google" translatable="yes">Google</item>
+                  <item id="Google" translatable="yes">Google</item>
+                  <item id="DuckDuckGo" translatable="yes">DuckDuckGo</item>
+                  <item id="Yahoo" translatable="yes">Yahoo</item>
+                  <item id="Bing" translatable="yes">Bing</item>
                 </items>
                 <signal name="changed" handler="_on_engine_changed" swapped="no"/>
               </object>
