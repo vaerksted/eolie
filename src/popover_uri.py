@@ -55,6 +55,7 @@ class Row(Gtk.ListBoxRow):
         favicon = None
         Gtk.ListBoxRow.__init__(self)
         self.get_style_context().add_class("row")
+        item_id = item.get_property("id")
         item_type = item.get_property("type")
         uri = item.get_property("uri")
         title = item.get_property("title")
@@ -79,11 +80,11 @@ class Row(Gtk.ListBoxRow):
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
         else:
-            if item_type == Type.NONE:
+            if item_id == Type.NONE:
                 icon_name = "folder-visiting-symbolic"
-            elif item_type == Type.POPULARS:
+            elif item_id == Type.POPULARS:
                 icon_name = "starred-symbolic"
-            elif item_type == Type.RECENTS:
+            elif item_id == Type.RECENTS:
                 icon_name = "document-open-recent-symbolic"
             else:
                 icon_name = "folder-symbolic"
