@@ -117,7 +117,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title instead of uri
         """
-        if title is not None:
+        if title:
             self.__entry.set_placeholder_text(title)
             if not self.__lock and\
                     not self.__in_notify and\
