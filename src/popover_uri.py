@@ -114,6 +114,7 @@ class Row(Gtk.ListBoxRow):
         self.__eventbox.set_size_request(-1, 30)
         self.__eventbox.show()
         self.add(self.__eventbox)
+        self.get_style_context().add_class('listboxrow')
 
     @property
     def eventbox(self):

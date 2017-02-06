@@ -62,6 +62,10 @@
     font-weight: bold;
 }
 
+.listboxrow {
+    padding: 0px;
+}
+
 .downloadrow {
     padding: 0px;
     background-color: transparent;
