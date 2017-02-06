@@ -68,9 +68,9 @@ class ToolbarTitle(Gtk.Bin):
                 self.__entry.set_icon_from_icon_name(
                                             Gtk.EntryIconPosition.PRIMARY,
                                             None)
-            self.__entry.set_text(uri)
             # Some uri update may not change title
             if strip_uri(uri) != strip_uri(self.__uri):
+                self.__entry.set_text(uri)
                 self.__entry.set_placeholder_text("")
             self.__entry.get_style_context().remove_class('uribar-title')
             self.__uri = uri
