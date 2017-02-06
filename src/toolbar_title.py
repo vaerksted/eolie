@@ -52,6 +52,12 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.set_property("width_request", width)
 
+    def show_uri(self, uri):
+        """
+            Just show uri in titlebar
+        """
+        self.__entry.set_placeholder_text(uri)
+
     def set_uri(self, uri):
         """
             Update entry
