@@ -43,7 +43,10 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry = builder.get_object("entry")
         self.__popover = UriPopover()
         self.__password_popover = None
-        self.__action_image = builder.get_object("action_image")
+        # Reload/Stop
+        self.__action_image1 = builder.get_object("action_image1")
+        # Bookmarks/Clear
+        self.__action_image2 = builder.get_object("action_image2")
         self.add(builder.get_object('widget'))
         # Some on the fly css styling
         context = self.__entry.get_style_context()
@@ -52,7 +55,6 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
-        self.__bookmark_image = builder.get_object("bookmark_image")
 
     def set_width(self, width):
         """
@@ -95,8 +97,8 @@ class ToolbarTitle(Gtk.Bin):
                 icon_name = "starred-symbolic"
             else:
                 icon_name = "non-starred-symbolic"
-            self.__bookmark_image.set_from_icon_name(icon_name,
-                                                     Gtk.IconSize.MENU)
+            self.__action_image2.set_from_icon_name(icon_name,
+                                                    Gtk.IconSize.MENU)
 
     def set_insecure_content(self):
         """
@@ -166,11 +168,11 @@ class ToolbarTitle(Gtk.Bin):
             @param event as WebKit2.LoadEvent
         """
         if view.is_loading():
-            self.__action_image.set_from_icon_name('process-stop-symbolic',
-                                                   Gtk.IconSize.MENU)
+            self.__action_image1.set_from_icon_name('process-stop-symbolic',
+                                                    Gtk.IconSize.MENU)
         else:
-            self.__action_image.set_from_icon_name('view-refresh-symbolic',
-                                                   Gtk.IconSize.MENU)
+            self.__action_image1.set_from_icon_name('view-refresh-symbolic',
+                                                    Gtk.IconSize.MENU)
 
     @property
     def progress(self):
@@ -252,12 +254,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__lock = True
         self.__entry.set_text(self.__uri)
-        self.__entry.get_style_context().remove_class('uribar-title')
-        self.__entry.get_style_context().add_class('input')
+        self.__entry.get_style_context().remove_class("uribar-title")
+        self.__entry.get_style_context().add_class("input")
         self.__popover.set_relative_to(self)
         self.__popover.show()
-        self.__signal_id = self.__entry.connect('changed',
+        self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
+        self.__action_image2.set_from_icon_name("edit-clear-symbolic",
+                                                Gtk.IconSize.MENU)
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -271,8 +275,16 @@ class ToolbarTitle(Gtk.Bin):
             self.__signal_id = None
         if self.__entry.get_placeholder_text():
             self.__entry.set_text("")
-            self.__entry.get_style_context().add_class('uribar-title')
-        self.__entry.get_style_context().remove_class('input')
+            self.__entry.get_style_context().add_class("uribar-title")
+        self.__entry.get_style_context().remove_class("input")
+        view = El().active_window.container.current
+        bookmark_id = El().bookmarks.get_id(view.get_uri())
+        if bookmark_id is not None:
+            icon_name = "starred-symbolic"
+        else:
+            icon_name = "non-starred-symbolic"
+            self.__action_image2.set_from_icon_name(icon_name,
+                                                    Gtk.IconSize.MENU)
 
     def _on_key_press_event(self, entry, event):
         """
@@ -291,18 +303,18 @@ class ToolbarTitle(Gtk.Bin):
                                 Gdk.KEY_Escape]:
                 GLib.idle_add(self.hide_popover)
 
-    def _on_action_press(self, eventbox, event):
+    def _on_action1_press(self, eventbox, event):
         """
-            Reload current view
+            Reload current view/Stop loading
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self.__action_image.get_icon_name()[0] == 'view-refresh-symbolic':
+        if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
             El().active_window.container.current.reload()
         else:
             El().active_window.container.current.stop_loading()
 
-    def _on_bookmark_press(self, eventbox, event):
+    def _on_action2_press(self, eventbox, event):
         """
             Add/Remove page to/from bookmarks
             @param eventbox as Gtk.EventBox
@@ -310,14 +322,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         view = El().active_window.container.current
         from eolie.widget_edit_bookmark import EditBookmarkWidget
-        if self.__bookmark_image.get_icon_name()[0] == "starred-symbolic":
-            self.__bookmark_image.set_from_icon_name("non-starred-symbolic",
-                                                     Gtk.IconSize.MENU)
+        if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
+            self.__action_image2.set_from_icon_name("non-starred-symbolic",
+                                                    Gtk.IconSize.MENU)
             bookmark_id = El().bookmarks.get_id(view.get_uri())
             El().bookmarks.remove(bookmark_id)
-        else:
-            self.__bookmark_image.set_from_icon_name("starred-symbolic",
-                                                     Gtk.IconSize.MENU)
+        elif self.__action_image2.get_icon_name()[0] == "non-starred-symbolic":
+            self.__action_image2.set_from_icon_name("starred-symbolic",
+                                                    Gtk.IconSize.MENU)
             bookmark_id = El().bookmarks.add(view.get_title(),
                                              view.get_uri(), [])
             widget = EditBookmarkWidget(bookmark_id, False)
@@ -328,6 +340,8 @@ class ToolbarTitle(Gtk.Bin):
             popover.set_relative_to(eventbox)
             popover.add(widget)
             popover.show()
+        elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
+            self.__entry.delete_text(0, -1)
 
     def _on_eventbox_enter_notify(self, eventbox, event):
         """
