@@ -269,13 +269,24 @@ class WebView(Gtk.Grid):
             return False
 
         uri = decision.get_navigation_action().get_request().get_uri()
-        if decision.get_mouse_button() == 0:
-            decision.use()
-            return False
-        elif decision.get_mouse_button() == 1:
+        mouse_button = decision.get_navigation_action().get_mouse_button()
+        if mouse_button == 0:
+            if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+                El().active_window.container.add_web_view(uri, True)
+                decision.ignore()
+                return True
+            else:
+                decision.use()
+                return False
+        elif mouse_button == 1:
             self.__loaded_uri = uri
-            decision.use()
-            return False
+            if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+                El().active_window.container.add_web_view(uri, True)
+                decision.ignore()
+                return True
+            else:
+                decision.use()
+                return False
         else:
             El().active_window.container.add_web_view(uri, False)
             decision.ignore()
