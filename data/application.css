@@ -14,10 +14,23 @@
     background-color: transparent;
     background-image: none;
 }
+/*
+@keyframes fadein {
+  0% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+    animation-name: fadein;
+    animation-duration: 5s;
+    animation-timing-function: linear;
+    animation-delay: 1ms;
+*/
 
 .sidebarchild-title {
-    background-color: @theme_selected_fg_color;
-    opacity: 0.96;
+    padding: 0px;
+    box-shadow: 1px 1px 3px 3px white;
+    background-color: white;
+    text-shadow: 1px 1px white;
+    opacity: 0.9;
 }
 
 .sidebarchild-image {
