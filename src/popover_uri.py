@@ -334,8 +334,8 @@ class UriPopover(Gtk.Popover):
             @param search as str
         """
         self.__search_model.remove_all()
-        self.__stack.set_visible_child_name("search")
         self.__set_search_text(search)
+        self.__stack.set_visible_child_name("search")
 
     def add_keywords(self, words):
         """
@@ -509,7 +509,8 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
         """
         self.__input = Input.NONE
-        self.set_search_text("")
+        if not self.__search_box.get_children():
+            self.set_search_text("")
 
     def _on_history_map(self, widget):
         """
