@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
 from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
+from locale import strcoll
 
 from eolie.define import El, ArtSize, Type
 
@@ -23,13 +24,13 @@ class Item(GObject.GObject):
     id = GObject.Property(type=int,
                           default=Type.URI)
     title = GObject.Property(type=str,
-                             default='')
+                             default="")
     value = GObject.Property(type=str,
-                             default='')
+                             default="")
     uri = GObject.Property(type=str,
-                           default='')
+                           default="")
     date = GObject.Property(type=str,
-                            default='')
+                            default="")
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -48,13 +49,13 @@ class Row(Gtk.ListBoxRow):
         self.__eventbox = None
         favicon = None
         Gtk.ListBoxRow.__init__(self)
-        item_id = item.get_property('id')
-        uri = item.get_property('uri')
-        title = item.get_property('title')
+        item_id = item.get_property("id")
+        uri = item.get_property("uri")
+        title = item.get_property("title")
         grid = Gtk.Grid()
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
-        grid.set_property('valign', Gtk.Align.CENTER)
+        grid.set_property("valign", Gtk.Align.CENTER)
         if item_id == Type.URI:
             surface = El().art.get_artwork(uri,
                                            "favicon",
@@ -83,13 +84,13 @@ class Row(Gtk.ListBoxRow):
             favicon.show()
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__title.set_property('halign', Gtk.Align.START)
+        self.__title.set_property("halign", Gtk.Align.START)
         self.__title.set_hexpand(True)
         self.__title.show()
-        uri = Gtk.Label.new(item.get_property('uri'))
+        uri = Gtk.Label.new(item.get_property("uri"))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
-        uri.set_property('halign', Gtk.Align.END)
-        uri.get_style_context().add_class('dim-label')
+        uri.set_property("halign", Gtk.Align.END)
+        uri.get_style_context().add_class("dim-label")
         uri.set_max_width_chars(40)
         uri.show()
         if favicon is not None:
@@ -102,7 +103,15 @@ class Row(Gtk.ListBoxRow):
         self.__eventbox.set_size_request(-1, 30)
         self.__eventbox.show()
         self.add(self.__eventbox)
-        self.get_style_context().add_class('listboxrow')
+        self.get_style_context().add_class("listboxrow")
+
+    def set_title(self, title):
+        """
+            Set row title
+            @param title as str
+        """
+        self.__item.set_property("title", title)
+        self.__title.set_text(title)
 
     @property
     def eventbox(self):
@@ -143,33 +152,35 @@ class UriPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.__input = False
+        self.__tag_entry_signal_id = None
         self.set_modal(False)
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
+        builder.add_from_resource("/org/gnome/Eolie/PopoverUri.ui")
         builder.connect_signals(self)
-        self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
+        self.__scrolled_bookmarks = builder.get_object("scrolled_bookmarks")
         self.__history_model = Gio.ListStore()
-        self.__history_box = builder.get_object('history_box')
+        self.__history_box = builder.get_object("history_box")
         self.__history_box.bind_model(self.__history_model,
                                       self.__on_item_create)
         self.__search_model = Gio.ListStore()
-        self.__search_box = builder.get_object('search_box')
-        self.__stack = builder.get_object('stack')
+        self.__search_box = builder.get_object("search_box")
+        self.__stack = builder.get_object("stack")
         self.__search_box.bind_model(self.__search_model,
                                      self.__on_item_create)
         self.__bookmarks_model = Gio.ListStore()
-        self.__tags_model = Gio.ListStore()
-        self.__tags = builder.get_object('tags')
-        self.__tags_box = builder.get_object('tags_box')
-        self.__tags_box.bind_model(self.__tags_model,
-                                   self.__on_item_create)
-        self.__bookmarks_box = builder.get_object('bookmarks_box')
+        self.__tags = builder.get_object("tags")
+        self.__tags_box = builder.get_object("tags_box")
+        self.__tags_box.set_sort_func(self.__sort_tags)
+        self.__tag_entry = builder.get_object("tag_entry")
+        self.__save_tag_button = builder.get_object("save_tag_button")
+        self.__bookmarks_count = builder.get_object("count")
+        self.__bookmarks_box = builder.get_object("bookmarks_box")
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
                                         self.__on_item_create)
-        self.__calendar = builder.get_object('calendar')
-        self.add(builder.get_object('widget'))
-        self.connect('map', self.__on_map)
-        self.connect('unmap', self.__on_unmap)
+        self.__calendar = builder.get_object("calendar")
+        self.add(builder.get_object("widget"))
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
 
     @property
     def input(self):
@@ -196,9 +207,9 @@ class UriPopover(Gtk.Popover):
         if self.__stack.get_visible_child_name() != "search":
             return
         item = Item()
-        item.set_property('id', Type.SEARCH)
-        item.set_property('title', words)
-        item.set_property('uri', El().search.get_search_uri(words))
+        item.set_property("id", Type.SEARCH)
+        item.set_property("title", words)
+        item.set_property("uri", El().search.get_search_uri(words))
         self.__search_model.append(item)
 
     def forward_event(self, event):
@@ -213,13 +224,13 @@ class UriPopover(Gtk.Popover):
             return False
         elif event.keyval == Gdk.KEY_Left and self.__input == Input.BOOKMARKS:
             self.__input = Input.TAGS
-            self.__tags_box.get_style_context().add_class('input')
-            self.__bookmarks_box.get_style_context().remove_class('input')
+            self.__tags_box.get_style_context().add_class("input")
+            self.__bookmarks_box.get_style_context().remove_class("input")
             return True
         elif event.keyval == Gdk.KEY_Right and self.__input == Input.TAGS:
             self.__input = Input.BOOKMARKS
-            self.__bookmarks_box.get_style_context().add_class('input')
-            self.__tags_box.get_style_context().remove_class('input')
+            self.__bookmarks_box.get_style_context().add_class("input")
+            self.__tags_box.get_style_context().remove_class("input")
             return True
         elif event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
                 self.__input == Input.SEARCH:
@@ -233,7 +244,7 @@ class UriPopover(Gtk.Popover):
                 if self.__stack.get_visible_child_name() == "search":
                     self.__input = Input.SEARCH
                 elif self.__stack.get_visible_child_name() == "bookmarks":
-                    self.__tags_box.get_style_context().add_class('input')
+                    self.__tags_box.get_style_context().add_class("input")
                     self.__input = Input.TAGS
                 else:
                     self.__input = Input.NONE
@@ -253,7 +264,7 @@ class UriPopover(Gtk.Popover):
             if selected is None:
                 box.select_row(rows[0])
                 if self.__input == Input.TAGS:
-                    item_id = rows[0].item.get_property('id')
+                    item_id = rows[0].item.get_property("id")
                     self.__set_bookmarks(item_id)
             else:
                 idx = -1 if event.keyval == Gdk.KEY_Up else 1
@@ -264,7 +275,7 @@ class UriPopover(Gtk.Popover):
                 if idx >= len(rows):
                     box.select_row(rows[0])
                     if self.__input == Input.TAGS:
-                        item_id = rows[0].item.get_property('id')
+                        item_id = rows[0].item.get_property("id")
                         self.__set_bookmarks(item_id)
                     return True
                 elif idx < 0:
@@ -275,12 +286,12 @@ class UriPopover(Gtk.Popover):
                     else:
                         box.select_row(None)
                         self.__input = Input.NONE
-                        box.get_style_context().remove_class('input')
+                        box.get_style_context().remove_class("input")
                         return False
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
-                        item_id = rows[idx].item.get_property('id')
+                        item_id = rows[idx].item.get_property("id")
                         self.__set_bookmarks(item_id)
                     return True
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
@@ -288,7 +299,7 @@ class UriPopover(Gtk.Popover):
             if box is not None:
                 selected = box.get_selected_row()
                 if selected is not None:
-                    uri = selected.item.get_property('uri')
+                    uri = selected.item.get_property("uri")
                     if uri:
                         El().active_window.toolbar.title.hide_popover()
                         El().active_window.container.current.load_uri(uri)
@@ -303,6 +314,46 @@ class UriPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
+    def _on_save_tag_clicked(self, button):
+        """
+            Save bookmarks to tag
+        """
+        current = self.__tags_box.get_selected_row()
+        value = self.__tag_entry.get_text()
+        tag_id = El().bookmarks.get_tag_id(value)
+        # We need to move all items from current tag to new tag
+        if tag_id is not None:
+            current_tag_id = current.item.get_property("id")
+            for (rowid, title, uri) in El().bookmarks.get_bookmarks(
+                                                               current_tag_id):
+                El().bookmarks.add_tag_to(tag_id, rowid, False)
+                El().bookmarks.del_tag_from(current_tag_id, rowid, False)
+            El().bookmarks.clean_tags()
+            current.destroy()
+            self.__set_bookmarks(Type.POPULARS)
+        else:
+            tag_id = current.item.get_property("id")
+            El().bookmarks.set_tag_title(tag_id, value)
+            current.set_title(value)
+        button.hide()
+        self.__tags_box.invalidate_sort()
+
+    def _on_tag_entry_enter_notify(self, entry, event):
+        """
+            Remove class
+            @param entry as Gtk.Entry
+            @param event as Gdk.Event
+        """
+        entry.get_style_context().remove_class('tag-edit')
+
+    def _on_tag_entry_leave_notify(self, entry, event):
+        """
+            Set class
+            @param entry as Gtk.Entry
+            @param event as Gdk.Event
+        """
+        entry.get_style_context().add_class('tag-edit')
+
     def _on_row_selected(self, listbox, row):
         """
             Scroll to row
@@ -360,8 +411,8 @@ class UriPopover(Gtk.Popover):
             @param calendar as Gtk.Calendar
         """
         (year, month, day) = calendar.get_date()
-        date = '%s/%s/%s' % (day, month, year)
-        mtime = mktime(datetime.strptime(date, '%d/%m/%Y').timetuple())
+        date = "%s/%s/%s" % (day, month, year)
+        mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
         result = El().history.get(mtime)
         self.__history_model.remove_all()
         self.__add_history_items(result)
@@ -369,6 +420,15 @@ class UriPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __sort_tags(self, row1, row2):
+        """
+            Sort tags
+        """
+        if row1.item.get_property("id") < 0:
+            return False
+        return strcoll(row1.item.get_property("title"),
+                       row2.item.get_property("title"))
+
     def __add_searches(self, searches):
         """
             Add searches to model
@@ -377,8 +437,8 @@ class UriPopover(Gtk.Popover):
         if searches:
             (title, uri) = searches.pop(0)
             item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
+            item.set_property("title", title)
+            item.set_property("uri", uri)
             self.__search_model.append(item)
             GLib.idle_add(self.__add_searches, searches)
 
@@ -390,8 +450,8 @@ class UriPopover(Gtk.Popover):
         if bookmarks:
             (bookmark_id, title, uri) = bookmarks.pop(0)
             item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
+            item.set_property("title", title)
+            item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
             GLib.idle_add(self.__add_bookmarks, bookmarks)
 
@@ -403,9 +463,14 @@ class UriPopover(Gtk.Popover):
         if tags:
             (tag_id, title) = tags.pop(0)
             item = Item()
-            item.set_property('id', tag_id)
-            item.set_property('title', title)
-            self.__tags_model.append(item)
+            item.set_property("id", tag_id)
+            item.set_property("title", title)
+            child = Row(item)
+            child.eventbox.connect("button-release-event",
+                                   self.__on_button_release,
+                                   item)
+            child.show()
+            self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags)
 
     def __add_history_items(self, items):
@@ -416,8 +481,8 @@ class UriPopover(Gtk.Popover):
         if items:
             (title, uri, mtime) = items.pop(0)
             item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
+            item.set_property("title", title)
+            item.set_property("uri", uri)
             self.__history_model.append(item)
             GLib.idle_add(self.__add_history_items, items)
 
@@ -453,12 +518,20 @@ class UriPopover(Gtk.Popover):
             @param tag id as int
         """
         self.__bookmarks_model.remove_all()
+        self.__tag_entry.hide()
         if tag_id == Type.POPULARS:
             items = El().bookmarks.get_populars()
         elif tag_id == Type.RECENTS:
             items = El().bookmarks.get_recents()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
+            if self.__tag_entry_signal_id is not None:
+                self.__tag_entry.disconnect(self.__tag_entry_signal_id)
+            self.__tag_entry.set_text(El().bookmarks.get_tag_title(tag_id))
+            self.__tag_entry_signal_id = self.__tag_entry.connect(
+                                        "changed", self.__on_tag_entry_changed)
+            self.__tag_entry.show()
+        self.__bookmarks_count.set_text("%s bookmarks" % len(items))
         self.__add_bookmarks(items)
 
     def __on_button_release(self, eventbox, event, item):
@@ -468,8 +541,8 @@ class UriPopover(Gtk.Popover):
             @param event as Gdk.Event
             @param item as Item
         """
-        uri = item.get_property('uri')
-        item_id = item.get_property('id')
+        uri = item.get_property("uri")
+        item_id = item.get_property("id")
         if item_id in [Type.URI, Type.SEARCH]:
             if event.button == 1:
                 El().active_window.container.current.load_uri(uri)
@@ -481,15 +554,28 @@ class UriPopover(Gtk.Popover):
         else:
             self.__set_bookmarks(item_id)
 
+    def __on_tag_entry_changed(self, entry):
+        """
+            Update tag title
+            @param entry as Gtk.Entry
+        """
+        current = self.__tags_box.get_selected_row()
+        value = entry.get_text()
+        current_title = current.item.get_property("title")
+        if current_title != value:
+            self.__save_tag_button.show()
+        else:
+            self.__save_tag_button.hide()
+
     def __on_map(self, widget):
         """
             Resize
             @param widget as Gtk.Widget
         """
         self.__input = Input.NONE
-        self.__search_box.get_style_context().remove_class('input')
-        self.__bookmarks_box.get_style_context().remove_class('input')
-        self.__tags_box.get_style_context().remove_class('input')
+        self.__search_box.get_style_context().remove_class("input")
+        self.__bookmarks_box.get_style_context().remove_class("input")
+        self.__tags_box.get_style_context().remove_class("input")
         size = El().active_window.get_size()
         self.set_size_request(size[0]*0.5, size[1]*0.8)
         self.__scrolled_bookmarks.set_size_request(size[1]*0.7*0.5, -1)
@@ -499,7 +585,10 @@ class UriPopover(Gtk.Popover):
             Switch to bookmarks
             @param widget as Gtk.Widget
         """
-        self.__stack.set_visible_child_name('bookmarks')
+        if self.__tag_entry_signal_id is not None:
+            self.__tag_entry.disconnect(self.__tag_entry_signal_id)
+            self.__tag_entry_signal_id = None
+        self.__stack.set_visible_child_name("bookmarks")
 
     def __on_item_create(self, item):
         """
@@ -507,7 +596,7 @@ class UriPopover(Gtk.Popover):
             @param item as Item
         """
         child = Row(item)
-        child.eventbox.connect('button-release-event',
+        child.eventbox.connect("button-release-event",
                                self.__on_button_release,
                                item)
         return child

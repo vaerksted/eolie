@@ -102,6 +102,7 @@ class DatabaseBookmarks:
         """
             Get id for uri
             @param uri as str
+            @return id as int
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
@@ -116,11 +117,27 @@ class DatabaseBookmarks:
         """
             Get tag id
             @param title as str
+            @return tag id as int
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM tags\
                                   WHERE title=?", (title,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
+    def get_tag_title(self, tag_id):
+        """
+            Get tag id title
+            @param tag id as int
+            @return title as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT tags.title\
+                                  FROM tags\
+                                  WHERE id=?", (tag_id,))
             v = result.fetchone()
             if v is not None:
                 return v[0]
@@ -192,6 +209,16 @@ class DatabaseBookmarks:
                          SET atime=? where uri=?", (atime, uri))
             sql.commit()
 
+    def set_tag_title(self, tag_id, title):
+        """
+            Set tag id title
+            @param tag id as int
+            @parma title as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE tags SET title=? WHERE id=?", (title, tag_id,))
+            sql.commit()
+
     def set_more_popular(self, uri):
         """
             Increment bookmark popularity
@@ -205,6 +232,45 @@ class DatabaseBookmarks:
                 sql.execute("UPDATE bookmarks set popularity=?\
                              WHERE uri=?", (v[0]+1, uri))
                 sql.commit()
+
+    def add_tag_to(self, tag_id, bookmark_id, commit=True):
+        """
+            Add tag to bookmark
+            @param tag id as int
+            @param bookmark id as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("INSERT INTO bookmarks_tags\
+                         (bookmark_id, tag_id) VALUES (?, ?)",
+                        (bookmark_id, tag_id))
+            if commit:
+                sql.commit()
+
+    def del_tag_from(self, tag_id, bookmark_id, commit=True):
+        """
+            Remove tag from bookmark
+            @param tag id as int
+            @param bookmark id as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE from bookmarks_tags\
+                         WHERE bookmark_id=? and tag_id=?",
+                        (bookmark_id, tag_id))
+            if commit:
+                sql.commit()
+
+    def clean_tags(self):
+        """
+            Remove orphan tags
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE from tags\
+                         WHERE NOT EXISTS (\
+                            SELECT rowid from bookmarks_tags\
+                            WHERE tags.rowid = bookmarks_tags.tag_id)")
+            sql.commit()
 
     def import_firefox(self):
         """
