@@ -295,7 +295,6 @@ class StackSidebar(Gtk.Grid):
         self.__scrolled.set_vexpand(True)
         self.__scrolled.show()
         self.__listbox = Gtk.ListBox.new()
-        self.__listbox.set_filter_func(self.__filter_func)
         self.__listbox.set_activate_on_single_click(True)
         self.__listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__listbox.show()
@@ -335,9 +334,11 @@ class StackSidebar(Gtk.Grid):
             self.__search_entry.grab_focus()
             self.__search_entry.connect('key-press-event',
                                         self.__on_key_press)
+            self.__listbox.set_filter_func(self.__filter_func)
         else:
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
+            self.__listbox.set_filter_func(None)
         self.__search_bar.set_search_mode(b)
 
     @property
