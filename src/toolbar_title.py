@@ -70,7 +70,8 @@ class ToolbarTitle(Gtk.Bin):
                                             None)
             # Some uri update may not change title
             if strip_uri(uri) != strip_uri(self.__uri):
-                self.__entry.set_text(uri)
+                if not self.__popover.is_visible():
+                    self.__entry.set_text(uri)
                 self.__entry.set_placeholder_text("")
             self.__entry.get_style_context().remove_class('uribar-title')
             self.__uri = uri
@@ -96,7 +97,9 @@ class ToolbarTitle(Gtk.Bin):
         """
         if title is not None:
             self.__entry.set_placeholder_text(title)
-            if not self.__lock and not self.__in_notify:
+            if not self.__lock and\
+                    not self.__in_notify and\
+                    not self.__popover.is_visible():
                 self.__entry.set_text("")
                 self.__entry.get_style_context().add_class('uribar-title')
 
@@ -144,6 +147,14 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__action_image.set_from_icon_name('view-refresh-symbolic',
                                                    Gtk.IconSize.MENU)
+
+    @property
+    def focus_in(self):
+        """
+            Return True if title bar has focus
+            @return bool
+        """
+        return self.__popover.is_visible()
 
 #######################
 # PROTECTED           #
