@@ -41,8 +41,8 @@ class Row(Gtk.ListBoxRow):
         A row
     """
     __gsignals__ = {
-        'edit': (GObject.SignalFlags.RUN_FIRST, None, ()),
-        'move': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
+        'edited': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'moved': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
     }
 
     def __init__(self, item):
@@ -169,17 +169,16 @@ class Row(Gtk.ListBoxRow):
 #######################
     def __on_drag_begin(self, widget, context):
         """
-            Set icon
+            We need to select self
             @param widget as Gtk.Widget
             @param context as Gdk.DragContext
         """
-        widget.drag_source_set_icon_name('web-browser')
         # add current drag to selected rows
         self.get_parent().select_row(self)
 
     def __on_drag_data_get(self, widget, context, data, info, time):
         """
-            Send track id
+            Send item ids
             @param widget as Gtk.Widget
             @param context as Gdk.DragContext
             @param data as Gtk.SelectionData
@@ -194,7 +193,7 @@ class Row(Gtk.ListBoxRow):
 
     def __on_drag_data_received(self, widget, context, x, y, data, info, time):
         """
-            Move track
+            Move items
             @param widget as Gtk.Widget
             @param context as Gdk.DragContext
             @param x as int
@@ -211,7 +210,7 @@ class Row(Gtk.ListBoxRow):
                 bookmark_id = int(rowid)
                 tag_id = self.__item.get_property("id")
                 items.append((bookmark_id, tag_id))
-            self.emit("move", GLib.Variant("aai", items))
+            self.emit("moved", GLib.Variant("aai", items))
         except:
             pass
 
@@ -271,7 +270,7 @@ class Row(Gtk.ListBoxRow):
             Edit self
             @param button as Gtk.Button
         """
-        self.emit("edit")
+        self.emit("edited")
 
 
 class Input:
@@ -611,7 +610,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("title", title)
             child = Row(item)
             child.connect("activate", self.__on_row_activated)
-            child.connect("move", self.__on_row_moved)
+            child.connect("moved", self.__on_row_moved)
             child.show()
             self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags, select)
@@ -761,5 +760,5 @@ class UriPopover(Gtk.Popover):
             @param item as Item
         """
         child = Row(item)
-        child.connect("edit", self.__on_row_edited)
+        child.connect("edited", self.__on_row_edited)
         return child

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, WebKit2
+from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
@@ -21,6 +21,10 @@ class SidebarChild(Gtk.ListBoxRow):
     """
         A Sidebar Child
     """
+
+    __gsignals__ = {
+        'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
+    }
 
     def __init__(self, view, container):
         """
@@ -50,6 +54,18 @@ class SidebarChild(Gtk.ListBoxRow):
         view.connect('notify::title', self.__on_title_changed)
         view.connect('load-changed', self.__on_load_changed)
         self.get_style_context().add_class('sidebar-item')
+
+        self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
+                             Gdk.DragAction.MOVE)
+        self.drag_source_add_text_targets()
+        self.connect('drag-begin', self.__on_drag_begin)
+        self.connect('drag-data-get', self.__on_drag_data_get)
+        self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
+                           [], Gdk.DragAction.MOVE)
+        self.drag_dest_add_text_targets()
+        self.connect('drag-data-received', self.__on_drag_data_received)
+        self.connect('drag-motion', self.__on_drag_motion)
+        self.connect('drag-leave', self.__on_drag_leave)
 
     @property
     def view(self):
@@ -312,6 +328,84 @@ class SidebarChild(Gtk.ListBoxRow):
         else:
             self.__set_favicon()
 
+    def __on_drag_begin(self, widget, context):
+        """
+            Set icon
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+        """
+        surface = self.__image.get_property("surface")
+        if surface is None:
+            return
+        pixbuf = Gdk.pixbuf_get_from_surface(surface,
+                                             0, 0,
+                                             surface.get_width(),
+                                             surface.get_height())
+
+        widget.drag_source_set_icon_pixbuf(pixbuf)
+        del pixbuf
+
+    def __on_drag_data_get(self, widget, context, data, info, time):
+        """
+            Send track id
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        name = str(self.__view)
+        data.set_text(name, len(name))
+
+    def __on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """
+            Move track
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        height = self.get_allocated_height()
+        if y > height/2:
+            up = False
+        else:
+            up = True
+        try:
+            src_widget = data.get_text()
+            self.emit('moved', src_widget, up)
+        except:
+            pass
+
+    def __on_drag_motion(self, widget, context, x, y, time):
+        """
+            Add style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param time as int
+        """
+        height = self.get_allocated_height()
+        if y > height/2:
+            self.get_style_context().add_class('drag-up')
+            self.get_style_context().remove_class('drag-down')
+        else:
+            self.get_style_context().remove_class('drag-up')
+            self.get_style_context().add_class('drag-down')
+
+    def __on_drag_leave(self, widget, context, time):
+        """
+            Remove style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param time as int
+        """
+        self.get_style_context().remove_class('drag-up')
+        self.get_style_context().remove_class('drag-down')
+
 
 class StackSidebar(Gtk.Grid):
     """
@@ -350,6 +444,7 @@ class StackSidebar(Gtk.Grid):
             @param view as WebView
         """
         child = SidebarChild(view, self.__container)
+        child.connect("moved", self.__on_moved)
         child.show()
         self.__listbox.add(child)
 
@@ -395,7 +490,7 @@ class StackSidebar(Gtk.Grid):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(self.__container.current)
+        index = self.__get_index(str(self.__container.current))
         if index + 1 < len(children):
             next_row = self.__listbox.get_row_at_index(index + 1)
         else:
@@ -409,7 +504,7 @@ class StackSidebar(Gtk.Grid):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(self.__container.current)
+        index = self.__get_index(str(self.__container.current))
         if index == 0:
             next_row = self.__listbox.get_row_at_index(len(children) - 1)
         else:
@@ -425,7 +520,7 @@ class StackSidebar(Gtk.Grid):
             @return child SidebarChild
         """
         was_current = view == self.__container.current
-        child_index = self.__get_index(view)
+        child_index = self.__get_index(str(view))
         # Delay view destroy to allow stack animation
         child = self.__listbox.get_row_at_index(child_index)
         if child is None:
@@ -438,7 +533,7 @@ class StackSidebar(Gtk.Grid):
         next_row = None
         # Go back to parent page
         if view.parent is not None:
-            parent_index = self.__get_index(view.parent)
+            parent_index = self.__get_index(str(view.parent))
             next_row = self.__listbox.get_row_at_index(parent_index)
         # Find best near page
         else:
@@ -483,13 +578,14 @@ class StackSidebar(Gtk.Grid):
     def __get_index(self, view):
         """
             Get view index
+            @param view as str
             @return int
         """
         # Search current index
         children = self.__listbox.get_children()
         index = 0
         for child in children:
-            if child.view == view:
+            if str(child.view) == view:
                 break
             index += 1
         return index
@@ -510,6 +606,21 @@ class StackSidebar(Gtk.Grid):
             row.set_snapshot(False)
             return True
         return False
+
+    def __on_moved(self, child, view, up):
+        """
+            Move child row
+            @param child as SidebarChild
+            @param view as str
+            @param up as bool
+        """
+        view_index = self.__get_index(view)
+        row = self.__listbox.get_row_at_index(view_index)
+        self.__listbox.remove(row)
+        child_index = self.__get_index(str(child.view))
+        if not up:
+            child_index += 1
+        self.__listbox.insert(row, child_index)
 
     def __on_key_press(self, widget, event):
         """
