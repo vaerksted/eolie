@@ -51,6 +51,7 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
+        self.__bookmark_image = builder.get_object("bookmark_image")
 
     def set_width(self, width):
         """
@@ -88,6 +89,13 @@ class ToolbarTitle(Gtk.Bin):
                 self.__entry.set_placeholder_text("")
             self.__entry.get_style_context().remove_class('uribar-title')
             self.__uri = uri
+            bookmark_id = El().bookmarks.get_id(uri)
+            if bookmark_id is not None:
+                icon_name = "starred-symbolic"
+            else:
+                icon_name = "non-starred-symbolic"
+            self.__bookmark_image.set_from_icon_name(icon_name,
+                                                     Gtk.IconSize.MENU)
 
     def set_insecure_content(self):
         """
@@ -197,7 +205,7 @@ class ToolbarTitle(Gtk.Bin):
                margin-right: %spx; }" % (margin_bottom,
                                          margin_start + border,
                                          margin_end + border)
-        # 5 is eventbox margin (see ui file)
+        # 5 is grid margin (see ui file)
         width = grid.get_allocated_width()
         css += ".uribar { padding-right: %spx; }" % (width + 5)
         self.__css_provider.load_from_data(css.encode("utf-8"))
@@ -290,21 +298,48 @@ class ToolbarTitle(Gtk.Bin):
         else:
             El().active_window.container.current.stop_loading()
 
-    def _on_action_enter_notify(self, eventbox, event):
+    def _on_bookmark_press(self, eventbox, event):
         """
-            Change opacity
+            Add/Remove page to/from bookmarks
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__action_image.set_opacity(1)
+        view = El().active_window.container.current
+        from eolie.widget_edit_bookmark import EditBookmarkWidget
+        if self.__bookmark_image.get_icon_name()[0] == "starred-symbolic":
+            self.__bookmark_image.set_from_icon_name("non-starred-symbolic",
+                                                     Gtk.IconSize.MENU)
+            bookmark_id = El().bookmarks.get_id(view.get_uri())
+            El().bookmarks.remove(bookmark_id)
+        else:
+            self.__bookmark_image.set_from_icon_name("starred-symbolic",
+                                                     Gtk.IconSize.MENU)
+            bookmark_id = El().bookmarks.add(view.get_title(),
+                                             view.get_uri(), [])
+            widget = EditBookmarkWidget(bookmark_id, False)
+            widget.show()
+            popover = Gtk.Popover.new()
+            size = El().active_window.get_size()
+            popover.set_size_request(size[0]*0.3, size[1]*0.5)
+            popover.set_relative_to(eventbox)
+            popover.add(widget)
+            popover.show()
 
-    def _on_action_leave_notify(self, eventbox, event):
+    def _on_eventbox_enter_notify(self, eventbox, event):
         """
             Change opacity
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__action_image.set_opacity(0.8)
+        eventbox.set_opacity(1)
+
+    def _on_eventbox_leave_notify(self, eventbox, event):
+        """
+            Change opacity
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        eventbox.set_opacity(0.8)
 
     def _on_activate(self, entry):
         """

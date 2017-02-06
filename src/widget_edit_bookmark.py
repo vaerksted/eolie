@@ -22,10 +22,11 @@ class EditBookmarkWidget(Gtk.Bin):
         Widget allowing to edit a bookmark
     """
 
-    def __init__(self, bookmark_id):
+    def __init__(self, bookmark_id, back_enabled=True):
         """
             Init widget
             @param bookmark id as int
+            @param enable back button as bool
         """
         Gtk.Bin.__init__(self)
         self.__bookmark_id = bookmark_id
@@ -59,6 +60,10 @@ class EditBookmarkWidget(Gtk.Bin):
         for (tag_id, title) in El().bookmarks.get_tags():
             self.__model.append([title, El().bookmarks.has_tag(bookmark_id,
                                                                title)])
+        if not back_enabled:
+            builder.get_object("back_button").hide()
+            self.set_margin_start(20)
+            self.set_margin_top(20)
         self.add(builder.get_object("widget"))
 
 #######################

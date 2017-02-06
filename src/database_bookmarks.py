@@ -75,6 +75,7 @@ class DatabaseBookmarks:
             @param uri as str
             @param tags as [str]
             @param ctime as int
+            @return bookmark id as int
         """
         if not uri or not title:
             return
@@ -94,6 +95,7 @@ class DatabaseBookmarks:
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
             sql.commit()
+            return bookmarks_id
 
     def remove(self, bookmark_id):
         """

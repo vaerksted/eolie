@@ -28,62 +28,81 @@
           </packing>
         </child>
         <child type="overlay">
-          <object class="GtkEventBox">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="halign">end</property>
-            <property name="margin_right">5</property>
-            <property name="vexpand">True</property>
-            <property name="above_child">True</property>
-            <signal name="button-press-event" handler="_on_action_press" swapped="no"/>
-            <signal name="enter-notify-event" handler="_on_action_enter_notify" object="action_image" swapped="no"/>
-            <signal name="leave-notify-event" handler="_on_action_leave_notify" object="action_image" swapped="no"/>
-            <child>
-              <object class="GtkGrid">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="vexpand">True</property>
-                <property name="column_spacing">5</property>
-                <signal name="map" handler="_on_map" swapped="no"/>
-                <child>
-                  <object class="GtkImage" id="action_image">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="opacity">0.80000000000000004</property>
-                    <property name="vexpand">True</property>
-                    <property name="icon_name">view-refresh-symbolic</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparator">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="vexpand">True</property>
-                    <property name="orientation">vertical</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="index">1</property>
-          </packing>
-        </child>
-        <child type="overlay">
           <object class="GtkProgressBar" id="progress">
             <property name="can_focus">False</property>
             <property name="valign">end</property>
             <style>
               <class name="progressbar"/>
             </style>
+          </object>
+          <packing>
+            <property name="index">1</property>
+          </packing>
+        </child>
+        <child type="overlay">
+          <object class="GtkGrid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">end</property>
+            <property name="margin_right">5</property>
+            <property name="vexpand">True</property>
+            <property name="column_spacing">5</property>
+            <signal name="map" handler="_on_map" swapped="no"/>
+            <child>
+              <object class="GtkSeparator">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="vexpand">True</property>
+                <property name="orientation">vertical</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEventBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="opacity">0.80000000000000004</property>
+                <signal name="button-press-event" handler="_on_action_press" swapped="no"/>
+                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="action_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="vexpand">True</property>
+                    <property name="icon_name">view-refresh-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">2</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEventBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="opacity">0.80000000000000004</property>
+                <signal name="button-press-event" handler="_on_bookmark_press" swapped="no"/>
+                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="bookmark_image">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">non-starred-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="index">1</property>
