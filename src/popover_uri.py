@@ -498,7 +498,7 @@ class UriPopover(Gtk.Popover):
             Init search
             @param widget as Gtk.Widget
         """
-        self.__input = Input.SEARCH
+        self.__input = Input.NONE
         self.set_search_text("")
 
     def _on_history_map(self, widget):
