@@ -48,15 +48,16 @@ class Container(Gtk.Paned):
         self.child_set_property(self.__stack_sidebar, "shrink", False)
         self.add2(overlay)
 
-    def add_web_view(self, uri, show, webview=None, state=None):
+    def add_web_view(self, uri, show, parent=None, webview=None, state=None):
         """
             Add a web view to container
             @param uri as str
             @param show as bool
             @param webview as WebKit2.WebView
+            @param parent as WebView
             @param state as WebKit2.WebViewSessionState
         """
-        view = self.__get_new_webview(webview)
+        view = self.__get_new_webview(parent, webview)
         if state is not None:
             view.restore_session_state(state)
         view.show()
@@ -146,14 +147,15 @@ class Container(Gtk.Paned):
 #######################
 # PRIVATE             #
 #######################
-    def __get_new_webview(self, webview):
+    def __get_new_webview(self, parent, webview):
         """
             Get a new webview
+            @param parent as webview
             @param webview as WebKit2.WebView
             @return WebView
         """
         from eolie.web_view import WebView
-        view = WebView(webview)
+        view = WebView(parent, webview)
         view.connect("map", self.__on_view_map)
         view.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)

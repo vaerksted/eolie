@@ -420,21 +420,31 @@ class StackSidebar(Gtk.Grid):
             @param view as WebView
             @return child SidebarChild
         """
-        index = self.__get_index(view)
-        next_row = None
+        was_current = view == self.__container.current
+        child_index = self.__get_index(view)
         # Delay view destroy to allow stack animation
-        child = self.__listbox.get_row_at_index(index)
+        child = self.__listbox.get_row_at_index(child_index)
         if child is None:
             return
-        GLib.timeout_add(1000, child.view.destroy)
+        GLib.timeout_add(1000, view.destroy)
         child.destroy()
-        children = self.__listbox.get_children()
-        if len(children) == 0:
-            self.__container.add_web_view(El().start_page, True)
-        elif index + 1 < len(children):
-            next_row = self.__listbox.get_row_at_index(index + 1)
+        # Nothing to do if was not current page
+        if not was_current:
+            return
+        next_row = None
+        # Go back to parent page
+        if view.parent is not None:
+            parent_index = self.__get_index(view.parent)
+            next_row = self.__listbox.get_row_at_index(parent_index)
+        # Find best near page
         else:
-            next_row = self.__listbox.get_row_at_index(index - 1)
+            children = self.__listbox.get_children()
+            if len(children) == 0:
+                self.__container.add_web_view(El().start_page, True)
+            elif child_index + 1 < len(children):
+                next_row = self.__listbox.get_row_at_index(child_index + 1)
+            else:
+                next_row = self.__listbox.get_row_at_index(child_index - 1)
         if next_row is not None:
             self.__container.set_visible_view(next_row.view)
         self.update_visible_child()

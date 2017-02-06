@@ -264,7 +264,7 @@ class Application(Gtk.Application):
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_web_view,
-                              uri, count == 0, None, webkit_state)
+                              uri, count == 0, None, None, webkit_state)
                 count += 1
         except Exception as e:
             print("Application::restore_state()", e)

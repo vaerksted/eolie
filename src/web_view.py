@@ -27,12 +27,16 @@ class WebView(Gtk.Grid):
         Forward all connect to internal WebKit2.WebView webview, you get
         self as first argument
     """
-    def __init__(self, webview=None):
+    def __init__(self, parent=None, webview=None):
         """
             Init view
+            @param parent as WebView
             @param webview as WebKit2.WebView
         """
         Gtk.Grid.__init__(self)
+        self.__parent = parent
+        if parent is not None:
+            parent.connect("destroy", self.__on_parent_destroy)
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
@@ -160,6 +164,14 @@ class WebView(Gtk.Grid):
             self.__find_widget.grab_focus()
 
     @property
+    def parent(self):
+        """
+            Get parent web view
+            @return WebView/None
+        """
+        return self.__parent
+
+    @property
     def loaded_uri(self):
         """
             Return loaded uri (This is not current uri!)
@@ -222,6 +234,14 @@ class WebView(Gtk.Grid):
                               source != Gdk.InputSource.MOUSE)
         self.__webview.set_settings(settings)
 
+    def __on_parent_destroy(self, internal, view):
+        """
+            Remove parent
+            @param internal as WebKit2.WebView
+            @param view as WebView
+        """
+        self.__parent = None
+
     def __on_create(self, view, action):
         """
             Create a new view for action
@@ -239,7 +259,7 @@ class WebView(Gtk.Grid):
             @param view as WebKit2.WebView
             @param uri as str
         """
-        El().active_window.container.add_web_view(uri, True, view)
+        El().active_window.container.add_web_view(uri, True, self, view)
 
     def __on_run_as_modal(self, view):
         """
@@ -311,7 +331,7 @@ class WebView(Gtk.Grid):
         mouse_button = decision.get_navigation_action().get_mouse_button()
         if mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True)
+                El().active_window.container.add_web_view(uri, True, self)
                 decision.ignore()
                 return True
             else:
@@ -320,13 +340,13 @@ class WebView(Gtk.Grid):
         elif mouse_button == 1:
             self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True)
+                El().active_window.container.add_web_view(uri, True, self)
                 decision.ignore()
                 return True
             else:
                 decision.use()
                 return False
         else:
-            El().active_window.container.add_web_view(uri, False)
+            El().active_window.container.add_web_view(uri, False, self)
             decision.ignore()
             return True
