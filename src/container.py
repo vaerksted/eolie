@@ -63,7 +63,8 @@ class Container(Gtk.Paned):
         view.show()
         self.__stack_sidebar.add_child(view)
         if uri is not None:
-            view.load_uri(uri)
+            # Do not load uri until we are on screen
+            GLib.idle_add(view.load_uri, uri)
         self.__stack.add(view)
         if show:
             self.__stack.set_visible_child(view)
