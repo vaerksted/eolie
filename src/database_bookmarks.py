@@ -95,6 +95,18 @@ class DatabaseBookmarks:
                             (bookmarks_id, tag_id))
             sql.commit()
 
+    def remove(self, bookmark_id):
+        """
+            Remove bookmark from db
+            @param bookmark id as int
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE FROM bookmarks\
+                         WHERE rowid=?", (bookmark_id,))
+            sql.execute("DELETE FROM bookmarks_tags\
+                         WHERE bookmark_id=?", (bookmark_id,))
+            sql.commit()
+
     def add_tag(self, tag, commit=False):
         """
             Add tag to db, return existing if exists

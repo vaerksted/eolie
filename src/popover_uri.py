@@ -358,7 +358,11 @@ class UriPopover(Gtk.Popover):
             Save bookmarks to tag
             @param button as Gtk.Button
         """
-        print("click")
+        for row in self.__bookmarks_box.get_selected_rows():
+            item_id = row.item.get_property("id")
+            El().bookmarks.remove(item_id)
+            self.__bookmarks_box.remove(row)
+            self.__remove_button.hide()
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
