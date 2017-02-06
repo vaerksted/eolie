@@ -81,6 +81,11 @@
     font-weight: bold;
 }
 
+.no-padding {
+    padding: 2px;
+    min-width: 28px;
+}
+
 .downloadrow {
     padding: 0px;
     background-color: transparent;
