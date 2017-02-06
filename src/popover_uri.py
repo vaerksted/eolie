@@ -27,10 +27,10 @@ class Item(GObject.GObject):
                             default=0)
     title = GObject.Property(type=str,
                              default="")
-    value = GObject.Property(type=str,
-                             default="")
     uri = GObject.Property(type=str,
                            default="")
+    atime = GObject.Property(type=int,
+                             default=0)
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -102,11 +102,21 @@ class Row(Gtk.ListBoxRow):
         uri.get_style_context().add_class("dim-label")
         uri.set_max_width_chars(40)
         uri.show()
+        if item_type == Type.HISTORY:
+            dt = datetime.fromtimestamp(item.get_property("atime"))
+            hour = str(dt.hour).rjust(2, "0")
+            minute = str(dt.minute).rjust(2, "0")
+            atime = Gtk.Label.new("%s:%s" % (hour, minute))
+            atime.get_style_context().add_class("dim-label")
+            atime.set_margin_end(2)
+            atime.show()
         if favicon is not None:
             favicon.set_margin_start(2)
             grid.add(favicon)
         grid.add(self.__title)
         grid.add(uri)
+        if item_type == Type.HISTORY:
+            grid.add(atime)
         if item_type == Type.BOOKMARK:
             edit_button = Gtk.Button.new_from_icon_name(
                                                      "document-edit-symbolic",
@@ -620,11 +630,12 @@ class UriPopover(Gtk.Popover):
             @param [(title, uri, mtime)]  as [(str, str, int)]
         """
         if items:
-            (title, uri, mtime) = items.pop(0)
+            (title, uri, atime) = items.pop(0)
             item = Item()
             item.set_property("type", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
+            item.set_property("atime", atime)
             self.__history_model.append(item)
             GLib.idle_add(self.__add_history_items, items)
 
