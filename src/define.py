@@ -24,9 +24,10 @@ class ArtSize:
 class Type:
     POPULARS = -1
     RECENTS = -2
-    URI = -3
-    SEARCH = -4
-    SEPARATOR = -5
+    BOOKMARK = -3
+    KEYWORDS = -4
+    HISTORY = -5
+    SEPARATOR = -6
 
 
 LOGINS = ["login", "username", "user"]

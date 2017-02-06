@@ -22,15 +22,13 @@ from eolie.define import El, ArtSize, Type
 
 class Item(GObject.GObject):
     id = GObject.Property(type=int,
-                          default=Type.URI)
+                          default=0)
     title = GObject.Property(type=str,
                              default="")
     value = GObject.Property(type=str,
                              default="")
     uri = GObject.Property(type=str,
                            default="")
-    date = GObject.Property(type=str,
-                            default="")
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -56,7 +54,7 @@ class Row(Gtk.ListBoxRow):
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
-        if item_id == Type.URI:
+        if item_id in [Type.BOOKMARK, Type.HISTORY]:
             surface = El().art.get_artwork(uri,
                                            "favicon",
                                            self.get_scale_factor(),
@@ -69,7 +67,7 @@ class Row(Gtk.ListBoxRow):
                                            Gtk.IconSize.MENU)
             else:
                 del surface
-        elif item_id == Type.SEARCH:
+        elif item_id == Type.KEYWORDS:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
         else:
@@ -207,7 +205,7 @@ class UriPopover(Gtk.Popover):
         if self.__stack.get_visible_child_name() != "search":
             return
         item = Item()
-        item.set_property("id", Type.SEARCH)
+        item.set_property("id", Type.KEYWORDS)
         item.set_property("title", words)
         item.set_property("uri", El().search.get_search_uri(words))
         self.__search_model.append(item)
@@ -437,6 +435,7 @@ class UriPopover(Gtk.Popover):
         if searches:
             (title, uri) = searches.pop(0)
             item = Item()
+            item.set_property("id", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__search_model.append(item)
@@ -450,6 +449,7 @@ class UriPopover(Gtk.Popover):
         if bookmarks:
             (bookmark_id, title, uri) = bookmarks.pop(0)
             item = Item()
+            item.set_property("id", Type.BOOKMARK)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
@@ -481,6 +481,7 @@ class UriPopover(Gtk.Popover):
         if items:
             (title, uri, mtime) = items.pop(0)
             item = Item()
+            item.set_property("id", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__history_model.append(item)
@@ -543,7 +544,7 @@ class UriPopover(Gtk.Popover):
         """
         uri = item.get_property("uri")
         item_id = item.get_property("id")
-        if item_id in [Type.URI, Type.SEARCH]:
+        if item_id in [Type.HISTORY, Type.KEYWORDS, Type.BOOKMARK]:
             if event.button == 1:
                 El().active_window.container.current.load_uri(uri)
             else:
