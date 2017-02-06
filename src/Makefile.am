@@ -7,7 +7,7 @@ app_PYTHON = \
     database_adblock.py\
     database_bookmarks.py\
     database_history.py\
-    downloads_manager.py\
+    download_manager.py\
     define.py\
     localized.py\
     popover_downloads.py\

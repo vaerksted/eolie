@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib, Gio, Pango
 
+from time import time
+
 from eolie.define import El
 
 
@@ -26,6 +28,7 @@ class Row(Gtk.ListBoxRow):
         """
         Gtk.ListBoxRow.__init__(self)
         self.__download = download
+        self.__uri = self.__download.get_request().get_uri()
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/RowDownload.ui')
         builder.connect_signals(self)
@@ -40,11 +43,23 @@ class Row(Gtk.ListBoxRow):
                                                    Pango.EllipsizeMode.START)
         self.__progress = builder.get_object('progress')
         self.__progress.set_fraction(download.get_estimated_progress())
-        self.__stop_button = builder.get_object('stop_button')
-        download.connect('finished', self.__on_finished)
-        download.connect('received-data', self.__on_received_data)
-        download.connect('failed', self.__on_failed)
+        self.__button = builder.get_object('button')
+        self.__button_image = builder.get_object('button_image')
+        if download.get_estimated_progress() == 1.0:
+            self.__on_finished(download)
+        else:
+            download.connect('finished', self.__on_finished)
+            download.connect('received-data', self.__on_received_data)
+            download.connect('failed', self.__on_failed)
         self.add(builder.get_object('row'))
+
+    @property
+    def download(self):
+        """
+            Get row download
+            @return WebKit2.Download
+        """
+        return self.__download
 
 #######################
 # PROTECTED           #
@@ -54,8 +69,10 @@ class Row(Gtk.ListBoxRow):
             Cancel download
             @param button as Gtk.Button
         """
-        self.__download.cancel()
-        self.destroy()
+        if self.__button_image.get_icon_name()[0] == 'close-symbolic':
+            self.__download.cancel()
+        elif self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
+            self.__download.get_web_view().download_uri(self.__uri)
 
 #######################
 # PRIVATE             #
@@ -71,16 +88,19 @@ class Row(Gtk.ListBoxRow):
         """
             @param download as WebKit2.Download
         """
-        self.__stop_button.hide()
-        self.__progress.hide()
+        self.__progress.set_opacity(0)
+        if self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
+            return True
+        else:
+            self.__button.hide()
 
     def __on_failed(self, download, error):
         """
             @param download as WebKit2.Download
             @param error as GLib.Error
         """
-        self.__stop_button.hide()
-        self.__progress.hide()
+        self.__button_image.set_from_icon_name('view-refresh-symbolic',
+                                               Gtk.IconSize.MENU)
 
 
 class DownloadsPopover(Gtk.Popover):
@@ -98,13 +118,15 @@ class DownloadsPopover(Gtk.Popover):
         builder.connect_signals(self)
         self.__model = Gio.ListStore()
         self.__listbox = builder.get_object('downloads_box')
+        self.__listbox.connect('row-activated', self.__on_row_activated)
         self.__listbox.set_placeholder(builder.get_object('placeholder'))
         self.__listbox.bind_model(self.__model,
                                   self.__on_item_create)
         self.__scrolled = builder.get_object('scrolled')
         self.add(builder.get_object('widget'))
         self.connect('map', self.__on_map)
-        for download in El().downloads_manager.get_all():
+        self.connect('unmap', self.__on_unmap)
+        for download in El().download_manager.get_all():
             self.__model.append(download)
 
 #######################
@@ -114,12 +136,40 @@ class DownloadsPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __on_row_activated(self, listbox, row):
+        """
+            Launch row if download finished
+            @param listbox as Gtk.ListBox
+            @param row as Row
+        """
+        if row.download.get_estimated_progress() == 1.0:
+            Gtk.show_uri(None, row.download.get_destination(), int(time()))
+            self.hide()
+
     def __on_map(self, widget):
         """
             Resize
             @param widget as Gtk.Widget
         """
+        El().download_manager.connect('download-start',
+                                      self.__on_download_start)
         self.set_size_request(400, -1)
+
+    def __on_unmap(self, widget):
+        """
+            Resize
+            @param widget as Gtk.Widget
+        """
+        El().download_manager.disconnect_by_func(self.__on_download_start)
+
+    def __on_download_start(self, download_manager):
+        """
+            Update view
+            @param download manager as Download Manager
+        """
+        self.__model.remove_all()
+        for download in El().download_manager.get_all():
+            self.__model.append(download)
 
     def __on_child_size_allocate(self, widget, allocation=None):
         """

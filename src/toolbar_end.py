@@ -48,10 +48,12 @@ class ToolbarEnd(Gtk.Bin):
         eventbox.connect('button-release-event', self.__on_event_release_event)
         eventbox.show()
         self.__progress = ProgressBar(builder.get_object('download_button'))
-        if El().downloads_manager.get_all():
+        if El().download_manager.get_all():
             self._progress.show()
-        El().downloads_manager.connect('download-changed',
-                                       self.__on_download_changed)
+        El().download_manager.connect('download-start',
+                                      self.__on_download)
+        El().download_manager.connect('download-finish',
+                                      self.__on_download)
         eventbox.add(self.__progress)
         builder.get_object('overlay').add_overlay(eventbox)
         if El().settings.get_value('adblock'):
@@ -87,13 +89,20 @@ class ToolbarEnd(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
-    def __update_progress(self, downloads_manager):
+    def __hide_progress(self):
+        """
+            Hide progress if needed
+        """
+        if self.__timeout_id is None:
+            self.__progress.hide()
+
+    def __update_progress(self, download_manager):
         """
             Update progress
         """
         fraction = 0.0
         nb_downloads = 0
-        for download in downloads_manager.get_all():
+        for download in download_manager.get_all():
             nb_downloads += 1
             fraction += download.get_estimated_progress()
         if nb_downloads:
@@ -108,18 +117,19 @@ class ToolbarEnd(Gtk.Bin):
         """
         self.__download_button.clicked()
 
-    def __on_download_changed(self, downloads_manager):
+    def __on_download(self, download_manager):
         """
             Update progress bar
             @param downloads manager as DownloadsManager
         """
-        if downloads_manager.get_all():
+        if download_manager.is_active():
             if self.__timeout_id is None:
                 self.__progress.show()
                 self.__timeout_id = GLib.timeout_add(1000,
                                                      self.__update_progress,
-                                                     downloads_manager)
-        else:
-            self.__progress.hide()
+                                                     download_manager)
+        elif self.__timeout_id is not None:
+            self.__progress.set_fraction(1.0)
+            GLib.timeout_add(1000, self.__hide_progress)
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None

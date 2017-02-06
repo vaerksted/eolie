@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkImage" id="image1">
+  <object class="GtkImage" id="button_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">close-symbolic</property>
@@ -41,13 +41,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="stop_button">
+      <object class="GtkButton" id="button">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
+        <property name="tooltip_text" translatable="yes">Cancel download</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">image1</property>
+        <property name="image">button_image</property>
         <property name="relief">none</property>
         <signal name="clicked" handler="_on_cancel_button_clicked" swapped="no"/>
         <style>

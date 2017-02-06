@@ -13,15 +13,16 @@
 from gi.repository import GObject, GLib, Gio
 
 from re import search
-from eolie.definie import El
+from eolie.define import El
 
 
-class DownloadsManager(GObject.GObject):
+class DownloadManager(GObject.GObject):
     """
         Downloads Manager
     """
     __gsignals__ = {
-        'download-changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'download-start': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'download-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -39,8 +40,15 @@ class DownloadsManager(GObject.GObject):
         self.__downloads.append(download)
         download.connect('finished', self.__on_finished)
         download.connect('failed', self.__on_failed)
-        self.emit('download-changed')
         download.connect('decide-destination', self.__on_decide_destination)
+
+    def remove(self, download):
+        """
+            Remove download
+            @param download as WebKit2.Download
+        """
+        if download in self.__downloads:
+            self.__downloads.remove(download)
 
     def get_all(self):
         """
@@ -48,6 +56,14 @@ class DownloadsManager(GObject.GObject):
             @return [WebKit2.Download]
         """
         return self.__downloads
+
+    def is_active(self):
+        """
+            Get active downloads
+        """
+        for download in self.__downloads:
+            if download.get_estimated_progress() != 1.0:
+                return True
 
     def cancel(self):
         """
@@ -88,18 +104,19 @@ class DownloadsManager(GObject.GObject):
                     destination_uri = "%s/%s" % (directory_uri, new_filename)
                 else:
                     not_ok = False
+                i += 1
         except:
             # Fallback to be sure
             destination_uri = "%s/%s" % (directory_uri, "@@" + filename)
         download.set_destination(destination_uri)
+        self.emit('download-start')
 
     def __on_finished(self, download):
         """
             @param download as WebKit2.Download
         """
-        if download in self.__downloads:
-            self.__downloads.remove(download)
-        self.emit('download-changed')
+        self.remove(download)
+        self.emit('download-finish')
 
     def __on_failed(self, download, error):
         """
@@ -107,6 +124,3 @@ class DownloadsManager(GObject.GObject):
             @param error as GLib.Error
         """
         print("DownloadManager::__on_failed:", error)
-        if download in self.__downloads:
-            self.__downloads.remove(download)
-        self.emit('download-changed')

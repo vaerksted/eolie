@@ -123,7 +123,7 @@ class WebView(WebKit2.WebView):
             @param context as WebKit2.WebContext
             @param download as WebKit2.Download
         """
-        El().downloads_manager.add(download)
+        El().download_manager.add(download)
 
     def __on_decide_policy(self, view, decision, decision_type):
         """

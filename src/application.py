@@ -26,7 +26,7 @@ from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
-from eolie.downloads_manager import DownloadsManager
+from eolie.download_manager import DownloadManager
 
 
 class Application(Gtk.Application):
@@ -101,7 +101,7 @@ class Application(Gtk.Application):
         adblock.update()
         self.art = Art()
         self.search = Search()
-        self.downloads_manager = DownloadsManager()
+        self.download_manager = DownloadManager()
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))
@@ -155,7 +155,7 @@ class Application(Gtk.Application):
         """
             Save window position and view
         """
-        self.downloads_manager.cancel()
+        self.download_manager.cancel()
         if exit:
             self.quit()
 
