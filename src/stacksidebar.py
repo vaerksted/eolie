@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
+from eolie.utils import strip_uri
 
 
 class SidebarChild(Gtk.ListBoxRow):
@@ -31,6 +32,7 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__scroll_timeout_id = None
         self.__view = view
         self.__container = container
+        self.__uri = ""
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
         builder.connect_signals(self)
@@ -183,7 +185,11 @@ class SidebarChild(Gtk.ListBoxRow):
             @param uri as str
             @param view as WebView
         """
-        self.__title.set_text(view.get_uri())
+        # Some uri update may not change title
+        uri = view.get_uri()
+        if strip_uri(uri) != strip_uri(self.__uri):
+            self.__title.set_text(uri)
+        self.__uri = uri
         # We are not filtered
         if self.get_allocated_width() != 1:
             preview = El().art.get_artwork(view.get_uri(),

@@ -17,6 +17,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import El
+from eolie.utils import strip_uri
 from eolie.popover_uri import UriPopover
 
 
@@ -57,7 +58,6 @@ class ToolbarTitle(Gtk.Bin):
             @param text as str
         """
         if uri is not None:
-            self.__uri = uri
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                "")
             if uri.startswith("https://"):
@@ -69,8 +69,11 @@ class ToolbarTitle(Gtk.Bin):
                                             Gtk.EntryIconPosition.PRIMARY,
                                             None)
             self.__entry.set_text(uri)
-            self.__entry.set_placeholder_text("")
+            # Some uri update may not change title
+            if strip_uri(uri) != strip_uri(self.__uri):
+                self.__entry.set_placeholder_text("")
             self.__entry.get_style_context().remove_class('uribar-title')
+            self.__uri = uri
 
     def set_insecure_content(self):
         """
