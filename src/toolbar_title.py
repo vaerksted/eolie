@@ -42,6 +42,7 @@ class ToolbarTitle(Gtk.Bin):
         builder.connect_signals(self)
         self.__entry = builder.get_object("entry")
         self.__popover = UriPopover()
+        self.__password_popover = None
         self.__action_image = builder.get_object("action_image")
         self.add(builder.get_object('widget'))
         # Some on the fly css styling
@@ -150,11 +151,13 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
         """
         from eolie.popover_password import PasswordPopover
-        popover = PasswordPopover(username, password, uri)
-        popover.set_relative_to(self.__entry)
-        popover.set_pointing_to(self.__entry.get_icon_area(
+        self.__password_popover = PasswordPopover(username, password, uri)
+        self.__password_popover.set_relative_to(self.__entry)
+        self.__password_popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
-        popover.show()
+        self.__password_popover.connect("closed",
+                                        self.__on_password_popover_closed)
+        self.__password_popover.show()
 
     def on_load_changed(self, view, event):
         """
@@ -183,7 +186,8 @@ class ToolbarTitle(Gtk.Bin):
             Return True if title bar has focus
             @return bool
         """
-        return self.__popover.is_visible()
+        return self.__popover.is_visible() or\
+            self.__password_popover is not None
 
 #######################
 # PROTECTED           #
@@ -377,6 +381,14 @@ class ToolbarTitle(Gtk.Bin):
             if words:
                 GLib.idle_add(self.__popover.add_keywords,
                               words.replace('"', ''))
+
+    def __on_password_popover_closed(self, popover):
+        """
+            Destroy popover
+            @param popover as Gtk.popover
+        """
+        self.__password_popover = None
+        popover.destroy()
 
     def __on_entry_changed(self, entry):
         """
