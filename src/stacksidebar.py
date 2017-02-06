@@ -424,6 +424,8 @@ class StackSidebar(Gtk.Grid):
         next_row = None
         # Delay view destroy to allow stack animation
         child = self.__listbox.get_row_at_index(index)
+        if child is None:
+            return
         GLib.timeout_add(1000, child.view.destroy)
         child.destroy()
         children = self.__listbox.get_children()

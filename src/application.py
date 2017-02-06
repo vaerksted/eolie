@@ -264,7 +264,7 @@ class Application(Gtk.Application):
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_web_view,
-                              uri, count == 0, webkit_state)
+                              uri, count == 0, None, webkit_state)
                 count += 1
         except Exception as e:
             print("Application::restore_state()", e)
@@ -419,7 +419,7 @@ class Application(Gtk.Application):
         elif string == "close_page":
             window.container.sidebar.close_view(window.container.current)
         elif string == "reload":
-            window.container.container.current.reload()
+            window.container.current.reload()
         elif string == "find":
             window.container.current.find()
         elif string == "backward":

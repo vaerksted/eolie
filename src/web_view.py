@@ -27,15 +27,19 @@ class WebView(Gtk.Grid):
         Forward all connect to internal WebKit2.WebView webview, you get
         self as first argument
     """
-    def __init__(self):
+    def __init__(self, webview=None):
         """
             Init view
+            @param webview as WebKit2.WebView
         """
         Gtk.Grid.__init__(self)
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
-        self.__webview = WebKit2.WebView()
+        if webview is None:
+            self.__webview = WebKit2.WebView()
+        else:
+            self.__webview = webview
         self.__webview.set_hexpand(True)
         self.__webview.set_vexpand(True)
         self.__webview.connect("scroll-event", self.__on_scroll_event)
@@ -81,6 +85,9 @@ class WebView(Gtk.Grid):
         self.__webview.set_settings(settings)
         self.__webview.connect("decide-policy", self.__on_decide_policy)
         self.__webview.connect("submit-form", self.__on_submit_form)
+        self.__webview.connect("create", self.__on_create)
+        self.__webview.connect("run-as-modal", self.__on_run_as_modal)
+        self.__webview.connect("close", self.__on_close)
         self.__webview.get_context().connect("download-started",
                                              self.__on_download_started)
         self.add(self.__find_widget)
@@ -214,6 +221,38 @@ class WebView(Gtk.Grid):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.__webview.set_settings(settings)
+
+    def __on_create(self, view, action):
+        """
+            Create a new view for action
+            @param view as WebKit2.WebView
+            @param action as WebKit2.NavigationAction
+        """
+        uri = action.get_request().get_uri()
+        view = WebKit2.WebView.new_with_related_view(self.__webview)
+        view.connect("ready-to-show", self.__on_ready_to_show, uri)
+        return view
+
+    def __on_ready_to_show(self, view, uri):
+        """
+            Add view to window
+            @param view as WebKit2.WebView
+            @param uri as str
+        """
+        El().active_window.container.add_web_view(uri, True, view)
+
+    def __on_run_as_modal(self, view):
+        """
+        """
+        print("WebView::__on_run_as_modal(): TODO")
+
+    def __on_close(self, view):
+        """
+            Close my self
+            @param view as WebKit2.WebView
+        """
+        for window in El().windows:
+            window.container.sidebar.close_view(self)
 
     def __on_scroll_event(self, widget, event):
         """
