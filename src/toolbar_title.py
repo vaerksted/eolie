@@ -38,11 +38,11 @@ class ToolbarTitle(Gtk.Bin):
         self.__keywords_timeout = None
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/ToolbarTitle.ui')
+        builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
         builder.connect_signals(self)
-        self.__entry = builder.get_object('entry')
+        self.__entry = builder.get_object("entry")
         self.__popover = UriPopover()
-        self.__action_image = builder.get_object('action_image')
+        self.__action_image = builder.get_object("action_image")
         self.add(builder.get_object('widget'))
         # Some on the fly css styling
         context = self.__entry.get_style_context()
@@ -50,6 +50,7 @@ class ToolbarTitle(Gtk.Bin):
         context.add_provider_for_screen(Gdk.Screen.get_default(),
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        self.__progress = builder.get_object("progress")
 
     def set_width(self, width):
         """
@@ -161,6 +162,14 @@ class ToolbarTitle(Gtk.Bin):
                                                    Gtk.IconSize.MENU)
 
     @property
+    def progress(self):
+        """
+            Get progress bar
+            @return Gtk.ProgressBar
+        """
+        return self.__progress
+
+    @property
     def focus_in(self):
         """
             Return True if title bar has focus
@@ -171,12 +180,26 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_size_allocate(self, grid, allocation):
+    def _on_map(self, grid):
         """
             Update entry padding
         """
+        border = self.__entry.get_style_context().get_border(
+                                                  Gtk.StateFlags.NORMAL).bottom
+        margin_start = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).left
+        margin_end = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).right
+        margin_bottom = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).bottom
+        css = ".progressbar { margin-bottom: %spx;\
+               margin-left: %spx;\
+               margin-right: %spx; }" % (margin_bottom,
+                                         margin_start + border,
+                                         margin_end + border)
         # 5 is eventbox margin (see ui file)
-        css = ".uribar { padding-right: %spx; }" % (allocation.width + 5)
+        width = grid.get_allocated_width()
+        css += ".uribar { padding-right: %spx; }" % (width + 5)
         self.__css_provider.load_from_data(css.encode("utf-8"))
 
     def _on_enter_notify(self, eventbox, event):

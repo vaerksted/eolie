@@ -37,16 +37,9 @@ class Container(Gtk.Paned):
         self.__stack.show()
         self.__stack_sidebar = StackSidebar(self)
         self.__stack_sidebar.show()
-        self.__progress = Gtk.ProgressBar()
-        self.__progress.get_style_context().add_class("progressbar")
-        self.__progress.set_property("valign", Gtk.Align.START)
-        overlay = Gtk.Overlay.new()
-        overlay.add(self.__stack)
-        overlay.add_overlay(self.__progress)
-        overlay.show()
         self.add1(self.__stack_sidebar)
         self.child_set_property(self.__stack_sidebar, "shrink", False)
-        self.add2(overlay)
+        self.add2(self.__stack)
 
     def add_web_view(self, uri, show, parent=None, webview=None, state=None):
         """
@@ -189,9 +182,9 @@ class Container(Gtk.Paned):
         if view == self.current:
             self.window.toolbar.title.set_uri(view.get_uri())
             if view.is_loading():
-                self.__progress.show()
+                self.window.toolbar.title.progress.show()
             else:
-                self.__progress.hide()
+                self.window.toolbar.title.progress.hide()
                 self.window.toolbar.title.set_title(view.get_title())
 
     def __on_button_press(self, internal, event, view):
@@ -212,7 +205,7 @@ class Container(Gtk.Paned):
         """
         if view == self.current:
             value = view.get_estimated_load_progress()
-            self.__progress.set_fraction(value)
+            self.window.toolbar.title.progress.set_fraction(value)
 
     def __on_uri_changed(self, internal, uri, view):
         """
@@ -294,9 +287,9 @@ class Container(Gtk.Paned):
         self.window.toolbar.title.on_load_changed(view, event)
         if event == WebKit2.LoadEvent.STARTED:
             if view == self.current:
-                self.__progress.show()
+                self.window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.FINISHED:
             if view == self.current:
                 if not self.window.toolbar.title.focus_in:
                     GLib.idle_add(internal.grab_focus)
-                self.__progress.hide()
+                GLib.timeout_add(500, self.window.toolbar.title.progress.hide)
