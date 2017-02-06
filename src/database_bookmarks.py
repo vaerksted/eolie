@@ -295,8 +295,7 @@ class DatabaseBookmarks:
                                    bookmarks.title,\
                                    bookmarks.uri\
                             FROM bookmarks\
-                            WHERE bookmarks.popularity!=0\
-                            AND NOT EXISTS (\
+                            WHERE NOT EXISTS (\
                                 SELECT bookmark_id FROM bookmarks_tags\
                                 WHERE bookmark_id=bookmarks.rowid)\
                             ORDER BY bookmarks.popularity DESC")
