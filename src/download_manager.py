@@ -39,10 +39,12 @@ class DownloadManager(GObject.GObject):
             Add a download
             @param download as WebKit2.Download
         """
-        self.__downloads.append(download)
-        download.connect('finished', self.__on_finished)
-        download.connect('failed', self.__on_failed)
-        download.connect('decide-destination', self.__on_decide_destination)
+        if download not in self.__downloads:
+            self.__downloads.append(download)
+            download.connect('finished', self.__on_finished)
+            download.connect('failed', self.__on_failed)
+            download.connect('decide-destination',
+                             self.__on_decide_destination)
 
     def remove(self, download):
         """
