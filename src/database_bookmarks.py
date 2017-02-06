@@ -89,14 +89,60 @@ class DatabaseBookmarks:
                     continue
                 tag_id = self.get_tag_id(tag)
                 if tag_id is None:
-                    result = sql.execute("INSERT INTO tags\
-                                          (title) VALUES (?)",
-                                         (tag,))
-                    tag_id = result.lastrowid
+                    tag_id = self.add_tag(tag)
                 sql.execute("INSERT INTO bookmarks_tags\
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
             sql.commit()
+
+    def add_tag(self, tag, commit=False):
+        """
+            Add tag to db, return existing if exists
+            @param tag as str
+            @return tag id as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("INSERT INTO tags\
+                                  (title) VALUES (?)",
+                                 (tag,))
+            if commit:
+                sql.commit()
+            return result.lastrowid
+
+    def del_tag(self, tag, commit=False):
+        """
+            Add tag to db, return existing if exists
+            @param tag as str
+        """
+        with SqlCursor(self) as sql:
+            tag_id = self.get_tag_id(tag)
+            if tag_id is None:
+                return
+            sql.execute("DELETE FROM tags\
+                         WHERE rowid=?", (tag_id,))
+            sql.execute("DELETE FROM bookmarks_tags\
+                         WHERE tag_id=?", (tag_id,))
+            if commit:
+                sql.commit()
+
+    def has_tag(self, bookmark_id, tag):
+        """
+            Return True if bookmark id as tag
+            @param bookmark id as int
+            @param tag as str
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT tags.rowid\
+                                  FROM tags, bookmarks_tags\
+                                  WHERE tags.title=?\
+                                  AND bookmarks_tags.bookmark_id=?\
+                                  AND bookmarks_tags.tag_id=tags.rowid",
+                                 (tag, bookmark_id))
+            v = result.fetchone()
+            if v is not None:
+                return True
+            return False
 
     def get_id(self, uri):
         """
@@ -112,6 +158,36 @@ class DatabaseBookmarks:
             if v is not None:
                 return v[0]
             return None
+
+    def get_title(self, bookmark_id):
+        """
+            Get bookmark title
+            @param bookmark id as int
+            @return title as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT title\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
+
+    def get_uri(self, bookmark_id):
+        """
+            Get bookmark uri
+            @param bookmark id as int
+            @return uri as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
 
     def get_tag_id(self, title):
         """

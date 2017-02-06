@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/org/gnome/Eolie">
+    <file>application.css</file>
     <file preprocess="xml-stripblanks">AboutDialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
-    <file>application.css</file>
-    <file>application-legacy.css</file>
+    <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverPassword.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>

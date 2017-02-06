@@ -23,6 +23,8 @@ from eolie.define import El, ArtSize, Type
 class Item(GObject.GObject):
     id = GObject.Property(type=int,
                           default=0)
+    type = GObject.Property(type=int,
+                            default=0)
     title = GObject.Property(type=str,
                              default="")
     value = GObject.Property(type=str,
@@ -52,7 +54,7 @@ class Row(Gtk.ListBoxRow):
         favicon = None
         Gtk.ListBoxRow.__init__(self)
         self.get_style_context().add_class("row")
-        item_id = item.get_property("id")
+        item_id = item.get_property("type")
         uri = item.get_property("uri")
         title = item.get_property("title")
         grid = Gtk.Grid()
@@ -144,8 +146,11 @@ class Row(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        # Event is for internal button
+        if eventbox.get_window() != event.window:
+            return True
         uri = self.__item.get_property("uri")
-        item_id = self.__item.get_property("id")
+        item_id = self.__item.get_property("type")
         if item_id in [Type.HISTORY, Type.KEYWORDS, Type.BOOKMARK]:
             if event.button == 1:
                 El().active_window.container.current.load_uri(uri)
@@ -238,7 +243,7 @@ class UriPopover(Gtk.Popover):
         if self.__stack.get_visible_child_name() != "search":
             return
         item = Item()
-        item.set_property("id", Type.KEYWORDS)
+        item.set_property("type", Type.KEYWORDS)
         item.set_property("title", words)
         item.set_property("uri", El().search.get_search_uri(words))
         self.__search_model.append(item)
@@ -295,7 +300,7 @@ class UriPopover(Gtk.Popover):
             if selected is None:
                 box.select_row(rows[0])
                 if self.__input == Input.TAGS:
-                    item_id = rows[0].item.get_property("id")
+                    item_id = rows[0].item.get_property("type")
                     self.__set_bookmarks(item_id)
             else:
                 idx = -1 if event.keyval == Gdk.KEY_Up else 1
@@ -306,7 +311,7 @@ class UriPopover(Gtk.Popover):
                 if idx >= len(rows):
                     box.select_row(rows[0])
                     if self.__input == Input.TAGS:
-                        item_id = rows[0].item.get_property("id")
+                        item_id = rows[0].item.get_property("type")
                         self.__set_bookmarks(item_id)
                     return True
                 elif idx < 0:
@@ -322,7 +327,7 @@ class UriPopover(Gtk.Popover):
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
-                        item_id = rows[idx].item.get_property("id")
+                        item_id = rows[idx].item.get_property("type")
                         self.__set_bookmarks(item_id)
                     return True
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
@@ -354,16 +359,15 @@ class UriPopover(Gtk.Popover):
         tag_id = El().bookmarks.get_tag_id(value)
         # We need to move all items from current tag to new tag
         if tag_id is not None:
-            current_tag_id = current.item.get_property("id")
+            current_tag_id = current.item.get_property("type")
             for (rowid, title, uri) in El().bookmarks.get_bookmarks(
                                                                current_tag_id):
                 El().bookmarks.add_tag_to(tag_id, rowid, False)
                 El().bookmarks.del_tag_from(current_tag_id, rowid, False)
-            El().bookmarks.clean_tags()
             current.destroy()
             self.__set_bookmarks(Type.POPULARS)
         else:
-            tag_id = current.item.get_property("id")
+            tag_id = current.item.get_property("type")
             El().bookmarks.set_tag_title(tag_id, value)
             current.set_title(value)
         button.hide()
@@ -455,7 +459,7 @@ class UriPopover(Gtk.Popover):
         """
             Sort tags
         """
-        if row1.item.get_property("id") < 0:
+        if row1.item.get_property("type") < 0:
             return False
         return strcoll(row1.item.get_property("title"),
                        row2.item.get_property("title"))
@@ -468,7 +472,7 @@ class UriPopover(Gtk.Popover):
         if searches:
             (title, uri) = searches.pop(0)
             item = Item()
-            item.set_property("id", Type.HISTORY)
+            item.set_property("type", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__search_model.append(item)
@@ -482,7 +486,8 @@ class UriPopover(Gtk.Popover):
         if bookmarks:
             (bookmark_id, title, uri) = bookmarks.pop(0)
             item = Item()
-            item.set_property("id", Type.BOOKMARK)
+            item.set_property("id", bookmark_id)
+            item.set_property("type", Type.BOOKMARK)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
@@ -496,7 +501,7 @@ class UriPopover(Gtk.Popover):
         if tags:
             (tag_id, title) = tags.pop(0)
             item = Item()
-            item.set_property("id", tag_id)
+            item.set_property("type", tag_id)
             item.set_property("title", title)
             child = Row(item)
             child.connect("activate", self.__on_row_activated)
@@ -512,7 +517,7 @@ class UriPopover(Gtk.Popover):
         if items:
             (title, uri, mtime) = items.pop(0)
             item = Item()
-            item.set_property("id", Type.HISTORY)
+            item.set_property("type", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__history_model.append(item)
@@ -607,8 +612,19 @@ class UriPopover(Gtk.Popover):
             Select row
             @param row as Row
         """
-        item_id = row.item.get_property("id")
+        item_id = row.item.get_property("type")
         self.__set_bookmarks(item_id)
+
+    def __on_row_edited(self, row):
+        """
+            Edit bookmark associated to row
+            @param row as Row
+        """
+        from eolie.widget_edit_bookmark import EditBookmarkWidget
+        widget = EditBookmarkWidget(row.item.get_property("id"))
+        widget.show()
+        self.__stack.add(widget)
+        self.__stack.set_visible_child(widget)
 
     def __on_item_create(self, item):
         """
@@ -616,4 +632,5 @@ class UriPopover(Gtk.Popover):
             @param item as Item
         """
         child = Row(item)
+        child.connect("edit", self.__on_row_edited)
         return child
