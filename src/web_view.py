@@ -33,6 +33,7 @@ class WebView(Gtk.Grid):
         """
         Gtk.Grid.__init__(self)
         self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
         self.__webview = WebKit2.WebView()
         self.__webview.set_hexpand(True)
@@ -162,16 +163,6 @@ class WebView(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
-    def __on_scroll_event(self, widget, event):
-        """
-            Adapt scroll speed to device
-            @param widget as WebKit2.WebView
-            @param event as Gdk.EventScroll
-        """
-        if event.device.get_source() == Gdk.InputSource.MOUSE:
-            event.delta_x *= 2
-            event.delta_y *= 2
-
     def __set_system_fonts(self, settings):
         """
             Set system font
@@ -213,6 +204,31 @@ class WebView(Gtk.Grid):
                 auth = True
                 break
         return (auth, username, password)
+
+    def __set_smooth_scrolling(self, source):
+        """
+            Set smooth scrolling based on source
+            @param source as Gdk.InputSource
+        """
+        settings = self.__webview.get_settings()
+        settings.set_property("enable-smooth-scrolling",
+                              source != Gdk.InputSource.MOUSE)
+        self.__webview.set_settings(settings)
+
+    def __on_scroll_event(self, widget, event):
+        """
+            Adapt scroll speed to device
+            @param widget as WebKit2.WebView
+            @param event as Gdk.EventScroll
+        """
+        source = event.device.get_source()
+        self.__input_source
+        if source == Gdk.InputSource.MOUSE:
+            event.delta_x *= 2
+            event.delta_y *= 2
+        if self.__input_source != source:
+            self.__input_source = source
+            self.__set_smooth_scrolling(source)
 
     def __on_submit_form(self, view, request):
         """
