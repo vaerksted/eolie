@@ -12,8 +12,9 @@
 
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib
 
-from urllib.parse import urlparse
 from hashlib import sha256
+
+from eolie.utils import strip_uri
 
 
 class Art:
@@ -38,7 +39,7 @@ class Art:
             @param surface as cairo.surface
             @param suffix as str
         """
-        encoded = sha256(self.__strip_uri(uri)).hexdigest()
+        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
         pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
                                              surface.get_width(),
@@ -55,7 +56,7 @@ class Art:
             @param height as int
             @return cairo.surface
         """
-        encoded = sha256(self.__strip_uri(uri)).hexdigest()
+        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
         f = Gio.File.new_for_path(filepath)
         if f.query_exists():
@@ -76,16 +77,6 @@ class Art:
 #######################
 # PRIVATE             #
 #######################
-    def __strip_uri(self, uri):
-        """
-            Remove prefix from uri
-            @param uri as str
-            @return bytes
-        """
-        parsed = urlparse(uri)
-        new_uri = "%s%s" % (parsed.netloc, parsed.path)
-        return new_uri.encode("utf-8")
-
     def __create_cache(self):
         """
             Create cache dir

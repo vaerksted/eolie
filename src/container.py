@@ -14,6 +14,7 @@ from gi.repository import Gtk, WebKit2
 
 from eolie.stacksidebar import StackSidebar
 from eolie.define import El
+from eolie.utils import strip_uri
 
 
 class Container(Gtk.Paned):
@@ -184,10 +185,14 @@ class Container(Gtk.Paned):
             else:
                 self.window.toolbar.title.set_title(uri)
             self.window.toolbar.actions.set_actions(view)
+        # Update history
         if title:
-            El().history.add(title, uri)
-            if uri != view.loaded_uri:
-                El().history.add(title, view.loaded_uri)
+            striped_uri = strip_uri(uri)
+            striped_loaded_uri = strip_uri(view.loaded_uri)
+            El().history.add(title, striped_uri)
+            # Update loaded uri too allowing user's bookmarks popularity
+            if striped_uri != striped_loaded_uri:
+                El().history.add(title, striped_loaded_uri)
 
     def __on_enter_fullscreen(self, view):
         """

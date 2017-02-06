@@ -11,6 +11,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import unicodedata
+from urllib.parse import urlparse
 
 from eolie.define import El
 
@@ -32,3 +33,18 @@ def debug(str):
     """
     if El().debug is True:
         print(str)
+
+
+def strip_uri(uri, prefix=True):
+    """
+        Clean up uri
+        @param uri as str
+        @param prefix as bool
+        @return str
+    """
+    parsed = urlparse(uri)
+    if prefix:
+        new_uri = "%s://%s%s" % (parsed.scheme, parsed.netloc, parsed.path)
+    else:
+        new_uri = "%s%s" % (parsed.netloc, parsed.path)
+    return new_uri.rstrip('/')
