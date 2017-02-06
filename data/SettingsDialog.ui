@@ -47,7 +47,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
+                <property name="top_attach">4</property>
                 <property name="width">2</property>
               </packing>
             </child>
@@ -60,7 +60,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -73,7 +73,7 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">1</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -89,7 +89,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">6</property>
                 <property name="width">2</property>
               </packing>
             </child>
@@ -106,7 +106,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">3</property>
+                <property name="top_attach">7</property>
                 <property name="width">2</property>
               </packing>
             </child>
@@ -120,7 +120,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">4</property>
+                <property name="top_attach">8</property>
               </packing>
             </child>
             <child>
@@ -137,41 +137,7 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">4</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">5</property>
-                <property name="label" translatable="yes">Session</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">5</property>
-                <property name="width">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCheckButton" id="remember_session_check">
-                <property name="label" translatable="yes">Remember previous tabs on startup</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">15</property>
-                <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="_on_remember_session_toggled" swapped="no"/>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">6</property>
-                <property name="width">2</property>
+                <property name="top_attach">8</property>
               </packing>
             </child>
             <child>
@@ -187,7 +153,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">7</property>
+                <property name="top_attach">9</property>
                 <property name="width">2</property>
               </packing>
             </child>
@@ -204,9 +170,87 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">8</property>
+                <property name="top_attach">10</property>
                 <property name="width">2</property>
               </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="margin_left">5</property>
+                <property name="hexpand">True</property>
+                <property name="label" translatable="yes">Startup</property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="margin_left">15</property>
+                <property name="label" translatable="yes">Start Page:</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="combo_start">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <items>
+                  <item id="search" translatable="yes">Search engine</item>
+                  <item id="popular" translatable="yes">Popular pages</item>
+                  <item id="address" translatable="yes">Set address</item>
+                </items>
+                <signal name="changed" handler="_on_start_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="start_page_uri">
+                <property name="can_focus">True</property>
+                <property name="placeholder_text" translatable="yes">https://gnumdk.github.io/lollypop-web</property>
+                <signal name="changed" handler="_on_start_page_uri_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="remember_session_check">
+                <property name="label" translatable="yes">Remember previous tabs on startup</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="halign">start</property>
+                <property name="margin_left">15</property>
+                <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="_on_remember_session_toggled" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">3</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder/>
             </child>
           </object>
         </child>

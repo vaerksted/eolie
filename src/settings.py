@@ -73,6 +73,16 @@ class SettingsDialog:
         autostart_downloads.set_active(
                                 El().settings.get_value('autostart-downloads'))
 
+        self.__start_page_uri = builder.get_object('start_page_uri')
+        combo_start = builder.get_object('combo_start')
+        start_page = El().settings.get_value('start-page').get_string()
+        if start_page.startswith('http'):
+            combo_start.set_active_id('address')
+            self.__start_page_uri.set_text(start_page)
+            self.__start_page_uri.show()
+        else:
+            combo_start.set_active_id(start_page)
+
         combo_engine = builder.get_object('combo_engine')
         combo_engine.set_active_id(
                         El().settings.get_value('search-engine').get_string())
@@ -197,6 +207,26 @@ class SettingsDialog:
         """
         El().settings.set_value('remember-session',
                                 GLib.Variant('b', button.get_active()))
+
+    def _on_start_page_uri_changed(self, entry):
+        """
+            Save startup page
+            @param entry as Gtk.Entry
+        """
+        El().settings.set_value('start-page',
+                                GLib.Variant('s', entry.get_text()))
+
+    def _on_start_changed(self, combo):
+        """
+            Save startup page
+            @param combo as Gtk.ComboBoxText
+        """
+        if combo.get_active_id() == 'address':
+            self.__start_page_uri.show()
+        else:
+            self.__start_page_uri.hide()
+            El().settings.set_value('start-page',
+                                    GLib.Variant('s', combo.get_active_id()))
 
     def _on_engine_changed(self, combo):
         """

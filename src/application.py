@@ -177,6 +177,19 @@ class Application(Gtk.Application):
                 view.set_setting(key, value)
 
     @property
+    def start_page(self):
+        """
+            Get start page
+            @return uri as str
+        """
+        value = self.settings.get_value('start-page').get_string()
+        if value == 'search':
+            value = self.search.uri
+        elif value == 'popular':
+            pass
+        return value
+
+    @property
     def active_window(self):
         """
             Get active window
@@ -219,7 +232,7 @@ class Application(Gtk.Application):
                     active_window.container.add_web_view(uri, True)
                 active_window.present()
             else:
-                active_window.container.add_web_view("google.fr", True)
+                active_window.container.add_web_view(self.start_page, True)
         return 0
 
     def __on_delete_event(self, widget, event):
@@ -342,6 +355,6 @@ class Application(Gtk.Application):
         if string == "uri":
             window.toolbar.title.focus_entry()
         elif string == "new_page":
-            window.container.add_web_view("google.fr", True)
+            window.container.add_web_view(self.start_page, True)
         elif string == "close_page":
             window.container.sidebar.current.destroy()

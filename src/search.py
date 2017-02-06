@@ -12,6 +12,8 @@
 
 from gi.repository import Soup
 
+from gettext import gettext as _
+
 from eolie.define import El
 
 
@@ -21,22 +23,28 @@ class Search:
     """
     __ENGINES = {
         'Google': [
+            # Translators: Google url for your country
+            _("https://www.google.com"),
             'https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8',
             'https://www.google.com/complete/search?client=firefox&q=%s',
             'unicode_escape'
             ],
         'DuckDuckGo': [
+            'https://duckduckgo.com',
             'https://duckduckgo.com/?q=%s',
             'https://ac.duckduckgo.com/ac/?q=%s&type=list',
             'utf-8'
             ],
         'Yahoo': [
+            # Translators: Yahoo url for your country
+            _("https://www.yahoo.com"),
             'https://search.yahoo.com/yhs/search?p=%s&ei=UTF-8',
             'https://ca.search.yahoo.com/sugg/ff?'
             'command=%s&output=fxjson&appid=fd',
             'utf-8'
             ],
         'Bing': [
+            'https://www.bing.com',
             'https://www.bing.com/search?q=%s',
             'https://www.bing.com/osjson.aspx?query=%s&form=OSDJAS',
             'utf-8'
@@ -56,9 +64,10 @@ class Search:
         wanted = El().settings.get_value('search-engine').get_string()
         for engine in self.__ENGINES:
             if engine == wanted:
-                self.__search = self.__ENGINES[engine][0]
-                self.__keywords = self.__ENGINES[engine][1]
-                self.__encoding = self.__ENGINES[engine][2]
+                self.__uri = self.__ENGINES[engine][0]
+                self.__search = self.__ENGINES[engine][1]
+                self.__keywords = self.__ENGINES[engine][2]
+                self.__encoding = self.__ENGINES[engine][3]
                 break
 
     def get_search_uri(self, words):
@@ -107,6 +116,14 @@ class Search:
             # String contains dot, is an uri
             search = string.find(".") == -1
         return search
+
+    @property
+    def uri(self):
+        """
+            Search engine uri
+            @return str
+        """
+        return self.__uri
 
 #######################
 # PRIVATE             #

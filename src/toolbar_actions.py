@@ -64,5 +64,5 @@ class ToolbarActions(Gtk.Bin):
             Add a new web view
             @param button as Gtk.Button
         """
-        El().active_window.container.add_web_view("http://www.google.fr",
+        El().active_window.container.add_web_view(El().start_page,
                                                   True)
