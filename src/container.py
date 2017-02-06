@@ -73,10 +73,13 @@ class Container(Gtk.Paned):
             view.load_uri(uri)
         view.show()
         self.__stack_sidebar.add_child(view)
+
         if show:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)
             self.__stack_sidebar.update_visible_child()
+        else:
+            self.__set_offscreen(view, True)
 
     def load_uri(self, uri):
         """
@@ -85,6 +88,16 @@ class Container(Gtk.Paned):
         """
         if self.current is not None:
             self.current.load_uri(uri)
+
+    def set_visible_view(self, view):
+        """
+            Set visible view
+            @param view as WebView
+        """
+        current = self.current
+        self.__set_offscreen(view, False)
+        self.__stack.set_visible_child(view)
+        self.__set_offscreen(current, True)
 
     @property
     def sidebar(self):
@@ -101,14 +114,6 @@ class Container(Gtk.Paned):
             @return views as [WebView]
         """
         return self.__stack.get_children()
-
-    @property
-    def stack(self):
-        """
-            Get stack
-            @return Gtk.Stack
-        """
-        return self.__stack
 
     @property
     def current(self):
@@ -129,6 +134,32 @@ class Container(Gtk.Paned):
 #######################
 # PRIVATE             #
 #######################
+    def __set_offscreen(self, view, offscreen):
+        """
+            Set view as offscreen
+            @param view as WebView
+            @return bool
+        """
+        # Check if we really need to do something
+        is_offscreen = view.is_offscreen
+        if (offscreen and is_offscreen) or\
+           (not offscreen and not is_offscreen) or\
+           (offscreen and not view.is_loading()):
+            return
+        # Remove view from previous container
+        parent = view.get_parent()
+        if parent is not None:
+            parent.remove(view)
+        if offscreen:
+            window = Gtk.OffscreenWindow.new()
+            view.set_size_request(self.__stack.get_allocated_width(),
+                                  self.__stack.get_allocated_height())
+            window.add(view)
+            window.show()
+        else:
+            view.set_size_request(-1, -1)
+            self.__stack.add(view)
+
     def __on_view_map(self, view):
         """
             Update window
@@ -220,8 +251,9 @@ class Container(Gtk.Paned):
             @param event as WebKit2.LoadEvent
         """
         self.window.toolbar.title.on_load_changed(view, event)
-        if view == self.current:
-            if event == WebKit2.LoadEvent.STARTED:
+        if event == WebKit2.LoadEvent.STARTED:
+            if view == self.current:
                 self.__progress.show()
-            if event == WebKit2.LoadEvent.FINISHED:
+        elif event == WebKit2.LoadEvent.FINISHED:
+            if view == self.current:
                 self.__progress.hide()

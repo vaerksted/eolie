@@ -31,7 +31,6 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__scroll_timeout_id = None
         self.__view = view
         self.__container = container
-        self.__offscreen = False
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
         builder.connect_signals(self)
@@ -57,27 +56,6 @@ class SidebarChild(Gtk.ListBoxRow):
             @return WebView
         """
         return self.__view
-
-    def set_offscreen(self, offscreen):
-        """
-            Set view as offscreen
-            @return bool
-        """
-        if self.__offscreen and not offscreen:
-            window = self.__view.get_toplevel()
-            window.remove(self.__view)
-            self.__view.set_size_request(-1, -1)
-            self.__container.stack.add(self.__view)
-            self.__offscreen = False
-        elif offscreen and not self.__offscreen:
-            self.__offscreen = True
-            self.__container.stack.remove(self.__view)
-            window = Gtk.OffscreenWindow.new()
-            self.__view.set_size_request(
-                                self.__container.stack.get_allocated_width(),
-                                self.__container.stack.get_allocated_height())
-            window.add(self.__view)
-            window.show()
 
 #######################
 # PROTECTED           #
@@ -128,21 +106,11 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if self.__view == self.__container.current:
-            self.__view.get_snapshot(
-                                    WebKit2.SnapshotRegion.VISIBLE,
-                                    WebKit2.SnapshotOptions.NONE,
-                                    None,
-                                    self.__on_snapshot,
-                                    save)
-        else:
-            self.set_offscreen(True)
-            self.__view.get_snapshot(
-                                    WebKit2.SnapshotRegion.VISIBLE,
-                                    WebKit2.SnapshotOptions.NONE,
-                                    None,
-                                    self.__on_snapshot,
-                                    save)
+        self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                 WebKit2.SnapshotOptions.NONE,
+                                 None,
+                                 self.__on_snapshot,
+                                 save)
 
     def __get_snapshot_timeout(self):
         """
@@ -273,7 +241,6 @@ class SidebarChild(Gtk.ListBoxRow):
         if save:
             El().art.save_artwork(self.__view.get_uri(), surface, "preview")
         del surface
-        self.set_offscreen(False)
 
     def __on_load_changed(self, view, event):
         """
@@ -283,7 +250,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         if event == WebKit2.LoadEvent.STARTED:
             pass
-        if event == WebKit2.LoadEvent.FINISHED:
+        elif event == WebKit2.LoadEvent.FINISHED:
             GLib.timeout_add(500, self.__get_snapshot, True)
 
     def __on_notify_favicon(self, view, pointer):
@@ -337,7 +304,7 @@ class StackSidebar(Gtk.Grid):
             Mark current child as visible
             Unmark all others
         """
-        visible = self.__container.stack.get_visible_child()
+        visible = self.__container.current
         for child in self.__listbox.get_children():
             if child.view == visible:
                 child.get_style_context().add_class('sidebar-item-selected')
@@ -374,6 +341,5 @@ class StackSidebar(Gtk.Grid):
             @param listbox as Gtk.ListBox
             @param row as SidebarChild
         """
-        row.set_offscreen(False)
-        self.__container.stack.set_visible_child(row.view)
+        self.__container.set_visible_view(row.view)
         self.update_visible_child()

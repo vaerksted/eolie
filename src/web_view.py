@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import WebKit2, Gio, Gtk
 
 from eolie.define import El
 
@@ -89,6 +89,14 @@ class WebView(WebKit2.WebView):
         else:
             settings.set_property(key, value)
         self.set_settings(settings)
+
+    @property
+    def is_offscreen(self):
+        """
+            True if offscreen
+        """
+        parent = self.get_parent()
+        return parent is not None and isinstance(parent, Gtk.OffscreenWindow)
 
     @property
     def loaded_uri(self):
