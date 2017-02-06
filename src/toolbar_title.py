@@ -252,6 +252,8 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__lock = True
         self.__entry.set_text(self.__uri)
+        # We need to wait next loop to do this
+        GLib.idle_add(self.__entry.select_region, 0, -1)
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__entry.get_style_context().add_class('input')
         self.__popover.set_relative_to(self)
