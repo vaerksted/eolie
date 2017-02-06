@@ -41,7 +41,8 @@ class Row(Gtk.ListBoxRow):
         A row
     """
     __gsignals__ = {
-        'edit': (GObject.SignalFlags.RUN_FIRST, None, ())
+        'edit': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'move': (GObject.SignalFlags.RUN_FIRST, None, (int, int))
     }
 
     def __init__(self, item):
@@ -54,14 +55,14 @@ class Row(Gtk.ListBoxRow):
         favicon = None
         Gtk.ListBoxRow.__init__(self)
         self.get_style_context().add_class("row")
-        item_id = item.get_property("type")
+        item_type = item.get_property("type")
         uri = item.get_property("uri")
         title = item.get_property("title")
         grid = Gtk.Grid()
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
-        if item_id in [Type.BOOKMARK, Type.HISTORY]:
+        if item_type in [Type.BOOKMARK, Type.HISTORY]:
             surface = El().art.get_artwork(uri,
                                            "favicon",
                                            self.get_scale_factor(),
@@ -74,15 +75,15 @@ class Row(Gtk.ListBoxRow):
                                            Gtk.IconSize.MENU)
             else:
                 del surface
-        elif item_id == Type.KEYWORDS:
+        elif item_type == Type.KEYWORDS:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
         else:
-            if item_id == Type.NONE:
+            if item_type == Type.NONE:
                 icon_name = "folder-visiting-symbolic"
-            elif item_id == Type.POPULARS:
+            elif item_type == Type.POPULARS:
                 icon_name = "starred-symbolic"
-            elif item_id == Type.RECENTS:
+            elif item_type == Type.RECENTS:
                 icon_name = "document-open-recent-symbolic"
             else:
                 icon_name = "folder-symbolic"
@@ -105,7 +106,7 @@ class Row(Gtk.ListBoxRow):
             grid.add(favicon)
         grid.add(self.__title)
         grid.add(uri)
-        if item_id == Type.BOOKMARK:
+        if item_type == Type.BOOKMARK:
             edit_button = Gtk.Button.new_from_icon_name(
                                                      "document-edit-symbolic",
                                                      Gtk.IconSize.MENU)
@@ -121,7 +122,20 @@ class Row(Gtk.ListBoxRow):
         eventbox.connect("button-release-event", self.__on_button_release)
         eventbox.show()
         self.add(eventbox)
-        self.get_style_context().add_class("listboxrow")
+        if item_type == Type.BOOKMARK:
+            self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
+                                 Gdk.DragAction.MOVE)
+            self.drag_source_add_text_targets()
+            self.connect('drag-begin', self.__on_drag_begin)
+            self.connect('drag-data-get', self.__on_drag_data_get)
+        # We add bookmark, not useful, only for visual feedback on drag
+        if item_type in [Type.TAG, Type.BOOKMARK]:
+            self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
+                               [], Gdk.DragAction.MOVE)
+            self.drag_dest_add_text_targets()
+            self.connect('drag-data-received', self.__on_drag_data_received)
+            self.connect('drag-motion', self.__on_drag_motion)
+            self.connect('drag-leave', self.__on_drag_leave)
 
     def set_title(self, title):
         """
@@ -142,6 +156,71 @@ class Row(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __on_drag_begin(self, widget, context):
+        """
+            Set icon
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+        """
+        widget.drag_source_set_icon_name('web-browser')
+        # add current drag to selected rows
+        self.get_parent().select_row(self)
+
+    def __on_drag_data_get(self, widget, context, data, info, time):
+        """
+            Send track id
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        # Get data from parent as multiple row may be selected
+        text = ""
+        for row in self.get_parent().get_selected_rows():
+            text += str(row.item.get_property("id")) + "@"
+        data.set_text(text, len(text))
+
+    def __on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """
+            Move track
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        try:
+            for rowid in data.get_text().split("@"):
+                bookmark_id = int(rowid)
+                tag_id = self.__item.get_property("id")
+                self.emit("move", bookmark_id, tag_id)
+        except:
+            pass
+
+    def __on_drag_motion(self, widget, context, x, y, time):
+        """
+            Add style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param time as int
+        """
+        if self.__item.get_property("type") == Type.TAG:
+            self.get_style_context().add_class('drag')
+
+    def __on_drag_leave(self, widget, context, time):
+        """
+            Remove style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param time as int
+        """
+        self.get_style_context().remove_class('drag')
+
     def __on_button_release(self, eventbox, event):
         """
             Got to uri
@@ -149,7 +228,8 @@ class Row(Gtk.ListBoxRow):
             @param event as Gdk.Event
         """
         # Lets user select item
-        if event.state & Gdk.ModifierType.CONTROL_MASK:
+        if event.state & Gdk.ModifierType.CONTROL_MASK or\
+                event.state & Gdk.ModifierType.SHIFT_MASK:
             return False
         # Event is for internal button
         if eventbox.get_window() != event.window:
@@ -500,10 +580,12 @@ class UriPopover(Gtk.Popover):
         if tags:
             (tag_id, title) = tags.pop(0)
             item = Item()
-            item.set_property("type", tag_id)
+            item.set_property("id", tag_id)
+            item.set_property("type", Type.TAG)
             item.set_property("title", title)
             child = Row(item)
             child.connect("activate", self.__on_row_activated)
+            child.connect("move", self.__on_row_moved)
             child.show()
             self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags)
@@ -607,8 +689,22 @@ class UriPopover(Gtk.Popover):
             Select row
             @param row as Row
         """
-        item_id = row.item.get_property("type")
+        item_id = row.item.get_property("id")
         self.__set_bookmarks(item_id)
+
+    def __on_row_moved(self, row, bookmark_id, tag_id):
+        """
+            Move bookmark from current selected tag to tag
+            @param row as Row
+            @param bookmark_id as int
+            @param tag id as int
+        """
+        tag_row = self.__tags_box.get_selected_row()
+        current_tag_id = tag_row.item.get_property("id")
+        if current_tag_id >= 0:
+            El().bookmarks.del_tag_from(current_tag_id, bookmark_id)
+        El().bookmarks.add_tag_to(tag_id, bookmark_id)
+        self.__on_row_activated(tag_row)
 
     def __on_row_edited(self, row):
         """

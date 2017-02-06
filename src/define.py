@@ -28,7 +28,8 @@ class Type:
     BOOKMARK = -4
     KEYWORDS = -5
     HISTORY = -6
-    SEPARATOR = -7
+    TAG = -7
+    SEPARATOR = -8
 
 
 LOGINS = ["login", "username", "user"]

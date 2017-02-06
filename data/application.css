@@ -68,12 +68,6 @@
     font-weight: bold;
 }
 
-.listboxrow {
-    /* https://bugzilla.gnome.org/show_bug.cgi?id=763517 */
-    transition: none;
-    padding: 0px;
-}
-
 .downloadrow {
     padding: 0px;
     background-color: transparent;
@@ -92,6 +86,16 @@
 
 .rounded-button {
     border-radius: 20px;
+}
+
+.drag {
+    color: red;
+}
+
+.row {
+    /* https://bugzilla.gnome.org/show_bug.cgi?id=763517 */
+    transition: none;
+    padding: 0px;
 }
 
 .edit-button {
