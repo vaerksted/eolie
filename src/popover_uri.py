@@ -63,7 +63,7 @@ class Row(Gtk.ListBoxRow):
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
-        if item_type in [Type.BOOKMARK, Type.HISTORY]:
+        if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             surface = El().art.get_artwork(uri,
                                            "favicon",
                                            self.get_scale_factor(),
@@ -254,7 +254,8 @@ class Row(Gtk.ListBoxRow):
             return True
         uri = self.__item.get_property("uri")
         item_id = self.__item.get_property("type")
-        if item_id in [Type.HISTORY, Type.KEYWORDS, Type.BOOKMARK]:
+        if item_id in [Type.HISTORY, Type.KEYWORDS,
+                       Type.SEARCH, Type.BOOKMARK]:
             El().active_window.toolbar.title.hide_popover()
             if event.button == 1:
                 El().active_window.container.current.load_uri(uri)
@@ -574,7 +575,7 @@ class UriPopover(Gtk.Popover):
         if searches:
             (title, uri) = searches.pop(0)
             item = Item()
-            item.set_property("type", Type.HISTORY)
+            item.set_property("type", Type.SEARCH)
             item.set_property("title", title)
             item.set_property("uri", uri)
             added.append(uri)
