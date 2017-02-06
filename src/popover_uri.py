@@ -38,15 +38,20 @@ class Row(Gtk.ListBoxRow):
     """
         A row
     """
+    __gsignals__ = {
+        'edit': (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
+
     def __init__(self, item):
         """
             Init row
             @param item as Item
         """
         self.__item = item
-        self.__eventbox = None
+        eventbox = None
         favicon = None
         Gtk.ListBoxRow.__init__(self)
+        self.get_style_context().add_class("row")
         item_id = item.get_property("id")
         uri = item.get_property("uri")
         title = item.get_property("title")
@@ -92,15 +97,26 @@ class Row(Gtk.ListBoxRow):
         uri.set_max_width_chars(40)
         uri.show()
         if favicon is not None:
+            favicon.set_margin_start(2)
             grid.add(favicon)
         grid.add(self.__title)
         grid.add(uri)
+        if item_id == Type.BOOKMARK:
+            edit_button = Gtk.Button.new_from_icon_name(
+                                                     "document-edit-symbolic",
+                                                     Gtk.IconSize.MENU)
+            edit_button.get_image().set_opacity(0.5)
+            edit_button.connect("clicked", self.__on_edit_clicked)
+            edit_button.get_style_context().add_class("edit-button")
+            edit_button.show()
+            grid.add(edit_button)
         grid.show()
-        self.__eventbox = Gtk.EventBox()
-        self.__eventbox.add(grid)
-        self.__eventbox.set_size_request(-1, 30)
-        self.__eventbox.show()
-        self.add(self.__eventbox)
+        eventbox = Gtk.EventBox()
+        eventbox.add(grid)
+        eventbox.set_size_request(-1, 30)
+        eventbox.connect("button-release-event", self.__on_button_release)
+        eventbox.show()
+        self.add(eventbox)
         self.get_style_context().add_class("listboxrow")
 
     def set_title(self, title):
@@ -110,14 +126,6 @@ class Row(Gtk.ListBoxRow):
         """
         self.__item.set_property("title", title)
         self.__title.set_text(title)
-
-    @property
-    def eventbox(self):
-        """
-            Get eventbox
-            @return Gtk.EventBox
-        """
-        return self.__eventbox
 
     @property
     def item(self):
@@ -130,6 +138,31 @@ class Row(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __on_button_release(self, eventbox, event):
+        """
+            Got to uri
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        uri = self.__item.get_property("uri")
+        item_id = self.__item.get_property("id")
+        if item_id in [Type.HISTORY, Type.KEYWORDS, Type.BOOKMARK]:
+            if event.button == 1:
+                El().active_window.container.current.load_uri(uri)
+            else:
+                El().active_window.container.add_web_view(uri, True)
+            El().bookmarks.set_access_time(uri, int(time()))
+            El().bookmarks.set_more_popular(uri)
+            El().active_window.toolbar.title.hide_popover()
+        else:
+            self.emit("activate")
+
+    def __on_edit_clicked(self, button):
+        """
+            Edit self
+            @param button as Gtk.Button
+        """
+        self.emit("edit")
 
 
 class Input:
@@ -466,9 +499,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("id", tag_id)
             item.set_property("title", title)
             child = Row(item)
-            child.eventbox.connect("button-release-event",
-                                   self.__on_button_release,
-                                   item)
+            child.connect("activate", self.__on_row_activated)
             child.show()
             self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags)
@@ -535,26 +566,6 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_count.set_text("%s bookmarks" % len(items))
         self.__add_bookmarks(items)
 
-    def __on_button_release(self, eventbox, event, item):
-        """
-            Got to uri
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-            @param item as Item
-        """
-        uri = item.get_property("uri")
-        item_id = item.get_property("id")
-        if item_id in [Type.HISTORY, Type.KEYWORDS, Type.BOOKMARK]:
-            if event.button == 1:
-                El().active_window.container.current.load_uri(uri)
-            else:
-                El().active_window.container.add_web_view(uri, True)
-            El().bookmarks.set_access_time(uri, int(time()))
-            El().bookmarks.set_more_popular(uri)
-            El().active_window.toolbar.title.hide_popover()
-        else:
-            self.__set_bookmarks(item_id)
-
     def __on_tag_entry_changed(self, entry):
         """
             Update tag title
@@ -591,13 +602,18 @@ class UriPopover(Gtk.Popover):
             self.__tag_entry_signal_id = None
         self.__stack.set_visible_child_name("bookmarks")
 
+    def __on_row_activated(self, row):
+        """
+            Select row
+            @param row as Row
+        """
+        item_id = row.item.get_property("id")
+        self.__set_bookmarks(item_id)
+
     def __on_item_create(self, item):
         """
             Add child to box
             @param item as Item
         """
         child = Row(item)
-        child.eventbox.connect("button-release-event",
-                               self.__on_button_release,
-                               item)
         return child

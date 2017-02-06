@@ -94,7 +94,41 @@
     border-radius: 20px;
 }
 
-.no-padding {
-    min-width: 28px;
-    padding: 2px;
+.edit-button {
+	box-shadow: none;
+	min-height: 24px;
+	min-width: 24px;
+	margin-right: 2px;
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	background-image: none;
+	border-style: solid;
+	border-image-source: none;
+    border-bottom-width: 1px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-color: transparent;
+    color: inherit;
+    opacity: 0.2;
+}
+
+.row .edit-button {
+	border-color: transparent;
+	background-color: transparent;
+	color: transparent;
+}
+
+.row:hover .edit-button {
+  	color: inherit;
+	opacity: 0.4;
+}
+
+.row:hover .edit-button:hover {
+	border-color: alpha(@theme_fg_color, 0.1);
+	min-height: 24px;
+	min-width: 24px;
+	opacity: 1;
 }
