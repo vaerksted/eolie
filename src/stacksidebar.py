@@ -222,16 +222,20 @@ class SidebarChild(Gtk.ListBoxRow):
             @param title as str
             @param view as WebView
         """
-        if event.name != "title":
-            return
-        title = view.get_title()
-        if not title:
-            title = view.get_uri()
-        self.__title.set_text(title)
+        # First update snapshot
         if not view.is_loading():
             GLib.timeout_add(1000, self.set_snapshot, True)
+        # If not a title event, return
+        if event.name != "title":
+            return
+        # If title empty, return, otherwise, it will set wrong
+        # favicon on redirections
+        title = view.get_title()
+        if not title:
+            return
+        self.__title.set_text(title)
         if view.get_favicon() is not None:
-            GLib.timeout_add(500, self.__set_favicon)
+            GLib.timeout_add(1000, self.__set_favicon)
 
     def __on_scroll_event(self, internal, event, view):
         """
