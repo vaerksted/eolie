@@ -57,6 +57,17 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         return self.__view
 
+    def set_snapshot(self, save):
+        """
+            Set webpage preview
+            @param save as bool
+        """
+        self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                 WebKit2.SnapshotOptions.NONE,
+                                 None,
+                                 self.__on_snapshot,
+                                 save)
+
 #######################
 # PROTECTED           #
 #######################
@@ -101,23 +112,12 @@ class SidebarChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
-    def __get_snapshot(self, save):
-        """
-            Set webpage preview
-            @param save as bool
-        """
-        self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                 WebKit2.SnapshotOptions.NONE,
-                                 None,
-                                 self.__on_snapshot,
-                                 save)
-
-    def __get_snapshot_timeout(self):
+    def __set_snapshot_timeout(self):
         """
             Get snapshot timeout
         """
         self.__scroll_timeout_id = None
-        self.__get_snapshot(False)
+        self.set_snapshot(False)
 
     def __on_uri_changed(self, view, uri):
         """
@@ -126,17 +126,19 @@ class SidebarChild(Gtk.ListBoxRow):
             @param uri as str
         """
         self.__title.set_text(view.get_uri())
-        preview = El().art.get_artwork(view.get_uri(),
-                                       "preview",
-                                       view.get_scale_factor(),
-                                       self.get_allocated_width() -
-                                       ArtSize.PREVIEW_WIDTH_MARGIN,
-                                       ArtSize.PREVIEW_HEIGHT)
-        if preview is not None:
-            self.__image.set_from_surface(preview)
-            del preview
-        else:
-            self.__image.clear()
+        # We are not filtered
+        if self.get_allocated_width() != 1:
+            preview = El().art.get_artwork(view.get_uri(),
+                                           "preview",
+                                           view.get_scale_factor(),
+                                           self.get_allocated_width() -
+                                           ArtSize.PREVIEW_WIDTH_MARGIN,
+                                           ArtSize.PREVIEW_HEIGHT)
+            if preview is not None:
+                self.__image.set_from_surface(preview)
+                del preview
+            else:
+                self.__image.clear()
         favicon = El().art.get_artwork(view.get_uri(),
                                        "favicon",
                                        view.get_scale_factor(),
@@ -162,7 +164,7 @@ class SidebarChild(Gtk.ListBoxRow):
             title = view.get_uri()
         self.__title.set_text(title)
         if not view.is_loading():
-            GLib.timeout_add(500, self.__get_snapshot, True)
+            GLib.timeout_add(500, self.__set_snapshot, True)
         if view.get_favicon() is not None:
             GLib.timeout_add(500, self.__set_favicon)
 
@@ -176,7 +178,7 @@ class SidebarChild(Gtk.ListBoxRow):
             GLib.source_remove(self.__scroll_timeout_id)
         self.__scroll_timeout_id = GLib.timeout_add(
                                                 1000,
-                                                self.__get_snapshot_timeout)
+                                                self.__set_snapshot_timeout)
 
     def __get_favicon(self, surface):
         """
@@ -222,25 +224,29 @@ class SidebarChild(Gtk.ListBoxRow):
             @param result as Gio.AsyncResult
             @param save as bool
         """
+        # We are filtered
+        if self.get_allocated_width() == 1:
+            return
         try:
             snapshot = self.__view.get_snapshot_finish(result)
+            factor = self.get_allocated_width() /\
+                snapshot.get_width()
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                         self.get_allocated_width() -
+                                         ArtSize.PREVIEW_WIDTH_MARGIN,
+                                         ArtSize.PREVIEW_HEIGHT)
+            context = cairo.Context(surface)
+            context.scale(factor, factor)
+            context.set_source_surface(snapshot, 0, 0)
+            context.paint()
+            self.__image.set_from_surface(surface)
+            if save:
+                El().art.save_artwork(self.__view.get_uri(),
+                                      surface, "preview")
+            del surface
         except Exception as e:
             print("StackSidebar::__on_snapshot:", e)
             return
-        factor = self.get_allocated_width() /\
-            snapshot.get_width()
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                     self.get_allocated_width() -
-                                     ArtSize.PREVIEW_WIDTH_MARGIN,
-                                     ArtSize.PREVIEW_HEIGHT)
-        context = cairo.Context(surface)
-        context.scale(factor, factor)
-        context.set_source_surface(snapshot, 0, 0)
-        context.paint()
-        self.__image.set_from_surface(surface)
-        if save:
-            El().art.save_artwork(self.__view.get_uri(), surface, "preview")
-        del surface
 
     def __on_load_changed(self, view, event):
         """
@@ -251,7 +257,7 @@ class SidebarChild(Gtk.ListBoxRow):
         if event == WebKit2.LoadEvent.STARTED:
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
-            GLib.timeout_add(500, self.__get_snapshot, True)
+            GLib.timeout_add(500, self.set_snapshot, True)
 
     def __on_notify_favicon(self, view, pointer):
         """
@@ -278,10 +284,18 @@ class StackSidebar(Gtk.Grid):
         Gtk.Grid.__init__(self)
         self.__container = container
         self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.__search_entry = Gtk.SearchEntry.new()
+        self.__search_entry.connect('search-changed', self._on_search_changed)
+
+        self.__search_entry.show()
+        self.__search_bar = Gtk.SearchBar.new()
+        self.__search_bar.add(self.__search_entry)
+        self.add(self.__search_bar)
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_vexpand(True)
         self.__scrolled.show()
         self.__listbox = Gtk.ListBox.new()
+        self.__listbox.set_filter_func(self.__filter_func)
         self.__listbox.set_activate_on_single_click(True)
         self.__listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__listbox.show()
@@ -311,6 +325,21 @@ class StackSidebar(Gtk.Grid):
             else:
                 child.get_style_context().remove_class('sidebar-item-selected')
 
+    def set_filtered(self, b):
+        """
+            Show filtering widget
+            @param b as bool
+        """
+        if b:
+            self.__search_bar.show()
+            self.__search_entry.grab_focus()
+            self.__search_entry.connect('key-press-event',
+                                        self.__on_key_press)
+        else:
+            self.__search_bar.hide()
+            self.__search_entry.disconnect_by_func(self.__on_key_press)
+        self.__search_bar.set_search_mode(b)
+
     @property
     def current(self):
         """
@@ -325,6 +354,42 @@ class StackSidebar(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __filter_func(self, row):
+        """
+            Filter list based on current filter
+            @param row as Row
+        """
+        filter = self.__search_entry.get_text()
+        if not filter:
+            row.set_snapshot(False)
+            return True
+        uri = row.view.get_uri()
+        title = row.view.get_title()
+        if (uri is not None and uri.find(filter) != -1) or\
+                (title is not None and title.find(filter) != -1):
+            row.set_snapshot(False)
+            return True
+        return False
+
+    def _on_search_changed(self, entry):
+        """
+            Update filter
+            @param entry as Gtk.Entry
+        """
+        self.__listbox.invalidate_filter()
+
+    def __on_key_press(self, widget, event):
+        """
+            If Esc, hide widget, why GTK doesn't do that?
+            Otherwise, we get an ugly frame
+            @param widget as Gtk.SearchEntry
+            @param event as Gdk.Event
+        """
+        if event.keyval == 65307:
+            self.__search_entry.set_text('')
+            El().active_window.toolbar.actions.filter_button.set_active(False)
+            return True
+
     def __on_child_destroy(self, child):
         """
             Destroy associated view

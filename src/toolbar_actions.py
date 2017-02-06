@@ -33,6 +33,7 @@ class ToolbarActions(Gtk.Bin):
 
         self.__back = builder.get_object('back_button')
         self.__forward = builder.get_object('forward_button')
+        self.__filter = builder.get_object('filter_button')
 
     def set_actions(self, view):
         """
@@ -41,6 +42,14 @@ class ToolbarActions(Gtk.Bin):
         """
         self.__back.set_sensitive(view.can_go_back())
         self.__forward.set_sensitive(view.can_go_forward())
+
+    @property
+    def filter_button(self):
+        """
+            Get filtering toggle button
+            @return Gtk.ToggleButton
+        """
+        return self.__filter
 
 #######################
 # PROTECTED           #
@@ -66,3 +75,10 @@ class ToolbarActions(Gtk.Bin):
         """
         El().active_window.container.add_web_view(El().start_page,
                                                   True)
+
+    def _on_filter_button_toggled(self, button):
+        """
+            Add a new web view
+            @param button as Gtk.ToggleButton
+        """
+        El().active_window.container.sidebar.set_filtered(button.get_active())

@@ -110,6 +110,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.shortcut::uri", ["<Control>l"])
         self.set_accels_for_action("app.shortcut::new_page", ["<Control>t"])
         self.set_accels_for_action("app.shortcut::close_page", ["<Control>w"])
+        self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
@@ -359,9 +360,12 @@ class Application(Gtk.Application):
         if window is None:
             return
         string = param.get_string()
-        if string == "uri":
+        if string == 'uri':
             window.toolbar.title.focus_entry()
-        elif string == "new_page":
+        elif string == 'new_page':
             window.container.add_web_view(self.start_page, True)
-        elif string == "close_page":
+        elif string == 'close_page':
             window.container.sidebar.current.destroy()
+        elif string == 'filter':
+            button = self.active_window.toolbar.actions.filter_button
+            button.set_active(not button.get_active())
