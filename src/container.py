@@ -280,4 +280,5 @@ class Container(Gtk.Paned):
                 self.__progress.show()
         elif event == WebKit2.LoadEvent.FINISHED:
             if view == self.current:
+                GLib.idle_add(internal.grab_focus)
                 self.__progress.hide()
