@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio, Gtk
+from gi.repository import WebKit2, Gio, Gtk, Gdk
 
 import ctypes
 from urllib.parse import urlparse
@@ -37,6 +37,7 @@ class WebView(Gtk.Grid):
         self.__webview = WebKit2.WebView()
         self.__webview.set_hexpand(True)
         self.__webview.set_vexpand(True)
+        self.__webview.connect("scroll-event", self.__on_scroll_event)
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
@@ -161,6 +162,16 @@ class WebView(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __on_scroll_event(self, widget, event):
+        """
+            Adapt scroll speed to device
+            @param widget as WebKit2.WebView
+            @param event as Gdk.EventScroll
+        """
+        if event.device.get_source() == Gdk.InputSource.MOUSE:
+            event.delta_x *= 2
+            event.delta_y *= 2
+
     def __set_system_fonts(self, settings):
         """
             Set system font
