@@ -522,6 +522,13 @@ class UriPopover(Gtk.Popover):
         self.__calendar.select_month(now.month, now.year)
         self.__calendar.select_day(now.day)
 
+    def _on_close_map(self, widget):
+        """
+            Close popover
+            @param widget as Gtk.Widget
+        """
+        El().active_window.toolbar.title.hide_popover()
+
     def _on_bookmarks_map(self, widget):
         """
             Init bookmarks

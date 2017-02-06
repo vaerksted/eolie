@@ -218,6 +218,19 @@
             <property name="position">2</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <signal name="map" handler="_on_close_map" swapped="no"/>
+          </object>
+          <packing>
+            <property name="name">close</property>
+            <property name="title" translatable="yes">close</property>
+            <property name="icon_name">pan-up-symbolic</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="left_attach">0</property>
