@@ -453,7 +453,7 @@ class UriPopover(Gtk.Popover):
                         self.__cookies_box.remove(row)
                 sql.commit()
         except Exception as e:
-            print("UriPopover::_on_action_clicked:", e)
+            print("UriPopover::_on_cookies_button_clicked:", e)
 
 #######################
 # PRIVATE             #
@@ -582,7 +582,7 @@ class UriPopover(Gtk.Popover):
                 El().active_window.container.current.load_uri(uri)
             else:
                 El().active_window.container.add_web_view(uri, True)
-            El().active_window.toolbar.self.__title.hide_popover()
+            El().active_window.toolbar.title.hide_popover()
         else:
             self.__set_bookmarks(item_id)
 
