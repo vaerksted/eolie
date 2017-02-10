@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2
+from gi.repository import Gtk, WebKit2, GLib
 
 from eolie.stacksidebar import StackSidebar
 from eolie.define import El
@@ -98,6 +98,13 @@ class Container(Gtk.Paned):
         self.__set_offscreen(view, False)
         self.__stack.set_visible_child(view)
         self.__set_offscreen(current, True)
+
+    def save_position(self):
+        """
+            Save current position
+        """
+        El().settings.set_value('paned-width',
+                                GLib.Variant('i', self.get_position()))
 
     @property
     def sidebar(self):

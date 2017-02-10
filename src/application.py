@@ -158,6 +158,7 @@ class Application(Gtk.Application):
         """
             Save window position and view
         """
+        self.active_window.container.save_position()
         self.download_manager.cancel()
         if exit:
             self.quit()
