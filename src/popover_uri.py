@@ -62,6 +62,7 @@ class Row(Gtk.ListBoxRow):
                                            ArtSize.FAVICON,
                                            ArtSize.FAVICON)
             favicon = Gtk.Image.new_from_surface(surface)
+            favicon.show()
             if surface is None:
                 favicon.set_from_icon_name("applications-internet",
                                            Gtk.IconSize.MENU)
@@ -81,40 +82,54 @@ class Row(Gtk.ListBoxRow):
                 icon_name = "folder-symbolic"
             favicon = Gtk.Image.new_from_icon_name(icon_name,
                                                    Gtk.IconSize.MENU)
-        title = Gtk.Label.new(title)
-        title.set_ellipsize(Pango.EllipsizeMode.END)
-        title.set_property('halign', Gtk.Align.START)
+            favicon.show()
+        self.__title = Gtk.Label.new(title)
+        self.__title.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__title.set_property('halign', Gtk.Align.START)
         # More informations for cookies
         if item_id == Type.COOKIES:
-            value = Gtk.Label.new(item.get_property('value'))
-            value.get_style_context().add_class('bold')
-            value.set_property('halign', Gtk.Align.START)
-            value.set_ellipsize(Pango.EllipsizeMode.END)
-            value.set_hexpand(True)
-            date = Gtk.Label.new(item.get_property('date'))
-            date.set_ellipsize(Pango.EllipsizeMode.END)
+            self.__value = Gtk.Label.new(item.get_property('value'))
+            self.__value.get_style_context().add_class('bold')
+            self.__value.set_property('halign', Gtk.Align.START)
+            self.__value.set_ellipsize(Pango.EllipsizeMode.END)
+            self.__value.set_hexpand(True)
+            self.__date = Gtk.Label.new(item.get_property('date'))
+            self.__date.set_ellipsize(Pango.EllipsizeMode.END)
+            self.__date.set_property('halign', Gtk.Align.END)
+            self.__date.set_hexpand(True)
+            self.__date.show()
         else:
-            title.set_hexpand(True)
+            self.__title.set_hexpand(True)
+            self.__title.show()
         uri = Gtk.Label.new(item.get_property('uri'))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property('halign', Gtk.Align.END)
         uri.get_style_context().add_class('dim-label')
         uri.set_max_width_chars(40)
+        uri.show()
         if favicon is not None:
             grid.add(favicon)
-        grid.add(title)
+        grid.add(self.__title)
         if item_id == Type.COOKIES:
-            grid.add(value)
+            grid.add(self.__value)
         grid.add(uri)
         if item_id == Type.COOKIES:
-            grid.add(date)
-        grid.show_all()
+            grid.add(self.__date)
+        grid.show()
         self.__eventbox = Gtk.EventBox()
         self.__eventbox.add(grid)
         self.__eventbox.set_size_request(-1, 30)
         self.__eventbox.show()
         self.add(self.__eventbox)
         self.get_style_context().add_class('listboxrow')
+
+    def show_cookie_fields(self):
+        """
+            Show hidden fields for cookie
+        """
+        self.__value.show()
+        self.__title.show()
+        self.__date.set_hexpand(False)
 
     @property
     def eventbox(self):
@@ -304,7 +319,7 @@ class UriPopover(Gtk.Popover):
                 if selected is not None:
                     uri = selected.item.get_property('uri')
                     if uri:
-                        El().active_window.toolbar.title.hide_popover()
+                        El().active_window.toolbar.self.__title.hide_popover()
                         El().active_window.container.current.load_uri(uri)
                 return True
             else:
@@ -326,6 +341,7 @@ class UriPopover(Gtk.Popover):
         if row is None:
             return
         if row.item.get_property('id') == Type.COOKIES:
+            row.show_cookie_fields()
             if len(listbox.get_selected_rows()) > 1:
                 self.__cookies_button.set_label(_("Remove cookies"))
             else:
@@ -566,7 +582,7 @@ class UriPopover(Gtk.Popover):
                 El().active_window.container.current.load_uri(uri)
             else:
                 El().active_window.container.add_web_view(uri, True)
-            El().active_window.toolbar.title.hide_popover()
+            El().active_window.toolbar.self.__title.hide_popover()
         else:
             self.__set_bookmarks(item_id)
 
