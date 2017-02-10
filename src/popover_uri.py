@@ -71,8 +71,6 @@ class Row(Gtk.ListBoxRow):
         elif item_id == Type.SEARCH:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
-        elif item_id == Type.COOKIES:
-            pass
         else:
             if item_id == Type.POPULARS:
                 icon_name = "starred-symbolic"
@@ -86,21 +84,8 @@ class Row(Gtk.ListBoxRow):
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.set_property('halign', Gtk.Align.START)
-        # More informations for cookies
-        if item_id == Type.COOKIES:
-            self.__value = Gtk.Label.new(item.get_property('value'))
-            self.__value.get_style_context().add_class('bold')
-            self.__value.set_property('halign', Gtk.Align.START)
-            self.__value.set_ellipsize(Pango.EllipsizeMode.END)
-            self.__value.set_hexpand(True)
-            self.__date = Gtk.Label.new(item.get_property('date'))
-            self.__date.set_ellipsize(Pango.EllipsizeMode.END)
-            self.__date.set_property('halign', Gtk.Align.END)
-            self.__date.set_hexpand(True)
-            self.__date.show()
-        else:
-            self.__title.set_hexpand(True)
-            self.__title.show()
+        self.__title.set_hexpand(True)
+        self.__title.show()
         uri = Gtk.Label.new(item.get_property('uri'))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property('halign', Gtk.Align.END)
@@ -110,11 +95,7 @@ class Row(Gtk.ListBoxRow):
         if favicon is not None:
             grid.add(favicon)
         grid.add(self.__title)
-        if item_id == Type.COOKIES:
-            grid.add(self.__value)
         grid.add(uri)
-        if item_id == Type.COOKIES:
-            grid.add(self.__date)
         grid.show()
         self.__eventbox = Gtk.EventBox()
         self.__eventbox.add(grid)
@@ -122,14 +103,6 @@ class Row(Gtk.ListBoxRow):
         self.__eventbox.show()
         self.add(self.__eventbox)
         self.get_style_context().add_class('listboxrow')
-
-    def show_cookie_fields(self):
-        """
-            Show hidden fields for cookie
-        """
-        self.__value.show()
-        self.__title.show()
-        self.__date.set_hexpand(False)
 
     @property
     def eventbox(self):
@@ -174,12 +147,7 @@ class UriPopover(Gtk.Popover):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
         builder.connect_signals(self)
-        self.__cookies_button = builder.get_object('cookies_button')
         self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
-        self.__cookies_model = Gio.ListStore()
-        self.__cookies_box = builder.get_object('cookies_box')
-        self.__cookies_box.bind_model(self.__cookies_model,
-                                      self.__on_item_create)
         self.__history_model = Gio.ListStore()
         self.__history_box = builder.get_object('history_box')
         self.__history_box.bind_model(self.__history_model,
@@ -340,21 +308,14 @@ class UriPopover(Gtk.Popover):
         """
         if row is None:
             return
-        if row.item.get_property('id') == Type.COOKIES:
-            row.show_cookie_fields()
-            if len(listbox.get_selected_rows()) > 1:
-                self.__cookies_button.set_label(_("Remove cookies"))
-            else:
-                self.__cookies_button.set_label(_("Remove cookie"))
-        else:
-            scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
-            if scrolled is None:
-                return
-            y = row.translate_coordinates(listbox, 0, 0)[1]
-            if y + row.get_allocated_height() >\
-                    scrolled.get_allocated_height() or\
-                    y - row.get_allocated_height() < 0:
-                scrolled.get_vadjustment().set_value(y)
+        scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
+        if scrolled is None:
+            return
+        y = row.translate_coordinates(listbox, 0, 0)[1]
+        if y + row.get_allocated_height() >\
+                scrolled.get_allocated_height() or\
+                y - row.get_allocated_height() < 0:
+            scrolled.get_vadjustment().set_value(y)
 
     def _on_search_map(self, widget):
         """
@@ -390,32 +351,6 @@ class UriPopover(Gtk.Popover):
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
             self.__set_bookmarks(Type.POPULARS)
 
-    def _on_passwords_map(self, widget):
-        """
-            Init passwords
-            @param widget as Gtk.Widget
-        """
-        pass
-
-    def _on_cookies_map(self, widget):
-        """
-            Init cookies
-            @param widget as Gtk.Widget
-        """
-        self.__input = Input.NONE
-        try:
-            import sqlite3
-            sql = sqlite3.connect(El().cookies_path, 600.0)
-            result = sql.execute("SELECT name, value, host, expiry\
-                                 FROM moz_cookies")
-            self.__cookies_model.remove_all()
-            self.__add_cookies(list(result))
-            self.__cookies_button.set_label(_("Remove all cookies"))
-            self.__cookies_button.get_style_context().add_class(
-                                                          'destructive-action')
-        except Exception as e:
-            print("UriPopover::_on_cookies_map()", e)
-
     def _on_day_selected(self, calendar):
         """
             Show history for day
@@ -427,33 +362,6 @@ class UriPopover(Gtk.Popover):
         result = El().history.get(mtime)
         self.__history_model.remove_all()
         self.__add_history_items(result)
-
-    def _on_cookies_button_clicked(self, button):
-        """
-            Execute context action
-            @param button as Gtk.Button
-        """
-        try:
-            if self.__stack.get_visible_child_name() == 'cookies':
-                import sqlite3
-                sql = sqlite3.connect(El().cookies_path, 600.0)
-                if not self.__cookies_box.get_selected_rows():
-                    sql.execute("DELETE FROM moz_cookies")
-                    self.__cookies_model.remove_all()
-                else:
-                    for row in self.__cookies_box.get_selected_rows():
-                        title = row.item.get_property('title')
-                        uri = row.item.get_property('uri')
-                        value = row.item.get_property('value')
-                        sql.execute("DELETE FROM moz_cookies\
-                                     WHERE name=?\
-                                     AND value=?\
-                                     AND host=?",
-                                    (title, value, uri))
-                        self.__cookies_box.remove(row)
-                sql.commit()
-        except Exception as e:
-            print("UriPopover::_on_cookies_button_clicked:", e)
 
 #######################
 # PRIVATE             #
@@ -509,24 +417,6 @@ class UriPopover(Gtk.Popover):
             item.set_property('uri', uri)
             self.__history_model.append(item)
             GLib.idle_add(self.__add_history_items, items)
-
-    def __add_cookies(self, cookies):
-        """
-            Add cookies to model
-            @param [(title, value, host, expiry)]  as [(str, str, str, int)]
-        """
-        if cookies:
-            (title, value, host, expiry) = cookies.pop(0)
-            item = Item()
-            item.set_property('id', Type.COOKIES)
-            item.set_property('title', title)
-            item.set_property('uri', host)
-            item.set_property('value', value)
-            item.set_property('date',
-                              datetime.fromtimestamp(
-                                  int(expiry)).strftime('%H:%M, %d/%m/%Y'))
-            self.__cookies_model.append(item)
-            GLib.idle_add(self.__add_cookies, cookies)
 
     def __get_current_box(self):
         """

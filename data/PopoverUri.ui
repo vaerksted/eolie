@@ -169,87 +169,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkGrid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
-                <signal name="map" handler="_on_cookies_map" swapped="no"/>
-                <child>
-                  <object class="GtkViewport">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkListBox" id="cookies_box">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">True</property>
-                        <property name="selection_mode">multiple</property>
-                        <signal name="map" handler="_on_cookies_map" swapped="no"/>
-                        <signal name="row-selected" handler="_on_row_selected" swapped="no"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="cookies_button">
-                <property name="label" translatable="yes">Delete all cookies</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="_on_cookies_button_clicked" swapped="no"/>
-                <style>
-                  <class name="destructive-action"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="name">cookies</property>
-            <property name="title" translatable="yes">Cookies</property>
-            <property name="icon_name">security-medium-symbolic</property>
-            <property name="position">3</property>
-          </packing>
+          <placeholder/>
         </child>
         <child>
-          <object class="GtkScrolledWindow">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="shadow_type">in</property>
-            <signal name="map" handler="_on_passwords_map" swapped="no"/>
-            <child>
-              <object class="GtkViewport">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkListBox" id="passwd_box">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="name">passwords</property>
-            <property name="title" translatable="yes">Saved passwords</property>
-            <property name="icon_name">dialog-password-symbolic</property>
-            <property name="position">4</property>
-          </packing>
+          <placeholder/>
         </child>
       </object>
       <packing>

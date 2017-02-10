@@ -26,8 +26,7 @@ class Type:
     RECENTS = -2
     URI = -3
     SEARCH = -4
-    COOKIES = -5
-    SEPARATOR = -6
+    SEPARATOR = -5
 
 
 LOGINS = ["login", "username", "user"]
