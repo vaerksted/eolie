@@ -55,6 +55,10 @@ class Search:
         """
             Init search
         """
+        self.__uri = ""
+        self.__search = ""
+        self.__keywords = ""
+        self.__encoding = ""
         self.update_default_engine()
 
     def update_default_engine(self):

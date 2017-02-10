@@ -42,7 +42,7 @@
             <description></description>
         </key>
 	    <key type="s" name="search-engine">
-            <default>"google"</default>
+            <default>"Google"</default>
             <summary>Web search engine</summary>
             <description></description>
         </key>
