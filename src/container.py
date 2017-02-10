@@ -29,6 +29,7 @@ class Container(Gtk.Paned):
         Gtk.Paned.__init__(self)
         self.set_position(
             El().settings.get_value('paned-width').get_int32())
+        self.connect('notify::position', self.__on_notify_position)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -166,6 +167,14 @@ class Container(Gtk.Paned):
         else:
             view.set_size_request(-1, -1)
             self.__stack.add(view)
+
+    def __on_notify_position(self, paned, position):
+        """
+            Update sidebar
+            @param paned as Gtk.Paned
+            @param position as GParamInt
+        """
+        self.__stack_sidebar.update_children_snapshot()
 
     def __on_view_map(self, view):
         """

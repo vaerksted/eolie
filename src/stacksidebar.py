@@ -68,6 +68,14 @@ class SidebarChild(Gtk.ListBoxRow):
                                  self.__on_snapshot,
                                  save)
 
+    def clear_snapshot(self):
+        """
+            Get snapshot
+            @return Gtk.Image
+        """
+        if self.__image is not None:
+            self.__image.clear()
+
 #######################
 # PROTECTED           #
 #######################
@@ -312,6 +320,14 @@ class StackSidebar(Gtk.Grid):
         child.show()
         self.__listbox.add(child)
 
+    def update_children_snapshot(self):
+        """
+            Update child snapshot
+        """
+        for row in self.__listbox.get_children():
+            row.clear_snapshot()
+            row.set_snapshot(True)
+
     def update_visible_child(self):
         """
             Mark current child as visible
@@ -353,6 +369,16 @@ class StackSidebar(Gtk.Grid):
                 return child
 
 #######################
+# PROTECTED           #
+#######################
+    def _on_search_changed(self, entry):
+        """
+            Update filter
+            @param entry as Gtk.Entry
+        """
+        self.__listbox.invalidate_filter()
+
+#######################
 # PRIVATE             #
 #######################
     def __filter_func(self, row):
@@ -371,13 +397,6 @@ class StackSidebar(Gtk.Grid):
             row.set_snapshot(False)
             return True
         return False
-
-    def _on_search_changed(self, entry):
-        """
-            Update filter
-            @param entry as Gtk.Entry
-        """
-        self.__listbox.invalidate_filter()
 
     def __on_key_press(self, widget, event):
         """
