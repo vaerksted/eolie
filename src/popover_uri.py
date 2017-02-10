@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GObject, Gio, Pango
+from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
 
 from gettext import gettext as _
 from time import mktime
@@ -369,11 +369,7 @@ class UriPopover(Gtk.Popover):
                        _("Populars")),
                       (Type.RECENTS,
                        _("Recents"))]
-            for (tag_id, title) in static + El().bookmarks.get_tags():
-                item = Item()
-                item.set_property('id', tag_id)
-                item.set_property('title', title)
-                self.__tags_model.append(item)
+            self.__add_tags(static + El().bookmarks.get_tags())
         if self.__tags_box.get_children():
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
             self.__set_bookmarks(Type.POPULARS)
@@ -397,16 +393,7 @@ class UriPopover(Gtk.Popover):
             result = sql.execute("SELECT name, value, host, expiry\
                                  FROM moz_cookies")
             self.__cookies_model.remove_all()
-            for (name, value, host, expiry) in list(result):
-                item = Item()
-                item.set_property('id', Type.COOKIES)
-                item.set_property('title', name)
-                item.set_property('uri', host)
-                item.set_property('value', value)
-                item.set_property('date',
-                                  datetime.fromtimestamp(
-                                      int(expiry)).strftime('%H:%M, %d/%m/%Y'))
-                self.__cookies_model.append(item)
+            self.__add_cookies(list(result))
             self.__cookies_button.set_label(_("Remove all cookies"))
             self.__cookies_button.get_style_context().add_class(
                                                           'destructive-action')
@@ -423,11 +410,7 @@ class UriPopover(Gtk.Popover):
         mtime = mktime(datetime.strptime(date, '%d/%m/%Y').timetuple())
         result = El().history.get(mtime)
         self.__history_model.remove_all()
-        for (title, uri, mtime) in result:
-            item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
-            self.__history_model.append(item)
+        self.__add_history_items(result)
 
     def _on_cookies_button_clicked(self, button):
         """
@@ -459,6 +442,76 @@ class UriPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __add_searches(self, searches):
+        """
+            Add searches to model
+            @param [(title, uri)] as [(str, str)]
+        """
+        if searches:
+            (title, uri) = searches.pop(0)
+            item = Item()
+            item.set_property('title', title)
+            item.set_property('uri', uri)
+            self.__search_model.append(item)
+            GLib.idle_add(self.__add_searches, searches)
+
+    def __add_bookmarks(self, bookmarks):
+        """
+            Add bookmarks to model
+            @param [(bookmark_id, title, uri)] as [(int, str, str)]
+        """
+        if bookmarks:
+            (bookmark_id, title, uri) = bookmarks.pop(0)
+            item = Item()
+            item.set_property('title', title)
+            item.set_property('uri', uri)
+            self.__bookmarks_model.append(item)
+            GLib.idle_add(self.__add_bookmarks, bookmarks)
+
+    def __add_tags(self, tags):
+        """
+            Add tags to model
+            @param [(tag_id, title)] as [(int, str)]
+        """
+        if tags:
+            (tag_id, title) = tags.pop(0)
+            item = Item()
+            item.set_property('id', tag_id)
+            item.set_property('title', title)
+            self.__tags_model.append(item)
+            GLib.idle_add(self.__add_tags, tags)
+
+    def __add_history_items(self, items):
+        """
+            Add history items to model
+            @param [(title, uri, mtime)]  as [(str, str, int)]
+        """
+        if items:
+            (title, uri, mtime) = items.pop(0)
+            item = Item()
+            item.set_property('title', title)
+            item.set_property('uri', uri)
+            self.__history_model.append(item)
+            GLib.idle_add(self.__add_history_items, items)
+
+    def __add_cookies(self, cookies):
+        """
+            Add cookies to model
+            @param [(title, value, host, expiry)]  as [(str, str, str, int)]
+        """
+        if cookies:
+            (title, value, host, expiry) = cookies.pop(0)
+            item = Item()
+            item.set_property('id', Type.COOKIES)
+            item.set_property('title', title)
+            item.set_property('uri', host)
+            item.set_property('value', value)
+            item.set_property('date',
+                              datetime.fromtimestamp(
+                                  int(expiry)).strftime('%H:%M, %d/%m/%Y'))
+            self.__cookies_model.append(item)
+            GLib.idle_add(self.__add_cookies, cookies)
+
     def __get_current_box(self):
         """
             Get current box
@@ -483,11 +536,7 @@ class UriPopover(Gtk.Popover):
         else:
             limit = 10
         result = El().history.search(search, limit)
-        for (title, uri) in result:
-            item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
-            self.__search_model.append(item)
+        self.__add_searches(result)
 
     def __set_bookmarks(self, tag_id):
         """
@@ -501,11 +550,7 @@ class UriPopover(Gtk.Popover):
             items = El().bookmarks.get_recents()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
-        for (bookmark_id, title, uri) in items:
-            item = Item()
-            item.set_property('title', title)
-            item.set_property('uri', uri)
-            self.__bookmarks_model.append(item)
+        self.__add_bookmarks(items)
 
     def __on_button_release(self, eventbox, event, item):
         """
