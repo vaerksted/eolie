@@ -9,6 +9,7 @@
     <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="settings_dialog">
+    <property name="width_request">600</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Preferences</property>
     <property name="resizable">False</property>
@@ -474,7 +475,19 @@
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
-                <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Manage cookies</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="hexpand">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
               </packing>
             </child>
             <child>
@@ -555,7 +568,6 @@
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">4</property>
-                <property name="width">2</property>
               </packing>
             </child>
             <child>
@@ -572,6 +584,19 @@
                 <property name="left_attach">0</property>
                 <property name="top_attach">5</property>
                 <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="manage_passwords_button">
+                <property name="label" translatable="yes">Manage passwords</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="hexpand">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
           </object>
