@@ -159,7 +159,7 @@ class UriPopover(Gtk.Popover):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverUri.ui')
         builder.connect_signals(self)
-        self.__action_button = builder.get_object('action_button')
+        self.__cookies_button = builder.get_object('cookies_button')
         self.__scrolled_bookmarks = builder.get_object('scrolled_bookmarks')
         self.__cookies_model = Gio.ListStore()
         self.__cookies_box = builder.get_object('cookies_box')
@@ -327,9 +327,9 @@ class UriPopover(Gtk.Popover):
             return
         if row.item.get_property('id') == Type.COOKIES:
             if len(listbox.get_selected_rows()) > 1:
-                self.__action_button.set_label(_("Remove cookies"))
+                self.__cookies_button.set_label(_("Remove cookies"))
             else:
-                self.__action_button.set_label(_("Remove cookie"))
+                self.__cookies_button.set_label(_("Remove cookie"))
         else:
             scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
             if scrolled is None:
@@ -357,7 +357,6 @@ class UriPopover(Gtk.Popover):
         now = datetime.now()
         self.__calendar.select_month(now.month, now.year)
         self.__calendar.select_day(now.day)
-        self.__action_button.hide()
 
     def _on_bookmarks_map(self, widget):
         """
@@ -378,6 +377,13 @@ class UriPopover(Gtk.Popover):
         if self.__tags_box.get_children():
             self.__tags_box.select_row(self.__tags_box.get_children()[0])
             self.__set_bookmarks(Type.POPULARS)
+
+    def _on_passwords_map(self, widget):
+        """
+            Init passwords
+            @param widget as Gtk.Widget
+        """
+        pass
 
     def _on_cookies_map(self, widget):
         """
@@ -401,10 +407,9 @@ class UriPopover(Gtk.Popover):
                                   datetime.fromtimestamp(
                                       int(expiry)).strftime('%H:%M, %d/%m/%Y'))
                 self.__cookies_model.append(item)
-            self.__action_button.set_label(_("Remove all cookies"))
-            self.__action_button.get_style_context().add_class(
+            self.__cookies_button.set_label(_("Remove all cookies"))
+            self.__cookies_button.get_style_context().add_class(
                                                           'destructive-action')
-            self.__action_button.show()
         except Exception as e:
             print("UriPopover::_on_cookies_map()", e)
 
@@ -424,13 +429,13 @@ class UriPopover(Gtk.Popover):
             item.set_property('uri', uri)
             self.__history_model.append(item)
 
-    def _on_action_clicked(self, stack):
+    def _on_cookies_button_clicked(self, button):
         """
             Execute context action
-            @param stack as Gtk.Stack
+            @param button as Gtk.Button
         """
         try:
-            if stack.get_visible_child_name() == 'cookies':
+            if self.__stack.get_visible_child_name() == 'cookies':
                 import sqlite3
                 sql = sqlite3.connect(El().cookies_path, 600.0)
                 if not self.__cookies_box.get_selected_rows():
