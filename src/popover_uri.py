@@ -287,7 +287,7 @@ class UriPopover(Gtk.Popover):
                 if selected is not None:
                     uri = selected.item.get_property('uri')
                     if uri:
-                        El().active_window.toolbar.self.__title.hide_popover()
+                        El().active_window.toolbar.title.hide_popover()
                         El().active_window.container.current.load_uri(uri)
                 return True
             else:
