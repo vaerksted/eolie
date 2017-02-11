@@ -23,4 +23,5 @@ app_PYTHON = \
     toolbar_end.py\
     toolbar_title.py\
     web_view.py\
+    widget_find.py\
     window.py

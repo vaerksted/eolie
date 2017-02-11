@@ -113,6 +113,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.shortcut::close_page", ["<Control>w"])
         self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("app.shortcut::reload", ["<Control>r"])
+        self.set_accels_for_action("app.shortcut::find", ["<Control>f"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
@@ -371,6 +372,8 @@ class Application(Gtk.Application):
             window.container.sidebar.current.destroy()
         elif string == "reload":
             self.active_window.container.current.reload()
+        elif string == "find":
+            self.active_window.container.current.find()
         elif string == "filter":
             button = self.active_window.toolbar.actions.filter_button
             button.set_active(not button.get_active())

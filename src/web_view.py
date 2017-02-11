@@ -15,6 +15,7 @@ from gi.repository import WebKit2, Gio, Gtk
 import ctypes
 from urllib.parse import urlparse
 
+from eolie.widget_find import FindWidget
 from eolie.define import El, LOGINS, PASSWORDS
 
 
@@ -30,11 +31,14 @@ class WebView(Gtk.Grid):
             Init view
         """
         Gtk.Grid.__init__(self)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__loaded_uri = ""
         self.__webview = WebKit2.WebView()
         self.__webview.set_hexpand(True)
         self.__webview.set_vexpand(True)
         self.__webview.show()
+        self.__find_widget = FindWidget(self.__webview)
+        self.__find_widget.show()
         settings = self.__webview.get_settings()
         settings.set_property('enable-java',
                               El().settings.get_value('enable-plugins'))
@@ -76,6 +80,7 @@ class WebView(Gtk.Grid):
         self.__webview.connect("submit-form", self.__on_submit_form)
         self.__webview.get_context().connect("download-started",
                                              self.__on_download_started)
+        self.add(self.__find_widget)
         self.add(self.__webview)
 
     def load_uri(self, uri):
@@ -116,6 +121,15 @@ class WebView(Gtk.Grid):
             @param kwargs as data
         """
         self.__webview.connect(*args, self, **kwargs)
+
+    def find(self):
+        """
+            Show find widget
+        """
+        search_mode = self.__find_widget.get_search_mode()
+        self.__find_widget.set_search_mode(not search_mode)
+        if not search_mode:
+            self.__find_widget.grab_focus()
 
     @property
     def is_offscreen(self):

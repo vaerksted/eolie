@@ -303,6 +303,7 @@ class StackSidebar(Gtk.Grid):
         self.__search_entry.show()
         self.__search_bar = Gtk.SearchBar.new()
         self.__search_bar.add(self.__search_entry)
+        self.__search_bar.show()
         self.add(self.__search_bar)
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_vexpand(True)
@@ -351,13 +352,11 @@ class StackSidebar(Gtk.Grid):
             @param b as bool
         """
         if b:
-            self.__search_bar.show()
             self.__search_entry.grab_focus()
             self.__search_entry.connect('key-press-event',
                                         self.__on_key_press)
             self.__listbox.set_filter_func(self.__filter_func)
         else:
-            self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self.__listbox.set_filter_func(None)
         self.__search_bar.set_search_mode(b)
@@ -410,7 +409,7 @@ class StackSidebar(Gtk.Grid):
             @param widget as Gtk.SearchEntry
             @param event as Gdk.Event
         """
-        if event.keyval == 65307:
+        if event.keyval == Gdk.KEY_Escape:
             self.__search_entry.set_text('')
             El().active_window.toolbar.actions.filter_button.set_active(False)
             return True
