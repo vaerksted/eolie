@@ -62,6 +62,16 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
+        if self.__view != self.__container.current:
+            self.__container.remove_view(self.__view)
+            window = Gtk.OffscreenWindow.new()
+            width = self.__container.get_allocated_width() -\
+                self.get_allocated_width()
+            self.__view.set_size_request(
+                                  width,
+                                  self.__container.get_allocated_height())
+            window.add(self.__view)
+            window.show()
         self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                                  WebKit2.SnapshotOptions.NONE,
                                  None,
@@ -84,13 +94,13 @@ class SidebarChild(Gtk.ListBoxRow):
             Destroy self
         """
         if event.button == 2:
-            self.destroy()
+            self.__container.sidebar.close_current()
 
     def _on_close_button_press(self, button, event):
         """
             Destroy self
         """
-        self.destroy()
+        self.__container.sidebar.close_current()
 
     def _on_enter_notify(self, eventbox, event):
         """
@@ -211,7 +221,7 @@ class SidebarChild(Gtk.ListBoxRow):
             title = view.get_uri()
         self.__title.set_text(title)
         if not view.is_loading():
-            GLib.timeout_add(500, self.set_snapshot, True)
+            GLib.timeout_add(1000, self.set_snapshot, True)
         if view.get_favicon() is not None:
             GLib.timeout_add(500, self.__set_favicon)
 
@@ -234,6 +244,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param result as Gio.AsyncResult
             @param save as bool
+            @warning view here is WebKit2.WebView, not WebView
         """
         # We are filtered
         if self.get_allocated_width() == 1:
@@ -258,6 +269,11 @@ class SidebarChild(Gtk.ListBoxRow):
         except Exception as e:
             print("StackSidebar::__on_snapshot:", e)
             return
+        parent = self.__view.get_parent()
+        if parent is not None and isinstance(parent, Gtk.OffscreenWindow):
+            parent.remove(self.__view)
+            self.__view.set_size_request(-1, -1)
+            self.__container.add_view(self.__view)
 
     def __on_load_changed(self, internal, event, view):
         """
@@ -322,7 +338,6 @@ class StackSidebar(Gtk.Grid):
             @param view as WebView
         """
         child = SidebarChild(view, self.__container)
-        child.connect('destroy', self.__on_child_destroy)
         child.show()
         self.__listbox.add(child)
 
@@ -361,16 +376,31 @@ class StackSidebar(Gtk.Grid):
             self.__listbox.set_filter_func(None)
         self.__search_bar.set_search_mode(b)
 
-    @property
-    def current(self):
+    def close_current(self):
         """
-            Current child
+            close current view
             @return child SidebarChild
         """
-        visible = self.__container.stack.get_visible_child()
-        for child in self.__listbox.get_children():
+        # Search current index
+        children = self.__listbox.get_children()
+        visible = self.__container.current
+        index = 0
+        for child in children:
             if child.view == visible:
-                return child
+                break
+            index += 1
+        next_row = None
+        if len(children) == 0:
+            self.__container.add_web_view(El().start_page, True)
+        elif index < len(children):
+            next_row = self.__listbox.get_row_at_index(index + 1)
+        else:
+            next_row = self.__listbox.get_row_at_index(index - 1)
+        if next_row is not None:
+            self.__container.set_visible_view(next_row.view)
+        child.view.destroy()
+        child.destroy()
+        self.update_visible_child()
 
 #######################
 # PROTECTED           #
@@ -413,16 +443,6 @@ class StackSidebar(Gtk.Grid):
             self.__search_entry.set_text('')
             El().active_window.toolbar.actions.filter_button.set_active(False)
             return True
-
-    def __on_child_destroy(self, child):
-        """
-            Destroy associated view
-            @param child as SidebarChild
-        """
-        if len(self.__listbox.get_children()) == 0:
-            self.__container.add_web_view(El().start_page, True)
-        child.view.destroy()
-        self.update_visible_child()
 
     def __on_row_activated(self, listbox, row):
         """

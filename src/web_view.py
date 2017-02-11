@@ -132,14 +132,6 @@ class WebView(Gtk.Grid):
             self.__find_widget.grab_focus()
 
     @property
-    def is_offscreen(self):
-        """
-            True if offscreen
-        """
-        parent = self.get_parent()
-        return parent is not None and isinstance(parent, Gtk.OffscreenWindow)
-
-    @property
     def loaded_uri(self):
         """
             Return loaded uri (This is not current uri!)

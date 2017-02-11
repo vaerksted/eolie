@@ -18,6 +18,7 @@ gi.require_version('Secret', '1')
 from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 
 from gettext import gettext as _
+from pickle import dump, load
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -161,6 +162,17 @@ class Application(Gtk.Application):
         """
         self.active_window.container.save_position()
         self.download_manager.cancel()
+        try:
+            session_states = []
+            for window in self.__windows:
+                for view in window.container.views:
+                    uri = view.get_uri()
+                    state = view.get_session_state().serialize()
+                    session_states.append((uri, state.get_data()))
+            dump(session_states,
+                 open(self.__LOCAL_PATH + "/session_states.bin", "wb"))
+        except Exception as e:
+            print("Application::prepare_to_exit()", e)
         if exit:
             self.quit()
 
@@ -226,6 +238,26 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __restore_state(self):
+        """
+            Restore saved state
+            @return restored pages count as int
+        """
+        count = 0
+        try:
+            session_states = load(open(
+                                     self.__LOCAL_PATH + "/session_states.bin",
+                                     "rb"))
+            for (uri, state) in session_states:
+                webkit_state = WebKit2.WebViewSessionState(
+                                                         GLib.Bytes.new(state))
+                GLib.idle_add(self.active_window.container.add_web_view,
+                              uri, False, webkit_state)
+                count += 1
+            return count
+        except Exception as e:
+            print("Application::restore_state()", e)
+
     def __on_command_line(self, app, app_cmd_line):
         """
             Handle command line
@@ -238,12 +270,13 @@ class Application(Gtk.Application):
         if options.contains('debug'):
             pass
         else:
+            count = self.__restore_state()
             active_window = self.active_window
             if len(args) > 1:
                 for uri in args[1:]:
                     active_window.container.add_web_view(uri, True)
                 active_window.present()
-            else:
+            elif count == 0:
                 active_window.container.add_web_view(self.start_page, True)
         return 0
 
@@ -369,11 +402,11 @@ class Application(Gtk.Application):
         elif string == "new_page":
             window.container.add_web_view(self.start_page, True)
         elif string == "close_page":
-            window.container.sidebar.current.destroy()
+            window.container.sidebar.close_current()
         elif string == "reload":
-            self.active_window.container.current.reload()
+            window.container.container.current.reload()
         elif string == "find":
-            self.active_window.container.current.find()
+            window.container.current.find()
         elif string == "filter":
-            button = self.active_window.toolbar.actions.filter_button
+            button = window.toolbar.actions.filter_button
             button.set_active(not button.get_active())

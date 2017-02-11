@@ -49,39 +49,24 @@ class Container(Gtk.Paned):
         self.child_set_property(self.__stack_sidebar, "shrink", False)
         self.add2(overlay)
 
-    def add_web_view(self, uri, show):
+    def add_web_view(self, uri, show, state=None):
         """
             Add a web view to container
             @param uri as str
             @param show as bool
+            @param state as WebKit2.WebViewSessionState
         """
-        from eolie.web_view import WebView
-        if uri is None:
-            uri = "about:blank"
-        view = WebView()
-        view.connect("map", self.__on_view_map)
-        view.connect("notify::estimated-load-progress",
-                     self.__on_estimated_load_progress)
-        view.connect("load-changed", self.__on_load_changed)
-        view.connect("button-press-event", self.__on_button_press)
-        view.connect("notify::uri", self.__on_uri_changed)
-        view.connect("notify::title", self.__on_title_changed)
-        view.connect("enter-fullscreen", self.__on_enter_fullscreen)
-        view.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        view.connect("insecure-content-detected",
-                     self.__on_insecure_content_detected)
-
-        if uri != "about:blank":
-            view.load_uri(uri)
+        view = self.__get_new_webview()
+        if state is not None:
+            view.restore_session_state(state)
         view.show()
         self.__stack_sidebar.add_child(view)
-
+        if uri is not None:
+            view.load_uri(uri)
+        self.__stack.add(view)
         if show:
-            self.__stack.add(view)
             self.__stack.set_visible_child(view)
             self.__stack_sidebar.update_visible_child()
-        else:
-            self.__set_offscreen(view, True)
 
     def load_uri(self, uri):
         """
@@ -91,15 +76,33 @@ class Container(Gtk.Paned):
         if self.current is not None:
             self.current.load_uri(uri)
 
+    def add_view(self, view):
+        """
+            Add view to container
+        """
+        if view not in self.__stack.get_children():
+            self.__stack.add(view)
+
+    def remove_view(self, view):
+        """
+            Remove view from container
+        """
+        if view in self.__stack.get_children():
+            self.__stack.remove(view)
+
     def set_visible_view(self, view):
         """
             Set visible view
             @param view as WebView
         """
-        current = self.current
-        self.__set_offscreen(view, False)
+        # Remove from offscreen window if needed
+        # Will kill running get_snapshot :-/
+        parent = view.get_parent()
+        if parent is not None and isinstance(parent, Gtk.OffscreenWindow):
+            parent.remove(view)
+            view.set_size_request(-1, -1)
+            self.__stack.add(view)
         self.__stack.set_visible_child(view)
-        self.__set_offscreen(current, True)
 
     def save_position(self):
         """
@@ -143,31 +146,26 @@ class Container(Gtk.Paned):
 #######################
 # PRIVATE             #
 #######################
-    def __set_offscreen(self, view, offscreen):
+    def __get_new_webview(self):
         """
-            Set view as offscreen
-            @param view as WebView
-            @return bool
+            Get a new webview
+            @return WebView
         """
-        # Check if we really need to do something
-        is_offscreen = view.is_offscreen
-        if (offscreen and is_offscreen) or\
-           (not offscreen and not is_offscreen) or\
-           (offscreen and not view.is_loading()):
-            return
-        # Remove view from previous container
-        parent = view.get_parent()
-        if parent is not None:
-            parent.remove(view)
-        if offscreen:
-            window = Gtk.OffscreenWindow.new()
-            view.set_size_request(self.__stack.get_allocated_width(),
-                                  self.__stack.get_allocated_height())
-            window.add(view)
-            window.show()
-        else:
-            view.set_size_request(-1, -1)
-            self.__stack.add(view)
+        from eolie.web_view import WebView
+        view = WebView()
+        view.connect("map", self.__on_view_map)
+        view.connect("notify::estimated-load-progress",
+                     self.__on_estimated_load_progress)
+        view.connect("load-changed", self.__on_load_changed)
+        view.connect("button-press-event", self.__on_button_press)
+        view.connect("notify::uri", self.__on_uri_changed)
+        view.connect("notify::title", self.__on_title_changed)
+        view.connect("enter-fullscreen", self.__on_enter_fullscreen)
+        view.connect("leave-fullscreen", self.__on_leave_fullscreen)
+        view.connect("insecure-content-detected",
+                     self.__on_insecure_content_detected)
+        view.show()
+        return view
 
     def __on_notify_position(self, paned, position):
         """
