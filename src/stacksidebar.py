@@ -390,16 +390,16 @@ class StackSidebar(Gtk.Grid):
                 break
             index += 1
         next_row = None
+        child.view.destroy()
+        child.destroy()
         if len(children) == 0:
             self.__container.add_web_view(El().start_page, True)
-        elif index < len(children):
+        elif index + 1 < len(children):
             next_row = self.__listbox.get_row_at_index(index + 1)
         else:
             next_row = self.__listbox.get_row_at_index(index - 1)
         if next_row is not None:
             self.__container.set_visible_view(next_row.view)
-        child.view.destroy()
-        child.destroy()
         self.update_visible_child()
 
 #######################

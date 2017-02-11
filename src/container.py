@@ -66,7 +66,7 @@ class Container(Gtk.Paned):
         self.__stack.add(view)
         if show:
             self.__stack.set_visible_child(view)
-            self.__stack_sidebar.update_visible_child()
+        self.__stack_sidebar.update_visible_child()
 
     def load_uri(self, uri):
         """
