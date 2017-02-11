@@ -270,7 +270,10 @@ class Application(Gtk.Application):
         if options.contains('debug'):
             pass
         else:
-            count = self.__restore_state()
+            if self.settings.get_value("remember-session"):
+                count = self.__restore_state()
+            else:
+                count = 0
             active_window = self.active_window
             if len(args) > 1:
                 for uri in args[1:]:
