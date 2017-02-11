@@ -28,8 +28,8 @@ class Container(Gtk.Paned):
         """
         Gtk.Paned.__init__(self)
         self.set_position(
-            El().settings.get_value('paned-width').get_int32())
-        self.connect('notify::position', self.__on_notify_position)
+            El().settings.get_value("paned-width").get_int32())
+        self.connect("notify::position", self.__on_notify_position)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -39,13 +39,14 @@ class Container(Gtk.Paned):
         self.__stack_sidebar = StackSidebar(self)
         self.__stack_sidebar.show()
         self.__progress = Gtk.ProgressBar()
-        self.__progress.get_style_context().add_class('progressbar')
-        self.__progress.set_property('valign', Gtk.Align.START)
+        self.__progress.get_style_context().add_class("progressbar")
+        self.__progress.set_property("valign", Gtk.Align.START)
         overlay = Gtk.Overlay.new()
         overlay.add(self.__stack)
         overlay.add_overlay(self.__progress)
         overlay.show()
         self.add1(self.__stack_sidebar)
+        self.child_set_property(self.__stack_sidebar, "shrink", False)
         self.add2(overlay)
 
     def add_web_view(self, uri, show):
@@ -58,16 +59,16 @@ class Container(Gtk.Paned):
         if uri is None:
             uri = "about:blank"
         view = WebView()
-        view.connect('map', self.__on_view_map)
-        view.connect('notify::estimated-load-progress',
+        view.connect("map", self.__on_view_map)
+        view.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)
-        view.connect('load-changed', self.__on_load_changed)
-        view.connect('button-press-event', self.__on_button_press)
-        view.connect('notify::uri', self.__on_uri_changed)
-        view.connect('notify::title', self.__on_title_changed)
-        view.connect('enter-fullscreen', self.__on_enter_fullscreen)
-        view.connect('leave-fullscreen', self.__on_leave_fullscreen)
-        view.connect('insecure-content-detected',
+        view.connect("load-changed", self.__on_load_changed)
+        view.connect("button-press-event", self.__on_button_press)
+        view.connect("notify::uri", self.__on_uri_changed)
+        view.connect("notify::title", self.__on_title_changed)
+        view.connect("enter-fullscreen", self.__on_enter_fullscreen)
+        view.connect("leave-fullscreen", self.__on_leave_fullscreen)
+        view.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
 
         if uri != "about:blank":
