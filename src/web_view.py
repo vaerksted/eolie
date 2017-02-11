@@ -18,17 +18,24 @@ from urllib.parse import urlparse
 from eolie.define import El, LOGINS, PASSWORDS
 
 
-class WebView(WebKit2.WebView):
+class WebView(Gtk.Grid):
     """
         WebKit view
+        All WebKit2.WebView members available
+        Forward all connect to internal WebKit2.WebView webview, you get
+        self as first argument
     """
     def __init__(self):
         """
             Init view
         """
-        WebKit2.WebView.__init__(self)
+        Gtk.Grid.__init__(self)
         self.__loaded_uri = ""
-        settings = self.get_settings()
+        self.__webview = WebKit2.WebView()
+        self.__webview.set_hexpand(True)
+        self.__webview.set_vexpand(True)
+        self.__webview.show()
+        settings = self.__webview.get_settings()
         settings.set_property('enable-java',
                               El().settings.get_value('enable-plugins'))
         settings.set_property('enable-plugins',
@@ -64,12 +71,12 @@ class WebView(WebKit2.WebView):
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
         settings.set_property("media-playback-allows-inline", True)
-        self.set_settings(settings)
-        self.show()
-        self.connect("decide-policy", self.__on_decide_policy)
-        self.connect("submit-form", self.__on_submit_form)
-        self.get_context().connect("download-started",
-                                   self.__on_download_started)
+        self.__webview.set_settings(settings)
+        self.__webview.connect("decide-policy", self.__on_decide_policy)
+        self.__webview.connect("submit-form", self.__on_submit_form)
+        self.__webview.get_context().connect("download-started",
+                                             self.__on_download_started)
+        self.add(self.__webview)
 
     def load_uri(self, uri):
         """
@@ -79,7 +86,7 @@ class WebView(WebKit2.WebView):
         if not uri.startswith("http://") and not uri.startswith("https://"):
             uri = "http://" + uri
         self.__loaded_uri = uri
-        WebKit2.WebView.load_uri(self, uri)
+        self.__webview.load_uri(uri)
 
     def set_setting(self, key, value):
         """
@@ -87,12 +94,28 @@ class WebView(WebKit2.WebView):
             @param key as str
             @param value as GLib.Variant
         """
-        settings = self.get_settings()
+        settings = self.__webview.get_settings()
         if key == 'use-system-fonts':
             self.__set_system_fonts(settings)
         else:
             settings.set_property(key, value)
-        self.set_settings(settings)
+        self.__webview.set_settings(settings)
+
+    def __getattr__(self, name):
+        """
+            Get all attributes from webview
+            @param name as str
+        """
+        return getattr(self.__webview, name)
+
+    def connect(self, *args, **kwargs):
+        """
+            Forward connect to webview, prepend self as arg as
+            internal webview may not be useful for callers
+            @param args as (str, callback)
+            @param kwargs as data
+        """
+        self.__webview.connect(*args, self, **kwargs)
 
     @property
     def is_offscreen(self):

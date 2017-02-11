@@ -115,79 +115,11 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
                                                                'sidebar-close')
-            self.__on_notify_favicon(self.__view, None)
+            self.__on_notify_favicon(None, None, self.__view)
 
 #######################
 # PRIVATE             #
 #######################
-    def __set_snapshot_timeout(self):
-        """
-            Get snapshot timeout
-        """
-        self.__scroll_timeout_id = None
-        self.set_snapshot(False)
-
-    def __on_uri_changed(self, view, uri):
-        """
-            Update uri
-            @param view as WebView
-            @param uri as str
-        """
-        self.__title.set_text(view.get_uri())
-        # We are not filtered
-        if self.get_allocated_width() != 1:
-            preview = El().art.get_artwork(view.get_uri(),
-                                           "preview",
-                                           view.get_scale_factor(),
-                                           self.get_allocated_width() -
-                                           ArtSize.PREVIEW_WIDTH_MARGIN,
-                                           ArtSize.PREVIEW_HEIGHT)
-            if preview is not None:
-                self.__image.set_from_surface(preview)
-                del preview
-            else:
-                self.__image.clear()
-        favicon = El().art.get_artwork(view.get_uri(),
-                                       "favicon",
-                                       view.get_scale_factor(),
-                                       ArtSize.FAVICON,
-                                       ArtSize.FAVICON)
-        if favicon is not None:
-            self.__image_close.set_from_surface(favicon)
-            del favicon
-        else:
-            self.__image_close.set_from_icon_name('applications-internet',
-                                                  Gtk.IconSize.MENU)
-
-    def __on_title_changed(self, view, event):
-        """
-            Update title
-            @param view as WebView
-            @param title as str
-        """
-        if event.name != "title":
-            return
-        title = view.get_title()
-        if not title:
-            title = view.get_uri()
-        self.__title.set_text(title)
-        if not view.is_loading():
-            GLib.timeout_add(500, self.set_snapshot, True)
-        if view.get_favicon() is not None:
-            GLib.timeout_add(500, self.__set_favicon)
-
-    def __on_scroll_event(self, view, event):
-        """
-            Update snapshot
-            @param view as WebView
-            @param event as WebKit2.Event
-        """
-        if self.__scroll_timeout_id is not None:
-            GLib.source_remove(self.__scroll_timeout_id)
-        self.__scroll_timeout_id = GLib.timeout_add(
-                                                1000,
-                                                self.__set_snapshot_timeout)
-
     def __get_favicon(self, surface):
         """
             Resize surface to match favicon size
@@ -225,6 +157,77 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__image_close.get_style_context().remove_class('sidebar-close')
         self.__image_close.show()
 
+    def __set_snapshot_timeout(self):
+        """
+            Get snapshot timeout
+        """
+        self.__scroll_timeout_id = None
+        self.set_snapshot(False)
+
+    def __on_uri_changed(self, internal, uri, view):
+        """
+            Update uri
+            @param internal as WebKit2.WebView
+            @param uri as str
+            @param view as WebView
+        """
+        self.__title.set_text(view.get_uri())
+        # We are not filtered
+        if self.get_allocated_width() != 1:
+            preview = El().art.get_artwork(view.get_uri(),
+                                           "preview",
+                                           view.get_scale_factor(),
+                                           self.get_allocated_width() -
+                                           ArtSize.PREVIEW_WIDTH_MARGIN,
+                                           ArtSize.PREVIEW_HEIGHT)
+            if preview is not None:
+                self.__image.set_from_surface(preview)
+                del preview
+            else:
+                self.__image.clear()
+        favicon = El().art.get_artwork(view.get_uri(),
+                                       "favicon",
+                                       view.get_scale_factor(),
+                                       ArtSize.FAVICON,
+                                       ArtSize.FAVICON)
+        if favicon is not None:
+            self.__image_close.set_from_surface(favicon)
+            del favicon
+        else:
+            self.__image_close.set_from_icon_name('applications-internet',
+                                                  Gtk.IconSize.MENU)
+
+    def __on_title_changed(self, internal, event, view):
+        """
+            Update title
+            @param internal as WebKit2.WebView
+            @param title as str
+            @param view as WebView
+        """
+        if event.name != "title":
+            return
+        title = view.get_title()
+        if not title:
+            title = view.get_uri()
+        self.__title.set_text(title)
+        if not view.is_loading():
+            GLib.timeout_add(500, self.set_snapshot, True)
+        if view.get_favicon() is not None:
+            GLib.timeout_add(500, self.__set_favicon)
+
+    def __on_scroll_event(self, internal, event, view):
+        """
+            Update snapshot
+            @param internal as WebKit2.WebView
+            @param event as WebKit2.Event
+            @param view as WebView
+        """
+        if self.__scroll_timeout_id is not None:
+            GLib.source_remove(self.__scroll_timeout_id)
+        self.__scroll_timeout_id = GLib.timeout_add(
+                                                1000,
+                                                self.__set_snapshot_timeout)
+
     def __on_snapshot(self, view, result, save):
         """
             Set snapshot on main image
@@ -256,22 +259,24 @@ class SidebarChild(Gtk.ListBoxRow):
             print("StackSidebar::__on_snapshot:", e)
             return
 
-    def __on_load_changed(self, view, event):
+    def __on_load_changed(self, internal, event, view):
         """
             Update sidebar/urlbar
-            @param view as WebView
+            @param internal as WebKit2.WebView
             @param event as WebKit2.LoadEvent
+            @param view as WebView
         """
         if event == WebKit2.LoadEvent.STARTED:
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
             GLib.timeout_add(500, self.set_snapshot, True)
 
-    def __on_notify_favicon(self, view, pointer):
+    def __on_notify_favicon(self, internal, pointer, view):
         """
             Set favicon
+            @param internal as WebKit2.WebView
+            @param pointer as GParamPointer
             @param view as WebView
-            @param pointer as GParamPointer => unused
         """
         if view.get_favicon() is None:
             self.__image_close.set_from_icon_name('applications-internet',

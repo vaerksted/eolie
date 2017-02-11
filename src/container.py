@@ -176,9 +176,10 @@ class Container(Gtk.Paned):
         """
         self.__stack_sidebar.update_children_snapshot()
 
-    def __on_view_map(self, view):
+    def __on_view_map(self, internal, view):
         """
             Update window
+            @param internal as WebKit2.WebView
             @param view as WebView
         """
         if view == self.current:
@@ -189,38 +190,42 @@ class Container(Gtk.Paned):
                 self.__progress.hide()
                 self.window.toolbar.title.set_title(view.get_title())
 
-    def __on_button_press(self, widget, event):
+    def __on_button_press(self, internal, event, view):
         """
             Hide Titlebar popover
-            @param widget as Gtk.Widget
+            @param internal as WebKit2.WebView
             @param event as Gdk.Event
+            @param view as WebView
         """
         self.window.toolbar.title.hide_popover()
 
-    def __on_estimated_load_progress(self, view, value):
+    def __on_estimated_load_progress(self, internal, value, view):
         """
             Update progress bar
+            @param internal as WebKit2.WebView
+            @param value GparamFloat
             @param view as WebView
-            @param UNUSED
         """
         if view == self.current:
             value = view.get_estimated_load_progress()
             self.__progress.set_fraction(value)
 
-    def __on_uri_changed(self, view, uri):
+    def __on_uri_changed(self, internal, uri, view):
         """
             Update uri
-            @param view as WebView
+            @param internal as WebKit2.WebView
             @param uri as str
+            @param view as WebView
         """
         if view == self.current:
             self.window.toolbar.title.set_uri(view.get_uri())
 
-    def __on_title_changed(self, view, event):
+    def __on_title_changed(self, internal, event, view):
         """
             Update title
-            @param view as WebView
+            @param internal as WebKit2.WebView
             @param title as str
+            @param view as WebView
         """
         if event.name != "title":
             return
@@ -239,32 +244,36 @@ class Container(Gtk.Paned):
             if strip_uri(uri, False) != strip_uri(view.loaded_uri, False):
                 El().history.add(title, strip_uri(view.loaded_uri))
 
-    def __on_enter_fullscreen(self, view):
+    def __on_enter_fullscreen(self, internal, view):
         """
             Hide sidebar (conflict with fs)
+            @param internal as WebKit2.WebView
             @param view as WebView
         """
         self.__stack_sidebar.hide()
 
-    def __on_leave_fullscreen(self, view):
+    def __on_leave_fullscreen(self, internal, view):
         """
             Show sidebar (conflict with fs)
+            @param internal as WebKit2.WebView
             @param view as WebView
         """
         self.__stack_sidebar.show()
 
-    def __on_insecure_content_detected(self, view, event):
+    def __on_insecure_content_detected(self, internal, event, view):
         """
-            @param view as WebView
+            @param internal as WebKit2.WebView
             @param event as WebKit2.InsecureContentEvent
+            @param view as WebView
         """
         self.window.toolbar.title.set_insecure_content()
 
-    def __on_load_changed(self, view, event):
+    def __on_load_changed(self, internal, event, view):
         """
             Update sidebar/urlbar
-            @param view as WebView
+            @param internal as WebKit2.WebView
             @param event as WebKit2.LoadEvent
+            @param view as WebView
         """
         self.window.toolbar.title.on_load_changed(view, event)
         if event == WebKit2.LoadEvent.STARTED:
