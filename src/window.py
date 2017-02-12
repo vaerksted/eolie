@@ -134,7 +134,7 @@ class Window(Gtk.ApplicationWindow):
             Save window state, update current view content size
             @param: widget as Gtk.Window
         """
-        self.update_zoom_level()
+        self.update_zoom_level(False)
         self.__timeout_configure = None
         size = widget.get_size()
         El().settings.set_value('window-size',
