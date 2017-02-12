@@ -378,23 +378,46 @@ class StackSidebar(Gtk.Grid):
             self.__listbox.set_filter_func(None)
         self.__search_bar.set_search_mode(b)
 
+    def next(self):
+        """
+            Show next view
+        """
+        children = self.__listbox.get_children()
+        index = self.__get_index(self.__container.current)
+        if index + 1 < len(children):
+            next_row = self.__listbox.get_row_at_index(index + 1)
+        else:
+            next_row = self.__listbox.get_row_at_index(0)
+        if next_row is not None:
+            self.__container.set_visible_view(next_row.view)
+        self.update_visible_child()
+
+    def previous(self):
+        """
+            Show next view
+        """
+        children = self.__listbox.get_children()
+        index = self.__get_index(self.__container.current)
+        if index == 0:
+            next_row = self.__listbox.get_row_at_index(len(children) - 1)
+        else:
+            next_row = self.__listbox.get_row_at_index(index - 1)
+        if next_row is not None:
+            self.__container.set_visible_view(next_row.view)
+        self.update_visible_child()
+
     def close_current(self):
         """
             close current view
             @return child SidebarChild
         """
-        # Search current index
-        children = self.__listbox.get_children()
-        visible = self.__container.current
-        index = 0
-        for child in children:
-            if child.view == visible:
-                break
-            index += 1
+        index = self.__get_index(self.__container.current)
         next_row = None
         # Delay view destroy to allow stack animation
+        child = self.__listbox.get_row_at_index(index)
         GLib.timeout_add(1000, child.view.destroy)
         child.destroy()
+        children = self.__listbox.get_children()
         if len(children) == 0:
             self.__container.add_web_view(El().start_page, True)
         elif index + 1 < len(children):
@@ -418,6 +441,20 @@ class StackSidebar(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __get_index(self, view):
+        """
+            Get view index
+            @return int
+        """
+        # Search current index
+        children = self.__listbox.get_children()
+        index = 0
+        for child in children:
+            if child.view == view:
+                break
+            index += 1
+        return index
+
     def __filter_func(self, row):
         """
             Filter list based on current filter

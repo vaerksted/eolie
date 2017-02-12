@@ -118,6 +118,9 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.shortcut::settings", ["<Control>e"])
         self.set_accels_for_action("app.shortcut::backward", ["<Alt>Left"])
         self.set_accels_for_action("app.shortcut::forward", ["<Alt>Right"])
+        self.set_accels_for_action("app.shortcut::next", ["<Control>Tab"])
+        self.set_accels_for_action("app.shortcut::previous",
+                                   ["<Control><Shift>Tab"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
@@ -427,6 +430,10 @@ class Application(Gtk.Application):
         elif string == "settings":
             dialog = SettingsDialog()
             dialog.show()
+        elif string == "previous":
+            window.container.sidebar.previous()
+        elif string == "next":
+            window.container.sidebar.next()
         elif string == "filter":
             button = window.toolbar.actions.filter_button
             button.set_active(not button.get_active())
