@@ -86,6 +86,11 @@
             <summary>Minimum font size</summary>
             <description></description>
         </key>
+	    <key type="as" name="default-zoom-level">
+            <default>[]</default>
+            <summary>INTERNAL</summary>
+            <description></description>
+        </key>
 	    <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
             <default>"no_third_party"</default>
             <summary>Cookie storage type</summary>

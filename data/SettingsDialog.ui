@@ -8,6 +8,12 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkAdjustment" id="adjustment2">
+    <property name="lower">0.10000000000000001</property>
+    <property name="upper">5</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkWindow" id="settings_dialog">
     <property name="width_request">600</property>
     <property name="can_focus">False</property>
@@ -431,6 +437,31 @@
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Default zoom level</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSpinButton" id="default_zoom_level">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="adjustment">adjustment2</property>
+                <property name="digits">1</property>
+                <signal name="value-changed" handler="_on_default_zoom_changed" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
           </object>

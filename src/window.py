@@ -15,6 +15,7 @@ from gi.repository import Gtk, GLib
 from eolie.define import El
 from eolie.toolbar import Toolbar
 from eolie.container import Container
+from eolie.utils import get_current_monitor_model
 
 
 class Window(Gtk.ApplicationWindow):
@@ -30,7 +31,7 @@ class Window(Gtk.ApplicationWindow):
         Gtk.ApplicationWindow.__init__(self,
                                        application=El(),
                                        title="Eolie")
-
+        self.__monitor_model = ""
         self.__setup_content()
         self.setup_window()
         self.connect('destroy', self.__on_destroyed_window)
@@ -46,6 +47,27 @@ class Window(Gtk.ApplicationWindow):
         if El().settings.get_value('window-maximized'):
             self.maximize()
 
+    def update_zoom_level(self, force):
+        """
+            Update zoom level
+            @param force as bool
+        """
+        monitor_model = get_current_monitor_model()
+        if force or monitor_model != self.__monitor_model:
+            self.__monitor_model = monitor_model
+            zoom_levels = El().settings.get_value(
+                                             "default-zoom-level")
+            wanted_zoom_level = 1.0
+            try:
+                for zoom_level in zoom_levels:
+                    zoom_splited = zoom_level.split('@')
+                    if zoom_splited[0] == monitor_model:
+                        wanted_zoom_level = float(zoom_splited[1])
+            except Exception as e:
+                print("Window::__save_size_position()", e)
+            for view in self.__container.views:
+                view.set_zoom_level(wanted_zoom_level)
+
     @property
     def container(self):
         """
@@ -53,6 +75,13 @@ class Window(Gtk.ApplicationWindow):
             @return Container
         """
         return self.__container
+
+    @property
+    def monitor_model(self):
+        """
+            Get current monitor model
+        """
+        self.__monitor_model
 
     @property
     def toolbar(self):
@@ -100,6 +129,22 @@ class Window(Gtk.ApplicationWindow):
            isinstance(position_setting[1], int):
             self.move(position_setting[0], position_setting[1])
 
+    def __save_size_position(self, widget):
+        """
+            Save window state, update current view content size
+            @param: widget as Gtk.Window
+        """
+        self.update_zoom_level()
+        self.__timeout_configure = None
+        size = widget.get_size()
+        El().settings.set_value('window-size',
+                                GLib.Variant('ai', [size[0], size[1]]))
+
+        position = widget.get_position()
+        El().settings.set_value('window-position',
+                                GLib.Variant('ai',
+                                             [position[0], position[1]]))
+
     def __on_configure_event(self, widget, event):
         """
             Delay event
@@ -116,21 +161,6 @@ class Window(Gtk.ApplicationWindow):
                                                    1000,
                                                    self.__save_size_position,
                                                    widget)
-
-    def __save_size_position(self, widget):
-        """
-            Save window state, update current view content size
-            @param: widget as Gtk.Window
-        """
-        self.__timeout_configure = None
-        size = widget.get_size()
-        El().settings.set_value('window-size',
-                                GLib.Variant('ai', [size[0], size[1]]))
-
-        position = widget.get_position()
-        El().settings.set_value('window-position',
-                                GLib.Variant('ai',
-                                             [position[0], position[1]]))
 
     def __on_window_state_event(self, widget, event):
         """

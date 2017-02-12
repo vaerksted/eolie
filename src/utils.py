@@ -10,10 +10,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from gi.repository import Gdk
+
 import unicodedata
 from urllib.parse import urlparse
 
 from eolie.define import El
+
+
+def get_current_monitor_model():
+    """
+        Return monitor model as string
+        @return str
+    """
+    screen = Gdk.Screen.get_default()
+    display = screen.get_display()
+    monitor = display.get_monitor_at_window(El().active_window.get_window())
+    return monitor.get_model()
 
 
 def noaccents(string):
