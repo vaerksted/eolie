@@ -218,6 +218,7 @@ class DatabaseBookmarks:
             for (title, uri,  tag) in list(result):
                 if not uri.startswith('http'):
                     continue
+                uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
                     self.add(title, uri, [tag])
