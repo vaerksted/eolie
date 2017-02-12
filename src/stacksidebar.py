@@ -392,7 +392,8 @@ class StackSidebar(Gtk.Grid):
                 break
             index += 1
         next_row = None
-        child.view.destroy()
+        # Delay view destroy to allow stack animation
+        GLib.timeout_add(1000, child.view.destroy)
         child.destroy()
         if len(children) == 0:
             self.__container.add_web_view(El().start_page, True)
