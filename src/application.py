@@ -115,6 +115,8 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("app.shortcut::reload", ["<Control>r"])
         self.set_accels_for_action("app.shortcut::find", ["<Control>f"])
+        self.set_accels_for_action("app.shortcut::backward", ["<Alt>Left"])
+        self.set_accels_for_action("app.shortcut::forward", ["<Alt>Right"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
@@ -410,6 +412,10 @@ class Application(Gtk.Application):
             window.container.container.current.reload()
         elif string == "find":
             window.container.current.find()
+        elif string == "backward":
+            window.toolbar.actions.backward()
+        elif string == "forward":
+            window.toolbar.actions.forward()
         elif string == "filter":
             button = window.toolbar.actions.filter_button
             button.set_active(not button.get_active())

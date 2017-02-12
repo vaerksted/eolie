@@ -31,7 +31,7 @@ class ToolbarActions(Gtk.Bin):
 
         self.add(builder.get_object('actions'))
 
-        self.__back = builder.get_object('back_button')
+        self.__backward = builder.get_object('back_button')
         self.__forward = builder.get_object('forward_button')
         self.__filter = builder.get_object('filter_button')
 
@@ -40,8 +40,20 @@ class ToolbarActions(Gtk.Bin):
             Set available actions based on view
             @param view as WebView
         """
-        self.__back.set_sensitive(view.can_go_back())
+        self.__backward.set_sensitive(view.can_go_back())
         self.__forward.set_sensitive(view.can_go_forward())
+
+    def backward(self):
+        """
+            Click next
+        """
+        self.__backward.clicked()
+
+    def forward(self):
+        """
+            Click previous
+        """
+        self.__forward.clicked()
 
     @property
     def filter_button(self):
