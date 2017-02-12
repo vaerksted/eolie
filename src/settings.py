@@ -48,7 +48,6 @@ class SettingsDialog:
         """
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SettingsDialog.ui')
-        builder.connect_signals(self)
 
         self.__settings_dialog = builder.get_object('settings_dialog')
         self.__settings_dialog.set_transient_for(El().active_window)
@@ -99,6 +98,8 @@ class SettingsDialog:
         use_system_fonts = builder.get_object('system_fonts_check')
         use_system_fonts.set_active(
                                 El().settings.get_value('use-system-fonts'))
+        self.__fonts_grid.set_sensitive(
+                            not El().settings.get_value('use-system-fonts'))
 
         sans_serif_button = builder.get_object('sans_serif_button')
         sans_serif_button.set_font_name(
@@ -121,6 +122,7 @@ class SettingsDialog:
         tracking_check = builder.get_object('tracking_check')
         tracking_check.set_active(
                                 El().settings.get_value('do-not-track'))
+        builder.connect_signals(self)
 
     def show(self):
         """
@@ -145,6 +147,9 @@ class SettingsDialog:
             @param combo as Gtk.ComboBoxText
         """
         El().settings.set_enum('cookie-storage', int(combo.get_active_id()))
+        for window in El().windows:
+            for view in window.container.views:
+                El().set_cookie_manager(view.get_context())
 
     def _on_min_font_size_changed(self, button):
         """

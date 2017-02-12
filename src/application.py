@@ -132,12 +132,7 @@ class Application(Gtk.Application):
         if not d.query_exists():
             d.make_directory_with_parents()
         context.set_favicon_database_directory(self.__FAVICONS_PATH)
-        cookie_manager = context.get_cookie_manager()
-        cookie_manager.set_accept_policy(
-                                     WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY)
-        cookie_manager.set_persistent_storage(
-                                        self.__COOKIES_PATH,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
+        self.set_cookie_manager(context)
 
     def do_startup(self):
         """
@@ -194,6 +189,18 @@ class Application(Gtk.Application):
         for window in self.__windows:
             for view in window.container.views:
                 view.set_setting(key, value)
+
+    def set_cookie_manager(self, context):
+        """
+            Set default webkit cookie manager
+            @param context as WebKit2.WebContext
+        """
+        cookie_manager = context.get_cookie_manager()
+        cookie_manager.set_accept_policy(
+                                     self.settings.get_enum("cookie-storage"))
+        cookie_manager.set_persistent_storage(
+                                        self.__COOKIES_PATH,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
 
     @property
     def start_page(self):
