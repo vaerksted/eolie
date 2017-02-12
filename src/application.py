@@ -115,6 +115,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("app.shortcut::reload", ["<Control>r"])
         self.set_accels_for_action("app.shortcut::find", ["<Control>f"])
+        self.set_accels_for_action("app.shortcut::settings", ["<Control>e"])
         self.set_accels_for_action("app.shortcut::backward", ["<Alt>Left"])
         self.set_accels_for_action("app.shortcut::forward", ["<Alt>Right"])
 
@@ -423,6 +424,9 @@ class Application(Gtk.Application):
             window.toolbar.actions.backward()
         elif string == "forward":
             window.toolbar.actions.forward()
+        elif string == "settings":
+            dialog = SettingsDialog()
+            dialog.show()
         elif string == "filter":
             button = window.toolbar.actions.filter_button
             button.set_active(not button.get_active())
