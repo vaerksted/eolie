@@ -63,15 +63,17 @@ class SidebarChild(Gtk.ListBoxRow):
             @param save as bool
         """
         if self.__view != self.__container.current:
-            self.__container.remove_view(self.__view)
-            window = Gtk.OffscreenWindow.new()
-            width = self.__container.get_allocated_width() -\
-                self.get_allocated_width()
-            self.__view.set_size_request(
-                                  width,
-                                  self.__container.get_allocated_height())
-            window.add(self.__view)
-            window.show()
+            parent = self.__view.get_parent()
+            if not isinstance(parent, Gtk.OffscreenWindow):
+                self.__container.remove_view(self.__view)
+                window = Gtk.OffscreenWindow.new()
+                width = self.__container.get_allocated_width() -\
+                    self.get_allocated_width()
+                self.__view.set_size_request(
+                                      width,
+                                      self.__container.get_allocated_height())
+                window.add(self.__view)
+                window.show()
         self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                                  WebKit2.SnapshotOptions.NONE,
                                  None,
