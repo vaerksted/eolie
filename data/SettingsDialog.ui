@@ -78,7 +78,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="auto_download_check">
+              <object class="GtkCheckButton" id="open_downloads_check">
                 <property name="label" translatable="yes">Automatically open downloaded files</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -86,7 +86,7 @@
                 <property name="halign">start</property>
                 <property name="margin_left">15</property>
                 <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="_on_auto_download_toggled" swapped="no"/>
+                <signal name="toggled" handler="_on_open_downloads_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>

@@ -36,9 +36,9 @@
             <summary>Download folder uri</summary>
             <description></description>
         </key>
-	    <key type="b" name="autostart-downloads">
+	    <key type="b" name="open-downloads">
             <default>true</default>
-            <summary>Autostart downloads</summary>
+            <summary>Open finished downloads</summary>
             <description></description>
         </key>
 	    <key type="s" name="search-engine">

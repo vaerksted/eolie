@@ -10,9 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GObject, GLib, Gio
+from gi.repository import GObject, GLib, Gio, Gtk
 
 from re import search
+from time import time
+
 from eolie.define import El
 
 
@@ -117,6 +119,8 @@ class DownloadManager(GObject.GObject):
         """
         self.remove(download)
         self.emit('download-finish')
+        if El().settings.get_value('open-downloads'):
+            Gtk.show_uri(None, download.get_destination(), int(time()))
 
     def __on_failed(self, download, error):
         """

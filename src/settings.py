@@ -69,9 +69,9 @@ class SettingsDialog:
             dir_uri = GLib.filename_to_uri(directory, None)
         download_chooser.set_uri(dir_uri)
 
-        autostart_downloads = builder.get_object('auto_download_check')
-        autostart_downloads.set_active(
-                                El().settings.get_value('autostart-downloads'))
+        open_downloads = builder.get_object('open_downloads_check')
+        open_downloads.set_active(
+                                El().settings.get_value('open-downloads'))
 
         self.__start_page_uri = builder.get_object('start_page_uri')
         combo_start = builder.get_object('combo_start')
@@ -237,12 +237,12 @@ class SettingsDialog:
                                 GLib.Variant('s', combo.get_active_id()))
         El().search.update_default_engine()
 
-    def _on_auto_download_toggled(self, button):
+    def _on_open_downloads_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value('autostart-downloads',
+        El().settings.set_value('open-downloads',
                                 GLib.Variant('b', button.get_active()))
 
     def _on_selection_changed(self, chooser):
