@@ -54,19 +54,8 @@ class Window(Gtk.ApplicationWindow):
         """
         monitor_model = get_current_monitor_model()
         if force or monitor_model != self.__monitor_model:
-            self.__monitor_model = monitor_model
-            zoom_levels = El().settings.get_value(
-                                             "default-zoom-level")
-            wanted_zoom_level = 1.0
-            try:
-                for zoom_level in zoom_levels:
-                    zoom_splited = zoom_level.split('@')
-                    if zoom_splited[0] == monitor_model:
-                        wanted_zoom_level = float(zoom_splited[1])
-            except Exception as e:
-                print("Window::__save_size_position()", e)
             for view in self.__container.views:
-                view.set_zoom_level(wanted_zoom_level)
+                view.update_zoom_level()
 
     @property
     def container(self):

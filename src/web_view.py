@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from eolie.widget_find import FindWidget
 from eolie.define import El, LOGINS, PASSWORDS
+from eolie.utils import get_current_monitor_model
 
 
 class WebView(Gtk.Grid):
@@ -82,6 +83,7 @@ class WebView(Gtk.Grid):
                                              self.__on_download_started)
         self.add(self.__find_widget)
         self.add(self.__webview)
+        self.update_zoom_level()
 
     def load_uri(self, uri):
         """
@@ -92,6 +94,23 @@ class WebView(Gtk.Grid):
             uri = "http://" + uri
         self.__loaded_uri = uri
         self.__webview.load_uri(uri)
+
+    def update_zoom_level(self):
+        """
+            Update zoom level
+        """
+        monitor_model = get_current_monitor_model()
+        zoom_levels = El().settings.get_value(
+                                         "default-zoom-level")
+        wanted_zoom_level = 1.0
+        try:
+            for zoom_level in zoom_levels:
+                zoom_splited = zoom_level.split('@')
+                if zoom_splited[0] == monitor_model:
+                    wanted_zoom_level = float(zoom_splited[1])
+        except Exception as e:
+            print("Window::__save_size_position()", e)
+        self.__webview.set_zoom_level(wanted_zoom_level)
 
     def set_setting(self, key, value):
         """
