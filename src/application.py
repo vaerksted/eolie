@@ -267,9 +267,9 @@ class Application(Gtk.Application):
                 GLib.idle_add(self.active_window.container.add_web_view,
                               uri, count == 0, webkit_state)
                 count += 1
-            return count
         except Exception as e:
             print("Application::restore_state()", e)
+        return count
 
     def __on_command_line(self, app, app_cmd_line):
         """
