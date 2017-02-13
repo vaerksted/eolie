@@ -509,14 +509,15 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
         """
         self.__input == Input.TAGS
-        if not self.__tags_box.get_children():
-            static = [(Type.POPULARS,
-                       _("Populars")),
-                      (Type.RECENTS,
-                       _("Recents")),
-                      (Type.NONE,
-                       _("Unclassified"))]
-            self.__add_tags(static + El().bookmarks.get_tags())
+        for child in self.__tags_box.get_children():
+            child.destroy()
+        static = [(Type.POPULARS,
+                   _("Populars")),
+                  (Type.RECENTS,
+                   _("Recents")),
+                  (Type.NONE,
+                   _("Unclassified"))]
+        self.__add_tags(static + El().bookmarks.get_tags())
 
     def _on_day_selected(self, calendar):
         """

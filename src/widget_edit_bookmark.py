@@ -145,8 +145,9 @@ class EditBookmarkWidget(Gtk.Bin):
             return
         iterator = self.__model.get_iter(path)
         old_name = self.__model.get_value(iterator, 0)
+        has_tag = El().bookmarks.has_tag(self.__bookmark_id, old_name)
         self.__model.remove(iterator)
-        self.__model.append([name, False])
+        self.__model.append([name, has_tag])
         El().bookmarks.rename_tag(old_name, name)
 
     def __on_item_toggled(self, view, path):
