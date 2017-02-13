@@ -94,7 +94,9 @@ class EditBookmarkWidget(Gtk.Bin):
         """
         tag_title = self.__new_tag_entry.get_text()
         El().bookmarks.add_tag(tag_title, True)
-        self.__model.append([tag_title, False])
+        tag_id = El().bookmarks.get_tag_id(tag_title)
+        El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
+        self.__model.append([tag_title, True])
 
     def _on_remove_tag_clicked(self, button):
         """
