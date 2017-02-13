@@ -516,16 +516,20 @@ class UriPopover(Gtk.Popover):
             Init bookmarks
             @param widget as Gtk.Widget
         """
+        current = None
+        row = self.__tags_box.get_selected_row()
+        if row is not None:
+            current = row.item.get_property("id")
         self.__input == Input.TAGS
         for child in self.__tags_box.get_children():
-            child.destroy()
+            self.__tags_box.remove(child)
         static = [(Type.POPULARS,
                    _("Populars")),
                   (Type.RECENTS,
                    _("Recents")),
                   (Type.NONE,
                    _("Unclassified"))]
-        self.__add_tags(static + El().bookmarks.get_tags())
+        self.__add_tags(static + El().bookmarks.get_tags(), current)
 
     def _on_day_selected(self, calendar):
         """
@@ -582,10 +586,11 @@ class UriPopover(Gtk.Popover):
             self.__bookmarks_model.append(item)
             GLib.idle_add(self.__add_bookmarks, bookmarks)
 
-    def __add_tags(self, tags):
+    def __add_tags(self, tags, select):
         """
             Add tags to model
             @param [(tag_id, title)] as [(int, str)]
+            @param select as int
         """
         if tags:
             (tag_id, title) = tags.pop(0)
@@ -598,10 +603,16 @@ class UriPopover(Gtk.Popover):
             child.connect("move", self.__on_row_moved)
             child.show()
             self.__tags_box.add(child)
-            GLib.idle_add(self.__add_tags, tags)
+            GLib.idle_add(self.__add_tags, tags, select)
         else:
-            self.__tags_box.select_row(self.__tags_box.get_children()[0])
-            self.__set_bookmarks(Type.POPULARS)
+            if select is None:
+                select = Type.POPULARS
+            # Search for previous current row
+            for row in self.__tags_box.get_children():
+                if row.item.get_property("id") == select:
+                    self.__tags_box.select_row(row)
+                    break
+            self.__set_bookmarks(select)
 
     def __add_history_items(self, items):
         """
