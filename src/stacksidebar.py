@@ -597,13 +597,11 @@ class StackSidebar(Gtk.Grid):
         """
         filter = self.__search_entry.get_text()
         if not filter:
-            row.set_snapshot(False)
             return True
         uri = row.view.get_uri()
         title = row.view.get_title()
         if (uri is not None and uri.find(filter) != -1) or\
                 (title is not None and title.find(filter) != -1):
-            row.set_snapshot(False)
             return True
         return False
 
