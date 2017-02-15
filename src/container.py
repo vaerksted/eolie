@@ -69,7 +69,7 @@ class Container(Gtk.Paned):
             @param uri as str
         """
         if self.current is not None:
-            self.current.load_uri(uri)
+            self.current.webview.load_uri(uri)
 
     def add_view(self, view):
         """
