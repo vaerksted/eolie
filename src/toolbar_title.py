@@ -327,10 +327,13 @@ class ToolbarTitle(Gtk.Bin):
             bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
             El().bookmarks.remove(bookmark_id)
         elif self.__action_image2.get_icon_name()[0] == "non-starred-symbolic":
+            uri = view.webview.get_uri()
+            if not uri or uri == "about:blank":
+                return
             self.__action_image2.set_from_icon_name("starred-symbolic",
                                                     Gtk.IconSize.MENU)
             bookmark_id = El().bookmarks.add(view.webview.get_title(),
-                                             view.webview.get_uri(), [])
+                                             uri, [])
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
