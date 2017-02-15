@@ -226,7 +226,7 @@
           </object>
           <packing>
             <property name="name">close</property>
-            <property name="title" translatable="yes">close</property>
+            <property name="title" translatable="yes">Close</property>
             <property name="icon_name">pan-up-symbolic</property>
             <property name="position">3</property>
           </packing>
