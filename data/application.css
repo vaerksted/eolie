@@ -183,16 +183,23 @@
     padding-right: 2px;
 }
 
-.urilabel-left {
+.bottom-left {
     border: 1px solid shade(@theme_bg_color, 0.7);
     border-left: none;
     border-bottom: none;
     border-top-right-radius: 2px;
 }
 
-.urilabel-right {
+.bottom-right {
     border: 1px solid shade(@theme_bg_color, 0.7);
     border-right: none;
     border-bottom: none;
     border-top-left-radius: 2px;
+}
+
+.top-left {
+    border: 1px solid shade(@theme_bg_color, 0.7);
+    border-left: none;
+    border-top: none;
+    border-bottom-right-radius: 2px;
 }

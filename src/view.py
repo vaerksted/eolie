@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, GLib, Pango
 
 from eolie.widget_find import FindWidget
 from eolie.web_view import WebView
@@ -30,7 +30,6 @@ class UriLabel(Gtk.EventBox):
         self.__label = Gtk.Label()
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.get_style_context().add_class("urilabel")
-        self.__label.get_style_context().add_class("urilabel-left")
         self.__label.show()
         self.add(self.__label)
         self.connect("enter-notify-event", self.__on_enter_notify)
@@ -40,9 +39,11 @@ class UriLabel(Gtk.EventBox):
             Set label text
             @param text as str
         """
+        if text == self.__label.get_text():
+            return
         self.set_property("halign", Gtk.Align.START)
-        self.__label.get_style_context().remove_class("urilabel-right")
-        self.__label.get_style_context().add_class("urilabel-left")
+        self.__label.get_style_context().remove_class("bottom-right")
+        self.__label.get_style_context().add_class("bottom-left")
         self.__label.set_text(text)
 
 #######################
@@ -54,16 +55,19 @@ class UriLabel(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
+        self.hide()
         # Move label at the right
-        if self.get_property("valign"):
+        if self.get_property("halign") == Gtk.Align.START:
             self.set_property("halign", Gtk.Align.END)
-            self.__label.get_style_context().remove_class("urilabel-left")
-            self.__label.get_style_context().add_class("urilabel-right")
-        # Smaller label
+            self.__label.get_style_context().remove_class("bottom-left")
+            self.__label.get_style_context().add_class("bottom-right")
+        # Move label at top
         else:
-            width = self.__label.get_max_width_chars() - 1
-            if width:
-                self.__label.set_max_width_chars(width)
+            self.set_property("halign", Gtk.Align.START)
+            self.set_property("valign", Gtk.Align.START)
+            self.__label.get_style_context().add_class("top-left")
+            self.__label.get_style_context().remove_class("bottom-right")
+        GLib.idle_add(self.show)
 
 
 class View(Gtk.Overlay):
