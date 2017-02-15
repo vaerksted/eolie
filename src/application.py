@@ -166,8 +166,8 @@ class Application(Gtk.Application):
             session_states = []
             for window in self.__windows:
                 for view in window.container.views:
-                    uri = view.get_uri()
-                    state = view.get_session_state().serialize()
+                    uri = view.webview.get_uri()
+                    state = view.webview.get_session_state().serialize()
                     session_states.append((uri, state.get_data()))
             dump(session_states,
                  open(self.__LOCAL_PATH + "/session_states.bin", "wb"))
@@ -191,7 +191,7 @@ class Application(Gtk.Application):
         """
         for window in self.__windows:
             for view in window.container.views:
-                view.set_setting(key, value)
+                view.webview.set_setting(key, value)
 
     def set_cookie_manager(self, context):
         """
@@ -419,9 +419,13 @@ class Application(Gtk.Application):
         elif string == "close_page":
             window.container.sidebar.close_view(window.container.current)
         elif string == "reload":
-            window.container.current.reload()
+            window.container.current.webview.reload()
         elif string == "find":
-            window.container.current.find()
+            find_widget = window.container.current.find_widget
+            search_mode = find_widget.get_search_mode()
+            find_widget.set_search_mode(not search_mode)
+            if not search_mode:
+                find_widget.grab_focus()
         elif string == "backward":
             window.toolbar.actions.backward()
         elif string == "forward":

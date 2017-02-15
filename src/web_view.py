@@ -10,50 +10,42 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio, Gtk, GLib, Gdk
+from gi.repository import WebKit2, GObject, Gio, GLib, Gdk
 
 import ctypes
 from urllib.parse import urlparse
-from threading import Thread
 
-from eolie.widget_find import FindWidget
 from eolie.define import El, LOGINS, PASSWORDS
 from eolie.utils import get_current_monitor_model
 
 
-class WebView(Gtk.Grid):
+class WebView(WebKit2.WebView):
     """
         WebKit view
         All WebKit2.WebView members available
         Forward all connect to internal WebKit2.WebView webview, you get
         self as first argument
     """
-    def __init__(self, parent=None, webview=None):
+
+    __gsignals__ = {
+        'readable': (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
+
+    def __init__(self):
         """
             Init view
-            @param parent as WebView
-            @param webview as WebKit2.WebView
         """
-        Gtk.Grid.__init__(self)
-        self.__readable = False
+        WebKit2.WebView.__init__(self)
+        self.__in_read_mode = False
+        self.__readable_content = ""
+        self.__js_timeout = None
         self.__cancellable = Gio.Cancellable()
-        self.__parent = parent
-        if parent is not None:
-            parent.connect("destroy", self.__on_parent_destroy)
-        self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
-        if webview is None:
-            self.__webview = WebKit2.WebView()
-        else:
-            self.__webview = webview
-        self.__webview.set_hexpand(True)
-        self.__webview.set_vexpand(True)
-        self.__webview.connect("scroll-event", self.__on_scroll_event)
-        self.__webview.show()
-        self.__find_widget = FindWidget(self.__webview)
-        self.__find_widget.show()
-        settings = self.__webview.get_settings()
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+        self.connect("scroll-event", self.__on_scroll_event)
+        settings = self.get_settings()
         settings.set_property('enable-java',
                               El().settings.get_value('enable-plugins'))
         settings.set_property('enable-plugins',
@@ -91,16 +83,19 @@ class WebView(Gtk.Grid):
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
         settings.set_property("media-playback-allows-inline", True)
-        self.__webview.set_settings(settings)
-        self.__webview.connect("decide-policy", self.__on_decide_policy)
-        self.__webview.connect("submit-form", self.__on_submit_form)
-        self.__webview.connect("create", self.__on_create)
-        self.__webview.connect("run-as-modal", self.__on_run_as_modal)
-        self.__webview.connect("close", self.__on_close)
-        self.__webview.get_context().connect("download-started",
-                                             self.__on_download_started)
-        self.add(self.__find_widget)
-        self.add(self.__webview)
+        self.set_settings(settings)
+        self.connect("decide-policy", self.__on_decide_policy)
+        self.connect("submit-form", self.__on_submit_form)
+        self.connect("create", self.__on_create)
+        self.connect("run-as-modal", self.__on_run_as_modal)
+        self.connect("close", self.__on_close)
+        # We launch Readability.js at page loading finished
+        # As Webkit2GTK doesn't allow us to get content from python
+        # It sets title with content for one shot, so try to get it here
+        self.connect("notify::title", self.__on_title_changed)
+        self.connect("notify::uri", self.__on_uri_changed)
+        self.get_context().connect("download-started",
+                                   self.__on_download_started)
         self.update_zoom_level()
 
     def load_uri(self, uri):
@@ -113,7 +108,7 @@ class WebView(Gtk.Grid):
         if not uri.startswith("http://") and not uri.startswith("https://"):
             uri = "http://" + uri
         self.__loaded_uri = uri
-        self.__webview.load_uri(uri)
+        WebKit2.WebView.load_uri(self, uri)
 
     def update_zoom_level(self):
         """
@@ -130,7 +125,7 @@ class WebView(Gtk.Grid):
                     wanted_zoom_level = float(zoom_splited[1])
         except Exception as e:
             print("Window::__save_size_position()", e)
-        self.__webview.set_zoom_level(wanted_zoom_level)
+        self.set_zoom_level(wanted_zoom_level)
 
     def set_setting(self, key, value):
         """
@@ -138,66 +133,44 @@ class WebView(Gtk.Grid):
             @param key as str
             @param value as GLib.Variant
         """
-        settings = self.__webview.get_settings()
+        settings = self.get_settings()
         if key == 'use-system-fonts':
             self.__set_system_fonts(settings)
         else:
             settings.set_property(key, value)
-        self.__webview.set_settings(settings)
+        self.set_settings(settings)
 
-    def __getattr__(self, name):
+    def switch_read_mode(self, force=False):
         """
-            Get all attributes from webview
-            @param name as str
+            Show a readable version of page if available.
+            If in read mode, switch back to page
+            If force, always go in read mode
+            @param force as bool
         """
-        return getattr(self.__webview, name)
-
-    def connect(self, *args, **kwargs):
-        """
-            Forward connect to webview, prepend self as arg as
-            internal webview may not be useful for callers
-            @param args as (str, callback)
-            @param kwargs as data
-        """
-        self.__webview.connect(*args, self, **kwargs)
-
-    def find(self):
-        """
-            Show find widget
-        """
-        search_mode = self.__find_widget.get_search_mode()
-        self.__find_widget.set_search_mode(not search_mode)
-        if not search_mode:
-            self.__find_widget.grab_focus()
-
-    def show_readable_version(self, show):
-        """
-            Show a readable version of page
-            @param show as bool
-        """
-        self.__readable = show
-        if show:
-            thread = Thread(target=self.__show_readable_version)
-            thread.daemon = True
-            thread.start()
+        show = not self.__in_read_mode or force
+        if show and self.__readable_content:
+            self.__in_read_mode = True
+            html = '<html><head>\
+                    <style type="text/css">\
+                    * {font-size: 16pt;\
+                        background-color: #333333;\
+                        color: #e6e6e6;}\
+                    </style></head>'
+            html += "<title>%s</title>" % self.get_title()
+            html += self.__readable_content
+            html += "</html>"
+            GLib.idle_add(self.load_html, html, None)
         else:
-            self.__webview.load_uri(self.__loaded_uri)
+            self.__in_read_mode = False
+            self.load_uri(self.__loaded_uri)
 
     @property
     def readable(self):
         """
-            True if in readable mode
-            @return bool
+            Readable status
+            @return (in_read_mode, content) as (bool, str)
         """
-        return self.__readable
-
-    @property
-    def parent(self):
-        """
-            Get parent web view
-            @return WebView/None
-        """
-        return self.__parent
+        return (self.__in_read_mode, self.__readable_content)
 
     @property
     def loaded_uri(self):
@@ -210,46 +183,6 @@ class WebView(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
-    def __show_readable_version(self):
-        """
-            Show a readable version of page
-            @param show as bool
-            @thread safe
-        """
-        try:
-            from readability.readability import Document
-            from gi.repository import Soup
-            session = Soup.Session.new()
-            request = session.request(self.__webview.get_uri())
-            stream = request.send(self.__cancellable)
-            bytes = bytearray(0)
-            buf = stream.read_bytes(1024, self.__cancellable).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(1024, self.__cancellable).get_data()
-            data = bytes.decode("utf-8")
-            readable_title = Document(data).short_title()
-            html = '<html><head>\
-                    <style type="text/css">\
-                    * {font-size: 18pt;\
-                        background-color: #333333;\
-                        color: #e6e6e6;}\
-                    </style></head>'
-            html += "<title>%s</title>" % readable_title
-            html += Document(data).summary()
-            GLib.idle_add(self.__webview.load_html, html, None)
-        except Exception as e:
-            # Fallback to mercury web service
-            print("WebView::show_readable_version():", e)
-            API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
-            API_URL = "https://mercury.postlight.com/parser?url=%s"
-            session = Soup.Session.new()
-            message = Soup.Message.new("GET",
-                                       API_URL % self.__webview.get_uri())
-            headers = message.get_property("request-headers")
-            headers.append("x-api-key", API_KEY)
-            session.send_async(message, self.__cancellable, self.__on_readable)
-
     def __set_system_fonts(self, settings):
         """
             Set system font
@@ -297,50 +230,44 @@ class WebView(Gtk.Grid):
             Set smooth scrolling based on source
             @param source as Gdk.InputSource
         """
-        settings = self.__webview.get_settings()
+        settings = self.get_settings()
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
-        self.__webview.set_settings(settings)
+        self.set_settings(settings)
 
-    def __on_readable(self, session, result):
+    def __on_uri_changed(self, view, uri):
         """
-            Load readable content
-            @param session as Soup.Session
-            @param result as Gio.AsyncResult
+            Clear readable version
+            @param view as WebKit2.WebView
+            @param uri as GParamSpec
         """
-        import json
-        try:
-            stream = session.send_finish(result)
-            if stream is None:
-                raise("No data")
-            bytes = b''
-            stream.read_all(bytes)
-            buf = stream.read_bytes(1024, self.__cancellable).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(1024, self.__cancellable).get_data()
-            content = json.loads(bytes.decode("utf-8"))
-            html = '<html><head>\
-                    <style type="text/css">\
-                    * {font-size: 18pt;\
-                        background-color: #333333;\
-                        color: #e6e6e6;}\
-                    </style></head>'
-            html += "<title>%s</title>" % content["title"]
-            html += content["content"]
-            html += "</html>"
-            self.__webview.load_html(html, None)
-        except Exception as e:
-            self.__readable = False
-            print("WebView::__on_readable():", e)
+        if view.get_uri() != "about:blank":
+            self.__readable_content = ""
+            self.__in_read_mode = False
+            self.__js_timeout = None
 
-    def __on_parent_destroy(self, internal, view):
+    def __on_title_changed(self, webview, event):
         """
-            Remove parent
-            @param internal as WebKit2.WebView
-            @param view as WebView
+            We launch Readability.js at page loading finished.
+            As Webkit2GTK doesn't allow us to get content from python,
+            it sets title with content for one shot, so try to get it here
+            @param webview as WebKit2.WebView
+            @param event as  GParamSpec
         """
-        self.__parent = None
+        if event.name != "title":
+            return True
+        title = webview.get_title()
+        if title.startswith("@&$%ù²"):
+            self.__readable_content = title.replace("@&$%ù²", "")
+            self.emit("readable")
+            return True
+        else:
+            if self.__js_timeout is None and not self.__in_read_mode:
+                self.__js_timeout = GLib.timeout_add(
+                                 2000,
+                                 self.run_javascript_from_gresource,
+                                 '/org/gnome/Eolie/Readability.js', None, None)
+        return False
 
     def __on_create(self, view, action):
         """
@@ -349,7 +276,7 @@ class WebView(Gtk.Grid):
             @param action as WebKit2.NavigationAction
         """
         uri = action.get_request().get_uri()
-        view = WebKit2.WebView.new_with_related_view(self.__webview)
+        view = WebView.new_with_related_view(self)
         view.connect("ready-to-show", self.__on_ready_to_show, uri)
         return view
 
@@ -444,7 +371,6 @@ class WebView(Gtk.Grid):
                 decision.ignore()
                 return True
             else:
-                self.__readable = False
                 decision.use()
                 return False
         else:

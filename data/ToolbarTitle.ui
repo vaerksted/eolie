@@ -40,7 +40,7 @@
           </packing>
         </child>
         <child type="overlay">
-          <object class="GtkGrid">
+          <object class="GtkGrid" id="icon_grid">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">end</property>
@@ -56,7 +56,7 @@
                 <property name="orientation">vertical</property>
               </object>
               <packing>
-                <property name="left_attach">1</property>
+                <property name="left_attach">2</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -78,7 +78,7 @@
                 </child>
               </object>
               <packing>
-                <property name="left_attach">2</property>
+                <property name="left_attach">3</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -100,6 +100,26 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEventBox" id="readable">
+                <property name="can_focus">False</property>
+                <property name="opacity">0.80000000000000004</property>
+                <signal name="button-press-event" handler="_on_readable_press" swapped="no"/>
+                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">view-dual-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>

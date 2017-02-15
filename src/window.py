@@ -55,7 +55,7 @@ class Window(Gtk.ApplicationWindow):
         monitor_model = get_current_monitor_model()
         if force or monitor_model != self.__monitor_model:
             for view in self.__container.views:
-                view.update_zoom_level()
+                view.webview.update_zoom_level()
 
     @property
     def container(self):

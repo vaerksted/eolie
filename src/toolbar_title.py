@@ -47,7 +47,8 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image1 = builder.get_object("action_image1")
         # Bookmarks/Clear
         self.__action_image2 = builder.get_object("action_image2")
-        self.add(builder.get_object('widget'))
+        self.__icon_grid = builder.get_object("icon_grid")
+        self.add(builder.get_object("widget"))
         # Some on the fly css styling
         context = self.__entry.get_style_context()
         self.__css_provider = Gtk.CssProvider()
@@ -55,6 +56,18 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
+        self.__readable = builder.get_object("readable")
+
+    def show_readable_button(self, b):
+        """
+            Show readable button
+            @param b as bool
+        """
+        if b:
+            self.__readable.show()
+        else:
+            self.__readable.hide()
+        GLib.idle_add(self.__update_margins)
 
     def set_width(self, width):
         """
@@ -198,23 +211,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Update entry padding
         """
-        border = self.__entry.get_style_context().get_border(
-                                                  Gtk.StateFlags.NORMAL).bottom
-        margin_start = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).left
-        margin_end = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).right
-        margin_bottom = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).bottom
-        css = ".progressbar { margin-bottom: %spx;\
-               margin-left: %spx;\
-               margin-right: %spx; }" % (margin_bottom,
-                                         margin_start + border,
-                                         margin_end + border)
-        # 5 is grid margin (see ui file)
-        width = grid.get_allocated_width()
-        css += ".uribar { padding-right: %spx; }" % (width + 5)
-        self.__css_provider.load_from_data(css.encode("utf-8"))
+        self.__update_margins()
 
     def _on_enter_notify(self, eventbox, event):
         """
@@ -278,7 +275,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
         view = El().active_window.container.current
-        bookmark_id = El().bookmarks.get_id(view.get_uri())
+        bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
         else:
@@ -303,6 +300,14 @@ class ToolbarTitle(Gtk.Bin):
                                 Gdk.KEY_Escape]:
                 GLib.idle_add(self.hide_popover)
 
+    def _on_readable_press(self, eventbox, event):
+        """
+            Reload current view/Stop loading
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        El().active_window.container.current.webview.switch_read_mode()
+
     def _on_action1_press(self, eventbox, event):
         """
             Reload current view/Stop loading
@@ -310,9 +315,9 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
-            El().active_window.container.current.reload()
+            El().active_window.container.current.webview.reload()
         else:
-            El().active_window.container.current.stop_loading()
+            El().active_window.container.current.webview.stop_loading()
 
     def _on_action2_press(self, eventbox, event):
         """
@@ -325,13 +330,13 @@ class ToolbarTitle(Gtk.Bin):
         if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
             self.__action_image2.set_from_icon_name("non-starred-symbolic",
                                                     Gtk.IconSize.MENU)
-            bookmark_id = El().bookmarks.get_id(view.get_uri())
+            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
             El().bookmarks.remove(bookmark_id)
         elif self.__action_image2.get_icon_name()[0] == "non-starred-symbolic":
             self.__action_image2.set_from_icon_name("starred-symbolic",
                                                     Gtk.IconSize.MENU)
-            bookmark_id = El().bookmarks.add(view.get_title(),
-                                             view.get_uri(), [])
+            bookmark_id = El().bookmarks.add(view.webview.get_title(),
+                                             view.webview.get_uri(), [])
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
@@ -372,6 +377,28 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __update_margins(self):
+        """
+            Update margins
+        """
+        border = self.__entry.get_style_context().get_border(
+                                                  Gtk.StateFlags.NORMAL).bottom
+        margin_start = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).left
+        margin_end = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).right
+        margin_bottom = self.__entry.get_style_context().get_margin(
+                                                  Gtk.StateFlags.NORMAL).bottom
+        css = ".progressbar { margin-bottom: %spx;\
+               margin-left: %spx;\
+               margin-right: %spx; }" % (margin_bottom,
+                                         margin_start + border,
+                                         margin_end + border)
+        # 5 is grid margin (see ui file)
+        width = self.__icon_grid.get_allocated_width()
+        css += ".uribar { padding-right: %spx; }" % (width + 5)
+        self.__css_provider.load_from_data(css.encode("utf-8"))
+
     def __search_keywords_thread(self, value):
         """
             Run __search_keywords() in a thread

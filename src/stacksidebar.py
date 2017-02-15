@@ -29,7 +29,7 @@ class SidebarChild(Gtk.ListBoxRow):
     def __init__(self, view, container):
         """
             Init child
-            @param view as WebView
+            @param view as View
             @param container as Container
         """
         Gtk.ListBoxRow.__init__(self)
@@ -48,11 +48,11 @@ class SidebarChild(Gtk.ListBoxRow):
                                               Gtk.IconSize.MENU)
         self.__title.set_label("Empty page")
         self.add(builder.get_object('widget'))
-        view.connect('notify::favicon', self.__on_notify_favicon)
-        view.connect('scroll-event', self.__on_scroll_event)
-        view.connect('notify::uri', self.__on_uri_changed)
-        view.connect('notify::title', self.__on_title_changed)
-        view.connect('load-changed', self.__on_load_changed)
+        view.webview.connect('notify::favicon', self.__on_notify_favicon)
+        view.webview.connect('scroll-event', self.__on_scroll_event)
+        view.webview.connect('notify::uri', self.__on_uri_changed)
+        view.webview.connect('notify::title', self.__on_title_changed)
+        view.webview.connect('load-changed', self.__on_load_changed)
         self.get_style_context().add_class('sidebar-item')
 
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
@@ -71,7 +71,7 @@ class SidebarChild(Gtk.ListBoxRow):
     def view(self):
         """
             Get linked view
-            @return WebView
+            @return View
         """
         return self.__view
 
@@ -92,11 +92,11 @@ class SidebarChild(Gtk.ListBoxRow):
                                       self.__container.get_allocated_height())
                 window.add(self.__view)
                 window.show()
-        self.__view.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                 WebKit2.SnapshotOptions.NONE,
-                                 None,
-                                 self.__on_snapshot,
-                                 save)
+        self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                         WebKit2.SnapshotOptions.NONE,
+                                         None,
+                                         self.__on_snapshot,
+                                         save)
 
     def clear_snapshot(self):
         """
@@ -146,7 +146,7 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
                                                                'sidebar-close')
-            self.__on_notify_favicon(None, None, self.__view)
+            self.__on_notify_favicon(self.__view.webview, None)
 
 #######################
 # PRIVATE             #
@@ -174,15 +174,17 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        surface = self.__get_favicon(self.__view.get_favicon())
+        surface = self.__get_favicon(self.__view.webview.get_favicon())
         if surface is None:
             self.__image_close.set_from_icon_name('applications-internet',
                                                   Gtk.IconSize.MENU)
             return
         # We save favicon twice. If user have https://www.google.com as
         # bookmark, it will be directed and wont save bookmark's favicon
-        El().art.save_artwork(self.__view.get_uri(), surface, "favicon")
-        El().art.save_artwork(self.__view.loaded_uri, surface, "favicon")
+        El().art.save_artwork(self.__view.webview.get_uri(),
+                              surface, "favicon")
+        El().art.save_artwork(self.__view.webview.loaded_uri,
+                              surface, "favicon")
         self.__image_close.set_from_surface(surface)
         del surface
         self.__image_close.get_style_context().remove_class('sidebar-close')
@@ -195,12 +197,11 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__scroll_timeout_id = None
         self.set_snapshot(False)
 
-    def __on_uri_changed(self, internal, uri, view):
+    def __on_uri_changed(self, view, uri):
         """
             Update uri
-            @param internal as WebKit2.WebView
-            @param uri as str
             @param view as WebView
+            @param uri as str
         """
         # Some uri update may not change title
         uri = view.get_uri()
@@ -232,12 +233,11 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_icon_name('applications-internet',
                                                   Gtk.IconSize.MENU)
 
-    def __on_title_changed(self, internal, event, view):
+    def __on_title_changed(self, view, event):
         """
             Update title
-            @param internal as WebKit2.WebView
-            @param title as str
             @param view as WebView
+            @param title as GParamSpec
         """
         # First update snapshot
         if not view.is_loading():
@@ -254,12 +254,11 @@ class SidebarChild(Gtk.ListBoxRow):
         if view.get_favicon() is not None:
             GLib.timeout_add(1000, self.__set_favicon)
 
-    def __on_scroll_event(self, internal, event, view):
+    def __on_scroll_event(self, view, event):
         """
             Update snapshot
-            @param internal as WebKit2.WebView
-            @param event as WebKit2.Event
             @param view as WebView
+            @param event as WebKit2.Event
         """
         if self.__scroll_timeout_id is not None:
             GLib.source_remove(self.__scroll_timeout_id)
@@ -279,7 +278,7 @@ class SidebarChild(Gtk.ListBoxRow):
         if self.get_allocated_width() == 1:
             return
         try:
-            snapshot = self.__view.get_snapshot_finish(result)
+            snapshot = view.get_snapshot_finish(result)
             factor = self.get_allocated_width() /\
                 snapshot.get_width()
             surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
@@ -292,7 +291,7 @@ class SidebarChild(Gtk.ListBoxRow):
             context.paint()
             self.__image.set_from_surface(surface)
             if save:
-                El().art.save_artwork(self.__view.get_uri(),
+                El().art.save_artwork(view.get_uri(),
                                       surface, "preview")
             del surface
         except Exception as e:
@@ -304,24 +303,22 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__view.set_size_request(-1, -1)
             self.__container.add_view(self.__view)
 
-    def __on_load_changed(self, internal, event, view):
+    def __on_load_changed(self, view, event):
         """
             Update sidebar/urlbar
-            @param internal as WebKit2.WebView
-            @param event as WebKit2.LoadEvent
             @param view as WebView
+            @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
             GLib.timeout_add(500, self.set_snapshot, True)
 
-    def __on_notify_favicon(self, internal, pointer, view):
+    def __on_notify_favicon(self, view, pointer):
         """
             Set favicon
-            @param internal as WebKit2.WebView
-            @param pointer as GParamPointer
             @param view as WebView
+            @param pointer as GParamPointer
         """
         if view.get_favicon() is None:
             self.__image_close.set_from_icon_name('applications-internet',

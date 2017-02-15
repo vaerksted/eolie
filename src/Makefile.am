@@ -22,6 +22,7 @@ app_PYTHON = \
     toolbar_actions.py\
     toolbar_end.py\
     toolbar_title.py\
+    view.py\
     web_view.py\
     widget_edit_bookmark.py\
     widget_find.py\

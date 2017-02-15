@@ -258,7 +258,7 @@ class Row(Gtk.ListBoxRow):
                        Type.SEARCH, Type.BOOKMARK]:
             El().active_window.toolbar.title.hide_popover()
             if event.button == 1:
-                El().active_window.container.current.load_uri(uri)
+                El().active_window.container.current.webview.load_uri(uri)
             else:
                 El().active_window.container.add_web_view(uri, True)
             El().bookmarks.set_access_time(uri, int(time()))
@@ -440,7 +440,8 @@ class UriPopover(Gtk.Popover):
                     uri = selected.item.get_property("uri")
                     if uri:
                         El().active_window.toolbar.title.hide_popover()
-                        El().active_window.container.current.load_uri(uri)
+                        El().active_window.container.current.webview.load_uri(
+                                                                           uri)
                 return True
             else:
                 self.__input = Input.NONE
