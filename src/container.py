@@ -220,6 +220,8 @@ class Container(Gtk.Paned):
             @param uri as str
         """
         if view == self.current.webview:
+            self.window.toolbar.title.show_readable_button(
+                                                        view.readable[1] != "")
             self.window.toolbar.end.on_uri_changed()
             self.window.toolbar.title.set_uri(view.get_uri())
 
