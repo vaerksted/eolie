@@ -10,9 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
-
-from gettext import gettext as _
+from gi.repository import Gtk, GLib, Gio
 
 from eolie.define import El
 from eolie.popover_downloads import DownloadsPopover
@@ -46,7 +44,7 @@ class ToolbarEnd(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/ToolbarEnd.ui")
         builder.connect_signals(self)
         self.__download_button = builder.get_object("download_button")
-        self.__read_button = builder.get_object("read_button")
+        self.__menu_button = builder.get_object("menu_button")
         eventbox = Gtk.EventBox()
         eventbox.connect("button-release-event", self.__on_event_release_event)
         eventbox.show()
@@ -61,15 +59,22 @@ class ToolbarEnd(Gtk.Bin):
         builder.get_object("overlay").add_overlay(eventbox)
         if El().settings.get_value("adblock"):
             builder.get_object(
-                         "adblock_button").get_style_context().add_class("red")
+                         "menu_button").get_style_context().add_class("red")
         self.add(builder.get_object("end"))
 
-    def update_reader_button(self):
-        """
-            Update reader button
-        """
-        self.__read_button.set_active(
-                                El().active_window.container.current.readable)
+        adblock_action = Gio.SimpleAction.new_stateful(
+           "adblock",
+           None,
+           GLib.Variant.new_boolean(El().settings.get_value("adblock")))
+        adblock_action.connect("change-state", self.__on_adblock_change_state)
+        El().add_action(adblock_action)
+        self.__reader_action = Gio.SimpleAction.new_stateful(
+                                               "reader",
+                                               None,
+                                               GLib.Variant.new_boolean(False))
+        self.__reader_action.connect("change-state",
+                                     self.__on_reader_change_state)
+        El().add_action(self.__reader_action)
 
 #######################
 # PROTECTED           #
@@ -90,33 +95,14 @@ class ToolbarEnd(Gtk.Bin):
         """
         El().active_window.container.current.load_uri(El().start_page)
 
-    def _on_read_button_toggled(self, button):
+    def _on_menu_button_clicked(self, button):
         """
-            Go to home page
+            Update reader action
             @param button as Gtk.Button
         """
-        current_view = El().active_window.container.current
-        active = button.get_active()
-        if active == current_view.readable:
-            return
-        if active:
-            button.set_tooltip_text(_("Leave reader view"))
-        else:
-            button.set_tooltip_text(_("Enter reader view"))
-        current_view.show_readable_version(active)
-
-    def _on_adblock_button_clicked(self, button):
-        """
-            Switch add blocking on/off
-            @param button as Gtk.Button
-        """
-        value = not El().settings.get_value("adblock")
-        El().settings.set_value("adblock",
-                                GLib.Variant("b", value))
-        if value:
-            button.get_style_context().add_class("red")
-        else:
-            button.get_style_context().remove_class("red")
+        self.__reader_action.set_state(
+                GLib.Variant("b",
+                             El().active_window.container.current.readable))
 
 #######################
 # PRIVATE             #
@@ -155,6 +141,32 @@ class ToolbarEnd(Gtk.Bin):
             @param event as Gdk.Event
         """
         self.__download_button.clicked()
+
+    def __on_adblock_change_state(self, action, param):
+        """
+            Set adblock state
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        El().settings.set_value('adblock', param)
+        if param.get_boolean():
+            self.__menu_button.get_style_context().add_class("red")
+        else:
+            self.__menu_button.get_style_context().remove_class("red")
+
+    def __on_reader_change_state(self, action, param):
+        """
+            Set reader view
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        current_view = El().active_window.container.current
+        active = param.get_boolean()
+        if active == current_view.readable:
+            return
+        current_view.show_readable_version(active)
 
     def __on_download(self, download_manager, name=""):
         """

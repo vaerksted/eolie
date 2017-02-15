@@ -215,7 +215,6 @@ class Container(Gtk.Paned):
             @param view as WebView
         """
         if view == self.current:
-            self.window.toolbar.end.update_reader_button()
             self.window.toolbar.title.set_uri(view.get_uri())
 
     def __on_title_changed(self, internal, event, view):

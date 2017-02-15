@@ -10,10 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio, Gtk, Gdk
+from gi.repository import WebKit2, Gio, Gtk, GLib, Gdk
 
 import ctypes
 from urllib.parse import urlparse
+from threading import Thread
 
 from eolie.widget_find import FindWidget
 from eolie.define import El, LOGINS, PASSWORDS
@@ -176,7 +177,9 @@ class WebView(Gtk.Grid):
         """
         self.__readable = show
         if show:
-            self.__show_readable_version()
+            thread = Thread(target=self.__show_readable_version)
+            thread.daemon = True
+            thread.start()
         else:
             self.__webview.load_uri(self.__loaded_uri)
 
@@ -211,6 +214,7 @@ class WebView(Gtk.Grid):
         """
             Show a readable version of page
             @param show as bool
+            @thread safe
         """
         try:
             from readability.readability import Document
@@ -233,7 +237,7 @@ class WebView(Gtk.Grid):
                     </style></head>'
             html += "<title>%s</title>" % readable_title
             html += Document(data).summary()
-            self.__webview.load_html(html, None)
+            GLib.idle_add(self.__webview.load_html, html, None)
         except Exception as e:
             # Fallback to mercury web service
             print("WebView::show_readable_version():", e)
