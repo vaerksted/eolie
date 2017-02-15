@@ -122,7 +122,7 @@ class ToolbarEnd(Gtk.Bin):
         page_ex = El().adblock.is_an_exception(parsed.netloc +
                                                parsed.path)
         site_ex = El().adblock.is_an_exception(parsed.netloc)
-        if page_ex and site_ex:
+        if not page_ex and not site_ex:
             self.__exceptions_action.change_state(GLib.Variant("s", "none"))
         elif site_ex:
             self.__exceptions_action.change_state(GLib.Variant("s", "site"))
