@@ -2090,6 +2090,6 @@ var documentClone = document.cloneNode(true);
 var article = new Readability(uri, documentClone).parse();
 // BIG HACK but webkitgtk doesn't allow us to read result from js
 var previous_title = document.title;
-document.title="@&$%ù²".concat(article.content);
-document.title=previous_title;
-
+if (article.textContent.length > 1000)
+    document.title="@&$%ù²".concat(article.content);
+    document.title=previous_title;
