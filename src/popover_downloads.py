@@ -32,28 +32,27 @@ class Row(Gtk.ListBoxRow):
         self.__finished = finished
         self.__uri = self.__download.get_request().get_uri()
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/RowDownload.ui')
+        builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
         builder.connect_signals(self)
-        self.__progress = builder.get_object('progress')
+        self.__progress = builder.get_object("progress")
         filename = GLib.filename_from_uri(download.get_destination())
         if filename is not None:
-            builder.get_object('label').set_label(
+            builder.get_object("label").set_label(
                                          GLib.path_get_basename(filename[0]))
-            builder.get_object('path').set_label(filename[0])
+            builder.get_object("path").set_label(filename[0])
         else:
-            builder.get_object('label').set_label(download.get_destination())
-            builder.get_object('label').set_ellipsize(
+            builder.get_object("label").set_label(download.get_destination())
+            builder.get_object("label").set_ellipsize(
                                                    Pango.EllipsizeMode.START)
-        self.__button = builder.get_object('button')
-        self.__button_image = builder.get_object('button_image')
+        self.__button = builder.get_object("button")
+        self.__button_image = builder.get_object("button_image")
         if finished:
             self.__on_finished(download)
         else:
             self.__progress.set_fraction(download.get_estimated_progress())
-            download.connect('finished', self.__on_finished)
-            download.connect('received-data', self.__on_received_data)
-            download.connect('failed', self.__on_failed)
-        self.add(builder.get_object('row'))
+        self.add(builder.get_object("row"))
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
 
     @property
     def finished(self):
@@ -78,9 +77,9 @@ class Row(Gtk.ListBoxRow):
             Cancel download
             @param button as Gtk.Button
         """
-        if self.__button_image.get_icon_name()[0] == 'close-symbolic':
+        if self.__button_image.get_icon_name()[0] == "close-symbolic":
             self.__download.cancel()
-        elif self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
+        elif self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
             self.__download.get_web_view().download_uri(self.__uri)
             El().download_manager.remove(self.__download)
             self.destroy()
@@ -88,6 +87,24 @@ class Row(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __on_map(self, widget):
+        """
+            Connect signals
+            @param widget as Gtk.Widget
+        """
+        self.__download.connect("finished", self.__on_finished)
+        self.__download.connect("received-data", self.__on_received_data)
+        self.__download.connect("failed", self.__on_failed)
+
+    def __on_unmap(self, widget):
+        """
+            Disconnect signals
+            @param widget as Gtk.Widget
+        """
+        self.__download.disconnect_by_func(self.__on_finished)
+        self.__download.disconnect_by_func(self.__on_received_data)
+        self.__download.disconnect_by_func(self.__on_failed)
+
     def __on_received_data(self, download, length):
         """
             @param download as WebKit2.Download
@@ -104,7 +121,7 @@ class Row(Gtk.ListBoxRow):
         parent = self.get_parent()
         if parent is not None:
             parent.invalidate_sort()
-        if self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
+        if self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
             return True
         else:
             self.__button.hide()
@@ -114,7 +131,7 @@ class Row(Gtk.ListBoxRow):
             @param download as WebKit2.Download
             @param error as GLib.Error
         """
-        self.__button_image.set_from_icon_name('view-refresh-symbolic',
+        self.__button_image.set_from_icon_name("view-refresh-symbolic",
                                                Gtk.IconSize.MENU)
 
 
@@ -129,21 +146,45 @@ class DownloadsPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/PopoverDownloads.ui')
+        builder.add_from_resource("/org/gnome/Eolie/PopoverDownloads.ui")
         builder.connect_signals(self)
-        self.__listbox = builder.get_object('downloads_box')
-        self.__listbox.connect('row-activated', self.__on_row_activated)
-        self.__listbox.set_placeholder(builder.get_object('placeholder'))
+        self.__listbox = builder.get_object("downloads_box")
+        self.__listbox.connect("row-activated", self.__on_row_activated)
+        self.__listbox.set_placeholder(builder.get_object("placeholder"))
         self.__listbox.set_sort_func(self.__sort)
-        self.__scrolled = builder.get_object('scrolled')
-        self.add(builder.get_object('widget'))
-        self.connect('map', self.__on_map)
-        self.connect('unmap', self.__on_unmap)
+        self.__scrolled = builder.get_object("scrolled")
+        self.__clear_button = builder.get_object("clear_button")
+        self.add(builder.get_object("widget"))
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
         self.__populate()
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_open_clicked(self, button):
+        """
+            Open download folder
+            @param button as Gtk.button
+        """
+        directory_uri = El().settings.get_value("download-uri").get_string()
+        if not directory_uri:
+            directory = GLib.get_user_special_dir(
+                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+            directory_uri = GLib.filename_to_uri(directory, None)
+        Gtk.show_uri(None, directory_uri, int(time()))
+        self.hide()
+
+    def _on_clear_clicked(self, button):
+        """
+            Clear finished downloads
+            @param button as Gtk.button
+        """
+        self.__clear_button.set_sensitive(False)
+        for child in self.__listbox.get_children():
+            El().download_manager.remove(child.download)
+            if child.finished:
+                child.destroy()
 
 #######################
 # PRIVATE             #
@@ -166,14 +207,15 @@ class DownloadsPopover(Gtk.Popover):
         """
         for download in El().download_manager.get():
             child = Row(download, False)
-            child.connect('size-allocate', self.__on_child_size_allocate)
+            child.connect("size-allocate", self.__on_child_size_allocate)
             child.show()
             self.__listbox.add(child)
         for download in El().download_manager.get_finished():
             child = Row(download, True)
-            child.connect('size-allocate', self.__on_child_size_allocate)
+            child.connect("size-allocate", self.__on_child_size_allocate)
             child.show()
             self.__listbox.add(child)
+        self.__clear_button.set_sensitive(El().download_manager.get_finished())
 
     def __on_row_activated(self, listbox, row):
         """
@@ -190,8 +232,10 @@ class DownloadsPopover(Gtk.Popover):
             Resize
             @param widget as Gtk.Widget
         """
-        El().download_manager.connect('download-start',
+        El().download_manager.connect("download-start",
                                       self.__on_download_start)
+        El().download_manager.connect("download-finish",
+                                      self.__on_download_finish)
         self.set_size_request(400, -1)
 
     def __on_unmap(self, widget):
@@ -202,6 +246,7 @@ class DownloadsPopover(Gtk.Popover):
         for child in self.__listbox.get_children():
             child.destroy()
         El().download_manager.disconnect_by_func(self.__on_download_start)
+        El().download_manager.disconnect_by_func(self.__on_download_finish)
 
     def __on_download_start(self, download_manager, download_name):
         """
@@ -212,10 +257,17 @@ class DownloadsPopover(Gtk.Popover):
         for download in El().download_manager.get():
             if str(download) == download_name:
                 child = Row(download, False)
-                child.connect('size-allocate', self.__on_child_size_allocate)
+                child.connect("size-allocate", self.__on_child_size_allocate)
                 child.show()
                 self.__listbox.add(child)
                 break
+
+    def __on_download_finish(self, download_manager):
+        """
+            Update clear button
+            @param download manager as Download Manager
+        """
+        self.__clear_button.set_sensitive(True)
 
     def __on_child_size_allocate(self, widget, allocation=None):
         """
