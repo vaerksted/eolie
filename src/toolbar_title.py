@@ -263,7 +263,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title
             @param entry as Gtk.Entry
-            @param event as Gdk.Event
+            @param event as Gdk.Event (do not use)
         """
         self.__lock = False
         if self.__signal_id is not None:
@@ -349,6 +349,9 @@ class ToolbarTitle(Gtk.Bin):
             size = El().active_window.get_size()
             popover.set_size_request(size[0]*0.3, size[1]*0.5)
             popover.set_relative_to(eventbox)
+            popover.connect("closed",
+                            lambda x: self._on_entry_focus_out(
+                                                           self.__entry, None))
             popover.add(widget)
             popover.show()
         elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
