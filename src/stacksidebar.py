@@ -607,8 +607,8 @@ class StackSidebar(Gtk.Grid):
         filter = self.__search_entry.get_text()
         if not filter:
             return True
-        uri = row.view.get_uri()
-        title = row.view.get_title()
+        uri = row.view.webview.get_uri()
+        title = row.view.webview.get_title()
         if (uri is not None and uri.find(filter) != -1) or\
                 (title is not None and title.find(filter) != -1):
             return True
