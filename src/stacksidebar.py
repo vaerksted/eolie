@@ -533,8 +533,19 @@ class StackSidebar(Gtk.Grid):
         if not was_current:
             return
         next_row = None
+
+        # First we search a child with same parent as closed
+        brother = None
+        for child in self.__listbox.get_children():
+            if child != view and child.view.parent == view.parent:
+                brother = child
+                break
+        # Load brother
+        if brother is not None:
+            brother_index = self.__get_index(str(brother.view))
+            next_row = self.__listbox.get_row_at_index(brother_index)
         # Go back to parent page
-        if view.parent is not None:
+        elif view.parent is not None:
             parent_index = self.__get_index(str(view.parent))
             next_row = self.__listbox.get_row_at_index(parent_index)
         # Find best near page
