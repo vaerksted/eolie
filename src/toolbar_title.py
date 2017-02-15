@@ -47,6 +47,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image1 = builder.get_object("action_image1")
         # Bookmarks/Clear
         self.__action_image2 = builder.get_object("action_image2")
+        self.__readable_image = builder.get_object("readable_image")
         self.__icon_grid = builder.get_object("icon_grid")
         self.add(builder.get_object("widget"))
         # Some on the fly css styling
@@ -81,6 +82,10 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
+        if El().active_window.container.current.webview.readable[0]:
+            self.__readable_image.get_style_context().add_class("selected")
+        else:
+            self.__readable_image.get_style_context().remove_class("selected")
         if uri is not None:
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                "")
@@ -301,6 +306,10 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         El().active_window.container.current.webview.switch_read_mode()
+        if El().active_window.container.current.webview.readable[0]:
+            self.__readable_image.get_style_context().add_class("selected")
+        else:
+            self.__readable_image.get_style_context().remove_class("selected")
 
     def _on_action1_press(self, eventbox, event):
         """

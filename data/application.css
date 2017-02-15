@@ -81,6 +81,10 @@
     color: shade(yellow, 0.8);
 }
 
+.selected {
+    color: @theme_selected_bg_color;
+}
+
 .bold {
     font-weight: bold;
 }
