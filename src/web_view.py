@@ -294,7 +294,8 @@ class WebView(WebKit2.WebView):
             @param view as WebKit2.WebView
             @param uri as str
         """
-        El().active_window.container.add_web_view(uri, True, self, view)
+        El().active_window.container.add_web_view(uri, True,
+                                                  self.get_parent(), view)
 
     def __on_run_as_modal(self, view):
         """
@@ -366,7 +367,8 @@ class WebView(WebKit2.WebView):
         mouse_button = decision.get_navigation_action().get_mouse_button()
         if mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True, self)
+                El().active_window.container.add_web_view(uri, True,
+                                                          self.get_parent())
                 decision.ignore()
                 return True
             else:
@@ -375,13 +377,15 @@ class WebView(WebKit2.WebView):
         elif mouse_button == 1:
             self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True, self)
+                El().active_window.container.add_web_view(uri, True,
+                                                          self.get_parent())
                 decision.ignore()
                 return True
             else:
                 decision.use()
                 return False
         else:
-            El().active_window.container.add_web_view(uri, False, self)
+            El().active_window.container.add_web_view(uri, False,
+                                                      self.get_parent())
             decision.ignore()
             return True
