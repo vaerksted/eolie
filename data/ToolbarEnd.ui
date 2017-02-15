@@ -7,6 +7,11 @@
     <property name="can_focus">False</property>
     <property name="icon_name">user-home-symbolic</property>
   </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">view-dual-symbolic</property>
+  </object>
   <object class="GtkBox" id="end">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -15,44 +20,58 @@
     <property name="vexpand">False</property>
     <property name="spacing">5</property>
     <child>
-      <object class="GtkButton" id="adblock_button">
+      <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="receives_default">False</property>
-        <property name="tooltip_text" translatable="yes">Hide ads</property>
-        <property name="valign">center</property>
-        <signal name="clicked" handler="_on_adblock_button_clicked" swapped="no"/>
         <child>
-          <object class="GtkImage" id="adblock-button-image">
+          <object class="GtkButton" id="adblock_button">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="icon_name">user-not-tracked-symbolic</property>
-            <property name="icon_size">1</property>
+            <property name="receives_default">False</property>
+            <property name="tooltip_text" translatable="yes">Hide ads</property>
+            <property name="valign">center</property>
+            <signal name="clicked" handler="_on_adblock_button_clicked" swapped="no"/>
+            <child>
+              <object class="GtkImage" id="adblock-button-image">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">user-not-tracked-symbolic</property>
+                <property name="icon_size">1</property>
+              </object>
+            </child>
+            <style>
+              <class name="image-button"/>
+            </style>
           </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="read_action">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Show a more readable version of page</property>
+            <property name="image">image3</property>
+            <signal name="clicked" handler="_on_read_button_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
         </child>
         <style>
-          <class name="image-button"/>
+          <class name="linked"/>
         </style>
       </object>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="pack_type">end</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="home_button">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="tooltip_text" translatable="yes">Go to home page</property>
-        <property name="image">image2</property>
-        <signal name="clicked" handler="_on_home_button_clicked" swapped="no"/>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
         <property name="position">1</property>
       </packing>
     </child>
@@ -86,7 +105,24 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
+        <property name="pack_type">end</property>
         <property name="position">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="home_button">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="tooltip_text" translatable="yes">Go to home page</property>
+        <property name="image">image2</property>
+        <signal name="clicked" handler="_on_home_button_clicked" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="pack_type">end</property>
+        <property name="position">3</property>
       </packing>
     </child>
   </object>

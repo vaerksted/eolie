@@ -34,6 +34,7 @@ class WebView(Gtk.Grid):
             @param webview as WebKit2.WebView
         """
         Gtk.Grid.__init__(self)
+        self.__cancellable = Gio.Cancellable()
         self.__parent = parent
         if parent is not None:
             parent.connect("destroy", self.__on_parent_destroy)
@@ -108,6 +109,14 @@ class WebView(Gtk.Grid):
         self.__loaded_uri = uri
         self.__webview.load_uri(uri)
 
+    def stop_loading(self):
+        """
+            Stop view loading
+        """
+        self.__webview.stop_loading()
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
+
     def update_zoom_level(self):
         """
             Update zoom level
@@ -162,6 +171,19 @@ class WebView(Gtk.Grid):
         self.__find_widget.set_search_mode(not search_mode)
         if not search_mode:
             self.__find_widget.grab_focus()
+
+    def show_readable_version(self):
+        """
+            Use mercury service to show a readable version of page
+        """
+        from gi.repository import Soup
+        API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
+        API_URL = "https://mercury.postlight.com/parser?url=%s"
+        session = Soup.Session.new()
+        message = Soup.Message.new("GET", API_URL % self.__webview.get_uri())
+        headers = message.get_property("request-headers")
+        headers.append("x-api-key", API_KEY)
+        session.send_async(message, self.__cancellable, self.__on_readable)
 
     @property
     def parent(self):
@@ -233,6 +255,37 @@ class WebView(Gtk.Grid):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.__webview.set_settings(settings)
+
+    def __on_readable(self, session, result):
+        """
+            Load readable content
+            @param session as Soup.Session
+            @param result as Gio.AsyncResult
+        """
+        import json
+        try:
+            stream = session.send_finish(result)
+            if stream is None:
+                raise("No data")
+            bytes = b''
+            stream.read_all(bytes)
+            buf = stream.read_bytes(1024, self.__cancellable).get_data()
+            while buf:
+                bytes += buf
+                buf = stream.read_bytes(1024, self.__cancellable).get_data()
+            content = json.loads(bytes.decode("utf-8"))
+            html = '<html><head>\
+                    <style type="text/css">\
+                    * {font-size: 18pt;\
+                        background-color: #333333;\
+                        color: #e6e6e6;}\
+                    </style></head>'
+            html += "<title>%s</title>" % content["title"]
+            html += content["content"]
+            html += "</html>"
+            self.__webview.load_html(html, None)
+        except Exception as e:
+            print("WebView::__on_readable():", e)
 
     def __on_parent_destroy(self, internal, view):
         """

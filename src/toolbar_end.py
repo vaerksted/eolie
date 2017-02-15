@@ -80,6 +80,13 @@ class ToolbarEnd(Gtk.Bin):
         """
         El().active_window.container.current.load_uri(El().start_page)
 
+    def _on_read_button_clicked(self, button):
+        """
+            Go to home page
+            @param button as Gtk.Button
+        """
+        El().active_window.container.current.show_readable_version()
+
     def _on_adblock_button_clicked(self, button):
         """
             Switch add blocking on/off
