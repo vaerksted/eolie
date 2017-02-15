@@ -153,7 +153,7 @@ class WebView(WebKit2.WebView):
             self.__in_read_mode = True
             html = "<html><head>\
                     <style type='text/css'>\
-                    * {font-size: %s;\
+                    *:not(img) {font-size: %s;\
                         background-color: #333333;\
                         color: #e6e6e6;\
                         margin-left: auto;\
