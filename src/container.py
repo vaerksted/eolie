@@ -159,8 +159,6 @@ class Container(Gtk.Paned):
         view.webview.connect("notify::title", self.__on_title_changed)
         view.webview.connect("enter-fullscreen", self.__on_enter_fullscreen)
         view.webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        view.webview.connect("mouse-target-changed",
-                             self.__on_mouse_target_changed)
         view.webview.connect("readable", self.__on_readable)
         view.webview.connect("insecure-content-detected",
                              self.__on_insecure_content_detected)
@@ -261,21 +259,6 @@ class Container(Gtk.Paned):
             @param event as WebKit2.InsecureContentEvent
         """
         self.window.toolbar.title.set_insecure_content()
-
-    def __on_mouse_target_changed(self, view, hit, modifiers):
-        """
-            Show uri in title bar
-            @param view as WebView
-            @param hit as WebKit2.HitTestResult
-            @param modifier as Gdk.ModifierType
-        """
-        if hit.context_is_link():
-            self.window.toolbar.title.show_uri(hit.get_link_uri())
-        else:
-            title = view.get_title()
-            if title is None:
-                title = ""
-            self.window.toolbar.title.set_title(title)
 
     def __on_load_changed(self, view, event):
         """

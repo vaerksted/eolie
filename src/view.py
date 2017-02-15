@@ -10,13 +10,63 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Pango
 
 from eolie.widget_find import FindWidget
 from eolie.web_view import WebView
 
 
-class View(Gtk.Grid):
+class UriLabel(Gtk.EventBox):
+    """
+        Small label trying to not be under mouse pointer
+    """
+
+    def __init__(self):
+        """
+            Init label
+        """
+        Gtk.EventBox.__init__(self)
+        self.set_property("valign", Gtk.Align.END)
+        self.__label = Gtk.Label()
+        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__label.get_style_context().add_class("urilabel")
+        self.__label.get_style_context().add_class("urilabel-left")
+        self.__label.show()
+        self.add(self.__label)
+        self.connect("enter-notify-event", self.__on_enter_notify)
+
+    def set_text(self, text):
+        """
+            Set label text
+            @param text as str
+        """
+        self.set_property("halign", Gtk.Align.START)
+        self.__label.get_style_context().remove_class("urilabel-right")
+        self.__label.get_style_context().add_class("urilabel-left")
+        self.__label.set_text(text)
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_enter_notify(self, widget, event):
+        """
+            Try to go away from mouse cursor
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        # Move label at the right
+        if self.get_property("valign"):
+            self.set_property("halign", Gtk.Align.END)
+            self.__label.get_style_context().remove_class("urilabel-left")
+            self.__label.get_style_context().add_class("urilabel-right")
+        # Smaller label
+        else:
+            width = self.__label.get_max_width_chars() - 1
+            if width:
+                self.__label.set_max_width_chars(width)
+
+
+class View(Gtk.Overlay):
     """
         A webview with a find widget
     """
@@ -27,11 +77,10 @@ class View(Gtk.Grid):
             @param as parent as View
             @param webview as WebView
         """
-        Gtk.Grid.__init__(self)
+        Gtk.Overlay.__init__(self)
         self.__parent = parent
         if parent is not None:
             parent.connect("destroy", self.__on_parent_destroy)
-        self.set_orientation(Gtk.Orientation.VERTICAL)
         if webview is None:
             self.__webview = WebView()
             self.__webview.show()
@@ -39,8 +88,16 @@ class View(Gtk.Grid):
             self.__webview = webview
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
-        self.add(self.__find_widget)
-        self.add(self.__webview)
+        grid = Gtk.Grid()
+        grid.set_orientation(Gtk.Orientation.VERTICAL)
+        grid.add(self.__find_widget)
+        grid.add(self.__webview)
+        grid.show()
+        self.add(grid)
+        self.__uri_label = UriLabel()
+        self.add_overlay(self.__uri_label)
+        self.__webview.connect("mouse-target-changed",
+                               self.__on_mouse_target_changed)
 
     @property
     def parent(self):
@@ -69,6 +126,19 @@ class View(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __on_mouse_target_changed(self, view, hit, modifiers):
+        """
+            Show uri in title bar
+            @param view as WebView
+            @param hit as WebKit2.HitTestResult
+            @param modifier as Gdk.ModifierType
+        """
+        if hit.context_is_link():
+            self.__uri_label.set_text(hit.get_link_uri())
+            self.__uri_label.show()
+        else:
+            self.__uri_label.hide()
+
     def __on_parent_destroy(self, view):
         """
             Remove parent

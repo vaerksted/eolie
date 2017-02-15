@@ -177,3 +177,22 @@
                                      to (white));
 }
 
+.urilabel {
+    background-color: @theme_bg_color;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.urilabel-left {
+    border: 1px solid shade(@theme_bg_color, 0.7);
+    border-left: none;
+    border-bottom: none;
+    border-top-right-radius: 2px;
+}
+
+.urilabel-right {
+    border: 1px solid shade(@theme_bg_color, 0.7);
+    border-right: none;
+    border-bottom: none;
+    border-top-left-radius: 2px;
+}
