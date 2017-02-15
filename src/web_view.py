@@ -42,6 +42,7 @@ class WebView(WebKit2.WebView):
         self.__cancellable = Gio.Cancellable()
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
+        self.__document_font_size = "14pt"
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -150,12 +151,16 @@ class WebView(WebKit2.WebView):
         show = not self.__in_read_mode or force
         if show and self.__readable_content:
             self.__in_read_mode = True
-            html = '<html><head>\
-                    <style type="text/css">\
-                    * {font-size: 16pt;\
+            html = "<html><head>\
+                    <style type='text/css'>\
+                    * {font-size: %s;\
                         background-color: #333333;\
-                        color: #e6e6e6;}\
-                    </style></head>'
+                        color: #e6e6e6;\
+                        margin-left: auto;\
+                        margin-right: auto;\
+                        width: %s}\
+                    </style></head>" % (self.__document_font_size,
+                                        self.get_allocated_width() / 1.5)
             html += "<title>%s</title>" % self.get_title()
             html += self.__readable_content
             html += "</html>"
@@ -188,16 +193,19 @@ class WebView(WebKit2.WebView):
             Set system font
             @param settings as WebKit2.Settings
         """
-        system = Gio.Settings.new('org.gnome.desktop.interface')
+        system = Gio.Settings.new("org.gnome.desktop.interface")
+        document_font_name = system.get_value("document-font-name").get_string(
+                                                                              )
+        self.__document_font_size = document_font_name[-2:] + "pt"
         settings.set_property(
-                        'monospace-font-family',
-                        system.get_value('monospace-font-name').get_string())
+                        "monospace-font-family",
+                        system.get_value("monospace-font-name").get_string())
         settings.set_property(
-                        'sans-serif-font-family',
-                        system.get_value('document-font-name').get_string())
+                        "sans-serif-font-family",
+                        system.get_value("document-font-name").get_string())
         settings.set_property(
-                        'serif-font-family',
-                        system.get_value('font-name').get_string())
+                        "serif-font-family",
+                        system.get_value("font-name").get_string())
 
     def __read_auth_request(self, request):
         """
