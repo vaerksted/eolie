@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, GObject, Gio, GLib, Gdk
+from gi.repository import WebKit2, GObject, Gtk, Gio, GLib, Gdk
 
 import ctypes
 from urllib.parse import urlparse
@@ -376,10 +376,11 @@ class WebView(WebKit2.WebView):
 
         uri = decision.get_navigation_action().get_request().get_uri()
         mouse_button = decision.get_navigation_action().get_mouse_button()
+        # We are looking for our parent View(Gtk.EventBox)
+        parent = self.get_ancestor(Gtk.EventBox)
         if mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True,
-                                                          self.get_parent())
+                El().active_window.container.add_web_view(uri, True, parent)
                 decision.ignore()
                 return True
             else:
@@ -388,15 +389,13 @@ class WebView(WebKit2.WebView):
         elif mouse_button == 1:
             self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True,
-                                                          self.get_parent())
+                El().active_window.container.add_web_view(uri, True, parent)
                 decision.ignore()
                 return True
             else:
                 decision.use()
                 return False
         else:
-            El().active_window.container.add_web_view(uri, False,
-                                                      self.get_parent())
+            El().active_window.container.add_web_view(uri, False, parent)
             decision.ignore()
             return True
