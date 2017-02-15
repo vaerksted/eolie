@@ -73,6 +73,13 @@ class ToolbarEnd(Gtk.Bin):
         popover.set_relative_to(button)
         popover.show()
 
+    def _on_home_button_clicked(self, button):
+        """
+            Go to home page
+            @param button as Gtk.Button
+        """
+        El().active_window.container.current.load_uri(El().start_page)
+
     def _on_adblock_button_clicked(self, button):
         """
             Switch add blocking on/off
