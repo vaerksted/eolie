@@ -226,6 +226,7 @@ class ToolbarEnd(Gtk.Bin):
         elif param.get_string() == "page":
             El().adblock.add_exception(parsed.netloc + parsed.path)
         self.__update_filtering_button_color()
+        El().active_window.container.current.webview.reload()
 
     def __on_adblock_change_state(self, action, param):
         """
