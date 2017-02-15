@@ -195,6 +195,7 @@ class WebView(Gtk.Grid):
         except Exception as e:
             # Fallback to mercury web service
             print("WebView::show_readable_version():", e)
+            print("$ sudo pip3 install readability-lxml")
             API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
             API_URL = "https://mercury.postlight.com/parser?url=%s"
             session = Soup.Session.new()
