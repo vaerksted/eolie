@@ -69,10 +69,9 @@ class View(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
-    def __on_parent_destroy(self, internal, view):
+    def __on_parent_destroy(self, view):
         """
             Remove parent
-            @param internal as WebKit2.WebView
             @param view as WebView
         """
         self.__parent = None
