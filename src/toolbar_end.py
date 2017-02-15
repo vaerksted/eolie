@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib
 
+from gettext import gettext as _
+
 from eolie.define import El
 from eolie.popover_downloads import DownloadsPopover
 
@@ -23,7 +25,7 @@ class ProgressBar(Gtk.ProgressBar):
     def __init__(self, parent):
         Gtk.ProgressBar.__init__(self)
         self.__parent = parent
-        self.set_property('valign', Gtk.Align.END)
+        self.set_property("valign", Gtk.Align.END)
 
     def do_get_preferred_width(self):
         return (24, 24)
@@ -41,25 +43,26 @@ class ToolbarEnd(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__timeout_id = None
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/ToolbarEnd.ui')
+        builder.add_from_resource("/org/gnome/Eolie/ToolbarEnd.ui")
         builder.connect_signals(self)
-        self.__download_button = builder.get_object('download_button')
+        self.__download_button = builder.get_object("download_button")
+        self.__read_button = builder.get_object("read_button")
         eventbox = Gtk.EventBox()
-        eventbox.connect('button-release-event', self.__on_event_release_event)
+        eventbox.connect("button-release-event", self.__on_event_release_event)
         eventbox.show()
-        self.__progress = ProgressBar(builder.get_object('download_button'))
+        self.__progress = ProgressBar(builder.get_object("download_button"))
         if El().download_manager.get_all():
             self._progress.show()
-        El().download_manager.connect('download-start',
+        El().download_manager.connect("download-start",
                                       self.__on_download)
-        El().download_manager.connect('download-finish',
+        El().download_manager.connect("download-finish",
                                       self.__on_download)
         eventbox.add(self.__progress)
-        builder.get_object('overlay').add_overlay(eventbox)
-        if El().settings.get_value('adblock'):
+        builder.get_object("overlay").add_overlay(eventbox)
+        if El().settings.get_value("adblock"):
             builder.get_object(
-                         'adblock_button').get_style_context().add_class('red')
-        self.add(builder.get_object('end'))
+                         "adblock_button").get_style_context().add_class("red")
+        self.add(builder.get_object("end"))
 
 #######################
 # PROTECTED           #
@@ -80,25 +83,30 @@ class ToolbarEnd(Gtk.Bin):
         """
         El().active_window.container.current.load_uri(El().start_page)
 
-    def _on_read_button_clicked(self, button):
+    def _on_read_button_toggled(self, button):
         """
             Go to home page
             @param button as Gtk.Button
         """
-        El().active_window.container.current.show_readable_version()
+        active = button.get_active()
+        if active:
+            button.set_tooltip_text(_("Leave reader view"))
+        else:
+            button.set_tooltip_text(_("Enter reader view"))
+        El().active_window.container.current.show_readable_version(active)
 
     def _on_adblock_button_clicked(self, button):
         """
             Switch add blocking on/off
             @param button as Gtk.Button
         """
-        value = not El().settings.get_value('adblock')
-        El().settings.set_value('adblock',
-                                GLib.Variant('b', value))
+        value = not El().settings.get_value("adblock")
+        El().settings.set_value("adblock",
+                                GLib.Variant("b", value))
         if value:
-            button.get_style_context().add_class('red')
+            button.get_style_context().add_class("red")
         else:
-            button.get_style_context().remove_class('red')
+            button.get_style_context().remove_class("red")
 
 #######################
 # PRIVATE             #

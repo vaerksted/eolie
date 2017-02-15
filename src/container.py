@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2, GLib
+from gi.repository import Gtk, GObject, WebKit2, GLib
 
 from eolie.stacksidebar import StackSidebar
 from eolie.define import El
@@ -20,6 +20,9 @@ class Container(Gtk.Paned):
     """
         Main Eolie view
     """
+    __gsignals__ = {
+        'current-changed': (GObject.SignalFlags.RUN_FIRST, None, ()),
+    }
 
     def __init__(self):
         """
@@ -61,6 +64,7 @@ class Container(Gtk.Paned):
         self.__stack.add(view)
         if show:
             self.__stack.set_visible_child(view)
+            self.emit("current-changed")
         self.__stack_sidebar.update_visible_child()
 
     def load_uri(self, uri):
@@ -70,6 +74,7 @@ class Container(Gtk.Paned):
         """
         if self.current is not None:
             self.current.load_uri(uri)
+            self.emit("current-changed")
 
     def add_view(self, view):
         """
@@ -98,6 +103,7 @@ class Container(Gtk.Paned):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__stack.set_visible_child(view)
+        self.emit("current-changed")
 
     def save_position(self):
         """

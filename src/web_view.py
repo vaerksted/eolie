@@ -166,9 +166,39 @@ class WebView(Gtk.Grid):
         if not search_mode:
             self.__find_widget.grab_focus()
 
-    def show_readable_version(self):
+    def show_readable_version(self, show):
         """
-            Use mercury service to show a readable version of page
+            Show a readable version of page
+            @param show as bool
+        """
+        if show:
+            self.__show_readable_version()
+        else:
+            self.__webview.load_uri(self.__loaded_uri)
+
+    @property
+    def parent(self):
+        """
+            Get parent web view
+            @return WebView/None
+        """
+        return self.__parent
+
+    @property
+    def loaded_uri(self):
+        """
+            Return loaded uri (This is not current uri!)
+            @return str
+        """
+        return self.__loaded_uri
+
+#######################
+# PRIVATE             #
+#######################
+    def __show_readable_version(self):
+        """
+            Show a readable version of page
+            @param show as bool
         """
         try:
             from readability.readability import Document
@@ -195,7 +225,6 @@ class WebView(Gtk.Grid):
         except Exception as e:
             # Fallback to mercury web service
             print("WebView::show_readable_version():", e)
-            print("$ sudo pip3 install readability-lxml")
             API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
             API_URL = "https://mercury.postlight.com/parser?url=%s"
             session = Soup.Session.new()
@@ -205,25 +234,6 @@ class WebView(Gtk.Grid):
             headers.append("x-api-key", API_KEY)
             session.send_async(message, self.__cancellable, self.__on_readable)
 
-    @property
-    def parent(self):
-        """
-            Get parent web view
-            @return WebView/None
-        """
-        return self.__parent
-
-    @property
-    def loaded_uri(self):
-        """
-            Return loaded uri (This is not current uri!)
-            @return str
-        """
-        return self.__loaded_uri
-
-#######################
-# PRIVATE             #
-#######################
     def __set_system_fonts(self, settings):
         """
             Set system font

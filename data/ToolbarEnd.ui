@@ -50,13 +50,13 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="read_action">
+          <object class="GtkToggleButton" id="read_button">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Enter Reader View</property>
             <property name="image">image3</property>
-            <signal name="clicked" handler="_on_read_button_clicked" swapped="no"/>
+            <signal name="toggled" handler="_on_read_button_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
