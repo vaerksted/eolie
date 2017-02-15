@@ -4,13 +4,32 @@
   <requires lib="gtk+" version="3.10"/>
     <menu id="menu">
         <section>
+            <attribute name="label" translatable="yes">Filtering</attribute>
             <item>
               <attribute name="label" translatable="yes">Block ads</attribute>
               <attribute name="action">app.adblock</attribute>
             </item>
             <item>
-              <attribute name="label" translatable="yes">Reader view</attribute>
-              <attribute name="action">app.reader</attribute>
+              <attribute name="label" translatable="yes">Block images</attribute>
+              <attribute name="action">app.imgblock</attribute>
+            </item>
+        </section>
+        <section>
+            <attribute name="label" translatable="yes">Acceptable ads</attribute>
+            <item>
+              <attribute name="label" translatable="yes">None</attribute>
+              <attribute name="action">app.exceptions</attribute>
+              <attribute name="target">none</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Current site</attribute>
+              <attribute name="action">app.exceptions</attribute>
+              <attribute name="target">site</attribute>
+            </item>
+            <item>
+              <attribute name="label" translatable="yes">Current page</attribute>
+              <attribute name="action">app.exceptions</attribute>
+              <attribute name="target">page</attribute>
             </item>
         </section>
     </menu>

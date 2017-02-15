@@ -31,6 +31,11 @@
             <summary>Block ads on pages</summary>
             <description></description>
         </key>
+	    <key type="b" name="imgblock">
+            <default>false</default>
+            <summary>Block images on pages</summary>
+            <description></description>
+        </key>
 	    <key type="s" name="download-uri">
             <default>""</default>
             <summary>Download folder uri</summary>

@@ -69,7 +69,12 @@ def on_send_request(webpage, request, redirect):
         @param redirect as WebKit2WebExtension.URIResponse
     """
     uri = request.get_uri()
-    if settings.get_value('adblock') and adblock.is_blocked(uri):
+    parsed = urlparse(uri)
+    exception = adblock.is_an_exception(parsed.netloc) or\
+        adblock.is_an_exception(parsed.netloc + parsed.path)
+    if settings.get_value('adblock') and\
+            not exception and\
+            adblock.is_blocked(uri):
         return True
 
 

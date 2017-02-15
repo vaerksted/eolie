@@ -90,6 +90,7 @@ class WebView(WebKit2.WebView):
         self.connect("create", self.__on_create)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("close", self.__on_close)
+        self.connect("load-changed", self.__on_load_changed)
         # We launch Readability.js at page loading finished
         # As Webkit2GTK doesn't allow us to get content from python
         # It sets title with content for one shot, so try to get it here
@@ -345,6 +346,16 @@ class WebView(WebKit2.WebView):
             @param download as WebKit2.Download
         """
         El().download_manager.add(download)
+
+    def __on_load_changed(self, view, event):
+        """
+            Update sidebar/urlbar
+            @param view as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event == WebKit2.LoadEvent.STARTED:
+            self.set_setting("auto-load-images",
+                             not El().settings.get_value("imgblock"))
 
     def __on_decide_policy(self, view, decision, decision_type):
         """

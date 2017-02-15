@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib, Gio
 
+from urllib.parse import urlparse
+
 from eolie.define import El
 from eolie.popover_downloads import DownloadsPopover
 
@@ -63,18 +65,31 @@ class ToolbarEnd(Gtk.Bin):
         self.add(builder.get_object("end"))
 
         adblock_action = Gio.SimpleAction.new_stateful(
-           "adblock",
-           None,
-           GLib.Variant.new_boolean(El().settings.get_value("adblock")))
+               "adblock",
+               None,
+               GLib.Variant.new_boolean(El().settings.get_value("adblock")))
         adblock_action.connect("change-state", self.__on_adblock_change_state)
         El().add_action(adblock_action)
-        self.__reader_action = Gio.SimpleAction.new_stateful(
-                                               "reader",
-                                               None,
-                                               GLib.Variant.new_boolean(False))
-        self.__reader_action.connect("change-state",
-                                     self.__on_reader_change_state)
-        El().add_action(self.__reader_action)
+        image_action = Gio.SimpleAction.new_stateful(
+               "imgblock",
+               None,
+               GLib.Variant.new_boolean(El().settings.get_value("imgblock")))
+        image_action.connect("change-state",
+                             self.__on_image_change_state)
+        El().add_action(image_action)
+        self.__exceptions_action = Gio.SimpleAction.new_stateful(
+                                                   "exceptions",
+                                                   GLib.VariantType.new("s"),
+                                                   GLib.Variant("s", "none"))
+        self.__exceptions_action.connect("activate",
+                                         self.__on_exceptions_active)
+        El().add_action(self.__exceptions_action)
+
+    def on_uri_changed(self):
+        """
+            Update menu button color
+        """
+        self.__update_filtering_button_color()
 
 #######################
 # PROTECTED           #
@@ -100,9 +115,19 @@ class ToolbarEnd(Gtk.Bin):
             Update reader action
             @param button as Gtk.Button
         """
-        self.__reader_action.set_state(
-                GLib.Variant("b",
-                             El().active_window.container.current.readable))
+        uri = El().active_window.container.current.webview.get_uri()
+        if not uri:
+            return
+        parsed = urlparse(uri)
+        page_ex = El().adblock.is_an_exception(parsed.netloc +
+                                               parsed.path)
+        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        if page_ex and site_ex:
+            self.__exceptions_action.change_state(GLib.Variant("s", "none"))
+        elif site_ex:
+            self.__exceptions_action.change_state(GLib.Variant("s", "site"))
+        else:
+            self.__exceptions_action.change_state(GLib.Variant("s", "page"))
 
 #######################
 # PRIVATE             #
@@ -127,12 +152,36 @@ class ToolbarEnd(Gtk.Bin):
             self.__progress.set_fraction(fraction/nb_downloads)
         return True
 
-    def __on_current_changed(self, container):
+    def __update_filtering_button_color(self):
         """
-            Update toggle button
-            @param container as Container
+            Show different colors:
+                * red for adblock all
+                * orange for adblock site
+                * yellow for adblock page
+                * black for no adblock
         """
-        self.__read_button.set_active(container.current.is_readable)
+        # Remove any previous class
+        self.__menu_button.get_style_context().remove_class("red")
+        self.__menu_button.get_style_context().remove_class("orange")
+        self.__menu_button.get_style_context().remove_class("yellow")
+        # If adblock disabled, nothing more to do
+        if not El().settings.get_value("adblock"):
+            return
+        uri = El().active_window.container.current.webview.get_uri()
+        # If uri empty, we just set adblock color to red and leave
+        if not uri:
+            if El().settings.get_value("adblock"):
+                self.__menu_button.get_style_context().add_class("red")
+            return
+        parsed = urlparse(uri)
+        page_ex = El().adblock.is_an_exception(parsed.netloc + parsed.path)
+        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        if page_ex:
+            self.__menu_button.get_style_context().add_class("yellow")
+        elif site_ex:
+            self.__menu_button.get_style_context().add_class("orange")
+        else:
+            self.__menu_button.get_style_context().add_class("red")
 
     def __on_event_release_event(self, widget, event):
         """
@@ -142,6 +191,33 @@ class ToolbarEnd(Gtk.Bin):
         """
         self.__download_button.clicked()
 
+    def __on_exceptions_active(self, action, param):
+        """
+            Update exception for current page/site
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        uri = El().active_window.container.current.webview.get_uri()
+        if not uri:
+            return
+        action.set_state(param)
+        parsed = urlparse(uri)
+        page_ex = El().adblock.is_an_exception(parsed.netloc + parsed.path)
+        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        # Clean previous exceptions
+        if param.get_string() in ["site", "none"]:
+            if page_ex:
+                El().adblock.remove_exception(parsed.netloc + parsed.path)
+        if param.get_string() in ["page", "none"]:
+            if site_ex:
+                El().adblock.remove_exception(parsed.netloc)
+        # Add new exceptions
+        if param.get_string() == "site":
+            El().adblock.add_exception(parsed.netloc)
+        elif param.get_string() == "page":
+            El().adblock.add_exception(parsed.netloc + parsed.path)
+        self.__update_filtering_button_color()
+
     def __on_adblock_change_state(self, action, param):
         """
             Set adblock state
@@ -150,23 +226,18 @@ class ToolbarEnd(Gtk.Bin):
         """
         action.set_state(param)
         El().settings.set_value('adblock', param)
-        if param.get_boolean():
-            self.__menu_button.get_style_context().add_class("red")
-        else:
-            self.__menu_button.get_style_context().remove_class("red")
+        self.__update_filtering_button_color()
+        El().active_window.container.current.webview.reload()
 
-    def __on_reader_change_state(self, action, param):
+    def __on_image_change_state(self, action, param):
         """
             Set reader view
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
         action.set_state(param)
-        current_view = El().active_window.container.current
-        active = param.get_boolean()
-        if active == current_view.readable:
-            return
-        current_view.show_readable_version(active)
+        El().settings.set_value('imgblock', param)
+        El().active_window.container.current.webview.reload()
 
     def __on_download(self, download_manager, name=""):
         """

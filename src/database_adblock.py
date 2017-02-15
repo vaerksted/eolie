@@ -47,6 +47,11 @@ class DatabaseAdblock:
                                                mtime INT NOT NULL
                                                )'''
 
+    __create_exceptions = '''CREATE TABLE exceptions (
+                                               id INTEGER PRIMARY KEY,
+                                               uri TEXT NOT NULL
+                                               )'''
+
     def __init__(self):
         """
             Create database tables or manage update if needed
@@ -64,9 +69,46 @@ class DatabaseAdblock:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
+                    sql.execute(self.__create_exceptions)
                     sql.commit()
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
+
+    def add_exception(self, uri):
+        """
+            Add an exception
+            @param uri as str
+        """
+        try:
+            with SqlCursor(self) as sql:
+                sql.execute("INSERT INTO exceptions (uri) VALUES (?)", (uri,))
+                sql.commit()
+        except:
+            pass
+
+    def remove_exception(self, uri):
+        """
+            Remove an exception
+            @param uri as str
+        """
+        try:
+            with SqlCursor(self) as sql:
+                sql.execute("DELETE FROM exceptions WHERE uri=?", (uri,))
+                sql.commit()
+        except:
+            pass
+
+    def is_an_exception(self, uri):
+        """
+            True if uri not in exceptions
+            @param uri as str
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid FROM exceptions\
+                                  WHERE uri=?", (uri,))
+            v = result.fetchone()
+            return v is not None
 
     def update(self):
         """

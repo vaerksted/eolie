@@ -70,7 +70,15 @@
 }
 
 .red {
-    color: shade(red, 0.8)
+    color: shade(red, 0.9);
+}
+
+.orange {
+    color: shade(orange, 0.95);
+}
+
+.yellow {
+    color: shade(yellow, 0.8);
 }
 
 .bold {
