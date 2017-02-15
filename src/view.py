@@ -26,7 +26,6 @@ class UriLabel(Gtk.EventBox):
             Init label
         """
         Gtk.EventBox.__init__(self)
-        self.set_property("valign", Gtk.Align.END)
         self.__label = Gtk.Label()
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.get_style_context().add_class("urilabel")
@@ -42,6 +41,7 @@ class UriLabel(Gtk.EventBox):
         if text == self.__label.get_text():
             return
         self.set_property("halign", Gtk.Align.START)
+        self.set_property("valign", Gtk.Align.END)
         self.__label.get_style_context().remove_class("bottom-right")
         self.__label.get_style_context().add_class("bottom-left")
         self.__label.set_text(text)
