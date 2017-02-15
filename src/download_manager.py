@@ -23,7 +23,7 @@ class DownloadManager(GObject.GObject):
         Downloads Manager
     """
     __gsignals__ = {
-        'download-start': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        'download-start': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         'download-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
@@ -33,6 +33,7 @@ class DownloadManager(GObject.GObject):
         """
         GObject.GObject.__init__(self)
         self.__downloads = []
+        self.__finished = []
 
     def add(self, download):
         """
@@ -53,13 +54,22 @@ class DownloadManager(GObject.GObject):
         """
         if download in self.__downloads:
             self.__downloads.remove(download)
+        if download in self.__finished:
+            self.__finished.remove(download)
 
-    def get_all(self):
+    def get(self):
         """
             Get all downloads
             @return [WebKit2.Download]
         """
         return self.__downloads
+
+    def get_finished(self):
+        """
+            Get finished download
+            @return [WebKit2.Download]
+        """
+        return self.__finished
 
     def is_active(self):
         """
@@ -113,13 +123,14 @@ class DownloadManager(GObject.GObject):
             # Fallback to be sure
             destination_uri = "%s/%s" % (directory_uri, "@@" + filename)
         download.set_destination(destination_uri)
-        self.emit('download-start')
+        self.emit('download-start', str(download))
 
     def __on_finished(self, download):
         """
             @param download as WebKit2.Download
         """
         self.remove(download)
+        self.__finished.append(download)
         self.emit('download-finish')
         if El().settings.get_value('open-downloads'):
             Gtk.show_uri(None, download.get_destination(), int(time()))

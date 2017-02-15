@@ -51,7 +51,7 @@ class ToolbarEnd(Gtk.Bin):
         eventbox.connect("button-release-event", self.__on_event_release_event)
         eventbox.show()
         self.__progress = ProgressBar(builder.get_object("download_button"))
-        if El().download_manager.get_all():
+        if El().download_manager.get():
             self._progress.show()
         El().download_manager.connect("download-start",
                                       self.__on_download)
@@ -134,7 +134,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         fraction = 0.0
         nb_downloads = 0
-        for download in download_manager.get_all():
+        for download in download_manager.get():
             nb_downloads += 1
             fraction += download.get_estimated_progress()
         if nb_downloads:
@@ -156,10 +156,11 @@ class ToolbarEnd(Gtk.Bin):
         """
         self.__download_button.clicked()
 
-    def __on_download(self, download_manager):
+    def __on_download(self, download_manager, name=""):
         """
             Update progress bar
             @param downloads manager as DownloadsManager
+            @param name as str (do not use this)
         """
         if download_manager.is_active():
             if self.__timeout_id is None:

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Pango
+from gi.repository import Gtk, GLib, Pango
 
 from time import time
 
@@ -21,17 +21,20 @@ class Row(Gtk.ListBoxRow):
     """
         A row
     """
-    def __init__(self, download):
+    def __init__(self, download, finished):
         """
             Init row
             @param download as WebKit2.Download
+            @param finished as bool
         """
         Gtk.ListBoxRow.__init__(self)
         self.__download = download
+        self.__finished = finished
         self.__uri = self.__download.get_request().get_uri()
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/RowDownload.ui')
         builder.connect_signals(self)
+        self.__progress = builder.get_object('progress')
         filename = GLib.filename_from_uri(download.get_destination())
         if filename is not None:
             builder.get_object('label').set_label(
@@ -41,17 +44,23 @@ class Row(Gtk.ListBoxRow):
             builder.get_object('label').set_label(download.get_destination())
             builder.get_object('label').set_ellipsize(
                                                    Pango.EllipsizeMode.START)
-        self.__progress = builder.get_object('progress')
-        self.__progress.set_fraction(download.get_estimated_progress())
         self.__button = builder.get_object('button')
         self.__button_image = builder.get_object('button_image')
-        if download.get_estimated_progress() == 1.0:
+        if finished:
             self.__on_finished(download)
         else:
+            self.__progress.set_fraction(download.get_estimated_progress())
             download.connect('finished', self.__on_finished)
             download.connect('received-data', self.__on_received_data)
             download.connect('failed', self.__on_failed)
         self.add(builder.get_object('row'))
+
+    @property
+    def finished(self):
+        """
+            True if download is finished
+        """
+        return self.__finished
 
     @property
     def download(self):
@@ -73,6 +82,8 @@ class Row(Gtk.ListBoxRow):
             self.__download.cancel()
         elif self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
             self.__download.get_web_view().download_uri(self.__uri)
+            El().download_manager.remove(self.__download)
+            self.destroy()
 
 #######################
 # PRIVATE             #
@@ -88,7 +99,11 @@ class Row(Gtk.ListBoxRow):
         """
             @param download as WebKit2.Download
         """
+        self.__finished = True
         self.__progress.set_opacity(0)
+        parent = self.get_parent()
+        if parent is not None:
+            parent.invalidate_sort()
         if self.__button_image.get_icon_name()[0] == 'view-refresh-symbolic':
             return True
         else:
@@ -116,18 +131,15 @@ class DownloadsPopover(Gtk.Popover):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverDownloads.ui')
         builder.connect_signals(self)
-        self.__model = Gio.ListStore()
         self.__listbox = builder.get_object('downloads_box')
         self.__listbox.connect('row-activated', self.__on_row_activated)
         self.__listbox.set_placeholder(builder.get_object('placeholder'))
-        self.__listbox.bind_model(self.__model,
-                                  self.__on_item_create)
+        self.__listbox.set_sort_func(self.__sort)
         self.__scrolled = builder.get_object('scrolled')
         self.add(builder.get_object('widget'))
         self.connect('map', self.__on_map)
         self.connect('unmap', self.__on_unmap)
-        for download in El().download_manager.get_all():
-            self.__model.append(download)
+        self.__populate()
 
 #######################
 # PROTECTED           #
@@ -136,13 +148,40 @@ class DownloadsPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __sort(self, row1, row2):
+        """
+            Sort listbox
+            @param row1 as Row
+            @param row2 as Row
+        """
+        if row1.finished:
+            return True
+        elif row1.download.get_estimated_progress() >\
+                row2.download.get_estimated_progress():
+            return False
+
+    def __populate(self):
+        """
+            Populate view
+        """
+        for download in El().download_manager.get():
+            child = Row(download, False)
+            child.connect('size-allocate', self.__on_child_size_allocate)
+            child.show()
+            self.__listbox.add(child)
+        for download in El().download_manager.get_finished():
+            child = Row(download, True)
+            child.connect('size-allocate', self.__on_child_size_allocate)
+            child.show()
+            self.__listbox.add(child)
+
     def __on_row_activated(self, listbox, row):
         """
             Launch row if download finished
             @param listbox as Gtk.ListBox
             @param row as Row
         """
-        if row.download.get_estimated_progress() == 1.0:
+        if row.finished:
             Gtk.show_uri(None, row.download.get_destination(), int(time()))
             self.hide()
 
@@ -160,16 +199,23 @@ class DownloadsPopover(Gtk.Popover):
             Resize
             @param widget as Gtk.Widget
         """
+        for child in self.__listbox.get_children():
+            child.destroy()
         El().download_manager.disconnect_by_func(self.__on_download_start)
 
-    def __on_download_start(self, download_manager):
+    def __on_download_start(self, download_manager, download_name):
         """
-            Update view
+            Add download
             @param download manager as Download Manager
+            @param download_name as str
         """
-        self.__model.remove_all()
-        for download in El().download_manager.get_all():
-            self.__model.append(download)
+        for download in El().download_manager.get():
+            if str(download) == download_name:
+                child = Row(download, False)
+                child.connect('size-allocate', self.__on_child_size_allocate)
+                child.show()
+                self.__listbox.add(child)
+                break
 
     def __on_child_size_allocate(self, widget, allocation=None):
         """
@@ -184,12 +230,3 @@ class DownloadsPopover(Gtk.Popover):
         if height > size[1] * 0.6:
             height = size[1] * 0.6
         self.__scrolled.set_size_request(400, height)
-
-    def __on_item_create(self, download):
-        """
-            Add child to box
-            @param download as WebKit2.Download
-        """
-        child = Row(download)
-        child.connect('size-allocate', self.__on_child_size_allocate)
-        return child
