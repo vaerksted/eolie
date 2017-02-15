@@ -88,20 +88,13 @@ class Window(Gtk.ApplicationWindow):
             Setup window content
         """
         self.set_default_icon_name('web-browser')
-        vgrid = Gtk.Grid()
-        vgrid.set_orientation(Gtk.Orientation.VERTICAL)
-        vgrid.show()
         self.__toolbar = Toolbar()
         self.__toolbar.show()
-        if El().prefers_app_menu():
-            self.set_titlebar(self.__toolbar)
-            self.__toolbar.set_show_close_button(True)
-        else:
-            vgrid.add(self.__toolbar)
         self.__container = Container()
         self.__container.show()
-        vgrid.add(self.__container)
-        self.add(vgrid)
+        self.set_titlebar(self.__toolbar)
+        self.__toolbar.set_show_close_button(True)
+        self.add(self.__container)
 
     def __setup_pos(self):
         """

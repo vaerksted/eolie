@@ -50,6 +50,7 @@ class ToolbarEnd(Gtk.Bin):
         eventbox = Gtk.EventBox()
         eventbox.connect("button-release-event", self.__on_event_release_event)
         eventbox.show()
+        self.__settings_button = builder.get_object("settings_button")
         self.__progress = ProgressBar(builder.get_object("download_button"))
         if El().download_manager.get():
             self._progress.show()
@@ -84,6 +85,14 @@ class ToolbarEnd(Gtk.Bin):
         self.__exceptions_action.connect("activate",
                                          self.__on_exceptions_active)
         El().add_action(self.__exceptions_action)
+
+    def setup_menu(self, menu):
+        """
+            Add an application menu to menu button
+            @parma: menu as Gio.Menu
+        """
+        self.__settings_button.show()
+        self.__settings_button.set_menu_model(menu)
 
     def on_uri_changed(self):
         """

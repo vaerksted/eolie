@@ -151,7 +151,7 @@ class Application(Gtk.Application):
                 window = Window()
             else:
                 window = Window()
-                window.setup_menu(menu)
+                window.toolbar.end.setup_menu(menu)
             window.connect('delete-event', self.__on_delete_event)
             window.show()
             self.__windows.append(window)
