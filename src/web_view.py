@@ -104,18 +104,12 @@ class WebView(Gtk.Grid):
             Load uri
             @param uri as str
         """
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
         if not uri.startswith("http://") and not uri.startswith("https://"):
             uri = "http://" + uri
         self.__loaded_uri = uri
         self.__webview.load_uri(uri)
-
-    def stop_loading(self):
-        """
-            Stop view loading
-        """
-        self.__webview.stop_loading()
-        self.__cancellable.cancel()
-        self.__cancellable.reset()
 
     def update_zoom_level(self):
         """
@@ -176,14 +170,39 @@ class WebView(Gtk.Grid):
         """
             Use mercury service to show a readable version of page
         """
-        from gi.repository import Soup
-        API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
-        API_URL = "https://mercury.postlight.com/parser?url=%s"
-        session = Soup.Session.new()
-        message = Soup.Message.new("GET", API_URL % self.__webview.get_uri())
-        headers = message.get_property("request-headers")
-        headers.append("x-api-key", API_KEY)
-        session.send_async(message, self.__cancellable, self.__on_readable)
+        try:
+            from readability.readability import Document
+            from gi.repository import Soup
+            session = Soup.Session.new()
+            request = session.request(self.__webview.get_uri())
+            stream = request.send(self.__cancellable)
+            bytes = bytearray(0)
+            buf = stream.read_bytes(1024, self.__cancellable).get_data()
+            while buf:
+                bytes += buf
+                buf = stream.read_bytes(1024, self.__cancellable).get_data()
+            data = bytes.decode("utf-8")
+            readable_title = Document(data).short_title()
+            html = '<html><head>\
+                    <style type="text/css">\
+                    * {font-size: 18pt;\
+                        background-color: #333333;\
+                        color: #e6e6e6;}\
+                    </style></head>'
+            html += "<title>%s</title>" % readable_title
+            html += Document(data).summary()
+            self.__webview.load_html(html, None)
+        except Exception as e:
+            # Fallback to mercury web service
+            print("WebView::show_readable_version():", e)
+            API_KEY = "QemIisLAGhqvnYHNNgYr8sWUcSMc6xWQoUvFjiPk"
+            API_URL = "https://mercury.postlight.com/parser?url=%s"
+            session = Soup.Session.new()
+            message = Soup.Message.new("GET",
+                                       API_URL % self.__webview.get_uri())
+            headers = message.get_property("request-headers")
+            headers.append("x-api-key", API_KEY)
+            session.send_async(message, self.__cancellable, self.__on_readable)
 
     @property
     def parent(self):
