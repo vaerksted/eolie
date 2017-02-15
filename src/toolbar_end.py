@@ -117,7 +117,7 @@ class ToolbarEnd(Gtk.Bin):
             Go to home page
             @param button as Gtk.Button
         """
-        El().active_window.container.current.load_uri(El().start_page)
+        El().active_window.container.current.webview.load_uri(El().start_page)
 
     def _on_menu_button_clicked(self, button):
         """
