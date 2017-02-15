@@ -77,7 +77,7 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-offline-web-application-cache", True)
         settings.set_property("enable-page-cache", True)
         settings.set_property("enable-resizable-text-areas", True)
-        settings.set_property("enable-smooth-scrolling", True)
+        settings.set_property("enable-smooth-scrolling", False)
         settings.set_property("enable-webaudio", True)
         settings.set_property("enable-webgl", True)
         settings.set_property("javascript-can-access-clipboard", True)
@@ -318,7 +318,6 @@ class WebView(WebKit2.WebView):
             @param event as Gdk.EventScroll
         """
         source = event.device.get_source()
-        self.__input_source
         if source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
