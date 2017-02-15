@@ -186,6 +186,8 @@ class Container(Gtk.Paned):
             @param view as WebView
         """
         if view == self.current.webview:
+            self.window.toolbar.title.show_readable_button(
+                                                        view.readable[1] != "")
             self.window.toolbar.title.set_uri(view.get_uri())
             if view.is_loading():
                 self.window.toolbar.title.progress.show()
