@@ -514,7 +514,7 @@ class StackSidebar(Gtk.Grid):
     def close_view(self, view):
         """
             close current view
-            @param view as WebView
+            @param view as View
             @return child SidebarChild
         """
         was_current = view == self.__container.current
@@ -533,7 +533,7 @@ class StackSidebar(Gtk.Grid):
         # First we search a child with same parent as closed
         brother = None
         for child in self.__listbox.get_children():
-            if child != view and child.view.parent == view.parent:
+            if child.view != view and child.view.parent == view.parent:
                 brother = child
                 break
         # Load brother
