@@ -462,7 +462,7 @@ class StackSidebar(Gtk.Grid):
             Mark current child as visible
             Unmark all others
         """
-        self.__container.emit("current-changed")
+        self.__container.window.toolbar.end.update_reader_button()
         visible = self.__container.current
         for child in self.__listbox.get_children():
             if child.view == visible:

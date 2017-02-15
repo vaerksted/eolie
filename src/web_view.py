@@ -34,6 +34,7 @@ class WebView(Gtk.Grid):
             @param webview as WebKit2.WebView
         """
         Gtk.Grid.__init__(self)
+        self.__readable = False
         self.__cancellable = Gio.Cancellable()
         self.__parent = parent
         if parent is not None:
@@ -171,10 +172,19 @@ class WebView(Gtk.Grid):
             Show a readable version of page
             @param show as bool
         """
+        self.__readable = show
         if show:
             self.__show_readable_version()
         else:
             self.__webview.load_uri(self.__loaded_uri)
+
+    @property
+    def readable(self):
+        """
+            True if in readable mode
+            @return bool
+        """
+        return self.__readable
 
     @property
     def parent(self):
@@ -315,6 +325,7 @@ class WebView(Gtk.Grid):
             html += "</html>"
             self.__webview.load_html(html, None)
         except Exception as e:
+            self.__readable = False
             print("WebView::__on_readable():", e)
 
     def __on_parent_destroy(self, internal, view):
@@ -427,6 +438,7 @@ class WebView(Gtk.Grid):
                 decision.ignore()
                 return True
             else:
+                self.__readable = False
                 decision.use()
                 return False
         else:

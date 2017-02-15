@@ -64,6 +64,13 @@ class ToolbarEnd(Gtk.Bin):
                          "adblock_button").get_style_context().add_class("red")
         self.add(builder.get_object("end"))
 
+    def update_reader_button(self):
+        """
+            Update reader button
+        """
+        self.__read_button.set_active(
+                                El().active_window.container.current.readable)
+
 #######################
 # PROTECTED           #
 #######################
@@ -88,12 +95,15 @@ class ToolbarEnd(Gtk.Bin):
             Go to home page
             @param button as Gtk.Button
         """
+        current_view = El().active_window.container.current
         active = button.get_active()
+        if active == current_view.readable:
+            return
         if active:
             button.set_tooltip_text(_("Leave reader view"))
         else:
             button.set_tooltip_text(_("Enter reader view"))
-        El().active_window.container.current.show_readable_version(active)
+        current_view.show_readable_version(active)
 
     def _on_adblock_button_clicked(self, button):
         """
@@ -130,6 +140,13 @@ class ToolbarEnd(Gtk.Bin):
         if nb_downloads:
             self.__progress.set_fraction(fraction/nb_downloads)
         return True
+
+    def __on_current_changed(self, container):
+        """
+            Update toggle button
+            @param container as Container
+        """
+        self.__read_button.set_active(container.current.is_readable)
 
     def __on_event_release_event(self, widget, event):
         """
