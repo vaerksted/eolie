@@ -56,6 +56,11 @@
             <summary>Remember passwords</summary>
             <description></description>
         </key>
+	    <key type="b" name="developer-extras">
+            <default>false</default>
+            <summary>Enable developer tools</summary>
+            <description></description>
+        </key>
 	    <key type="b" name="enable-plugins">
             <default>false</default>
             <summary>Enable plugins</summary>

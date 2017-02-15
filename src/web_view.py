@@ -78,6 +78,8 @@ class WebView(Gtk.Grid):
         settings.set_property("enable-javascript", True)
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-mediasource", True)
+        settings.set_property("enable-developer-extras",
+                              El().settings.get_value("developer-extras"))
         settings.set_property("enable-offline-web-application-cache", True)
         settings.set_property("enable-page-cache", True)
         settings.set_property("enable-resizable-text-areas", True)
