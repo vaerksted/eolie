@@ -317,7 +317,7 @@ class WebView(WebKit2.WebView):
             @param widget as WebKit2.WebView
             @param event as Gdk.EventScroll
         """
-        source = event.device.get_source()
+        source = event.get_source_device().get_source()
         if source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
