@@ -28,6 +28,7 @@ class Container(Gtk.Paned):
             @param window as Window
         """
         Gtk.Paned.__init__(self)
+        self.__window = window
         self.set_position(
             El().settings.get_value("paned-width").get_int32())
         self.connect("notify::position", self.__on_notify_position)
@@ -223,7 +224,7 @@ class Container(Gtk.Paned):
             Show readable button in titlebar
             @param webview as WebView
         """
-        self.window.toolbar.title.show_readable_button(True)
+        self.__window.toolbar.title.show_readable_button(True)
 
     def __on_view_map(self, webview):
         """
@@ -231,14 +232,14 @@ class Container(Gtk.Paned):
             @param webview as WebView
         """
         if webview == self.current.webview:
-            self.window.toolbar.title.show_readable_button(
+            self.__window.toolbar.title.show_readable_button(
                                                     webview.readable[1] != "")
-            self.window.toolbar.title.set_uri(webview.get_uri())
+            self.__window.toolbar.title.set_uri(webview.get_uri())
             if webview.is_loading():
-                self.window.toolbar.title.progress.show()
+                self.__window.toolbar.title.progress.show()
             else:
-                self.window.toolbar.title.progress.hide()
-                self.window.toolbar.title.set_title(webview.get_title())
+                self.__window.toolbar.title.progress.hide()
+                self.__window.toolbar.title.set_title(webview.get_title())
 
     def __on_save_password(self, webview, username, password, netloc):
         """
@@ -248,7 +249,7 @@ class Container(Gtk.Paned):
             @param password as str
             @param netloc as str
         """
-        self.window.toolbar.title.save_password(username, password, netloc)
+        self.__window.toolbar.title.save_password(username, password, netloc)
 
     def __on_button_press(self, webview, event):
         """
@@ -256,7 +257,7 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as Gdk.Event
         """
-        self.window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.hide_popover()
 
     def __on_estimated_load_progress(self, webview, value):
         """
@@ -266,7 +267,7 @@ class Container(Gtk.Paned):
         """
         if webview == self.current.webview:
             value = webview.get_estimated_load_progress()
-            self.window.toolbar.title.progress.set_fraction(value)
+            self.__window.toolbar.title.progress.set_fraction(value)
 
     def __on_uri_changed(self, webview, uri):
         """
@@ -275,10 +276,10 @@ class Container(Gtk.Paned):
             @param uri as str
         """
         if webview == self.current.webview:
-            self.window.toolbar.title.show_readable_button(
+            self.__window.toolbar.title.show_readable_button(
                                                     webview.readable[1] != "")
-            self.window.toolbar.end.on_uri_changed()
-            self.window.toolbar.title.set_uri(webview.get_uri())
+            self.__window.toolbar.end.on_uri_changed()
+            self.__window.toolbar.title.set_uri(webview.get_uri())
 
     def __on_title_changed(self, webview, event):
         """
@@ -290,10 +291,10 @@ class Container(Gtk.Paned):
         title = webview.get_title()
         if webview == self.current.webview:
             if title:
-                self.window.toolbar.title.set_title(title)
+                self.__window.toolbar.title.set_title(title)
             else:
-                self.window.toolbar.title.set_title(uri)
-            self.window.toolbar.actions.set_actions(webview)
+                self.__window.toolbar.title.set_title(uri)
+            self.__window.toolbar.actions.set_actions(webview)
         # Update history
         if title:
             El().history.add(title, uri)
@@ -317,7 +318,7 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.InsecureContentEvent
         """
-        self.window.toolbar.title.set_insecure_content()
+        self.__window.toolbar.title.set_insecure_content()
 
     def __on_load_changed(self, webview, event):
         """
@@ -325,12 +326,13 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.window.toolbar.title.on_load_changed(webview, event)
+        self.__window.toolbar.title.on_load_changed(webview, event)
         if event == WebKit2.LoadEvent.STARTED:
             if webview == self.current.webview:
-                self.window.toolbar.title.progress.show()
+                self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.FINISHED:
             if webview == self.current.webview:
-                if not self.window.toolbar.title.focus_in:
+                if not self.__window.toolbar.title.focus_in:
                     GLib.idle_add(webview.grab_focus)
-                GLib.timeout_add(500, self.window.toolbar.title.progress.hide)
+                GLib.timeout_add(500,
+                                 self.__window.toolbar.title.progress.hide)
