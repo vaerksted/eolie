@@ -13,6 +13,7 @@
 from gi.repository import Gtk, WebKit2, GLib
 
 from eolie.stacksidebar import StackSidebar
+from eolie.view import View
 from eolie.define import El
 
 
@@ -148,7 +149,6 @@ class Container(Gtk.Paned):
             @param webview as WebKit2.WebView
             @return View
         """
-        from eolie.view import View
         view = View(parent, webview)
         view.webview.connect("map", self.__on_view_map)
         view.webview.connect("notify::estimated-load-progress",
@@ -160,10 +160,23 @@ class Container(Gtk.Paned):
         view.webview.connect("enter-fullscreen", self.__on_enter_fullscreen)
         view.webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
         view.webview.connect("readable", self.__on_readable)
+        view.webview.connect("new-page", self.__on_new_page)
+        view.webview.connect("create", self.__on_create)
+        view.webview.connect("close", self.__on_close)
         view.webview.connect("insecure-content-detected",
                              self.__on_insecure_content_detected)
         view.show()
         return view
+
+    def __get_view_for_webview(self, webview):
+        """
+            @param webview as WebView
+            @return view as View
+        """
+        for child in self.__stack.get_children():
+            if child.webview == webview:
+                return child
+        return None
 
     def __on_notify_position(self, paned, position):
         """
@@ -172,6 +185,44 @@ class Container(Gtk.Paned):
             @param position as GParamInt
         """
         self.__stack_sidebar.update_children_snapshot()
+
+    def __on_new_page(self, view, uri, show):
+        """
+            Open a new page, switch to view if show is True
+            @param view as WebView
+            @param uri as str
+            @param show as bool
+        """
+        self.add_web_view(uri, True, view)
+
+    def __on_create(self, view, action):
+        """
+            Create a new view for action
+            @param view as WebKit2.WebView
+            @param action as WebKit2.NavigationAction
+        """
+        from eolie.web_view import WebView
+        uri = action.get_request().get_uri()
+        webview = WebView.new_with_related_view(view)
+        webview.connect("ready-to-show", self.__on_ready_to_show, uri)
+        return webview
+
+    def __on_close(self, webview):
+        """
+            Close my self
+            @param webview as WebKit2.WebView
+        """
+        view = self.__get_view_for_webview(webview)
+        if view is not None:
+            self.sidebar.close_view(view)
+
+    def __on_ready_to_show(self, view, uri):
+        """
+            Add view to window
+            @param view as WebKit2.WebView
+            @param uri as str
+        """
+        self.add_web_view(uri, True, None, view)
 
     def __on_readable(self, view):
         """

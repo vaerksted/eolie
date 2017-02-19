@@ -27,8 +27,10 @@ class WebView(WebKit2.WebView):
         self as first argument
     """
 
+    # If you add a signal here, you need to update new_with_related_view()
     __gsignals__ = {
-        'readable': (GObject.SignalFlags.RUN_FIRST, None, ())
+        "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
     }
 
     def __init__(self):
@@ -36,69 +38,28 @@ class WebView(WebKit2.WebView):
             Init view
         """
         WebKit2.WebView.__init__(self)
-        self.__in_read_mode = False
-        self.__readable_content = ""
-        self.__js_timeout = None
-        self.__cancellable = Gio.Cancellable()
-        self.__input_source = Gdk.InputSource.MOUSE
-        self.__loaded_uri = ""
-        self.__document_font_size = "14pt"
-        self.set_hexpand(True)
-        self.set_vexpand(True)
-        self.connect("scroll-event", self.__on_scroll_event)
-        settings = self.get_settings()
-        settings.set_property('enable-java',
-                              El().settings.get_value('enable-plugins'))
-        settings.set_property('enable-plugins',
-                              El().settings.get_value('enable-plugins'))
-        settings.set_property('minimum-font-size',
-                              El().settings.get_value(
-                                'min-font-size').get_int32())
-        if El().settings.get_value('use-system-fonts'):
-            self.__set_system_fonts(settings)
-        else:
-            settings.set_property('monospace-font-family',
-                                  El().settings.get_value(
-                                    'font-monospace').get_string())
-            settings.set_property('sans-serif-font-family',
-                                  El().settings.get_value(
-                                    'font-sans-serif').get_string())
-            settings.set_property('serif-font-family',
-                                  El().settings.get_value(
-                                    'font-serif').get_string())
-        settings.set_property("allow-file-access-from-file-urls",
-                              False)
-        settings.set_property("auto-load-images", True)
-        settings.set_property("enable-javascript", True)
-        settings.set_property("enable-media-stream", True)
-        settings.set_property("enable-mediasource", True)
-        settings.set_property("enable-developer-extras",
-                              El().settings.get_value("developer-extras"))
-        settings.set_property("enable-offline-web-application-cache", True)
-        settings.set_property("enable-page-cache", True)
-        settings.set_property("enable-resizable-text-areas", True)
-        settings.set_property("enable-smooth-scrolling", False)
-        settings.set_property("enable-webaudio", True)
-        settings.set_property("enable-webgl", True)
-        settings.set_property("javascript-can-access-clipboard", True)
-        settings.set_property("javascript-can-open-windows-automatically",
-                              True)
-        settings.set_property("media-playback-allows-inline", True)
-        self.set_settings(settings)
-        self.connect("decide-policy", self.__on_decide_policy)
-        self.connect("submit-form", self.__on_submit_form)
-        self.connect("create", self.__on_create)
-        self.connect("run-as-modal", self.__on_run_as_modal)
-        self.connect("close", self.__on_close)
-        self.connect("load-changed", self.__on_load_changed)
-        # We launch Readability.js at page loading finished
-        # As Webkit2GTK doesn't allow us to get content from python
-        # It sets title with content for one shot, so try to get it here
-        self.connect("notify::title", self.__on_title_changed)
-        self.connect("notify::uri", self.__on_uri_changed)
-        self.get_context().connect("download-started",
-                                   self.__on_download_started)
-        self.update_zoom_level()
+        self.__init()
+
+    def new_with_related_view(related):
+        """
+            Create a new WebView related to view
+            @param related as WebView
+            @return WebView
+        """
+        view = WebKit2.WebView.new_with_related_view(related)
+        # Manually install signals
+        gsignals = {
+            "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
+            "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        }
+        if "readable" not in GObject.signal_list_names(WebKit2.WebView):
+            for signal in gsignals:
+                args = gsignals[signal]
+                GObject.signal_new(signal, WebKit2.WebView,
+                                   args[0], args[1], args[2])
+        view.__class__ = WebView
+        view.__init()
+        return view
 
     def load_uri(self, uri):
         """
@@ -189,6 +150,72 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
+    def __init(self):
+        """
+            Init WebView
+        """
+        self.__in_read_mode = False
+        self.__readable_content = ""
+        self.__js_timeout = None
+        self.__cancellable = Gio.Cancellable()
+        self.__input_source = Gdk.InputSource.MOUSE
+        self.__loaded_uri = ""
+        self.__document_font_size = "14pt"
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+        self.connect("scroll-event", self.__on_scroll_event)
+        settings = self.get_settings()
+        settings.set_property('enable-java',
+                              El().settings.get_value('enable-plugins'))
+        settings.set_property('enable-plugins',
+                              El().settings.get_value('enable-plugins'))
+        settings.set_property('minimum-font-size',
+                              El().settings.get_value(
+                                'min-font-size').get_int32())
+        if El().settings.get_value('use-system-fonts'):
+            self.__set_system_fonts(settings)
+        else:
+            settings.set_property('monospace-font-family',
+                                  El().settings.get_value(
+                                    'font-monospace').get_string())
+            settings.set_property('sans-serif-font-family',
+                                  El().settings.get_value(
+                                    'font-sans-serif').get_string())
+            settings.set_property('serif-font-family',
+                                  El().settings.get_value(
+                                    'font-serif').get_string())
+        settings.set_property("allow-file-access-from-file-urls",
+                              False)
+        settings.set_property("auto-load-images", True)
+        settings.set_property("enable-javascript", True)
+        settings.set_property("enable-media-stream", True)
+        settings.set_property("enable-mediasource", True)
+        settings.set_property("enable-developer-extras",
+                              El().settings.get_value("developer-extras"))
+        settings.set_property("enable-offline-web-application-cache", True)
+        settings.set_property("enable-page-cache", True)
+        settings.set_property("enable-resizable-text-areas", True)
+        settings.set_property("enable-smooth-scrolling", False)
+        settings.set_property("enable-webaudio", True)
+        settings.set_property("enable-webgl", True)
+        settings.set_property("javascript-can-access-clipboard", True)
+        settings.set_property("javascript-can-open-windows-automatically",
+                              True)
+        settings.set_property("media-playback-allows-inline", True)
+        self.set_settings(settings)
+        self.connect("decide-policy", self.__on_decide_policy)
+        self.connect("submit-form", self.__on_submit_form)
+        self.connect("run-as-modal", self.__on_run_as_modal)
+        self.connect("load-changed", self.__on_load_changed)
+        # We launch Readability.js at page loading finished
+        # As Webkit2GTK doesn't allow us to get content from python
+        # It sets title with content for one shot, so try to get it here
+        self.connect("notify::title", self.__on_title_changed)
+        self.connect("notify::uri", self.__on_uri_changed)
+        self.get_context().connect("download-started",
+                                   self.__on_download_started)
+        self.update_zoom_level()
+
     def __set_system_fonts(self, settings):
         """
             Set system font
@@ -278,38 +305,10 @@ class WebView(WebKit2.WebView):
                                  '/org/gnome/Eolie/Readability.js', None, None)
         return False
 
-    def __on_create(self, view, action):
-        """
-            Create a new view for action
-            @param view as WebKit2.WebView
-            @param action as WebKit2.NavigationAction
-        """
-        uri = action.get_request().get_uri()
-        view = WebView.new_with_related_view(self)
-        view.connect("ready-to-show", self.__on_ready_to_show, uri)
-        return view
-
-    def __on_ready_to_show(self, view, uri):
-        """
-            Add view to window
-            @param view as WebKit2.WebView
-            @param uri as str
-        """
-        El().active_window.container.add_web_view(uri, True,
-                                                  self.get_parent(), view)
-
     def __on_run_as_modal(self, view):
         """
         """
         print("WebView::__on_run_as_modal(): TODO")
-
-    def __on_close(self, view):
-        """
-            Close my self
-            @param view as WebKit2.WebView
-        """
-        for window in El().windows:
-            window.container.sidebar.close_view(self)
 
     def __on_scroll_event(self, widget, event):
         """
@@ -375,11 +374,9 @@ class WebView(WebKit2.WebView):
 
         uri = decision.get_navigation_action().get_request().get_uri()
         mouse_button = decision.get_navigation_action().get_mouse_button()
-        # We are looking for our parent View(Gtk.EventBox)
-        parent = El().active_window.container.current
         if mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True, parent)
+                self.emit("new-page", uri, True)
                 decision.ignore()
                 return True
             else:
@@ -388,13 +385,13 @@ class WebView(WebKit2.WebView):
         elif mouse_button == 1:
             self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                El().active_window.container.add_web_view(uri, True, parent)
+                self.emit("new-page", uri, True)
                 decision.ignore()
                 return True
             else:
                 decision.use()
                 return False
         else:
-            El().active_window.container.add_web_view(uri, False, parent)
+            self.emit("new-page", uri, False)
             decision.ignore()
             return True

@@ -87,9 +87,9 @@ class View(Gtk.Overlay):
             parent.connect("destroy", self.__on_parent_destroy)
         if webview is None:
             self.__webview = WebView()
-            self.__webview.show()
         else:
             self.__webview = webview
+        self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
         grid = Gtk.Grid()
