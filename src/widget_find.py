@@ -52,6 +52,7 @@ class FindWidget(Gtk.SearchBar):
         grid.add(forward_button)
         grid.get_style_context().add_class('linked')
         grid.show()
+        self.connect_entry(self.__search_entry)
         self.set_show_close_button(True)
         self.add(grid)
 
@@ -72,6 +73,7 @@ class FindWidget(Gtk.SearchBar):
             @param event as Gdk.Event
         """
         if event.keyval == Gdk.KEY_Escape:
+            self.__search_entry.set_text("")
             self.set_search_mode(False)
 
     def __on_search_changed(self, entry):
