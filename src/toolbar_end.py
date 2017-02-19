@@ -110,6 +110,7 @@ class ToolbarEnd(Gtk.Bin):
             Show download popover
             @param button as Gtk.Button
         """
+        button.get_style_context().remove_class("selected")
         popover = DownloadsPopover()
         popover.set_relative_to(button)
         popover.show()
@@ -268,3 +269,4 @@ class ToolbarEnd(Gtk.Bin):
             GLib.timeout_add(1000, self.__hide_progress)
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
+            self.__download_button.get_style_context().add_class("selected")
