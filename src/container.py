@@ -132,14 +132,6 @@ class Container(Gtk.Paned):
         """
         return self.__stack.get_visible_child()
 
-    @property
-    def window(self):
-        """
-            Get window for self
-            @return Window
-        """
-        return self.__window
-
 #######################
 # PRIVATE             #
 #######################
