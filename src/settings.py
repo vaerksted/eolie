@@ -43,15 +43,16 @@ class SettingsDialog:
         Dialog showing eolie options
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init dialog
+            @param window as Window
         """
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SettingsDialog.ui")
 
         self.__settings_dialog = builder.get_object("settings_dialog")
-        self.__settings_dialog.set_transient_for(El().active_window)
+        self.__settings_dialog.set_transient_for(window)
         # self.__settings_dialog.connect("destroy", self.__on_destroy)
 
         if False:

@@ -26,16 +26,16 @@ class SidebarChild(Gtk.ListBoxRow):
         'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
     }
 
-    def __init__(self, view, container):
+    def __init__(self, view, window):
         """
             Init child
             @param view as View
-            @param container as Container
+            @param window as Window
         """
         Gtk.ListBoxRow.__init__(self)
         self.__scroll_timeout_id = None
         self.__view = view
-        self.__container = container
+        self.__window = window
         self.__uri = ""
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
@@ -80,16 +80,16 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if self.__view != self.__container.current:
+        if self.__view != self.__window.container.current:
             parent = self.__view.get_parent()
             if not isinstance(parent, Gtk.OffscreenWindow):
-                self.__container.remove_view(self.__view)
+                self.__window.container.remove_view(self.__view)
                 window = Gtk.OffscreenWindow.new()
-                width = self.__container.get_allocated_width() -\
+                width = self.__window.container.get_allocated_width() -\
                     self.get_allocated_width()
                 self.__view.set_size_request(
-                                      width,
-                                      self.__container.get_allocated_height())
+                              width,
+                              self.__window.container.get_allocated_height())
                 window.add(self.__view)
                 window.show()
         self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
@@ -114,14 +114,14 @@ class SidebarChild(Gtk.ListBoxRow):
             Destroy self
         """
         if event.button == 2:
-            self.__container.sidebar.close_view(self.__view)
-        El().active_window.toolbar.title.hide_popover()
+            self.__window.container.sidebar.close_view(self.__view)
+        self.__window.toolbar.title.hide_popover()
 
     def _on_close_button_press(self, button, event):
         """
             Destroy self
         """
-        self.__container.sidebar.close_view(self.__view)
+        self.__window.container.sidebar.close_view(self.__view)
 
     def _on_enter_notify(self, eventbox, event):
         """
@@ -301,7 +301,7 @@ class SidebarChild(Gtk.ListBoxRow):
         if parent is not None and isinstance(parent, Gtk.OffscreenWindow):
             parent.remove(self.__view)
             self.__view.set_size_request(-1, -1)
-            self.__container.add_view(self.__view)
+            self.__window.container.add_view(self.__view)
 
     def __on_load_changed(self, view, event):
         """
@@ -407,15 +407,15 @@ class SidebarChild(Gtk.ListBoxRow):
 
 class StackSidebar(Gtk.Grid):
     """
-        Sidebar linked to a Gtk.Stack
+        Sidebar linked to a Window Gtk.Stack
     """
-    def __init__(self, container):
+    def __init__(self, window):
         """
             Init sidebar
-            @param container as Container
+            @param window as Window
         """
         Gtk.Grid.__init__(self)
-        self.__container = container
+        self.__window = window
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.connect('search-changed', self._on_search_changed)
@@ -441,7 +441,7 @@ class StackSidebar(Gtk.Grid):
             Add child to sidebar
             @param view as WebView
         """
-        child = SidebarChild(view, self.__container)
+        child = SidebarChild(view, self.__window)
         child.connect("moved", self.__on_moved)
         child.show()
         self.__listbox.add(child)
@@ -459,7 +459,7 @@ class StackSidebar(Gtk.Grid):
             Mark current child as visible
             Unmark all others
         """
-        visible = self.__container.current
+        visible = self.__window.container.current
         for child in self.__listbox.get_children():
             if child.view == visible:
                 child.get_style_context().add_class('sidebar-item-selected')
@@ -488,13 +488,13 @@ class StackSidebar(Gtk.Grid):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(str(self.__container.current))
+        index = self.__get_index(str(self.__window.container.current))
         if index + 1 < len(children):
             next_row = self.__listbox.get_row_at_index(index + 1)
         else:
             next_row = self.__listbox.get_row_at_index(0)
         if next_row is not None:
-            self.__container.set_visible_view(next_row.view)
+            self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
     def previous(self):
@@ -502,13 +502,13 @@ class StackSidebar(Gtk.Grid):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(str(self.__container.current))
+        index = self.__get_index(str(self.__window.container.current))
         if index == 0:
             next_row = self.__listbox.get_row_at_index(len(children) - 1)
         else:
             next_row = self.__listbox.get_row_at_index(index - 1)
         if next_row is not None:
-            self.__container.set_visible_view(next_row.view)
+            self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
     def close_view(self, view):
@@ -517,7 +517,7 @@ class StackSidebar(Gtk.Grid):
             @param view as View
             @return child SidebarChild
         """
-        was_current = view == self.__container.current
+        was_current = view == self.__window.container.current
         child_index = self.__get_index(str(view))
         # Delay view destroy to allow stack animation
         child = self.__listbox.get_row_at_index(child_index)
@@ -548,13 +548,13 @@ class StackSidebar(Gtk.Grid):
         else:
             children = self.__listbox.get_children()
             if len(children) == 0:
-                self.__container.add_web_view(El().start_page, True)
+                self.__window.container.add_web_view(El().start_page, True)
             elif child_index + 1 < len(children):
                 next_row = self.__listbox.get_row_at_index(child_index + 1)
             else:
                 next_row = self.__listbox.get_row_at_index(child_index - 1)
         if next_row is not None:
-            self.__container.set_visible_view(next_row.view)
+            self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
 #######################
@@ -638,7 +638,7 @@ class StackSidebar(Gtk.Grid):
         """
         if event.keyval == Gdk.KEY_Escape:
             self.__search_entry.set_text('')
-            El().active_window.toolbar.actions.filter_button.set_active(False)
+            self.__window.toolbar.actions.filter_button.set_active(False)
             return True
 
     def __on_row_activated(self, listbox, row):
@@ -647,5 +647,5 @@ class StackSidebar(Gtk.Grid):
             @param listbox as Gtk.ListBox
             @param row as SidebarChild
         """
-        self.__container.set_visible_view(row.view)
+        self.__window.container.set_visible_view(row.view)
         self.update_visible_child()

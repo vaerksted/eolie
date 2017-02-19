@@ -20,11 +20,13 @@ class ToolbarActions(Gtk.Bin):
         Actions toolbar
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init toolbar
+            @param window as Window
         """
         Gtk.Bin.__init__(self)
+        self.__window = window
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/ToolbarActions.ui')
         builder.connect_signals(self)
@@ -71,26 +73,25 @@ class ToolbarActions(Gtk.Bin):
             Go backward on current view
             @param button as Gtk.Button
         """
-        El().active_window.container.current.webview.go_back()
+        self.__window.container.current.webview.go_back()
 
     def _on_forward_button_clicked(self, button):
         """
             aa
             @param button as Gtk.Button
         """
-        El().active_window.container.current.webview.go_forward()
+        self.__window.container.current.webview.go_forward()
 
     def _on_new_button_clicked(self, button):
         """
             Add a new web view
             @param button as Gtk.Button
         """
-        El().active_window.container.add_web_view(El().start_page,
-                                                  True)
+        self.__window.container.add_web_view(El().start_page, True)
 
     def _on_filter_button_toggled(self, button):
         """
             Add a new web view
             @param button as Gtk.ToggleButton
         """
-        El().active_window.container.sidebar.set_filtered(button.get_active())
+        self.__window.container.sidebar.set_filtered(button.get_active())

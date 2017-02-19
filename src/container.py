@@ -22,9 +22,10 @@ class Container(Gtk.Paned):
         Main Eolie view
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init container
+            @param window as Window
         """
         Gtk.Paned.__init__(self)
         self.set_position(
@@ -36,7 +37,7 @@ class Container(Gtk.Paned):
         self.__stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self.__stack.set_transition_duration(150)
         self.__stack.show()
-        self.__stack_sidebar = StackSidebar(self)
+        self.__stack_sidebar = StackSidebar(window)
         self.__stack_sidebar.show()
         self.add1(self.__stack_sidebar)
         self.child_set_property(self.__stack_sidebar, "shrink", False)
@@ -137,7 +138,7 @@ class Container(Gtk.Paned):
             Get window for self
             @return Window
         """
-        return self.get_toplevel()
+        return self.__window
 
 #######################
 # PRIVATE             #

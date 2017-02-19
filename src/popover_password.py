@@ -20,23 +20,23 @@ class PasswordPopover(Gtk.Popover):
         Tell user to save form password
     """
 
-    def __init__(self, username, password, uri):
+    def __init__(self, username, password, netloc):
         """
             Init popover
             @param username as str
             @param password as str
-            @param uri as str
+            @param netloc as str
         """
         Gtk.Popover.__init__(self)
         self.__secret_item = None
         self.__username = username
         self.__password = password
-        self.__uri = uri
+        self.__netloc = netloc
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverPassword.ui')
         builder.connect_signals(self)
         self.__label = builder.get_object('label')
-        builder.get_object('uri').set_text(uri)
+        builder.get_object('uri').set_text(netloc)
         builder.get_object('username').set_text(username)
         builder.get_object('password').set_text(password)
         self.add(builder.get_object('widget'))
@@ -56,7 +56,7 @@ class PasswordPopover(Gtk.Popover):
                     "uri": Secret.SchemaAttributeType.STRING
                 }
                 SecretAttributes = {
-                    "uri": self.__uri
+                    "uri": self.__netloc
                 }
                 schema = Secret.Schema.new("org.gnome.Eolie",
                                            Secret.SchemaFlags.NONE,
@@ -144,7 +144,7 @@ class PasswordPopover(Gtk.Popover):
                 "uri": Secret.SchemaAttributeType.STRING
             }
             SecretAttributes = {
-                "uri": self.__uri,
+                "uri": self.__netloc,
             }
 
             schema = Secret.Schema.new("org.gnome.Eolie",

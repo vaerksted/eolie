@@ -309,7 +309,7 @@ class Application(Gtk.Application):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        dialog = SettingsDialog()
+        dialog = SettingsDialog(self.active_window)
         dialog.show()
 
     def __on_about_activate(self, action, param):

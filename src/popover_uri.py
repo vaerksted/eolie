@@ -45,12 +45,14 @@ class Row(Gtk.ListBoxRow):
         'moved': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
     }
 
-    def __init__(self, item):
+    def __init__(self, item, window):
         """
             Init row
             @param item as Item
+            @param window as Window
         """
         self.__item = item
+        self.__window = window
         eventbox = None
         favicon = None
         Gtk.ListBoxRow.__init__(self)
@@ -256,11 +258,11 @@ class Row(Gtk.ListBoxRow):
         item_id = self.__item.get_property("type")
         if item_id in [Type.HISTORY, Type.KEYWORDS,
                        Type.SEARCH, Type.BOOKMARK]:
-            El().active_window.toolbar.title.hide_popover()
+            self.__window.toolbar.title.hide_popover()
             if event.button == 1:
-                El().active_window.container.current.webview.load_uri(uri)
+                self.__window.container.current.webview.load_uri(uri)
             else:
-                El().active_window.container.add_web_view(uri, True)
+                self.__window.container.add_web_view(uri, True)
             El().bookmarks.set_access_time(uri, int(time()))
             El().bookmarks.set_more_popular(uri)
         else:
@@ -286,11 +288,13 @@ class UriPopover(Gtk.Popover):
         Show user bookmarks or search
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init popover
+            @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.__window = window
         self.__input = False
         self.set_modal(False)
         builder = Gtk.Builder()
@@ -439,9 +443,8 @@ class UriPopover(Gtk.Popover):
                 if selected is not None:
                     uri = selected.item.get_property("uri")
                     if uri:
-                        El().active_window.toolbar.title.hide_popover()
-                        El().active_window.container.current.webview.load_uri(
-                                                                           uri)
+                        self.__window.toolbar.title.hide_popover()
+                        self.__window.container.current.webview.load_uri(uri)
                 return True
             else:
                 self.__input = Input.NONE
@@ -528,7 +531,7 @@ class UriPopover(Gtk.Popover):
             Close popover
             @param widget as Gtk.Widget
         """
-        El().active_window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.hide_popover()
 
     def _on_bookmarks_map(self, widget):
         """
@@ -617,7 +620,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("id", tag_id)
             item.set_property("type", Type.TAG)
             item.set_property("title", title)
-            child = Row(item)
+            child = Row(item, self.__window)
             child.connect("activate", self.__on_row_activated)
             child.connect("moved", self.__on_row_moved)
             child.show()
@@ -714,7 +717,7 @@ class UriPopover(Gtk.Popover):
         self.__search_box.get_style_context().remove_class("input")
         self.__bookmarks_box.get_style_context().remove_class("input")
         self.__tags_box.get_style_context().remove_class("input")
-        size = El().active_window.get_size()
+        size = self.__window.get_size()
         self.set_size_request(size[0]*0.5, size[1]*0.8)
         self.__scrolled_bookmarks.set_size_request(size[1]*0.6*0.5, -1)
 
@@ -768,6 +771,6 @@ class UriPopover(Gtk.Popover):
             Add child to box
             @param item as Item
         """
-        child = Row(item)
+        child = Row(item, self.__window)
         child.connect("edited", self.__on_row_edited)
         return child

@@ -88,7 +88,7 @@ class Window(Gtk.ApplicationWindow):
             Setup window content
         """
         self.set_default_icon_name('web-browser')
-        self.__toolbar = Toolbar()
+        self.__toolbar = Toolbar(self)
         self.__toolbar.show()
         self.__container = Container()
         self.__container.show()

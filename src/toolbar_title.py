@@ -26,11 +26,13 @@ class ToolbarTitle(Gtk.Bin):
         Title toolbar
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init toolbar
+            @param window as Window
         """
         Gtk.Bin.__init__(self)
+        self.__window = window
         self.__uri = ""
         self.__lock = False
         self.__in_notify = False
@@ -41,7 +43,7 @@ class ToolbarTitle(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
         builder.connect_signals(self)
         self.__entry = builder.get_object("entry")
-        self.__popover = UriPopover()
+        self.__popover = UriPopover(window)
         self.__password_popover = None
         # Reload/Stop
         self.__action_image1 = builder.get_object("action_image1")
@@ -82,7 +84,7 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        if El().active_window.container.current.webview.readable[0]:
+        if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
         else:
             self.__readable_image.get_style_context().remove_class("selected")
@@ -149,7 +151,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.hide()
             self.__keywords_cancellable.cancel()
             self.__keywords_cancellable.reset()
-            El().active_window.set_focus(None)
+            self.__window.set_focus(None)
 
     def focus_entry(self):
         """
@@ -273,7 +275,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_text("")
             self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
-        view = El().active_window.container.current
+        view = self.__window.container.current
         bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
@@ -305,8 +307,8 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        El().active_window.container.current.webview.switch_read_mode()
-        if El().active_window.container.current.webview.readable[0]:
+        self.__window.container.current.webview.switch_read_mode()
+        if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
         else:
             self.__readable_image.get_style_context().remove_class("selected")
@@ -318,9 +320,9 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
-            El().active_window.container.current.webview.reload()
+            self.__window.container.current.webview.reload()
         else:
-            El().active_window.container.current.webview.stop_loading()
+            self.__window.container.current.webview.stop_loading()
 
     def _on_action2_press(self, eventbox, event):
         """
@@ -328,7 +330,7 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        view = El().active_window.container.current
+        view = self.__window.container.current
         from eolie.widget_edit_bookmark import EditBookmarkWidget
         if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
             self.__action_image2.set_from_icon_name("non-starred-symbolic",
@@ -346,7 +348,7 @@ class ToolbarTitle(Gtk.Bin):
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
-            size = El().active_window.get_size()
+            size = self.__window.get_size()
             popover.set_size_request(size[0]*0.3, size[1]*0.5)
             popover.set_relative_to(eventbox)
             popover.connect("closed",
@@ -381,7 +383,7 @@ class ToolbarTitle(Gtk.Bin):
         uri = entry.get_text()
         if El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
-        El().active_window.container.load_uri(uri)
+        self.__window.container.load_uri(uri)
 
 #######################
 # PRIVATE             #
