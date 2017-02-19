@@ -183,8 +183,11 @@ class SidebarChild(Gtk.ListBoxRow):
         # bookmark, it will be directed and wont save bookmark's favicon
         El().art.save_artwork(self.__view.webview.get_uri(),
                               surface, "favicon")
-        El().art.save_artwork(self.__view.webview.loaded_uri,
-                              surface, "favicon")
+        if self.__view.webview.get_uri() != self.__view.webview.loaded_uri:
+            if strip_uri(self.__view.webview.get_uri(), False, False) ==\
+               strip_uri(self.__view.webview.loaded_uri, False, False):
+                El().art.save_artwork(self.__view.webview.loaded_uri,
+                                      surface, "favicon")
         self.__image_close.set_from_surface(surface)
         del surface
         self.__image_close.get_style_context().remove_class('sidebar-close')

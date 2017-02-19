@@ -317,6 +317,30 @@ class DatabaseBookmarks:
                                   ORDER BY bookmarks.atime DESC")
             return list(result)
 
+    def set_title(self, bookmark_id, title):
+        """
+            Set bookmark title
+            @param bookmark id as int
+            @param title as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET title=?\
+                         WHERE rowid=?", (title, bookmark_id,))
+            sql.commit()
+
+    def set_uri(self, bookmark_id, uri):
+        """
+            Set bookmark uri
+            @param bookmark id as int
+            @param uri as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET uri=?\
+                         WHERE rowid=?", (uri, bookmark_id,))
+            sql.commit()
+
     def set_access_time(self, uri, atime):
         """
             Set bookmark access time

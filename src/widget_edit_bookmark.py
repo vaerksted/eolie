@@ -67,6 +67,7 @@ class EditBookmarkWidget(Gtk.Bin):
             self.set_margin_start(20)
             self.set_margin_top(20)
         self.add(builder.get_object("widget"))
+        self.connect("unmap", self.__on_unmap)
 
 #######################
 # PROTECTED           #
@@ -76,6 +77,11 @@ class EditBookmarkWidget(Gtk.Bin):
             Destroy self
             @param button as Gtk.Button
         """
+        self.disconnect_by_func(self.__on_unmap)
+        El().bookmarks.set_title(self.__bookmark_id,
+                                 self.__title_entry.get_text())
+        El().bookmarks.set_uri(self.__bookmark_id,
+                               self.__uri_entry.get_text())
         self.get_parent().set_visible_child_name("bookmarks")
         GLib.timeout_add(1000, self.destroy)
 
@@ -141,6 +147,16 @@ class EditBookmarkWidget(Gtk.Bin):
         a = model.get_value(itera, 0)
         b = model.get_value(iterb, 0)
         return strcoll(a, b)
+
+    def __on_unmap(self, widget):
+        """
+            Save uri and title
+            @param widget as Gtk.Widget
+        """
+        El().bookmarks.set_title(self.__bookmark_id,
+                                 self.__title_entry.get_text())
+        El().bookmarks.set_uri(self.__bookmark_id,
+                               self.__uri_entry.get_text())
 
     def __on_tag_edited(self, widget, path, name):
         """
