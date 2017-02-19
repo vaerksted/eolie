@@ -288,8 +288,12 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as  GParamSpec
         """
-        uri = webview.get_uri()
+        if event.name != "title":
+            return True
         title = webview.get_title()
+        if not title or title.startswith("@&$%ù²"):
+            return True
+        uri = webview.get_uri()
         if webview == self.current.webview:
             if title:
                 self.__window.toolbar.title.set_title(title)

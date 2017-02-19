@@ -251,8 +251,8 @@ class SidebarChild(Gtk.ListBoxRow):
         # If title empty, return, otherwise, it will set wrong
         # favicon on redirections
         title = view.get_title()
-        if not title:
-            return
+        if not title or title.startswith("@&$%ù²"):
+            return True
         self.__title.set_text(title)
         if view.get_favicon() is not None:
             GLib.timeout_add(1000, self.__set_favicon)

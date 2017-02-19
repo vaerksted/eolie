@@ -299,6 +299,8 @@ class WebView(WebKit2.WebView):
         if event.name != "title":
             return True
         title = webview.get_title()
+        if not title:
+            return True
         if title.startswith("@&$%ù²"):
             self.__readable_content = title.replace("@&$%ù²", "")
             self.emit("readable")
