@@ -31,6 +31,9 @@ class WebView(WebKit2.WebView):
     __gsignals__ = {
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
+                                                                str,
+                                                                str)),
     }
 
     def __init__(self):
@@ -51,6 +54,9 @@ class WebView(WebKit2.WebView):
         gsignals = {
             "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
             "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+            "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
+                                                                    str,
+                                                                    str))
         }
         if "readable" not in GObject.signal_list_names(WebKit2.WebView):
             for signal in gsignals:
@@ -334,8 +340,7 @@ class WebView(WebKit2.WebView):
         if not auth:
             return
         parsed = urlparse(view.get_uri())
-        El().active_window.toolbar.title.save_password(
-                                 username, password, parsed.netloc)
+        self.emit("save-password", username, password, parsed.netloc)
 
     def __on_download_started(self, context, download):
         """

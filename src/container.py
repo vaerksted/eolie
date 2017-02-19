@@ -163,6 +163,7 @@ class Container(Gtk.Paned):
         view.webview.connect("new-page", self.__on_new_page)
         view.webview.connect("create", self.__on_create)
         view.webview.connect("close", self.__on_close)
+        view.webview.connect("save-password", self.__on_save_password)
         view.webview.connect("insecure-content-detected",
                              self.__on_insecure_content_detected)
         view.show()
@@ -186,24 +187,24 @@ class Container(Gtk.Paned):
         """
         self.__stack_sidebar.update_children_snapshot()
 
-    def __on_new_page(self, view, uri, show):
+    def __on_new_page(self, webview, uri, show):
         """
             Open a new page, switch to view if show is True
-            @param view as WebView
+            @param webview as WebView
             @param uri as str
             @param show as bool
         """
-        self.add_web_view(uri, True, view)
+        self.add_web_view(uri, True, webview)
 
-    def __on_create(self, view, action):
+    def __on_create(self, related, action):
         """
             Create a new view for action
-            @param view as WebKit2.WebView
+            @param related as WebKit2.WebView
             @param action as WebKit2.NavigationAction
         """
         from eolie.web_view import WebView
         uri = action.get_request().get_uri()
-        webview = WebView.new_with_related_view(view)
+        webview = WebView.new_with_related_view(related)
         webview.connect("ready-to-show", self.__on_ready_to_show, uri)
         return webview
 
@@ -216,117 +217,127 @@ class Container(Gtk.Paned):
         if view is not None:
             self.sidebar.close_view(view)
 
-    def __on_ready_to_show(self, view, uri):
+    def __on_ready_to_show(self, webview, uri):
         """
             Add view to window
-            @param view as WebKit2.WebView
+            @param webview as WebKit2.WebView
             @param uri as str
         """
-        self.add_web_view(uri, True, None, view)
+        self.add_web_view(uri, True, None, webview)
 
-    def __on_readable(self, view):
+    def __on_readable(self, webview):
         """
             Show readable button in titlebar
-            @param view as WebView
+            @param webview as WebView
         """
         self.window.toolbar.title.show_readable_button(True)
 
-    def __on_view_map(self, view):
+    def __on_view_map(self, webview):
         """
             Update window
-            @param view as WebView
+            @param webview as WebView
         """
-        if view == self.current.webview:
+        if webview == self.current.webview:
             self.window.toolbar.title.show_readable_button(
-                                                        view.readable[1] != "")
-            self.window.toolbar.title.set_uri(view.get_uri())
-            if view.is_loading():
+                                                    webview.readable[1] != "")
+            self.window.toolbar.title.set_uri(webview.get_uri())
+            if webview.is_loading():
                 self.window.toolbar.title.progress.show()
             else:
                 self.window.toolbar.title.progress.hide()
-                self.window.toolbar.title.set_title(view.get_title())
+                self.window.toolbar.title.set_title(webview.get_title())
 
-    def __on_button_press(self, view, event):
+    def __on_save_password(self, webview, username, password, netloc):
+        """
+            Ask user to save password
+            @param webview as WebView
+            @param username as str
+            @param password as str
+            @param netloc as str
+        """
+        self.window.toolbar.title.save_password(username, password, netloc)
+
+    def __on_button_press(self, webview, event):
         """
             Hide Titlebar popover
-            @param view as WebView
+            @param webview as WebView
             @param event as Gdk.Event
         """
         self.window.toolbar.title.hide_popover()
 
-    def __on_estimated_load_progress(self, view, value):
+    def __on_estimated_load_progress(self, webview, value):
         """
             Update progress bar
-            @param view as WebView
+            @param webview as WebView
             @param value GparamFloat
         """
-        if view == self.current.webview:
-            value = view.get_estimated_load_progress()
+        if webview == self.current.webview:
+            value = webview.get_estimated_load_progress()
             self.window.toolbar.title.progress.set_fraction(value)
 
-    def __on_uri_changed(self, view, uri):
+    def __on_uri_changed(self, webview, uri):
         """
             Update uri
-            @param view as WebView
+            @param webview as WebView
             @param uri as str
         """
-        if view == self.current.webview:
+        if webview == self.current.webview:
             self.window.toolbar.title.show_readable_button(
-                                                        view.readable[1] != "")
+                                                    webview.readable[1] != "")
             self.window.toolbar.end.on_uri_changed()
-            self.window.toolbar.title.set_uri(view.get_uri())
+            self.window.toolbar.title.set_uri(webview.get_uri())
 
-    def __on_title_changed(self, view, event):
+    def __on_title_changed(self, webview, event):
         """
             Update title
-            @param view as WebView
+            @param webview as WebView
             @param event as  GParamSpec
         """
-        uri = view.get_uri()
-        title = view.get_title()
-        if view == self.current.webview:
+        uri = webview.get_uri()
+        title = webview.get_title()
+        if webview == self.current.webview:
             if title:
                 self.window.toolbar.title.set_title(title)
             else:
                 self.window.toolbar.title.set_title(uri)
-            self.window.toolbar.actions.set_actions(view)
+            self.window.toolbar.actions.set_actions(webview)
         # Update history
         if title:
             El().history.add(title, uri)
 
-    def __on_enter_fullscreen(self, view):
+    def __on_enter_fullscreen(self, webview):
         """
             Hide sidebar (conflict with fs)
-            @param view as WebView
+            @param webview as WebView
         """
         self.__stack_sidebar.hide()
 
-    def __on_leave_fullscreen(self, view):
+    def __on_leave_fullscreen(self, webview):
         """
             Show sidebar (conflict with fs)
-            @param view as WebView
+            @param webview as WebView
         """
         self.__stack_sidebar.show()
 
-    def __on_insecure_content_detected(self, view, event):
+    def __on_insecure_content_detected(self, webview, event):
         """
-            @param view as WebView
+            @param webview as WebView
             @param event as WebKit2.InsecureContentEvent
         """
         self.window.toolbar.title.set_insecure_content()
 
-    def __on_load_changed(self, view, event):
+    def __on_load_changed(self, webview, event):
         """
             Update sidebar/urlbar
-            @param view as WebView
+            @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.window.toolbar.title.on_load_changed(view, event)
+        self.window.toolbar.title.on_load_changed(webview, event)
         if event == WebKit2.LoadEvent.STARTED:
-            if view == self.current.webview:
+            if webview == self.current.webview:
                 self.window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.FINISHED:
-            if view == self.current.webview:
+            if webview == self.current.webview:
                 if not self.window.toolbar.title.focus_in:
-                    GLib.idle_add(view.grab_focus)
+                    GLib.idle_add(webview.grab_focus)
                 GLib.timeout_add(500, self.window.toolbar.title.progress.hide)
