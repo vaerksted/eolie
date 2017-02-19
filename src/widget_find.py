@@ -10,9 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, WebKit2
+from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2
 
 from gettext import gettext as _
+
+from eolie.define import El
 
 
 class FindWidget(Gtk.SearchBar):
@@ -26,12 +28,15 @@ class FindWidget(Gtk.SearchBar):
             @param webview as WebKit2.WebView
         """
         Gtk.SearchBar.__init__(self)
+        self.__action = None
         self.__find_controller = webview.get_find_controller()
         grid = Gtk.Grid()
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.set_size_request(300, -1)
         self.__search_entry.connect("search-changed", self.__on_search_changed)
-        self.__search_entry.connect('key-press-event', self.__on_key_press)
+        self.__search_entry.connect("key-press-event", self.__on_key_press)
+        self.__search_entry.connect("map", self.__on_map)
+        self.__search_entry.connect("unmap", self.__on_unmap)
         self.__search_entry.show()
         backward_button = Gtk.Button.new_from_icon_name("go-up-symbolic",
                                                         Gtk.IconSize.BUTTON)
@@ -75,6 +80,39 @@ class FindWidget(Gtk.SearchBar):
         if event.keyval == Gdk.KEY_Escape:
             self.__search_entry.set_text("")
             self.set_search_mode(False)
+        elif event.keyval == Gdk.KEY_Return:
+            self.__find_controller.search_next()
+
+    def __on_map(self, entry):
+        """
+            Set shortcuts
+            @param entry as Gtk.Entry
+        """
+        self.__action = Gio.SimpleAction.new("find_shortcut",
+                                             GLib.VariantType.new('s'))
+        self.__action.connect("activate", self.__on_shortcut_action)
+        El().add_action(self.__action)
+        El().set_accels_for_action("app.find_shortcut::next", ["F3"])
+        El().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
+
+    def __on_unmap(self, entry):
+        """
+            Unset shortcuts
+            @param entry as Gtk.Entry
+        """
+        El().remove_action("find_shortcut")
+
+    def __on_shortcut_action(self, action, param):
+        """
+            Global shortcuts handler
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        string = param.get_string()
+        if string == "next":
+            self.__find_controller.search_next()
+        elif string == "prev":
+            self.__find_controller.search_previous()
 
     def __on_search_changed(self, entry):
         """
