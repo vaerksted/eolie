@@ -168,7 +168,7 @@ class SettingsDialog:
         El().settings.set_enum("cookie-storage", int(combo.get_active_id()))
         for window in El().windows:
             for view in window.container.views:
-                El().set_cookie_manager(view.get_context())
+                El().set_cookie_manager(view.webview.get_context())
 
     def _on_default_zoom_changed(self, button):
         """
