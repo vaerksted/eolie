@@ -59,10 +59,8 @@ class DatabaseAdblock:
         self.__cancellable = Gio.Cancellable.new()
         f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
-        self.__sleep = 0.5
         if not f.query_exists():
             try:
-                self.__sleep = 0.1
                 d = Gio.File.new_for_path(self.__LOCAL_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
@@ -177,7 +175,7 @@ class DatabaseAdblock:
                 for line in result.split('\n'):
                     if self.__cancellable.is_cancelled():
                         raise IOError("Cancelled")
-                    sleep(self.__sleep)
+                    sleep(0.1)
                     if line.startswith('#'):
                         continue
                     array = line.replace(
