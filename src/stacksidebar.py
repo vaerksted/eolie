@@ -536,7 +536,9 @@ class StackSidebar(Gtk.Grid):
         # First we search a child with same parent as closed
         brother = None
         for child in self.__listbox.get_children():
-            if child.view != view and child.view.parent == view.parent:
+            if view.parent is not None and\
+                    child.view != view and\
+                    child.view.parent == view.parent:
                 brother = child
                 break
         # Load brother
