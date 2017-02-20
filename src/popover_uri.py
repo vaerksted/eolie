@@ -408,7 +408,7 @@ class UriPopover(Gtk.Popover):
             if selected is None:
                 box.select_row(rows[0])
                 if self.__input == Input.TAGS:
-                    item_id = rows[0].item.get_property("type")
+                    item_id = rows[0].item.get_property("id")
                     self.__set_bookmarks(item_id)
             else:
                 idx = -1 if event.keyval == Gdk.KEY_Up else 1
@@ -419,11 +419,11 @@ class UriPopover(Gtk.Popover):
                 if idx >= len(rows):
                     box.select_row(rows[0])
                     if self.__input == Input.TAGS:
-                        item_id = rows[0].item.get_property("type")
+                        item_id = rows[0].item.get_property("id")
                         self.__set_bookmarks(item_id)
                     return True
                 elif idx < 0:
-                    # Do not go to uribar for bookmarks list
+                    # Do not go to uribar for bookmarks & search
                     if self.__input in [Input.BOOKMARKS, Input.SEARCH]:
                         box.select_row(rows[-1])
                         return True
@@ -435,7 +435,7 @@ class UriPopover(Gtk.Popover):
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
-                        item_id = rows[idx].item.get_property("type")
+                        item_id = rows[idx].item.get_property("id")
                         self.__set_bookmarks(item_id)
                     return True
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
