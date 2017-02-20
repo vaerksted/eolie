@@ -85,35 +85,43 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
+        if uri is None:
+            return
         if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
         else:
             self.__readable_image.get_style_context().remove_class("selected")
-        if uri is not None:
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               "")
-            if uri.startswith("https://"):
-                self.__entry.set_icon_from_icon_name(
-                                            Gtk.EntryIconPosition.PRIMARY,
-                                            'channel-secure-symbolic')
-            else:
-                self.__entry.set_icon_from_icon_name(
-                                            Gtk.EntryIconPosition.PRIMARY,
-                                            None)
-            # Some uri update may not change title
-            if strip_uri(uri) != strip_uri(self.__uri):
-                if not self.__popover.is_visible():
-                    self.__entry.set_text(uri)
-                self.__entry.set_placeholder_text("")
-            self.__entry.get_style_context().remove_class('uribar-title')
-            self.__uri = uri
-            bookmark_id = El().bookmarks.get_id(uri)
-            if bookmark_id is not None:
-                icon_name = "starred-symbolic"
-            else:
-                icon_name = "non-starred-symbolic"
-            self.__action_image2.set_from_icon_name(icon_name,
-                                                    Gtk.IconSize.MENU)
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           "")
+        parsed = urlparse(uri)
+        if parsed.scheme == "https":
+            self.__entry.set_icon_from_icon_name(
+                                        Gtk.EntryIconPosition.PRIMARY,
+                                        'channel-secure-symbolic')
+        else:
+            self.__entry.set_icon_from_icon_name(
+                                        Gtk.EntryIconPosition.PRIMARY,
+                                        None)
+        # Do not show this in titlebar
+        if parsed.scheme == "populars":
+            self.__uri = ""
+            self.__entry.set_text("")
+            return
+
+        # Some uri update may not change title
+        if strip_uri(uri) != strip_uri(self.__uri):
+            if not self.__popover.is_visible():
+                self.__entry.set_text(uri)
+            self.__entry.set_placeholder_text("")
+        self.__entry.get_style_context().remove_class('uribar-title')
+        self.__uri = uri
+        bookmark_id = El().bookmarks.get_id(uri)
+        if bookmark_id is not None:
+            icon_name = "starred-symbolic"
+        else:
+            icon_name = "non-starred-symbolic"
+        self.__action_image2.set_from_icon_name(icon_name,
+                                                Gtk.IconSize.MENU)
 
     def set_insecure_content(self):
         """
@@ -162,6 +170,8 @@ class ToolbarTitle(Gtk.Bin):
             Focus entry
         """
         self.get_toplevel().set_focus(self.__entry)
+        if self.__popover.get_relative_to() is not None:
+            self.__popover.show()
 
     def save_password(self, username, password, uri):
         """
@@ -198,6 +208,7 @@ class ToolbarTitle(Gtk.Bin):
             popover allowing user to start a search
         """
         self.__popover.set_relative_to(None)
+        self.__entry.set_text("")
         self.__entry.grab_focus()
         self.__popover.set_relative_to(self)
 
@@ -264,11 +275,8 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         self.__lock = True
-        self.__entry.set_text(self.__uri)
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-        if self.__popover.get_relative_to() is not None:
-            self.__popover.show()
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
@@ -297,6 +305,15 @@ class ToolbarTitle(Gtk.Bin):
             self.__action_image2.set_from_icon_name(icon_name,
                                                     Gtk.IconSize.MENU)
         self.set_insecure_content()
+
+    def _on_button_press_event(self, entry, event):
+        """
+            Show popover if hidden
+            @param entry as Gtk.Entry
+            @param event as Gdk.Event
+        """
+        if self.__popover.get_relative_to() is not None:
+            self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
         """
