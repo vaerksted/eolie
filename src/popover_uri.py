@@ -396,6 +396,7 @@ class UriPopover(Gtk.Popover):
                 if box is not None:
                     rows = box.get_children()
                     if rows:
+                        box.select_row(None)
                         box.select_row(rows[0])
                 return True
             box = self.__get_current_box()
@@ -416,6 +417,7 @@ class UriPopover(Gtk.Popover):
                     if row == selected:
                         break
                     idx += 1
+                box.select_row(None)
                 if idx >= len(rows):
                     box.select_row(rows[0])
                     if self.__input == Input.TAGS:
