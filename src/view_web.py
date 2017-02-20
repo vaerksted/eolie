@@ -13,6 +13,7 @@
 from gi.repository import WebKit2, GObject, Gio, GLib, Gdk
 
 import ctypes
+from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import El, LOGINS, PASSWORDS
@@ -74,7 +75,8 @@ class WebView(WebKit2.WebView):
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
-        if not uri.startswith("http://") and not uri.startswith("https://"):
+        parsed = urlparse(uri)
+        if parsed.scheme not in ["http", "https", "file", "populars"]:
             uri = "http://" + uri
         self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
@@ -190,9 +192,9 @@ class WebView(WebKit2.WebView):
             settings.set_property('serif-font-family',
                                   El().settings.get_value(
                                     'font-serif').get_string())
-        settings.set_property("allow-file-access-from-file-urls",
-                              False)
         settings.set_property("auto-load-images", True)
+        settings.set_property("allow-universal-access-from-file-urls", False)
+        settings.set_property("allow-file-access-from-file-urls", False)
         settings.set_property("enable-javascript", True)
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-mediasource", True)
@@ -218,8 +220,10 @@ class WebView(WebKit2.WebView):
         # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
-        self.get_context().connect("download-started",
-                                   self.__on_download_started)
+        context = self.get_context()
+        context.register_uri_scheme("populars", self.__on_populars_scheme)
+        context.get_security_manager().register_uri_scheme_as_local("populars")
+        context.connect("download-started", self.__on_download_started)
         self.update_zoom_level()
 
     def __set_system_fonts(self, settings):
@@ -276,6 +280,31 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
+
+    def __on_populars_scheme(self, request):
+        """
+            Show populars web pages
+            @param request as WebKit2.URISchemeRequest
+        """
+        search = El().history.search("", 40)
+        start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
+        end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
+        (status, start_content, tag) = start.load_contents(None)
+        (status, end_content, tag) = end.load_contents(None)
+        # Update start
+        html_start = start_content.decode("utf-8")
+        html_start = html_start.replace("@TITLE@", _("Populars page"))
+        for (title, uri) in search:
+            if not El().art.exists(uri, "start"):
+                continue
+            path = El().art.get_path(uri, "start")
+            html_start += '<a class="child" title="%s" href="%s">' % (title,
+                                                                      uri)
+            html_start += '<img src="file://%s"></img>' % path
+            html_start += '<span class="caption">%s</span></a>' % title
+        html = html_start.encode("utf-8") + end_content
+        stream = Gio.MemoryInputStream.new_from_data(html)
+        request.finish(stream, -1, "text/html")
 
     def __on_uri_changed(self, view, uri):
         """

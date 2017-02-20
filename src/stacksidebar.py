@@ -214,6 +214,13 @@ class SidebarChild(Gtk.ListBoxRow):
         if strip_uri(uri) != strip_uri(self.__uri):
             self.__title.set_text(uri)
         self.__uri = uri
+
+        # Just set icon if special schemes
+        if uri == "populars://":
+            self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                  Gtk.IconSize.MENU)
+            return
+
         # We are not filtered
         if self.get_allocated_width() != 1:
             preview = El().art.get_artwork(view.get_uri(),
@@ -308,7 +315,35 @@ class SidebarChild(Gtk.ListBoxRow):
             if save:
                 El().art.save_artwork(view.get_uri(),
                                       surface, "preview")
+            # Manage start page cache
+            if not El().art.exists(view.get_uri(), "start"):
+                width = snapshot.get_width()
+                height = snapshot.get_height()
+                if width > height:
+                    factor_height = ArtSize.START_HEIGHT / height
+                    factor_width = factor_height
+                    if width * factor_height < ArtSize.START_WIDTH:
+                        factor_width += (ArtSize.START_WIDTH *
+                                         factor_height /
+                                         width)
+                else:
+                    factor_width = ArtSize.START_WIDTH / width
+                    factor_height = factor_width
+                    if height * factor_width < ArtSize.START_HEIGHT:
+                        factor_height += (ArtSize.START_HEIGHT *
+                                          factor_width /
+                                          height)
+                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                             ArtSize.START_WIDTH,
+                                             ArtSize.START_HEIGHT)
+                context = cairo.Context(surface)
+                context.scale(factor_width, factor_height)
+                context.set_source_surface(snapshot, 0, 0)
+                context.paint()
+                El().art.save_artwork(view.get_uri(),
+                                      surface, "start")
             del surface
+            del snapshot
         except Exception as e:
             print("StackSidebar::__on_snapshot:", e)
             return
@@ -324,7 +359,11 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param pointer as GParamPointer
         """
-        if view.get_favicon() is None:
+        # Just set icon if special schemes
+        if view.get_uri() == "populars://":
+            self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                  Gtk.IconSize.MENU)
+        elif view.get_favicon() is None:
             self.__image_close.set_from_icon_name('applications-internet',
                                                   Gtk.IconSize.MENU)
         else:

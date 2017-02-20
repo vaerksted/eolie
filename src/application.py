@@ -211,11 +211,11 @@ class Application(Gtk.Application):
             Get start page
             @return uri as str
         """
-        value = self.settings.get_value('start-page').get_string()
-        if value == 'search':
+        value = self.settings.get_value("start-page").get_string()
+        if value == "search":
             value = self.search.uri
-        elif value == 'popular':
-            pass
+        elif value == "popular":
+            value = "populars://"
         return value
 
     @property

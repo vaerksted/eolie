@@ -39,8 +39,7 @@ class Art:
             @param surface as cairo.surface
             @param suffix as str
         """
-        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
-        filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
+        filepath = self.get_path(uri, suffix)
         pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
                                              surface.get_width(),
                                              surface.get_height())
@@ -56,8 +55,7 @@ class Art:
             @param height as int
             @return cairo.surface
         """
-        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
-        filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
+        filepath = self.get_path(uri, suffix)
         f = Gio.File.new_for_path(filepath)
         if f.query_exists():
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filepath,
@@ -69,6 +67,31 @@ class Art:
             del pixbuf
             return surface
         return None
+
+    def get_path(self, uri, suffix):
+        """
+            Return cache image path
+            @return str
+        """
+        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
+        filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
+        return filepath
+
+    def exists(self, uri, suffix):
+        """
+            True if exists in cache
+            @return bool
+        """
+        f = Gio.File.new_for_path(self.get_path(uri, suffix))
+        return f.query_exists()
+
+    @property
+    def base_uri(self):
+        """
+            Get cache base uri
+            @return str
+        """
+        return GLib.filename_to_uri(self.__CACHE_PATH)
 
 #######################
 # PROTECTED           #

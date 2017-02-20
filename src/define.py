@@ -19,6 +19,8 @@ class ArtSize:
     FAVICON = 22
     PREVIEW_HEIGHT = 60
     PREVIEW_WIDTH_MARGIN = 10
+    START_WIDTH = 300
+    START_HEIGHT = 200
 
 
 class Type:

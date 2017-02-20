@@ -381,7 +381,9 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
         """
         uri = entry.get_text()
-        if El().search.is_search(uri):
+        parsed = urlparse(uri)
+        if parsed.scheme not in ["http", "https", "file", "populars"] and\
+                El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
 
@@ -453,8 +455,9 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text(value)
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
+            self.__keywords_timeout = None
         parsed = urlparse(value)
-        if not parsed.scheme.startswith("http") and\
+        if parsed.scheme not in ["http", "file", "https", "populars"] and\
                 Gio.NetworkMonitor.get_default().get_network_available():
             self.__keywords_timeout = GLib.timeout_add(
                                                  500,

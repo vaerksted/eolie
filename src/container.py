@@ -13,6 +13,7 @@
 from gi.repository import Gtk, WebKit2, GLib
 
 from gettext import gettext as _
+from urllib.parse import urlparse
 
 from eolie.stacksidebar import StackSidebar
 from eolie.view import View
@@ -200,7 +201,7 @@ class Container(Gtk.Paned):
             @param related as WebKit2.WebView
             @param action as WebKit2.NavigationAction
         """
-        from eolie.web_view import WebView
+        from eolie.view_web import WebView
         uri = action.get_request().get_uri()
         webview = WebView.new_with_related_view(related)
         webview.connect("ready-to-show", self.__on_ready_to_show, uri)
@@ -307,7 +308,10 @@ class Container(Gtk.Paned):
             self.__window.toolbar.actions.set_actions(webview)
         # Update history
         if title:
-            El().history.add(title, webview.get_uri())
+            uri = webview.get_uri()
+            parsed = urlparse(uri)
+            if parsed.scheme in ["http", "https", "file"]:
+                El().history.add(title, uri)
 
     def __on_enter_fullscreen(self, webview):
         """

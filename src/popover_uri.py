@@ -85,7 +85,7 @@ class Row(Gtk.ListBoxRow):
             if item_id == Type.NONE:
                 icon_name = "folder-visiting-symbolic"
             elif item_id == Type.POPULARS:
-                icon_name = "starred-symbolic"
+                icon_name = "emote-love-symbolic"
             elif item_id == Type.RECENTS:
                 icon_name = "document-open-recent-symbolic"
             else:

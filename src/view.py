@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GLib, Pango
 
 from eolie.widget_find import FindWidget
-from eolie.web_view import WebView
+from eolie.view_web import WebView
 
 
 class UriLabel(Gtk.EventBox):
