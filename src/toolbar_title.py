@@ -118,16 +118,19 @@ class ToolbarTitle(Gtk.Bin):
         """
             Mark uri as insecure
         """
-        if not self.__uri.startswith("https://") or\
-                self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
-                'channel-insecure-symbolic':
-            return
-        self.__entry.set_icon_tooltip_text(
+        if self.__uri.startswith("https://"):
+            self.__entry.set_icon_tooltip_text(
                                       Gtk.EntryIconPosition.PRIMARY,
                                       _("This page contains insecure content"))
-        self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        'channel-insecure-symbolic')
+            self.__entry.set_icon_from_icon_name(
+                                            Gtk.EntryIconPosition.PRIMARY,
+                                            "channel-insecure-symbolic")
+        else:
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
+            self.__entry.set_icon_from_icon_name(
+                                            Gtk.EntryIconPosition.PRIMARY,
+                                            None)
 
     def set_title(self, title):
         """
@@ -283,6 +286,7 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "non-starred-symbolic"
             self.__action_image2.set_from_icon_name(icon_name,
                                                     Gtk.IconSize.MENU)
+        self.set_insecure_content()
 
     def _on_key_press_event(self, entry, event):
         """
@@ -467,3 +471,4 @@ class ToolbarTitle(Gtk.Bin):
                                                  value)
         entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                       "system-search-symbolic")
+        entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
