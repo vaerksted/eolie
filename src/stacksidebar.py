@@ -37,6 +37,7 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__view = view
         self.__window = window
         self.__uri = ""
+        self.__load_status = WebKit2.LoadEvent.FINISHED
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
         builder.connect_signals(self)
@@ -240,22 +241,31 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Update title
             @param view as WebView
-            @param title as GParamSpec
+            @param event as GParamSpec
         """
-        # First update snapshot
-        if not view.is_loading():
-            GLib.timeout_add(1000, self.set_snapshot, True)
-        # If not a title event, return
-        if event.name != "title":
-            return
-        # If title empty, return, otherwise, it will set wrong
-        # favicon on redirections
-        title = view.get_title()
-        if not title or title.startswith("@&$%ù²"):
+        if self.__load_status != WebKit2.LoadEvent.FINISHED:
             return True
+        title = view.get_title()
+        if title.startswith("@&$%ù²"):
+            return True
+        if not title:
+            title = "No title"
         self.__title.set_text(title)
         if view.get_favicon() is not None:
             GLib.timeout_add(1000, self.__set_favicon)
+        GLib.timeout_add(500, self.set_snapshot, True)
+
+    def __on_load_changed(self, view, event):
+        """
+            Update snapshot
+            @param view as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        self.__load_status = event
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__snapshot_valid = False
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.__on_title_changed(view, event)
 
     def __on_scroll_event(self, view, event):
         """
@@ -305,17 +315,6 @@ class SidebarChild(Gtk.ListBoxRow):
             parent.remove(self.__view)
             self.__view.set_size_request(-1, -1)
             self.__window.container.add_view(self.__view)
-
-    def __on_load_changed(self, view, event):
-        """
-            Update sidebar/urlbar
-            @param view as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        if event == WebKit2.LoadEvent.STARTED:
-            pass
-        elif event == WebKit2.LoadEvent.FINISHED:
-            GLib.timeout_add(500, self.set_snapshot, True)
 
     def __on_notify_favicon(self, view, pointer):
         """

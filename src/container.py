@@ -29,6 +29,7 @@ class Container(Gtk.Paned):
         """
         Gtk.Paned.__init__(self)
         self.__window = window
+        self.__load_status = WebKit2.LoadEvent.FINISHED
         self.set_position(
             El().settings.get_value("paned-width").get_int32())
         self.connect("notify::position", self.__on_notify_position)
@@ -292,19 +293,19 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as  GParamSpec
         """
-        if event.name != "title":
+        if self.__load_status != WebKit2.LoadEvent.FINISHED:
             return True
         title = webview.get_title()
-        if not title or title.startswith("@&$%ù²"):
+        if title.startswith("@&$%ù²"):
             return True
-        uri = webview.get_uri()
+        if not title:
+            title = "No title"
         if webview == self.current.webview:
-            if title:
-                self.__window.toolbar.title.set_title(title)
+            self.__window.toolbar.title.set_title(title)
             self.__window.toolbar.actions.set_actions(webview)
         # Update history
         if title:
-            El().history.add(title, uri)
+            El().history.add(title, webview.get_uri())
 
     def __on_enter_fullscreen(self, webview):
         """
@@ -333,11 +334,13 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        self.__load_status = event
         self.__window.toolbar.title.on_load_changed(webview, event)
         if event == WebKit2.LoadEvent.STARTED:
             if webview == self.current.webview:
                 self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__on_title_changed(webview, event)
             if webview == self.current.webview:
                 if not self.__window.toolbar.title.focus_in:
                     GLib.idle_add(webview.grab_focus)
