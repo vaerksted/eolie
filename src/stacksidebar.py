@@ -546,6 +546,8 @@ class StackSidebar(Gtk.Grid):
             @param view as View
             @return child SidebarChild
         """
+        # Needed to unfocus titlebar
+        self.__window.set_focus(None)
         was_current = view == self.__window.container.current
         child_index = self.__get_index(str(view))
         # Delay view destroy to allow stack animation

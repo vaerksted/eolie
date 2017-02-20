@@ -170,7 +170,8 @@ class ToolbarTitle(Gtk.Bin):
             Focus entry
         """
         self.get_toplevel().set_focus(self.__entry)
-        self.__popover.show()
+        if not self.__popover.is_visible():
+            self.__popover.show()
 
     def save_password(self, username, password, uri):
         """
@@ -309,7 +310,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
-        self.__popover.show()
+        if not self.__popover.is_visible():
+            self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
         """
