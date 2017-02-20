@@ -463,3 +463,5 @@ class ToolbarTitle(Gtk.Bin):
                                                  500,
                                                  self.__search_keywords_thread,
                                                  value)
+        entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                      "system-search-symbolic")
