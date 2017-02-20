@@ -11,8 +11,8 @@
 }
 
 .child {
+    position: relative;
     vertical-align: top;
-    display: inline-block;
     text-align: center;
     margin: 10px;
     border: 1px solid #eeeeec;
@@ -21,6 +21,7 @@
     opacity: 1.0;
     max-width: 300px;
     min-width: 300px;
+    transition: opacity .25s;
 }
 
 .child:hover {
@@ -28,13 +29,17 @@
 }
 
 .caption {
-    display: block;
-    background-color: #2e3436;
-    color: #eeeeec;
+    background-color: white;
+    color: black;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    opacity: 0.85;
+    position: absolute;
+    bottom: 0;
+    width: 300px;
 }
+
 a:hover, a:visited, a:link, a:active
 {
     text-decoration: none;
