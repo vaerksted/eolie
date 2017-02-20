@@ -248,10 +248,10 @@ class SidebarChild(Gtk.ListBoxRow):
         if self.__load_status != WebKit2.LoadEvent.FINISHED:
             return True
         title = view.get_title()
-        if title.startswith("@&$%ù²"):
-            return True
         if not title:
             title = _("No title")
+        if title.startswith("@&$%ù²"):
+            return True
         self.__title.set_text(title)
         if view.get_favicon() is not None:
             GLib.timeout_add(1000, self.__set_favicon)

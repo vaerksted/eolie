@@ -298,10 +298,10 @@ class Container(Gtk.Paned):
         if self.__load_status != WebKit2.LoadEvent.FINISHED:
             return True
         title = webview.get_title()
-        if title.startswith("@&$%ù²"):
-            return True
         if not title:
             title = _("No title")
+        if title.startswith("@&$%ù²"):
+            return True
         if webview == self.current.webview:
             self.__window.toolbar.title.set_title(title)
             self.__window.toolbar.actions.set_actions(webview)
