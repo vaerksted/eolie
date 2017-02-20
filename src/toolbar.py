@@ -17,7 +17,7 @@ from eolie.toolbar_title import ToolbarTitle
 from eolie.toolbar_end import ToolbarEnd
 
 
-class Toolbar(Gtk.HeaderBar):
+class Toolbar(Gtk.EventBox):
     """
         Eolie toolbar
     """
@@ -27,17 +27,28 @@ class Toolbar(Gtk.HeaderBar):
             Init toolbar
             @param window as Window
         """
-        Gtk.HeaderBar.__init__(self)
-        self.set_title("Eolie")
+        Gtk.EventBox.__init__(self)
+        self.__headerbar = Gtk.HeaderBar()
+        self.__headerbar.show()
+        self.__headerbar.set_title("Eolie")
         self.__toolbar_actions = ToolbarActions(window)
         self.__toolbar_actions.show()
         self.__toolbar_title = ToolbarTitle(window)
         self.__toolbar_title.show()
         self.__toolbar_end = ToolbarEnd(window)
         self.__toolbar_end.show()
-        self.pack_start(self.__toolbar_actions)
-        self.set_custom_title(self.__toolbar_title)
-        self.pack_end(self.__toolbar_end)
+        self.__headerbar.pack_start(self.__toolbar_actions)
+        self.__headerbar.set_custom_title(self.__toolbar_title)
+        self.__headerbar.pack_end(self.__toolbar_end)
+        self.connect("button-press-event", self.__on_button_press)
+        self.add(self.__headerbar)
+
+    def set_show_close_button(self, show):
+        """
+            Forward to headerbar
+            @param show as bool
+        """
+        self.__headerbar.set_show_close_button(show)
 
     @property
     def title(self):
@@ -66,3 +77,10 @@ class Toolbar(Gtk.HeaderBar):
 #######################
 # PRIVATE             #
 #######################
+    def __on_button_press(self, widget, event):
+        """
+            Hide popover if visible
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        self.__toolbar_title.hide_popover()

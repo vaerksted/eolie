@@ -110,6 +110,7 @@ class ToolbarEnd(Gtk.Bin):
             Show download popover
             @param button as Gtk.Button
         """
+        self.__window.toolbar.title.hide_popover()
         button.get_style_context().remove_class("selected")
         popover = DownloadsPopover()
         popover.set_relative_to(button)
@@ -120,6 +121,7 @@ class ToolbarEnd(Gtk.Bin):
             Go to home page
             @param button as Gtk.Button
         """
+        self.__window.toolbar.title.hide_popover()
         self.__window.container.current.webview.load_uri(El().start_page)
 
     def _on_menu_button_clicked(self, button):
@@ -127,6 +129,7 @@ class ToolbarEnd(Gtk.Bin):
             Update reader action
             @param button as Gtk.Button
         """
+        self.__window.toolbar.title.hide_popover()
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
             return

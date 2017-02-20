@@ -74,6 +74,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.current.webview.go_back()
+        self.__window.toolbar.title.hide_popover()
 
     def _on_forward_button_clicked(self, button):
         """
@@ -81,6 +82,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.current.webview.go_forward()
+        self.__window.toolbar.title.hide_popover()
 
     def _on_new_button_clicked(self, button):
         """
@@ -88,6 +90,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.add_web_view(El().start_page, True)
+        self.__window.toolbar.title.hide_popover()
 
     def _on_filter_button_toggled(self, button):
         """
@@ -95,3 +98,4 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         self.__window.container.sidebar.set_filtered(button.get_active())
+        self.__window.toolbar.title.hide_popover()
