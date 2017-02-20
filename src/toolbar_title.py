@@ -323,6 +323,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__window.container.current.webview.reload()
         else:
             self.__window.container.current.webview.stop_loading()
+        return True
 
     def _on_action2_press(self, eventbox, event):
         """
@@ -358,6 +359,7 @@ class ToolbarTitle(Gtk.Bin):
             popover.show()
         elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
+        return True
 
     def _on_eventbox_enter_notify(self, eventbox, event):
         """
