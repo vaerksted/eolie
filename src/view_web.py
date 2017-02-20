@@ -301,7 +301,7 @@ class WebView(WebKit2.WebView):
             html_start += '<a class="child" title="%s" href="%s">' % (title,
                                                                       uri)
             html_start += '<img src="file://%s"></img>' % path
-            html_start += '<span class="caption">%s</span></a>' % title
+            html_start += '<div class="caption">%s</div></a>' % title
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")

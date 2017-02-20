@@ -318,26 +318,12 @@ class SidebarChild(Gtk.ListBoxRow):
             # Manage start page cache
             if not El().art.exists(view.get_uri(), "start"):
                 width = snapshot.get_width()
-                height = snapshot.get_height()
-                if width > height:
-                    factor_height = ArtSize.START_HEIGHT / height
-                    factor_width = factor_height
-                    if width * factor_height < ArtSize.START_WIDTH:
-                        factor_width += (ArtSize.START_WIDTH *
-                                         factor_height /
-                                         width)
-                else:
-                    factor_width = ArtSize.START_WIDTH / width
-                    factor_height = factor_width
-                    if height * factor_width < ArtSize.START_HEIGHT:
-                        factor_height += (ArtSize.START_HEIGHT *
-                                          factor_width /
-                                          height)
+                factor = ArtSize.START_WIDTH / width
                 surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                              ArtSize.START_WIDTH,
                                              ArtSize.START_HEIGHT)
                 context = cairo.Context(surface)
-                context.scale(factor_width, factor_height)
+                context.scale(factor, factor)
                 context.set_source_surface(snapshot, 0, 0)
                 context.paint()
                 El().art.save_artwork(view.get_uri(),
