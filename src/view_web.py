@@ -293,7 +293,7 @@ class WebView(WebKit2.WebView):
         (status, end_content, tag) = end.load_contents(None)
         # Update start
         html_start = start_content.decode("utf-8")
-        html_start = html_start.replace("@TITLE@", _("Populars page"))
+        html_start = html_start.replace("@TITLE@", _("Popular pages"))
         for (title, uri) in search:
             if not El().art.exists(uri, "start"):
                 continue
