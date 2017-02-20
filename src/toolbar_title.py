@@ -300,8 +300,8 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "starred-symbolic"
         else:
             icon_name = "non-starred-symbolic"
-            self.__action_image2.set_from_icon_name(icon_name,
-                                                    Gtk.IconSize.MENU)
+        self.__action_image2.set_from_icon_name(icon_name,
+                                                Gtk.IconSize.MENU)
         self.set_insecure_content()
 
     def _on_button_press_event(self, entry, event):
