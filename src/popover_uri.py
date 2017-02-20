@@ -258,13 +258,13 @@ class Row(Gtk.ListBoxRow):
         item_id = self.__item.get_property("type")
         if item_id in [Type.HISTORY, Type.KEYWORDS,
                        Type.SEARCH, Type.BOOKMARK]:
-            self.__window.toolbar.title.hide_popover()
             if event.button == 1:
                 self.__window.container.current.webview.load_uri(uri)
-            elif event.button == 2:
-                self.__window.container.add_web_view(uri, False)
+                self.__window.toolbar.title.hide_popover()
             else:
                 self.__window.container.add_web_view(uri, True)
+                if event.button == 2:
+                    self.__window.toolbar.title.hide_popover()
             El().bookmarks.set_access_time(uri, int(time()))
             El().bookmarks.set_more_popular(uri)
         else:
