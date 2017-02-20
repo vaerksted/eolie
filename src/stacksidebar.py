@@ -13,6 +13,8 @@
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, WebKit2
 import cairo
 
+from gettext import gettext as _
+
 from eolie.define import El, ArtSize
 from eolie.utils import strip_uri
 
@@ -249,7 +251,7 @@ class SidebarChild(Gtk.ListBoxRow):
         if title.startswith("@&$%ù²"):
             return True
         if not title:
-            title = "No title"
+            title = _("No title")
         self.__title.set_text(title)
         if view.get_favicon() is not None:
             GLib.timeout_add(1000, self.__set_favicon)

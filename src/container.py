@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, WebKit2, GLib
 
+from gettext import gettext as _
+
 from eolie.stacksidebar import StackSidebar
 from eolie.view import View
 from eolie.define import El
@@ -299,7 +301,7 @@ class Container(Gtk.Paned):
         if title.startswith("@&$%ù²"):
             return True
         if not title:
-            title = "No title"
+            title = _("No title")
         if webview == self.current.webview:
             self.__window.toolbar.title.set_title(title)
             self.__window.toolbar.actions.set_actions(webview)
