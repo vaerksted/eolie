@@ -170,8 +170,7 @@ class ToolbarTitle(Gtk.Bin):
             Focus entry
         """
         self.get_toplevel().set_focus(self.__entry)
-        if self.__popover.get_relative_to() is not None:
-            self.__popover.show()
+        self.__popover.show()
 
     def save_password(self, username, password, uri):
         """
@@ -207,10 +206,8 @@ class ToolbarTitle(Gtk.Bin):
             Focus widget without showing
             popover allowing user to start a search
         """
-        self.__popover.set_relative_to(None)
         self.__entry.set_text("")
         self.__entry.grab_focus()
-        self.__popover.set_relative_to(self)
 
     @property
     def progress(self):
@@ -312,8 +309,7 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
-        if self.__popover.get_relative_to() is not None:
-            self.__popover.show()
+        self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
         """
