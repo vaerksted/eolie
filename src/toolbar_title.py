@@ -44,6 +44,7 @@ class ToolbarTitle(Gtk.Bin):
         builder.connect_signals(self)
         self.__entry = builder.get_object("entry")
         self.__popover = UriPopover(window)
+        self.__popover.set_relative_to(self)
         self.__password_popover = None
         # Reload/Stop
         self.__action_image1 = builder.get_object("action_image1")
@@ -191,6 +192,15 @@ class ToolbarTitle(Gtk.Bin):
             self.__action_image1.set_from_icon_name('view-refresh-symbolic',
                                                     Gtk.IconSize.MENU)
 
+    def start_search(self):
+        """
+            Focus widget without showing
+            popover allowing user to start a search
+        """
+        self.__popover.set_relative_to(None)
+        self.__entry.grab_focus()
+        self.__popover.set_relative_to(self)
+
     @property
     def progress(self):
         """
@@ -257,8 +267,8 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_text(self.__uri)
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-        self.__popover.set_relative_to(self)
-        self.__popover.show()
+        if self.__popover.get_relative_to() is not None:
+            self.__popover.show()
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
@@ -459,6 +469,8 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text("")
         else:
             self.__popover.set_search_text(value)
+        if not self.__popover.is_visible():
+            self.__popover.show()
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None

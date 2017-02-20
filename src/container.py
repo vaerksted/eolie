@@ -349,6 +349,9 @@ class Container(Gtk.Paned):
             self.__on_title_changed(webview, event)
             if webview == self.current.webview:
                 if not self.__window.toolbar.title.focus_in:
-                    GLib.idle_add(webview.grab_focus)
+                    if webview.get_uri() == "populars://":
+                        self.__window.toolbar.title.start_search()
+                    else:
+                        GLib.idle_add(webview.grab_focus)
                 GLib.timeout_add(500,
                                  self.__window.toolbar.title.progress.hide)
