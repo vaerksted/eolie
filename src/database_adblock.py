@@ -112,6 +112,7 @@ class DatabaseAdblock:
         """
             Update database
         """
+        self.__stop = False
         if Gio.NetworkMonitor.get_default().get_network_available():
             self.__mtime = int(time())
             self.__thread = Thread(target=self.__update)
@@ -124,6 +125,7 @@ class DatabaseAdblock:
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
+        self.__stop = True
 
     def is_blocked(self, uri):
         """
@@ -159,6 +161,7 @@ class DatabaseAdblock:
         """
             Update database
         """
+        SqlCursor.add(self)
         result = ""
         try:
             for uri in self.__URIS:
@@ -172,8 +175,9 @@ class DatabaseAdblock:
                     buf = stream.read_bytes(
                                            1024, self.__cancellable).get_data()
                 result = bytes.decode('utf-8')
+                count = 0
                 for line in result.split('\n'):
-                    if self.__cancellable.is_cancelled():
+                    if self.__cancellable.is_cancelled() or self.__stop:
                         raise IOError("Cancelled")
                     sleep(0.1)
                     if line.startswith('#'):
@@ -197,10 +201,16 @@ class DatabaseAdblock:
                                               (dns, mtime)\
                                               VALUES (?, ?)",
                                         (dns, self.__mtime))
-                        sql.commit()
+                        count += 1
+                        if count == 1000:
+                            sql.commit()
+                            count = 0
             # Delete removed entries
             with SqlCursor(self) as sql:
                 sql.execute("DELETE FROM adblock\
                              WHERE mtime!=?", (self.__mtime,))
         except Exception as e:
             print("DatabaseAdlbock:__update():", e)
+        with SqlCursor(self) as sql:
+            sql.commit()
+        SqlCursor.remove(self)

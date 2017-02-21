@@ -28,6 +28,14 @@ class SqlCursor:
         name = current_thread().getName() + obj.__class__.__name__
         El().cursors[name] = obj.get_cursor()
 
+    def remove(obj):
+        """
+            Remove cursor to thread list
+            Raise an exception if cursor already exists
+        """
+        name = current_thread().getName() + obj.__class__.__name__
+        del El().cursors[name]
+
     def __init__(self, obj):
         """
             Init object

@@ -162,6 +162,7 @@ class Application(Gtk.Application):
         """
         self.active_window.container.save_position()
         self.download_manager.cancel()
+        self.adblock.stop()
         try:
             session_states = []
             for window in self.__windows:
