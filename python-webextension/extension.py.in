@@ -137,13 +137,17 @@ def on_document_loaded(webpage):
         if name is None:
             i += 1
             continue
-        for search in LOGINS:
-            if search in name.lower():
-                username_input = inputs.item(i)
-                break
+        found = False
         for search in PASSWORDS:
             if search in name.lower():
                 password_input = inputs.item(i)
+                found = True
+                break
+        if found:
+            continue
+        for search in LOGINS:
+            if search in name.lower():
+                username_input = inputs.item(i)
                 break
         i += 1
 
