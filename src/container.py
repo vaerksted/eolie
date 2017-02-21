@@ -285,10 +285,6 @@ class Container(Gtk.Paned):
                                                     webview.readable[1] != "")
             self.__window.toolbar.end.on_uri_changed()
             self.__window.toolbar.title.set_uri(webview.get_uri())
-            # Update title if available
-            title = webview.get_title()
-            if title:
-                self.__window.toolbar.title.set_title(title)
 
     def __on_title_changed(self, webview, event):
         """
