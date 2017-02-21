@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2017 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -37,3 +37,6 @@ class Type:
 
 LOGINS = ["login", "username", "user"]
 PASSWORDS = ["password", "passwd", "pass"]
+
+TOKENSERVER_URL = "https://token.services.mozilla.com/"
+FXA_SERVER_URL = "https://api.accounts.firefox.com"
