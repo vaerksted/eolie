@@ -69,6 +69,8 @@ class Application(Gtk.Application):
         self.cursors = {}
         GLib.set_application_name('Eolie')
         GLib.set_prgname('eolie')
+        self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Debug Eolie", None)
         self.connect('activate', self.__on_activate)
         self.connect('command-line', self.__on_command_line)
         self.register(None)
@@ -281,19 +283,20 @@ class Application(Gtk.Application):
         args = app_cmd_line.get_arguments()
         options = app_cmd_line.get_options_dict()
         if options.contains('debug'):
-            pass
+            GLib.setenv("LIBGL_DEBUG", "verbose", True)
+            GLib.setenv("WEBKIT_DEBUG", "network", True)
+            GLib.setenv("GST_DEBUG", "webkit*:5", True)
+        if self.settings.get_value("remember-session"):
+            count = self.__restore_state()
         else:
-            if self.settings.get_value("remember-session"):
-                count = self.__restore_state()
-            else:
-                count = 0
-            active_window = self.active_window
-            if len(args) > 1:
-                for uri in args[1:]:
-                    active_window.container.add_web_view(uri, True)
-                active_window.present()
-            elif count == 0:
-                active_window.container.add_web_view(self.start_page, True)
+            count = 0
+        active_window = self.active_window
+        if len(args) > 1:
+            for uri in args[1:]:
+                active_window.container.add_web_view(uri, True)
+            active_window.present()
+        elif count == 0:
+            active_window.container.add_web_view(self.start_page, True)
         return 0
 
     def __on_delete_event(self, widget, event):
