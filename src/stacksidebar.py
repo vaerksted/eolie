@@ -13,8 +13,6 @@
 from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, WebKit2
 import cairo
 
-from gettext import gettext as _
-
 from eolie.define import El, ArtSize
 from eolie.utils import strip_uri
 
@@ -256,7 +254,7 @@ class SidebarChild(Gtk.ListBoxRow):
             return True
         title = view.get_title()
         if not title:
-            title = _("No title")
+            title = view.get_uri()
         if title.startswith("@&$%ù²"):
             return True
         self.__title.set_text(title)

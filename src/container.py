@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk, WebKit2, GLib
 
-from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.stacksidebar import StackSidebar
@@ -296,7 +295,7 @@ class Container(Gtk.Paned):
             return True
         title = webview.get_title()
         if not title:
-            title = _("No title")
+            title = webview.get_uri()
         if title.startswith("@&$%ù²"):
             return True
         if webview == self.current.webview:
