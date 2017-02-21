@@ -37,6 +37,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__lock = False
         self.__in_notify = False
         self.__signal_id = None
+        self.__secure_content = True
         self.__keywords_timeout = None
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
@@ -61,6 +62,7 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
         self.__readable = builder.get_object("readable")
+        self.__placeholder = builder.get_object("placeholder")
 
     def show_readable_button(self, b):
         """
@@ -87,22 +89,15 @@ class ToolbarTitle(Gtk.Bin):
         """
         if uri is None:
             return
+        self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
         else:
             self.__readable_image.get_style_context().remove_class("selected")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
-        parsed = urlparse(uri)
-        if parsed.scheme == "https":
-            self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        'channel-secure-symbolic')
-        else:
-            self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        None)
         # Do not show this in titlebar
+        parsed = urlparse(uri)
         if parsed.scheme == "populars":
             self.__uri = ""
             self.__entry.set_text("")
@@ -115,6 +110,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_placeholder_text("")
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__uri = uri
+        self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
@@ -127,19 +123,13 @@ class ToolbarTitle(Gtk.Bin):
         """
             Mark uri as insecure
         """
-        if self.__uri.startswith("https://"):
-            self.__entry.set_icon_tooltip_text(
-                                      Gtk.EntryIconPosition.PRIMARY,
-                                      _("This page contains insecure content"))
-            self.__entry.set_icon_from_icon_name(
-                                            Gtk.EntryIconPosition.PRIMARY,
-                                            "channel-insecure-symbolic")
-        else:
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               "")
-            self.__entry.set_icon_from_icon_name(
-                                            Gtk.EntryIconPosition.PRIMARY,
-                                            None)
+        self.__secure_content = False
+        self.__entry.set_icon_tooltip_text(
+                                  Gtk.EntryIconPosition.PRIMARY,
+                                  _("This page contains insecure content"))
+        self.__entry.set_icon_from_icon_name(
+                                        Gtk.EntryIconPosition.PRIMARY,
+                                        "channel-insecure-symbolic")
 
     def set_title(self, title):
         """
@@ -279,6 +269,9 @@ class ToolbarTitle(Gtk.Bin):
                                                 self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
+        if not self.__entry.get_text():
+            self.__placeholder.show()
+        self.__update_secure_content_indicator()
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -302,7 +295,8 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "non-starred-symbolic"
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
-        self.set_insecure_content()
+        self.__update_secure_content_indicator()
+        self.__placeholder.hide()
 
     def _on_button_press_event(self, entry, event):
         """
@@ -421,18 +415,33 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __update_secure_content_indicator(self):
+        """
+            Update PRIMARY icon
+        """
+        parsed = urlparse(self.__uri)
+        if parsed.scheme == "https" and self.__secure_content:
+            self.__entry.set_icon_from_icon_name(
+                                        Gtk.EntryIconPosition.PRIMARY,
+                                        'channel-secure-symbolic')
+        elif parsed.scheme == "http":
+            self.set_insecure_content()
+        else:
+            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                                 "system-search-symbolic")
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
+
     def __update_margins(self):
         """
             Update margins
         """
-        border = self.__entry.get_style_context().get_border(
-                                                  Gtk.StateFlags.NORMAL).bottom
-        margin_start = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).left
-        margin_end = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).right
-        margin_bottom = self.__entry.get_style_context().get_margin(
-                                                  Gtk.StateFlags.NORMAL).bottom
+        style = self.__entry.get_style_context()
+        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
+        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
+        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
+        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
+        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
         css = ".progressbar { margin-bottom: %spx;\
                margin-left: %spx;\
                margin-right: %spx; }" % (margin_bottom,
@@ -442,6 +451,8 @@ class ToolbarTitle(Gtk.Bin):
         width = self.__icon_grid.get_allocated_width()
         css += ".uribar { padding-right: %spx; }" % (width + 5)
         self.__css_provider.load_from_data(css.encode("utf-8"))
+        # 22 is Gtk.EntryIconPosition.PRIMARY
+        self.__placeholder.set_margin_start(padding_start + 22 + border)
 
     def __search_keywords_thread(self, value):
         """
@@ -480,6 +491,10 @@ class ToolbarTitle(Gtk.Bin):
             Update popover search if needed
         """
         value = entry.get_text()
+        if value:
+            self.__placeholder.hide()
+        else:
+            self.__placeholder.show()
         if value == self.__uri:
             self.__popover.set_search_text("")
         else:
@@ -496,6 +511,4 @@ class ToolbarTitle(Gtk.Bin):
                                                  500,
                                                  self.__search_keywords_thread,
                                                  value)
-        entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                      "system-search-symbolic")
-        entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
+        self.__update_secure_content_indicator()
