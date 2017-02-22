@@ -293,7 +293,7 @@ class WebView(WebKit2.WebView):
             Show populars web pages
             @param request as WebKit2.URISchemeRequest
         """
-        search = El().history.search("", 40)
+        search = El().history.search("", 20)
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
