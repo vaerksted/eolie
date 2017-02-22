@@ -30,7 +30,6 @@ class Container(Gtk.Paned):
             @param window as Window
         """
         Gtk.Paned.__init__(self)
-        self.__previous_uri = ""
         self.__window = window
         self.__load_status = WebKit2.LoadEvent.FINISHED
         self.set_position(
@@ -286,15 +285,9 @@ class Container(Gtk.Paned):
                                                     webview.readable[1] != "")
             self.__window.toolbar.end.on_uri_changed()
             self.__window.toolbar.title.set_uri(uri)
-            # Update title if available and we are on the same web site
-            # Javascript can change uri without re-updating title
-            ppu = urlparse(self.__previous_uri)
-            pu = urlparse(uri)
-            if pu.netloc + pu.path == ppu.netloc + ppu.path:
-                title = webview.get_title()
-                if title:
-                    self.__window.toolbar.title.set_title(title)
-            self.__previous_uri = uri
+            title = webview.get_title()
+            if title:
+                self.__window.toolbar.title.set_title(title)
 
     def __on_title_changed(self, webview, event):
         """
@@ -302,7 +295,7 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as  GParamSpec
         """
-        if self.__load_status != WebKit2.LoadEvent.FINISHED:
+        if self.__load_status == WebKit2.LoadEvent.STARTED:
             return True
         title = webview.get_title()
         if not title:
@@ -351,6 +344,8 @@ class Container(Gtk.Paned):
         if event == WebKit2.LoadEvent.STARTED:
             if webview == self.current.webview:
                 self.__window.toolbar.title.progress.show()
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            pass
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__on_title_changed(webview, event)
             if webview == self.current.webview:
