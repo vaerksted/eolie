@@ -85,15 +85,17 @@ class EditBookmarkWidget(Gtk.Bin):
         self.get_parent().set_visible_child_name("bookmarks")
         GLib.timeout_add(1000, self.destroy)
 
-    def _on_add_del_clicked(self, button):
+    def _on_del_clicked(self, button):
         """
-            Destroy self
+            Remove item
             @param button as Gtk.Button
         """
         self.disconnect_by_func(self.__on_unmap)
         El().bookmarks.remove(self.__bookmark_id)
-        self.get_parent().set_visible_child_name("bookmarks")
-        GLib.timeout_add(1000, self.destroy)
+        if isinstance(self.get_parent(), Gtk.Popover):
+            self.get_parent().hide()
+        else:
+            self.get_parent().set_visible_child_name("bookmarks")
 
     def _on_new_tag_changed(self, entry):
         """

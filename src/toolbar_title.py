@@ -363,15 +363,18 @@ class ToolbarTitle(Gtk.Bin):
             uri = view.webview.get_uri()
             if not uri or uri == "about:blank":
                 return
+            title = view.webview.get_title()
+            if not title:
+                title = uri
             self.__action_image2.set_from_icon_name("starred-symbolic",
                                                     Gtk.IconSize.MENU)
-            bookmark_id = El().bookmarks.add(view.webview.get_title(),
+            bookmark_id = El().bookmarks.add(title,
                                              uri, [])
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
             size = self.__window.get_size()
-            popover.set_size_request(size[0]*0.3, size[1]*0.5)
+            popover.set_size_request(size[0]*0.3, size[1]*0.8)
             popover.set_relative_to(eventbox)
             popover.connect("closed",
                             lambda x: self._on_entry_focus_out(
