@@ -97,11 +97,15 @@ class Row(Gtk.ListBoxRow):
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.set_property("halign", Gtk.Align.START)
         self.__title.set_hexpand(True)
+        self.__title.set_property('has-tooltip', True)
+        self.__title.connect('query-tooltip', self.__on_query_tooltip)
         self.__title.show()
         uri = Gtk.Label.new(item.get_property("uri"))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property("halign", Gtk.Align.END)
         uri.get_style_context().add_class("dim-label")
+        uri.set_property('has-tooltip', True)
+        uri.connect('query-tooltip', self.__on_query_tooltip)
         uri.set_max_width_chars(40)
         uri.show()
         if item_type == Type.HISTORY:
@@ -169,6 +173,22 @@ class Row(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
+        """
+            Show tooltip if needed
+            @param widget as Gtk.Widget
+            @param x as int
+            @param y as int
+            @param keyboard as bool
+            @param tooltip as Gtk.Tooltip
+        """
+        text = ''
+        layout = widget.get_layout()
+        label = widget.get_text()
+        if layout.is_ellipsized():
+            text = "%s" % (GLib.markup_escape_text(label))
+        widget.set_tooltip_markup(text)
+
     def __on_drag_begin(self, widget, context):
         """
             We need to select self
