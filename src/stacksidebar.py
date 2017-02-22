@@ -578,12 +578,13 @@ class StackSidebar(Gtk.Grid):
         # Find best near page
         else:
             children = self.__listbox.get_children()
+            # We are last row, add a new one
             if len(children) == 0:
                 self.__window.container.add_web_view(El().start_page, True)
-            elif child_index == 0:
-                next_row = self.__listbox.get_row_at_index(0)
-            elif child_index + 1 < len(children):
-                next_row = self.__listbox.get_row_at_index(child_index + 1)
+            # We have rows next to closed, so reload current index
+            elif child_index < len(children):
+                next_row = self.__listbox.get_row_at_index(child_index)
+            # We have rows before closed
             elif child_index - 1 >= 0:
                 next_row = self.__listbox.get_row_at_index(child_index - 1)
         if next_row is not None:
