@@ -379,6 +379,7 @@ class WebView(WebKit2.WebView):
             return
         parsed = urlparse(view.get_uri())
         self.emit("save-password", username, password, parsed.netloc)
+        request.submit()
 
     def __on_download_started(self, context, download):
         """
