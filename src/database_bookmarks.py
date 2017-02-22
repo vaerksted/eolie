@@ -83,7 +83,7 @@ class DatabaseBookmarks:
             result = sql.execute("INSERT INTO bookmarks\
                                   (title, uri, popularity, atime)\
                                   VALUES (?, ?, ?, ?)",
-                                 (title, uri, 0, atime))
+                                 (title, uri.rstrip('/'), 0, atime))
             bookmarks_id = result.lastrowid
             for tag in tags:
                 if not tag:
@@ -177,7 +177,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE uri=?", (uri,))
+                                  WHERE uri=?", (uri.rstrip('/'),))
             v = result.fetchone()
             if v is not None:
                 return v[0]
@@ -338,7 +338,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET uri=?\
-                         WHERE rowid=?", (uri, bookmark_id,))
+                         WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
             sql.commit()
 
     def set_access_time(self, uri, atime):
@@ -349,7 +349,7 @@ class DatabaseBookmarks:
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
-                         SET atime=? where uri=?", (atime, uri))
+                         SET atime=? where uri=?", (atime, uri.rstrip('/')))
             sql.commit()
 
     def set_tag_title(self, tag_id, title):
@@ -368,6 +368,7 @@ class DatabaseBookmarks:
             @param uri as str
         """
         with SqlCursor(self) as sql:
+            uri = uri.rstrip('/')
             result = sql.execute("SELECT popularity FROM bookmarks\
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
