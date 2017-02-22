@@ -258,13 +258,17 @@ class WebView(WebKit2.WebView):
             return (username, password, auth)
         for k, v in fields.items():
             name = ctypes.string_at(k).decode("utf-8")
-            for search in LOGINS:
-                if search in name.lower():
-                    username = ctypes.string_at(v).decode("utf-8")
-                    break
+            found = False
             for search in PASSWORDS:
-                if search in name.lower():
+                if name.lower().find(search) != -1:
                     password = ctypes.string_at(v).decode("utf-8")
+                    found = True
+                    break
+            if found:
+                continue
+            for search in LOGINS:
+                if name.lower().find(search) != -1:
+                    username = ctypes.string_at(v).decode("utf-8")
                     break
             if username and password:
                 auth = True
