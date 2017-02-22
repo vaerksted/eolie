@@ -138,18 +138,20 @@ def on_document_loaded(webpage):
             i += 1
             continue
         found = False
-        for search in PASSWORDS:
-            if name.lower().find(search) != -1:
-                password_input = inputs.item(i)
-                found = True
-                break
+        if password_input is None:
+            for search in PASSWORDS:
+                if name.lower().find(search) != -1:
+                    password_input = inputs.item(i)
+                    found = True
+                    break
         if found:
             i += 1
             continue
-        for search in LOGINS:
-            if name.lower().find(search) != -1:
-                username_input = inputs.item(i)
-                break
+        if username_input is None:
+            for search in LOGINS:
+                if name.lower().find(search) != -1:
+                    username_input = inputs.item(i)
+                    break
         i += 1
 
     if username_input is None or password_input is None:

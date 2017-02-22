@@ -35,7 +35,7 @@ class Type:
     SEPARATOR = -9
 
 
-LOGINS = ["login", "username", "user"]
+LOGINS = ["login", "username", "user", "mail", "email"]
 PASSWORDS = ["password", "passwd", "pass"]
 
 TOKENSERVER_URL = "https://token.services.mozilla.com/"

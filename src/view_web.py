@@ -259,20 +259,23 @@ class WebView(WebKit2.WebView):
         for k, v in fields.items():
             name = ctypes.string_at(k).decode("utf-8")
             found = False
-            for search in PASSWORDS:
-                if name.lower().find(search) != -1:
-                    password = ctypes.string_at(v).decode("utf-8")
-                    found = True
-                    break
-            if found:
-                continue
-            for search in LOGINS:
-                if name.lower().find(search) != -1:
-                    username = ctypes.string_at(v).decode("utf-8")
-                    break
+            if not password:
+                for search in PASSWORDS:
+                    if name.lower().find(search) != -1:
+                        password = ctypes.string_at(v).decode("utf-8")
+                        found = True
+                        break
+                if found:
+                    continue
+            if not username:
+                for search in LOGINS:
+                    if name.lower().find(search) != -1:
+                        username = ctypes.string_at(v).decode("utf-8")
+                        break
             if username and password:
-                auth = True
                 break
+        if username and password:
+            auth = True
         return (auth, username, password)
 
     def __set_smooth_scrolling(self, source):
