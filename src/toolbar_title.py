@@ -37,6 +37,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__in_notify = False
         self.__signal_id = None
         self.__secure_content = True
+        self.__prevent_focus_out = False
         self.__keywords_timeout = None
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
@@ -277,6 +278,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event (do not use)
         """
+        if self.__prevent_focus_out:
+            return True
         self.__lock = False
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
@@ -400,6 +403,16 @@ class ToolbarTitle(Gtk.Bin):
         """
         eventbox.set_opacity(0.8)
 
+    def _on_populate_popup(self, entry, menu):
+        """
+            Replace menu with a popover
+            @param entry as Gtk.Entry
+            @param menu as Gtk.Menu
+        """
+        self.__prevent_focus_out = True
+        self.__placeholder.hide()
+        menu.connect("unmap", self.__on_menu_unmap)
+
     def _on_activate(self, entry):
         """
             Go to url or search for words
@@ -485,6 +498,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__password_popover = None
         popover.destroy()
+
+    def __on_menu_unmap(self, menu):
+        """
+            On menu unmap
+        """
+        self.__prevent_focus_out = False
+        if not self.__entry.get_text():
+            self.__placeholder.show()
 
     def __on_entry_changed(self, entry):
         """

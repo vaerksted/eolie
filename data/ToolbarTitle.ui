@@ -16,6 +16,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <signal name="activate" handler="_on_activate" swapped="no"/>
+            <signal name="populate-popup" handler="_on_populate_popup" swapped="no"/>
             <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
             <signal name="focus-in-event" handler="_on_entry_focus_in" swapped="no"/>
             <signal name="focus-out-event" handler="_on_entry_focus_out" swapped="no"/>
