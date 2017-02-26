@@ -214,6 +214,7 @@ class WebView(WebKit2.WebView):
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("submit-form", self.__on_submit_form)
         self.connect("run-as-modal", self.__on_run_as_modal)
+        self.connect("web-process-crashed", self.__on_web_process_crashed)
         self.connect("load-changed", self.__on_load_changed)
         # We launch Readability.js at page loading finished
         # As Webkit2GTK doesn't allow us to get content from python
@@ -398,6 +399,13 @@ class WebView(WebKit2.WebView):
         if event == WebKit2.LoadEvent.STARTED:
             self.set_setting("auto-load-images",
                              not El().settings.get_value("imgblock"))
+
+    def __on_web_process_crashed(self, view):
+        """
+            We just crashed :-(
+            @param view as WebKit2.WebView
+        """
+        print("WebView::__on_web_process_crashed():", view)
 
     def __on_decide_policy(self, view, decision, decision_type):
         """

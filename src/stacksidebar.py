@@ -81,18 +81,6 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if self.__view != self.__window.container.current:
-            parent = self.__view.get_parent()
-            if not isinstance(parent, Gtk.OffscreenWindow):
-                self.__window.container.remove_view(self.__view)
-                window = Gtk.OffscreenWindow.new()
-                width = self.__window.container.get_allocated_width() -\
-                    self.get_allocated_width()
-                self.__view.set_size_request(
-                              width,
-                              self.__window.container.get_allocated_height())
-                window.add(self.__view)
-                window.show()
         self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
@@ -329,11 +317,6 @@ class SidebarChild(Gtk.ListBoxRow):
         except Exception as e:
             print("StackSidebar::__on_snapshot:", e)
             return
-        parent = self.__view.get_parent()
-        if parent is not None and isinstance(parent, Gtk.OffscreenWindow):
-            parent.remove(self.__view)
-            self.__view.set_size_request(-1, -1)
-            self.__window.container.add_view(self.__view)
 
     def __on_notify_favicon(self, view, pointer):
         """
