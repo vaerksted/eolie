@@ -77,20 +77,6 @@ class Container(Gtk.Paned):
         if self.current is not None:
             self.current.webview.load_uri(uri)
 
-    def add_view(self, view):
-        """
-            Add view to container
-        """
-        if view not in self.__stack.get_children():
-            self.__stack.add(view)
-
-    def remove_view(self, view):
-        """
-            Remove view from container
-        """
-        if view in self.__stack.get_children():
-            self.__stack.remove(view)
-
     def set_visible_view(self, view):
         """
             Set visible view
