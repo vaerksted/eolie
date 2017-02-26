@@ -526,7 +526,11 @@ class UriPopover(Gtk.Popover):
         if scrolled is None:
             return
         y = row.translate_coordinates(listbox, 0, 0)[1]
-        scrolled.get_vadjustment().set_value(y)
+        adj = scrolled.get_vadjustment().get_value()
+        if y + row.get_allocated_height() >\
+                scrolled.get_allocated_height() + adj or\
+                y - row.get_allocated_height() < 0 + adj:
+            scrolled.get_vadjustment().set_value(y)
 
     def _on_search_map(self, widget):
         """
