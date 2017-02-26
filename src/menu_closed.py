@@ -58,7 +58,7 @@ class ClosedMenu(Gio.Menu):
             item.set_icon(icon)
         except:
             pass
-        self.append_item(item)
+        self.insert_item(0, item)
         self.__update_toolbar_actions()
 
     def remove_action(self, uri):
