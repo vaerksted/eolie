@@ -5,7 +5,7 @@
     <file compressed="true">start.html</file>
     <file compressed="true">end.html</file>
     <file compressed="true">Readability.js</file>
-    <file compressed="true">Facebook_adblock.js</file>
+    <file compressed="true">facebook.com_adblock.js</file>
     <file preprocess="xml-stripblanks">AboutDialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
