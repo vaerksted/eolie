@@ -84,6 +84,9 @@ class Application(Gtk.Application):
             Init main application
         """
         self.__is_fs = False
+        self.__setup_app_menu()
+        if self.prefers_app_menu():
+            self.set_app_menu(self.__menu)
         if Gtk.get_minor_version() > 18:
             cssProviderFile = Gio.File.new_for_uri(
                 'resource:///org/gnome/Eolie/application.css')
@@ -149,16 +152,7 @@ class Application(Gtk.Application):
 
         if not self.__windows:
             self.init()
-            menu = self.__setup_app_menu()
-            if self.prefers_app_menu():
-                self.set_app_menu(menu)
-                window = Window()
-            else:
-                window = Window()
-                window.toolbar.end.setup_menu(menu)
-            window.connect('delete-event', self.__on_delete_event)
-            window.show()
-            self.__windows.append(window)
+            self.__get_new_window()
 
     def prepare_to_exit(self, action=None, param=None, exit=True):
         """
@@ -263,6 +257,18 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __get_new_window(self):
+        """
+            Return a new window
+            @return Window
+        """
+        window = Window()
+        if not self.prefers_app_menu():
+            window.toolbar.end.setup_menu(self.__menu)
+        window.connect('delete-event', self.__on_delete_event)
+        window.show()
+        self.__windows.append(window)
+
     def __restore_state(self):
         """
             Restore saved state
@@ -306,6 +312,7 @@ class Application(Gtk.Application):
                 active_window.container.add_web_view(uri, True)
             active_window.present()
         elif count == 0:
+            print(active_window.container.current)
             active_window.container.add_web_view(self.start_page, True)
         return 0
 
@@ -384,7 +391,7 @@ class Application(Gtk.Application):
         """
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/Appmenu.ui')
-        menu = builder.get_object('app-menu')
+        self.__menu = builder.get_object('app-menu')
 
         settings_action = Gio.SimpleAction.new('settings', None)
         settings_action.connect('activate', self.__on_settings_activate)
@@ -405,8 +412,6 @@ class Application(Gtk.Application):
         quit_action = Gio.SimpleAction.new('quit', None)
         quit_action.connect('activate', self.prepare_to_exit)
         self.add_action(quit_action)
-
-        return menu
 
     def __on_activate(self, application):
         """
