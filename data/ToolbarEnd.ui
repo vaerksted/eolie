@@ -118,7 +118,7 @@
           </object>
         </child>
         <style>
-          <class name="no-padding"/>
+          <class name="download-button"/>
         </style>
       </object>
       <packing>

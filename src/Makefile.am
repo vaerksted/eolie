@@ -10,6 +10,7 @@ app_PYTHON = \
     download_manager.py\
     define.py\
     localized.py\
+    menu_closed.py\
     popover_downloads.py\
     popover_password.py\
     popover_uri.py\

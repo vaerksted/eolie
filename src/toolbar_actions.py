@@ -28,14 +28,18 @@ class ToolbarActions(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/ToolbarActions.ui')
+        builder.add_from_resource("/org/gnome/Eolie/ToolbarActions.ui")
         builder.connect_signals(self)
 
-        self.add(builder.get_object('actions'))
+        self.add(builder.get_object("actions"))
 
-        self.__backward = builder.get_object('back_button')
-        self.__forward = builder.get_object('forward_button')
-        self.__filter = builder.get_object('filter_button')
+        self.__backward = builder.get_object("back_button")
+        self.__forward = builder.get_object("forward_button")
+        self.__filter = builder.get_object("filter_button")
+        self.__closed_button = builder.get_object("closed_button")
+        self.__closed_button.set_menu_model(El().closed_menu)
+        sensitive = El().closed_menu.get_n_items() != 0
+        self.__closed_button.set_sensitive(sensitive)
 
     def set_actions(self, view):
         """
@@ -58,6 +62,14 @@ class ToolbarActions(Gtk.Bin):
         self.__forward.clicked()
 
     @property
+    def closed_button(self):
+        """
+            Get closed pages button
+            @return Gtk.MenuButton
+        """
+        return self.__closed_button
+
+    @property
     def filter_button(self):
         """
             Get filtering toggle button
@@ -78,7 +90,7 @@ class ToolbarActions(Gtk.Bin):
 
     def _on_forward_button_clicked(self, button):
         """
-            aa
+            Go forward on current view
             @param button as Gtk.Button
         """
         self.__window.container.current.webview.go_forward()

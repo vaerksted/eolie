@@ -29,6 +29,7 @@ from eolie.database_adblock import DatabaseAdblock
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
+from eolie.menu_closed import ClosedMenu
 
 
 class Application(Gtk.Application):
@@ -65,6 +66,7 @@ class Application(Gtk.Application):
                     break
         self.__extension_dir = extension_dir
         self.__windows = []
+        self.__closed_menu = ClosedMenu(self)
         self.debug = False
         self.cursors = {}
         GLib.set_application_name('Eolie')
@@ -207,6 +209,14 @@ class Application(Gtk.Application):
         cookie_manager.set_persistent_storage(
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
+
+    @property
+    def closed_menu(self):
+        """
+            Get closed menu
+            @return ClosedMenu
+        """
+        return self.__closed_menu
 
     @property
     def start_page(self):
