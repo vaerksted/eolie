@@ -435,7 +435,7 @@ class WebView(WebKit2.WebView):
             @param error as GLib.Error
         """
         # Ignore all others errors
-        if error.code != 2:
+        if error.code not in [2, 4]:
             return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
@@ -443,7 +443,7 @@ class WebView(WebKit2.WebView):
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
         (status, content, tag) = f.load_contents(None)
         html = content.decode("utf-8")
-        html = html % (_("Error occured"),
+        html = html % (_("Failed to load this web page"),
                        css,
                        "load_uri('%s')" % uri,
                        "internal:///org/gnome/Eolie/"
