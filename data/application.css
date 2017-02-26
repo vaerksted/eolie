@@ -15,15 +15,6 @@
     background-image: none;
 }
 
-.progressbar-fat progress {
-    min-height: 10px;
-    border: 1px solid @theme_bg_color;
-}
-
-.progressbar-fat trough {
-    min-height: 11px;
-}
-
 /*
 @keyframes fadein {
   0% { opacity: 0.4; }
