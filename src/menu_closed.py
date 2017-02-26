@@ -35,6 +35,8 @@ class ClosedMenu(Gio.Menu):
             @param uri as str
             @param state as WebKit2.WebViewSessionState
         """
+        if not title:
+            title = uri
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = self.__app.lookup_action(encoded)
         if action is not None:
