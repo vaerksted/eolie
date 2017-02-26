@@ -268,10 +268,13 @@ class SidebarChild(Gtk.ListBoxRow):
             @param event as WebKit2.LoadEvent
         """
         self.__load_status = event
+        uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
-            self.__title.set_text(view.get_uri())
+            if uri:
+                self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__title.set_text(view.get_uri())
+            if uri:
+                self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__on_title_changed(view, None)
             self.__progress.hide()
