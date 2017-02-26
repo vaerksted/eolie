@@ -17,10 +17,11 @@
 
 .progressbar-fat progress {
     min-height: 10px;
+    border: 1px solid @theme_selected_fg_color;;
 }
 
 .progressbar-fat trough {
-    min-height: 10px;
+    min-height: 11px;
 }
 
 /*
