@@ -508,7 +508,7 @@ class WebView(WebKit2.WebView):
             error = _("The certificate activation time is still in the future")
         else:
             error = _("The identity of this website has not been verified")
-        html = html % (_("Failed to load this web page"),
+        html = html % (_("Connection is not secure"),
                        css,
                        "load_uri('%s')" % uri.replace("https://",
                                                       "accept://"),
