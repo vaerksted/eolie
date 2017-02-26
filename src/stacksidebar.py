@@ -258,8 +258,6 @@ class SidebarChild(Gtk.ListBoxRow):
         if title.startswith("@&$%ù²"):
             return True
         self.__title.set_text(title)
-        if view.get_favicon() is not None:
-            GLib.timeout_add(1000, self.__set_favicon)
         GLib.timeout_add(500, self.set_snapshot, True)
 
     def __on_load_changed(self, view, event):
