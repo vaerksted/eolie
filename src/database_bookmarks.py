@@ -174,6 +174,8 @@ class DatabaseBookmarks:
             @param uri as str
             @return id as int
         """
+        if uri is None:
+            return None
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
