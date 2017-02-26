@@ -41,7 +41,6 @@ class ClosedMenu(Gio.Menu):
         action = self.__app.lookup_action(encoded)
         if action is not None:
             self.__app.remove_action(encoded)
-            action.destroy()
         action = Gio.SimpleAction(name=encoded)
         self.__app.add_action(action)
         action.connect('activate',
