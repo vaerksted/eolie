@@ -76,8 +76,12 @@ class WebView(WebKit2.WebView):
         self.__cancellable.cancel()
         self.__cancellable.reset()
         parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "file", "populars"]:
+        if parsed.scheme not in ["http", "https", "file",
+                                 "populars", "accept"]:
             uri = "http://" + uri
+        # Reset bad tls certificate
+        elif parsed.scheme != "accept":
+            self.__bad_tls = None
         self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
 
@@ -169,6 +173,7 @@ class WebView(WebKit2.WebView):
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
         self.__document_font_size = "14pt"
+        self.__bad_tls = None  # Keep bad TLS certificate
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -217,6 +222,7 @@ class WebView(WebKit2.WebView):
         self.connect("web-process-crashed", self.__on_web_process_crashed)
         self.connect("load-changed", self.__on_load_changed)
         self.connect("load-failed", self.__on_load_failed)
+        self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
         # We launch Readability.js at page loading finished
         # As Webkit2GTK doesn't allow us to get content from python
         # It sets title with content for one shot, so try to get it here
@@ -225,6 +231,7 @@ class WebView(WebKit2.WebView):
         context = self.get_context()
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
+        context.register_uri_scheme("accept", self.__on_accept_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.connect("download-started", self.__on_download_started)
         self.update_zoom_level()
@@ -325,6 +332,18 @@ class WebView(WebKit2.WebView):
         uri = request.get_uri().replace("internal:/", "resource:/")
         f = Gio.File.new_for_uri(uri)
         request.finish(f.read(), -1, "image/svg+xml")
+
+    def __on_accept_scheme(self, request):
+        """
+            Accept certificate for uri
+            @param request as WebKit2.URISchemeRequest
+        """
+        if self.__bad_tls is None:
+            return
+        parsed = urlparse(request.get_uri())
+        self.get_context().allow_tls_certificate_for_host(self.__bad_tls,
+                                                          parsed.netloc)
+        self.load_uri("https://" + parsed.netloc + parsed.path)
 
     def __on_uri_changed(self, view, uri):
         """
@@ -453,7 +472,57 @@ class WebView(WebKit2.WebView):
                        _("It may be temporarily inaccessible or moved"
                          " to a new address.<br/> You may wish to verify that"
                          " your internet connection is working correctly."),
+                       "suggested-action",
                        _("Retry"))
+        self.load_html(html, None)
+        return True
+
+    def __on_load_failed_tls(self, view, uri, certificate, errors):
+        """
+            Show TLS error page
+            @param view as WebKit2.WebView
+            @param certificate as Gio.TlsCertificate
+            @parma errors as Gio.TlsCertificateFlags
+        """
+        self.__bad_tls = certificate
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
+        (status, css_content, tag) = f.load_contents(None)
+        css = css_content.decode("utf-8")
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
+        (status, content, tag) = f.load_contents(None)
+        html = content.decode("utf-8")
+        if errors == Gio.TlsCertificateFlags.BAD_IDENTITY:
+            error = _("The certificate does not match this website")
+        elif errors == Gio.TlsCertificateFlags.EXPIRED:
+            error = _("The certificate has expired")
+        elif errors == Gio.TlsCertificateFlags.UNKNOWN_CA:
+            error = _("The signing certificate authority is not known")
+        elif errors == Gio.TlsCertificateFlags.GENERIC_ERROR:
+            error = _("The certificate contains errors")
+        elif errors == Gio.TlsCertificateFlags.REVOKED:
+            error = _("The certificate has been revoked")
+        elif errors == Gio.TlsCertificateFlags.INSECURE:
+            error = _("The certificate is signed using"
+                      " a weak signature algorithm")
+        elif errors == Gio.TlsCertificateFlags.NOT_ACTIVATED:
+            error = _("The certificate activation time is still in the future")
+        else:
+            error = _("The identity of this website has not been verified")
+        html = html % (_("Failed to load this web page"),
+                       css,
+                       "load_uri('%s')" % uri.replace("https://",
+                                                      "accept://"),
+                       "internal:///org/gnome/Eolie/"
+                       "dialog-warning-symbolic.svg",
+                       _("Connection is not secure"),
+                       error,
+                       _("This does not look like the real %s.<br/>"
+                         "Attackers might be trying to steal or alter"
+                         " information going to or from this site"
+                         " (for example, private messages, credit card"
+                         " information, or passwords).") % uri,
+                       "destructive-action",
+                       _("Accept Risk and Proceed"))
         self.load_html(html, None)
         return True
 
