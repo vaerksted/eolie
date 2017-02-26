@@ -151,7 +151,8 @@ class ToolbarActions(Gtk.Bin):
             @param popover
             @param model as HistoryMenu
         """
-        model.remove_actions()
+        # Let model activate actions
+        GLib.idle_add(model.remove_actions)
 
     def __on_back_history_timeout(self):
         """
