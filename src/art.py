@@ -73,7 +73,9 @@ class Art:
             Return cache image path
             @return str
         """
-        encoded = sha256(strip_uri(uri, False).encode("utf-8")).hexdigest()
+        strip = strip_uri(uri, False, True)
+        strip = strip.replace("www.", "")
+        encoded = sha256(strip.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
         return filepath
 
