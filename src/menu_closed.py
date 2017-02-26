@@ -35,6 +35,7 @@ class ClosedMenu(Gio.Menu):
             @param uri as str
             @param state as WebKit2.WebViewSessionState
         """
+        self.__clean_actions()
         if not title:
             title = uri
         encoded = sha256(uri.encode("utf-8")).hexdigest()
@@ -78,6 +79,19 @@ class ClosedMenu(Gio.Menu):
 #######################
 # PRIVATE             #
 #######################
+    def __clean_actions(self):
+        """
+            Remove one action from history if needed
+        """
+        count = self.get_n_items()
+        if count > 20:
+            uri = self.get_item_attribute_value(0, "uri").get_string()
+            encoded = sha256(uri.encode("utf-8")).hexdigest()
+            action = self.__app.lookup_action(encoded)
+            if action is not None:
+                self.__app.remove_action(encoded)
+            self.remove(0)
+
     def __update_toolbar_actions(self):
         """
             Update toolbar actions (ie our button)
