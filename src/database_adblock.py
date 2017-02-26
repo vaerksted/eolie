@@ -20,6 +20,57 @@ from threading import Thread
 from eolie.sqlcursor import SqlCursor
 
 
+class DatabaseExceptions:
+    """
+        Adblock exceptions
+    """
+    if GLib.getenv("XDG_DATA_HOME") is None:
+        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
+    else:
+        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
+    DB_PATH = "%s/exceptions.db" % __LOCAL_PATH
+
+    # SQLite documentation:
+    # In SQLite, a column with type INTEGER PRIMARY KEY
+    # is an alias for the ROWID.
+    # Here, we define an id INT PRIMARY KEY but never feed it,
+    # this make VACUUM not destroy rowids...
+    __create_exceptions = '''CREATE TABLE exceptions (
+                                               id INTEGER PRIMARY KEY,
+                                               uri TEXT NOT NULL
+                                               )'''
+
+    def __init__(self):
+        """
+            Create database tables or manage update if needed
+        """
+        self.__cancellable = Gio.Cancellable.new()
+        f = Gio.File.new_for_path(self.DB_PATH)
+        # Lazy loading if not empty
+        if not f.query_exists():
+            try:
+                d = Gio.File.new_for_path(self.__LOCAL_PATH)
+                if not d.query_exists():
+                    d.make_directory_with_parents()
+                # Create db schema
+                with SqlCursor(self) as sql:
+                    sql.execute(self.__create_exceptions)
+                    sql.commit()
+            except Exception as e:
+                print("DatabaseExceptions::__init__(): %s" % e)
+
+    def get_cursor(self):
+        """
+            Return a new sqlite cursor
+        """
+        try:
+            c = sqlite3.connect(self.DB_PATH, 600.0)
+            return c
+        except Exception as e:
+            print(e)
+            exit(-1)
+
+
 class DatabaseAdblock:
     """
         Eolie adblock db
@@ -47,15 +98,11 @@ class DatabaseAdblock:
                                                mtime INT NOT NULL
                                                )'''
 
-    __create_exceptions = '''CREATE TABLE exceptions (
-                                               id INTEGER PRIMARY KEY,
-                                               uri TEXT NOT NULL
-                                               )'''
-
     def __init__(self):
         """
             Create database tables or manage update if needed
         """
+        self.__exceptions = DatabaseExceptions()
         self.__cancellable = Gio.Cancellable.new()
         f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
@@ -67,7 +114,6 @@ class DatabaseAdblock:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
-                    sql.execute(self.__create_exceptions)
                     sql.commit()
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
@@ -78,7 +124,7 @@ class DatabaseAdblock:
             @param uri as str
         """
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self.__exceptions) as sql:
                 sql.execute("INSERT INTO exceptions (uri) VALUES (?)", (uri,))
                 sql.commit()
         except:
@@ -90,7 +136,7 @@ class DatabaseAdblock:
             @param uri as str
         """
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self.__exceptions) as sql:
                 sql.execute("DELETE FROM exceptions WHERE uri=?", (uri,))
                 sql.commit()
         except:
@@ -102,7 +148,7 @@ class DatabaseAdblock:
             @param uri as str
             @return bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self.__exceptions) as sql:
             result = sql.execute("SELECT rowid FROM exceptions\
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
@@ -151,7 +197,8 @@ class DatabaseAdblock:
         try:
             c = sqlite3.connect(self.DB_PATH, 600.0)
             return c
-        except:
+        except Exception as e:
+            print(e)
             exit(-1)
 
 #######################
