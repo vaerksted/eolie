@@ -92,7 +92,6 @@ class ToolbarActions(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_back_history_timeout)
-        return True
 
     def _on_back_button_release_event(self, button, event):
         """
@@ -115,7 +114,6 @@ class ToolbarActions(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_forward_history_timeout)
-        return True
 
     def _on_forward_button_release_event(self, button, event):
         """
