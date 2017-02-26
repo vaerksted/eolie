@@ -117,6 +117,7 @@ class Application(Gtk.Application):
         self.add_action(shortcut_action)
         self.set_accels_for_action("app.shortcut::uri", ["<Control>l"])
         self.set_accels_for_action("app.shortcut::new_page", ["<Control>t"])
+        self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
         self.set_accels_for_action("app.shortcut::close_page", ["<Control>w"])
         self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("app.shortcut::reload", ["<Control>r"])
@@ -158,7 +159,6 @@ class Application(Gtk.Application):
         """
             Save window position and view
         """
-        self.active_window.container.save_position()
         self.download_manager.cancel()
         self.adblock.stop()
         try:
@@ -268,6 +268,7 @@ class Application(Gtk.Application):
         window.connect('delete-event', self.__on_delete_event)
         window.show()
         self.__windows.append(window)
+        return window
 
     def __restore_state(self):
         """
@@ -312,17 +313,24 @@ class Application(Gtk.Application):
                 active_window.container.add_web_view(uri, True)
             active_window.present()
         elif count == 0:
-            print(active_window.container.current)
-            active_window.container.add_web_view(self.start_page, True)
+            # We already have a window, open a new one
+            if active_window.container.current:
+                window = self.__get_new_window()
+                window.container.add_web_view(self.start_page, True)
+            else:
+                active_window.container.add_web_view(self.start_page, True)
         return 0
 
-    def __on_delete_event(self, widget, event):
+    def __on_delete_event(self, window, event):
         """
             Exit application
-            @param widget as Gtk.Widget
+            @param window as Window
             @param event as Gdk.Event
         """
-        self.prepare_to_exit()
+        window.container.save_position()
+        self.__windows.remove(window)
+        if not self.__windows:
+            self.prepare_to_exit()
 
     def __on_settings_activate(self, action, param):
         """
@@ -434,6 +442,9 @@ class Application(Gtk.Application):
         if string == "uri":
             window.toolbar.title.focus_entry()
         elif string == "new_page":
+            window.container.add_web_view(self.start_page, True)
+        elif string == "new_window":
+            window = self.__get_new_window()
             window.container.add_web_view(self.start_page, True)
         elif string == "close_page":
             window.container.sidebar.close_view(window.container.current)
