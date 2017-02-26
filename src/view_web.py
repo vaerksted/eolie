@@ -448,7 +448,7 @@ class WebView(WebKit2.WebView):
                        _("Failed to load this web page"),
                        _("%s is not available") % uri,
                        _("It may be temporarily inaccessible or moved"
-                         " to a new address. You may wish to verify that"
+                         " to a new address.<br/> You may wish to verify that"
                          " your internet connection is working correctly."),
                        _("Retry"))
         self.load_html(html, None)
