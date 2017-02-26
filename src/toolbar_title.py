@@ -228,7 +228,10 @@ class ToolbarTitle(Gtk.Bin):
         current_text = self.__entry.get_text()
         if current_text == "":
             self.__entry.set_text(self.__uri)
-            self.__placeholder.set_text("")
+            if self.__uri:
+                self.__placeholder.set_text("")
+            else:
+                self.__placeholder.set_text(_("Search or enter address"))
             self.__entry.get_style_context().remove_class('uribar-title')
 
     def _on_leave_notify(self, eventbox, event):
