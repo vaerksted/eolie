@@ -40,7 +40,7 @@ class ClosedMenu(Gio.Menu):
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = self.__app.lookup_action(encoded)
         if action is not None:
-            self.__app.remove_action(action)
+            self.__app.remove_action(encoded)
             action.destroy()
         action = Gio.SimpleAction(name=encoded)
         self.__app.add_action(action)
