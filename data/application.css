@@ -25,13 +25,16 @@
     animation-timing-function: linear;
     animation-delay: 1ms;
 */
+.sidebarchild-spinner {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 20px;
+}
 
 .sidebarchild-title {
     padding: 0px;
-    box-shadow: 1px 1px 3px 3px white;
-    background-color: white;
+    box-shadow: 1px 1px 3px 3px rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.85);
     text-shadow: 1px 1px white;
-    opacity: 0.9;
 }
 
 .sidebarchild-image {
