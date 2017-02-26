@@ -434,6 +434,9 @@ class WebView(WebKit2.WebView):
             @param uri as str
             @param error as GLib.Error
         """
+        # Ignore all others errors
+        if error.code != 2:
+            return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
