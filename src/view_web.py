@@ -216,6 +216,7 @@ class WebView(WebKit2.WebView):
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("web-process-crashed", self.__on_web_process_crashed)
         self.connect("load-changed", self.__on_load_changed)
+        self.connect("load-failed", self.__on_load_failed)
         # We launch Readability.js at page loading finished
         # As Webkit2GTK doesn't allow us to get content from python
         # It sets title with content for one shot, so try to get it here
@@ -223,6 +224,7 @@ class WebView(WebKit2.WebView):
         self.connect("notify::uri", self.__on_uri_changed)
         context = self.get_context()
         context.register_uri_scheme("populars", self.__on_populars_scheme)
+        context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.connect("download-started", self.__on_download_started)
         self.update_zoom_level()
@@ -313,6 +315,16 @@ class WebView(WebKit2.WebView):
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
+
+    def __on_internal_scheme(self, request):
+        """
+            Load an internal resource
+            @param request as WebKit2.URISchemeRequest
+        """
+        # We use internal:/ because resource:/ is already used by WebKit2
+        uri = request.get_uri().replace("internal:/", "resource:/")
+        f = Gio.File.new_for_uri(uri)
+        request.finish(f.read(), -1, "image/svg+xml")
 
     def __on_uri_changed(self, view, uri):
         """
@@ -413,6 +425,34 @@ class WebView(WebKit2.WebView):
                             self.run_javascript_from_gresource(
                                 '/org/gnome/Eolie/%s_adblock.js' % site,
                                 None, None)
+
+    def __on_load_failed(self, view, event, uri, error):
+        """
+            Show error page
+            @param view as WebKit2.WebView
+            @param event as WebKit2.LoadEvent
+            @param uri as str
+            @param error as GLib.Error
+        """
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
+        (status, css_content, tag) = f.load_contents(None)
+        css = css_content.decode("utf-8")
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
+        (status, content, tag) = f.load_contents(None)
+        html = content.decode("utf-8")
+        html = html % (_("Error occured"),
+                       css,
+                       "load_uri('%s')" % uri,
+                       "internal:///org/gnome/Eolie/"
+                       "dialog-information-symbolic.svg",
+                       _("Failed to load this web page"),
+                       _("%s is not available") % uri,
+                       _("It may be temporarily inaccessible or moved"
+                         " to a new address. You may wish to verify that"
+                         " your internet connection is working correctly."),
+                       _("Retry"))
+        self.load_html(html, None)
+        return True
 
     def __on_web_process_crashed(self, view):
         """
