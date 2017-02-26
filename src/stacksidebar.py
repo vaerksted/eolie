@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, GObject, GdkPixbuf, WebKit2
+from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
@@ -139,24 +139,23 @@ class SidebarChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
-    def __get_favicon(self, surface):
+    def __get_favicon(self, favicon):
         """
             Resize surface to match favicon size
-            @param surface as cairo.surface
+            @param favicon as cairo.surface
         """
-        if surface is None:
+        if favicon is None:
             return None
-        pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
-                                             surface.get_width(),
-                                             surface.get_height())
-        scaled = pixbuf.scale_simple(ArtSize.FAVICON,
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                      ArtSize.FAVICON,
-                                     GdkPixbuf.InterpType.BILINEAR)
-        del pixbuf
-        s = Gdk.cairo_surface_create_from_pixbuf(scaled,
-                                                 self.get_scale_factor(), None)
-        del scaled
-        return s
+                                     ArtSize.FAVICON)
+        factor = ArtSize.FAVICON / favicon.get_width()
+        context = cairo.Context(surface)
+        context.scale(factor, factor)
+        context.set_source_surface(favicon, 0, 0)
+        context.paint()
+        del favicon
+        return surface
 
     def __set_favicon(self):
         """
