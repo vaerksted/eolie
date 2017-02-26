@@ -246,10 +246,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param event as WebKit2.LoadEvent
         """
         self.__load_status = event
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__image.clear()
-            self.__snapshot_valid = False
-        elif event == WebKit2.LoadEvent.FINISHED:
+        if event == WebKit2.LoadEvent.FINISHED:
             self.__on_title_changed(view, None)
 
     def __on_scroll_event(self, view, event):
