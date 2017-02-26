@@ -74,6 +74,20 @@
             </style>
           </object>
         </child>
+        <child type="overlay">
+          <object class="GtkProgressBar" id="progress">
+            <property name="can_focus">False</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <style>
+              <class name="progressbar"/>
+              <class name="progressbar-fat"/>
+            </style>
+          </object>
+          <packing>
+            <property name="index">1</property>
+          </packing>
+        </child>
       </object>
     </child>
   </object>

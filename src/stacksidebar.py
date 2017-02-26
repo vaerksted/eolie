@@ -23,7 +23,7 @@ class SidebarChild(Gtk.ListBoxRow):
     """
 
     __gsignals__ = {
-        'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
+        "moved": (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
     }
 
     def __init__(self, view, window):
@@ -38,33 +38,36 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__window = window
         self.__load_status = WebKit2.LoadEvent.FINISHED
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
+        builder.add_from_resource("/org/gnome/Eolie/SidebarChild.ui")
         builder.connect_signals(self)
-        self.__title = builder.get_object('title')
-        self.__image = builder.get_object('image')
-        self.__image_close = builder.get_object('image_close')
-        self.__image_close.set_from_icon_name('applications-internet',
+        self.__progress = builder.get_object("progress")
+        self.__title = builder.get_object("title")
+        self.__image = builder.get_object("image")
+        self.__image_close = builder.get_object("image_close")
+        self.__image_close.set_from_icon_name("applications-internet",
                                               Gtk.IconSize.MENU)
         self.__title.set_label("Empty page")
-        self.add(builder.get_object('widget'))
-        view.webview.connect('notify::favicon', self.__on_notify_favicon)
-        view.webview.connect('scroll-event', self.__on_scroll_event)
-        view.webview.connect('notify::uri', self.__on_uri_changed)
-        view.webview.connect('notify::title', self.__on_title_changed)
-        view.webview.connect('load-changed', self.__on_load_changed)
-        self.get_style_context().add_class('sidebar-item')
+        self.add(builder.get_object("widget"))
+        view.webview.connect("notify::favicon", self.__on_notify_favicon)
+        view.webview.connect("notify::estimated-load-progress",
+                             self.__on_estimated_load_progress)
+        view.webview.connect("scroll-event", self.__on_scroll_event)
+        view.webview.connect("notify::uri", self.__on_uri_changed)
+        view.webview.connect("notify::title", self.__on_title_changed)
+        view.webview.connect("load-changed", self.__on_load_changed)
+        self.get_style_context().add_class("sidebar-item")
 
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
         self.drag_source_add_text_targets()
-        self.connect('drag-begin', self.__on_drag_begin)
-        self.connect('drag-data-get', self.__on_drag_data_get)
+        self.connect("drag-begin", self.__on_drag_begin)
+        self.connect("drag-data-get", self.__on_drag_data_get)
         self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
                            [], Gdk.DragAction.MOVE)
         self.drag_dest_add_text_targets()
-        self.connect('drag-data-received', self.__on_drag_data_received)
-        self.connect('drag-motion', self.__on_drag_motion)
-        self.connect('drag-leave', self.__on_drag_leave)
+        self.connect("drag-data-received", self.__on_drag_data_received)
+        self.connect("drag-motion", self.__on_drag_motion)
+        self.connect("drag-leave", self.__on_drag_leave)
 
     @property
     def view(self):
@@ -73,6 +76,16 @@ class SidebarChild(Gtk.ListBoxRow):
             @return View
         """
         return self.__view
+
+    def show_progress(self, show):
+        """
+            Show progress bar
+            @param show as bool
+        """
+        if show and self.__progress.get_fraction() != 1.0:
+            self.__progress.show()
+        else:
+            self.__progress.hide()
 
     def set_snapshot(self, save):
         """
@@ -116,9 +129,9 @@ class SidebarChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__image_close.set_from_icon_name('close-symbolic',
+        self.__image_close.set_from_icon_name("close-symbolic",
                                               Gtk.IconSize.DIALOG)
-        self.__image_close.get_style_context().add_class('sidebar-close')
+        self.__image_close.get_style_context().add_class("sidebar-close")
 
     def _on_leave_notify(self, eventbox, event):
         """
@@ -132,7 +145,7 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y <= 0 or\
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
-                                                               'sidebar-close')
+                                                               "sidebar-close")
             self.__on_notify_favicon(self.__view.webview, None)
 
 #######################
@@ -163,7 +176,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         surface = self.__get_favicon(self.__view.webview.get_favicon())
         if surface is None:
-            self.__image_close.set_from_icon_name('applications-internet',
+            self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.MENU)
             return
         # We save favicon twice. If user have https://www.google.com as
@@ -177,7 +190,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                       surface, "favicon")
         self.__image_close.set_from_surface(surface)
         del surface
-        self.__image_close.get_style_context().remove_class('sidebar-close')
+        self.__image_close.get_style_context().remove_class("sidebar-close")
         self.__image_close.show()
 
     def __set_snapshot_timeout(self):
@@ -186,6 +199,15 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.__scroll_timeout_id = None
         self.set_snapshot(False)
+
+    def __on_estimated_load_progress(self, webview, value):
+        """
+            Update progress bar
+            @param webview as WebView
+            @param value GparamFloat
+        """
+        value = webview.get_estimated_load_progress()
+        self.__progress.set_fraction(value)
 
     def __on_uri_changed(self, view, uri):
         """
@@ -220,7 +242,7 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_surface(favicon)
             del favicon
         else:
-            self.__image_close.set_from_icon_name('applications-internet',
+            self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.MENU)
 
     def __on_title_changed(self, view, event):
@@ -246,8 +268,13 @@ class SidebarChild(Gtk.ListBoxRow):
             @param event as WebKit2.LoadEvent
         """
         self.__load_status = event
-        if event == WebKit2.LoadEvent.FINISHED:
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__title.set_text(view.get_uri())
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            self.__title.set_text(view.get_uri())
+        elif event == WebKit2.LoadEvent.FINISHED:
             self.__on_title_changed(view, None)
+            self.__progress.hide()
 
     def __on_scroll_event(self, view, event):
         """
@@ -318,7 +345,7 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_icon_name("emote-love-symbolic",
                                                   Gtk.IconSize.MENU)
         elif view.get_favicon() is None:
-            self.__image_close.set_from_icon_name('applications-internet',
+            self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.MENU)
         else:
             self.__set_favicon()
@@ -370,7 +397,7 @@ class SidebarChild(Gtk.ListBoxRow):
             up = True
         try:
             src_widget = data.get_text()
-            self.emit('moved', src_widget, up)
+            self.emit("moved", src_widget, up)
         except:
             pass
 
@@ -385,11 +412,11 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         height = self.get_allocated_height()
         if y > height/2:
-            self.get_style_context().add_class('drag-up')
-            self.get_style_context().remove_class('drag-down')
+            self.get_style_context().add_class("drag-up")
+            self.get_style_context().remove_class("drag-down")
         else:
-            self.get_style_context().remove_class('drag-up')
-            self.get_style_context().add_class('drag-down')
+            self.get_style_context().remove_class("drag-up")
+            self.get_style_context().add_class("drag-down")
 
     def __on_drag_leave(self, widget, context, time):
         """
@@ -398,8 +425,8 @@ class SidebarChild(Gtk.ListBoxRow):
             @param context as Gdk.DragContext
             @param time as int
         """
-        self.get_style_context().remove_class('drag-up')
-        self.get_style_context().remove_class('drag-down')
+        self.get_style_context().remove_class("drag-up")
+        self.get_style_context().remove_class("drag-down")
 
 
 class StackSidebar(Gtk.Grid):
@@ -416,7 +443,7 @@ class StackSidebar(Gtk.Grid):
         self.__window = window
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__search_entry = Gtk.SearchEntry.new()
-        self.__search_entry.connect('search-changed', self._on_search_changed)
+        self.__search_entry.connect("search-changed", self._on_search_changed)
 
         self.__search_entry.show()
         self.__search_bar = Gtk.SearchBar.new()
@@ -430,7 +457,7 @@ class StackSidebar(Gtk.Grid):
         self.__listbox.set_activate_on_single_click(True)
         self.__listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__listbox.show()
-        self.__listbox.connect('row_activated', self.__on_row_activated)
+        self.__listbox.connect("row_activated", self.__on_row_activated)
         self.__scrolled.add(self.__listbox)
         self.add(self.__scrolled)
 
@@ -460,11 +487,13 @@ class StackSidebar(Gtk.Grid):
         visible = self.__window.container.current
         for child in self.__listbox.get_children():
             if child.view == visible:
-                child.get_style_context().add_class('sidebar-item-selected')
+                child.show_progress(False)
+                child.get_style_context().add_class("sidebar-item-selected")
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_row, child)
             else:
-                child.get_style_context().remove_class('sidebar-item-selected')
+                child.show_progress(True)
+                child.get_style_context().remove_class("sidebar-item-selected")
 
     def set_filtered(self, b):
         """
@@ -473,7 +502,7 @@ class StackSidebar(Gtk.Grid):
         """
         if b:
             self.__search_entry.grab_focus()
-            self.__search_entry.connect('key-press-event',
+            self.__search_entry.connect("key-press-event",
                                         self.__on_key_press)
             self.__listbox.set_filter_func(self.__filter_func)
         else:
@@ -646,7 +675,7 @@ class StackSidebar(Gtk.Grid):
             @param event as Gdk.Event
         """
         if event.keyval == Gdk.KEY_Escape:
-            self.__search_entry.set_text('')
+            self.__search_entry.set_text("")
             self.__window.toolbar.actions.filter_button.set_active(False)
             return True
 
