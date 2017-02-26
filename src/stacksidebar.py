@@ -36,13 +36,11 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__scroll_timeout_id = None
         self.__view = view
         self.__window = window
-        self.__uri = ""
         self.__load_status = WebKit2.LoadEvent.FINISHED
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/SidebarChild.ui')
         builder.connect_signals(self)
         self.__title = builder.get_object('title')
-        self.__uri = builder.get_object('uri')
         self.__image = builder.get_object('image')
         self.__image_close = builder.get_object('image_close')
         self.__image_close.set_from_icon_name('applications-internet',
@@ -195,12 +193,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param uri as str
         """
-        # Some uri update may not change title
         uri = view.get_uri()
-        if strip_uri(uri) != strip_uri(self.__uri):
-            self.__title.set_text(uri)
-        self.__uri = uri
-
         # Just set icon if special schemes
         if uri == "populars://":
             self.__image_close.set_from_icon_name("emote-love-symbolic",
@@ -209,7 +202,7 @@ class SidebarChild(Gtk.ListBoxRow):
 
         # We are not filtered
         if self.get_allocated_width() != 1:
-            preview = El().art.get_artwork(view.get_uri(),
+            preview = El().art.get_artwork(uri,
                                            "preview",
                                            view.get_scale_factor(),
                                            self.get_allocated_width() -
@@ -218,9 +211,7 @@ class SidebarChild(Gtk.ListBoxRow):
             if preview is not None:
                 self.__image.set_from_surface(preview)
                 del preview
-            else:
-                self.__image.clear()
-        favicon = El().art.get_artwork(view.get_uri(),
+        favicon = El().art.get_artwork(uri,
                                        "favicon",
                                        view.get_scale_factor(),
                                        ArtSize.FAVICON,
@@ -256,9 +247,10 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.__load_status = event
         if event == WebKit2.LoadEvent.STARTED:
+            self.__image.clear()
             self.__snapshot_valid = False
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__on_title_changed(view, event)
+            self.__on_title_changed(view, None)
 
     def __on_scroll_event(self, view, event):
         """
