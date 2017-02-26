@@ -46,6 +46,8 @@ class ClosedMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_action_clicked,
                        (uri, state))
+        if len(title) > 60:
+            title = title[0:60] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
         # Try to set icon
