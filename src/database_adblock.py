@@ -14,7 +14,7 @@ from gi.repository import Soup, Gio, GLib
 
 from urllib.parse import urlparse
 import sqlite3
-from time import time, sleep
+from time import time
 from threading import Thread
 
 from eolie.sqlcursor import SqlCursor
@@ -158,9 +158,19 @@ class DatabaseAdblock:
         """
             Update database
         """
+        # Get in db mtime
+        # Only update if filters older than one week
+        mtime = 0
+        with SqlCursor(self) as sql:
+                result = sql.execute("SELECT mtime FROM adblock LIMIT 1")
+                v = result.fetchone()
+                if v is not None:
+                    mtime = v[0]
+        self.__mtime = int(time())
+        if self.__mtime - mtime < 604800:
+            return
         self.__stop = False
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__mtime = int(time())
             self.__thread = Thread(target=self.__update)
             self.__thread.daemon = True
             self.__thread.start()
@@ -226,7 +236,6 @@ class DatabaseAdblock:
                 for line in result.split('\n'):
                     if self.__cancellable.is_cancelled() or self.__stop:
                         raise IOError("Cancelled")
-                    sleep(0.1)
                     if line.startswith('#'):
                         continue
                     array = line.replace(
@@ -237,17 +246,10 @@ class DatabaseAdblock:
                                        ' ', '').replace('\r', '').split('#')[0]
                     # Update entry if exists, create else
                     with SqlCursor(self) as sql:
-                        result = sql.execute("SELECT mtime FROM adblock\
-                                              WHERE dns=?", (dns,))
-                        v = result.fetchone()
-                        if v is not None:
-                            sql.execute("UPDATE adblock set mtime=?\
-                                         WHERE dns=?", (self.__mtime, dns))
-                        else:
-                            sql.execute("INSERT INTO adblock\
-                                              (dns, mtime)\
-                                              VALUES (?, ?)",
-                                        (dns, self.__mtime))
+                        sql.execute("INSERT INTO adblock\
+                                          (dns, mtime)\
+                                          VALUES (?, ?)",
+                                    (dns, self.__mtime))
                         count += 1
                         if count == 1000:
                             sql.commit()
