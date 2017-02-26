@@ -64,9 +64,21 @@ class Container(Gtk.Paned):
         if uri is not None:
             # Do not load uri until we are on screen
             GLib.idle_add(view.webview.load_uri, uri)
-        self.__stack.add(view)
         if show:
+            self.__stack.add(view)
             self.__stack.set_visible_child(view)
+        else:
+            # Little hack, we force webview to be shown (offscreen)
+            # This allow getting snapshots from webkit
+            window = Gtk.OffscreenWindow.new()
+            width = self.get_allocated_width() -\
+                self.__stack_sidebar.get_allocated_width()
+            view.set_size_request(width, self.get_allocated_height())
+            window.add(view)
+            window.show()
+            window.remove(view)
+            view.set_size_request(-1, -1)
+            self.__stack.add(view)
         self.__stack_sidebar.update_visible_child()
 
     def load_uri(self, uri):
