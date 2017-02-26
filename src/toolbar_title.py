@@ -73,7 +73,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__readable.show()
         else:
             self.__readable.hide()
-        GLib.idle_add(self.__update_margins)
 
     def set_width(self, width):
         """
@@ -402,6 +401,13 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         eventbox.set_opacity(0.8)
+
+    def _on_readable_map_unmap(self, eventbox):
+        """
+            Update margins
+            @param eventbox as Gtk.EventBox
+        """
+        GLib.idle_add(self.__update_margins)
 
     def _on_populate_popup(self, entry, menu):
         """
