@@ -10,8 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
+from eolie.menu_history import HistoryMenu
 from eolie.define import El
 
 
@@ -27,6 +28,7 @@ class ToolbarActions(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
+        self.__timeout_id = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarActions.ui")
         builder.connect_signals(self)
@@ -80,21 +82,51 @@ class ToolbarActions(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_back_button_clicked(self, button):
+    def _on_back_button_press_event(self, button, event):
+        """
+            Launch history menu after timeout
+            @param button as Gtk.Button
+            @param event as Gdk.event
+        """
+        button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
+        self.__window.toolbar.title.hide_popover()
+        self.__timeout_id = GLib.timeout_add(500,
+                                             self.__on_back_history_timeout)
+        return True
+
+    def _on_back_button_release_event(self, button, event):
         """
             Go backward on current view
             @param button as Gtk.Button
+            @param event as Gdk.event
         """
-        self.__window.container.current.webview.go_back()
-        self.__window.toolbar.title.hide_popover()
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
+            self.__timeout_id = None
+            self.__window.container.current.webview.go_back()
 
-    def _on_forward_button_clicked(self, button):
+    def _on_forward_button_press_event(self, button, event):
+        """
+            Launch history menu after timeout
+            @param button as Gtk.Button
+            @param event as Gdk.event
+        """
+        button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
+        self.__window.toolbar.title.hide_popover()
+        self.__timeout_id = GLib.timeout_add(500,
+                                             self.__on_forward_history_timeout)
+        return True
+
+    def _on_forward_button_release_event(self, button, event):
         """
             Go forward on current view
             @param button as Gtk.Button
+            @param event as Gdk.event
         """
-        self.__window.container.current.webview.go_forward()
-        self.__window.toolbar.title.hide_popover()
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
+            self.__timeout_id = None
+            self.__window.container.current.webview.go_forward()
 
     def _on_new_button_clicked(self, button):
         """
@@ -111,3 +143,40 @@ class ToolbarActions(Gtk.Bin):
         """
         self.__window.container.sidebar.set_filtered(button.get_active())
         self.__window.toolbar.title.hide_popover()
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_popover_closed(self, popover, model):
+        """
+            Clear menu actions
+            @param popover
+            @param model as HistoryMenu
+        """
+        model.remove_actions()
+
+    def __on_back_history_timeout(self):
+        """
+            Show back history
+        """
+        self.__timeout_id = None
+        current = self.__window.container.current.webview
+        back_list = current.get_back_forward_list().get_back_list()
+        if back_list:
+            model = HistoryMenu(El(), back_list)
+            popover = Gtk.Popover.new_from_model(self.__backward, model)
+            popover.connect("closed", self.__on_popover_closed, model)
+            popover.show()
+
+    def __on_forward_history_timeout(self):
+        """
+            Show forward history
+        """
+        self.__timeout_id = None
+        current = self.__window.container.current.webview
+        forward_list = current.get_back_forward_list().get_forward_list()
+        if forward_list:
+            model = HistoryMenu(El(), forward_list)
+            popover = Gtk.Popover.new_from_model(self.__forward, model)
+            popover.connect("closed", self.__on_popover_closed, model)
+            popover.show()

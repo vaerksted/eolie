@@ -51,7 +51,8 @@
             <property name="valign">center</property>
             <property name="image">image1</property>
             <property name="always_show_image">True</property>
-            <signal name="clicked" handler="_on_back_button_clicked" swapped="no"/>
+            <signal name="button-press-event" handler="_on_back_button_press_event" swapped="no"/>
+            <signal name="button-press-event" handler="_on_back_button_release_event" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -70,7 +71,8 @@
             <property name="valign">center</property>
             <property name="image">image2</property>
             <property name="always_show_image">True</property>
-            <signal name="clicked" handler="_on_forward_button_clicked" swapped="no"/>
+            <signal name="button-press-event" handler="_on_forward_button_press_event" swapped="no"/>
+            <signal name="button-press-event" handler="_on_forward_button_release_event" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
