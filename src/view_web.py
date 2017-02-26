@@ -399,6 +399,11 @@ class WebView(WebKit2.WebView):
         if event == WebKit2.LoadEvent.STARTED:
             self.set_setting("auto-load-images",
                              not El().settings.get_value("imgblock"))
+        elif event == WebKit2.LoadEvent.FINISHED:
+            if El().settings.get_value("adblock") and\
+                    view.get_uri().find("facebook.com") != -1:
+                self.run_javascript_from_gresource(
+                            '/org/gnome/Eolie/Facebook_adblock.js', None, None)
 
     def __on_web_process_crashed(self, view):
         """
