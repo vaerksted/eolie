@@ -49,6 +49,13 @@ class ClosedMenu(Gio.Menu):
                        (uri, state))
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
+        # Try to set icon
+        try:
+            f = Gio.File.new_for_path(self.__app.art.get_path(uri, "favicon"))
+            icon = Gio.FileIcon.new(f)
+            item.set_icon(icon)
+        except:
+            pass
         self.append_item(item)
         self.__update_toolbar_actions()
 
