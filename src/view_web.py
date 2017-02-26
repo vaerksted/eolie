@@ -17,7 +17,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import El, LOGINS, PASSWORDS
-from eolie.utils import get_current_monitor_model
+from eolie.utils import get_current_monitor_model, get_ftp_cmd
 
 
 class WebView(WebKit2.WebView):
@@ -76,8 +76,14 @@ class WebView(WebKit2.WebView):
         self.__cancellable.cancel()
         self.__cancellable.reset()
         parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "file",
-                                 "populars", "accept"]:
+        # We are not a ftp browser, fall back to env
+        if parsed.scheme == "ftp":
+            argv = [get_ftp_cmd(), uri, None]
+            GLib.spawn_sync(None, argv, None,
+                            GLib.SpawnFlags.SEARCH_PATH, None)
+            return
+        elif parsed.scheme not in ["http", "https", "file",
+                                   "populars", "accept"]:
             uri = "http://" + uri
         # Reset bad tls certificate
         elif parsed.scheme != "accept":

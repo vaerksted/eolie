@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gdk
+from gi.repository import Gdk, GLib
 
 import unicodedata
 from urllib.parse import urlparse
@@ -37,6 +37,17 @@ def noaccents(string):
         """
         nfkd_form = unicodedata.normalize('NFKD', string)
         return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
+
+def get_ftp_cmd():
+    """
+        Try to guess best ftp app
+        @return app cmd as str
+    """
+    for app in ["filezilla", "nautilus", "thunar", "nemo", "true"]:
+        cmd = GLib.find_program_in_path(app)
+        if cmd is not None:
+            return cmd
 
 
 def debug(str):
