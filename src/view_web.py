@@ -356,10 +356,11 @@ class WebView(WebKit2.WebView):
 
     def __on_uri_changed(self, view, uri):
         """
-            Clear readable version
+            Clear readable context and title
             @param view as WebKit2.WebView
             @param uri as GParamSpec
         """
+        self.__title = ""
         if view.get_uri() != "about:blank":
             self.__readable_content = ""
             self.__in_read_mode = False
@@ -443,6 +444,9 @@ class WebView(WebKit2.WebView):
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
                 uri = view.get_uri()
+                # We need to send a title if non exists
+                if not self.__title:
+                    self.emit("title-changed", uri)
                 for site in ["facebook.com"]:
                     if uri.find(site) != -1:
                         parsed = urlparse(uri)
