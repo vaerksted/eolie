@@ -308,7 +308,7 @@ class Container(Gtk.Paned):
         if title:
             uri = webview.get_uri()
             parsed = urlparse(uri)
-            if parsed.scheme in ["http", "https", "file"]:
+            if parsed.scheme in ["http", "https"]:
                 El().history.add(title, uri)
 
     def __on_enter_fullscreen(self, webview):
