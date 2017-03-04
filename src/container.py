@@ -226,7 +226,8 @@ class Container(Gtk.Paned):
             Show readable button in titlebar
             @param webview as WebView
         """
-        self.__window.toolbar.title.show_readable_button(True)
+        if webview == self.current.webview:
+            self.__window.toolbar.title.show_readable_button(True)
 
     def __on_view_map(self, webview):
         """
