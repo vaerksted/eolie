@@ -78,8 +78,8 @@ class DatabaseHistory:
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
             if v is not None:
-                sql.execute("UPDATE history set atime=?, popularity=?\
-                             WHERE uri=?", (int(time()), v[0]+1, uri))
+                sql.execute("UPDATE history set atime=?, title=?, popularity=?\
+                             WHERE uri=?", (int(time()), title, v[0]+1, uri))
             else:
                 sql.execute("INSERT INTO history\
                                   (title, uri, atime, popularity)\
