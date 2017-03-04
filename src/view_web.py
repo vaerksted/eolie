@@ -250,7 +250,8 @@ class WebView(WebKit2.WebView):
         system = Gio.Settings.new("org.gnome.desktop.interface")
         document_font_name = system.get_value("document-font-name").get_string(
                                                                               )
-        self.__document_font_size = document_font_name[-2:] + "pt"
+        self.__document_font_size = str(
+                                    int(document_font_name[-2:]) * 1.3) + "pt"
         settings.set_property(
                         "monospace-font-family",
                         system.get_value("monospace-font-name").get_string())
