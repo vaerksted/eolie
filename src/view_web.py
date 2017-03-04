@@ -31,6 +31,7 @@ class WebView(WebKit2.WebView):
     # If you add a signal here, you need to update new_with_related_view()
     __gsignals__ = {
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
@@ -178,6 +179,7 @@ class WebView(WebKit2.WebView):
         self.__cancellable = Gio.Cancellable()
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
+        self.__title = ""
         self.__document_font_size = "14pt"
         self.__bad_tls = None  # Keep bad TLS certificate
         self.set_hexpand(True)
@@ -372,21 +374,22 @@ class WebView(WebKit2.WebView):
             @param event as  GParamSpec
         """
         if event.name != "title":
-            return True
+            return
         title = webview.get_title()
-        if not title:
-            return True
+        if not title or title == self.__title:
+            return
         if title.startswith("@&$%ù²"):
             self.__readable_content = title.replace("@&$%ù²", "")
             self.emit("readable")
-            return True
+            return
         else:
+            self.__title = title
+            self.emit("title-changed", title)
             if self.__js_timeout is None and not self.__in_read_mode:
                 self.__js_timeout = GLib.timeout_add(
                                  2000,
                                  self.run_javascript_from_gresource,
                                  '/org/gnome/Eolie/Readability.js', None, None)
-        return False
 
     def __on_run_as_modal(self, view):
         """

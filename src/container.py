@@ -31,7 +31,6 @@ class Container(Gtk.Paned):
         """
         Gtk.Paned.__init__(self)
         self.__window = window
-        self.__load_status = WebKit2.LoadEvent.FINISHED
         self.set_position(
             El().settings.get_value("paned-width").get_int32())
         self.connect("notify::position", self.__on_notify_position)
@@ -151,7 +150,7 @@ class Container(Gtk.Paned):
         view.webview.connect("load-changed", self.__on_load_changed)
         view.webview.connect("button-press-event", self.__on_button_press)
         view.webview.connect("notify::uri", self.__on_uri_changed)
-        view.webview.connect("notify::title", self.__on_title_changed)
+        view.webview.connect("title-changed", self.__on_title_changed)
         view.webview.connect("enter-fullscreen", self.__on_enter_fullscreen)
         view.webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
         view.webview.connect("readable", self.__on_readable)
@@ -288,28 +287,20 @@ class Container(Gtk.Paned):
             if title:
                 self.__window.toolbar.title.set_title(title)
 
-    def __on_title_changed(self, webview, event):
+    def __on_title_changed(self, webview, title):
         """
             Update title
             @param webview as WebView
-            @param event as  GParamSpec
+            @param title as str
         """
-        if self.__load_status == WebKit2.LoadEvent.STARTED:
-            return True
-        title = webview.get_title()
-        if not title:
-            title = webview.get_uri()
-        if title.startswith("@&$%ù²"):
-            return True
         if webview == self.current.webview:
             self.__window.toolbar.title.set_title(title)
             self.__window.toolbar.actions.set_actions(webview)
         # Update history
-        if title:
-            uri = webview.get_uri()
-            parsed = urlparse(uri)
-            if parsed.scheme in ["http", "https"]:
-                El().history.add(title, uri)
+        uri = webview.get_uri()
+        parsed = urlparse(uri)
+        if parsed.scheme in ["http", "https"]:
+            El().history.add(title, uri)
 
     def __on_enter_fullscreen(self, webview):
         """
@@ -338,7 +329,6 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.__load_status = event
         self.__window.toolbar.title.on_load_changed(webview, event)
         if event == WebKit2.LoadEvent.STARTED:
             if webview == self.current.webview:
@@ -346,7 +336,6 @@ class Container(Gtk.Paned):
         elif event == WebKit2.LoadEvent.COMMITTED:
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__on_title_changed(webview, event)
             if webview == self.current.webview:
                 if not self.__window.toolbar.title.focus_in:
                     if webview.get_uri() == "populars://":
