@@ -548,7 +548,7 @@ class UriPopover(Gtk.Popover):
         """
         self.__input = Input.NONE
         now = datetime.now()
-        self.__calendar.select_month(now.month, now.year)
+        self.__calendar.select_month(now.month - 1, now.year)
         self.__calendar.select_day(now.day)
 
     def _on_close_map(self, widget):
@@ -584,7 +584,7 @@ class UriPopover(Gtk.Popover):
             @param calendar as Gtk.Calendar
         """
         (year, month, day) = calendar.get_date()
-        date = "%s/%s/%s" % (day, month, year)
+        date = "%s/%s/%s" % (day, month + 1, year)
         mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
         result = El().history.get(mtime)
         self.__history_model.remove_all()
