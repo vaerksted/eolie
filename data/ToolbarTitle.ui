@@ -49,7 +49,7 @@
             <property name="margin_right">5</property>
             <property name="vexpand">True</property>
             <property name="column_spacing">5</property>
-            <signal name="map" handler="_on_map" swapped="no"/>
+            <signal name="size-allocate" handler="_on_icon_grid_size_allocate" swapped="no"/>
             <child>
               <object class="GtkSeparator">
                 <property name="visible">True</property>
@@ -117,8 +117,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="icon_name">view-dual-symbolic</property>
-                    <signal name="map" handler="_on_readable_map_unmap" swapped="no"/>
-                    <signal name="unmap" handler="_on_readable_map_unmap" swapped="no"/>
                   </object>
                 </child>
               </object>

@@ -52,7 +52,6 @@ class ToolbarTitle(Gtk.Bin):
         # Bookmarks/Clear
         self.__action_image2 = builder.get_object("action_image2")
         self.__readable_image = builder.get_object("readable_image")
-        self.__icon_grid = builder.get_object("icon_grid")
         self.add(builder.get_object("widget"))
         # Some on the fly css styling
         context = self.__entry.get_style_context()
@@ -218,12 +217,6 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_map(self, grid):
-        """
-            Update entry padding
-        """
-        self.__update_margins()
-
     def _on_enter_notify(self, eventbox, event):
         """
             Show uri
@@ -402,13 +395,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         eventbox.set_opacity(0.8)
 
-    def _on_readable_map_unmap(self, eventbox):
-        """
-            Update margins
-            @param eventbox as Gtk.EventBox
-        """
-        GLib.idle_add(self.__update_margins)
-
     def _on_populate_popup(self, entry, menu):
         """
             Replace menu with a popover
@@ -431,6 +417,29 @@ class ToolbarTitle(Gtk.Bin):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
 
+    def _on_icon_grid_size_allocate(self, grid, allocation):
+        """
+            Update margins
+            @param grid as Gtk.Grid
+            @param allocation as Gtk.Allocation
+        """
+        style = self.__entry.get_style_context()
+        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
+        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
+        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
+        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
+        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
+        css = ".progressbar { margin-bottom: %spx;\
+               margin-left: %spx;\
+               margin-right: %spx; }" % (margin_bottom,
+                                         margin_start + border,
+                                         margin_end + border)
+        # 5 is grid margin (see ui file)
+        css += ".uribar { padding-right: %spx; }" % (allocation.width + 5)
+        self.__css_provider.load_from_data(css.encode("utf-8"))
+        # 22 is Gtk.EntryIconPosition.PRIMARY
+        self.__placeholder.set_margin_start(padding_start + 22 + border)
+
 #######################
 # PRIVATE             #
 #######################
@@ -450,28 +459,6 @@ class ToolbarTitle(Gtk.Bin):
                                                  "system-search-symbolic")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                "")
-
-    def __update_margins(self):
-        """
-            Update margins
-        """
-        style = self.__entry.get_style_context()
-        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
-        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
-        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
-        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
-        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
-        css = ".progressbar { margin-bottom: %spx;\
-               margin-left: %spx;\
-               margin-right: %spx; }" % (margin_bottom,
-                                         margin_start + border,
-                                         margin_end + border)
-        # 5 is grid margin (see ui file)
-        width = self.__icon_grid.get_allocated_width()
-        css += ".uribar { padding-right: %spx; }" % (width + 5)
-        self.__css_provider.load_from_data(css.encode("utf-8"))
-        # 22 is Gtk.EntryIconPosition.PRIMARY
-        self.__placeholder.set_margin_start(padding_start + 22 + border)
 
     def __search_keywords_thread(self, value):
         """
