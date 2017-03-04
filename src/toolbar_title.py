@@ -243,10 +243,12 @@ class ToolbarTitle(Gtk.Bin):
            event.y <= 0 or\
            event.y >= allocation.height:
             self.__in_notify = False
-            if self.__entry.get_text() and\
-                    not self.__lock:
+            if not self.__entry.get_text():
+                self.__placeholder.set_text(_("Search or enter address"))
+            if not self.__lock:
+                if self.__title:
+                    self.__placeholder.set_text(self.__title)
                 self.__entry.set_text("")
-                self.__placeholder.set_text(self.__title)
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def _on_entry_focus_in(self, entry, event):
