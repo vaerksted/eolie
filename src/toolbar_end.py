@@ -44,6 +44,7 @@ class ToolbarEnd(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__timeout_id = None
+        self.set_hexpand(True)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarEnd.ui")
         builder.connect_signals(self)

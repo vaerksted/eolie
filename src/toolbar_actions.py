@@ -34,7 +34,7 @@ class ToolbarActions(Gtk.Bin):
         builder.connect_signals(self)
 
         self.add(builder.get_object("actions"))
-
+        self.set_hexpand(True)
         self.__backward = builder.get_object("back_button")
         self.__forward = builder.get_object("forward_button")
         self.__filter = builder.get_object("filter_button")

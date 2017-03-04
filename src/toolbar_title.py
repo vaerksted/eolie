@@ -132,11 +132,12 @@ class ToolbarTitle(Gtk.Bin):
             Show title instead of uri
         """
         if title:
-            self.__entry.set_placeholder_text(title)
+            self.__title = title
             if not self.__lock and\
                     not self.__in_notify and\
                     not self.__popover.is_visible():
                 self.__entry.set_text("")
+                self.__placeholder.set_text(title)
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def hide_popover(self):
@@ -227,6 +228,7 @@ class ToolbarTitle(Gtk.Bin):
         current_text = self.__entry.get_text()
         if current_text == "":
             self.__entry.set_text(self.__uri)
+            self.__placeholder.set_text("")
             self.__entry.get_style_context().remove_class('uribar-title')
 
     def _on_leave_notify(self, eventbox, event):
@@ -241,10 +243,10 @@ class ToolbarTitle(Gtk.Bin):
            event.y <= 0 or\
            event.y >= allocation.height:
             self.__in_notify = False
-            if self.__entry.get_placeholder_text() and\
-                    self.__entry.get_text() and\
+            if self.__entry.get_text() and\
                     not self.__lock:
                 self.__entry.set_text("")
+                self.__placeholder.set_text(self.__title)
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def _on_entry_focus_in(self, entry, event):
@@ -260,8 +262,11 @@ class ToolbarTitle(Gtk.Bin):
                                                 self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        if not self.__entry.get_text():
-            self.__placeholder.show()
+        if self.__uri:
+            self.__placeholder.set_text("")
+            self.__entry.set_text(self.__uri)
+        else:
+            self.__placeholder.set_text(_("Search or enter address"))
         self.__update_secure_content_indicator()
 
     def _on_entry_focus_out(self, entry, event):
@@ -276,8 +281,9 @@ class ToolbarTitle(Gtk.Bin):
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
             self.__signal_id = None
-        if self.__entry.get_placeholder_text():
+        if self.__title:
             self.__entry.set_text("")
+            self.__placeholder.set_text(self.__title)
             self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
         view = self.__window.container.current
@@ -289,7 +295,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
         self.__update_secure_content_indicator()
-        self.__placeholder.hide()
 
     def _on_button_press_event(self, entry, event):
         """
@@ -402,7 +407,6 @@ class ToolbarTitle(Gtk.Bin):
             @param menu as Gtk.Menu
         """
         self.__prevent_focus_out = True
-        self.__placeholder.hide()
         menu.connect("unmap", self.__on_menu_unmap)
 
     def _on_activate(self, entry):
@@ -497,22 +501,20 @@ class ToolbarTitle(Gtk.Bin):
             On menu unmap
         """
         self.__prevent_focus_out = False
-        if not self.__entry.get_text():
-            self.__placeholder.show()
 
     def __on_entry_changed(self, entry):
         """
             Update popover search if needed
         """
         value = entry.get_text()
-        if value:
-            self.__placeholder.hide()
-        else:
-            self.__placeholder.show()
         if value == self.__uri:
             self.__popover.set_search_text("")
         else:
             self.__popover.set_search_text(value)
+        if value:
+            self.__placeholder.set_text("")
+        else:
+            self.__placeholder.set_text(_("Search or enter address"))
         if not self.__popover.is_visible():
             self.__popover.show()
         if self.__keywords_timeout is not None:

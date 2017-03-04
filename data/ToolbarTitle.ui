@@ -26,6 +26,120 @@
             </style>
           </object>
           <packing>
+            <property name="index">1</property>
+          </packing>
+        </child>
+        <child type="overlay">
+          <object class="GtkGrid" id="grid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkGrid" id="icon_grid">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">5</property>
+                <property name="column_spacing">5</property>
+                <signal name="size-allocate" handler="_on_icon_grid_size_allocate" swapped="no"/>
+                <child>
+                  <object class="GtkSeparator">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="vexpand">True</property>
+                    <property name="orientation">vertical</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEventBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="opacity">0.80000000000000004</property>
+                    <signal name="button-press-event" handler="_on_action1_press" swapped="no"/>
+                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                    <child>
+                      <object class="GtkImage" id="action_image1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="vexpand">True</property>
+                        <property name="icon_name">view-refresh-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">3</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEventBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="opacity">0.80000000000000004</property>
+                    <signal name="button-press-event" handler="_on_action2_press" swapped="no"/>
+                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                    <child>
+                      <object class="GtkImage" id="action_image2">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="icon_name">non-starred-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEventBox" id="readable">
+                    <property name="can_focus">False</property>
+                    <property name="opacity">0.80000000000000004</property>
+                    <signal name="button-press-event" handler="_on_readable_press" swapped="no"/>
+                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                    <child>
+                      <object class="GtkImage" id="readable_image">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="icon_name">view-dual-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="placeholder">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="opacity">0.8</property>
+                <property name="halign">start</property>
+                <property name="hexpand">True</property>
+                <property name="ellipsize">end</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="pass_through">True</property>
             <property name="index">-1</property>
           </packing>
         </child>
@@ -38,111 +152,7 @@
             </style>
           </object>
           <packing>
-            <property name="index">1</property>
-          </packing>
-        </child>
-        <child type="overlay">
-          <object class="GtkGrid" id="icon_grid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="halign">end</property>
-            <property name="margin_right">5</property>
-            <property name="vexpand">True</property>
-            <property name="column_spacing">5</property>
-            <signal name="size-allocate" handler="_on_icon_grid_size_allocate" swapped="no"/>
-            <child>
-              <object class="GtkSeparator">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="vexpand">True</property>
-                <property name="orientation">vertical</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEventBox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="opacity">0.80000000000000004</property>
-                <signal name="button-press-event" handler="_on_action1_press" swapped="no"/>
-                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
-                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
-                <child>
-                  <object class="GtkImage" id="action_image1">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="vexpand">True</property>
-                    <property name="icon_name">view-refresh-symbolic</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">3</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEventBox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="opacity">0.80000000000000004</property>
-                <signal name="button-press-event" handler="_on_action2_press" swapped="no"/>
-                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
-                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
-                <child>
-                  <object class="GtkImage" id="action_image2">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="icon_name">non-starred-symbolic</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEventBox" id="readable">
-                <property name="can_focus">False</property>
-                <property name="opacity">0.80000000000000004</property>
-                <signal name="button-press-event" handler="_on_readable_press" swapped="no"/>
-                <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
-                <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
-                <child>
-                  <object class="GtkImage" id="readable_image">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="icon_name">view-dual-symbolic</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="index">1</property>
-          </packing>
-        </child>
-        <child type="overlay">
-          <object class="GtkLabel" id="placeholder">
-            <property name="can_focus">False</property>
-            <property name="halign">start</property>
-            <property name="label" translatable="yes">Search or enter address</property>
-            <property name="ellipsize">end</property>
-            <style>
-              <class name="dim-label"/>
-            </style>
-          </object>
-          <packing>
-            <property name="pass_through">True</property>
-            <property name="index">4</property>
+            <property name="index">-1</property>
           </packing>
         </child>
       </object>
