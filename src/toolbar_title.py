@@ -103,7 +103,7 @@ class ToolbarTitle(Gtk.Bin):
 
         if not self.__popover.is_visible():
             self.__entry.set_text(uri)
-        self.__entry.set_placeholder_text("")
+        self.__placeholder.set_text("")
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__uri = uri
         self.__update_secure_content_indicator()
