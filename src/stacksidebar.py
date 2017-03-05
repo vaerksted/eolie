@@ -36,7 +36,6 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__scroll_timeout_id = None
         self.__view = view
         self.__window = window
-        self.__load_status = WebKit2.LoadEvent.FINISHED
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SidebarChild.ui")
         builder.connect_signals(self)
@@ -51,7 +50,7 @@ class SidebarChild(Gtk.ListBoxRow):
         view.webview.connect("notify::favicon", self.__on_notify_favicon)
         view.webview.connect("scroll-event", self.__on_scroll_event)
         view.webview.connect("notify::uri", self.__on_uri_changed)
-        view.webview.connect("notify::title", self.__on_title_changed)
+        view.webview.connect("title-changed", self.__on_title_changed)
         view.webview.connect("load-changed", self.__on_load_changed)
         self.get_style_context().add_class("sidebar-item")
 
@@ -223,19 +222,12 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.MENU)
 
-    def __on_title_changed(self, view, event):
+    def __on_title_changed(self, view, title):
         """
             Update title
             @param view as WebView
-            @param event as GParamSpec
+            @param title as str
         """
-        if self.__load_status != WebKit2.LoadEvent.FINISHED:
-            return True
-        title = view.get_title()
-        if not title:
-            title = view.get_uri()
-        if title.startswith("@&$%ù²"):
-            return True
         self.__title.set_text(title)
         GLib.timeout_add(500, self.set_snapshot, True)
 
@@ -245,7 +237,6 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.__load_status = event
         uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
             self.__spinner.start()
@@ -256,7 +247,6 @@ class SidebarChild(Gtk.ListBoxRow):
                 self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            self.__on_title_changed(view, None)
 
     def __on_scroll_event(self, view, event):
         """
