@@ -56,6 +56,7 @@ class WebView(WebKit2.WebView):
         gsignals = {
             "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
             "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+            "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
             "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                     str,
                                                                     str))
