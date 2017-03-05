@@ -31,6 +31,8 @@ class Item(GObject.GObject):
                            default="")
     atime = GObject.Property(type=int,
                              default=0)
+    search = GObject.Property(type=str,
+                              default="")
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -53,6 +55,7 @@ class Row(Gtk.ListBoxRow):
         """
         self.__item = item
         self.__window = window
+        self.__search = ""
         eventbox = None
         favicon = None
         Gtk.ListBoxRow.__init__(self)
@@ -359,7 +362,6 @@ class UriPopover(Gtk.Popover):
             Set search model
             @param search as str
         """
-        self.__search_model.remove_all()
         self.__set_search_text(search)
         self.__stack.set_visible_child_name("search")
 
@@ -374,6 +376,7 @@ class UriPopover(Gtk.Popover):
         item.set_property("type", Type.KEYWORDS)
         item.set_property("title", words)
         item.set_property("uri", El().search.get_search_uri(words))
+        item.set_property("search", self.__search)
         self.__search_model.append(item)
 
     def forward_event(self, event):
@@ -606,17 +609,30 @@ class UriPopover(Gtk.Popover):
         """
             Add searches to model
             @param [(title, uri)] as [(str, str)]
-            @internal added
         """
         if searches:
             (title, uri) = searches.pop(0)
+            for child in self.__search_box.get_children():
+                if child.item.get_property("uri") == uri:
+                    child.item.set_property("search", self.__search)
+                    GLib.idle_add(self.__add_searches, searches)
+                    return
             item = Item()
             item.set_property("type", Type.SEARCH)
             item.set_property("title", title)
             item.set_property("uri", uri)
-            added.append(uri)
+            item.set_property("search", self.__search)
             self.__search_model.append(item)
-            GLib.idle_add(self.__add_searches, searches, added)
+            GLib.idle_add(self.__add_searches, searches)
+        else:
+            n_items = self.__search_model.get_n_items()
+            to_remove = []
+            for i in range(0, n_items):
+                item = self.__search_model.get_item(i)
+                if item.get_property("search") != self.__search:
+                    to_remove.append(i)
+            for i in reversed(to_remove):
+                self.__search_model.remove(i)
 
     def __add_bookmarks(self, bookmarks):
         """
@@ -695,6 +711,7 @@ class UriPopover(Gtk.Popover):
             Set search model
             @param search as str
         """
+        self.__search = search
         if search == '':
             result = El().history.search(search, 50)
         else:
