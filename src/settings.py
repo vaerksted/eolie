@@ -394,7 +394,7 @@ class SettingsDialog:
             @param secret as Secret
             @param result as Gio.AsyncResult
         """
-        El().sync_worker.set_credentials()
+        El().sync_worker.sync(True)
 
     def __on_sync_button_clicked(self, button, login_entry, password_entry,
                                  label, image):
