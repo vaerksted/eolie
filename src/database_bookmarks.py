@@ -458,6 +458,7 @@ class DatabaseBookmarks:
                             FROM bookmarks, bookmarks_tags\
                             WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
                             AND bookmarks_tags.tag_id=?\
+                            AND bookmarks.guid != bookmarks.uri\
                             AND bookmarks.del=0\
                             ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
