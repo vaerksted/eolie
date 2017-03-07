@@ -363,13 +363,12 @@ class SyncWorker:
         except Exception as e:
             print("SyncWorker::__on_get_secret()", e)
 
-    def __on_load_secret(self, source, result, first_sync, delete):
+    def __on_load_secret(self, source, result, first_sync):
         """
             Set params and start sync
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param first_sync as bool
-            @param delete as bool
         """
         try:
             secret = source.get_secret()
