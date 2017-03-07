@@ -198,9 +198,6 @@ class SyncWorker:
         while parents:
             parent_id = parents.pop(0)
             parent_guid = El().bookmarks.get_guid(parent_id)
-            # No parent or read only parent
-            if parent_guid in [None, "root", "unfiled"]:
-                continue
             parent_name = El().bookmarks.get_title(parent_id)
             children = El().bookmarks.get_children(parent_guid)
             # So search if children in parents
@@ -295,8 +292,7 @@ class SyncWorker:
                     El().bookmarks.set_uri(bookmark_id,
                                            bookmark["bmkUri"],
                                            False)
-                elif "children" in bookmark.keys() and\
-                        bookmark["id"] not in ["root", "unfiled"]:
+                elif "children" in bookmark.keys():
                     position = 0
                     for child in bookmark["children"]:
                         bid = El().bookmarks.get_id_by_guid(child)
@@ -324,7 +320,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.add_tag(tag, False)
                         El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
-                                     start_time,
+                                     start_time - 0.1,  # Prevent pushing
                                      False)
             if "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
