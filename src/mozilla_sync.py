@@ -62,7 +62,16 @@ class SyncWorker:
         self.__username = ""
         self.__password = ""
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret, first_sync)
+                           self.__on_get_secret, first_sync, False)
+
+    def delete_secret(self):
+        """
+            Delete sync secret
+        """
+        self.__username = ""
+        self.__password = ""
+        Secret.Service.get(Secret.ServiceFlags.NONE, None,
+                           self.__on_get_secret, False, True)
 
     def stop(self):
         """
@@ -330,12 +339,13 @@ class SyncWorker:
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
-    def __on_get_secret(self, source, result, first_sync):
+    def __on_get_secret(self, source, result, first_sync, delete):
         """
             Store secret proxy
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param fisrt_sync as bool
+            @param delete as bool
         """
         try:
             secret = Secret.Service.get_finish(result)
@@ -349,16 +359,17 @@ class SyncWorker:
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
             secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search, first_sync)
+                          None, self.__on_secret_search, first_sync, delete)
         except Exception as e:
             print("SyncWorker::__on_get_secret()", e)
 
-    def __on_load_secret(self, source, result, first_sync):
+    def __on_load_secret(self, source, result, first_sync, delete):
         """
             Set params and start sync
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param first_sync as bool
+            @param delete as bool
         """
         try:
             secret = source.get_secret()
@@ -378,21 +389,25 @@ class SyncWorker:
         except Exception as e:
             print("SyncWorker::__on_load_secret()", e)
 
-    def __on_secret_search(self, source, result, first_sync):
+    def __on_secret_search(self, source, result, first_sync, delete):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param first_sync as bool
+            @param delete as bool
         """
         try:
             if result is not None:
                 items = source.search_finish(result)
                 if not items:
                     return
-                items[0].load_secret(None,
-                                     self.__on_load_secret,
-                                     first_sync)
+                if delete:
+                    items[0].delete(None, None)
+                else:
+                    items[0].load_secret(None,
+                                         self.__on_load_secret,
+                                         first_sync)
             else:
                 # Sync not configured, just remove pending deleted bookmarks
                 for bookmark_id in El().get_deleted_ids():

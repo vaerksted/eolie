@@ -416,6 +416,7 @@ class SettingsDialog:
             @param label as Gtk.Label
             @param image as Gtk.Image
         """
+        El().sync_worker.delete_secret()
         if image.get_icon_name() == "content-loading-symbolic":
             return
         label.set_text(_("Connecting..."))
