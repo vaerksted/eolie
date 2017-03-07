@@ -39,6 +39,10 @@ TOKENSERVER_URL = "https://token.services.mozilla.com/"
 FXA_SERVER_URL = "https://api.accounts.firefox.com"
 
 
+class PushException(Exception):
+    pass
+
+
 class SyncWorker:
     """
        Manage sync with mozilla server, will start syncing on init
@@ -105,7 +109,7 @@ class SyncWorker:
         """
         debug("Start syncing")
         if not self.__username or not self.__password:
-            raise StopIteration("No credentials")
+            raise Exception("No credentials")
         try:
             self.__mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
@@ -137,20 +141,29 @@ class SyncWorker:
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 if self.__start_time != start_time:
-                    raise StopIteration("Sync cancelled")
+                    raise Exception("Sync cancelled")
                 self.__pull_bookmarks(bulk_keys, start_time, first_sync)
             # Push new bookmarks
             if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
+                raise Exception("Sync cancelled")
             self.__push_bookmarks(bulk_keys,
                                   self.__mtimes["bookmarks"],
                                   start_time)
             if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
+                raise PushException("Sync cancelled")
             self.__mtimes = self.__client.client.info_collections()
             dump(self.__mtimes,
                  open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
+        # If we have a PushException, we need to update mtime in cache
+        except PushException as e:
+            print("SyncWorker::__sync():", e)
+            try:
+                self.__mtimes = self.__client.client.info_collections()
+                dump(self.__mtimes,
+                     open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+            except Exception as e:
+                print("SyncWorker::__sync():", e)
         except Exception as e:
             print("SyncWorker::__sync():", e)
 
@@ -174,7 +187,7 @@ class SyncWorker:
             if parent_id not in parents:
                 parents.append(parent_id)
             if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
+                raise PushException("Sync cancelled")
             record = {}
             record["bmkUri"] = El().bookmarks.get_uri(bookmark_id)
             record["id"] = El().bookmarks.get_guid(bookmark_id)
@@ -218,7 +231,7 @@ class SyncWorker:
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
+                raise PushException("Sync cancelled")
             guid = El().bookmarks.get_guid(bookmark_id)
             debug("deleting %s" % guid)
             self.__client.client.delete_record("bookmarks", guid)
@@ -245,7 +258,7 @@ class SyncWorker:
             to_delete = El().bookmarks.get_guids()
         for record in records:
             if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
+                raise Exception("Sync cancelled")
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
                     bookmark["type"] not in ["folder", "bookmark"]:
@@ -321,7 +334,7 @@ class SyncWorker:
                                           bookmark["parentName"],
                                           False)
         if self.__start_time != start_time:
-            raise StopIteration("Sync cancelled")
+            raise Exception("Sync cancelled")
         for guid in to_delete:
             bookmark_id = El().bookmarks.get_id_by_guid(guid)
             if bookmark_id is not None:

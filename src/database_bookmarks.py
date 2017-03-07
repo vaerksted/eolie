@@ -476,6 +476,7 @@ class DatabaseBookmarks:
                             FROM bookmarks\
                             WHERE bookmarks.popularity!=0\
                             AND bookmarks.del=0\
+                            AND bookmarks.guid != bookmarks.uri\
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
 
@@ -494,6 +495,7 @@ class DatabaseBookmarks:
                                 SELECT bookmark_id FROM bookmarks_tags\
                                 WHERE bookmark_id=bookmarks.rowid)\
                             AND bookmarks.del=0\
+                            AND bookmarks.guid != bookmarks.uri\
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
 
@@ -509,6 +511,7 @@ class DatabaseBookmarks:
                                   FROM bookmarks\
                                   WHERE bookmarks.atime != 0\
                                   AND bookmarks.del=0\
+                                  AND bookmarks.guid != bookmarks.uri\
                                   ORDER BY bookmarks.atime DESC")
             return list(result)
 
