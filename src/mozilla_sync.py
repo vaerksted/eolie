@@ -172,8 +172,17 @@ class SyncWorker:
             @raise StopIteration
         """
         debug("push bookmarks")
-        # Add new bookmarks
+        # Push bookmarks
+        parents = []
         for bookmark_id in El().bookmarks.get_ids_for_mtime(mtime):
+            parent = El().bookmarks.get_parent(bookmark_id)
+            # No parent, move it to unfiled
+            if parent[0] is None:
+                parent_id = "unfiled_____"
+            else:
+                parent_id = parent[0]
+            if parent not in parents:
+                parents.append(parent)
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
             record = {}
@@ -181,9 +190,25 @@ class SyncWorker:
             record["id"] = El().bookmarks.get_guid(bookmark_id)
             record["title"] = El().bookmarks.get_title(bookmark_id)
             record["tags"] = El().bookmarks.get_tags(bookmark_id)
-            record["parentid"] = El().bookmarks.get_parent_id(bookmark_id)
+            record["parentid"] = parent_id
             record["type"] = "bookmark"
             debug("pushing %s" % record)
+            self.__client.add_bookmark(record, bulk_keys)
+        # Push parents
+        for (parent_guid, parent_name) in parents:
+            if parent_guid in ["root________", "unfiled_____"]:
+                continue
+            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
+            (grand_parent_guid, grand_parent_name) = \
+                El().bookmarks.get_parent(parent_id)
+            record = {}
+            record["id"] = parent_guid
+            record["type"] = "folder"
+            record["parentid"] = grand_parent_guid
+            record["parentName"] = grand_parent_name
+            record["title"] = parent_name
+            record["children"] = El().bookmarks.get_children(parent_guid)
+            debug("pushing parent %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
@@ -202,6 +227,7 @@ class SyncWorker:
             @param start time as float
             @raise StopIteration
         """
+        self.__client.client.delete_record("bookmarks", None)
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
         # We get all guids here and remove them while sync
@@ -212,52 +238,77 @@ class SyncWorker:
                 raise StopIteration("Sync cancelled")
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
-                    bookmark["type"] != "bookmark":
+                    bookmark["type"] not in ["folder", "bookmark"]:
                 continue
             debug("pulling %s" % record)
             bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
             # This bookmark exists, remove from to delete
             if bookmark["id"] in to_delete:
                 to_delete.remove(bookmark["id"])
-            if El().bookmarks.get_mtime(bookmark_id) < record["modified"]:
+            if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
-            if not bookmark["tags"] and bookmark["parentName"]:
-                bookmark["tags"] = [bookmark["parentName"]]
+            # Use parent name if no bookmarks tags
+            if "tags" not in bookmark.keys() or\
+                    not bookmark["tags"]:
+                if "parentName" in bookmark.keys() and\
+                        bookmark["parentName"]:
+                    bookmark["tags"] = [bookmark["parentName"]]
+                else:
+                    bookmark["tags"] = []
             if bookmark_id is None:
-                bookmark_id = El().bookmarks.add(bookmark["title"],
-                                                 bookmark["bmkUri"],
-                                                 bookmark["tags"],
-                                                 bookmark["id"])
+                if "bmkUri" in bookmark.keys():
+                    bookmark_id = El().bookmarks.add(bookmark["title"],
+                                                     bookmark["bmkUri"],
+                                                     bookmark["id"],
+                                                     bookmark["tags"])
+                else:
+                    bookmark_id = El().bookmarks.add(bookmark["title"],
+                                                     bookmark["id"],
+                                                     bookmark["id"],
+                                                     bookmark["tags"])
             else:
                 El().bookmarks.set_title(bookmark_id,
                                          bookmark["title"],
                                          False)
-                El().bookmarks.set_uri(bookmark_id,
-                                       bookmark["bmkUri"],
-                                       False)
+                if "bmkUri" in bookmark.keys():
+                    El().bookmarks.set_uri(bookmark_id,
+                                           bookmark["bmkUri"],
+                                           False)
+                elif "children" in bookmark.keys():
+                    position = 0
+                    for child in bookmark["children"]:
+                        bid = El().bookmarks.get_id_by_guid(child)
+                        El().bookmarks.set_position(bid,
+                                                    position,
+                                                    False)
+                        position += 1
                 # Remove previous tags
                 current_tags = El().bookmarks.get_tags(bookmark_id)
                 for tag in El().bookmarks.get_tags(bookmark_id):
-                    if tag not in bookmark["tags"]:
+                    if "tags" in bookmark.keys() and\
+                            tag not in bookmark["tags"]:
                         tag_id = El().bookmarks.get_tag_id(tag)
                         current_tags.remove(tag)
                         El().bookmarks.del_tag_from(tag_id,
                                                     bookmark_id,
                                                     False)
-                for tag in bookmark["tags"]:
-                    # Tag already associated
-                    if tag in current_tags:
-                        continue
-                    tag_id = El().bookmarks.get_tag_id(tag)
-                    if tag_id is None:
-                        tag_id = El().bookmarks.add_tag(tag, False)
-                    El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
+                if "tags" in bookmark.keys():
+                    for tag in bookmark["tags"]:
+                        # Tag already associated
+                        if tag in current_tags:
+                            continue
+                        tag_id = El().bookmarks.get_tag_id(tag)
+                        if tag_id is None:
+                            tag_id = El().bookmarks.add_tag(tag, False)
+                        El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
                                      record["modified"],
                                      False)
-            El().bookmarks.set_parent_id(bookmark_id,
-                                         bookmark["parentid"],
-                                         False)
+            if "parentName" in bookmark.keys():
+                El().bookmarks.set_parent(bookmark_id,
+                                          bookmark["parentid"],
+                                          bookmark["parentName"],
+                                          False)
         if self.__start_time != start_time:
             raise StopIteration("Sync cancelled")
         for guid in to_delete:

@@ -39,11 +39,11 @@ class DatabaseBookmarks:
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
-                                               parentid TEXT,
                                                popularity INT NOT NULL,
                                                atime INT NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
+                                               position INT DEFAULT 0,
                                                del INT DEFAULT 0
                                                )'''
     __create_tags = '''CREATE TABLE tags (id INTEGER PRIMARY KEY,
@@ -52,6 +52,12 @@ class DatabaseBookmarks:
                                                     id INTEGER PRIMARY KEY,
                                                     bookmark_id INT NOT NULL,
                                                     tag_id INT NOT NULL)'''
+    # Only useful for Firefox compatibility
+    __create_parents = '''CREATE TABLE parents (
+                                        id INTEGER PRIMARY KEY,
+                                        bookmark_id INT NOT NULL,
+                                        parent_guid TEXT NOT NULL,
+                                        parent_name TEXT NOT NULL)'''
 
     def __init__(self):
         """
@@ -68,23 +74,24 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_bookmarks)
                     sql.execute(self.__create_tags)
                     sql.execute(self.__create_bookmarks_tags)
+                    sql.execute(self.__create_parents)
                     sql.commit()
                 self.import_firefox()
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 
-    def add(self, title, uri, tags, guid=None, atime=0, commit=True):
+    def add(self, title, uri, guid, tags, atime=0, commit=True):
         """
             Add a new bookmark
             @param title as str
             @param uri as str
+            @param guid as str
             @param tags as [str]
+            @param parent_guid as str
             @param ctime as int
             @param commit as bool
             @return bookmark id as int
         """
-        if not uri or not title:
-            return
         # Find an uniq guid
         while guid is None:
             guid = get_random_string(12)
@@ -95,8 +102,7 @@ class DatabaseBookmarks:
             result = sql.execute("INSERT INTO bookmarks\
                                   (title, uri, popularity, guid, atime, mtime)\
                                   VALUES (?, ?, ?, ?, ?, ?)",
-                                 (title, uri.rstrip('/'), 0,
-                                  guid, atime, 0))
+                                 (title, uri.rstrip('/'), 0, guid, atime, 0))
             bookmarks_id = result.lastrowid
             for tag in tags:
                 if not tag:
@@ -132,6 +138,8 @@ class DatabaseBookmarks:
             sql.execute("DELETE FROM bookmarks\
                          WHERE rowid=?", (bookmark_id,))
             sql.execute("DELETE FROM bookmarks_tags\
+                         WHERE bookmark_id=?", (bookmark_id,))
+            sql.execute("DELETE FROM parents\
                          WHERE bookmark_id=?", (bookmark_id,))
             if commit:
                 sql.commit()
@@ -251,7 +259,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE mtime > ?\
+                                  WHERE mtime >= ?\
+                                  AND uri != guid\
                                   AND del=0", (mtime,))
             return list(itertools.chain(*result))
 
@@ -266,20 +275,21 @@ class DatabaseBookmarks:
                                   WHERE del=1")
             return list(itertools.chain(*result))
 
-    def get_parent_id(self, bookmark_id):
+    def get_parent(self, bookmark_id):
         """
-            Get parent id for bookmark
+            Get parent for bookmark
             @param bookmark id as int
-            @return parent id as str
+            @return parent as (str, str)
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT parentid\
-                                  FROM bookmarks\
-                                  WHERE rowid=?", (bookmark_id,))
+            result = sql.execute("SELECT parent_guid, parent_name\
+                                  FROM parents\
+                                  WHERE bookmark_id=?", (bookmark_id,))
             v = result.fetchone()
-            if v is not None and v[0] is not None:
-                return v[0]
-            return "unfiled_____"
+            if v is None:
+                return (None, None)
+            else:
+                return v
 
     def get_title(self, bookmark_id):
         """
@@ -335,6 +345,19 @@ class DatabaseBookmarks:
             result = sql.execute("SELECT guid FROM bookmarks")
             return list(itertools.chain(*result))
 
+    def get_children(self, guid):
+        """
+            Get guid children
+            @return [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT bookmarks.guid\
+                                  FROM bookmarks, parents\
+                                  WHERE parents.parent_guid=?\
+                                  AND parents.bookmark_id=bookmarks.rowid\
+                                  ORDER BY position ASC", (guid,))
+            return list(itertools.chain(*result))
+
     def get_mtime(self, bookmark_id):
         """
             Get bookmark mtime
@@ -343,6 +366,21 @@ class DatabaseBookmarks:
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT mtime\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
+
+    def get_position(self, bookmark_id):
+        """
+            Get bookmark position
+            @param bookmark id as int
+            @return position as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT position\
                                   FROM bookmarks\
                                   WHERE rowid=?", (bookmark_id,))
             v = result.fetchone()
@@ -486,17 +524,26 @@ class DatabaseBookmarks:
             if commit:
                 sql.commit()
 
-    def set_parent_id(self, bookmark_id, parent_id, commit=True):
+    def set_parent(self, bookmark_id, parent_guid, parent_name, commit=True):
         """
             Set parent id for bookmark
-            @param bookmark id as int
-            @param parent id as str
+            @param bookmark_id as int
+            @param parent_guid as str
+            @param parent_name as str
             @param commit as bool
         """
         with SqlCursor(self) as sql:
-            sql.execute("UPDATE bookmarks\
-                         SET parentid=? where rowid=?",
-                        (parent_id, bookmark_id))
+            parent = self.get_parent(bookmark_id)
+            if parent[0] is None:
+                sql.execute("INSERT INTO parents\
+                             (bookmark_id, parent_guid, parent_name)\
+                             VALUES (?, ?, ?)",
+                            (bookmark_id, parent_guid, parent_name))
+            else:
+                sql.execute("UPDATE parents\
+                             SET parent_guid=?, parent_name=?\
+                             WHERE bookmark_id=?",
+                            (parent_guid, parent_name, bookmark_id))
             if commit:
                 sql.commit()
 
@@ -521,6 +568,20 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET mtime=? where rowid=?", (mtime, bookmark_id))
+            if commit:
+                sql.commit()
+
+    def set_position(self, bookmark_id, position, commit=True):
+        """
+            Set bookmark position
+            @param bookmark id as int
+            @param mtime as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET position=? where rowid=?", (position,
+                                                         bookmark_id))
             if commit:
                 sql.commit()
 
@@ -609,26 +670,61 @@ class DatabaseBookmarks:
                     break
         if sqlite_path is not None:
             c = sqlite3.connect(sqlite_path, 600.0)
+            # Add bookmarks
             result = c.execute("SELECT bookmarks.title,\
                                        moz_places.url,\
                                        tag.title,\
                                        bookmarks.guid,\
-                                       tag.guid\
+                                       tag.guid,\
+                                       bookmarks.position\
                                 FROM moz_bookmarks AS bookmarks,\
                                      moz_bookmarks AS tag,\
                                      moz_places\
                                 WHERE bookmarks.fk=moz_places.id\
-                                AND bookmarks.type=1\
-                                AND tag.id=bookmarks.parent")
-            for (title, uri,  tag, bookmark_guid, tag_guid) in list(result):
-                if not uri.startswith('http'):
+                                AND tag.id=bookmarks.parent\
+                                AND bookmarks.type=1")
+            for (title, uri,  parent_name, bookmark_guid,
+                 parent_guid, position) in list(result):
+                if not uri.startswith('http') or not title:
                     continue
                 uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
-                    bookmark_id = self.add(title, uri, [tag],
-                                           bookmark_guid, 0, False)
-                    self.set_parent_id(bookmark_id, tag_guid)
+                    # Internal Firefox doesn't match Sync API
+                    if parent_guid == "root________":
+                        parent_guid = "places______"
+                    # Bookmarks and folder
+                    bookmark_id = self.add(title, uri, bookmark_guid,
+                                           [parent_name], 0, False)
+                    self.set_parent(bookmark_id, parent_guid,
+                                    parent_name, False)
+                    self.set_position(bookmark_id, position, False)
+            # Add folders, we need to get them as Firefox need children order
+            result = c.execute("SELECT bookmarks.title,\
+                                       tag.title,\
+                                       bookmarks.guid,\
+                                       tag.guid,\
+                                       bookmarks.position\
+                                FROM moz_bookmarks AS bookmarks,\
+                                     moz_bookmarks AS tag\
+                                WHERE tag.id=bookmarks.parent\
+                                AND bookmarks.type=2")
+            for (title, parent_name, bookmark_guid,
+                 parent_guid, position) in list(result):
+                if not title or bookmark_guid == "root________":
+                    continue
+                uri = bookmark_guid
+                rowid = self.get_id(uri)
+                if rowid is None:
+                    # Internal Firefox doesn't match Sync API
+                    if parent_guid == "root________":
+                        parent_guid = "places______"
+                    # Bookmarks and folder
+                    bookmark_id = self.add(title, uri, bookmark_guid,
+                                           [parent_name], 0, False)
+                    self.set_parent(bookmark_id, parent_guid,
+                                    parent_name, False)
+                    self.set_position(bookmark_id, position, False)
         with SqlCursor(self) as sql:
             sql.commit()
         SqlCursor.remove(self)
