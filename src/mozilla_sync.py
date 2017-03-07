@@ -63,7 +63,6 @@ class SyncWorker:
             Start syncing, you need to check sync_status property
             @param first_sync as bool
         """
-        return
         self.__username = ""
         self.__password = ""
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
