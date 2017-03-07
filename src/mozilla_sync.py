@@ -50,6 +50,7 @@ class SyncWorker:
         """
         self.set_credentials()
         self.__start_time = 0
+        self.__mtimes = {"bookmarks": 0}
         self.__status = False
         self.__client = MozillaSync()
         self.__session = None
@@ -80,6 +81,14 @@ class SyncWorker:
                            self.__on_get_secret)
 
     @property
+    def mtimes(self):
+        """
+            Sync engine modification times
+            @return {}
+        """
+        return self.__mtimes
+
+    @property
     def status(self):
         """
             Return True if sync is working
@@ -107,10 +116,10 @@ class SyncWorker:
         if not self.__username or not self.__password:
             raise StopIteration("No credentials")
         try:
-            mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
-                          "rb"))
+            self.__mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
+                                 "rb"))
         except:
-            mtimes = {"bookmarks": 0}
+            self.__mtimes = {"bookmarks": 0}
         try:
             if self.__session is None:
                 self.__session = FxASession(self.__client.client,
@@ -132,21 +141,22 @@ class SyncWorker:
                 raise e
             new_mtimes = self.__client.client.info_collections()
             debug("local mtime: %s, remote mtime: %s" % (
-                                                     mtimes["bookmarks"],
-                                                     new_mtimes["bookmarks"]))
+                                                 self.__mtimes["bookmarks"],
+                                                 new_mtimes["bookmarks"]))
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
             self.__push_bookmarks(bulk_keys,
-                                  mtimes["bookmarks"],
+                                  self.__mtimes["bookmarks"],
                                   start_time)
             # Only pull if something new available
-            if mtimes["bookmarks"] != new_mtimes["bookmarks"]:
+            if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 if self.__start_time != start_time:
                     raise StopIteration("Sync cancelled")
                 self.__pull_bookmarks(bulk_keys, start_time)
                 if self.__start_time != start_time:
                     raise StopIteration("Sync cancelled")
-            dump(self.__client.client.info_collections(),
+            self.__mtimes = self.__client.client.info_collections()
+            dump(self.__mtimes,
                  open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
         except Exception as e:
@@ -207,7 +217,7 @@ class SyncWorker:
             # This bookmark exists, remove from to delete
             if bookmark["id"] in to_delete:
                 to_delete.remove(bookmark["id"])
-            if El().bookmarks.get_mtime(bookmark_id) == record["modified"]:
+            if El().bookmarks.get_mtime(bookmark_id) < record["modified"]:
                 continue
             if not bookmark["tags"] and bookmark["parentName"]:
                 bookmark["tags"] = [bookmark["parentName"]]

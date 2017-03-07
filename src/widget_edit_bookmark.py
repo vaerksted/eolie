@@ -13,6 +13,7 @@
 from gi.repository import Gtk, GLib, Pango
 
 from locale import strcoll
+from time import time
 
 from eolie.define import El
 
@@ -84,6 +85,13 @@ class EditBookmarkWidget(Gtk.Bin):
                                self.__uri_entry.get_text())
         self.get_parent().set_visible_child_name("bookmarks")
         if El().sync_worker is not None:
+            mtimes = El().sync_worker.mtimes
+            if mtimes["bookmarks"] == 0:
+                El().bookmarks.set_mtime(self.__bookmark_id,
+                                         round(time(), 2) + 1)
+            else:
+                El().bookmarks.set_mtime(self.__bookmark_id,
+                                         mtimes["bookmarks"] + 1)
             El().sync_worker.sync()
         GLib.timeout_add(1000, self.destroy)
 
@@ -172,6 +180,13 @@ class EditBookmarkWidget(Gtk.Bin):
         El().bookmarks.set_uri(self.__bookmark_id,
                                self.__uri_entry.get_text())
         if El().sync_worker is not None:
+            mtimes = El().sync_worker.mtimes
+            if mtimes["bookmarks"] == 0:
+                El().bookmarks.set_mtime(self.__bookmark_id,
+                                         round(time(), 2) + 1)
+            else:
+                El().bookmarks.set_mtime(self.__bookmark_id,
+                                         mtimes["bookmarks"] + 1)
             El().sync_worker.sync()
 
     def __on_tag_edited(self, widget, path, name):
@@ -189,6 +204,18 @@ class EditBookmarkWidget(Gtk.Bin):
         has_tag = El().bookmarks.has_tag(self.__bookmark_id, old_name)
         self.__model.remove(iterator)
         self.__model.append([name, has_tag])
+        # Update mtime for all tagged bookmarks
+        if El().sync_worker is not None:
+            mtimes = El().sync_worker.mtimes
+            if mtimes["bookmarks"] == 0:
+                mtime = round(time(), 2)
+            else:
+                mtime = mtimes["bookmarks"]
+            tag_id = self.get_tag_id(old_name)
+            if tag_id is None:
+                return
+            for (bookmark_id, title, uri) in self.get_bookmarks(tag_id):
+                El().bookmarks.set_mtime(bookmark_id, mtime + 1)
         El().bookmarks.rename_tag(old_name, name)
 
     def __on_item_toggled(self, view, path):

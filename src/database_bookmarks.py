@@ -13,7 +13,6 @@
 from gi.repository import GLib, Gio
 
 import sqlite3
-from time import time
 import itertools
 
 from eolie.utils import noaccents, get_random_string
@@ -93,12 +92,11 @@ class DatabaseBookmarks:
                 guid = None
 
         with SqlCursor(self) as sql:
-            mtime = round(time(), 2)
             result = sql.execute("INSERT INTO bookmarks\
                                   (title, uri, popularity, guid, atime, mtime)\
                                   VALUES (?, ?, ?, ?, ?, ?)",
                                  (title, uri.rstrip('/'), 0,
-                                  guid, atime, mtime))
+                                  guid, atime, 0))
             bookmarks_id = result.lastrowid
             for tag in tags:
                 if not tag:
@@ -174,11 +172,6 @@ class DatabaseBookmarks:
             @param old as str
             @param new as str
         """
-        tag_id = self.get_tag_id(old)
-        if tag_id is None:
-            return
-        for (bookmark_id, title, uri) in self.get_bookmarks(tag_id):
-            self.set_mtime(bookmark_id, round(time(), 2))
         with SqlCursor(self) as sql:
             sql.execute("UPDATE tags set title=? WHERE title=?", (new, old))
             sql.commit()
@@ -478,7 +471,6 @@ class DatabaseBookmarks:
                          WHERE rowid=?", (title, bookmark_id,))
             if commit:
                 sql.commit()
-        self.set_mtime(bookmark_id, round(time(), 2), commit)
 
     def set_uri(self, bookmark_id, uri, commit=True):
         """
@@ -493,7 +485,6 @@ class DatabaseBookmarks:
                          WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
             if commit:
                 sql.commit()
-        self.set_mtime(bookmark_id, round(time(), 2), commit)
 
     def set_parent_id(self, bookmark_id, parent_id, commit=True):
         """
