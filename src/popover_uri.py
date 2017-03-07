@@ -498,7 +498,8 @@ class UriPopover(Gtk.Popover):
             self.__bookmarks_box.remove(row)
             self.__remove_button.hide()
         El().bookmarks.clean_tags()
-        El().sync_worker.sync()
+        if El().sync_worker is not None:
+            El().sync_worker.sync()
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
@@ -816,7 +817,8 @@ class UriPopover(Gtk.Popover):
             El().bookmarks.add_tag_to(item[1], item[0])
         self.__on_row_activated(tag_row)
         El().bookmarks.clean_tags()
-        El().sync_worker.sync()
+        if El().sync_worker is not None:
+            El().sync_worker.sync()
 
     def __on_row_edited(self, row):
         """
