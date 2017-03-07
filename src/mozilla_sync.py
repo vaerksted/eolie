@@ -324,7 +324,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.add_tag(tag, False)
                         El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
-                                     record["modified"],
+                                     start_time,
                                      False)
             if "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
