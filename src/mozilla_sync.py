@@ -63,6 +63,7 @@ class SyncWorker:
             Start syncing, you need to check sync_status property
             @param first_sync as bool
         """
+        return
         self.__username = ""
         self.__password = ""
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
@@ -270,21 +271,22 @@ class SyncWorker:
                 to_delete.remove(bookmark["id"])
             if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
-            # Use parent name if no bookmarks tags
-            if "tags" not in bookmark.keys() or\
-                    not bookmark["tags"]:
-                if "parentName" in bookmark.keys() and\
-                        bookmark["parentName"]:
-                    bookmark["tags"] = [bookmark["parentName"]]
-                else:
-                    bookmark["tags"] = []
             if bookmark_id is None:
                 if "bmkUri" in bookmark.keys():
+                    # Use parent name if no bookmarks tags
+                    if "tags" not in bookmark.keys() or\
+                            not bookmark["tags"]:
+                        if "parentName" in bookmark.keys() and\
+                                bookmark["parentName"]:
+                            bookmark["tags"] = [bookmark["parentName"]]
+                        else:
+                            bookmark["tags"] = []
                     bookmark_id = El().bookmarks.add(bookmark["title"],
                                                      bookmark["bmkUri"],
                                                      bookmark["id"],
                                                      bookmark["tags"])
                 else:
+                    bookmark["tags"] = []
                     bookmark_id = El().bookmarks.add(bookmark["title"],
                                                      bookmark["id"],
                                                      bookmark["id"],

@@ -690,20 +690,10 @@ class DatabaseBookmarks:
         if sqlite_path is not None:
             c = sqlite3.connect(sqlite_path, 600.0)
             # Add bookmarks
-            result = c.execute("SELECT bookmarks.title,\
-                                       moz_places.url,\
-                                       tag.title,\
-                                       bookmarks.guid,\
-                                       tag.guid,\
-                                       bookmarks.position\
-                                FROM moz_bookmarks AS bookmarks,\
-                                     moz_bookmarks AS tag,\
-                                     moz_places\
-                                WHERE bookmarks.fk=moz_places.id\
-                                AND tag.id=bookmarks.parent\
-                                AND bookmarks.type=1")
+            bookmarks = self.__get_firefox_bookmarks(c)
             for (title, uri,  parent_name, bookmark_guid,
-                 parent_guid, position) in list(result):
+                 parent_guid, position) in bookmarks:
+                tags = self.__get_tags_for_firefox_bookmark(c, bookmark_guid)
                 bookmark_guid = self.__clean_guid(bookmark_guid)
                 parent_guid = self.__clean_guid(parent_guid)
                 if not uri.startswith('http') or not title:
@@ -711,24 +701,19 @@ class DatabaseBookmarks:
                 uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
+                    # If bookmark is not tagged, we use parent name
+                    if not tags:
+                        tags = [parent_name]
                     # Bookmarks and folder
                     bookmark_id = self.add(title, uri, bookmark_guid,
-                                           [parent_name], 0, False)
+                                           tags, 0, False)
                     self.set_parent(bookmark_id, parent_guid,
                                     parent_name, False)
                     self.set_position(bookmark_id, position, False)
             # Add folders, we need to get them as Firefox need children order
-            result = c.execute("SELECT bookmarks.title,\
-                                       tag.title,\
-                                       bookmarks.guid,\
-                                       tag.guid,\
-                                       bookmarks.position\
-                                FROM moz_bookmarks AS bookmarks,\
-                                     moz_bookmarks AS tag\
-                                WHERE tag.id=bookmarks.parent\
-                                AND bookmarks.type=2")
+            parents = self.__get_firefox_parents(c)
             for (title, parent_name, bookmark_guid,
-                 parent_guid, position) in list(result):
+                 parent_guid, position) in parents:
                 bookmark_guid = self.__clean_guid(bookmark_guid)
                 parent_guid = self.__clean_guid(parent_guid)
                 if not title or bookmark_guid == "root":
@@ -738,7 +723,7 @@ class DatabaseBookmarks:
                 if rowid is None:
                     # Bookmarks and folder
                     bookmark_id = self.add(title, uri, bookmark_guid,
-                                           [parent_name], 0, False)
+                                           [], 0, False)
                     self.set_parent(bookmark_id, parent_guid,
                                     parent_name, False)
                     self.set_position(bookmark_id, position, False)
@@ -799,6 +784,64 @@ class DatabaseBookmarks:
 #######################
 # PRIVATE             #
 #######################
+    def __get_firefox_bookmarks(self, c):
+        """
+            Return firefox bookmarks
+            @param c as Sqlite cursor
+            @return (title, url, parent title, guid, parent guid, position)
+             as (str, str, str, str, str, int)
+        """
+        result = c.execute("SELECT bookmarks.title,\
+                                   moz_places.url,\
+                                   parent.title,\
+                                   bookmarks.guid,\
+                                   parent.guid,\
+                                   bookmarks.position\
+                            FROM moz_bookmarks AS bookmarks,\
+                                 moz_bookmarks AS parent,\
+                                 moz_places\
+                            WHERE bookmarks.fk=moz_places.id\
+                            AND parent.id=bookmarks.parent\
+                            AND bookmarks.type=1")
+        return list(result)
+
+    def __get_tags_for_firefox_bookmark(self, c, guid):
+        """
+            Return firefox bookmarks
+            @param c as Sqlite cursor
+            @param guid as str
+            @return (title, url, parent title, guid, parent guid, position)
+             as (str, str, str, str, str, int)
+        """
+        result = c.execute("SELECT parent.title\
+                            FROM moz_bookmarks AS bookmarks,\
+                                 moz_bookmarks AS tag,\
+                                 moz_bookmarks AS parent\
+                            WHERE bookmarks.fk=tag.fk\
+                            AND tag.fk=bookmarks.fk\
+                            AND tag.title is null\
+                            AND parent.id=tag.parent\
+                            AND bookmarks.guid=?", (guid,))
+        return list(itertools.chain(*result))
+
+    def __get_firefox_parents(self, c):
+        """
+            Return firefox parents
+            @param c as Sqlite cursor
+            @return (title, parent title, guid, parent guid, position)
+             as (str, str, str, str, str, int)
+        """
+        result = c.execute("SELECT bookmarks.title,\
+                                   parent.title,\
+                                   bookmarks.guid,\
+                                   parent.guid,\
+                                   bookmarks.position\
+                            FROM moz_bookmarks AS bookmarks,\
+                                 moz_bookmarks AS parent\
+                            WHERE parent.id=bookmarks.parent\
+                            AND bookmarks.type=2")
+        return list(result)
+
     def __clean_guid(self, guid):
         """
             Clean guid to match sync API
