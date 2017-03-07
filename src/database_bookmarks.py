@@ -286,9 +286,9 @@ class DatabaseBookmarks:
                                   FROM parents\
                                   WHERE bookmark_id=?", (bookmark_id,))
             v = result.fetchone()
-            if v is not None:
+            if v is not None and v[0] is not None:
                 return v[0]
-            return None
+            return "unfiled"
 
     def get_parent_name(self, bookmark_id):
         """
