@@ -252,11 +252,11 @@ class SyncWorker:
                 continue
             debug("pulling %s" % record)
             bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
+            if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
+                continue
             # This bookmark exists, remove from to delete
             if bookmark["id"] in to_delete:
                 to_delete.remove(bookmark["id"])
-            if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
-                continue
             if bookmark_id is None:
                 if "bmkUri" in bookmark.keys():
                     # Use parent name if no bookmarks tags
