@@ -259,7 +259,6 @@ class SyncWorker:
             if "type" not in bookmark.keys() or\
                     bookmark["type"] not in ["folder", "bookmark"]:
                 continue
-            debug("pulling %s" % record)
             bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
             # This bookmark exists, remove from to delete
             if bookmark["id"] in to_delete:
@@ -267,6 +266,7 @@ class SyncWorker:
             # Nothing to apply, continue
             if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
+            debug("pulling %s" % record)
             if bookmark_id is None:
                 if "bmkUri" in bookmark.keys():
                     # Use parent name if no bookmarks tags
