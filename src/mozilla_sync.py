@@ -143,18 +143,19 @@ class SyncWorker:
             debug("local mtime: %s, remote mtime: %s" % (
                                                  self.__mtimes["bookmarks"],
                                                  new_mtimes["bookmarks"]))
-            if self.__start_time != start_time:
-                raise StopIteration("Sync cancelled")
-            self.__push_bookmarks(bulk_keys,
-                                  self.__mtimes["bookmarks"],
-                                  start_time)
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 if self.__start_time != start_time:
                     raise StopIteration("Sync cancelled")
                 self.__pull_bookmarks(bulk_keys, start_time)
-                if self.__start_time != start_time:
-                    raise StopIteration("Sync cancelled")
+            # Push new bookmarks
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
+            self.__push_bookmarks(bulk_keys,
+                                  self.__mtimes["bookmarks"],
+                                  start_time)
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
             self.__mtimes = self.__client.client.info_collections()
             dump(self.__mtimes,
                  open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
