@@ -55,13 +55,13 @@ class ToolbarActions(Gtk.Bin):
         """
             Click next
         """
-        self.__backward.clicked()
+        self.__window.container.current.webview.go_back()
 
     def forward(self):
         """
             Click previous
         """
-        self.__forward.clicked()
+        self.__window.container.current.webview.go_forward()
 
     @property
     def closed_button(self):
