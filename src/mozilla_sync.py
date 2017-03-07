@@ -328,6 +328,7 @@ class SyncWorker:
         if self.__start_time != start_time:
             raise Exception("Sync cancelled")
         for guid in to_delete:
+            debug("deleting: %s" % guid)
             bookmark_id = El().bookmarks.get_id_by_guid(guid)
             if bookmark_id is not None:
                 El().bookmarks.remove(bookmark_id, False)
