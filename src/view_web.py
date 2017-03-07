@@ -373,7 +373,7 @@ class WebView(WebKit2.WebView):
             As Webkit2GTK doesn't allow us to get content from python,
             it sets title with content for one shot, so try to get it here
             @param webview as WebKit2.WebView
-            @param event as  GParamSpec
+            @param event as GParamSpec
         """
         if event.name != "title":
             return

@@ -50,13 +50,16 @@ class PasswordPopover(Gtk.Popover):
             @param button as Gtk.Button
         """
         try:
-            schema_string = "org.gnome.Eolie.%s" % self.__username
+            schema_string = "org.gnome.Eolie: %s@%s" % (self.__username,
+                                                        self.__netloc)
             if self.__secret_item is None:
                 SecretSchema = {
-                    "uri": Secret.SchemaAttributeType.STRING
+                    "uri": Secret.SchemaAttributeType.STRING,
+                    "login": Secret.SchemaAttributeType.STRING,
                 }
                 SecretAttributes = {
-                    "uri": self.__netloc
+                    "uri": self.__netloc,
+                    "login": self.__username
                 }
                 schema = Secret.Schema.new("org.gnome.Eolie",
                                            Secret.SchemaFlags.NONE,
@@ -102,7 +105,7 @@ class PasswordPopover(Gtk.Popover):
             self.__secret_item = item
             secret = item.get_secret()
             if self.__secret_item is not None:
-                username = item.get_label().replace("org.gnome.Eolie.", "")
+                username = item.get_attributes()["login"]
                 password = secret.get().decode('utf-8')
                 if username == self.__username and self.__password == password:
                     return
@@ -141,12 +144,13 @@ class PasswordPopover(Gtk.Popover):
         try:
             secret = Secret.Service.get_finish(result)
             SecretSchema = {
-                "uri": Secret.SchemaAttributeType.STRING
+                "uri": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "uri": self.__netloc,
+                "login": self.__username
             }
-
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
