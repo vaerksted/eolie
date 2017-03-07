@@ -275,21 +275,35 @@ class DatabaseBookmarks:
                                   WHERE del=1")
             return list(itertools.chain(*result))
 
-    def get_parent(self, bookmark_id):
+    def get_parent_guid(self, bookmark_id):
         """
             Get parent for bookmark
             @param bookmark id as int
-            @return parent as (str, str)
+            @return guid as str
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT parent_guid, parent_name\
+            result = sql.execute("SELECT parent_guid\
                                   FROM parents\
                                   WHERE bookmark_id=?", (bookmark_id,))
             v = result.fetchone()
-            if v is None:
-                return (None, None)
-            else:
-                return v
+            if v is not None:
+                return v[0]
+            return None
+
+    def get_parent_name(self, bookmark_id):
+        """
+            Get parent for bookmark
+            @param bookmark id as int
+            @return name as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT parent_name\
+                                  FROM parents\
+                                  WHERE bookmark_id=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
 
     def get_title(self, bookmark_id):
         """
@@ -348,6 +362,7 @@ class DatabaseBookmarks:
     def get_children(self, guid):
         """
             Get guid children
+            @param guid as str
             @return [str]
         """
         with SqlCursor(self) as sql:
@@ -533,8 +548,8 @@ class DatabaseBookmarks:
             @param commit as bool
         """
         with SqlCursor(self) as sql:
-            parent = self.get_parent(bookmark_id)
-            if parent[0] is None:
+            previous_guid = self.get_parent_guid(bookmark_id)
+            if previous_guid is None:
                 sql.execute("INSERT INTO parents\
                              (bookmark_id, parent_guid, parent_name)\
                              VALUES (?, ?, ?)",
@@ -685,14 +700,13 @@ class DatabaseBookmarks:
                                 AND bookmarks.type=1")
             for (title, uri,  parent_name, bookmark_guid,
                  parent_guid, position) in list(result):
+                bookmark_guid = self.__clean_guid(bookmark_guid)
+                parent_guid = self.__clean_guid(parent_guid)
                 if not uri.startswith('http') or not title:
                     continue
                 uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
-                    # Internal Firefox doesn't match Sync API
-                    if parent_guid == "root________":
-                        parent_guid = "places______"
                     # Bookmarks and folder
                     bookmark_id = self.add(title, uri, bookmark_guid,
                                            [parent_name], 0, False)
@@ -711,14 +725,13 @@ class DatabaseBookmarks:
                                 AND bookmarks.type=2")
             for (title, parent_name, bookmark_guid,
                  parent_guid, position) in list(result):
-                if not title or bookmark_guid == "root________":
+                bookmark_guid = self.__clean_guid(bookmark_guid)
+                parent_guid = self.__clean_guid(parent_guid)
+                if not title or bookmark_guid == "root":
                     continue
                 uri = bookmark_guid
                 rowid = self.get_id(uri)
                 if rowid is None:
-                    # Internal Firefox doesn't match Sync API
-                    if parent_guid == "root________":
-                        parent_guid = "places______"
                     # Bookmarks and folder
                     bookmark_id = self.add(title, uri, bookmark_guid,
                                            [parent_name], 0, False)
@@ -782,3 +795,21 @@ class DatabaseBookmarks:
 #######################
 # PRIVATE             #
 #######################
+    def __clean_guid(self, guid):
+        """
+            Clean guid to match sync API
+            @param guid as str
+            @return str
+        """
+        if guid == "root________":
+            return "places"
+        elif guid == "menu________":
+            return "menu"
+        elif guid == "toolbar_____":
+            return "toolbar"
+        elif guid == "unfiled_____":
+            return "unfiled"
+        elif guid == "mobile______":
+            return "mobile"
+        else:
+            return guid

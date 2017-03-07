@@ -107,6 +107,7 @@ class Application(Gtk.Application):
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
         self.sync_worker = SyncWorker()
+        self.sync_worker.sync()
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.art = Art()

@@ -48,37 +48,27 @@ class SyncWorker:
         """
             Init worker
         """
-        self.set_credentials()
         self.__start_time = 0
         self.__mtimes = {"bookmarks": 0}
         self.__status = False
         self.__client = MozillaSync()
         self.__session = None
 
-    def sync(self):
+    def sync(self, first_sync=False):
         """
             Start syncing, you need to check sync_status property
+            @param first_sync as bool
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__start_time = time()
-            thread = Thread(target=self.__sync, args=(self.__start_time,))
-            thread.daemon = True
-            thread.start()
+        self.__username = ""
+        self.__password = ""
+        Secret.Service.get(Secret.ServiceFlags.NONE, None,
+                           self.__on_get_secret, first_sync)
 
     def stop(self):
         """
             Stop update
         """
         self.__start_time = time()
-
-    def set_credentials(self):
-        """
-            Update sync credentials
-        """
-        self.__username = ""
-        self.__password = ""
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret)
 
     @property
     def mtimes(self):
@@ -107,10 +97,11 @@ class SyncWorker:
 #######################
 # PRIVATE             #
 #######################
-    def __sync(self, start_time):
+    def __sync(self, start_time, first_sync):
         """
             Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
-            @param start time as float
+            @param start_time as float
+            @param first_sync as bool
         """
         debug("Start syncing")
         if not self.__username or not self.__password:
@@ -147,7 +138,7 @@ class SyncWorker:
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 if self.__start_time != start_time:
                     raise StopIteration("Sync cancelled")
-                self.__pull_bookmarks(bulk_keys, start_time)
+                self.__pull_bookmarks(bulk_keys, start_time, first_sync)
             # Push new bookmarks
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
@@ -175,14 +166,13 @@ class SyncWorker:
         # Push bookmarks
         parents = []
         for bookmark_id in El().bookmarks.get_ids_for_mtime(mtime):
-            parent = El().bookmarks.get_parent(bookmark_id)
+            parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
-            if parent[0] is None:
-                parent_id = "unfiled_____"
-            else:
-                parent_id = parent[0]
-            if parent not in parents:
-                parents.append(parent)
+            if parent_guid is None:
+                parent_guid = "unfiled"
+            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
+            if parent_id not in parents:
+                parents.append(parent_id)
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
             record = {}
@@ -190,24 +180,39 @@ class SyncWorker:
             record["id"] = El().bookmarks.get_guid(bookmark_id)
             record["title"] = El().bookmarks.get_title(bookmark_id)
             record["tags"] = El().bookmarks.get_tags(bookmark_id)
-            record["parentid"] = parent_id
+            record["parentid"] = El().bookmarks.get_parent_guid(bookmark_id)
             record["type"] = "bookmark"
             debug("pushing %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
-        # Push parents
-        for (parent_guid, parent_name) in parents:
-            if parent_guid in ["root________", "unfiled_____"]:
+        # Push parents in this order, parents near root are handle later
+        # As otherwise, order will be broken by new children updates
+        while parents:
+            parent_id = parents.pop(0)
+            parent_guid = El().bookmarks.get_guid(parent_id)
+            # No parent, no parent or read only parent
+            if parent_guid in [None, "root", "unfiled"]:
                 continue
-            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
-            (grand_parent_guid, grand_parent_name) = \
-                El().bookmarks.get_parent(parent_id)
+            parent_name = El().bookmarks.get_title(parent_id)
+            children = El().bookmarks.get_children(parent_guid)
+            # So search if children in parents
+            found = False
+            for child_guid in children:
+                child_id = El().bookmarks.get_id_by_guid(child_guid)
+                if child_id in parents:
+                    found = True
+                    break
+            # Handle children first
+            if found:
+                parents.append(parent_id)
+                debug("later: %s" % parent_name)
+                continue
             record = {}
             record["id"] = parent_guid
             record["type"] = "folder"
-            record["parentid"] = grand_parent_guid
-            record["parentName"] = grand_parent_name
+            record["parentid"] = El().bookmarks.get_parent_guid(parent_id)
+            record["parentName"] = El().bookmarks.get_parent_name(parent_id)
             record["title"] = parent_name
-            record["children"] = El().bookmarks.get_children(parent_guid)
+            record["children"] = children
             debug("pushing parent %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
         # Del old bookmarks
@@ -220,20 +225,25 @@ class SyncWorker:
             El().bookmarks.remove(bookmark_id)
         El().bookmarks.clean_tags()
 
-    def __pull_bookmarks(self, bulk_keys, start_time):
+    def __pull_bookmarks(self, bulk_keys, start_time, first_sync):
         """
             Pull from bookmarks
             @param bulk_keys as KeyBundle
-            @param start time as float
+            @param start_time as float
+            @param first_sync as bool
             @raise StopIteration
         """
-        self.__client.client.delete_record("bookmarks", None)
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
+        records = self.__client.get_bookmarks(bulk_keys)
         # We get all guids here and remove them while sync
         # At the end, we have deleted records
-        to_delete = El().bookmarks.get_guids()
-        for record in self.__client.get_bookmarks(bulk_keys):
+        # On fist sync, keep all
+        if first_sync:
+            to_delete = []
+        else:
+            to_delete = El().bookmarks.get_guids()
+        for record in records:
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
             bookmark = record["payload"]
@@ -318,11 +328,12 @@ class SyncWorker:
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
-    def __on_get_secret(self, source, result):
+    def __on_get_secret(self, source, result, first_sync):
         """
             Store secret proxy
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param fisrt_sync as bool
         """
         try:
             secret = Secret.Service.get_finish(result)
@@ -336,15 +347,16 @@ class SyncWorker:
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
             secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search)
+                          None, self.__on_secret_search, first_sync)
         except Exception as e:
             print("SyncWorker::__on_get_secret()", e)
 
-    def __on_load_secret(self, source, result):
+    def __on_load_secret(self, source, result, first_sync):
         """
-            Set username/password input
+            Set params and start sync
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param first_sync as bool
         """
         try:
             secret = source.get_secret()
@@ -355,15 +367,21 @@ class SyncWorker:
                 self.__token = attributes["token"]
                 self.__uid = attributes["uid"]
                 self.__keyB = base64.b64decode(attributes["keyB"])
-                self.sync()
+                if Gio.NetworkMonitor.get_default().get_network_available():
+                    self.__start_time = time()
+                    thread = Thread(target=self.__sync,
+                                    args=(self.__start_time, first_sync))
+                    thread.daemon = True
+                    thread.start()
         except Exception as e:
             print("SyncWorker::__on_load_secret()", e)
 
-    def __on_secret_search(self, source, result):
+    def __on_secret_search(self, source, result, first_sync):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param first_sync as bool
         """
         try:
             if result is not None:
@@ -371,7 +389,8 @@ class SyncWorker:
                 if not items:
                     return
                 items[0].load_secret(None,
-                                     self.__on_load_secret)
+                                     self.__on_load_secret,
+                                     first_sync)
             else:
                 # Sync not configured, just remove pending deleted bookmarks
                 for bookmark_id in El().get_deleted_ids():
