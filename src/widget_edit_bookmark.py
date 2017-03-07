@@ -234,6 +234,8 @@ class EditBookmarkWidget(Gtk.Bin):
         self.__model.set_value(iterator, 1, toggle)
         tag_title = self.__model.get_value(iterator, 0)
         tag_id = El().bookmarks.get_tag_id(tag_title)
+        if tag_id is None:
+            return  # Sync may have deleted tag
         if toggle:
             El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
         else:
