@@ -377,7 +377,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__action_image2.set_from_icon_name("starred-symbolic",
                                                     Gtk.IconSize.MENU)
             bookmark_id = El().bookmarks.add(title,
-                                             uri, [])
+                                             uri, None, [])
             if El().sync_worker is not None:
                 El().sync_worker.sync()
             widget = EditBookmarkWidget(bookmark_id, False)

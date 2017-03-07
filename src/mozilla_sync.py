@@ -151,9 +151,7 @@ class SyncWorker:
             # Push new bookmarks
             if self.__start_time != start_time:
                 raise Exception("Sync cancelled")
-            self.__push_bookmarks(bulk_keys,
-                                  self.__mtimes["bookmarks"],
-                                  start_time)
+            self.__push_bookmarks(bulk_keys, start_time)
             if self.__start_time != start_time:
                 raise Exception("Sync cancelled")
             self.__mtimes = self.__client.client.info_collections()
@@ -163,18 +161,18 @@ class SyncWorker:
         except Exception as e:
             print("SyncWorker::__sync():", e)
 
-    def __push_bookmarks(self, bulk_keys, mtime, start_time):
+    def __push_bookmarks(self, bulk_keys, start_time):
         """
             Push to bookmarks
             @param bulk keys as KeyBundle
-            @param mtime as float
             @param start time as float
             @raise StopIteration
         """
         debug("push bookmarks")
         # Push bookmarks
         parents = []
-        for bookmark_id in El().bookmarks.get_ids_for_mtime(mtime):
+        for bookmark_id in El().bookmarks.get_ids_for_mtime(
+                                                   self.__mtimes["bookmarks"]):
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
             if parent_guid is None:
@@ -320,7 +318,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.add_tag(tag, False)
                         El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
-                                     start_time - 0.1,  # Prevent pushing
+                                     self.__mtimes["bookmarks"] - 0.01,
                                      False)
             if "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
