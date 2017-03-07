@@ -92,6 +92,7 @@ class EditBookmarkWidget(Gtk.Bin):
             else:
                 El().bookmarks.set_mtime(self.__bookmark_id,
                                          mtimes["bookmarks"] + 1)
+            El().bookmarks.clean_tags()
             El().sync_worker.sync()
         GLib.timeout_add(1000, self.destroy)
 
@@ -187,6 +188,7 @@ class EditBookmarkWidget(Gtk.Bin):
             else:
                 El().bookmarks.set_mtime(self.__bookmark_id,
                                          mtimes["bookmarks"] + 1)
+            El().bookmarks.clean_tags()
             El().sync_worker.sync()
 
     def __on_tag_edited(self, widget, path, name):
