@@ -30,7 +30,6 @@ from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_closed import ClosedMenu
-from eolie.mozilla_sync import SyncWorker
 
 
 class Application(Gtk.Application):
@@ -106,8 +105,13 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
-        self.sync_worker = SyncWorker()
-        self.sync_worker.sync()
+        try:
+            from eolie.mozilla_sync import SyncWorker
+            self.sync_worker = SyncWorker()
+            self.sync_worker.sync()
+        except Exception as e:
+            print("Application::init():", e)
+            self.sync_worker = None
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.art = Art()
