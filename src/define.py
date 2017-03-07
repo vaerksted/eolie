@@ -37,6 +37,3 @@ class Type:
 
 LOGINS = ["login", "username", "user", "mail", "email"]
 PASSWORDS = ["password", "passwd", "pass"]
-
-TOKENSERVER_URL = "https://token.services.mozilla.com/"
-FXA_SERVER_URL = "https://api.accounts.firefox.com"

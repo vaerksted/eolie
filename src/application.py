@@ -30,6 +30,7 @@ from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_closed import ClosedMenu
+from eolie.mozilla_sync import SyncWorker
 
 
 class Application(Gtk.Application):
@@ -38,11 +39,11 @@ class Application(Gtk.Application):
     """
 
     if GLib.getenv("XDG_DATA_HOME") is None:
-        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
+        LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
     else:
-        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
-    __COOKIES_PATH = "%s/cookies.db" % __LOCAL_PATH
-    __FAVICONS_PATH = "%s/favicons" % __LOCAL_PATH
+        LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
+    __COOKIES_PATH = "%s/cookies.db" % LOCAL_PATH
+    __FAVICONS_PATH = "%s/favicons" % LOCAL_PATH
 
     def __init__(self, extension_dir):
         """
@@ -105,6 +106,7 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
+        self.sync_worker = SyncWorker()
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.art = Art()
@@ -169,7 +171,7 @@ class Application(Gtk.Application):
                     state = view.webview.get_session_state().serialize()
                     session_states.append((uri, state.get_data()))
             dump(session_states,
-                 open(self.__LOCAL_PATH + "/session_states.bin", "wb"))
+                 open(self.LOCAL_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::prepare_to_exit()", e)
         if exit:
@@ -278,7 +280,7 @@ class Application(Gtk.Application):
         count = 0
         try:
             session_states = load(open(
-                                     self.__LOCAL_PATH + "/session_states.bin",
+                                     self.LOCAL_PATH + "/session_states.bin",
                                      "rb"))
             for (uri, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
@@ -303,6 +305,7 @@ class Application(Gtk.Application):
             GLib.setenv("LIBGL_DEBUG", "verbose", True)
             GLib.setenv("WEBKIT_DEBUG", "network", True)
             GLib.setenv("GST_DEBUG", "webkit*:5", True)
+            self.debug = True
         if self.settings.get_value("remember-session"):
             count = self.__restore_state()
         else:

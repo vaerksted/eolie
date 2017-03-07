@@ -14,8 +14,21 @@ from gi.repository import Gdk, GLib
 
 import unicodedata
 from urllib.parse import urlparse
+import string
+from random import choice
+from base64 import b64encode
 
 from eolie.define import El
+
+
+def get_random_string(size):
+    """
+        Get a rand string at size
+        @param size as int
+        return str
+    """
+    s = ''.join(choice(string.printable) for c in range(size))
+    return b64encode(s.encode("utf-8"))[:size].decode("utf-8")
 
 
 def get_current_monitor_model():

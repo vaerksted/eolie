@@ -171,9 +171,9 @@ class DatabaseAdblock:
             return
         self.__stop = False
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__thread = Thread(target=self.__update)
-            self.__thread.daemon = True
-            self.__thread.start()
+            thread = Thread(target=self.__update)
+            thread.daemon = True
+            thread.start()
 
     def stop(self):
         """

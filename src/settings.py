@@ -13,6 +13,7 @@
 from gi.repository import Gio, Gtk, GLib
 
 from gettext import gettext as _
+from threading import Thread
 
 from eolie.define import El
 from eolie.utils import get_current_monitor_model
@@ -141,6 +142,20 @@ class SettingsDialog:
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
                                 El().settings.get_value("do-not-track"))
+        if El().sync_worker is not None:
+            login_entry = builder.get_object("login_entry")
+            login_entry.set_text(El().sync_worker.username)
+            password_entry = builder.get_object("password_entry")
+            label = builder.get_object("result_label")
+            image = builder.get_object("result_image")
+            if El().sync_worker.status:
+                label.set_text(_("Sync is working"))
+                image.set_from_icon_name("network-transmit-receive-symbolic",
+                                         Gtk.IconSize.MENU)
+            sync_button = builder.get_object("sync_button")
+            sync_button.connect("clicked", self.__on_sync_button_clicked,
+                                login_entry, password_entry,
+                                label, image)
         builder.connect_signals(self)
 
     def show(self):
@@ -311,3 +326,93 @@ class SettingsDialog:
         if uri is None:
             uri = ""
         El().settings.set_value("download-uri", GLib.Variant("s", uri))
+
+#######################
+# PRIVATE             #
+#######################
+    def __connect_mozilla_sync(self, login, password, label, image):
+        """
+            Connect to mozilla sync
+            @param login as str
+            @param password as str
+            @param label as Gtk.Label
+            @param image as Gtk.Image
+            @thread safe
+        """
+        from eolie.mozilla_sync import MozillaSync
+        from gi.repository import Secret
+        import base64
+        try:
+            self.__client = MozillaSync()
+            session = self.__client.login(login, password)
+            bid_assertion, key = self.__client.get_browserid_assertion(session)
+            schema_string = "org.gnome.Eolie.sync"
+            keyB = base64.b64encode(session.keys[1]).decode("utf-8")
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
+                "uid": Secret.SchemaAttributeType.STRING,
+                "token": Secret.SchemaAttributeType.STRING,
+                "keyB": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "sync": "mozilla",
+                "login": login,
+                "uid": session.uid,
+                "token": session.token,
+                "keyB": keyB
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            Secret.password_store(schema, SecretAttributes,
+                                  Secret.COLLECTION_DEFAULT,
+                                  schema_string,
+                                  password,
+                                  None,
+                                  self.__on_password_stored)
+            GLib.idle_add(label.set_text, _("Sync started"))
+            GLib.idle_add(image.set_from_icon_name,
+                          "network-transmit-receive-symbolic",
+                          Gtk.IconSize.MENU)
+        except Exception as e:
+            if str(e) == "Unverified account":
+                GLib.idle_add(label.set_text,
+                              _("You received an email to validate sync"))
+                GLib.idle_add(image.set_from_icon_name,
+                              "mail-unread-symbolic",
+                              Gtk.IconSize.MENU)
+            else:
+                GLib.idle_add(label.set_text, str(e))
+                GLib.idle_add(image.set_from_icon_name,
+                              "computer-fail-symbolic",
+                              Gtk.IconSize.MENU)
+
+    def __on_password_stored(self, secret, result):
+        """
+            Update credentials
+            @param secret as Secret
+            @param result as Gio.AsyncResult
+        """
+        El().sync_worker.set_credentials()
+
+    def __on_sync_button_clicked(self, button, login_entry, password_entry,
+                                 label, image):
+        """
+            Connect to Mozilla Sync to get tokens
+            @param button as Gtk.Button
+            @param login_entry as Gtk.Entry
+            @param password_entry as Gtk.Entry
+            @param label as Gtk.Label
+            @param image as Gtk.Image
+        """
+        if image.get_icon_name() == "content-loading-symbolic":
+            return
+        label.set_text(_("Connecting..."))
+        image.set_from_icon_name("content-loading-symbolic", Gtk.IconSize.MENU)
+        thread = Thread(target=self.__connect_mozilla_sync,
+                        args=(login_entry.get_text(),
+                              password_entry.get_text(),
+                              label, image))
+        thread.daemon = True
+        thread.start()

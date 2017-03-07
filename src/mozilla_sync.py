@@ -1,0 +1,746 @@
+# Copyright (c) 2017 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Fork of https://github.com/mozilla-services/syncclient
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from gi.repository import Gio, Secret
+
+from pickle import dump, load
+from hashlib import sha256
+from binascii import hexlify
+import json
+import six
+import hmac
+import base64
+import math
+import requests
+from time import time
+from Crypto.Cipher import AES
+from Crypto import Random
+from requests_hawk import HawkAuth
+from fxa.core import Client as FxAClient, Session as FxASession
+from fxa.crypto import quick_stretch_password
+from threading import Thread
+
+from eolie.define import El
+from eolie.utils import debug
+from eolie.sqlcursor import SqlCursor
+
+
+TOKENSERVER_URL = "https://token.services.mozilla.com/"
+FXA_SERVER_URL = "https://api.accounts.firefox.com"
+
+
+class SyncWorker:
+    """
+       Manage sync with mozilla server, will start syncing on init
+    """
+
+    def __init__(self):
+        """
+            Init worker
+        """
+        self.set_credentials()
+        self.__start_time = 0
+        self.__status = False
+        self.__client = MozillaSync()
+        self.__session = None
+
+    def sync(self):
+        """
+            Start syncing, you need to check sync_status property
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            self.__start_time = time()
+            thread = Thread(target=self.__sync, args=(self.__start_time,))
+            thread.daemon = True
+            thread.start()
+
+    def stop(self):
+        """
+            Stop update
+        """
+        self.__start_time = time()
+
+    def set_credentials(self):
+        """
+            Update sync credentials
+        """
+        self.__username = ""
+        self.__password = ""
+        Secret.Service.get(Secret.ServiceFlags.NONE, None,
+                           self.__on_get_secret)
+
+    @property
+    def status(self):
+        """
+            Return True if sync is working
+            @return bool
+        """
+        return self.__status
+
+    @property
+    def username(self):
+        """
+            Get username
+            @return str
+        """
+        return self.__username
+
+#######################
+# PRIVATE             #
+#######################
+    def __sync(self, start_time):
+        """
+            Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
+            @param start time as float
+        """
+        debug("Start syncing")
+        if not self.__username or not self.__password:
+            raise StopIteration("No credentials")
+        try:
+            mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
+                          "rb"))
+        except:
+            mtimes = {"bookmarks": 0}
+        try:
+            if self.__session is None:
+                self.__session = FxASession(self.__client.client,
+                                            self.__username,
+                                            quick_stretch_password(
+                                                            self.__username,
+                                                            self.__password),
+                                            self.__uid,
+                                            self.__token)
+                self.__session.keys = [b"", self.__keyB]
+            try:
+                self.__status = True
+                self.__session.check_session_status()
+                bid_assertion, key = self.__client.get_browserid_assertion(
+                                                                self.__session)
+                bulk_keys = self.__client.connect(bid_assertion, key)
+            except Exception as e:
+                self.__status = False
+                raise e
+            new_mtimes = self.__client.client.info_collections()
+            debug("local mtime: %s, remote mtime: %s" % (
+                                                     mtimes["bookmarks"],
+                                                     new_mtimes["bookmarks"]))
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
+            self.__push_bookmarks(bulk_keys,
+                                  mtimes["bookmarks"],
+                                  start_time)
+            # Only pull if something new available
+            if mtimes["bookmarks"] != new_mtimes["bookmarks"]:
+                if self.__start_time != start_time:
+                    raise StopIteration("Sync cancelled")
+                self.__pull_bookmarks(bulk_keys, start_time)
+                if self.__start_time != start_time:
+                    raise StopIteration("Sync cancelled")
+            dump(self.__client.client.info_collections(),
+                 open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+            debug("Stop syncing")
+        except Exception as e:
+            print("SyncWorker::__sync():", e)
+
+    def __push_bookmarks(self, bulk_keys, mtime, start_time):
+        """
+            Push to bookmarks
+            @param bulk keys as KeyBundle
+            @param mtime as float
+            @param start time as float
+            @raise StopIteration
+        """
+        debug("push bookmarks")
+        # Add new bookmarks
+        for bookmark_id in El().bookmarks.get_ids_for_mtime(mtime):
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
+            record = {}
+            record["bmkUri"] = El().bookmarks.get_uri(bookmark_id)
+            record["id"] = El().bookmarks.get_guid(bookmark_id)
+            record["title"] = El().bookmarks.get_title(bookmark_id)
+            record["tags"] = El().bookmarks.get_tags(bookmark_id)
+            record["parentid"] = El().bookmarks.get_parent_id(bookmark_id)
+            record["type"] = "bookmark"
+            debug("pushing %s" % record)
+            self.__client.add_bookmark(record, bulk_keys)
+        # Del old bookmarks
+        for bookmark_id in El().bookmarks.get_deleted_ids():
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
+            guid = El().bookmarks.get_guid(bookmark_id)
+            debug("deleting %s" % guid)
+            self.__client.client.delete_record("bookmarks", guid)
+            El().bookmarks.remove(bookmark_id)
+        El().bookmarks.clean_tags()
+
+    def __pull_bookmarks(self, bulk_keys, start_time):
+        """
+            Pull from bookmarks
+            @param bulk_keys as KeyBundle
+            @param start time as float
+            @raise StopIteration
+        """
+        debug("pull bookmarks")
+        SqlCursor.add(El().bookmarks)
+        # We get all guids here and remove them while sync
+        # At the end, we have deleted records
+        to_delete = El().bookmarks.get_guids()
+        for record in self.__client.get_bookmarks(bulk_keys):
+            if self.__start_time != start_time:
+                raise StopIteration("Sync cancelled")
+            bookmark = record["payload"]
+            if bookmark["type"] != "bookmark":
+                continue
+            debug("pulling %s" % bookmark)
+            bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
+            # This bookmark exists, remove from to delete
+            if bookmark["id"] in to_delete:
+                to_delete.remove(bookmark["id"])
+            if El().bookmarks.get_mtime(bookmark_id) == record["modified"]:
+                continue
+            if not bookmark["tags"] and bookmark["parentName"]:
+                bookmark["tags"] = [bookmark["parentName"]]
+            if bookmark_id is None:
+                bookmark_id = El().bookmarks.add(bookmark["title"],
+                                                 bookmark["bmkUri"],
+                                                 bookmark["tags"],
+                                                 bookmark["id"])
+            else:
+                El().bookmarks.set_title(bookmark_id,
+                                         bookmark["title"],
+                                         False)
+                El().bookmarks.set_uri(bookmark_id,
+                                       bookmark["bmkUri"],
+                                       False)
+                # Remove previous tags
+                current_tags = El().bookmarks.get_tags(bookmark_id)
+                for tag in El().bookmarks.get_tags(bookmark_id):
+                    if tag not in bookmark["tags"]:
+                        tag_id = El().bookmarks.get_tag_id(tag)
+                        current_tags.remove(tag)
+                        El().bookmarks.del_tag_from(tag_id,
+                                                    bookmark_id,
+                                                    False)
+                for tag in bookmark["tags"]:
+                    # Tag already associated
+                    if tag in current_tags:
+                        continue
+                    tag_id = El().bookmarks.get_tag_id(tag)
+                    if tag_id is None:
+                        tag_id = El().bookmarks.add_tag(tag, False)
+                    El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
+            El().bookmarks.set_mtime(bookmark_id,
+                                     record["modified"],
+                                     False)
+            El().bookmarks.set_parent_id(bookmark_id,
+                                         bookmark["parentid"],
+                                         False)
+        if self.__start_time != start_time:
+            raise StopIteration("Sync cancelled")
+        for guid in to_delete:
+            bookmark_id = El().bookmarks.get_id_by_guid(guid)
+            if bookmark_id is not None:
+                El().bookmarks.remove(bookmark_id, False)
+        El().bookmarks.clean_tags()  # Will commit
+        SqlCursor.remove(El().bookmarks)
+
+    def __on_get_secret(self, source, result):
+        """
+            Store secret proxy
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            secret = Secret.Service.get_finish(result)
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "sync": "mozilla",
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
+                          None, self.__on_secret_search)
+        except Exception as e:
+            print("SyncWorker::__on_get_secret()", e)
+
+    def __on_load_secret(self, source, result):
+        """
+            Set username/password input
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            secret = source.get_secret()
+            attributes = source.get_attributes()
+            if secret is not None:
+                self.__username = attributes["login"]
+                self.__password = secret.get().decode('utf-8')
+                self.__token = attributes["token"]
+                self.__uid = attributes["uid"]
+                self.__keyB = base64.b64decode(attributes["keyB"])
+                self.sync()
+        except Exception as e:
+            print("SyncWorker::__on_load_secret()", e)
+
+    def __on_secret_search(self, source, result):
+        """
+            Set username/password input
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            if result is not None:
+                items = source.search_finish(result)
+                if not items:
+                    return
+                items[0].load_secret(None,
+                                     self.__on_load_secret)
+            else:
+                # Sync not configured, just remove pending deleted bookmarks
+                for bookmark_id in El().get_deleted_ids():
+                    El().bookmarks.remove(bookmark_id)
+        except Exception as e:
+            print("SyncWorker::__on_secret_search()", e)
+
+
+class MozillaSync(object):
+    """
+        Sync client
+    """
+    def __init__(self):
+        """
+            Init client
+        """
+        self.__client = FxAClient()
+
+    def login(self, login, password):
+        """
+            Login to FxA and get the keys.
+            @param login as str
+            @param password as str
+            @return fxaSession
+        """
+        fxaSession = self.__client.login(login, password, keys=True)
+        fxaSession.fetch_keys()
+        return fxaSession
+
+    def connect(self, bid_assertion, key):
+        """
+            Connect to sync using FxA browserid assertion
+            @param session as fxaSession
+            @return bundle keys as KeyBundle
+        """
+        state = None
+        if key is not None:
+            state = hexlify(sha256(key).digest()[0:16])
+        self.__client = SyncClient(bid_assertion, state)
+        sync_keys = KeyBundle.fromMasterKey(
+                                        key,
+                                        "identity.mozilla.com/picl/v1/oldsync")
+
+        # Fetch the sync bundle keys out of storage.
+        # They're encrypted with the account-level key.
+        keys = self.__decrypt_payload(self.__client.get_record("crypto",
+                                                               "keys"),
+                                      sync_keys)
+
+        # There's some provision for using separate
+        # key bundles for separate collections
+        # but I haven't bothered digging through
+        # to see what that's about because
+        # it doesn't seem to be in use, at least on my account.
+        if keys["collections"]:
+            print("no support for per-collection key bundles yet sorry :-(")
+            return None
+
+        # Now use those keys to decrypt the records of interest.
+        bulk_keys = KeyBundle(base64.b64decode(keys["default"][0]),
+                              base64.b64decode(keys["default"][1]))
+        return bulk_keys
+
+    def get_bookmarks(self, bulk_keys):
+        """
+            Return bookmarks payload
+            @param bulk keys as KeyBundle
+            @return [{}]
+        """
+        bookmarks = []
+        for record in self.__client.get_records('bookmarks'):
+            record["payload"] = self.__decrypt_payload(record, bulk_keys)
+            bookmarks.append(record)
+        return bookmarks
+
+    def add_bookmark(self, bookmark, bulk_keys):
+        payload = self.__encrypt_payload(bookmark, bulk_keys)
+        record = {}
+        record["modified"] = round(time(), 2)
+        record["payload"] = payload
+        record["id"] = bookmark["id"]
+        self.__client.put_record("bookmarks", record)
+
+    def get_browserid_assertion(self, session,
+                                tokenserver_url=TOKENSERVER_URL):
+        """
+            Get browser id assertion and state
+            @param session as fxaSession
+            @return (bid_assertion, state) as (str, str)
+        """
+        bid_assertion = session.get_identity_assertion(tokenserver_url)
+        return bid_assertion, session.keys[1]
+
+    @property
+    def client(self):
+        """
+            Get client
+        """
+        return self.__client
+
+#######################
+# PRIVATE             #
+#######################
+    def __encrypt_payload(self, record, key_bundle):
+        """
+            Encrypt payload
+            @param record as {}
+            @param key bundle as KeyBundle
+            @return encrypted record payload
+        """
+        plaintext = json.dumps(record).encode("utf-8")
+        # Input strings must be a multiple of 16 in length
+        length = 16 - (len(plaintext) % 16)
+        plaintext += bytes([length]) * length
+        iv = Random.new().read(16)
+        aes = AES.new(key_bundle.encryption_key, AES.MODE_CBC, iv)
+        ciphertext = base64.b64encode(aes.encrypt(plaintext))
+        _hmac = hmac.new(key_bundle.hmac_key,
+                         ciphertext,
+                         sha256).hexdigest()
+        payload = {"ciphertext": ciphertext.decode("utf-8"),
+                   "IV": base64.b64encode(iv).decode("utf-8"), "hmac": _hmac}
+        return json.dumps(payload)
+
+    def __decrypt_payload(self, record, key_bundle):
+        """
+            Descrypt payload
+            @param record as str (json)
+            @param key bundle as KeyBundle
+            @return uncrypted record payload
+        """
+        j = json.loads(record["payload"])
+        # Always check the hmac before decrypting anything.
+        expected_hmac = hmac.new(key_bundle.hmac_key,
+                                 j['ciphertext'].encode("utf-8"),
+                                 sha256).hexdigest()
+        if j['hmac'] != expected_hmac:
+            raise ValueError("HMAC mismatch: %s != %s" % (j['hmac'],
+                                                          expected_hmac))
+        ciphertext = base64.b64decode(j['ciphertext'])
+        iv = base64.b64decode(j['IV'])
+        aes = AES.new(key_bundle.encryption_key, AES.MODE_CBC, iv)
+        plaintext = aes.decrypt(ciphertext).strip().decode("utf-8")
+        # Remove any CBC block padding,
+        # assuming it's a well-formed JSON payload.
+        plaintext = plaintext[:plaintext.rfind("}") + 1]
+        return json.loads(plaintext)
+
+
+class KeyBundle:
+    """
+        RFC-5869
+    """
+    def __init__(self, encryption_key, hmac_key):
+        self.encryption_key = encryption_key
+        self.hmac_key = hmac_key
+
+    @classmethod
+    def fromMasterKey(cls, master_key, info):
+        key_material = KeyBundle.HKDF(master_key, None, info, 2 * 32)
+        return cls(key_material[:32], key_material[32:])
+
+    def HKDF_extract(salt, IKM, hashmod=sha256):
+        """
+            Extract a pseudorandom key suitable for use with HKDF_expand
+            @param salt as str
+            @param IKM as str
+        """
+        if salt is None:
+            salt = b"\x00" * hashmod().digest_size
+        return hmac.new(salt, IKM, hashmod).digest()
+
+    def HKDF_expand(PRK, info, length, hashmod=sha256):
+        """
+            Expand pseudo random key and info
+            @param PRK as str
+            @param info as str
+            @param length as int
+        """
+        digest_size = hashmod().digest_size
+        N = int(math.ceil(length * 1.0 / digest_size))
+        assert N <= 255
+        T = b""
+        output = []
+        for i in range(1, N + 1):
+            data = T + (info + chr(i)).encode()
+            T = hmac.new(PRK, data, hashmod).digest()
+            output.append(T)
+        return b"".join(output)[:length]
+
+    def HKDF(secret, salt, info, length, hashmod=sha256):
+        """
+            HKDF-extract-and-expand as a single function.
+            @param secret as str
+            @param salt as str
+            @param info as str
+            @param length as int
+        """
+        PRK = KeyBundle.HKDF_extract(salt, secret, hashmod)
+        return KeyBundle.HKDF_expand(PRK, info, length, hashmod)
+
+
+class TokenserverClient(object):
+    """
+        Client for the Firefox Sync Token Server.
+    """
+    def __init__(self, bid_assertion, client_state,
+                 server_url=TOKENSERVER_URL):
+        """
+            Init client
+            @param bid assertion as str
+            @param client_state as ???
+            @param server_url as str
+        """
+        self.__bid_assertion = bid_assertion
+        self.__client_state = client_state
+        self.__server_url = server_url
+
+    def get_hawk_credentials(self, duration=None):
+        """
+            Asks for new temporary token given a BrowserID assertion
+            @param duration as str
+        """
+        authorization = 'BrowserID %s' % self.__bid_assertion
+        headers = {
+            'Authorization': authorization,
+            'X-Client-State': self.__client_state
+        }
+        params = {}
+
+        if duration is not None:
+            params['duration'] = int(duration)
+
+        url = self.__server_url.rstrip('/') + '/1.0/sync/1.5'
+        raw_resp = requests.get(url, headers=headers, params=params,
+                                verify=True)
+        raw_resp.raise_for_status()
+        return raw_resp.json()
+
+
+class SyncClient(object):
+    """
+        Client for the Firefox Sync server.
+    """
+    def __init__(self, bid_assertion=None, client_state=None,
+                 credentials={}, tokenserver_url=TOKENSERVER_URL):
+        """
+            Init client
+            @param bid assertion as str
+            @param client_state as ???
+            @param credentials as {}
+            @param server_url as str
+        """
+        if bid_assertion is not None and client_state is not None:
+            ts_client = TokenserverClient(bid_assertion, client_state,
+                                          tokenserver_url)
+            credentials = ts_client.get_hawk_credentials()
+        self.__user_id = credentials['uid']
+        self.__api_endpoint = credentials['api_endpoint']
+        self.__auth = HawkAuth(algorithm=credentials['hashalg'],
+                               id=credentials['id'],
+                               key=credentials['key'])
+
+    def _request(self, method, url, **kwargs):
+        """
+            Utility to request an endpoint with the correct authentication
+            setup, raises on errors and returns the JSON.
+            @param method as str
+            @param url as str
+            @param kwargs as requests.request named args
+        """
+        url = self.__api_endpoint.rstrip('/') + '/' + url.lstrip('/')
+        raw_resp = requests.request(method, url, auth=self.__auth, **kwargs)
+        raw_resp.raise_for_status()
+
+        if raw_resp.status_code == 304:
+            http_error_msg = '%s Client Error: %s for url: %s' % (
+                raw_resp.status_code,
+                raw_resp.reason,
+                raw_resp.url)
+            raise requests.exceptions.HTTPError(http_error_msg,
+                                                response=raw_resp)
+        return raw_resp.json()
+
+    def info_collections(self, **kwargs):
+        """
+            Returns an object mapping collection names associated with the
+            account to the last-modified time for each collection.
+
+            The server may allow requests to this endpoint to be authenticated
+            with an expired token, so that clients can check for server-side
+            changes before fetching an updated token from the Token Server.
+        """
+        return self._request('get', '/info/collections', **kwargs)
+
+    def info_quota(self, **kwargs):
+        """
+            Returns a two-item list giving the user's current usage and quota
+            (in KB). The second item will be null if the server
+            does not enforce quotas.
+
+            Note that usage numbers may be approximate.
+        """
+        return self._request('get', '/info/quota', **kwargs)
+
+    def get_collection_usage(self, **kwargs):
+        """
+            Returns an object mapping collection names associated with the
+            account to the data volume used for each collection (in KB).
+
+            Note that these results may be very expensive as it calculates more
+            detailed and accurate usage information than the info_quota method.
+        """
+        return self._request('get', '/info/collection_usage', **kwargs)
+
+    def get_collection_counts(self, **kwargs):
+        """
+            Returns an object mapping collection names associated with the
+            account to the total number of items in each collection.
+        """
+        return self._request('get', '/info/collection_counts', **kwargs)
+
+    def delete_all_records(self, **kwargs):
+        """
+            Deletes all records for the user
+        """
+        return self._request('delete', '/', **kwargs)
+
+    def get_records(self, collection, full=True, ids=None, newer=None,
+                    limit=None, offset=None, sort=None, **kwargs):
+        """
+            Returns a list of the BSOs contained in a collection. For example:
+
+            >>> ["GXS58IDC_12", "GXS58IDC_13", "GXS58IDC_15"]
+
+            By default only the BSO ids are returned, but full objects can be
+            requested using the full parameter. If the collection does not
+            exist, an empty list is returned.
+
+            :param ids:
+                a comma-separated list of ids. Only objects whose id is in
+                this list will be returned. A maximum of 100 ids may be
+                provided.
+
+            :param newer:
+                a timestamp. Only objects whose last-modified time is strictly
+                greater than this value will be returned.
+
+            :param full:
+                any value. If provided then the response will be a list of full
+                BSO objects rather than a list of ids.
+
+            :param limit:
+                a positive integer. At most that many objects will be returned.
+                If more than that many objects matched the query,
+                an X-Weave-Next-Offset header will be returned.
+
+            :param offset:
+                a string, as returned in the X-Weave-Next-Offset header of a
+                previous request using the limit parameter.
+
+            :param sort:
+                sorts the output:
+                "newest" - orders by last-modified time, largest first
+                "index" - orders by the sortindex, highest weight first
+                "oldest" - orders by last-modified time, oldest first
+        """
+        params = kwargs.pop('params', {})
+        if full:
+            params['full'] = True
+        if ids is not None:
+            params['ids'] = ','.join(map(str, ids))
+        if newer is not None:
+            params['newer'] = newer
+        if limit is not None:
+            params['limit'] = limit
+        if offset is not None:
+            params['offset'] = offset
+        if sort is not None and sort in ('newest', 'index', 'oldest'):
+            params['sort'] = sort
+
+        return self._request('get', '/storage/%s' % collection.lower(),
+                             params=params, **kwargs)
+
+    def get_record(self, collection, record_id, **kwargs):
+        """Returns the BSO in the collection corresponding to the requested id.
+        """
+        return self._request('get', '/storage/%s/%s' % (collection.lower(),
+                                                        record_id), **kwargs)
+
+    def delete_record(self, collection, record_id, **kwargs):
+        """Deletes the BSO at the given location.
+        """
+        try:
+            return self._request('delete', '/storage/%s/%s' % (
+                collection.lower(), record_id), **kwargs)
+        except Exception as e:
+            print("SyncClient::delete_record()", e)
+
+    def put_record(self, collection, record, **kwargs):
+        """
+            Creates or updates a specific BSO within a collection.
+            The passed record must be a python object containing new data for
+            the BSO.
+
+            If the target BSO already exists then it will be updated with the
+            data from the request body. Fields that are not provided will not
+            be overwritten, so it is possible to e.g. update the ttl field of a
+            BSO without re-submitting its payload. Fields that are explicitly
+            set to null in the request body will be set to their default value
+            by the server.
+
+            If the target BSO does not exist, then fields that are not provided
+            in the python object will be set to their default value
+            by the server.
+
+            Successful responses will return the new last-modified time for the
+            collection.
+
+            Note that the server may impose a limit on the amount of data
+            submitted for storage in a single BSO.
+        """
+        # XXX: Workaround until request-hawk supports the json parameter. (#17)
+        if isinstance(record, six.string_types):
+            record = json.loads(record)
+        record = record.copy()
+        record_id = record.pop('id')
+        headers = {}
+        if 'headers' in kwargs:
+            headers = kwargs.pop('headers')
+        headers['Content-Type'] = 'application/json; charset=utf-8'
+
+        return self._request('put', '/storage/%s/%s' % (
+            collection.lower(), record_id), data=json.dumps(record),
+            headers=headers, **kwargs)

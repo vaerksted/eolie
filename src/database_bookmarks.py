@@ -13,8 +13,10 @@
 from gi.repository import GLib, Gio
 
 import sqlite3
+from time import time
+import itertools
 
-from eolie.utils import noaccents
+from eolie.utils import noaccents, get_random_string
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -38,8 +40,12 @@ class DatabaseBookmarks:
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
+                                               parentid TEXT,
                                                popularity INT NOT NULL,
-                                               atime INT NOT NULL
+                                               atime INT NOT NULL,
+                                               guid TEXT NOT NULL,
+                                               mtime REAL NOT NULL,
+                                               del INT DEFAULT 0
                                                )'''
     __create_tags = '''CREATE TABLE tags (id INTEGER PRIMARY KEY,
                                           title TEXT NOT NULL)'''
@@ -68,22 +74,31 @@ class DatabaseBookmarks:
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 
-    def add(self, title, uri, tags, atime=0):
+    def add(self, title, uri, tags, guid=None, atime=0, commit=True):
         """
             Add a new bookmark
             @param title as str
             @param uri as str
             @param tags as [str]
             @param ctime as int
+            @param commit as bool
             @return bookmark id as int
         """
         if not uri or not title:
             return
+        # Find an uniq guid
+        while guid is None:
+            guid = get_random_string(12)
+            if self.exists_guid(guid):
+                guid = None
+
         with SqlCursor(self) as sql:
+            mtime = round(time(), 2)
             result = sql.execute("INSERT INTO bookmarks\
-                                  (title, uri, popularity, atime)\
-                                  VALUES (?, ?, ?, ?)",
-                                 (title, uri.rstrip('/'), 0, atime))
+                                  (title, uri, popularity, guid, atime, mtime)\
+                                  VALUES (?, ?, ?, ?, ?, ?)",
+                                 (title, uri.rstrip('/'), 0,
+                                  guid, atime, mtime))
             bookmarks_id = result.lastrowid
             for tag in tags:
                 if not tag:
@@ -94,20 +109,34 @@ class DatabaseBookmarks:
                 sql.execute("INSERT INTO bookmarks_tags\
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
-            sql.commit()
+            if commit:
+                sql.commit()
             return bookmarks_id
 
-    def remove(self, bookmark_id):
+    def delete(self, bookmark_id, delete=True):
+        """
+            Mark bookmark as deleted
+            @param bookmark id as int
+            @param delete as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET del=?\
+                         WHERE rowid=?", (delete, bookmark_id))
+
+    def remove(self, bookmark_id, commit=True):
         """
             Remove bookmark from db
             @param bookmark id as int
+            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("DELETE FROM bookmarks\
                          WHERE rowid=?", (bookmark_id,))
             sql.execute("DELETE FROM bookmarks_tags\
                          WHERE bookmark_id=?", (bookmark_id,))
-            sql.commit()
+            if commit:
+                sql.commit()
 
     def add_tag(self, tag, commit=False):
         """
@@ -145,9 +174,29 @@ class DatabaseBookmarks:
             @param old as str
             @param new as str
         """
+        tag_id = self.get_tag_id(old)
+        if tag_id is None:
+            return
+        for (bookmark_id, title, uri) in self.get_bookmarks(tag_id):
+            self.set_mtime(bookmark_id, round(time(), 2))
         with SqlCursor(self) as sql:
             sql.execute("UPDATE tags set title=? WHERE title=?", (new, old))
             sql.commit()
+
+    def get_tags(self, bookmark_id):
+        """
+            Get tags for bookmark id
+            @param bookmark id as int
+            @return [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT tags.title\
+                                  FROM tags, bookmarks_tags\
+                                  WHERE bookmarks_tags.bookmark_id=?\
+                                  AND bookmarks_tags.tag_id=tags.rowid\
+                                  ORDER BY title COLLATE LOCALIZED",
+                                 (bookmark_id,))
+            return list(itertools.chain(*result))
 
     def has_tag(self, bookmark_id, tag):
         """
@@ -185,6 +234,60 @@ class DatabaseBookmarks:
                 return v[0]
             return None
 
+    def get_id_by_guid(self, guid):
+        """
+            Get id for guid
+            @param guid as str
+            @return id as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM bookmarks\
+                                  WHERE guid=?", (guid,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
+    def get_ids_for_mtime(self, mtime):
+        """
+            Get ids that need to be synced related to mtime
+            @param mtime as int
+            @return [int]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM bookmarks\
+                                  WHERE mtime > ?\
+                                  AND del=0", (mtime,))
+            return list(itertools.chain(*result))
+
+    def get_deleted_ids(self):
+        """
+            Get ids that need to be synced related to mtime
+            @return [int]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM bookmarks\
+                                  WHERE del=1")
+            return list(itertools.chain(*result))
+
+    def get_parent_id(self, bookmark_id):
+        """
+            Get parent id for bookmark
+            @param bookmark id as int
+            @return parent id as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT parentid\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None and v[0] is not None:
+                return v[0]
+            return "unfiled_____"
+
     def get_title(self, bookmark_id):
         """
             Get bookmark title
@@ -214,6 +317,45 @@ class DatabaseBookmarks:
             if v is not None:
                 return v[0]
             return ""
+
+    def get_guid(self, bookmark_id):
+        """
+            Get bookmark guid
+            @param bookmark id as int
+            @return guid as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT guid\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
+
+    def get_guids(self):
+        """
+            Get all guids
+            @return guids as [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT guid FROM bookmarks")
+            return list(itertools.chain(*result))
+
+    def get_mtime(self, bookmark_id):
+        """
+            Get bookmark mtime
+            @param bookmark id as int
+            @return mtime as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
 
     def get_tag_id(self, title):
         """
@@ -245,7 +387,7 @@ class DatabaseBookmarks:
                 return v[0]
             return None
 
-    def get_tags(self):
+    def get_all_tags(self):
         """
             Get all tags
             @return [rowid, str]
@@ -270,6 +412,7 @@ class DatabaseBookmarks:
                             FROM bookmarks, bookmarks_tags\
                             WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
                             AND bookmarks_tags.tag_id=?\
+                            AND bookmarks.del=0\
                             ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
 
@@ -285,6 +428,7 @@ class DatabaseBookmarks:
                                    bookmarks.uri\
                             FROM bookmarks\
                             WHERE bookmarks.popularity!=0\
+                            AND bookmarks.del=0\
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
 
@@ -302,6 +446,7 @@ class DatabaseBookmarks:
                             WHERE NOT EXISTS (\
                                 SELECT bookmark_id FROM bookmarks_tags\
                                 WHERE bookmark_id=bookmarks.rowid)\
+                            AND bookmarks.del=0\
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
 
@@ -316,32 +461,53 @@ class DatabaseBookmarks:
                                   bookmarks.uri\
                                   FROM bookmarks\
                                   WHERE bookmarks.atime != 0\
+                                  AND bookmarks.del=0\
                                   ORDER BY bookmarks.atime DESC")
             return list(result)
 
-    def set_title(self, bookmark_id, title):
+    def set_title(self, bookmark_id, title, commit=True):
         """
             Set bookmark title
             @param bookmark id as int
             @param title as str
+            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET title=?\
                          WHERE rowid=?", (title, bookmark_id,))
-            sql.commit()
+            if commit:
+                sql.commit()
+        self.set_mtime(bookmark_id, round(time(), 2), commit)
 
-    def set_uri(self, bookmark_id, uri):
+    def set_uri(self, bookmark_id, uri, commit=True):
         """
             Set bookmark uri
             @param bookmark id as int
             @param uri as str
+            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET uri=?\
                          WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
-            sql.commit()
+            if commit:
+                sql.commit()
+        self.set_mtime(bookmark_id, round(time(), 2), commit)
+
+    def set_parent_id(self, bookmark_id, parent_id, commit=True):
+        """
+            Set parent id for bookmark
+            @param bookmark id as int
+            @param parent id as str
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET parentid=? where rowid=?",
+                        (parent_id, bookmark_id))
+            if commit:
+                sql.commit()
 
     def set_access_time(self, uri, atime):
         """
@@ -353,6 +519,19 @@ class DatabaseBookmarks:
             sql.execute("UPDATE bookmarks\
                          SET atime=? where uri=?", (atime, uri.rstrip('/')))
             sql.commit()
+
+    def set_mtime(self, bookmark_id, mtime, commit=True):
+        """
+            Set bookmark sync time
+            @param bookmark id as int
+            @param mtime as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET mtime=? where rowid=?", (mtime, bookmark_id))
+            if commit:
+                sql.commit()
 
     def set_tag_title(self, tag_id, title):
         """
@@ -422,6 +601,7 @@ class DatabaseBookmarks:
         """
             Mozilla Firefox importer
         """
+        SqlCursor.add(self)
         firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
         d = Gio.File.new_for_path(firefox_path)
         infos = d.enumerate_children(
@@ -440,20 +620,38 @@ class DatabaseBookmarks:
             c = sqlite3.connect(sqlite_path, 600.0)
             result = c.execute("SELECT bookmarks.title,\
                                        moz_places.url,\
-                                       tag.title\
+                                       tag.title,\
+                                       bookmarks.guid,\
+                                       tag.guid\
                                 FROM moz_bookmarks AS bookmarks,\
                                      moz_bookmarks AS tag,\
                                      moz_places\
                                 WHERE bookmarks.fk=moz_places.id\
                                 AND bookmarks.type=1\
                                 AND tag.id=bookmarks.parent")
-            for (title, uri,  tag) in list(result):
+            for (title, uri,  tag, bookmark_guid, tag_guid) in list(result):
                 if not uri.startswith('http'):
                     continue
                 uri = uri.rstrip('/')
                 rowid = self.get_id(uri)
                 if rowid is None:
-                    self.add(title, uri, [tag], 0)
+                    bookmark_id = self.add(title, uri, [tag],
+                                           bookmark_guid, 0, False)
+                    self.set_parent_id(bookmark_id, tag_guid)
+        with SqlCursor(self) as sql:
+            sql.commit()
+        SqlCursor.remove(self)
+
+    def exists_guid(self, guid):
+        """
+            Check if guid exists in db
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT guid FROM bookmarks\
+                                  WHERE guid=?", (guid,))
+            v = result.fetchone()
+            return v is not None
 
     def search(self, search, limit):
         """

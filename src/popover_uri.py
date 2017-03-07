@@ -494,7 +494,7 @@ class UriPopover(Gtk.Popover):
         """
         for row in self.__bookmarks_box.get_selected_rows():
             item_id = row.item.get_property("id")
-            El().bookmarks.remove(item_id)
+            El().bookmarks.delete(item_id)
             self.__bookmarks_box.remove(row)
             self.__remove_button.hide()
 
@@ -583,7 +583,7 @@ class UriPopover(Gtk.Popover):
                    _("Recents")),
                   (Type.NONE,
                    _("Unclassified"))]
-        self.__add_tags(static + El().bookmarks.get_tags(), current)
+        self.__add_tags(static + El().bookmarks.get_all_tags(), current)
 
     def _on_day_selected(self, calendar):
         """

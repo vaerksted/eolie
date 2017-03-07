@@ -33,6 +33,7 @@ class ToolbarTitle(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__uri = ""
+        self.__title = ""
         self.__lock = False
         self.__in_notify = False
         self.__signal_id = None
@@ -375,6 +376,7 @@ class ToolbarTitle(Gtk.Bin):
                                                     Gtk.IconSize.MENU)
             bookmark_id = El().bookmarks.add(title,
                                              uri, [])
+            El().sync_worker.push_bookmark(bookmark_id)
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()

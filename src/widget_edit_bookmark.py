@@ -57,7 +57,7 @@ class EditBookmarkWidget(Gtk.Bin):
         column1.set_expand(True)
         self.__treeview.append_column(column0)
         self.__treeview.append_column(column1)
-        for (tag_id, title) in El().bookmarks.get_tags():
+        for (tag_id, title) in El().bookmarks.get_all_tags():
             self.__model.append([title, El().bookmarks.has_tag(bookmark_id,
                                                                title)])
         # Some magic here but look ok when removing button
@@ -83,6 +83,8 @@ class EditBookmarkWidget(Gtk.Bin):
         El().bookmarks.set_uri(self.__bookmark_id,
                                self.__uri_entry.get_text())
         self.get_parent().set_visible_child_name("bookmarks")
+        if El().sync_worker is not None:
+            El().sync_worker.sync()
         GLib.timeout_add(1000, self.destroy)
 
     def _on_del_clicked(self, button):
@@ -91,7 +93,7 @@ class EditBookmarkWidget(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.disconnect_by_func(self.__on_unmap)
-        El().bookmarks.remove(self.__bookmark_id)
+        El().bookmarks.delete(self.__bookmark_id)
         if isinstance(self.get_parent(), Gtk.Popover):
             self.get_parent().hide()
         else:
@@ -169,6 +171,8 @@ class EditBookmarkWidget(Gtk.Bin):
                                  self.__title_entry.get_text())
         El().bookmarks.set_uri(self.__bookmark_id,
                                self.__uri_entry.get_text())
+        if El().sync_worker is not None:
+            El().sync_worker.sync()
 
     def __on_tag_edited(self, widget, path, name):
         """
