@@ -142,20 +142,29 @@ class SettingsDialog:
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
                                 El().settings.get_value("do-not-track"))
+        label = builder.get_object("result_label")
+        sync_button = builder.get_object("sync_button")
         if El().sync_worker is not None:
             login_entry = builder.get_object("login_entry")
             login_entry.set_text(El().sync_worker.username)
             password_entry = builder.get_object("password_entry")
-            label = builder.get_object("result_label")
             image = builder.get_object("result_image")
             if El().sync_worker.status:
                 label.set_text(_("Sync is working"))
                 image.set_from_icon_name("network-transmit-receive-symbolic",
                                          Gtk.IconSize.MENU)
-            sync_button = builder.get_object("sync_button")
             sync_button.connect("clicked", self.__on_sync_button_clicked,
                                 login_entry, password_entry,
                                 label, image)
+        else:
+            try:
+                from eolie.mozilla_sync import SyncWorker
+                SyncWorker  # Just make PEP8 happy
+            except Exception as e:
+                label.set_text(
+                      _("Sync is not available on your computer:\n %s") % e)
+                sync_button.set_sensitive(False)
+
         builder.connect_signals(self)
 
     def show(self):
