@@ -664,8 +664,11 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("DELETE from tags\
                          WHERE NOT EXISTS (\
-                            SELECT rowid FROM bookmarks_tags\
-                            WHERE tags.rowid = bookmarks_tags.tag_id)")
+                            SELECT bookmarks_tags.rowid\
+                            FROM bookmarks, bookmarks_tags\
+                            WHERE tags.rowid = bookmarks_tags.tag_id\
+                            AND bookmarks.rowid = bookmarks_tags.bookmark_id\
+                            AND bookmarks.del!=1)")
             sql.commit()
 
     def import_firefox(self):
