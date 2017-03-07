@@ -62,6 +62,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">start</property>
                 <property name="margin_left">15</property>
                 <property name="label" translatable="yes">Download folder:</property>
               </object>
