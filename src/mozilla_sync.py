@@ -211,9 +211,10 @@ class SyncWorker:
             if self.__start_time != start_time:
                 raise StopIteration("Sync cancelled")
             bookmark = record["payload"]
-            if bookmark["type"] != "bookmark":
+            if "type" not in bookmark.keys() or\
+                    bookmark["type"] != "bookmark":
                 continue
-            debug("pulling %s" % bookmark)
+            debug("pulling %s" % record)
             bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
             # This bookmark exists, remove from to delete
             if bookmark["id"] in to_delete:
