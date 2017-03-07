@@ -211,7 +211,7 @@ class EditBookmarkWidget(Gtk.Bin):
                 mtime = round(time(), 2)
             else:
                 mtime = mtimes["bookmarks"]
-            tag_id = self.get_tag_id(old_name)
+            tag_id = El.bookmarks.get_tag_id(old_name)
             if tag_id is None:
                 return
             for (bookmark_id, title, uri) in self.get_bookmarks(tag_id):
