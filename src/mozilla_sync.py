@@ -51,7 +51,6 @@ class SyncWorker:
         self.__stop = True
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
-        self.__bulk_keys = None
         self.__client = MozillaSync()
         self.__session = None
 
@@ -134,8 +133,6 @@ class SyncWorker:
             Get a session decrypt keys
             @return keys as (b"", b"")
         """
-        if self.__bulk_keys is not None:
-            return self.__bulk_keys
         if self.__session is None:
             self.__session = FxASession(self.__client.client,
                                         self.__username,
