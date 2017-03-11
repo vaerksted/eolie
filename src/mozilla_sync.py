@@ -48,9 +48,10 @@ class SyncWorker:
         """
             Init worker
         """
-        self.__start_time = 0
+        self.__stop = True
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
+        self.__bulk_keys = None
         self.__client = MozillaSync()
         self.__session = None
 
@@ -59,10 +60,24 @@ class SyncWorker:
             Start syncing, you need to check sync_status property
             @param first_sync as bool
         """
+        if self.syncing:
+            return
         self.__username = ""
         self.__password = ""
+        self.__stop = False
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret, first_sync, False)
+
+    def push_history(self, history_id):
+        """
+            Add history id to remote history
+            A first call to sync() is needed to populate secrets
+            @param history_id as int
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            thread = Thread(target=self.__push_history, args=(history_id,))
+            thread.daemon = True
+            thread.start()
 
     def delete_secret(self):
         """
@@ -77,7 +92,7 @@ class SyncWorker:
         """
             Stop update
         """
-        self.__start_time = time()
+        self.__stop = True
 
     @property
     def mtimes(self):
@@ -93,7 +108,7 @@ class SyncWorker:
             True if sync is running
             @return bool
         """
-        return self.__start_time != 0
+        return not self.__stop
 
     @property
     def status(self):
@@ -114,39 +129,76 @@ class SyncWorker:
 #######################
 # PRIVATE             #
 #######################
-    def __sync(self, start_time, first_sync):
+    def __get_session_bulk_keys(self):
+        """
+            Get a session decrypt keys
+            @return keys as (b"", b"")
+        """
+        if self.__bulk_keys is not None:
+            return self.__bulk_keys
+        if self.__session is None:
+            self.__session = FxASession(self.__client.client,
+                                        self.__username,
+                                        quick_stretch_password(
+                                                        self.__username,
+                                                        self.__password),
+                                        self.__uid,
+                                        self.__token)
+            self.__session.keys = [b"", self.__keyB]
+        try:
+            self.__status = True
+            self.__session.check_session_status()
+            bid_assertion, key = self.__client.get_browserid_assertion(
+                                                            self.__session)
+            bulk_keys = self.__client.connect(bid_assertion, key)
+        except Exception as e:
+            self.__status = False
+            raise e
+        return bulk_keys
+
+    def __push_history(self, history_id):
+        """
+            Push history
+            @param history_id as int
+        """
+        if not self.__username or not self.__password:
+            self.__stop = True
+            return
+        try:
+            bulk_keys = self.__get_session_bulk_keys()
+            record = {}
+            record["histUri"] = El().history.get_uri(history_id)
+            record["id"] = El().history.get_guid(history_id)
+            record["title"] = El().history.get_title(history_id)
+            atime = 1000000 * El().history.get_atime(history_id)
+            record["visits"] = [{"date": atime, "type": 1}]
+            debug("pushing %s" % record)
+            self.__client.add_history(record, bulk_keys)
+
+            # Update last sync mtime
+            self.__mtimes = self.__client.client.info_collections()
+            dump(self.__mtimes,
+                 open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+        except Exception as e:
+            print("SyncWorker::__push_history():", e)
+        self.__stop = True
+
+    def __sync(self, first_sync):
         """
             Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
-            @param start_time as float
             @param first_sync as bool
         """
         debug("Start syncing")
         if not self.__username or not self.__password:
-            raise Exception("No credentials")
+            self.__stop = True
+            return
         try:
             self.__mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         try:
-            if self.__session is None:
-                self.__session = FxASession(self.__client.client,
-                                            self.__username,
-                                            quick_stretch_password(
-                                                            self.__username,
-                                                            self.__password),
-                                            self.__uid,
-                                            self.__token)
-                self.__session.keys = [b"", self.__keyB]
-            try:
-                self.__status = True
-                self.__session.check_session_status()
-                bid_assertion, key = self.__client.get_browserid_assertion(
-                                                                self.__session)
-                bulk_keys = self.__client.connect(bid_assertion, key)
-            except Exception as e:
-                self.__status = False
-                raise e
+            bulk_keys = self.__get_session_bulk_keys()
             new_mtimes = self.__client.client.info_collections()
 
             ######################
@@ -157,13 +209,7 @@ class SyncWorker:
                                                  new_mtimes["history"]))
             # Only pull if something new available
             if self.__mtimes["history"] != new_mtimes["history"]:
-                if self.__start_time != start_time:
-                    raise Exception("Sync cancelled")
-                self.__pull_history(bulk_keys, start_time)
-            # Push new history
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
-            self.__push_history(bulk_keys, start_time)
+                self.__pull_history(bulk_keys)
             ########################
             # Bookmarks Management #
             ########################
@@ -172,15 +218,9 @@ class SyncWorker:
                                                  new_mtimes["bookmarks"]))
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
-                if self.__start_time != start_time:
-                    raise Exception("Sync cancelled")
-                self.__pull_bookmarks(bulk_keys, start_time, first_sync)
+                self.__pull_bookmarks(bulk_keys, first_sync)
             # Push new bookmarks
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
-            self.__push_bookmarks(bulk_keys, start_time)
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
+            self.__push_bookmarks(bulk_keys)
 
             # Update last sync mtime
             self.__mtimes = self.__client.client.info_collections()
@@ -189,9 +229,9 @@ class SyncWorker:
             debug("Stop syncing")
         except Exception as e:
             print("SyncWorker::__sync():", e)
-        self.__start_time = 0
+        self.__stop = True
 
-    def __push_bookmarks(self, bulk_keys, start_time):
+    def __push_bookmarks(self, bulk_keys):
         """
             Push to bookmarks
             @param bulk keys as KeyBundle
@@ -209,8 +249,6 @@ class SyncWorker:
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
             record = {}
             record["bmkUri"] = El().bookmarks.get_uri(bookmark_id)
             record["id"] = El().bookmarks.get_guid(bookmark_id)
@@ -229,8 +267,6 @@ class SyncWorker:
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
             guid = El().bookmarks.get_guid(bookmark_id)
             debug("deleting %s" % guid)
             self.__client.client.delete_record("bookmarks", guid)
@@ -265,11 +301,10 @@ class SyncWorker:
             self.__client.add_bookmark(record, bulk_keys)
         El().bookmarks.clean_tags()
 
-    def __pull_bookmarks(self, bulk_keys, start_time, first_sync):
+    def __pull_bookmarks(self, bulk_keys, first_sync):
         """
             Pull from bookmarks
             @param bulk_keys as KeyBundle
-            @param start_time as float
             @param first_sync as bool
             @raise StopIteration
         """
@@ -284,8 +319,6 @@ class SyncWorker:
         else:
             to_delete = El().bookmarks.get_guids()
         for record in records:
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
                     bookmark["type"] not in ["folder", "bookmark"]:
@@ -363,8 +396,6 @@ class SyncWorker:
                                           bookmark["parentid"],
                                           bookmark["parentName"],
                                           False)
-        if self.__start_time != start_time:
-            raise Exception("Sync cancelled")
         for guid in to_delete:
             debug("deleting: %s" % guid)
             bookmark_id = El().bookmarks.get_id_by_guid(guid)
@@ -373,40 +404,16 @@ class SyncWorker:
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
-    def __push_history(self, bulk_keys, start_time):
-        """
-            Push to history
-            @param bulk keys as KeyBundle
-            @param start_time as int
-            @raise StopIteration
-        """
-        debug("push history")
-        for history_id in El().history.get_ids_for_mtime(
-                                                   self.__mtimes["history"]):
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
-            record = {}
-            record["histUri"] = El().history.get_uri(history_id)
-            record["id"] = El().history.get_guid(history_id)
-            record["title"] = El().history.get_title(history_id)
-            atime = 1000000 * El().history.get_atime(history_id)
-            record["visits"] = [{"date": atime, "type": 1}]
-            debug("pushing %s" % record)
-            self.__client.add_history(record, bulk_keys)
-
-    def __pull_history(self, bulk_keys, start_time):
+    def __pull_history(self, bulk_keys):
         """
             Pull from history
             @param bulk_keys as KeyBundle
-            @param start_time as int
             @raise StopIteration
         """
         debug("pull history")
         SqlCursor.add(El().history)
         records = self.__client.get_history(bulk_keys)
         for record in records:
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
             history = record["payload"]
             if "histUri" not in history.keys():
                 continue
@@ -429,20 +436,18 @@ class SyncWorker:
                                               history["histUri"],
                                               history["id"],
                                               atime,
-                                              self.__mtimes["bookmarks"],
+                                              self.__mtimes["history"],
                                               False)
             else:
-                El().bookmarks.set_title(history_id,
-                                         title,
-                                         False)
-                El().bookmarks.set_atime(history_id,
-                                         atime,
-                                         False)
-                El().bookmarks.set_mtime(history_id,
-                                         self.__mtimes["bookmarks"],
-                                         False)
-        if self.__start_time != start_time:
-            raise Exception("Sync cancelled")
+                El().history.set_title(history_id,
+                                       title,
+                                       False)
+                El().history.set_atime(history_id,
+                                       atime,
+                                       False)
+                El().history.set_mtime(history_id,
+                                       self.__mtimes["history"],
+                                       False)
         with SqlCursor(El().history) as sql:
             sql.commit()
         SqlCursor.remove(El().history)
@@ -488,9 +493,8 @@ class SyncWorker:
                 self.__uid = attributes["uid"]
                 self.__keyB = base64.b64decode(attributes["keyB"])
                 if Gio.NetworkMonitor.get_default().get_network_available():
-                    self.__start_time = time()
                     thread = Thread(target=self.__sync,
-                                    args=(self.__start_time, first_sync))
+                                    args=(first_sync,))
                     thread.daemon = True
                     thread.start()
         except Exception as e:
@@ -616,7 +620,6 @@ class MozillaSync(object):
         record["modified"] = round(time(), 2)
         record["payload"] = payload
         record["id"] = history["id"]
-        return
         self.__client.put_record("history", record)
 
     def get_browserid_assertion(self, session,

@@ -302,6 +302,9 @@ class Container(Gtk.Paned):
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https"]:
             El().history.add(title, uri)
+            history_id = El().history.get_id(title, uri)
+            if El().sync_worker is not None:
+                El().sync_worker.push_history(history_id)
 
     def __on_enter_fullscreen(self, webview):
         """

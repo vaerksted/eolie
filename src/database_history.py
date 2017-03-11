@@ -71,7 +71,6 @@ class DatabaseHistory:
             @param atime as int
             @param mtime as int
             @param commit as bool
-            @return row id as int
         """
         if not uri:
             return
@@ -92,12 +91,12 @@ class DatabaseHistory:
             v = result.fetchone()
             if v is not None:
                 # Never update history item with an older entry
-                if v[0][1] >= atime:
+                if v[1] >= atime:
                     return
                 sql.execute("UPDATE history set atime=?, mtime=?, title=?,\
                                  popularity=?, guid=?\
                              WHERE uri=?", (atime, mtime, title,
-                                            v[0][0]+1, uri, guid))
+                                            v[0]+1, uri, guid))
             else:
                 sql.execute("INSERT INTO history\
                                   (title, uri, atime, mtime, popularity, guid)\
@@ -105,7 +104,6 @@ class DatabaseHistory:
                             (title, uri, atime, mtime, 0, guid))
             if commit:
                 sql.commit()
-            return result.lastrowid
 
     def get(self, atime):
         """
@@ -121,6 +119,23 @@ class DatabaseHistory:
                                   ORDER BY atime DESC LIMIT ?",
                                  (atime, atime + one_day, atime))
             return list(result)
+
+    def get_id(self, title, uri):
+        """
+            Get history id
+            @param title as str
+            @param uri as str
+            @return history_id as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM history\
+                                  WHERE title=? AND uri=?",
+                                 (title, uri))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
 
     def get_title(self, history_id):
         """
