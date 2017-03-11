@@ -96,7 +96,7 @@ class DatabaseHistory:
                 sql.execute("UPDATE history set atime=?, mtime=?, title=?,\
                                  popularity=?, guid=?\
                              WHERE uri=?", (atime, mtime, title,
-                                            v[0]+1, uri, guid))
+                                            v[0]+1, guid, uri))
             else:
                 sql.execute("INSERT INTO history\
                                   (title, uri, atime, mtime, popularity, guid)\
