@@ -13,9 +13,10 @@
 from gi.repository import GLib, Gio
 
 import sqlite3
+import itertools
 from time import time
 
-from eolie.utils import noaccents
+from eolie.utils import noaccents, get_random_string
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -39,7 +40,9 @@ class DatabaseHistory:
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
+                                               guid TEXT NOT NULL,
                                                atime INT NOT NULL,
+                                               mtime INT NOT NULL,
                                                popularity INT NOT NULL
                                                )'''
 
@@ -60,12 +63,15 @@ class DatabaseHistory:
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
 
-    def add(self, title, uri, atime=None):
+    def add(self, title, uri, guid=None, atime=None, mtime=None, commit=True):
         """
             Add a new entry to history, if exists, update it
             @param title as str
             @param uri as str
             @param atime as int
+            @param mtime as int
+            @param commit as bool
+            @return row id as int
         """
         if not uri:
             return
@@ -73,19 +79,33 @@ class DatabaseHistory:
             title = ""
         if atime is None:
             atime = int(time())
+        if mtime is None:
+            mtime = atime
+        # Find an uniq guid
+        while guid is None:
+            guid = get_random_string(12)
+            if self.exists_guid(guid):
+                guid = None
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT popularity FROM history\
+            result = sql.execute("SELECT popularity, atime FROM history\
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
             if v is not None:
-                sql.execute("UPDATE history set atime=?, title=?, popularity=?\
-                             WHERE uri=?", (int(time()), title, v[0]+1, uri))
+                # Never update history item with an older entry
+                if v[0][1] >= atime:
+                    return
+                sql.execute("UPDATE history set atime=?, mtime=?, title=?,\
+                                 popularity=?, guid=?\
+                             WHERE uri=?", (atime, mtime, title,
+                                            v[0][0]+1, uri, guid))
             else:
                 sql.execute("INSERT INTO history\
-                                  (title, uri, atime, popularity)\
-                                  VALUES (?, ?, ?, ?)",
-                            (title, uri, atime, 0))
-            sql.commit()
+                                  (title, uri, atime, mtime, popularity, guid)\
+                                  VALUES (?, ?, ?, ?, ?, ?)",
+                            (title, uri, atime, mtime, 0, guid))
+            if commit:
+                sql.commit()
+            return result.lastrowid
 
     def get(self, atime):
         """
@@ -101,6 +121,148 @@ class DatabaseHistory:
                                   ORDER BY atime DESC LIMIT ?",
                                  (atime, atime + one_day, atime))
             return list(result)
+
+    def get_title(self, history_id):
+        """
+            Get history title
+            @param history_id as int
+            @return title as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT title\
+                                  FROM history\
+                                  WHERE rowid=?", (history_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
+
+    def get_uri(self, history_id):
+        """
+            Get history uri
+            @param history_id as int
+            @return uri as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri\
+                                  FROM history\
+                                  WHERE rowid=?", (history_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
+
+    def get_guid(self, history_id):
+        """
+            Get history item guid
+            @param history_id as int
+            @return guid as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT guid\
+                                  FROM history\
+                                  WHERE rowid=?", (history_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return ""
+
+    def get_mtime(self, history_id):
+        """
+            Get history mtime
+            @param history_id as int
+            @return mtime as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime\
+                                  FROM history\
+                                  WHERE rowid=?", (history_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
+
+    def get_atime(self, history_id):
+        """
+            Get history atime
+            @param history_id as int
+            @return atime as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT atime\
+                                  FROM history\
+                                  WHERE rowid=?", (history_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
+
+    def get_id_by_guid(self, guid):
+        """
+            Get id for guid
+            @param guid as str
+            @return id as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM history\
+                                  WHERE guid=?", (guid,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
+    def get_ids_for_mtime(self, mtime):
+        """
+            Get ids that need to be synced related to mtime
+            @param mtime as int
+            @return [int]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid\
+                                  FROM history\
+                                  WHERE mtime > ?", (mtime,))
+            return list(itertools.chain(*result))
+
+    def set_title(self, history_id, title, commit=True):
+        """
+            Set history title
+            @param history_id as int
+            @param title as str
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE history\
+                         SET title=?\
+                         WHERE rowid=?", (title, history_id,))
+            if commit:
+                sql.commit()
+
+    def set_atime(self, history_id, atime, commit=True):
+        """
+            Set history atime
+            @param history_id as int
+            @param atime as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE history\
+                         SET atime=? where rowid=?", (atime, history_id))
+            if commit:
+                sql.commit()
+
+    def set_mtime(self, history_id, mtime, commit=True):
+        """
+            Set history mtime
+            @param history_id as int
+            @param atime as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE history\
+                         SET mtime=? where rowid=?", (mtime, history_id))
+            if commit:
+                sql.commit()
 
     def search(self, search, limit):
         """
@@ -119,6 +281,17 @@ class DatabaseHistory:
                                   atime DESC LIMIT ?",
                                  (filter, filter, limit))
             return list(result)
+
+    def exists_guid(self, guid):
+        """
+            Check if guid exists in db
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT guid FROM history\
+                                  WHERE guid=?", (guid,))
+            v = result.fetchone()
+            return v is not None
 
     def get_cursor(self):
         """

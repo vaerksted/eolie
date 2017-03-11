@@ -259,7 +259,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE mtime >= ?\
+                                  WHERE mtime > ?\
                                   AND uri != guid\
                                   AND del=0", (mtime,))
             return list(itertools.chain(*result))

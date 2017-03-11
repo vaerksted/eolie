@@ -49,7 +49,7 @@ class SyncWorker:
             Init worker
         """
         self.__start_time = 0
-        self.__mtimes = {"bookmarks": 0}
+        self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
         self.__client = MozillaSync()
         self.__session = None
@@ -127,7 +127,7 @@ class SyncWorker:
             self.__mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
-            self.__mtimes = {"bookmarks": 0}
+            self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         try:
             if self.__session is None:
                 self.__session = FxASession(self.__client.client,
@@ -148,6 +148,25 @@ class SyncWorker:
                 self.__status = False
                 raise e
             new_mtimes = self.__client.client.info_collections()
+
+            ######################
+            # History Management #
+            ######################
+            debug("local mtime: %s, remote mtime: %s" % (
+                                                 self.__mtimes["history"],
+                                                 new_mtimes["history"]))
+            # Only pull if something new available
+            if self.__mtimes["history"] != new_mtimes["history"]:
+                if self.__start_time != start_time:
+                    raise Exception("Sync cancelled")
+                self.__pull_history(bulk_keys, start_time)
+            # Push new history
+            if self.__start_time != start_time:
+                raise Exception("Sync cancelled")
+            self.__push_history(bulk_keys, start_time)
+            ########################
+            # Bookmarks Management #
+            ########################
             debug("local mtime: %s, remote mtime: %s" % (
                                                  self.__mtimes["bookmarks"],
                                                  new_mtimes["bookmarks"]))
@@ -162,6 +181,8 @@ class SyncWorker:
             self.__push_bookmarks(bulk_keys, start_time)
             if self.__start_time != start_time:
                 raise Exception("Sync cancelled")
+
+            # Update last sync mtime
             self.__mtimes = self.__client.client.info_collections()
             dump(self.__mtimes,
                  open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
@@ -178,7 +199,6 @@ class SyncWorker:
             @raise StopIteration
         """
         debug("push bookmarks")
-        # Push bookmarks
         parents = []
         for bookmark_id in El().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
@@ -291,13 +311,15 @@ class SyncWorker:
                     bookmark_id = El().bookmarks.add(bookmark["title"],
                                                      bookmark["bmkUri"],
                                                      bookmark["id"],
-                                                     bookmark["tags"])
+                                                     bookmark["tags"],
+                                                     False)
                 else:
                     bookmark["tags"] = []
                     bookmark_id = El().bookmarks.add(bookmark["title"],
                                                      bookmark["id"],
                                                      bookmark["id"],
-                                                     bookmark["tags"])
+                                                     bookmark["tags"],
+                                                     False)
             else:
                 El().bookmarks.set_title(bookmark_id,
                                          bookmark["title"],
@@ -334,7 +356,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.add_tag(tag, False)
                         El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
-                                     self.__mtimes["bookmarks"] - 0.01,
+                                     self.__mtimes["bookmarks"],
                                      False)
             if "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
@@ -350,6 +372,80 @@ class SyncWorker:
                 El().bookmarks.remove(bookmark_id, False)
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
+
+    def __push_history(self, bulk_keys, start_time):
+        """
+            Push to history
+            @param bulk keys as KeyBundle
+            @param start_time as int
+            @raise StopIteration
+        """
+        debug("push history")
+        for history_id in El().history.get_ids_for_mtime(
+                                                   self.__mtimes["history"]):
+            if self.__start_time != start_time:
+                raise Exception("Sync cancelled")
+            record = {}
+            record["histUri"] = El().history.get_uri(history_id)
+            record["id"] = El().history.get_guid(history_id)
+            record["title"] = El().history.get_title(history_id)
+            atime = 1000000 * El().history.get_atime(history_id)
+            record["visits"] = [{"date": atime, "type": 1}]
+            debug("pushing %s" % record)
+            self.__client.add_history(record, bulk_keys)
+
+    def __pull_history(self, bulk_keys, start_time):
+        """
+            Pull from history
+            @param bulk_keys as KeyBundle
+            @param start_time as int
+            @raise StopIteration
+        """
+        debug("pull history")
+        SqlCursor.add(El().history)
+        records = self.__client.get_history(bulk_keys)
+        for record in records:
+            if self.__start_time != start_time:
+                raise Exception("Sync cancelled")
+            history = record["payload"]
+            if "histUri" not in history.keys():
+                continue
+            history_id = El().history.get_id_by_guid(history["id"])
+            # Nothing to apply, continue
+            if El().history.get_mtime(history_id) >= record["modified"]:
+                continue
+            debug("pulling %s" % record)
+            # Try to get visit date
+            try:
+                atime = round(int(history["visits"][0]["date"]) / 1000000, 2)
+            except:
+                continue
+            # Ignore page with no title
+            if not history["title"]:
+                continue
+            title = history["title"].rstrip().lstrip()
+            if history_id is None:
+                history_id = El().history.add(title,
+                                              history["histUri"],
+                                              history["id"],
+                                              atime,
+                                              self.__mtimes["bookmarks"],
+                                              False)
+            else:
+                El().bookmarks.set_title(history_id,
+                                         title,
+                                         False)
+                El().bookmarks.set_atime(history_id,
+                                         atime,
+                                         False)
+                El().bookmarks.set_mtime(history_id,
+                                         self.__mtimes["bookmarks"],
+                                         False)
+        if self.__start_time != start_time:
+            raise Exception("Sync cancelled")
+        with SqlCursor(El().history) as sql:
+            sql.commit()
+        SqlCursor.remove(El().history)
 
     def __on_get_secret(self, source, result, first_sync, delete):
         """
@@ -494,6 +590,18 @@ class MozillaSync(object):
             bookmarks.append(record)
         return bookmarks
 
+    def get_history(self, bulk_keys):
+        """
+            Return history payload
+            @param bulk keys as KeyBundle
+            @return [{}]
+        """
+        history = []
+        for record in self.__client.get_records('history'):
+            record["payload"] = self.__decrypt_payload(record, bulk_keys)
+            history.append(record)
+        return history
+
     def add_bookmark(self, bookmark, bulk_keys):
         payload = self.__encrypt_payload(bookmark, bulk_keys)
         record = {}
@@ -501,6 +609,15 @@ class MozillaSync(object):
         record["payload"] = payload
         record["id"] = bookmark["id"]
         self.__client.put_record("bookmarks", record)
+
+    def add_history(self, history, bulk_keys):
+        payload = self.__encrypt_payload(history, bulk_keys)
+        record = {}
+        record["modified"] = round(time(), 2)
+        record["payload"] = payload
+        record["id"] = history["id"]
+        return
+        self.__client.put_record("history", record)
 
     def get_browserid_assertion(self, session,
                                 tokenserver_url=TOKENSERVER_URL):
