@@ -196,7 +196,7 @@ class SyncWorker:
             ######################
             # History Management #
             ######################
-            debug("local mtime: %s, remote mtime: %s" % (
+            debug("local history: %s, remote history: %s" % (
                                                  self.__mtimes["history"],
                                                  new_mtimes["history"]))
             # Only pull if something new available
@@ -205,15 +205,14 @@ class SyncWorker:
             ########################
             # Bookmarks Management #
             ########################
-            debug("local mtime: %s, remote mtime: %s" % (
+            debug("local bookmarks: %s, remote bookmarks: %s" % (
                                                  self.__mtimes["bookmarks"],
                                                  new_mtimes["bookmarks"]))
+            # Push new bookmarks
+            self.__push_bookmarks(bulk_keys)
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
-            # Push new bookmarks
-            self.__push_bookmarks(bulk_keys)
-
             # Update last sync mtime
             self.__mtimes = self.__client.client.info_collections()
             dump(self.__mtimes,
@@ -381,7 +380,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.add_tag(tag, False)
                         El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
             El().bookmarks.set_mtime(bookmark_id,
-                                     self.__mtimes["bookmarks"],
+                                     record["modified"],
                                      False)
             if "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
@@ -428,7 +427,7 @@ class SyncWorker:
                                               history["histUri"],
                                               history["id"],
                                               atime,
-                                              self.__mtimes["history"],
+                                              record["modified"],
                                               False)
             else:
                 El().history.set_title(history_id,
@@ -438,7 +437,7 @@ class SyncWorker:
                                        atime,
                                        False)
                 El().history.set_mtime(history_id,
-                                       self.__mtimes["history"],
+                                       record["modified"],
                                        False)
         with SqlCursor(El().history) as sql:
             sql.commit()
