@@ -151,6 +151,13 @@ class WebView(WebKit2.WebView):
             self.__in_read_mode = False
             self.load_uri(self.__loaded_uri)
 
+    def print(self):
+        """
+            Show print dialog for current page
+        """
+        p = WebKit2.PrintOperation.new(self)
+        p.run_dialog()
+
     @property
     def readable(self):
         """
