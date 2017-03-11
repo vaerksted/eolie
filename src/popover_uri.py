@@ -582,7 +582,7 @@ class UriPopover(Gtk.Popover):
     def _on_bookmarks_map(self, widget):
         """
             Init bookmarks
-            @param widget as Gtk.Widget
+            @param widget as Gtk.Widget/None
         """
         current = None
         row = self.__tags_box.get_selected_row()
@@ -626,6 +626,7 @@ class UriPopover(Gtk.Popover):
         elif self.__sync_stack.get_visible_child_name() == "spinner":
             self.__sync_stack.get_visible_child().stop()
             self.__sync_stack.set_visible_child_name("sync")
+            self._on_bookmarks_map(None)
 
     def __sort_search(self, row1, row2):
         """
