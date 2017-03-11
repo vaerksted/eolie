@@ -191,6 +191,21 @@ class SyncWorker:
             record["type"] = "bookmark"
             debug("pushing %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
+        # Del old bookmarks
+        for bookmark_id in El().bookmarks.get_deleted_ids():
+            parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
+            # No parent, move it to unfiled
+            if parent_guid is None:
+                parent_guid = "unfiled"
+            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
+            if parent_id not in parents:
+                parents.append(parent_id)
+            if self.__start_time != start_time:
+                raise Exception("Sync cancelled")
+            guid = El().bookmarks.get_guid(bookmark_id)
+            debug("deleting %s" % guid)
+            self.__client.client.delete_record("bookmarks", guid)
+            El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handle later
         # As otherwise, order will be broken by new children updates
         while parents:
@@ -219,14 +234,6 @@ class SyncWorker:
             record["children"] = children
             debug("pushing parent %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
-        # Del old bookmarks
-        for bookmark_id in El().bookmarks.get_deleted_ids():
-            if self.__start_time != start_time:
-                raise Exception("Sync cancelled")
-            guid = El().bookmarks.get_guid(bookmark_id)
-            debug("deleting %s" % guid)
-            self.__client.client.delete_record("bookmarks", guid)
-            El().bookmarks.remove(bookmark_id)
         El().bookmarks.clean_tags()
 
     def __pull_bookmarks(self, bulk_keys, start_time, first_sync):
