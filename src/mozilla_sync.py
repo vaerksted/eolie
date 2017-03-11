@@ -413,7 +413,6 @@ class SyncWorker:
             # Nothing to apply, continue
             if El().history.get_mtime(history_id) >= record["modified"]:
                 continue
-            debug("pulling %s" % record)
             # Try to get visit date
             try:
                 atime = round(int(history["visits"][0]["date"]) / 1000000, 2)
@@ -422,6 +421,7 @@ class SyncWorker:
             # Ignore page with no title
             if not history["title"]:
                 continue
+            debug("pulling %s" % record)
             title = history["title"].rstrip().lstrip()
             if history_id is None:
                 history_id = El().history.add(title,
