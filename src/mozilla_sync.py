@@ -174,11 +174,6 @@ class SyncWorker:
             record["visits"] = [{"date": atime, "type": 1}]
             debug("pushing %s" % record)
             self.__client.add_history(record, bulk_keys)
-
-            # Update last sync mtime
-            self.__mtimes = self.__client.client.info_collections()
-            dump(self.__mtimes,
-                 open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
             print("SyncWorker::__push_history():", e)
         self.__stop = True
