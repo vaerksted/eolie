@@ -345,6 +345,9 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
                                         self.__on_item_create)
         self.__calendar = builder.get_object("calendar")
+        if El().sync_worker is not None:
+            self.__sync_stack = builder.get_object("sync_stack")
+            self.__sync_stack.show()
         self.add(builder.get_object("widget"))
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
@@ -487,6 +490,14 @@ class UriPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
+    def _on_sync_button_clicked(self, button):
+        """
+            Sync with Mozilla Sync
+            @param button as Gtk.Button
+        """
+        El().sync_worker.sync()
+        GLib.timeout_add(1000, self.__check_sync_timer)
+
     def _on_remove_button_clicked(self, button):
         """
             Save bookmarks to tag
@@ -603,6 +614,19 @@ class UriPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __check_sync_timer(self):
+        """
+            Check sync status, if sync, show spinner and reload
+            else show sync button and quit
+        """
+        if El().sync_worker.syncing:
+            self.__sync_stack.set_visible_child_name("spinner")
+            self.__sync_stack.get_visible_child().start()
+            return True
+        elif self.__sync_stack.get_visible_child_name() == "spinner":
+            self.__sync_stack.get_visible_child().stop()
+            self.__sync_stack.set_visible_child_name("sync")
+
     def __sort_search(self, row1, row2):
         """
             Sort search

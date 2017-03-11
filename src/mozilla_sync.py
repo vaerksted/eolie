@@ -88,9 +88,17 @@ class SyncWorker:
         return self.__mtimes
 
     @property
+    def syncing(self):
+        """
+            True if sync is running
+            @return bool
+        """
+        return self.__start_time != 0
+
+    @property
     def status(self):
         """
-            Return True if sync is working
+            True if sync is working
             @return bool
         """
         return self.__status
@@ -160,6 +168,7 @@ class SyncWorker:
             debug("Stop syncing")
         except Exception as e:
             print("SyncWorker::__sync():", e)
+        self.__start_time = 0
 
     def __push_bookmarks(self, bulk_keys, start_time):
         """

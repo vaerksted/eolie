@@ -116,6 +116,12 @@
     min-height: 0px;
 }
 
+.small-padding {
+    padding: 2px;
+    min-width: 0px;
+    min-height: 0px;
+}
+
 .transparent {
     background-color: transparent;
 }
