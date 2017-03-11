@@ -68,8 +68,12 @@ class SettingsDialog:
         if not dir_uri:
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
-            dir_uri = GLib.filename_to_uri(directory, None)
-        download_chooser.set_uri(dir_uri)
+            if directory is not None:
+                dir_uri = GLib.filename_to_uri(directory, None)
+        if dir_uri:
+            download_chooser.set_uri(dir_uri)
+        else:
+            download_chooser.set_uri("file://" + GLib.getenv("HOME"))
 
         open_downloads = builder.get_object("open_downloads_check")
         open_downloads.set_active(
