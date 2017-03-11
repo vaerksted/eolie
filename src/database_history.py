@@ -91,7 +91,7 @@ class DatabaseHistory:
             v = result.fetchone()
             if v is not None:
                 # Never update history item with an older entry
-                if v[1] >= atime:
+                if v[1] > atime:
                     return
                 sql.execute("UPDATE history set atime=?, mtime=?, title=?,\
                                  popularity=?, guid=?\
