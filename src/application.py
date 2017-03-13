@@ -277,7 +277,7 @@ class Application(Gtk.Application):
             Return a new window
             @return Window
         """
-        window = Window()
+        window = Window(self)
         window.connect('delete-event', self.__on_delete_event)
         window.show()
         self.__windows.append(window)

@@ -23,13 +23,14 @@ class Window(Gtk.ApplicationWindow):
         Main window
     """
 
-    def __init__(self):
+    def __init__(self, app):
         """
             Init window
+            @param app as Gtk.Application
         """
         self.__timeout_configure = None
         Gtk.ApplicationWindow.__init__(self,
-                                       application=El(),
+                                       application=app,
                                        title="Eolie")
         self.__monitor_model = ""
         self.__zoom_level = 1.0
@@ -218,7 +219,7 @@ class Window(Gtk.ApplicationWindow):
         if string == "uri":
             self.toolbar.title.focus_entry()
         elif string == "new_page":
-            self.container.add_web_view(self.start_page, True)
+            self.container.add_web_view(El().start_page, True)
         elif string == "close_page":
             self.container.sidebar.close_view(self.container.current)
         elif string == "reload":
