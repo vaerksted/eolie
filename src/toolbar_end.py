@@ -66,9 +66,6 @@ class ToolbarEnd(Gtk.Bin):
                                       self.__on_download)
         eventbox.add(self.__progress)
         builder.get_object("overlay").add_overlay(eventbox)
-        if El().settings.get_value("adblock"):
-            builder.get_object(
-                         "adblock_button").get_style_context().add_class("red")
         self.add(builder.get_object("end"))
 
         adblock_action = Gio.SimpleAction.new_stateful(
@@ -76,27 +73,21 @@ class ToolbarEnd(Gtk.Bin):
                None,
                GLib.Variant.new_boolean(El().settings.get_value("adblock")))
         adblock_action.connect("change-state", self.__on_adblock_change_state)
-        El().add_action(adblock_action)
+        self.__window.add_action(adblock_action)
         image_action = Gio.SimpleAction.new_stateful(
                "imgblock",
                None,
                GLib.Variant.new_boolean(El().settings.get_value("imgblock")))
         image_action.connect("change-state",
                              self.__on_image_change_state)
-        El().add_action(image_action)
+        self.__window.add_action(image_action)
         self.__exceptions_action = Gio.SimpleAction.new_stateful(
                                                    "exceptions",
                                                    GLib.VariantType.new("s"),
                                                    GLib.Variant("s", "none"))
         self.__exceptions_action.connect("activate",
                                          self.__on_exceptions_active)
-        El().add_action(self.__exceptions_action)
-
-    def on_uri_changed(self):
-        """
-            Update menu button color
-        """
-        self.__update_filtering_button_color()
+        self.__window.add_action(self.__exceptions_action)
 
 #######################
 # PROTECTED           #
@@ -120,11 +111,25 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__window.container.current.webview.load_uri(El().start_page)
 
-    def _on_settings_button_clicked(self, button):
+    def _on_menu_button_clicked(self, button):
         """
             Show settings menu
             @param button as Gtk.Button
         """
+        self.__window.toolbar.title.hide_popover()
+        uri = self.__window.container.current.webview.get_uri()
+        if not uri:
+            return
+        parsed = urlparse(uri)
+        page_ex = El().adblock.is_an_exception(parsed.netloc +
+                                               parsed.path)
+        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        if not page_ex and not site_ex:
+            self.__exceptions_action.change_state(GLib.Variant("s", "none"))
+        elif site_ex:
+            self.__exceptions_action.change_state(GLib.Variant("s", "site"))
+        else:
+            self.__exceptions_action.change_state(GLib.Variant("s", "page"))
         popover = Gtk.PopoverMenu.new()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
@@ -143,26 +148,6 @@ class ToolbarEnd(Gtk.Bin):
         popover.add(widget)
         popover.set_relative_to(button)
         popover.show()
-
-    def _on_adblock_button_clicked(self, button):
-        """
-            Update exceptions
-            @param button as Gtk.Button
-        """
-        self.__window.toolbar.title.hide_popover()
-        uri = self.__window.container.current.webview.get_uri()
-        if not uri:
-            return
-        parsed = urlparse(uri)
-        page_ex = El().adblock.is_an_exception(parsed.netloc +
-                                               parsed.path)
-        site_ex = El().adblock.is_an_exception(parsed.netloc)
-        if not page_ex and not site_ex:
-            self.__exceptions_action.change_state(GLib.Variant("s", "none"))
-        elif site_ex:
-            self.__exceptions_action.change_state(GLib.Variant("s", "site"))
-        else:
-            self.__exceptions_action.change_state(GLib.Variant("s", "page"))
 
     def _on_save_button_clicked(self, button):
         """
@@ -297,37 +282,6 @@ class ToolbarEnd(Gtk.Bin):
             self.__progress.set_fraction(fraction/nb_downloads)
         return True
 
-    def __update_filtering_button_color(self):
-        """
-            Show different colors:
-                * red for adblock all
-                * orange for adblock site
-                * yellow for adblock page
-                * black for no adblock
-        """
-        # Remove any previous class
-        self.__adblock_button.get_style_context().remove_class("red")
-        self.__adblock_button.get_style_context().remove_class("orange")
-        self.__adblock_button.get_style_context().remove_class("yellow")
-        # If adblock disabled, nothing more to do
-        if not El().settings.get_value("adblock"):
-            return
-        uri = self.__window.container.current.webview.get_uri()
-        # If uri empty, we just set adblock color to red and leave
-        if not uri:
-            if El().settings.get_value("adblock"):
-                self.__adblock_button.get_style_context().add_class("red")
-            return
-        parsed = urlparse(uri)
-        page_ex = El().adblock.is_an_exception(parsed.netloc + parsed.path)
-        site_ex = El().adblock.is_an_exception(parsed.netloc)
-        if page_ex:
-            self.__adblock_button.get_style_context().add_class("yellow")
-        elif site_ex:
-            self.__adblock_button.get_style_context().add_class("orange")
-        else:
-            self.__adblock_button.get_style_context().add_class("red")
-
     def __on_save_response(self, dialog, response_id):
         """
             Tell WebKit to save current page
@@ -374,7 +328,6 @@ class ToolbarEnd(Gtk.Bin):
             El().adblock.add_exception(parsed.netloc)
         elif param.get_string() == "page":
             El().adblock.add_exception(parsed.netloc + parsed.path)
-        self.__update_filtering_button_color()
         self.__window.container.current.webview.reload()
 
     def __on_adblock_change_state(self, action, param):
@@ -385,7 +338,6 @@ class ToolbarEnd(Gtk.Bin):
         """
         action.set_state(param)
         El().settings.set_value('adblock', param)
-        self.__update_filtering_button_color()
         self.__window.container.current.webview.reload()
 
     def __on_image_change_state(self, action, param):
