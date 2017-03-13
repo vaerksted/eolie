@@ -86,7 +86,7 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        if uri is None:
+        if not uri:
             return
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
