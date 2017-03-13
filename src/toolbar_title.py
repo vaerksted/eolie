@@ -518,9 +518,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_text("")
         else:
             self.__placeholder.set_text(_("Search or enter address"))
-        if not self.__popover.is_visible():
-            self.__window.set_lock_focus(True)
-            self.__popover.show()
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None
