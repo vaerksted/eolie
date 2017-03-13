@@ -134,7 +134,6 @@ class ToolbarEnd(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         builder.connect_signals(self)
-        widget = builder.get_object("widget")
         webview = El().active_window.container.current.webview
         parsed = urlparse(webview.get_uri())
         if parsed.scheme not in ["http", "https"]:
@@ -145,7 +144,10 @@ class ToolbarEnd(Gtk.Bin):
             current = 100
         builder.get_object("default_zoom_button").set_label(
                                                         "{} %".format(current))
-        popover.add(widget)
+        popover.add(builder.get_object("widget"))
+        exceptions = builder.get_object("exceptions")
+        popover.add(exceptions)
+        popover.child_set_property(exceptions, "submenu", "exceptions")
         popover.set_relative_to(button)
         popover.show()
 
