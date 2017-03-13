@@ -32,6 +32,7 @@ class Window(Gtk.ApplicationWindow):
                                        application=El(),
                                        title="Eolie")
         self.__monitor_model = ""
+        self.__zoom_level = 1.0
         self.__setup_content()
         self.setup_window()
         self.connect('destroy', self.__on_destroyed_window)
@@ -52,8 +53,13 @@ class Window(Gtk.ApplicationWindow):
             Update zoom level
             @param force as bool
         """
-        monitor_model = get_current_monitor_model()
+        print("update")
+        monitor_model = get_current_monitor_model(self)
         if force or monitor_model != self.__monitor_model:
+            # Update window default zoom level
+            self.__update_zoom_level()
+            self.__monitor_model = monitor_model
+            # Update view zoom level
             for view in self.__container.views:
                 view.webview.update_zoom_level()
 
@@ -80,9 +86,30 @@ class Window(Gtk.ApplicationWindow):
         """
         return self.__toolbar
 
+    @property
+    def zoom_level(self):
+        """
+           Get zoom level for window
+           @return float
+        """
+        return self.__zoom_level
+
 ############
 # Private  #
 ############
+    def __update_zoom_level(self):
+        """
+            Update zoom level for default screen
+        """
+        monitor_model = get_current_monitor_model(self)
+        zoom_levels = El().settings.get_value(
+                                         "default-zoom-level")
+        for zl in zoom_levels:
+            zoom_splited = zl.split('@')
+            if zoom_splited[0] == monitor_model:
+                self.__zoom_level = float(zoom_splited[1])
+                break
+
     def __setup_content(self):
         """
             Setup window content
@@ -156,10 +183,10 @@ class Window(Gtk.ApplicationWindow):
 
     def __on_realize(self, widget):
         """
-            Run scanner on realize
+            Update zoom level
             @param widget as Gtk.Widget
         """
-        pass
+        self.update_zoom_level(False)
 
     def __on_destroyed_window(self, widget):
         """

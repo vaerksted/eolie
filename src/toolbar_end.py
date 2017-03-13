@@ -134,9 +134,12 @@ class ToolbarEnd(Gtk.Bin):
         parsed = urlparse(webview.get_uri())
         if parsed.scheme not in ["http", "https"]:
             builder.get_object("source_button").set_sensitive(False)
-        current = El().active_window.container.current.webview.get_zoom_level()
+        if parsed.netloc in El().zoom_levels.keys():
+            current = El().zoom_levels[parsed.netloc]
+        else:
+            current = 100
         builder.get_object("default_zoom_button").set_label(
-                                            "{} %".format((int(current*100))))
+                                                        "{} %".format(current))
         popover.add(widget)
         popover.set_relative_to(button)
         popover.show()
@@ -203,12 +206,14 @@ class ToolbarEnd(Gtk.Bin):
         """
         webview = El().active_window.container.current.webview
         parsed = urlparse(webview.get_uri())
-        current = webview.get_zoom_level()
-        current += 0.05
+        if parsed.netloc in El().zoom_levels.keys():
+            current = El().zoom_levels[parsed.netloc]
+        else:
+            current = 100
+        current += 5
         El().zoom_levels[parsed.netloc] = current
         webview.update_zoom_level()
-        current = webview.get_zoom_level()
-        button.set_label("{} %".format(int(current*100)))
+        button.set_label("{} %".format(current))
 
     def _on_unzoom_button_clicked(self, button):
         """
@@ -217,12 +222,14 @@ class ToolbarEnd(Gtk.Bin):
         """
         webview = El().active_window.container.current.webview
         parsed = urlparse(webview.get_uri())
-        current = webview.get_zoom_level()
-        current -= 0.05
+        if parsed.netloc in El().zoom_levels.keys():
+            current = El().zoom_levels[parsed.netloc]
+        else:
+            current = 100
+        current -= 5
         El().zoom_levels[parsed.netloc] = current
         webview.update_zoom_level()
-        current = webview.get_zoom_level()
-        button.set_label("{} %".format(int(current*100)))
+        button.set_label("{} %".format(current))
 
     def _on_default_zoom_button_clicked(self, button):
         """
@@ -234,8 +241,7 @@ class ToolbarEnd(Gtk.Bin):
             parsed = urlparse(webview.get_uri())
             del El().zoom_levels[parsed.netloc]
             webview.update_zoom_level()
-            current = webview.get_zoom_level()
-            button.set_label("{} %".format(int(current*100)))
+            button.set_label("100 %")
         except:
             pass
 

@@ -122,7 +122,7 @@ class SettingsDialog:
         min_font_size_spin.set_value(
                        El().settings.get_value("min-font-size").get_int32())
 
-        monitor_model = get_current_monitor_model()
+        monitor_model = get_current_monitor_model(window)
         zoom_levels = El().settings.get_value("default-zoom-level")
         wanted_zoom_level = 1.0
         try:
@@ -203,7 +203,8 @@ class SettingsDialog:
             Save size
             @param button as Gtk.SpinButton
         """
-        monitor_model = get_current_monitor_model()
+        monitor_model = get_current_monitor_model(
+                                    self.__settings_dialog.get_transient_for())
         try:
             # Add current value less monitor model
             zoom_levels = []

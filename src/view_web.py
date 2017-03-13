@@ -17,7 +17,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import El, LOGINS, PASSWORDS
-from eolie.utils import get_current_monitor_model, get_ftp_cmd
+from eolie.utils import get_ftp_cmd, debug
 
 
 class WebView(WebKit2.WebView):
@@ -93,33 +93,6 @@ class WebView(WebKit2.WebView):
         self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
 
-    def update_zoom_level(self):
-        """
-            Update zoom level
-        """
-        try:
-            zoom_level = None
-            # First search a zoom level for page
-            parsed = urlparse(self.get_uri())
-            if parsed.netloc in El().zoom_levels.keys():
-                zoom_level = El().zoom_levels[parsed.netloc]
-            # If none, get default zoom level for screen
-            if zoom_level is None:
-                monitor_model = get_current_monitor_model()
-                zoom_levels = El().settings.get_value(
-                                                 "default-zoom-level")
-                for zl in zoom_levels:
-                    zoom_splited = zl.split('@')
-                    if zoom_splited[0] == monitor_model:
-                        zoom_level = float(zoom_splited[1])
-                        break
-            # Else, set default
-            if zoom_level is None:
-                zoom_level = 1.0
-        except Exception as e:
-            print("Window::__save_size_position()", e)
-        self.set_zoom_level(zoom_level)
-
     def set_setting(self, key, value):
         """
             Set setting to value
@@ -160,6 +133,22 @@ class WebView(WebKit2.WebView):
         else:
             self.__in_read_mode = False
             self.load_uri(self.__loaded_uri)
+
+    def update_zoom_level(self):
+        """
+            Update zoom level
+        """
+        try:
+            parsed = urlparse(self.get_uri())
+            if parsed.netloc in El().zoom_levels.keys():
+                zoom_level = El().zoom_levels[parsed.netloc]
+            else:
+                zoom_level = 100
+            zoom_level *= self.get_toplevel().zoom_level
+        except Exception as e:
+            print("WebView::update_zoom_level()", e)
+        debug("Update zoom level: %s" % zoom_level)
+        self.set_zoom_level(zoom_level / 100)
 
     def print(self):
         """
@@ -260,7 +249,6 @@ class WebView(WebKit2.WebView):
         context.register_uri_scheme("accept", self.__on_accept_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.connect("download-started", self.__on_download_started)
-        self.update_zoom_level()
 
     def __set_system_fonts(self, settings):
         """

@@ -31,14 +31,15 @@ def get_random_string(size):
     return b64encode(s.encode("utf-8"))[:size].decode("utf-8")
 
 
-def get_current_monitor_model():
+def get_current_monitor_model(window):
     """
         Return monitor model as string
+        @param window as Gtk.Window
         @return str
     """
     screen = Gdk.Screen.get_default()
     display = screen.get_display()
-    monitor = display.get_monitor_at_window(El().active_window.get_window())
+    monitor = display.get_monitor_at_window(window.get_window())
     return monitor.get_model()
 
 
