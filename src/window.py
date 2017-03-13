@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gio
 
 from eolie.define import El
 from eolie.toolbar import Toolbar
@@ -35,10 +35,15 @@ class Window(Gtk.ApplicationWindow):
         self.__zoom_level = 1.0
         self.__setup_content()
         self.setup_window()
-        self.connect('destroy', self.__on_destroyed_window)
         self.connect('realize', self.__on_realize)
         self.connect('window-state-event', self.__on_window_state_event)
         self.connect('configure-event', self.__on_configure_event)
+
+        # Set window actions
+        shortcut_action = Gio.SimpleAction.new('shortcut',
+                                               GLib.VariantType.new('s'))
+        shortcut_action.connect('activate', self.__on_shortcut_action)
+        self.add_action(shortcut_action)
 
     def setup_window(self):
         """
@@ -53,7 +58,6 @@ class Window(Gtk.ApplicationWindow):
             Update zoom level
             @param force as bool
         """
-        print("update")
         monitor_model = get_current_monitor_model(self)
         if force or monitor_model != self.__monitor_model:
             # Update window default zoom level
@@ -188,18 +192,37 @@ class Window(Gtk.ApplicationWindow):
         """
         self.update_zoom_level(False)
 
-    def __on_destroyed_window(self, widget):
+    def __on_shortcut_action(self, action, param):
         """
-            Save paned widget width
-            @param widget as unused, data as unused
+            Global shortcuts handler
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
         """
-        return
-        main_pos = self._paned_main_list.get_position()
-        listview_pos = self._paned_list_view.get_position()
-        listview_pos = listview_pos if listview_pos > 100 else 100
-        El().settings.set_value('paned-mainlist-width',
-                                GLib.Variant('i',
-                                             main_pos))
-        El().settings.set_value('paned-listview-width',
-                                GLib.Variant('i',
-                                             listview_pos))
+        string = param.get_string()
+        if string == "uri":
+            self.toolbar.title.focus_entry()
+        elif string == "new_page":
+            self.container.add_web_view(self.start_page, True)
+        elif string == "close_page":
+            self.container.sidebar.close_view(self.container.current)
+        elif string == "reload":
+            self.container.current.webview.reload()
+        elif string == "find":
+            find_widget = self.container.current.find_widget
+            search_mode = find_widget.get_search_mode()
+            find_widget.set_search_mode(not search_mode)
+            if not search_mode:
+                find_widget.grab_focus()
+        elif string == "backward":
+            self.toolbar.actions.backward()
+        elif string == "forward":
+            self.toolbar.actions.forward()
+        elif string == "previous":
+            self.container.sidebar.previous()
+        elif string == "next":
+            self.container.sidebar.next()
+        elif string == "print":
+            self.container.current.webview.print()
+        elif string == "filter":
+            button = self.toolbar.actions.filter_button
+            button.set_active(not button.get_active())

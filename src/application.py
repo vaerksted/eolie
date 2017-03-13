@@ -126,19 +126,20 @@ class Application(Gtk.Application):
                                                GLib.VariantType.new('s'))
         shortcut_action.connect('activate', self.__on_shortcut_action)
         self.add_action(shortcut_action)
-        self.set_accels_for_action("app.shortcut::uri", ["<Control>l"])
-        self.set_accels_for_action("app.shortcut::new_page", ["<Control>t"])
+        self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
+        self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
         self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
-        self.set_accels_for_action("app.shortcut::close_page", ["<Control>w"])
-        self.set_accels_for_action("app.shortcut::filter", ["<Control>i"])
-        self.set_accels_for_action("app.shortcut::reload", ["<Control>r"])
-        self.set_accels_for_action("app.shortcut::find", ["<Control>f"])
-        self.set_accels_for_action("app.shortcut::print", ["<Control>p"])
-        self.set_accels_for_action("app.shortcut::settings", ["<Control>e"])
-        self.set_accels_for_action("app.shortcut::backward", ["<Alt>Left"])
-        self.set_accels_for_action("app.shortcut::forward", ["<Alt>Right"])
-        self.set_accels_for_action("app.shortcut::next", ["<Control>Tab"])
-        self.set_accels_for_action("app.shortcut::previous",
+        self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
+        self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
+        self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
+        self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
+        self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
+        self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
+        self.set_accels_for_action("win.shortcut::settings", ["<Control>e"])
+        self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
+        self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
+        self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
+        self.set_accels_for_action("win.shortcut::previous",
                                    ["<Control><Shift>Tab"])
 
         # Set some WebKit defaults
@@ -448,40 +449,7 @@ class Application(Gtk.Application):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        window = self.active_window
-        if window is None:
-            return
         string = param.get_string()
-        if string == "uri":
-            window.toolbar.title.focus_entry()
-        elif string == "new_page":
-            window.container.add_web_view(self.start_page, True)
-        elif string == "new_window":
+        if string == "new_window":
             window = self.__get_new_window()
             window.container.add_web_view(self.start_page, True)
-        elif string == "close_page":
-            window.container.sidebar.close_view(window.container.current)
-        elif string == "reload":
-            window.container.current.webview.reload()
-        elif string == "find":
-            find_widget = window.container.current.find_widget
-            search_mode = find_widget.get_search_mode()
-            find_widget.set_search_mode(not search_mode)
-            if not search_mode:
-                find_widget.grab_focus()
-        elif string == "backward":
-            window.toolbar.actions.backward()
-        elif string == "forward":
-            window.toolbar.actions.forward()
-        elif string == "settings":
-            dialog = SettingsDialog()
-            dialog.show()
-        elif string == "previous":
-            window.container.sidebar.previous()
-        elif string == "next":
-            window.container.sidebar.next()
-        elif string == "print":
-            window.container.current.webview.print()
-        elif string == "filter":
-            button = window.toolbar.actions.filter_button
-            button.set_active(not button.get_active())
