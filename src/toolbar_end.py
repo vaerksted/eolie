@@ -149,6 +149,8 @@ class ToolbarEnd(Gtk.Bin):
         popover.add(exceptions)
         popover.child_set_property(exceptions, "submenu", "exceptions")
         popover.set_relative_to(button)
+        popover.connect("closed", self.__on_popover_closed)
+        self.__window.set_lock_focus(True)
         popover.show()
 
     def _on_save_button_clicked(self, button):
@@ -370,3 +372,9 @@ class ToolbarEnd(Gtk.Bin):
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
             self.__download_button.get_style_context().add_class("selected")
+
+    def __on_popover_closed(self, popover):
+        """
+            Unlock focus
+        """
+        self.__window.set_lock_focus(False)

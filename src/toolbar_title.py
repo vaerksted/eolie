@@ -47,7 +47,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry = builder.get_object("entry")
         self.__popover = UriPopover(window)
         self.__popover.set_relative_to(self)
-        self.__password_popover = None
+        self.__popover.connect("closed", self.__on_popover_closed)
         # Reload/Stop
         self.__action_image1 = builder.get_object("action_image1")
         # Bookmarks/Clear
@@ -170,13 +170,13 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
         """
         from eolie.popover_password import PasswordPopover
-        self.__password_popover = PasswordPopover(username, password, uri)
-        self.__password_popover.set_relative_to(self.__entry)
-        self.__password_popover.set_pointing_to(self.__entry.get_icon_area(
+        popover = PasswordPopover(username, password, uri)
+        popover.set_relative_to(self.__entry)
+        popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
-        self.__password_popover.connect("closed",
-                                        self.__on_password_popover_closed)
-        self.__password_popover.show()
+        popover.connect("closed", self.__on_popover_closed)
+        self.__window.set_lock_focus(True)
+        popover.show()
 
     def on_load_changed(self, view, event):
         """
@@ -206,15 +206,6 @@ class ToolbarTitle(Gtk.Bin):
             @return Gtk.ProgressBar
         """
         return self.__progress
-
-    @property
-    def focus_in(self):
-        """
-            Return True if title bar has focus
-            @return bool
-        """
-        return self.__popover.is_visible() or\
-            self.__password_popover is not None
 
 #######################
 # PROTECTED           #
@@ -309,6 +300,7 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if not self.__popover.is_visible():
+            self.__window.set_lock_focus(True)
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
@@ -385,10 +377,12 @@ class ToolbarTitle(Gtk.Bin):
             popover = Gtk.Popover.new()
             popover.set_size_request(300, 500)
             popover.set_relative_to(eventbox)
+            popover.connect("closed", self.__on_popover_closed)
             popover.connect("closed",
                             lambda x: self._on_entry_focus_out(
                                                            self.__entry, None))
             popover.add(widget)
+            self.__window.set_lock_focus(True)
             popover.show()
         elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
@@ -498,13 +492,12 @@ class ToolbarTitle(Gtk.Bin):
                 GLib.idle_add(self.__popover.add_keywords,
                               words.replace('"', ''))
 
-    def __on_password_popover_closed(self, popover):
+    def __on_popover_closed(self, popover):
         """
             Destroy popover
             @param popover as Gtk.popover
         """
-        self.__password_popover = None
-        popover.destroy()
+        self.__window.set_lock_focus(False)
 
     def __on_menu_unmap(self, menu):
         """
@@ -526,6 +519,7 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__placeholder.set_text(_("Search or enter address"))
         if not self.__popover.is_visible():
+            self.__window.set_lock_focus(True)
             self.__popover.show()
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
