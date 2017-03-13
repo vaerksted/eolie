@@ -97,18 +97,28 @@ class WebView(WebKit2.WebView):
         """
             Update zoom level
         """
-        monitor_model = get_current_monitor_model()
-        zoom_levels = El().settings.get_value(
-                                         "default-zoom-level")
-        wanted_zoom_level = 1.0
         try:
-            for zoom_level in zoom_levels:
-                zoom_splited = zoom_level.split('@')
-                if zoom_splited[0] == monitor_model:
-                    wanted_zoom_level = float(zoom_splited[1])
+            zoom_level = None
+            # First search a zoom level for page
+            parsed = urlparse(self.get_uri())
+            if parsed.netloc in El().zoom_levels.keys():
+                zoom_level = El().zoom_levels[parsed.netloc]
+            # If none, get default zoom level for screen
+            if zoom_level is None:
+                monitor_model = get_current_monitor_model()
+                zoom_levels = El().settings.get_value(
+                                                 "default-zoom-level")
+                for zl in zoom_levels:
+                    zoom_splited = zl.split('@')
+                    if zoom_splited[0] == monitor_model:
+                        zoom_level = float(zoom_splited[1])
+                        break
+            # Else, set default
+            if zoom_level is None:
+                zoom_level = 1.0
         except Exception as e:
             print("Window::__save_size_position()", e)
-        self.set_zoom_level(wanted_zoom_level)
+        self.set_zoom_level(zoom_level)
 
     def set_setting(self, key, value):
         """
@@ -450,6 +460,8 @@ class WebView(WebKit2.WebView):
             self.set_setting("auto-load-images",
                              not El().settings.get_value("imgblock"))
             self.__title = ""
+        if event == WebKit2.LoadEvent.COMMITTED:
+            self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
                 uri = view.get_uri()

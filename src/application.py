@@ -68,6 +68,11 @@ class Application(Gtk.Application):
         self.__windows = []
         self.__closed_menu = ClosedMenu(self)
         self.debug = False
+        try:
+            self.zoom_levels = load(open(self.LOCAL_PATH + "/zoom_levels.bin",
+                                         "rb"))
+        except:
+            self.zoom_levels = {}
         self.cursors = {}
         GLib.set_application_name('Eolie')
         GLib.set_prgname('eolie')
@@ -177,6 +182,8 @@ class Application(Gtk.Application):
                     session_states.append((uri, state.get_data()))
             dump(session_states,
                  open(self.LOCAL_PATH + "/session_states.bin", "wb"))
+            dump(self.zoom_levels,
+                 open(self.LOCAL_PATH + "/zoom_levels.bin", "wb"))
         except Exception as e:
             print("Application::prepare_to_exit()", e)
         if exit:

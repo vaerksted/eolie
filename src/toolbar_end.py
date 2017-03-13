@@ -134,6 +134,9 @@ class ToolbarEnd(Gtk.Bin):
         parsed = urlparse(webview.get_uri())
         if parsed.scheme not in ["http", "https"]:
             builder.get_object("source_button").set_sensitive(False)
+        current = El().active_window.container.current.webview.get_zoom_level()
+        builder.get_object("default_zoom_button").set_label(
+                                            "{} %".format((int(current*100))))
         popover.add(widget)
         popover.set_relative_to(button)
         popover.show()
@@ -192,6 +195,49 @@ class ToolbarEnd(Gtk.Bin):
                         args=(uri,))
         thread.daemon = True
         thread.start()
+
+    def _on_zoom_button_clicked(self, button):
+        """
+            Zoom current page
+            @param button as Gtk.Button
+        """
+        webview = El().active_window.container.current.webview
+        parsed = urlparse(webview.get_uri())
+        current = webview.get_zoom_level()
+        current += 0.05
+        El().zoom_levels[parsed.netloc] = current
+        webview.update_zoom_level()
+        current = webview.get_zoom_level()
+        button.set_label("{} %".format(int(current*100)))
+
+    def _on_unzoom_button_clicked(self, button):
+        """
+            Unzoom current page
+            @param button as Gtk.Button
+        """
+        webview = El().active_window.container.current.webview
+        parsed = urlparse(webview.get_uri())
+        current = webview.get_zoom_level()
+        current -= 0.05
+        El().zoom_levels[parsed.netloc] = current
+        webview.update_zoom_level()
+        current = webview.get_zoom_level()
+        button.set_label("{} %".format(int(current*100)))
+
+    def _on_default_zoom_button_clicked(self, button):
+        """
+            Restore default zoom level
+            @param button as Gtk.Button
+        """
+        try:
+            webview = El().active_window.container.current.webview
+            parsed = urlparse(webview.get_uri())
+            del El().zoom_levels[parsed.netloc]
+            webview.update_zoom_level()
+            current = webview.get_zoom_level()
+            button.set_label("{} %".format(int(current*100)))
+        except:
+            pass
 
 #######################
 # PRIVATE             #
