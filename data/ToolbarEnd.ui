@@ -46,9 +46,11 @@
     <property name="vexpand">False</property>
     <property name="spacing">5</property>
     <child>
-      <object class="GtkMenuButton" id="settings_button">
+      <object class="GtkButton" id="settings_button">
+        <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="receives_default">False</property>
+        <signal name="clicked" handler="_on_settings_button_clicked" swapped="no"/>
         <child>
           <object class="GtkImage" id="settings-button-image">
             <property name="visible">True</property>
@@ -69,12 +71,12 @@
       </packing>
     </child>
     <child>
-      <object class="GtkMenuButton" id="menu_button">
+      <object class="GtkMenuButton" id="adblock_button">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="receives_default">False</property>
         <property name="menu_model">menu</property>
-        <signal name="clicked" handler="_on_menu_button_clicked" swapped="no"/>
+        <signal name="clicked" handler="_on_adblock_button_clicked" swapped="no"/>
         <child>
           <object class="GtkImage" id="menu-button-image">
             <property name="visible">True</property>

@@ -11,6 +11,7 @@
     <file compressed="true">Readability.js</file>
     <file compressed="true">facebook.com_adblock.js</file>
     <file preprocess="xml-stripblanks">AboutDialog.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>

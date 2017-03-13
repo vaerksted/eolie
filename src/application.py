@@ -85,8 +85,7 @@ class Application(Gtk.Application):
         """
         self.__is_fs = False
         self.__setup_app_menu()
-        if self.prefers_app_menu():
-            self.set_app_menu(self.__menu)
+        self.set_app_menu(self.__menu)
         if Gtk.get_minor_version() > 18:
             cssProviderFile = Gio.File.new_for_uri(
                 'resource:///org/gnome/Eolie/application.css')
@@ -271,8 +270,6 @@ class Application(Gtk.Application):
             @return Window
         """
         window = Window()
-        if not self.prefers_app_menu():
-            window.toolbar.end.setup_menu(self.__menu)
         window.connect('delete-event', self.__on_delete_event)
         window.show()
         self.__windows.append(window)
