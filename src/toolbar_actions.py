@@ -137,7 +137,6 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         popover = Gtk.Popover.new_from_model(button, El().pages_menu)
-        popover.set_relative_to(button)
         popover.forall(self.__force_show_image)
         popover.show()
 
@@ -158,9 +157,9 @@ class ToolbarActions(Gtk.Bin):
             @param widget as Gtk.Widget
         """
         if isinstance(widget, Gtk.Image):
-            widget.show()
-        elif isinstance(widget, Gtk.Container):
-            widget.forall(self.__force_show_image)
+            GLib.idle_add(widget.show)
+        elif hasattr(widget, "forall"):
+            GLib.idle_add(widget.forall, self.__force_show_image)
 
     def __on_popover_closed(self, popover, model):
         """
@@ -181,7 +180,7 @@ class ToolbarActions(Gtk.Bin):
         if back_list:
             model = HistoryMenu(El(), back_list)
             popover = Gtk.Popover.new_from_model(self.__backward, model)
-            popover.forall(self.__force_show_image)
+            GLib.idle_add(popover.forall, self.__force_show_image)
             popover.connect("closed", self.__on_popover_closed, model)
             popover.show()
 
@@ -195,6 +194,6 @@ class ToolbarActions(Gtk.Bin):
         if forward_list:
             model = HistoryMenu(El(), forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward, model)
-            popover.forall(self.__force_show_image)
+            GLib.idle_add(popover.forall, self.__force_show_image)
             popover.connect("closed", self.__on_popover_closed, model)
             popover.show()

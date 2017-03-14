@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, Gdk, WebKit2
 
 from hashlib import sha256
 
@@ -28,7 +28,7 @@ class HistoryMenu(Gio.Menu):
         """
         Gio.Menu.__init__(self)
         self.__app = app
-        for item in items:
+        for item in items[:10]:
             uri = item.get_uri()
             if uri is None:
                 continue
@@ -49,16 +49,10 @@ class HistoryMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             # Try to set icon
-            if self.__app.art.exists(uri, "favicon"):
-                f = Gio.File.new_for_path(self.__app.art.get_path(uri,
-                                                                  "favicon"))
-                icon = Gio.FileIcon.new(f)
-                item.set_icon(icon)
-            elif uri == "populars://":
-                item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
-            else:
-                item.set_icon(Gio.ThemedIcon.new("applications-internet"))
-            self.append_item(item)
+            context = WebKit2.WebContext.get_default()
+            favicon_db = context.get_favicon_database()
+            favicon_db.get_favicon(uri, None,
+                                   self.__set_favicon_result, item, uri)
 
     def remove_actions(self):
         """
@@ -74,6 +68,36 @@ class HistoryMenu(Gio.Menu):
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon_result(self, db, result, item, uri):
+        """
+            Set favicon db result
+            @param db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+            @param item as Gio.MenuItem
+            @param uri as str
+        """
+        try:
+            surface = db.get_favicon_finish(result)
+        except:
+            surface = None
+        if surface is not None:
+            pixbuf = Gdk.pixbuf_get_from_surface(surface,
+                                                 0,
+                                                 0,
+                                                 surface.get_width(),
+                                                 surface.get_height())
+            del surface
+            (saved, bytes) = pixbuf.save_to_bufferv("png",
+                                                    [None],
+                                                    [])
+            del pixbuf
+            item.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(bytes)))
+        elif uri == "populars://":
+            item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
+        else:
+            item.set_icon(Gio.ThemedIcon.new("applications-internet"))
+        self.append_item(item)
+
     def __on_action_clicked(self, action, variant, item):
         """
             Add to playlists
