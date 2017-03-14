@@ -40,6 +40,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__secure_content = True
         self.__prevent_focus_out = False
         self.__keywords_timeout = None
+        self.__icon_grid_width = None
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
@@ -431,6 +432,11 @@ class ToolbarTitle(Gtk.Bin):
             @param grid as Gtk.Grid
             @param allocation as Gtk.Allocation
         """
+        # Injecting css on size allocation may make GTK3 segfaults
+        # We prevent only update css if width change
+        if allocation.width == self.__icon_grid_width:
+            return
+        self.__icon_grid_width = allocation.width
         style = self.__entry.get_style_context()
         border = style.get_border(Gtk.StateFlags.NORMAL).bottom
         padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
@@ -444,9 +450,11 @@ class ToolbarTitle(Gtk.Bin):
                                          margin_end + border)
         # 5 is grid margin (see ui file)
         css += ".uribar { padding-right: %spx; }" % (allocation.width + 5)
-        self.__css_provider.load_from_data(css.encode("utf-8"))
         # 22 is Gtk.EntryIconPosition.PRIMARY
-        self.__placeholder.set_margin_start(padding_start + 22 + border)
+        placeholder_margin_start = padding_start + 22 + border
+        css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
+        # Let GTK finish current resizing before injecting css
+        GLib.idle_add(self.__css_provider.load_from_data, css.encode("utf-8"))
 
 #######################
 # PRIVATE             #

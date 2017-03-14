@@ -131,6 +131,9 @@
                 <property name="halign">start</property>
                 <property name="hexpand">True</property>
                 <property name="ellipsize">end</property>
+                <style>
+                    <class name="placeholder"/>
+                </style>
               </object>
               <packing>
                 <property name="left_attach">0</property>
