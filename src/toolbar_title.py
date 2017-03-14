@@ -452,7 +452,7 @@ class ToolbarTitle(Gtk.Bin):
         placeholder_margin_start = padding_start + 22 + border
         css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
         # Let GTK finish current resizing before injecting css
-        GLib.idle_add(self.__css_provider.load_from_data, css.encode("utf-8"))
+        self.__css_provider.load_from_data(css.encode("utf-8"))
 
 #######################
 # PRIVATE             #
