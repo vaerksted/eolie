@@ -78,8 +78,7 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if self.__view.webview.get_settings().get_property(
-                                                    "enable-private-browsing"):
+        if self.__view.webview.private:
             self.__image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
@@ -210,9 +209,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         uri = view.get_uri()
         # We are not filtered and not in private mode
-        if not self.__view.webview.get_settings().get_property(
-                                                "enable-private-browsing") and\
-                self.get_allocated_width() != 1:
+        if not self.__view.webview.private and self.get_allocated_width() != 1:
             preview = El().art.get_artwork(uri,
                                            "preview",
                                            view.get_scale_factor(),
@@ -520,8 +517,7 @@ class StackSidebar(Gtk.Grid):
             return
         El().pages_menu.add_action(view.webview.get_title(),
                                    view.webview.get_uri(),
-                                   view.webview.get_settings().get_property(
-                                                   "enable-private-browsing"),
+                                   view.webview.private,
                                    view.webview.get_session_state())
         GLib.timeout_add(1000, view.destroy)
         child.destroy()

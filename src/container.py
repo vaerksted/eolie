@@ -55,7 +55,7 @@ class Container(Gtk.Paned):
             @param parent as View
             @param private as bool
             @param webview as WebView
-            @param state as WebKit2.WebViewSessionState
+            @param state as WebViewSessionState
         """
         view = self.__get_new_view(private, parent, webview)
         if state is not None:
@@ -143,13 +143,10 @@ class Container(Gtk.Paned):
             Get a new view
             @param private as bool
             @param parent as webview
-            @param webview as WebKit2.WebView
+            @param webview as WebView
             @return View
         """
-        view = View(parent, webview)
-        if private:
-            view.webview.get_settings().set_property("enable-private-browsing",
-                                                     True)
+        view = View(private, parent, webview)
         view.webview.connect("map", self.__on_view_map)
         view.webview.connect("notify::estimated-load-progress",
                              self.__on_estimated_load_progress)
@@ -194,15 +191,13 @@ class Container(Gtk.Paned):
             @param uri as str
             @param show as bool
         """
-        private = webview.get_settings().get_property(
-                                                     "enable-private-browsing")
         view = self.__get_view_for_webview(webview)
-        self.add_web_view(uri, show, private, view)
+        self.add_web_view(uri, show, webview.private, view)
 
     def __on_create(self, related, action):
         """
             Create a new view for action
-            @param related as WebKit2.WebView
+            @param related as WebView
             @param action as WebKit2.NavigationAction
         """
         from eolie.view_web import WebView
@@ -214,7 +209,7 @@ class Container(Gtk.Paned):
     def __on_close(self, webview):
         """
             Close my self
-            @param webview as WebKit2.WebView
+            @param webview as WebView
         """
         view = self.__get_view_for_webview(webview)
         if view is not None:
@@ -223,12 +218,10 @@ class Container(Gtk.Paned):
     def __on_ready_to_show(self, webview, uri):
         """
             Add view to window
-            @param webview as WebKit2.WebView
+            @param webview as WebView
             @param uri as str
         """
-        private = webview.get_settings().get_property(
-                                                     "enable-private-browsing")
-        self.add_web_view(uri, True, private, None, webview)
+        self.add_web_view(uri, True, webview.private, None, webview)
 
     def __on_readable(self, webview):
         """
@@ -310,8 +303,7 @@ class Container(Gtk.Paned):
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https"] and\
-                not webview.get_settings().get_property(
-                                                    "enable-private-browsing"):
+                not webview.private:
             El().history.add(title, uri)
             history_id = El().history.get_id(title, uri)
             if El().sync_worker is not None:

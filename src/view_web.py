@@ -38,12 +38,13 @@ class WebView(WebKit2.WebView):
                                                                 str)),
     }
 
-    def __init__(self):
+    def __init__(self, private):
         """
             Init view
+            @param private as bool
         """
         WebKit2.WebView.__init__(self)
-        self.__init()
+        self.__init(private)
 
     def new_with_related_view(related):
         """
@@ -67,7 +68,7 @@ class WebView(WebKit2.WebView):
                 GObject.signal_new(signal, WebKit2.WebView,
                                    args[0], args[1], args[2])
         view.__class__ = WebView
-        view.__init()
+        view.__init(related.private)
         return view
 
     def load_uri(self, uri):
@@ -167,6 +168,14 @@ class WebView(WebKit2.WebView):
         return (self.__in_read_mode, self.__readable_content)
 
     @property
+    def private(self):
+        """
+            True if view is private
+            @return bool
+        """
+        return self.__private
+
+    @property
     def loaded_uri(self):
         """
             Return loaded uri (This is not current uri!)
@@ -177,10 +186,12 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self):
+    def __init(self, private):
         """
             Init WebView
+            @param private as bool
         """
+        self.__private = private
         self.__in_read_mode = False
         self.__readable_content = ""
         self.__js_timeout = None
@@ -227,6 +238,7 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling", False)
         settings.set_property("enable-webaudio", True)
         settings.set_property("enable-webgl", True)
+        settings.set_property("enable-private-browsing", private)
         settings.set_property("javascript-can-access-clipboard", True)
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
@@ -247,7 +259,16 @@ class WebView(WebKit2.WebView):
         # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
+
         context = self.get_context()
+        if private:
+            context.set_cache_model(WebKit2.CacheModel.DOCUMENT_VIEWER)
+            cookie_manager = context.get_cookie_manager()
+            cookie_manager.set_accept_policy(
+                                     El().settings.get_enum("cookie-storage"))
+            cookie_manager.set_persistent_storage(
+                                        "",
+                                        WebKit2.CookiePersistentStorage.SQLITE)
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)
@@ -331,9 +352,7 @@ class WebView(WebKit2.WebView):
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected or\
-                    self.get_settings().get_property(
-                                                    "enable-private-browsing"):
+            if self.__insecure_content_detected or self.__private:
                 request.deny()
             else:
                 request.allow()
@@ -448,7 +467,7 @@ class WebView(WebKit2.WebView):
             @param view as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if self.get_settings().get_property("enable-private-browsing"):
+        if self.__private:
             return
         (auth, username, password) = self.__read_auth_request(request)
         if not auth:

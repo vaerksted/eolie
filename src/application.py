@@ -161,7 +161,12 @@ class Application(Gtk.Application):
         if not d.query_exists():
             d.make_directory_with_parents()
         context.set_favicon_database_directory(self.__FAVICONS_PATH)
-        self.set_cookie_manager(context)
+        cookie_manager = context.get_cookie_manager()
+        cookie_manager.set_accept_policy(
+                                     self.settings.get_enum("cookie-storage"))
+        cookie_manager.set_persistent_storage(
+                                        self.__COOKIES_PATH,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
 
     def do_startup(self):
         """
@@ -186,8 +191,7 @@ class Application(Gtk.Application):
             for window in self.__windows:
                 for view in window.container.views:
                     uri = view.webview.get_uri()
-                    private = view.webview.get_settings().get_property(
-                                                     "enable-private-browsing")
+                    private = view.webview.private
                     state = view.webview.get_session_state().serialize()
                     session_states.append((uri, private, state.get_data()))
             dump(session_states,
@@ -208,18 +212,6 @@ class Application(Gtk.Application):
         for window in self.__windows:
             for view in window.container.views:
                 view.webview.set_setting(key, value)
-
-    def set_cookie_manager(self, context):
-        """
-            Set default webkit cookie manager
-            @param context as WebKit2.WebContext
-        """
-        cookie_manager = context.get_cookie_manager()
-        cookie_manager.set_accept_policy(
-                                     self.settings.get_enum("cookie-storage"))
-        cookie_manager.set_persistent_storage(
-                                        self.__COOKIES_PATH,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
 
     @property
     def pages_menu(self):
