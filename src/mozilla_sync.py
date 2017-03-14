@@ -60,12 +60,13 @@ class SyncWorker:
             @param first_sync as bool
         """
         if self.syncing:
-            return
+            return True
         self.__username = ""
         self.__password = ""
         self.__stop = False
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret, first_sync, False)
+        return True
 
     def push_history(self, history_id):
         """

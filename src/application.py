@@ -113,6 +113,8 @@ class Application(Gtk.Application):
             from eolie.mozilla_sync import SyncWorker
             self.sync_worker = SyncWorker()
             self.sync_worker.sync()
+            GLib.timeout_add_seconds(3600,
+                                     self.sync_worker.sync)
         except Exception as e:
             print("Application::init():", e)
             self.sync_worker = None
@@ -174,6 +176,8 @@ class Application(Gtk.Application):
         """
         self.download_manager.cancel()
         self.adblock.stop()
+        if self.sync_worker is not None:
+            self.sync_worker.stop()
         try:
             session_states = []
             for window in self.__windows:
@@ -189,13 +193,6 @@ class Application(Gtk.Application):
             print("Application::prepare_to_exit()", e)
         if exit:
             self.quit()
-
-    def quit(self):
-        """
-            Quit Eolie
-        """
-        for window in self.__windows:
-            window.destroy()
 
     def set_setting(self, key, value):
         """
@@ -343,6 +340,7 @@ class Application(Gtk.Application):
         """
         window.container.save_position()
         self.__windows.remove(window)
+        window.destroy()
         if not self.__windows:
             self.prepare_to_exit()
 
