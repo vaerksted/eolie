@@ -331,7 +331,9 @@ class WebView(WebKit2.WebView):
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected:
+            if self.__insecure_content_detected or\
+                    self.get_settings().get_property(
+                                                    "enable-private-browsing"):
                 request.deny()
             else:
                 request.allow()
@@ -446,6 +448,8 @@ class WebView(WebKit2.WebView):
             @param view as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
+        if self.get_settings().get_property("enable-private-browsing"):
+            return
         (auth, username, password) = self.__read_auth_request(request)
         if not auth:
             return

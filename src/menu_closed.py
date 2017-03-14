@@ -28,11 +28,12 @@ class ClosedMenu(Gio.Menu):
         Gio.Menu.__init__(self)
         self.__app = app
 
-    def add_action(self, title, uri, state):
+    def add_action(self, title, uri, private, state):
         """
             Add a new action to menu
             @param title as str
             @param uri as str
+            @param private as bool
             @param state as WebKit2.WebViewSessionState
         """
         self.__clean_actions()
@@ -46,7 +47,7 @@ class ClosedMenu(Gio.Menu):
         self.__app.add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
-                       (uri, state))
+                       (uri, private, state))
         if len(title) > 60:
             title = title[0:60] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
@@ -108,7 +109,8 @@ class ClosedMenu(Gio.Menu):
             @param data as (str, WebKit2.WebViewSessionState)
         """
         uri = data[0]
-        state = data[1]
+        private = data[1]
+        state = data[2]
         GLib.idle_add(self.__app.active_window.container.add_web_view,
-                      uri, True, None, None, state)
+                      uri, True, private, None, None, state)
         self.remove_action(uri)

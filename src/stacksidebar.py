@@ -79,11 +79,17 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                         WebKit2.SnapshotOptions.NONE,
-                                         None,
-                                         self.__on_snapshot,
-                                         save)
+        if self.__view.webview.get_settings().get_property(
+                                                    "enable-private-browsing"):
+            self.__image.set_from_icon_name(
+                                         "user-not-tracked-symbolic",
+                                         Gtk.IconSize.DIALOG)
+        else:
+            self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                             WebKit2.SnapshotOptions.NONE,
+                                             None,
+                                             self.__on_snapshot,
+                                             save)
 
     def clear_snapshot(self):
         """
@@ -526,6 +532,8 @@ class StackSidebar(Gtk.Grid):
             return
         El().closed_menu.add_action(view.webview.get_title(),
                                     view.webview.get_uri(),
+                                    view.webview.get_settings().get_property(
+                                                    "enable-private-browsing"),
                                     view.webview.get_session_state())
         GLib.timeout_add(1000, view.destroy)
         child.destroy()

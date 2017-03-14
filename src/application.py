@@ -78,6 +78,9 @@ class Application(Gtk.Application):
         GLib.set_prgname('eolie')
         self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Debug Eolie", None)
+        self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Add a private page",
+                             None)
         self.connect('activate', self.__on_activate)
         self.connect('command-line', self.__on_command_line)
         self.register(None)
@@ -183,8 +186,10 @@ class Application(Gtk.Application):
             for window in self.__windows:
                 for view in window.container.views:
                     uri = view.webview.get_uri()
+                    private = view.webview.get_settings().get_property(
+                                                     "enable-private-browsing")
                     state = view.webview.get_session_state().serialize()
-                    session_states.append((uri, state.get_data()))
+                    session_states.append((uri, private, state.get_data()))
             dump(session_states,
                  open(self.LOCAL_PATH + "/session_states.bin", "wb"))
             dump(self.zoom_levels,
@@ -290,11 +295,12 @@ class Application(Gtk.Application):
             session_states = load(open(
                                      self.LOCAL_PATH + "/session_states.bin",
                                      "rb"))
-            for (uri, state) in session_states:
+            for (uri, private, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_web_view,
-                              uri, count == 0, None, None, webkit_state)
+                              uri, count == 0, private,
+                              None, None, webkit_state)
                 count += 1
         except Exception as e:
             print("Application::restore_state()", e)
@@ -309,11 +315,12 @@ class Application(Gtk.Application):
         self.__externals_count = 0
         args = app_cmd_line.get_arguments()
         options = app_cmd_line.get_options_dict()
-        if options.contains('debug'):
+        if options.contains("debug"):
             GLib.setenv("LIBGL_DEBUG", "verbose", True)
             GLib.setenv("WEBKIT_DEBUG", "network", True)
             GLib.setenv("GST_DEBUG", "webkit*:5", True)
             self.debug = True
+        private_browsing = options.contains("private")
         if self.settings.get_value("remember-session"):
             count = self.__restore_state()
         else:
@@ -321,15 +328,18 @@ class Application(Gtk.Application):
         active_window = self.active_window
         if len(args) > 1:
             for uri in args[1:]:
-                active_window.container.add_web_view(uri, True)
+                active_window.container.add_web_view(uri, True,
+                                                     private_browsing)
             active_window.present()
         elif count == 0:
             # We already have a window, open a new one
             if active_window.container.current:
                 window = self.__get_new_window()
-                window.container.add_web_view(self.start_page, True)
+                window.container.add_web_view(self.start_page, True,
+                                              private_browsing)
             else:
-                active_window.container.add_web_view(self.start_page, True)
+                active_window.container.add_web_view(self.start_page, True,
+                                                     private_browsing)
         return 0
 
     def __on_delete_event(self, window, event):
