@@ -54,10 +54,12 @@ class PasswordPopover(Gtk.Popover):
                                                         self.__netloc)
             if self.__secret_item is None:
                 SecretSchema = {
+                    "type": Secret.SchemaAttributeType.STRING,
                     "uri": Secret.SchemaAttributeType.STRING,
                     "login": Secret.SchemaAttributeType.STRING,
                 }
                 SecretAttributes = {
+                    "type": "eolie web login",
                     "uri": self.__netloc,
                     "login": self.__username
                 }

@@ -115,6 +115,14 @@ class DatabaseHistory:
                          WHERE rowid=?", (history_id,))
             sql.commit()
 
+    def clear(self):
+        """
+            Clear history
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE from history")
+            sql.commit()
+
     def get(self, atime):
         """
             Get history

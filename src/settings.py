@@ -10,10 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, Gtk, GLib
+import gi
+gi.require_version('WebKit2', '4.0')
+
+from gi.repository import Gio, Gtk, GLib, Secret, WebKit2
 
 from gettext import gettext as _
 from threading import Thread
+import sqlite3
 
 from eolie.define import El
 from eolie.utils import get_current_monitor_model
@@ -186,9 +190,32 @@ class SettingsDialog:
 #######################
 # PROTECTED           #
 #######################
+    def _on_clear_personnal_data_clicked(self, button):
+        """
+            Show clear personnal data dialog
+            @param button as Gtk.button
+        """
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/ClearData.ui")
+        builder.connect_signals(self)
+        dialog = builder.get_object("dialog")
+        dialog.set_transient_for(self.__settings_dialog)
+        headerbar = builder.get_object("headerbar")
+        headerbar.set_title(_("Clear Personal Data"))
+        builder.get_object("clear_button").connect(
+                        "clicked",
+                        self.__on_clear_button_clicked,
+                        builder.get_object("cookies_button"),
+                        builder.get_object("cache_button"),
+                        builder.get_object("history_button"),
+                        builder.get_object("passwords_button"))
+        dialog.set_titlebar(headerbar)
+        dialog.show()
+
     def _on_manage_cookies_clicked(self, button):
         """
             Show cookies popover
+            @param button as Gtk.button
         """
         from eolie.popover_cookies import CookiesPopover
         popover = CookiesPopover()
@@ -456,3 +483,63 @@ class SettingsDialog:
                               label, image))
         thread.daemon = True
         thread.start()
+
+    def __on_clear_button_clicked(self, button, cookies_button, cache_button,
+                                  history_button, passwords_button):
+        """
+            Clear personnal data
+            @param button as Gtk.Button
+            @param cookies_button as Gtk.ToggleButton
+            @param cache_button as Gtk.ToggleButton
+            @param history_button as Gtk.ToggleButton
+            @param passwords_button as Gtk.ToggleButton
+        """
+        button.get_toplevel().hide()
+        if cookies_button.get_active():
+            sql = sqlite3.connect(El().cookies_path, 600.0)
+            sql.execute("DELETE FROM moz_cookies")
+            sql.commit()
+        if cache_button.get_active():
+            context = WebKit2.WebContext.get_default()
+            context.clear_cache()
+        if history_button.get_active():
+            El().history.clear()
+        if passwords_button.get_active():
+            Secret.Service.get(Secret.ServiceFlags.NONE, None,
+                               self.__on_get_secret)
+
+    def __on_get_secret(self, source, result):
+        """
+            Store secret proxy
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            secret = Secret.Service.get_finish(result)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "type": "eolie web login"
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
+                          None, self.__on_secret_search)
+        except Exception as e:
+            print("SettingsDialog::__on_get_secret()", e)
+
+    def __on_secret_search(self, source, result):
+        """
+            Set username/password input
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            if result is not None:
+                items = source.search_finish(result)
+                for item in items:
+                    item.delete(None, None)
+        except Exception as e:
+            print("SettingsDialog::__on_secret_search()", e)

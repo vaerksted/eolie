@@ -158,9 +158,11 @@ def on_document_loaded(webpage):
         return
     parsed = urlparse(webpage.get_uri())
     SecretSchema = {
+        "type": Secret.SchemaAttributeType.STRING,
         "uri": Secret.SchemaAttributeType.STRING,
     }
     SecretAttributes = {
+        "type": "eolie web login",
         "uri": parsed.netloc,
     }
     schema = Secret.Schema.new("org.gnome.Eolie",
