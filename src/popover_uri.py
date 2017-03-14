@@ -77,7 +77,6 @@ class Row(Gtk.ListBoxRow):
                                            ArtSize.FAVICON,
                                            ArtSize.FAVICON)
             favicon = Gtk.Image.new_from_surface(surface)
-            favicon.show()
             if surface is None:
                 favicon.set_from_icon_name("applications-internet",
                                            Gtk.IconSize.MENU)
@@ -97,7 +96,7 @@ class Row(Gtk.ListBoxRow):
                 icon_name = "folder-symbolic"
             favicon = Gtk.Image.new_from_icon_name(icon_name,
                                                    Gtk.IconSize.MENU)
-            favicon.show()
+        favicon.show()
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.set_property("halign", Gtk.Align.START)
