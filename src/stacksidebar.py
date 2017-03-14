@@ -14,7 +14,6 @@ from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
-from eolie.utils import strip_uri
 
 
 class SidebarChild(Gtk.ListBoxRow):
@@ -139,15 +138,16 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
                                                                "sidebar-close")
-            self.__set_favicon_from_cache()
+            self.__set_favicon()
 
 #######################
 # PRIVATE             #
 #######################
-    def __get_favicon(self, favicon):
+    def __resize_favicon(self, favicon):
         """
             Resize surface to match favicon size
             @param favicon as cairo.surface
+            @return cairo.surface
         """
         if favicon is None:
             return None
@@ -166,44 +166,34 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        surface = self.__get_favicon(self.__view.webview.get_favicon())
-        if surface is None:
-            self.__image_close.set_from_icon_name("applications-internet",
-                                                  Gtk.IconSize.MENU)
-            return
-        # We save favicon twice. If user have https://www.google.com as
-        # bookmark, it will be directed and wont save bookmark's favicon
-        El().art.save_artwork(self.__view.webview.get_uri(),
-                              surface, "favicon")
-        if self.__view.webview.get_uri() != self.__view.webview.loaded_uri:
-            if strip_uri(self.__view.webview.get_uri(), False, False) ==\
-               strip_uri(self.__view.webview.loaded_uri, False, False):
-                El().art.save_artwork(self.__view.webview.loaded_uri,
-                                      surface, "favicon")
-        self.__image_close.set_from_surface(surface)
-        del surface
-        self.__image_close.get_style_context().remove_class("sidebar-close")
-        self.__image_close.show()
-
-    def __set_favicon_from_cache(self):
-        """
-            Set site favicon from cache
-        """
+        favicon_db = self.__view.webview.get_context().get_favicon_database()
         uri = self.__view.webview.get_uri()
-        favicon = El().art.get_artwork(uri,
-                                       "favicon",
-                                       self.__view.webview.get_scale_factor(),
-                                       ArtSize.FAVICON,
-                                       ArtSize.FAVICON)
-        if favicon is not None:
-            self.__image_close.set_from_surface(favicon)
-            del favicon
-        elif uri == "populars://":
-            self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                  Gtk.IconSize.MENU)
+        favicon_db.get_favicon(uri, None, self.__set_favicon_result)
+
+    def __set_favicon_result(self, db, result):
+        """
+            Set favicon db result
+            @param db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+        """
+        try:
+            surface = db.get_favicon_finish(result)
+        except:
+            surface = None
+        if surface is None:
+            uri = self.__view.webview.get_uri()
+            if uri == "populars://":
+                self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                      Gtk.IconSize.MENU)
+            else:
+                self.__image_close.set_from_icon_name("applications-internet",
+                                                      Gtk.IconSize.MENU)
         else:
-            self.__image_close.set_from_icon_name("applications-internet",
-                                                  Gtk.IconSize.MENU)
+            self.__image_close.set_from_surface(self.__resize_favicon(surface))
+            del surface
+            self.__image_close.get_style_context().remove_class(
+                                                               "sidebar-close")
+            self.__image_close.show()
 
     def __set_snapshot_timeout(self):
         """
@@ -232,7 +222,7 @@ class SidebarChild(Gtk.ListBoxRow):
             if preview is not None:
                 self.__image.set_from_surface(preview)
                 del preview
-        self.__set_favicon_from_cache()
+        self.__set_favicon()
 
     def __on_title_changed(self, view, title):
         """
@@ -326,19 +316,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param pointer as GParamPointer
         """
-        # Do not try to load favicon in private browsing
-        if self.__view.webview.get_settings().get_property(
-                                                    "enable-private-browsing"):
-            return
-        # Just set icon if special schemes
-        if view.get_uri() == "populars://":
-            self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                  Gtk.IconSize.MENU)
-        elif view.get_favicon() is None:
-            self.__image_close.set_from_icon_name("applications-internet",
-                                                  Gtk.IconSize.MENU)
-        else:
-            self.__set_favicon()
+        self.__set_favicon()
 
     def __on_drag_begin(self, widget, context):
         """
