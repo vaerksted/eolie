@@ -139,7 +139,7 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
                                                                "sidebar-close")
-            self.__on_notify_favicon(self.__view.webview, None)
+            self.__set_favicon_from_cache()
 
 #######################
 # PRIVATE             #
@@ -185,6 +185,26 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__image_close.get_style_context().remove_class("sidebar-close")
         self.__image_close.show()
 
+    def __set_favicon_from_cache(self):
+        """
+            Set site favicon from cache
+        """
+        uri = self.__view.webview.get_uri()
+        favicon = El().art.get_artwork(uri,
+                                       "favicon",
+                                       self.__view.webview.get_scale_factor(),
+                                       ArtSize.FAVICON,
+                                       ArtSize.FAVICON)
+        if favicon is not None:
+            self.__image_close.set_from_surface(favicon)
+            del favicon
+        elif uri == "populars://":
+            self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                  Gtk.IconSize.MENU)
+        else:
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.MENU)
+
     def __set_snapshot_timeout(self):
         """
             Get snapshot timeout
@@ -199,14 +219,10 @@ class SidebarChild(Gtk.ListBoxRow):
             @param uri as str
         """
         uri = view.get_uri()
-        # Just set icon if special schemes
-        if uri == "populars://":
-            self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                  Gtk.IconSize.MENU)
-            return
-
-        # We are not filtered
-        if self.get_allocated_width() != 1:
+        # We are not filtered and not in private mode
+        if not self.__view.webview.get_settings().get_property(
+                                                "enable-private-browsing") and\
+                self.get_allocated_width() != 1:
             preview = El().art.get_artwork(uri,
                                            "preview",
                                            view.get_scale_factor(),
@@ -216,17 +232,7 @@ class SidebarChild(Gtk.ListBoxRow):
             if preview is not None:
                 self.__image.set_from_surface(preview)
                 del preview
-        favicon = El().art.get_artwork(uri,
-                                       "favicon",
-                                       view.get_scale_factor(),
-                                       ArtSize.FAVICON,
-                                       ArtSize.FAVICON)
-        if favicon is not None:
-            self.__image_close.set_from_surface(favicon)
-            del favicon
-        else:
-            self.__image_close.set_from_icon_name("applications-internet",
-                                                  Gtk.IconSize.MENU)
+        self.__set_favicon_from_cache()
 
     def __on_title_changed(self, view, title):
         """
@@ -320,6 +326,10 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param pointer as GParamPointer
         """
+        # Do not try to load favicon in private browsing
+        if self.__view.webview.get_settings().get_property(
+                                                    "enable-private-browsing"):
+            return
         # Just set icon if special schemes
         if view.get_uri() == "populars://":
             self.__image_close.set_from_icon_name("emote-love-symbolic",
