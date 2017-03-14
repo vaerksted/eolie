@@ -49,13 +49,15 @@ class HistoryMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             # Try to set icon
-            try:
-                f = Gio.File.new_for_path(self.__app.art.get_path(
-                                                               uri, "favicon"))
+            if self.__app.art.exists(uri, "favicon"):
+                f = Gio.File.new_for_path(self.__app.art.get_path(uri,
+                                                                  "favicon"))
                 icon = Gio.FileIcon.new(f)
                 item.set_icon(icon)
-            except:
-                pass
+            elif uri == "populars://":
+                item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
+            else:
+                item.set_icon(Gio.ThemedIcon.new("applications-internet"))
             self.append_item(item)
 
     def remove_actions(self):

@@ -39,7 +39,6 @@ class ToolbarActions(Gtk.Bin):
         self.__forward = builder.get_object("forward_button")
         self.__filter = builder.get_object("filter_button")
         self.__pages_button = builder.get_object("pages_button")
-        self.__pages_button.set_menu_model(El().pages_menu)
 
     def set_actions(self, view):
         """
@@ -132,6 +131,16 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.add_web_view(El().start_page, True)
         self.__window.toolbar.title.hide_popover()
 
+    def _on_pages_button_clicked(self, button):
+        """
+            Show pages popover
+            @param button as Gtk.Button
+        """
+        popover = Gtk.Popover.new_from_model(button, El().pages_menu)
+        popover.set_relative_to(button)
+        popover.forall(self.__force_show_image)
+        popover.show()
+
     def _on_filter_button_toggled(self, button):
         """
             Add a new web view
@@ -143,6 +152,16 @@ class ToolbarActions(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __force_show_image(self, widget):
+        """
+            Little hack to force Gtk.ModelButton to show image
+            @param widget as Gtk.Widget
+        """
+        if isinstance(widget, Gtk.Image):
+            widget.show()
+        elif isinstance(widget, Gtk.Container):
+            widget.forall(self.__force_show_image)
+
     def __on_popover_closed(self, popover, model):
         """
             Clear menu actions
@@ -162,6 +181,7 @@ class ToolbarActions(Gtk.Bin):
         if back_list:
             model = HistoryMenu(El(), back_list)
             popover = Gtk.Popover.new_from_model(self.__backward, model)
+            popover.forall(self.__force_show_image)
             popover.connect("closed", self.__on_popover_closed, model)
             popover.show()
 
@@ -175,5 +195,6 @@ class ToolbarActions(Gtk.Bin):
         if forward_list:
             model = HistoryMenu(El(), forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward, model)
+            popover.forall(self.__force_show_image)
             popover.connect("closed", self.__on_popover_closed, model)
             popover.show()

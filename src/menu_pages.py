@@ -33,6 +33,7 @@ class PagesMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_private_clicked)
         item = Gio.MenuItem.new(_("New private page"), "app.new-private")
+        item.set_icon(Gio.ThemedIcon.new("user-not-tracked-symbolic"))
         self.insert_item(0, item)
         self.__closed_section = Gio.Menu()
         self.insert_section(1, _("Closed pages"), self.__closed_section)
@@ -62,12 +63,14 @@ class PagesMenu(Gio.Menu):
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
         # Try to set icon
-        try:
+        if self.__app.art.exists(uri, "favicon"):
             f = Gio.File.new_for_path(self.__app.art.get_path(uri, "favicon"))
             icon = Gio.FileIcon.new(f)
             item.set_icon(icon)
-        except:
-            pass
+        elif uri == "populars://":
+                item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
+        else:
+            item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
 
     def remove_action(self, uri):
