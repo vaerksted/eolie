@@ -139,6 +139,12 @@ class SettingsDialog:
         storage = El().settings.get_enum("cookie-storage")
         cookies_combo.set_active_id(str(storage))
 
+        if GLib.find_program_in_path("seahorse") is None:
+            button = builder.get_object("manage_passwords_button")
+            button.set_sensitive(False)
+            button.set_label(_("Installing seahorse will allow you\n"
+                               "managing your passwords"))
+
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
                                 El().settings.get_value("remember-passwords"))
@@ -180,6 +186,14 @@ class SettingsDialog:
 #######################
 # PROTECTED           #
 #######################
+    def _on_manage_passwords_clicked(self, button):
+        """
+            Launch searhorse
+            @param button as Gtk.Button
+        """
+        argv = [GLib.find_program_in_path("seahorse")]
+        GLib.spawn_async(argv)
+
     def _on_tracking_toggled(self, button):
         """
             Save state
