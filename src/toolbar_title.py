@@ -244,7 +244,7 @@ class ToolbarTitle(Gtk.Bin):
             if not self.__lock:
                 if self.__title:
                     self.__placeholder.set_text(self.__title)
-                self.__entry.set_text("")
+                    self.__entry.set_text("")
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def _on_entry_focus_in(self, entry, event):
