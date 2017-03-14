@@ -127,6 +127,14 @@ class Row(Gtk.ListBoxRow):
         grid.add(uri)
         if item_type == Type.HISTORY:
             grid.add(atime)
+            delete_button = Gtk.Button.new_from_icon_name(
+                                                     "user-trash-symbolic",
+                                                     Gtk.IconSize.MENU)
+            delete_button.get_image().set_opacity(0.5)
+            delete_button.connect("clicked", self.__on_delete_clicked)
+            delete_button.get_style_context().add_class("edit-button")
+            delete_button.show()
+            grid.add(delete_button)
         if item_type == Type.BOOKMARK:
             edit_button = Gtk.Button.new_from_icon_name(
                                                      "document-edit-symbolic",
@@ -300,6 +308,18 @@ class Row(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         self.emit("edited")
+
+    def __on_delete_clicked(self, button):
+        """
+            Edit self
+            @param button as Gtk.Button
+        """
+        history_id = self.__item.get_property("id")
+        guid = El().history.get_guid(history_id)
+        if El().sync_worker is not None:
+            El().sync_worker.remove_from_history(guid)
+        El().history.remove(history_id)
+        GLib.idle_add(self.destroy)
 
 
 class Input:
@@ -723,11 +743,12 @@ class UriPopover(Gtk.Popover):
     def __add_history_items(self, items):
         """
             Add history items to model
-            @param [(title, uri, mtime)]  as [(str, str, int)]
+            @param [(history_id, title, uri, mtime)]  as [(int, str, str, int)]
         """
         if items:
-            (title, uri, atime) = items.pop(0)
+            (history_id, title, uri, atime) = items.pop(0)
             item = Item()
+            item.set_property("id", history_id)
             item.set_property("type", Type.HISTORY)
             item.set_property("title", title)
             item.set_property("uri", uri)

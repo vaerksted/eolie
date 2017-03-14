@@ -79,6 +79,17 @@ class SyncWorker:
             thread.daemon = True
             thread.start()
 
+    def remove_from_history(self, guid):
+        """
+            Remove history id from remote history
+            A first call to sync() is needed to populate secrets
+            @param guid as str
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            thread = Thread(target=self.__remove_from_history, args=(guid,))
+            thread.daemon = True
+            thread.start()
+
     def delete_secret(self):
         """
             Delete sync secret
@@ -174,6 +185,21 @@ class SyncWorker:
             self.__client.add_history(record, bulk_keys)
         except Exception as e:
             print("SyncWorker::__push_history():", e)
+        self.__stop = True
+
+    def __remove_from_history(self, guid):
+        """
+            Remove from history
+            @param guid as str
+        """
+        if not self.__username or not self.__password:
+            self.__stop = True
+            return
+        try:
+            debug("deleting %s" % guid)
+            self.__client.client.delete_record("history", guid)
+        except Exception as e:
+            print("SyncWorker::__remove_from_history():", e)
         self.__stop = True
 
     def __sync(self, first_sync):

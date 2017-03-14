@@ -105,6 +105,16 @@ class DatabaseHistory:
             if commit:
                 sql.commit()
 
+    def remove(self, history_id):
+        """
+            Remove item from history
+            @param history id as int
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE from history\
+                         WHERE rowid=?", (history_id,))
+            sql.commit()
+
     def get(self, atime):
         """
             Get history
@@ -113,7 +123,7 @@ class DatabaseHistory:
         """
         one_day = 86400
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT title, uri, atime\
+            result = sql.execute("SELECT rowid, title, uri, atime\
                                   FROM history\
                                   WHERE atime >= ? AND atime <= ?\
                                   ORDER BY atime DESC LIMIT ?",
