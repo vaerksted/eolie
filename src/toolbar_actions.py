@@ -38,10 +38,8 @@ class ToolbarActions(Gtk.Bin):
         self.__backward = builder.get_object("back_button")
         self.__forward = builder.get_object("forward_button")
         self.__filter = builder.get_object("filter_button")
-        self.__closed_button = builder.get_object("closed_button")
-        self.__closed_button.set_menu_model(El().closed_menu)
-        sensitive = El().closed_menu.get_n_items() != 0
-        self.__closed_button.set_sensitive(sensitive)
+        self.__pages_button = builder.get_object("pages_button")
+        self.__pages_button.set_menu_model(El().pages_menu)
 
     def set_actions(self, view):
         """

@@ -12,10 +12,11 @@
 
 from gi.repository import Gio, GLib
 
+from gettext import gettext as _
 from hashlib import sha256
 
 
-class ClosedMenu(Gio.Menu):
+class PagesMenu(Gio.Menu):
     """
         Menu showing closed page
     """
@@ -27,6 +28,14 @@ class ClosedMenu(Gio.Menu):
         """
         Gio.Menu.__init__(self)
         self.__app = app
+        action = Gio.SimpleAction(name="new-private")
+        app.add_action(action)
+        action.connect('activate',
+                       self.__on_private_clicked)
+        item = Gio.MenuItem.new(_("New private page"), "app.new-private")
+        self.insert_item(0, item)
+        self.__closed_section = Gio.Menu()
+        self.insert_section(1, _("Closed pages"), self.__closed_section)
 
     def add_action(self, title, uri, private, state):
         """
@@ -59,8 +68,7 @@ class ClosedMenu(Gio.Menu):
             item.set_icon(icon)
         except:
             pass
-        self.insert_item(0, item)
-        self.__update_toolbar_actions()
+        self.__closed_section.insert_item(0, item)
 
     def remove_action(self, uri):
         """
@@ -70,12 +78,11 @@ class ClosedMenu(Gio.Menu):
         action = self.__app.lookup_action(encoded)
         if action is not None:
             self.__app.remove_action(encoded)
-            for i in range(0, self.get_n_items()):
+            for i in range(0, self.__closed_section.get_n_items()):
                 _uri = self.get_item_attribute_value(i, "uri").get_string()
                 if uri == _uri:
-                    self.remove(i)
+                    self.__closed_section.remove(i)
                     break
-        self.__update_toolbar_actions()
 
 #######################
 # PRIVATE             #
@@ -86,20 +93,23 @@ class ClosedMenu(Gio.Menu):
         """
         count = self.get_n_items()
         if count > 20:
-            uri = self.get_item_attribute_value(0, "uri").get_string()
+            uri = self.__closed_section.get_item_attribute_value(
+                                                         0, "uri").get_string()
             encoded = sha256(uri.encode("utf-8")).hexdigest()
             action = self.__app.lookup_action(encoded)
             if action is not None:
                 self.__app.remove_action(encoded)
-            self.remove(0)
+            self.__closed_section.remove(0)
 
-    def __update_toolbar_actions(self):
+    def __on_private_clicked(self, action, variant):
         """
-            Update toolbar actions (ie our button)
+            Add a new private view
+            @param Gio.SimpleAction
+            @param GVariant
         """
-        sensitive = self.get_n_items() != 0
-        for window in self.__app.windows:
-            window.toolbar.actions.closed_button.set_sensitive(sensitive)
+        self.__app.active_window.container.add_web_view(self.__app.start_page,
+                                                        True,
+                                                        True)
 
     def __on_action_clicked(self, action, variant, data):
         """

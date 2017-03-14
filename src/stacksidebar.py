@@ -530,11 +530,11 @@ class StackSidebar(Gtk.Grid):
         child = self.__listbox.get_row_at_index(child_index)
         if child is None:
             return
-        El().closed_menu.add_action(view.webview.get_title(),
-                                    view.webview.get_uri(),
-                                    view.webview.get_settings().get_property(
-                                                    "enable-private-browsing"),
-                                    view.webview.get_session_state())
+        El().pages_menu.add_action(view.webview.get_title(),
+                                   view.webview.get_uri(),
+                                   view.webview.get_settings().get_property(
+                                                   "enable-private-browsing"),
+                                   view.webview.get_session_state())
         GLib.timeout_add(1000, view.destroy)
         child.destroy()
         # Nothing to do if was not current page

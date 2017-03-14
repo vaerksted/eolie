@@ -10,8 +10,8 @@ app_PYTHON = \
     download_manager.py\
     define.py\
     localized.py\
-    menu_closed.py\
     menu_history.py\
+    menu_pages.py\
     mozilla_sync.py\
     popover_cookies.py\
     popover_downloads.py\

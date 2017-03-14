@@ -29,7 +29,7 @@ from eolie.database_adblock import DatabaseAdblock
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
-from eolie.menu_closed import ClosedMenu
+from eolie.menu_pages import PagesMenu
 
 
 class Application(Gtk.Application):
@@ -66,7 +66,7 @@ class Application(Gtk.Application):
                     break
         self.__extension_dir = extension_dir
         self.__windows = []
-        self.__closed_menu = ClosedMenu(self)
+        self.__pages_menu = PagesMenu(self)
         self.debug = False
         try:
             self.zoom_levels = load(open(self.LOCAL_PATH + "/zoom_levels.bin",
@@ -222,12 +222,12 @@ class Application(Gtk.Application):
                                         WebKit2.CookiePersistentStorage.SQLITE)
 
     @property
-    def closed_menu(self):
+    def pages_menu(self):
         """
-            Get closed menu
-            @return ClosedMenu
+            Get pages menu
+            @return PagesMenu
         """
-        return self.__closed_menu
+        return self.__pages_menu
 
     @property
     def start_page(self):

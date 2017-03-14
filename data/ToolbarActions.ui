@@ -123,7 +123,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkMenuButton" id="closed_button">
+          <object class="GtkMenuButton" id="pages_button">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
