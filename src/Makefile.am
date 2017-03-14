@@ -13,6 +13,7 @@ app_PYTHON = \
     menu_closed.py\
     menu_history.py\
     mozilla_sync.py\
+    popover_cookies.py\
     popover_downloads.py\
     popover_password.py\
     popover_uri.py\

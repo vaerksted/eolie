@@ -311,7 +311,7 @@ class Row(Gtk.ListBoxRow):
 
     def __on_delete_clicked(self, button):
         """
-            Edit self
+            Delete self
             @param button as Gtk.Button
         """
         history_id = self.__item.get_property("id")

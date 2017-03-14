@@ -186,6 +186,16 @@ class SettingsDialog:
 #######################
 # PROTECTED           #
 #######################
+    def _on_manage_cookies_clicked(self, button):
+        """
+            Show cookies popover
+        """
+        from eolie.popover_cookies import CookiesPopover
+        popover = CookiesPopover()
+        popover.populate()
+        popover.set_relative_to(button)
+        popover.show()
+
     def _on_manage_passwords_clicked(self, button):
         """
             Launch searhorse

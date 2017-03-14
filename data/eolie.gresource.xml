@@ -14,6 +14,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverPassword.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
