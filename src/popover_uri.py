@@ -202,6 +202,10 @@ class Row(Gtk.ListBoxRow):
             favicon_db = context.get_favicon_database()
             favicon_db.get_favicon(favicon_uri, None,
                                    self.__set_favicon_result, favicon)
+        else:
+            favicon.set_from_icon_name("applications-internet",
+                                       Gtk.IconSize.LARGE_TOOLBAR)
+            favicon.show()
 
     def __set_favicon_result(self, db, result, favicon):
         """
@@ -216,7 +220,7 @@ class Row(Gtk.ListBoxRow):
             surface = None
         if surface is None:
             favicon.set_from_icon_name("applications-internet",
-                                       Gtk.IconSize.MENU)
+                                       Gtk.IconSize.LARGE_TOOLBAR)
         else:
             favicon.set_from_surface(resize_favicon(surface))
             del surface
