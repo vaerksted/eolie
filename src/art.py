@@ -85,6 +85,7 @@ class Art:
             @return bool
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
+        # TODO Should return False if preview too old
         return f.query_exists()
 
     @property
