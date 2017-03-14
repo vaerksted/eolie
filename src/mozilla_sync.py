@@ -418,6 +418,9 @@ class SyncWorker:
                 atime = round(int(history["visits"][0]["date"]) / 1000000, 2)
             except:
                 continue
+            # History item had been sync last sync
+            if atime < self.__mtimes["history"]:
+                continue
             # Ignore page with no title
             if not history["title"]:
                 continue
