@@ -265,6 +265,13 @@ class Application(Gtk.Application):
         """
         return self.__COOKIES_PATH
 
+    @property
+    def favicons_path(self):
+        """
+            Cookies sqlite db path
+        """
+        return self.__FAVICONS_PATH + "/WebpageIcons.db"
+
 #######################
 # PRIVATE             #
 #######################

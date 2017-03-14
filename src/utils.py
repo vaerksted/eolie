@@ -15,10 +15,31 @@ from gi.repository import Gdk, GLib
 import unicodedata
 from urllib.parse import urlparse
 import string
+import cairo
 from random import choice
 from base64 import b64encode
 
-from eolie.define import El
+from eolie.define import El, ArtSize
+
+
+def resize_favicon(favicon):
+    """
+        Resize surface to match favicon size
+        @param favicon as cairo.surface
+        @return cairo.surface
+    """
+    if favicon is None:
+        return None
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                 ArtSize.FAVICON,
+                                 ArtSize.FAVICON)
+    factor = ArtSize.FAVICON / favicon.get_width()
+    context = cairo.Context(surface)
+    context.scale(factor, factor)
+    context.set_source_surface(favicon, 0, 0)
+    context.paint()
+    del favicon
+    return surface
 
 
 def get_random_string(size):

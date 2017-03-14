@@ -10,14 +10,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
+from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango, WebKit2
 
 from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
 from locale import strcoll
+import sqlite3
+from urllib.parse import urlparse
 
-from eolie.define import El, ArtSize, Type
+from eolie.define import El, Type
+from eolie.utils import resize_favicon
 
 
 class Item(GObject.GObject):
@@ -71,20 +74,12 @@ class Row(Gtk.ListBoxRow):
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
-            surface = El().art.get_artwork(uri,
-                                           "favicon",
-                                           self.get_scale_factor(),
-                                           ArtSize.FAVICON,
-                                           ArtSize.FAVICON)
-            favicon = Gtk.Image.new_from_surface(surface)
-            if surface is None:
-                favicon.set_from_icon_name("applications-internet",
-                                           Gtk.IconSize.MENU)
-            else:
-                del surface
+            favicon = Gtk.Image()
+            self.__set_favicon(favicon)
         elif item_type == Type.KEYWORDS:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
+            favicon.show()
         else:
             if item_id == Type.NONE:
                 icon_name = "folder-visiting-symbolic"
@@ -96,7 +91,7 @@ class Row(Gtk.ListBoxRow):
                 icon_name = "folder-symbolic"
             favicon = Gtk.Image.new_from_icon_name(icon_name,
                                                    Gtk.IconSize.MENU)
-        favicon.show()
+            favicon.show()
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.set_property("halign", Gtk.Align.START)
@@ -185,6 +180,48 @@ class Row(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon(self, favicon):
+        """
+            Try to get a favicon for current uri
+            @param favicon as Gtk.Image
+            @param uri as str
+        """
+        favicon_uri = None
+        parsed = urlparse(self.__item.get_property("uri"))
+        for uri in [parsed.netloc + parsed.path, parsed.netloc]:
+            sql = sqlite3.connect(El().favicons_path, 600.0)
+            result = sql.execute("SELECT url\
+                                  FROM PageURL\
+                                  WHERE url LIKE ?", ("%{}%".format(uri),))
+            v = result.fetchone()
+            if v is not None:
+                favicon_uri = v[0]
+                break
+        if favicon_uri is not None:
+            context = WebKit2.WebContext.get_default()
+            favicon_db = context.get_favicon_database()
+            favicon_db.get_favicon(favicon_uri, None,
+                                   self.__set_favicon_result, favicon)
+
+    def __set_favicon_result(self, db, result, favicon):
+        """
+            Set favicon db result
+            @param db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+            @param favicon as Gtk.Image
+        """
+        try:
+            surface = db.get_favicon_finish(result)
+        except:
+            surface = None
+        if surface is None:
+            favicon.set_from_icon_name("applications-internet",
+                                       Gtk.IconSize.MENU)
+        else:
+            favicon.set_from_surface(resize_favicon(surface))
+            del surface
+        favicon.show()
+
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
             Show tooltip if needed

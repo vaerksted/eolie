@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
+from eolie.utils import resize_favicon
 
 
 class SidebarChild(Gtk.ListBoxRow):
@@ -142,25 +143,6 @@ class SidebarChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
-    def __resize_favicon(self, favicon):
-        """
-            Resize surface to match favicon size
-            @param favicon as cairo.surface
-            @return cairo.surface
-        """
-        if favicon is None:
-            return None
-        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                     ArtSize.FAVICON,
-                                     ArtSize.FAVICON)
-        factor = ArtSize.FAVICON / favicon.get_width()
-        context = cairo.Context(surface)
-        context.scale(factor, factor)
-        context.set_source_surface(favicon, 0, 0)
-        context.paint()
-        del favicon
-        return surface
-
     def __set_favicon(self):
         """
             Set favicon
@@ -188,7 +170,7 @@ class SidebarChild(Gtk.ListBoxRow):
                 self.__image_close.set_from_icon_name("applications-internet",
                                                       Gtk.IconSize.MENU)
         else:
-            self.__image_close.set_from_surface(self.__resize_favicon(surface))
+            self.__image_close.set_from_surface(resize_favicon(surface))
             del surface
             self.__image_close.get_style_context().remove_class(
                                                                "sidebar-close")
