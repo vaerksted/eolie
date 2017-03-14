@@ -456,9 +456,9 @@ class WebView(WebKit2.WebView):
                 # We need to send a title if non exists
                 if not self.__title:
                     self.__title = view.get_title()
-                if not self.__title:
-                    self.__title = view.get_uri()
-                self.emit("title-changed", self.__title)
+                    if not self.__title:
+                        self.__title = view.get_uri()
+                    self.emit("title-changed", self.__title)
                 for site in ["facebook.com"]:
                     if uri.find(site) != -1:
                         parsed = urlparse(uri)
