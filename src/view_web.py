@@ -90,6 +90,7 @@ class WebView(WebKit2.WebView):
         # Reset bad tls certificate
         elif parsed.scheme != "accept":
             self.__bad_tls = None
+            self.__insecure_content_detected = False
         self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
 
@@ -232,9 +233,12 @@ class WebView(WebKit2.WebView):
         settings.set_property("media-playback-allows-inline", True)
         self.set_settings(settings)
         self.connect("decide-policy", self.__on_decide_policy)
+        self.connect("insecure-content-detected",
+                     self.__on_insecure_content_detected)
         self.connect("submit-form", self.__on_submit_form)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("web-process-crashed", self.__on_web_process_crashed)
+        self.connect("permission_request", self.__on_permission_request)
         self.connect("load-changed", self.__on_load_changed)
         self.connect("load-failed", self.__on_load_failed)
         self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
@@ -312,6 +316,25 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
+
+    def __on_insecure_content_detected(self, webview, event):
+        """
+            @param webview as WebView
+            @param event as WebKit2.InsecureContentEvent
+        """
+        self.__insecure_content_detected = True
+
+    def __on_permission_request(self, webview, request):
+        """
+            Handle Webkit permissions
+            @param webview as WebKit2.WebView
+            @param request as WebKit2.PermissionRequest
+        """
+        if isinstance(request, WebKit2.GeolocationPermissionRequest):
+            if self.__insecure_content_detected:
+                request.deny()
+            else:
+                request.allow()
 
     def __on_populars_scheme(self, request):
         """
