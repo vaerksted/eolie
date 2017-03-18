@@ -134,7 +134,7 @@ class ToolbarEnd(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         builder.connect_signals(self)
-        webview = El().active_window.container.current.webview
+        webview = self.__window.container.current.webview
         parsed = urlparse(webview.get_uri())
         if parsed.scheme not in ["http", "https"]:
             builder.get_object("source_button").set_sensitive(False)
@@ -160,7 +160,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         button.get_ancestor(Gtk.Popover).hide()
         filechooser = Gtk.FileChooserNative.new(_("Save page"),
-                                                El().active_window,
+                                                self.__window,
                                                 Gtk.FileChooserAction.SAVE,
                                                 _("Save"),
                                                 _("Cancel"))
@@ -173,7 +173,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.button
         """
         button.get_ancestor(Gtk.Popover).hide()
-        action = El().lookup_action("shortcut")
+        action = self.__window.lookup_action("shortcut")
         action.activate(GLib.Variant("s", "print"))
 
     def _on_source_button_clicked(self, button):
@@ -182,7 +182,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.button
         """
         button.get_ancestor(Gtk.Popover).hide()
-        uri = El().active_window.container.current.webview.get_uri()
+        uri = self.__window.container.current.webview.get_uri()
         thread = Thread(target=self.__show_source_code,
                         args=(uri,))
         thread.daemon = True
@@ -193,7 +193,7 @@ class ToolbarEnd(Gtk.Bin):
             Zoom current page
             @param button as Gtk.Button
         """
-        webview = El().active_window.container.current.webview
+        webview = self.__window.container.current.webview
         parsed = urlparse(webview.get_uri())
         if parsed.netloc in El().zoom_levels.keys():
             current = El().zoom_levels[parsed.netloc]
@@ -209,7 +209,7 @@ class ToolbarEnd(Gtk.Bin):
             Unzoom current page
             @param button as Gtk.Button
         """
-        webview = El().active_window.container.current.webview
+        webview = self.__window.container.current.webview
         parsed = urlparse(webview.get_uri())
         if parsed.netloc in El().zoom_levels.keys():
             current = El().zoom_levels[parsed.netloc]
@@ -226,7 +226,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         try:
-            webview = El().active_window.container.current.webview
+            webview = self.__window.container.current.webview
             parsed = urlparse(webview.get_uri())
             del El().zoom_levels[parsed.netloc]
             webview.update_zoom_level()
@@ -293,7 +293,7 @@ class ToolbarEnd(Gtk.Bin):
             @param response_id as int
         """
         if response_id == Gtk.ResponseType.ACCEPT:
-            El().active_window.container.current.webview.save_to_file(
+            self.__window.container.current.webview.save_to_file(
                                     dialog.get_file(),
                                     WebKit2.SaveMode.MHTML,
                                     None,
