@@ -13,6 +13,7 @@
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib
 
 from hashlib import sha256
+from time import time
 
 from eolie.utils import strip_uri
 
@@ -81,12 +82,19 @@ class Art:
 
     def exists(self, uri, suffix):
         """
-            True if exists in cache
+            True if exists in cache and not older than one day
             @return bool
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
-        # TODO Should return False if preview too old
-        return f.query_exists()
+        exists = f.query_exists()
+        if exists:
+            info = f.query_info('time::modified',
+                                Gio.FileQueryInfoFlags.NONE,
+                                None)
+            mtime = int(info.get_attribute_as_string('time::modified'))
+            if time() - mtime > 86400:
+                exists = False
+        return exists
 
     @property
     def base_uri(self):
