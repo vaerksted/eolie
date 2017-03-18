@@ -579,7 +579,16 @@ class WebView(WebKit2.WebView):
                        "suggested-action",
                        _("Retry"))
         self.load_html(html, None)
-        if not network_available:
+        if network_available:
+            # Remove preview and start as should be wrong
+            for suffix in ["preview", "start"]:
+                path = El().art.get_path(uri, suffix)
+                f = Gio.File.new_for_path(path)
+                try:
+                    f.delete()
+                except:
+                    pass
+        else:
             GLib.timeout_add(1000, self.__check_for_network, uri)
         return True
 
