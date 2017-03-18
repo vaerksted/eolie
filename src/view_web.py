@@ -371,7 +371,14 @@ class WebView(WebKit2.WebView):
             Show populars web pages
             @param request as WebKit2.URISchemeRequest
         """
-        search = El().history.search("", 20)
+        items = []
+        # First from bookmarks
+        for (bookmark_id, title, uri) in El().bookmarks.get_populars(20):
+            items.append((title, uri))
+        # Then from history
+        more = 20 - len(items)
+        if more > 0:
+            items += El().history.search("", more)
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
@@ -379,7 +386,7 @@ class WebView(WebKit2.WebView):
         # Update start
         html_start = start_content.decode("utf-8")
         html_start = html_start.replace("@TITLE@", _("Popular pages"))
-        for (title, uri) in search:
+        for (title, uri) in items:
             f = Gio.File.new_for_path(El().art.get_path(uri, "preview"))
             if not f.query_exists():
                 continue

@@ -820,7 +820,7 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_model.remove_all()
         self.__remove_button.hide()
         if tag_id == Type.POPULARS:
-            items = El().bookmarks.get_populars()
+            items = El().bookmarks.get_populars(50)
         elif tag_id == Type.RECENTS:
             items = El().bookmarks.get_recents()
         elif tag_id == Type.NONE:

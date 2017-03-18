@@ -463,9 +463,10 @@ class DatabaseBookmarks:
                             ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
 
-    def get_populars(self):
+    def get_populars(self, limit):
         """
             Get popular bookmarks
+            @param limit as bool
             @return [(id, title, uri)]
         """
         with SqlCursor(self) as sql:
@@ -477,7 +478,8 @@ class DatabaseBookmarks:
                             WHERE bookmarks.popularity!=0\
                             AND bookmarks.del=0\
                             AND bookmarks.guid != bookmarks.uri\
-                            ORDER BY bookmarks.popularity DESC")
+                            ORDER BY bookmarks.popularity DESC\
+                            LIMIT ?", (limit,))
             return list(result)
 
     def get_unclassified(self):
