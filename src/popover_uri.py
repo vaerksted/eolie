@@ -16,11 +16,9 @@ from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
 from locale import strcoll
-import sqlite3
-from urllib.parse import urlparse
 
 from eolie.define import El, Type
-from eolie.utils import resize_favicon
+from eolie.utils import resize_favicon, get_favicon_best_uri
 
 
 class Item(GObject.GObject):
@@ -186,17 +184,7 @@ class Row(Gtk.ListBoxRow):
             @param favicon as Gtk.Image
             @param uri as str
         """
-        favicon_uri = None
-        parsed = urlparse(self.__item.get_property("uri"))
-        for uri in [parsed.netloc + parsed.path, parsed.netloc]:
-            sql = sqlite3.connect(El().favicons_path, 600.0)
-            result = sql.execute("SELECT url\
-                                  FROM PageURL\
-                                  WHERE url LIKE ?", ("%{}%".format(uri),))
-            v = result.fetchone()
-            if v is not None:
-                favicon_uri = v[0]
-                break
+        favicon_uri = get_favicon_best_uri(self.__item.get_property("uri"))
         if favicon_uri is not None:
             context = WebKit2.WebContext.get_default()
             favicon_db = context.get_favicon_database()

@@ -14,7 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2
 import cairo
 
 from eolie.define import El, ArtSize
-from eolie.utils import resize_favicon
+from eolie.utils import resize_favicon, get_favicon_best_uri
 
 
 class SidebarChild(Gtk.ListBoxRow):
@@ -147,9 +147,19 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        favicon_db = self.__view.webview.get_context().get_favicon_database()
         uri = self.__view.webview.get_uri()
-        favicon_db.get_favicon(uri, None, self.__set_favicon_result)
+        favicon_db = self.__view.webview.get_context().get_favicon_database()
+        favicon_uri = get_favicon_best_uri(uri)
+        if favicon_uri is None:
+            if uri == "populars://":
+                self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                      Gtk.IconSize.MENU)
+            else:
+                self.__image_close.set_from_icon_name("applications-internet",
+                                                      Gtk.IconSize.MENU)
+        else:
+            favicon_db.get_favicon(favicon_uri, None,
+                                   self.__set_favicon_result)
 
     def __set_favicon_result(self, db, result):
         """
@@ -161,15 +171,7 @@ class SidebarChild(Gtk.ListBoxRow):
             surface = db.get_favicon_finish(result)
         except:
             surface = None
-        if surface is None:
-            uri = self.__view.webview.get_uri()
-            if uri == "populars://":
-                self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                      Gtk.IconSize.MENU)
-            else:
-                self.__image_close.set_from_icon_name("applications-internet",
-                                                      Gtk.IconSize.MENU)
-        else:
+        if surface is not None:
             self.__image_close.set_from_surface(resize_favicon(surface))
             del surface
             self.__image_close.get_style_context().remove_class(
