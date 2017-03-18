@@ -133,7 +133,10 @@ class DownloadManager(GObject.GObject):
         self.__finished.append(download)
         self.emit('download-finish')
         if El().settings.get_value('open-downloads'):
-            Gtk.show_uri(None, download.get_destination(), int(time()))
+            destination = download.get_destination()
+            f = Gio.File.new_for_uri(destination)
+            if f.query_exists():
+                Gtk.show_uri(None, destination, int(time()))
 
     def __on_failed(self, download, error):
         """
