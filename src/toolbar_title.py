@@ -423,6 +423,7 @@ class ToolbarTitle(Gtk.Bin):
                 El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
+        self.__window.container.current.webview.grab_focus()
 
     def _on_icon_grid_size_allocate(self, grid, allocation):
         """
