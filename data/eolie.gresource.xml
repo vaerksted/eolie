@@ -8,6 +8,7 @@
     <file compressed="true">error.css</file>
     <file compressed="true">dialog-information-symbolic.svg</file>
     <file compressed="true">dialog-warning-symbolic.svg</file>
+    <file compressed="true">network-offline-symbolic.svg</file>
     <file compressed="true">Readability.js</file>
     <file compressed="true">facebook.com_adblock.js</file>
     <file preprocess="xml-stripblanks">AboutDialog.ui</file>

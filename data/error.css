@@ -48,6 +48,7 @@ html {
 #button {
     margin-top: 35px;
     margin-bottom: 0;
+    @button@
 }
 
 img#icon {

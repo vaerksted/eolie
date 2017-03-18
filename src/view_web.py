@@ -275,6 +275,15 @@ class WebView(WebKit2.WebView):
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.connect("download-started", self.__on_download_started)
 
+    def __check_for_network(self, uri):
+        """
+            Load uri when network is available
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            self.load_uri(uri)
+        else:
+            return True
+
     def __set_system_fonts(self, settings):
         """
             Set system font
@@ -525,28 +534,45 @@ class WebView(WebKit2.WebView):
             @param uri as str
             @param error as GLib.Error
         """
+        network_available = Gio.NetworkMonitor.get_default(
+                                                      ).get_network_available()
         # Ignore all others errors
         if error.code not in [2, 4]:
             return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
+        # Hide reload button if network is down
+        if network_available:
+            css = css.replace("@button@", "")
+        else:
+            css = css.replace("@button@", "display: none")
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
         (status, content, tag) = f.load_contents(None)
         html = content.decode("utf-8")
-        html = html % (_("Failed to load this web page"),
+        if network_available:
+            title = _("Failed to load this web page")
+            detail = _("It may be temporarily inaccessible or moved"
+                       " to a new address.<br/>"
+                       "You may wish to verify that your internet"
+                       " connection is working correctly.")
+            icon = "dialog-information-symbolic.svg"
+        else:
+            title = _("Network not available")
+            detail = _("Check your network connection")
+            icon = "network-offline-symbolic.svg"
+        html = html % (title,
                        css,
                        "load_uri('%s')" % uri,
-                       "internal:///org/gnome/Eolie/"
-                       "dialog-information-symbolic.svg",
-                       _("Failed to load this web page"),
+                       "internal:///org/gnome/Eolie/" + icon,
+                       title,
                        _("%s is not available") % uri,
-                       _("It may be temporarily inaccessible or moved"
-                         " to a new address.<br/> You may wish to verify that"
-                         " your internet connection is working correctly."),
+                       detail,
                        "suggested-action",
                        _("Retry"))
         self.load_html(html, None)
+        if not network_available:
+            GLib.timeout_add(1000, self.__check_for_network, uri)
         return True
 
     def __on_load_failed_tls(self, view, uri, certificate, errors):
