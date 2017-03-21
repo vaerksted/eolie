@@ -510,12 +510,15 @@ class ToolbarTitle(Gtk.Bin):
             Update popover search if needed
         """
         value = entry.get_text()
+        parsed = urlparse(value)
+        network = Gio.NetworkMonitor.get_default().get_network_available()
+        is_uri = parsed.scheme in ["http", "file", "https", "populars"]
         if value == self.__uri:
             self.__popover.set_search_text("")
         else:
             self.__popover.set_search_text(value)
-            self.__prevent_focus_out = True
-            if not self.__popover.is_visible():
+            # We are doing a search, show popover
+            if value and not is_uri and not self.__popover.is_visible():
                 self.__prevent_focus_out = True
                 self.__popover.show()
         if value:
@@ -525,9 +528,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None
-        parsed = urlparse(value)
-        if parsed.scheme not in ["http", "file", "https", "populars"] and\
-                Gio.NetworkMonitor.get_default().get_network_available():
+        if not is_uri and network:
             self.__keywords_timeout = GLib.timeout_add(
                                                  500,
                                                  self.__search_keywords_thread,
