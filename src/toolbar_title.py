@@ -87,7 +87,7 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        if not uri:
+        if not uri or uri == self.__uri:
             return
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
@@ -161,6 +161,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_text(self.__uri)
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
+            self.__prevent_focus_out = True
             self.__popover.show()
 
     def save_password(self, username, password, uri):
@@ -253,6 +254,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
+        if self.__prevent_focus_out:
+            return True
         self.__lock = True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
@@ -302,6 +305,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if not self.__popover.is_visible():
             self.__window.set_lock_focus(True)
+            self.__prevent_focus_out = True
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
@@ -382,7 +386,9 @@ class ToolbarTitle(Gtk.Bin):
                                                            self.__entry, None))
             popover.add(widget)
             self.__window.set_lock_focus(True)
-            popover.show()
+            if not popover.is_visible():
+                self.__prevent_focus_out = True
+                popover.show()
         elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
         return True
@@ -402,15 +408,6 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         eventbox.set_opacity(0.8)
-
-    def _on_populate_popup(self, entry, menu):
-        """
-            Replace menu with a popover
-            @param entry as Gtk.Entry
-            @param menu as Gtk.Menu
-        """
-        self.__prevent_focus_out = True
-        menu.connect("unmap", self.__on_menu_unmap)
 
     def _on_activate(self, entry):
         """
@@ -505,12 +502,8 @@ class ToolbarTitle(Gtk.Bin):
             @param popover as Gtk.popover
         """
         self.__window.set_lock_focus(False)
-
-    def __on_menu_unmap(self, menu):
-        """
-            On menu unmap
-        """
-        self.__prevent_focus_out = False
+        if popover == self.__popover:
+            self.__prevent_focus_out = False
 
     def __on_entry_changed(self, entry):
         """
@@ -521,7 +514,10 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text("")
         else:
             self.__popover.set_search_text(value)
-            self.__popover.show()
+            self.__prevent_focus_out = True
+            if not self.__popover.is_visible():
+                self.__prevent_focus_out = True
+                self.__popover.show()
         if value:
             self.__placeholder.set_text("")
         else:

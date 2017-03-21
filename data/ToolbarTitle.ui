@@ -20,7 +20,6 @@
             <signal name="focus-in-event" handler="_on_entry_focus_in" swapped="no"/>
             <signal name="focus-out-event" handler="_on_entry_focus_out" swapped="no"/>
             <signal name="key-press-event" handler="_on_key_press_event" swapped="no"/>
-            <signal name="populate-popup" handler="_on_populate_popup" swapped="no"/>
             <style>
               <class name="uribar"/>
             </style>
