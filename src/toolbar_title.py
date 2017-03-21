@@ -521,6 +521,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text("")
         else:
             self.__popover.set_search_text(value)
+            self.__popover.show()
         if value:
             self.__placeholder.set_text("")
         else:
