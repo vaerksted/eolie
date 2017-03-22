@@ -32,7 +32,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
-        self.__uri = ""
         self.__title = ""
         self.__lock_focus = False
         self.__signal_id = None
@@ -85,7 +84,7 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        if not uri or uri == self.__uri:
+        if not uri or uri == self.__entry.get_text():
             return
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
@@ -97,15 +96,11 @@ class ToolbarTitle(Gtk.Bin):
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme == "populars":
-            self.__uri = ""
             self.__entry.set_text("")
             return
-
-        if not self.__popover.is_visible():
-            self.__entry.set_text(uri)
+        self.__entry.set_text(uri)
         self.__placeholder.set_text("")
         self.__entry.get_style_context().remove_class('uribar-title')
-        self.__uri = uri
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
@@ -135,7 +130,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__title = title
             if not self.__lock_focus and\
                     not self.__popover.is_visible():
-                self.__entry.set_text("")
                 self.__placeholder.set_text(title)
                 self.__entry.get_style_context().add_class('uribar-title')
 
@@ -153,7 +147,6 @@ class ToolbarTitle(Gtk.Bin):
         """
             Focus entry
         """
-        self.__entry.set_text(self.__uri)
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
             self.__lock_focus = True
@@ -193,7 +186,6 @@ class ToolbarTitle(Gtk.Bin):
             Focus widget without showing
             popover allowing user to start a search
         """
-        self.__entry.set_text("")
         self.__entry.grab_focus()
 
     @property
@@ -223,14 +215,11 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
-        current_text = self.__entry.get_text()
-        if current_text == "":
-            self.__entry.set_text(self.__uri)
-            if self.__uri:
-                self.__placeholder.set_text("")
-            else:
-                self.__placeholder.set_text(_("Search or enter address"))
-            self.__entry.get_style_context().remove_class('uribar-title')
+        if self.__entry.get_text():
+            self.__placeholder.set_text("")
+        else:
+            self.__placeholder.set_text(_("Search or enter address"))
+        self.__entry.get_style_context().remove_class('uribar-title')
 
     def _on_leave_notify(self, eventbox, event):
         """
@@ -247,10 +236,9 @@ class ToolbarTitle(Gtk.Bin):
            event.y >= allocation.height:
             if not self.__entry.get_text():
                 self.__placeholder.set_text(_("Search or enter address"))
-            if not self.__lock_focus:
+            elif not self.__lock_focus:
                 if self.__title:
                     self.__placeholder.set_text(self.__title)
-                    self.__entry.set_text("")
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def _on_entry_focus_in(self, entry, event):
@@ -267,13 +255,12 @@ class ToolbarTitle(Gtk.Bin):
                                                 self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        if self.__uri:
+        if self.__entry.get_text():
             self.__placeholder.set_text("")
-            self.__entry.set_text(self.__uri)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
+            self.__placeholder.show()
         self.__update_secure_content_indicator()
-        self.__lock_focus = True
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -287,7 +274,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.disconnect(self.__signal_id)
             self.__signal_id = None
         if self.__title:
-            self.__entry.set_text("")
             self.__placeholder.set_text(self.__title)
             self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
@@ -459,7 +445,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Update PRIMARY icon
         """
-        parsed = urlparse(self.__uri)
+        parsed = urlparse(self.__entry.get_text())
         if parsed.scheme == "https" and self.__secure_content:
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
@@ -511,9 +497,7 @@ class ToolbarTitle(Gtk.Bin):
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["http", "file", "https", "populars"]
-        if value == self.__uri:
-            self.__popover.set_search_text("")
-        elif is_uri:
+        if is_uri:
             self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
             self.__popover.set_search_text(value)
