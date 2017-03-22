@@ -60,6 +60,8 @@ class ToolbarTitle(Gtk.Bin):
         self.__progress = builder.get_object("progress")
         self.__readable = builder.get_object("readable")
         self.__placeholder = builder.get_object("placeholder")
+        self.__signal_id = self.__entry.connect("changed",
+                                                self.__on_entry_changed)
 
     def show_readable_button(self, b):
         """
@@ -83,8 +85,15 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        if not uri or uri == self.__entry.get_text():
+        # Do not show this in titlebar
+        parsed = urlparse(uri)
+        if parsed.scheme == "populars":
+            self.__entry.set_text("")
             return
+        elif not uri or uri == self.__entry.get_text():
+            return
+        if self.__signal_id is not None:
+            self.__entry.disconnect(self.__signal_id)
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
@@ -92,11 +101,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__readable_image.get_style_context().remove_class("selected")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
-        # Do not show this in titlebar
-        parsed = urlparse(uri)
-        if parsed.scheme == "populars":
-            self.__entry.set_text("")
-            return
         self.__entry.set_text(uri)
         self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
@@ -108,6 +112,8 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "non-starred-symbolic"
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
+        self.__signal_id = self.__entry.connect("changed",
+                                                self.__on_entry_changed)
 
     def set_insecure_content(self):
         """
@@ -250,8 +256,6 @@ class ToolbarTitle(Gtk.Bin):
             return True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-        self.__signal_id = self.__entry.connect("changed",
-                                                self.__on_entry_changed)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         if self.__entry.get_text():
@@ -269,9 +273,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
-        if self.__signal_id is not None:
-            self.__entry.disconnect(self.__signal_id)
-            self.__signal_id = None
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
