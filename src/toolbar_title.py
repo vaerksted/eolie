@@ -258,7 +258,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Block entry on uri
             @param entry as Gtk.Entry
-           8 @param event as Gdk.Event
+            @param event as Gdk.Event
         """
         if self.__lock_focus:
             return True
@@ -308,7 +308,6 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if not self.__popover.is_visible():
-            self.__lock_focus = True
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
