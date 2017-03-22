@@ -32,7 +32,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
-        self.__title = ""
         self.__lock_focus = False
         self.__signal_id = None
         self.__secure_content = True
@@ -99,7 +98,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_text("")
             return
         self.__entry.set_text(uri)
-        self.__placeholder.set_text("")
+        self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
@@ -127,10 +126,10 @@ class ToolbarTitle(Gtk.Bin):
             Show title instead of uri
         """
         if title:
-            self.__title = title
+            self.__placeholder.set_text(title)
             if not self.__lock_focus and\
                     not self.__popover.is_visible():
-                self.__placeholder.set_text(title)
+                self.__placeholder.set_opacity(0.8)
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def hide_popover(self):
@@ -216,9 +215,10 @@ class ToolbarTitle(Gtk.Bin):
         if self.__lock_focus:
             return True
         if self.__entry.get_text():
-            self.__placeholder.set_text("")
+            self.__placeholder.set_opacity(0)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
+            self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().remove_class('uribar-title')
 
     def _on_leave_notify(self, eventbox, event):
@@ -234,11 +234,10 @@ class ToolbarTitle(Gtk.Bin):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
+            self.__placeholder.set_opacity(0.8)
             if not self.__entry.get_text():
                 self.__placeholder.set_text(_("Search or enter address"))
             elif not self.__lock_focus:
-                if self.__title:
-                    self.__placeholder.set_text(self.__title)
                 self.__entry.get_style_context().add_class('uribar-title')
 
     def _on_entry_focus_in(self, entry, event):
@@ -256,10 +255,10 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         if self.__entry.get_text():
-            self.__placeholder.set_text("")
+            self.__placeholder.set_opacity(0)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
-            self.__placeholder.show()
+            self.__placeholder.set_opacity(0.8)
         self.__update_secure_content_indicator()
 
     def _on_entry_focus_out(self, entry, event):
@@ -273,9 +272,8 @@ class ToolbarTitle(Gtk.Bin):
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
             self.__signal_id = None
-        if self.__title:
-            self.__placeholder.set_text(self.__title)
-            self.__entry.get_style_context().add_class("uribar-title")
+        self.__placeholder.set_opacity(0.8)
+        self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
         view = self.__window.container.current
         bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
@@ -502,13 +500,14 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__popover.set_search_text(value)
         if value:
-            self.__placeholder.set_text("")
+            self.__placeholder.set_opacity(0)
             # We are doing a search, show popover
             if not is_uri and not self.__popover.is_visible():
                 self.__lock_focus = True
                 self.__popover.show()
         else:
             self.__placeholder.set_text(_("Search or enter address"))
+            self.__placeholder.set_opacity(0.8)
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None
