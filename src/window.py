@@ -34,7 +34,6 @@ class Window(Gtk.ApplicationWindow):
                                        title="Eolie")
         self.__monitor_model = ""
         self.__zoom_level = 1.0
-        self.__lock_focus = False
         self.__setup_content()
         self.setup_window()
         self.connect('realize', self.__on_realize)
@@ -68,21 +67,6 @@ class Window(Gtk.ApplicationWindow):
             # Update view zoom level
             for view in self.__container.views:
                 view.webview.update_zoom_level()
-
-    def set_lock_focus(self, lock):
-        """
-            Set lock focus flag
-            @param lock as bool
-        """
-        self.__lock_focus = lock
-
-    @property
-    def lock_focus(self):
-        """
-            Get lock focus
-            @return bool
-        """
-        return self.__lock_focus
 
     @property
     def container(self):

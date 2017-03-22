@@ -344,7 +344,7 @@ class Container(Gtk.Paned):
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
             if webview == self.current.webview:
-                if not self.__window.lock_focus:
+                if not self.__window.toolbar.title.lock_focus:
                     if webview.get_uri() == "populars://":
                         GLib.idle_add(self.__window.toolbar.title.start_search)
                     else:

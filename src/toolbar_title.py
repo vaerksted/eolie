@@ -34,11 +34,10 @@ class ToolbarTitle(Gtk.Bin):
         self.__window = window
         self.__uri = ""
         self.__title = ""
-        self.__lock = False
+        self.__lock_focus = False
         self.__in_notify = False
         self.__signal_id = None
         self.__secure_content = True
-        self.__prevent_focus_out = False
         self.__keywords_timeout = None
         self.__icon_grid_width = None
         self.__keywords_cancellable = Gio.Cancellable.new()
@@ -135,7 +134,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if title:
             self.__title = title
-            if not self.__lock and\
+            if not self.__lock_focus and\
                     not self.__in_notify and\
                     not self.__popover.is_visible():
                 self.__entry.set_text("")
@@ -146,7 +145,6 @@ class ToolbarTitle(Gtk.Bin):
         """
             hide popover if needed
         """
-        self.__lock = False
         self.__in_notify = False
         if self.__popover.is_visible():
             self.__popover.hide()
@@ -161,7 +159,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_text(self.__uri)
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
-            self.__prevent_focus_out = True
+            self.__lock_focus = True
             self.__popover.show()
 
     def save_password(self, username, password, uri):
@@ -177,7 +175,7 @@ class ToolbarTitle(Gtk.Bin):
         popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
         popover.connect("closed", self.__on_popover_closed)
-        self.__window.set_lock_focus(True)
+        self.__lock_focus = True
         popover.show()
 
     def on_load_changed(self, view, event):
@@ -200,6 +198,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__entry.set_text("")
         self.__entry.grab_focus()
+
+    @property
+    def lock_focus(self):
+        """
+            Get lock focus
+            @return bool
+        """
+        return self.__lock_focus
 
     @property
     def progress(self):
@@ -242,7 +248,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__in_notify = False
             if not self.__entry.get_text():
                 self.__placeholder.set_text(_("Search or enter address"))
-            if not self.__lock:
+            if not self.__lock_focus:
                 if self.__title:
                     self.__placeholder.set_text(self.__title)
                     self.__entry.set_text("")
@@ -252,11 +258,10 @@ class ToolbarTitle(Gtk.Bin):
         """
             Block entry on uri
             @param entry as Gtk.Entry
-            @param event as Gdk.Event
+           8 @param event as Gdk.Event
         """
-        if self.__prevent_focus_out:
+        if self.__lock_focus:
             return True
-        self.__lock = True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         self.__signal_id = self.__entry.connect("changed",
@@ -276,9 +281,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event (do not use)
         """
-        if self.__prevent_focus_out:
+        if self.__lock_focus:
             return True
-        self.__lock = False
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
             self.__signal_id = None
@@ -304,8 +308,7 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if not self.__popover.is_visible():
-            self.__window.set_lock_focus(True)
-            self.__prevent_focus_out = True
+            self.__lock_focus = True
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
@@ -385,10 +388,8 @@ class ToolbarTitle(Gtk.Bin):
                             lambda x: self._on_entry_focus_out(
                                                            self.__entry, None))
             popover.add(widget)
-            self.__window.set_lock_focus(True)
-            if not popover.is_visible():
-                self.__prevent_focus_out = True
-                popover.show()
+            self.__lock_focus = True
+            popover.show()
         elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
         return True
@@ -501,9 +502,7 @@ class ToolbarTitle(Gtk.Bin):
             Destroy popover
             @param popover as Gtk.popover
         """
-        self.__window.set_lock_focus(False)
-        if popover == self.__popover:
-            self.__prevent_focus_out = False
+        self.__lock_focus = False
 
     def __on_entry_changed(self, entry):
         """
@@ -515,14 +514,16 @@ class ToolbarTitle(Gtk.Bin):
         is_uri = parsed.scheme in ["http", "file", "https", "populars"]
         if value == self.__uri:
             self.__popover.set_search_text("")
+        elif is_uri:
+            self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
             self.__popover.set_search_text(value)
-            # We are doing a search, show popover
-            if value and not is_uri and not self.__popover.is_visible():
-                self.__prevent_focus_out = True
-                self.__popover.show()
         if value:
             self.__placeholder.set_text("")
+            # We are doing a search, show popover
+            if not is_uri and not self.__popover.is_visible():
+                self.__lock_focus = True
+                self.__popover.show()
         else:
             self.__placeholder.set_text(_("Search or enter address"))
         if self.__keywords_timeout is not None:
