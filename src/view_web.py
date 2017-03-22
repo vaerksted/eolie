@@ -378,7 +378,9 @@ class WebView(WebKit2.WebView):
         # Then from history
         more = 20 - len(items)
         if more > 0:
-            items += El().history.search("", more)
+            for (title, uri) in El().history.search("", more):
+                if (title, uri) not in items:
+                    items.append((title, uri))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
