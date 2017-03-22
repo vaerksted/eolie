@@ -74,6 +74,7 @@ class DatabaseHistory:
         """
         if not uri:
             return
+        uri = uri.rstrip('/')
         if title is None:
             title = ""
         if atime is None:
