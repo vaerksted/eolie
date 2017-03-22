@@ -35,7 +35,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__uri = ""
         self.__title = ""
         self.__lock_focus = False
-        self.__in_notify = False
         self.__signal_id = None
         self.__secure_content = True
         self.__keywords_timeout = None
@@ -135,7 +134,6 @@ class ToolbarTitle(Gtk.Bin):
         if title:
             self.__title = title
             if not self.__lock_focus and\
-                    not self.__in_notify and\
                     not self.__popover.is_visible():
                 self.__entry.set_text("")
                 self.__placeholder.set_text(title)
@@ -145,7 +143,6 @@ class ToolbarTitle(Gtk.Bin):
         """
             hide popover if needed
         """
-        self.__in_notify = False
         if self.__popover.is_visible():
             self.__popover.hide()
             self.__keywords_cancellable.cancel()
@@ -224,7 +221,8 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__in_notify = True
+        if self.__lock_focus:
+            return True
         current_text = self.__entry.get_text()
         if current_text == "":
             self.__entry.set_text(self.__uri)
@@ -240,12 +238,13 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.__lock_focus:
+            return True
         allocation = eventbox.get_allocation()
         if event.x <= 0 or\
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            self.__in_notify = False
             if not self.__entry.get_text():
                 self.__placeholder.set_text(_("Search or enter address"))
             if not self.__lock_focus:
@@ -274,6 +273,7 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__placeholder.set_text(_("Search or enter address"))
         self.__update_secure_content_indicator()
+        self.__lock_focus = True
 
     def _on_entry_focus_out(self, entry, event):
         """
