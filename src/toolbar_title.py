@@ -171,7 +171,6 @@ class ToolbarTitle(Gtk.Bin):
         popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
         popover.connect("closed", self.__on_popover_closed)
-        self.__lock_focus = True
         popover.show()
 
     def on_load_changed(self, view, event):
