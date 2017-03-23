@@ -60,6 +60,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__progress = builder.get_object("progress")
         self.__readable = builder.get_object("readable")
         self.__placeholder = builder.get_object("placeholder")
+        self.__window.connect("leave-notify-event", self._on_leave_notify)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
@@ -219,10 +220,10 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_enter_notify(self, eventbox, event):
+    def _on_enter_notify(self, widget, event):
         """
             Show uri
-            @param eventbox as Gtk.EventBox
+            @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
         if self.__lock_focus:
@@ -234,19 +235,20 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().remove_class('uribar-title')
 
-    def _on_leave_notify(self, eventbox, event):
+    def _on_leave_notify(self, widget, event):
         """
             Show uri
-            @param eventbox as Gtk.EventBox
+            @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
         if self.__lock_focus:
             return True
-        allocation = eventbox.get_allocation()
+        allocation = widget.get_allocation()
         if event.x <= 0 or\
            event.x >= allocation.width or\
            event.y <= 0 or\
-           event.y >= allocation.height:
+           event.y >= allocation.height or\
+           not isinstance(widget, Gtk.EventBox):
             self.__placeholder.set_opacity(0.8)
             if not self.__entry.get_text():
                 self.__placeholder.set_text(_("Search or enter address"))
