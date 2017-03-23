@@ -497,6 +497,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__lock_focus = False
         uri = self.__window.container.current.webview.get_uri()
+        self.__entry.delete_selection()
         if uri is not None:
             self.set_uri(uri)
 
