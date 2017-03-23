@@ -86,33 +86,37 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        # Do not show this in titlebar
-        parsed = urlparse(uri)
-        if parsed.scheme == "populars":
-            self.__entry.set_text("")
-            return
-        elif not uri or uri == self.__entry.get_text():
-            return
-        if self.__signal_id is not None:
-            self.__entry.disconnect(self.__signal_id)
-        self.__secure_content = True
-        if self.__window.container.current.webview.readable[0]:
-            self.__readable_image.get_style_context().add_class("selected")
-        else:
-            self.__readable_image.get_style_context().remove_class("selected")
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           "")
-        self.__entry.set_text(uri)
-        self.__placeholder.set_opacity(0)
-        self.__entry.get_style_context().remove_class('uribar-title')
-        self.__update_secure_content_indicator()
-        bookmark_id = El().bookmarks.get_id(uri)
-        if bookmark_id is not None:
-            icon_name = "starred-symbolic"
-        else:
-            icon_name = "non-starred-symbolic"
-        self.__action_image2.set_from_icon_name(icon_name,
-                                                Gtk.IconSize.MENU)
+        try:
+            if self.__signal_id is not None:
+                self.__entry.disconnect(self.__signal_id)
+            # Do not show this in titlebar
+            parsed = urlparse(uri)
+            if parsed.scheme == "populars":
+                self.__entry.set_text("")
+                raise
+            elif not uri or uri == self.__entry.get_text():
+                raise
+            self.__secure_content = True
+            if self.__window.container.current.webview.readable[0]:
+                self.__readable_image.get_style_context().add_class("selected")
+            else:
+                self.__readable_image.get_style_context().remove_class(
+                                                                    "selected")
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
+            self.__entry.set_text(uri)
+            self.__placeholder.set_opacity(0)
+            self.__entry.get_style_context().remove_class('uribar-title')
+            self.__update_secure_content_indicator()
+            bookmark_id = El().bookmarks.get_id(uri)
+            if bookmark_id is not None:
+                icon_name = "starred-symbolic"
+            else:
+                icon_name = "non-starred-symbolic"
+            self.__action_image2.set_from_icon_name(icon_name,
+                                                    Gtk.IconSize.MENU)
+        except:
+            pass
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
