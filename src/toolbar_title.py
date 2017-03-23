@@ -302,6 +302,7 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if not self.__popover.is_visible():
+            self.__lock_focus = True
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
@@ -496,7 +497,9 @@ class ToolbarTitle(Gtk.Bin):
             @param popover as Gtk.popover
         """
         self.__lock_focus = False
-        self.__entry.delete_selection()
+        uri = self.__window.container.current.webview.get_uri()
+        if uri is not None:
+            self.__entry.set_text(uri)
 
     def __on_entry_changed(self, entry):
         """
