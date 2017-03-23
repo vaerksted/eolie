@@ -499,7 +499,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__lock_focus = False
         uri = self.__window.container.current.webview.get_uri()
         if uri is not None:
-            self.__entry.set_text(uri)
+            self.set_uri(uri)
 
     def __on_entry_changed(self, entry):
         """
