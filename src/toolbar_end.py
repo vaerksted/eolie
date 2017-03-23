@@ -150,7 +150,7 @@ class ToolbarEnd(Gtk.Bin):
         popover.child_set_property(exceptions, "submenu", "exceptions")
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed)
-        self.__window.set_lock_focus(True)
+        self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
     def _on_save_button_clicked(self, button):
@@ -377,4 +377,4 @@ class ToolbarEnd(Gtk.Bin):
         """
             Unlock focus
         """
-        self.__window.set_lock_focus(False)
+        self.__window.toolbar.title.set_lock_focus(False)

@@ -193,6 +193,13 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__entry.grab_focus()
 
+    def set_lock_focus(self, locked):
+        """
+            Set focus to be locked
+            @param locked as bool
+        """
+        self.__lock_focus = locked
+
     @property
     def lock_focus(self):
         """
