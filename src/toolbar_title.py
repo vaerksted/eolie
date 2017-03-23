@@ -494,6 +494,7 @@ class ToolbarTitle(Gtk.Bin):
             @param popover as Gtk.popover
         """
         self.__lock_focus = False
+        self.__entry.delete_selection()
 
     def __on_entry_changed(self, entry):
         """
