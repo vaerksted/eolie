@@ -779,7 +779,7 @@
             </child>
             <child>
               <object class="GtkButton" id="sync_button">
-                <property name="label" translatable="yes">Allow syncing</property>
+                <property name="label" translatable="yes">Allow synchronization</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -837,7 +837,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Mozilla Sync</property>
+            <property name="label" translatable="yes">Synchronization</property>
           </object>
           <packing>
             <property name="position">3</property>

@@ -164,7 +164,7 @@ class SettingsDialog:
             password_entry = builder.get_object("password_entry")
             image = builder.get_object("result_image")
             if El().sync_worker.status:
-                label.set_text(_("Sync is working"))
+                label.set_text(_("Synchronization is working"))
                 image.set_from_icon_name("network-transmit-receive-symbolic",
                                          Gtk.IconSize.MENU)
             sync_button.connect("clicked", self.__on_sync_button_clicked,
@@ -176,7 +176,8 @@ class SettingsDialog:
                 SyncWorker  # Just make PEP8 happy
             except Exception as e:
                 label.set_text(
-                      _("Sync is not available on your computer:\n %s") % e)
+                      _("Synchronization is not available"
+                        " on your computer:\n %s") % e)
                 sync_button.set_sensitive(False)
 
         builder.connect_signals(self)
@@ -443,7 +444,8 @@ class SettingsDialog:
         except Exception as e:
             if str(e) == "Unverified account":
                 GLib.idle_add(label.set_text,
-                              _("You've received an email to validate sync"))
+                              _("You've received an email"
+                                " to validate synchronization"))
                 GLib.idle_add(image.set_from_icon_name,
                               "mail-unread-symbolic",
                               Gtk.IconSize.MENU)
