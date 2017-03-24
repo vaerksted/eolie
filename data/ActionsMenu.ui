@@ -11,6 +11,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
+	<property name="action_target">"none"</property>
         <property name="text" translatable="yes" context="Exception">None</property>
       </object>
       <packing>
@@ -24,6 +25,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
+	<property name="action_target">"site"</property>
         <property name="text" translatable="yes">Current site</property>
       </object>
       <packing>
@@ -37,6 +39,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
+	<property name="action_target">"page"</property>
         <property name="text" translatable="yes">Current page</property>
       </object>
       <packing>
