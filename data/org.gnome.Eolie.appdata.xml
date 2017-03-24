@@ -3,7 +3,9 @@
  <id type="desktop">org.gnome.Eolie.desktop</id>
  <licence>CC0</licence>
  <name>Eolie</name>
+ <name xml:lang="fr">Eolie</name>
  <summary>Web browser</summary>
+ <summary xml:lang="fr">Navigateur web</summary>
  <description>
  </description>
  <screenshots>

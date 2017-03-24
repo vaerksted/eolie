@@ -3,7 +3,7 @@ NULL =
 
 bin_SCRIPTS = eolie
 
-SUBDIRS = src data python-webextension
+SUBDIRS = src data python-webextension po
 
 EXTRA_DIST = \
 	eolie.in\
