@@ -232,7 +232,7 @@
             <child>
               <object class="GtkEntry" id="start_page_uri">
                 <property name="can_focus">True</property>
-                <property name="placeholder_text" translatable="yes">https://gnumdk.github.io/lollypop-web</property>
+                <property name="placeholder_text" translatable="no">https://gnumdk.github.io/lollypop-web</property>
                 <signal name="changed" handler="_on_start_page_uri_changed" swapped="no"/>
               </object>
               <packing>
@@ -266,7 +266,6 @@
           <object class="GtkLabel" id="label1">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="tooltip_text" translatable="yes">Configure Lollypop appearance</property>
             <property name="label" translatable="yes">General</property>
           </object>
           <packing>
@@ -334,7 +333,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Sans serif fonts</property>
+                    <property name="label" translatable="yes">Sans serif font</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -346,7 +345,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Serif fonts</property>
+                    <property name="label" translatable="yes">Serif font</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -358,7 +357,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Monospace fonts</property>
+                    <property name="label" translatable="yes">Monospace font</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -476,7 +475,6 @@
           <object class="GtkLabel" id="label4">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="tooltip_text" translatable="yes">Configure Lollypop behaviour</property>
             <property name="label" translatable="yes">Appearance</property>
           </object>
           <packing>
@@ -699,7 +697,6 @@
           <object class="GtkLabel" id="label2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="tooltip_text" translatable="yes">Select music folders</property>
             <property name="label" translatable="yes">Privacy</property>
           </object>
           <packing>

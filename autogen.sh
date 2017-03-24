@@ -3,7 +3,7 @@
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-#[ ! -d "$srcdir"/po ] && git clone https://github.com/gnumdk/lollypop-po.git "$srcdir"/po
+[ ! -d "$srcdir"/po ] && git clone https://github.com/gnumdk/eolie-po.git "$srcdir"/po
 #[ ! -d "$srcdir"/help ] && git clone https://github.com/gnumdk/lollypop-help.git "$srcdir"/help
 
 (test -f $srcdir/configure.ac) || {

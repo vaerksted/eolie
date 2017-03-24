@@ -443,7 +443,7 @@ class SettingsDialog:
         except Exception as e:
             if str(e) == "Unverified account":
                 GLib.idle_add(label.set_text,
-                              _("You received an email to validate sync"))
+                              _("You've received an email to validate sync"))
                 GLib.idle_add(image.set_from_icon_name,
                               "mail-unread-symbolic",
                               Gtk.IconSize.MENU)
@@ -475,7 +475,7 @@ class SettingsDialog:
         El().sync_worker.delete_secret()
         if image.get_icon_name() == "content-loading-symbolic":
             return
-        label.set_text(_("Connecting..."))
+        label.set_text(_("Connecting…"))
         image.set_from_icon_name("content-loading-symbolic", Gtk.IconSize.MENU)
         thread = Thread(target=self.__connect_mozilla_sync,
                         args=(login_entry.get_text(),

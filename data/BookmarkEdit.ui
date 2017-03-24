@@ -202,7 +202,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="tooltip_text" translatable="yes">Delete</property>
+        <property name="tooltip_text" translatable="yes">Remove</property>
         <property name="image">image2</property>
         <signal name="clicked" handler="_on_del_clicked" swapped="no"/>
         <style>

@@ -11,8 +11,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
-        <property name="action_target">"none"</property>
-        <property name="text" translatable="yes">None</property>
+        <property name="text" translatable="yes" context="Exception">None</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -25,7 +24,6 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
-        <property name="action_target">"site"</property>
         <property name="text" translatable="yes">Current site</property>
       </object>
       <packing>
@@ -40,7 +38,6 @@
         <property name="receives_default">True</property>
         <property name="action_name">win.exceptions</property>
         <property name="text" translatable="yes">Current page</property>
-        <property name="action_target">"page"</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -52,11 +49,11 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
+        <property name="hexpand">True</property>
         <property name="text" translatable="yes">Exceptions</property>
         <property name="menu_name">main</property>
         <property name="inverted">True</property>
         <property name="centered">True</property>
-        <property name="hexpand">True</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -167,7 +164,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Unzoom</property>
+            <property name="tooltip_text" translatable="yes">Zoom out</property>
             <property name="image">image4</property>
             <signal name="clicked" handler="_on_unzoom_button_clicked" object="default_zoom_button" swapped="no"/>
           </object>
@@ -197,7 +194,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Zoom</property>
+            <property name="tooltip_text" translatable="yes">Zoom in</property>
             <property name="image">image5</property>
             <signal name="clicked" handler="_on_zoom_button_clicked" object="default_zoom_button" swapped="no"/>
           </object>
