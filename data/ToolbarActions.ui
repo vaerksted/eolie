@@ -47,7 +47,6 @@
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Previous page</property>
             <property name="valign">center</property>
             <property name="image">image1</property>
             <property name="always_show_image">True</property>
@@ -67,7 +66,6 @@
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Next page</property>
             <property name="valign">center</property>
             <property name="image">image2</property>
             <property name="always_show_image">True</property>

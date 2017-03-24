@@ -104,6 +104,7 @@
         <child>
           <object class="GtkButton" id="save_button">
             <property name="width_request">48</property>
+            <property name="hexpand">True</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -121,6 +122,7 @@
           <object class="GtkButton" id="print_button">
             <property name="width_request">48</property>
             <property name="visible">True</property>
+            <property name="hexpand">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Print page</property>
@@ -137,6 +139,7 @@
           <object class="GtkButton" id="source_button">
             <property name="width_request">48</property>
             <property name="visible">True</property>
+            <property name="hexpand">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Show page source</property>
@@ -165,6 +168,7 @@
         <child>
           <object class="GtkButton">
             <property name="visible">True</property>
+            <property name="hexpand">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Zoom out</property>
@@ -195,6 +199,7 @@
         <child>
           <object class="GtkButton">
             <property name="visible">True</property>
+            <property name="hexpand">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Zoom in</property>
