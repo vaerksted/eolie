@@ -642,6 +642,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="halign">start</property>
+                <property name="margin_left">15</property>
                 <signal name="clicked" handler="_on_manage_cookies_clicked" swapped="no"/>
               </object>
               <packing>
@@ -657,6 +658,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="halign">start</property>
+                <property name="margin_left">15</property>
                 <signal name="clicked" handler="_on_manage_passwords_clicked" swapped="no"/>
               </object>
               <packing>
@@ -672,6 +674,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="halign">start</property>
+                <property name="margin_left">15</property>
                 <signal name="clicked" handler="_on_clear_personnal_data_clicked" swapped="no"/>
               </object>
               <packing>
