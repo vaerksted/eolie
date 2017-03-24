@@ -100,7 +100,7 @@
   <object class="GtkLabel" id="placeholder">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="label" translatable="yes">No active downloads</property>
+    <property name="label" translatable="yes">No active download</property>
     <style>
       <class name="dim-label"/>
     </style>

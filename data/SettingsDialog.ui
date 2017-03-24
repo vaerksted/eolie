@@ -242,7 +242,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="remember_sessions_check">
-                <property name="label" translatable="yes">Remember previous tabs on startup</property>
+                <property name="label" translatable="yes">Remember previous pages on startup</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
