@@ -149,10 +149,14 @@ class ToolbarTitle(Gtk.Bin):
             hide popover if needed
         """
         if self.__popover.is_visible():
+            self.__lock_focus = False
             self.__popover.hide()
             self.__keywords_cancellable.cancel()
             self.__keywords_cancellable.reset()
-            self.__window.set_focus(None)
+            if self.__entry.has_focus():
+                self.__window.set_focus(None)
+            else:
+                self._on_entry_focus_out(self.__entry, None)
 
     def focus_entry(self):
         """
