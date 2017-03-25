@@ -266,6 +266,8 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
+        if self.__popover.is_visible():
+            self.__lock_focus = True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
@@ -305,7 +307,6 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if not self.__popover.is_visible():
-            self.__lock_focus = True
             self.__popover.show()
 
     def _on_key_press_event(self, entry, event):
