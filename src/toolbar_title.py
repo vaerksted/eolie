@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from eolie.define import El
 from eolie.popover_uri import UriPopover
+from eolie.widget_edit_bookmark import EditBookmarkWidget
 
 
 class ToolbarTitle(Gtk.Bin):
@@ -357,25 +358,24 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         view = self.__window.container.current
-        from eolie.widget_edit_bookmark import EditBookmarkWidget
-        if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
-            self.__action_image2.set_from_icon_name("non-starred-symbolic",
-                                                    Gtk.IconSize.MENU)
-            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
-            El().bookmarks.remove(bookmark_id)
-            if El().sync_worker is not None:
-                El().sync_worker.sync()
-        elif self.__action_image2.get_icon_name()[0] == "non-starred-symbolic":
-            uri = view.webview.get_uri()
-            if not uri or uri == "about:blank":
-                return
-            title = view.webview.get_title()
-            if not title:
-                title = uri
-            self.__action_image2.set_from_icon_name("starred-symbolic",
-                                                    Gtk.IconSize.MENU)
-            bookmark_id = El().bookmarks.add(title,
-                                             uri, None, [])
+        if self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
+            self.__entry.delete_text(0, -1)
+        else:
+            if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
+                bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
+            elif self.__action_image2.get_icon_name()[0] ==\
+                    "non-starred-symbolic":
+                uri = view.webview.get_uri()
+                if not uri or uri == "about:blank":
+                    return
+                title = view.webview.get_title()
+                if not title:
+                    title = uri
+                self.__action_image2.set_from_icon_name("starred-symbolic",
+                                                        Gtk.IconSize.MENU)
+                bookmark_id = El().bookmarks.add(title,
+                                                 uri, None, [])
+
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
@@ -384,12 +384,10 @@ class ToolbarTitle(Gtk.Bin):
             popover.connect("closed", self.__on_popover_closed)
             popover.connect("closed",
                             lambda x: self._on_entry_focus_out(
-                                                           self.__entry, None))
+                                                       self.__entry, None))
             popover.add(widget)
             self.__lock_focus = True
             popover.show()
-        elif self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
-            self.__entry.delete_text(0, -1)
         return True
 
     def _on_eventbox_enter_notify(self, eventbox, event):
@@ -505,6 +503,12 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.delete_selection()
         if uri is not None:
             self.set_uri(uri)
+        if isinstance(popover, EditBookmarkWidget):
+            view = self.__window.container.current
+            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
+            if bookmark_id is None:
+                self.__action_image2.set_from_icon_name("non-starred-symbolic",
+                                                        Gtk.IconSize.MENU)
 
     def __on_entry_changed(self, entry):
         """

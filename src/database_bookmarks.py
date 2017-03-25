@@ -229,7 +229,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE uri=?", (uri.rstrip('/'),))
+                                  WHERE uri=?\
+                                  AND del=0", (uri.rstrip('/'),))
             v = result.fetchone()
             if v is not None:
                 return v[0]
