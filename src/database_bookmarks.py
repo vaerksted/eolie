@@ -117,16 +117,19 @@ class DatabaseBookmarks:
                 sql.commit()
             return bookmarks_id
 
-    def delete(self, bookmark_id, delete=True):
+    def delete(self, bookmark_id, delete=True, commit=True):
         """
             Mark bookmark as deleted
             @param bookmark id as int
             @param delete as bool
+            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET del=?\
                          WHERE rowid=?", (delete, bookmark_id))
+            if commit:
+                sql.commit()
 
     def remove(self, bookmark_id, commit=True):
         """
