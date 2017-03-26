@@ -12,14 +12,6 @@
     <property name="can_focus">False</property>
     <property name="icon_name">user-trash-symbolic</property>
   </object>
-  <object class="GtkListStore" id="model">
-    <columns>
-      <!-- column-name tag -->
-      <column type="gchararray"/>
-      <!-- column-name active -->
-      <column type="gboolean"/>
-    </columns>
-  </object>
   <object class="GtkGrid" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -72,23 +64,17 @@
         <property name="can_focus">True</property>
         <property name="vexpand">True</property>
         <property name="hscrollbar_policy">never</property>
-        <property name="shadow_type">in</property>
         <child>
           <object class="GtkViewport">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="valign">start</property>
             <child>
-              <object class="GtkTreeView" id="treeview">
+              <object class="GtkFlowBox" id="flowbox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="model">model</property>
-                <property name="headers_visible">False</property>
-                <property name="enable_search">False</property>
-                <property name="activate_on_single_click">True</property>
-                <signal name="row-activated" handler="_on_row_activated" swapped="no"/>
-                <child internal-child="selection">
-                  <object class="GtkTreeSelection"/>
-                </child>
+                <property name="can_focus">False</property>
+                <property name="max_children_per_line">100</property>
+                <property name="selection_mode">none</property>
               </object>
             </child>
           </object>
@@ -238,5 +224,13 @@
     <child>
       <placeholder/>
     </child>
+  </object>
+  <object class="GtkListStore" id="model">
+    <columns>
+      <!-- column-name tag -->
+      <column type="gchararray"/>
+      <!-- column-name active -->
+      <column type="gboolean"/>
+    </columns>
   </object>
 </interface>

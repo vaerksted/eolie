@@ -18,6 +18,83 @@ from time import time
 from eolie.define import El
 
 
+class TagWidget(Gtk.FlowBoxChild):
+    """
+        Tag widget with some visual effects
+    """
+
+    def __init__(self):
+        """
+            Init widget
+        """
+        Gtk.FlowBoxChild.__init__(self)
+        self.__active = False
+        eventbox = Gtk.EventBox()
+        eventbox.show()
+        eventbox.connect("enter-notify-event", self.__on_enter_notify)
+        eventbox.connect("leave-notify-event", self.__on_leave_notify)
+        self.__label = Gtk.Label()
+        self.__label.get_style_context().add_class("tag")
+        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__label.set_max_width_chars(20)
+        self.__label.show()
+        self.set_property("halign", Gtk.Align.START)
+        self.set_property("valign", Gtk.Align.START)
+        eventbox.add(self.__label)
+        self.add(eventbox)
+
+    def set_label(self, label):
+        """
+            Set label
+            @param label as str
+        """
+        self.__label.set_text(label)
+        self.__label.set_tooltip_text(label)
+
+    @property
+    def label(self):
+        """
+            Get label
+            @return str
+        """
+        return self.__label.get_text()
+
+    def set_active(self, active):
+        """
+            Mark tag as active
+            @param active as bool
+        """
+        self.__active = active
+        if active:
+            self.__label.get_style_context().add_class("tag-set")
+        else:
+            self.__label.get_style_context().remove_class("tag-set")
+        self.__label.get_style_context().remove_class("tag-hover")
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_enter_notify(self, eventbox, event):
+        """
+            Update style
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if self.__active:
+            self.__label.get_style_context().remove_class("tag-set")
+        self.__label.get_style_context().add_class("tag-hover")
+
+    def __on_leave_notify(self, eventbox, event):
+        """
+            Update style
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if self.__active:
+            self.__label.get_style_context().add_class("tag-set")
+        self.__label.get_style_context().remove_class("tag-hover")
+
+
 class EditBookmarkWidget(Gtk.Bin):
     """
         Widget allowing to edit a bookmark
@@ -34,7 +111,8 @@ class EditBookmarkWidget(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/BookmarkEdit.ui")
         builder.connect_signals(self)
-        self.__treeview = builder.get_object("treeview")
+        self.__flowbox = builder.get_object("flowbox")
+        self.__flowbox.connect("child-activated", self.__on_tag_activated)
         self.__add_tag_button = builder.get_object("add_tag_button")
         self.__remove_tag_button = builder.get_object("remove_tag_button")
         self.__new_tag_entry = builder.get_object("new_tag_entry")
@@ -42,25 +120,13 @@ class EditBookmarkWidget(Gtk.Bin):
         self.__uri_entry = builder.get_object("uri_entry")
         self.__title_entry.set_text(El().bookmarks.get_title(bookmark_id))
         self.__uri_entry.set_text(El().bookmarks.get_uri(bookmark_id))
-        self.__model = builder.get_object("model")
-        self.__model.set_sort_column_id(1, Gtk.SortType.ASCENDING)
-        self.__model.set_sort_func(1, self.__sort_items)
-        renderer0 = Gtk.CellRendererToggle()
-        renderer0.set_property('activatable', True)
-        renderer0.connect('toggled', self.__on_item_toggled)
-        column0 = Gtk.TreeViewColumn("", renderer0, active=1)
-        renderer1 = Gtk.CellRendererText()
-        renderer1.set_property('ellipsize-set', True)
-        renderer1.set_property('ellipsize', Pango.EllipsizeMode.END)
-        renderer1.set_property('editable', True)
-        renderer1.connect('edited', self.__on_tag_edited)
-        column1 = Gtk.TreeViewColumn("", renderer1, markup=0)
-        column1.set_expand(True)
-        self.__treeview.append_column(column0)
-        self.__treeview.append_column(column1)
         for (tag_id, title) in El().bookmarks.get_all_tags():
-            self.__model.append([title, El().bookmarks.has_tag(bookmark_id,
-                                                               title)])
+            tag = TagWidget()
+            tag.set_label(title)
+            if El().bookmarks.has_tag(bookmark_id, title):
+                tag.set_active(True)
+            tag.show()
+            self.__flowbox.add(tag)
         # Some magic here but look ok when removing button
         # May need a better tweak later
         if not back_enabled:
@@ -117,8 +183,8 @@ class EditBookmarkWidget(Gtk.Bin):
         text = entry.get_text()
         sensitive = text != ""
         self.__remove_tag_button.set_sensitive(False)
-        for (title, active) in self.__model:
-            if title == text:
+        for child in self.__flowbox.get_children():
+            if child.label == text:
                 sensitive = False
                 self.__remove_tag_button.set_sensitive(True)
                 break
@@ -146,17 +212,6 @@ class EditBookmarkWidget(Gtk.Bin):
             if item[0] == tag_title:
                 self.__model.remove(item.iter)
                 break
-
-    def _on_row_activated(self, treeview, path, column):
-        """
-            Set tag entry
-            @param treeview as Gtk.TreeView
-            @param path as Gtk.TreePath
-            @param column as Gtk.TreeView.column
-        """
-        iterator = self.__model.get_iter(path)
-        value = self.__model.get_value(iterator, 0)
-        self.__new_tag_entry.set_text(value)
 
 #######################
 # PRIVATE             #
@@ -193,6 +248,23 @@ class EditBookmarkWidget(Gtk.Bin):
             if El().sync_worker is not None:
                 El().sync_worker.sync()
 
+    def __on_tag_activated(self, flowbox, child):
+        """
+            Add or remove tag
+            @param flowbox as Gtk.FlowBox
+            @param child as TagWidget
+        """
+        tag_id = El().bookmarks.get_tag_id(child.label)
+        if tag_id is None:
+            return  # Sync may have deleted tag
+        active = not El().bookmarks.has_tag(self.__bookmark_id, child.label)
+        if active:
+            El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
+        else:
+            El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
+        child.set_active(active)
+        self.__new_tag_entry.set_text(child.label)
+
     def __on_tag_edited(self, widget, path, name):
         """
             Rename tag
@@ -222,21 +294,3 @@ class EditBookmarkWidget(Gtk.Bin):
                     El().bookmarks.get_bookmarks(tag_id):
                 El().bookmarks.set_mtime(bookmark_id, mtime + 1)
         El().bookmarks.rename_tag(old_name, name)
-
-    def __on_item_toggled(self, view, path):
-        """
-            When item is toggled, set model
-            @param widget as cell renderer
-            @param path as str representation of Gtk.TreePath
-        """
-        iterator = self.__model.get_iter(path)
-        toggle = not self.__model.get_value(iterator, 1)
-        self.__model.set_value(iterator, 1, toggle)
-        tag_title = self.__model.get_value(iterator, 0)
-        tag_id = El().bookmarks.get_tag_id(tag_title)
-        if tag_id is None:
-            return  # Sync may have deleted tag
-        if toggle:
-            El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
-        else:
-            El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
