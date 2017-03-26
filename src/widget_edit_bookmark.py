@@ -269,8 +269,8 @@ class EditBookmarkWidget(Gtk.Bin):
             @param flowbox allocation as Gtk.Allocation
         """
         height = allocation.height
-        if height > 200:
-            height = 200
+        if height > 300:
+            height = 300
         scrolled.set_size_request(-1, height)
 
 #######################
