@@ -69,6 +69,16 @@
     color: transparent;
 }
 
+.close-button {
+    transition: 70ms linear;
+    border: 2px solid white;
+    background-color: black;
+    color: white;
+    opacity: 0.7;
+    padding: 5px;
+    border-radius: 16px;
+}
+
 .tag {
     border: 1px solid shade(@theme_bg_color, 0.7);
     border-radius: 5px;

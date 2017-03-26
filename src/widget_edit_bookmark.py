@@ -10,10 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango
+from gi.repository import Gtk, GLib
 
 from locale import strcoll
 from time import time
+from gettext import gettext as _
 
 from eolie.define import El
 
@@ -29,19 +30,14 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         Gtk.FlowBoxChild.__init__(self)
         self.__active = False
-        eventbox = Gtk.EventBox()
-        eventbox.show()
-        eventbox.connect("enter-notify-event", self.__on_enter_notify)
-        eventbox.connect("leave-notify-event", self.__on_leave_notify)
-        self.__label = Gtk.Label()
-        self.__label.get_style_context().add_class("tag")
-        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__label.set_max_width_chars(20)
-        self.__label.show()
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/TagWidget.ui")
+        builder.connect_signals(self)
+        self.__label = builder.get_object("label")
+        self.__close_button = builder.get_object("close_button")
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.START)
-        eventbox.add(self.__label)
-        self.add(eventbox)
+        self.add(builder.get_object("widget"))
 
     def set_label(self, label):
         """
@@ -59,6 +55,24 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         return self.__label.get_text()
 
+    @property
+    def removable(self):
+        """
+            True if removable
+            @return bool
+        """
+        return self.__close_button.is_visible()
+
+    def set_removable(self, removable):
+        """
+            Make tag removable
+            @param removable as bool
+        """
+        if removable:
+            self.__close_button.show()
+        else:
+            self.__close_button.hide()
+
     def set_active(self, active):
         """
             Mark tag as active
@@ -72,27 +86,57 @@ class TagWidget(Gtk.FlowBoxChild):
         self.__label.get_style_context().remove_class("tag-hover")
 
 #######################
-# PRIVATE             #
+# PROTECTED           #
 #######################
-    def __on_enter_notify(self, eventbox, event):
+    def _on_close_button_press(self, eventbox, event):
+        """
+            Remove tag
+            @param eventbox as Gtk.EventBox
+            @param event as Gtk.Event
+        """
+        tag_title = self.__label.get_text()
+        El().bookmarks.del_tag(tag_title, True)
+        self.destroy()
+
+    def _on_enter_notify(self, eventbox, event):
         """
             Update style
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.__close_button.is_visible():
+            return
         if self.__active:
             self.__label.get_style_context().remove_class("tag-set")
         self.__label.get_style_context().add_class("tag-hover")
 
-    def __on_leave_notify(self, eventbox, event):
+    def _on_leave_notify(self, eventbox, event):
         """
             Update style
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.__close_button.is_visible():
+            return
         if self.__active:
             self.__label.get_style_context().add_class("tag-set")
         self.__label.get_style_context().remove_class("tag-hover")
+
+    def _on_close_enter_notify(self, eventbox, event):
+        """
+            Update style
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        eventbox.set_opacity(1)
+
+    def _on_close_leave_notify(self, eventbox, event):
+        """
+            Update style
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        eventbox.set_opacity(0.7)
 
 
 class EditBookmarkWidget(Gtk.Bin):
@@ -112,6 +156,7 @@ class EditBookmarkWidget(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/BookmarkEdit.ui")
         builder.connect_signals(self)
         self.__flowbox = builder.get_object("flowbox")
+        self.__flowbox.set_sort_func(self.__sort_tags)
         self.__flowbox.connect("child-activated", self.__on_tag_activated)
         self.__add_tag_button = builder.get_object("add_tag_button")
         self.__remove_tag_button = builder.get_object("remove_tag_button")
@@ -182,11 +227,9 @@ class EditBookmarkWidget(Gtk.Bin):
         """
         text = entry.get_text()
         sensitive = text != ""
-        self.__remove_tag_button.set_sensitive(False)
         for child in self.__flowbox.get_children():
             if child.label == text:
                 sensitive = False
-                self.__remove_tag_button.set_sensitive(True)
                 break
         self.__add_tag_button.set_sensitive(sensitive)
 
@@ -199,33 +242,47 @@ class EditBookmarkWidget(Gtk.Bin):
         El().bookmarks.add_tag(tag_title, True)
         tag_id = El().bookmarks.get_tag_id(tag_title)
         El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
-        self.__model.append([tag_title, True])
+        tag = TagWidget()
+        tag.set_label(tag_title)
+        tag.show()
+        self.__flowbox.add(tag)
+        button.set_sensitive(False)
 
-    def _on_remove_tag_clicked(self, button):
+    def _on_remove_tags_clicked(self, button):
         """
             Remove tag
             @param button as Gtk.Button
         """
-        tag_title = self.__new_tag_entry.get_text()
-        El().bookmarks.del_tag(tag_title, True)
-        for item in self.__model:
-            if item[0] == tag_title:
-                self.__model.remove(item.iter)
-                break
+        if button.get_label() == _("Cancel"):
+            removable = False
+            button.set_label(_("Remove tags"))
+        else:
+            removable = True
+            button.set_label(_("Cancel"))
+        for child in self.__flowbox.get_children():
+            child.set_removable(removable)
+
+    def _on_flowbox_size_allocate(self, scrolled, allocation):
+        """
+            Set scrolled size allocation based on viewport allocation
+            @param scrolled as Gtk.ScrolledWindow
+            @param flowbox allocation as Gtk.Allocation
+        """
+        height = allocation.height
+        if height > 200:
+            height = 200
+        scrolled.set_size_request(-1, height)
 
 #######################
 # PRIVATE             #
 #######################
-    def __sort_items(self, model, itera, iterb, data):
+    def __sort_tags(self, child1, child2):
         """
-            Sort model
-            @param model as Gtk.ListStore
-            @param itera as Gtk.TreeIter
-            @param iterb as Gtk.TreeIter
+            Sort tags
+            @param child1 as TagWidget
+            @param child2 as TagWidget
         """
-        a = model.get_value(itera, 0)
-        b = model.get_value(iterb, 0)
-        return strcoll(a, b)
+        return strcoll(child1.label, child2.label)
 
     def __on_unmap(self, widget):
         """
@@ -254,6 +311,8 @@ class EditBookmarkWidget(Gtk.Bin):
             @param flowbox as Gtk.FlowBox
             @param child as TagWidget
         """
+        if child.removable:
+            return
         tag_id = El().bookmarks.get_tag_id(child.label)
         if tag_id is None:
             return  # Sync may have deleted tag

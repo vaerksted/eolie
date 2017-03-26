@@ -383,7 +383,6 @@ class ToolbarTitle(Gtk.Bin):
             widget = EditBookmarkWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
-            popover.set_size_request(300, 500)
             popover.set_relative_to(eventbox)
             popover.connect("closed", self.__on_popover_closed)
             popover.connect("closed",
