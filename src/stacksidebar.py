@@ -34,6 +34,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         Gtk.ListBoxRow.__init__(self)
         self.__scroll_timeout_id = None
+        self.__start_uri = None
         self.__view = view
         self.__window = window
         builder = Gtk.Builder()
@@ -223,12 +224,11 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
+            self.__start_uri = view.get_uri()
             self.__spinner.start()
-            if uri:
-                self.__title.set_text(uri)
+            self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            if uri:
-                self.__title.set_text(uri)
+            self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
             GLib.timeout_add(500, self.set_snapshot, True)
@@ -269,27 +269,40 @@ class SidebarChild(Gtk.ListBoxRow):
             context.set_source_surface(snapshot, 0, 0)
             context.paint()
             self.__image.set_from_surface(surface)
+            current_uri = view.get_uri()
             if save:
-                El().art.save_artwork(view.get_uri(),
+                El().art.save_artwork(current_uri,
                                       surface, "preview")
+                if self.__start_uri is not None and\
+                        current_uri != self.__start_uri:
+                    El().art.save_artwork(self.__start_uri,
+                                          surface, "preview")
             # Manage start page cache
-            if not El().art.exists(view.get_uri(), "start"):
-                width = snapshot.get_width()
-                factor = ArtSize.START_WIDTH / width
-                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                             ArtSize.START_WIDTH,
-                                             ArtSize.START_HEIGHT)
-                context = cairo.Context(surface)
-                context.scale(factor, factor)
-                context.set_source_surface(snapshot, 0, 0)
-                context.paint()
-                El().art.save_artwork(view.get_uri(),
+            uris = [current_uri]
+            if self.__start_uri is not None and self.__start_uri not in uris:
+                uris.append(self.__start_uri)
+            surface = None
+            for uri in uris:
+                if El().art.exists(uri, "start"):
+                    continue
+                if surface is None:
+                    width = snapshot.get_width()
+                    factor = ArtSize.START_WIDTH / width
+                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                 ArtSize.START_WIDTH,
+                                                 ArtSize.START_HEIGHT)
+                    context = cairo.Context(surface)
+                    context.scale(factor, factor)
+                    context.set_source_surface(snapshot, 0, 0)
+                    context.paint()
+                El().art.save_artwork(uri,
                                       surface, "start")
             del surface
             del snapshot
         except Exception as e:
             print("StackSidebar::__on_snapshot:", e)
             return
+        self.__start_uri = None
 
     def __on_notify_favicon(self, view, pointer):
         """

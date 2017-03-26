@@ -389,10 +389,10 @@ class WebView(WebKit2.WebView):
         html_start = start_content.decode("utf-8")
         html_start = html_start.replace("@TITLE@", _("Popular pages"))
         for (title, uri) in items:
-            f = Gio.File.new_for_path(El().art.get_path(uri, "preview"))
+            path = El().art.get_path(uri, "start")
+            f = Gio.File.new_for_path(path)
             if not f.query_exists():
                 continue
-            path = El().art.get_path(uri, "start")
             html_start += '<a class="child" title="%s" href="%s">' % (title,
                                                                       uri)
             html_start += '<img src="file://%s"></img>' % path
