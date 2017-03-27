@@ -21,7 +21,6 @@ It provides:
 - python3
 - intltool (make)
 - itstool (make)
-- totem-plparser
 - python (make)
 - python-cairo
 - python-dbus
