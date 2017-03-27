@@ -55,7 +55,7 @@ class UriLabel(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.hide()
+        GLib.idle_add(self.hide)
         # Move label at the right
         if self.get_property("halign") == Gtk.Align.START:
             self.set_property("halign", Gtk.Align.END)
