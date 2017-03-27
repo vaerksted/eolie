@@ -201,9 +201,8 @@ class Container(Gtk.Paned):
             @param action as WebKit2.NavigationAction
         """
         from eolie.view_web import WebView
-        uri = action.get_request().get_uri()
         webview = WebView.new_with_related_view(related)
-        webview.connect("ready-to-show", self.__on_ready_to_show, uri)
+        webview.connect("ready-to-show", self.__on_ready_to_show)
         return webview
 
     def __on_close(self, webview):
@@ -215,13 +214,12 @@ class Container(Gtk.Paned):
         if view is not None:
             self.sidebar.close_view(view)
 
-    def __on_ready_to_show(self, webview, uri):
+    def __on_ready_to_show(self, webview):
         """
             Add view to window
             @param webview as WebView
-            @param uri as str
         """
-        self.add_web_view(uri, True, webview.private, None, webview)
+        self.add_web_view(None, True, webview.private, None, webview)
 
     def __on_readable(self, webview):
         """
