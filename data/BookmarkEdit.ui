@@ -205,7 +205,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Rename tags</property>
+                        <property name="tooltip_text" translatable="yes">Rename</property>
                         <property name="halign">end</property>
                         <signal name="clicked" handler="_on_rename_tags_clicked" swapped="no"/>
                       </object>
@@ -221,7 +221,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Remove tags</property>
+                        <property name="tooltip_text" translatable="yes">Remove</property>
                         <property name="halign">end</property>
                         <signal name="clicked" handler="_on_remove_tags_clicked" swapped="no"/>
                       </object>
