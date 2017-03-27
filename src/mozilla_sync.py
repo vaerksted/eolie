@@ -279,9 +279,6 @@ class SyncWorker:
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
-            # No parent, move it to unfiled
-            if parent_guid is None:
-                parent_guid = "unfiled"
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
@@ -290,7 +287,7 @@ class SyncWorker:
             self.__client.client.delete_record("bookmarks", guid)
             El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handle later
-        # As otherwise, order will be broken by new children updates
+        # Otherwise, order will be broken by new children updates
         while parents:
             parent_id = parents.pop(0)
             parent_guid = El().bookmarks.get_guid(parent_id)
@@ -311,7 +308,12 @@ class SyncWorker:
             record = {}
             record["id"] = parent_guid
             record["type"] = "folder"
-            record["parentid"] = El().bookmarks.get_parent_guid(parent_id)
+            # A parent with parent as unfiled needs to be moved to places
+            # Firefox internal
+            grand_parent_guid = El().bookmarks.get_parent_guid(parent_id)
+            if grand_parent_guid == "unfiled":
+                grand_parent_guid = "places"
+            record["parentid"] = grand_parent_guid
             record["parentName"] = El().bookmarks.get_parent_name(parent_id)
             record["title"] = parent_name
             record["children"] = children
