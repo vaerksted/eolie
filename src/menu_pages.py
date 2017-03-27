@@ -77,7 +77,10 @@ class PagesMenu(Gio.Menu):
         if action is not None:
             self.__app.remove_action(encoded)
             for i in range(0, self.__closed_section.get_n_items()):
-                _uri = self.get_item_attribute_value(i, "uri").get_string()
+                attribute = self.get_item_attribute_value(i, "uri")
+                if attribute is None:
+                    continue
+                _uri = attribute.get_string()
                 if uri == _uri:
                     self.__closed_section.remove(i)
                     break
