@@ -389,6 +389,7 @@ class ToolbarTitle(Gtk.Bin):
                             lambda x: self._on_entry_focus_out(
                                                        self.__entry, None))
             popover.add(widget)
+            popover.set_size_request(self.__window.get_size()[0]/2.5, -1)
             self.__lock_focus = True
             popover.show()
         return True

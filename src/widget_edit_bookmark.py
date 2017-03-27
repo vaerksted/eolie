@@ -222,11 +222,11 @@ class EditBookmarkWidget(Gtk.Bin):
                 tag.set_active(True)
             tag.show()
             self.__flowbox.add(tag)
-        # Some magic here but look ok when removing button
+        # Just change opacity, hidding button will move widget on the left
         # May need a better tweak later
         if not back_enabled:
-            builder.get_object("back_button").hide()
-            self.set_margin_start(20)
+            builder.get_object("back_button").set_opacity(0)
+            builder.get_object("back_button").set_sensitive(False)
             self.set_margin_top(20)
         self.add(builder.get_object("widget"))
         self.connect("unmap", self.__on_unmap)
@@ -323,14 +323,14 @@ class EditBookmarkWidget(Gtk.Bin):
             Remove tag
             @param button as Gtk.Button
         """
-        if button.get_label() == _("Cancel"):
+        if button.get_label() == _("Finish"):
             removable = False
             button.set_label(_("Remove"))
             self.__rename_tag_button.show()
             button.get_style_context().remove_class("suggested-action")
         else:
             removable = True
-            button.set_label(_("Cancel"))
+            button.set_label(_("Finished"))
             self.__rename_tag_button.hide()
             button.get_style_context().add_class("suggested-action")
         for child in self.__flowbox.get_children():

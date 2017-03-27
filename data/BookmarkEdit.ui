@@ -58,60 +58,6 @@
       </packing>
     </child>
     <child>
-      <object class="GtkScrolledWindow" id="scrolled">
-        <property name="width_request">300</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hscrollbar_policy">never</property>
-        <child>
-          <object class="GtkViewport">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="valign">start</property>
-            <child>
-              <object class="GtkFlowBox" id="flowbox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="max_children_per_line">100</property>
-                <property name="selection_mode">none</property>
-                <signal name="size-allocate" handler="_on_flowbox_size_allocate" object="scrolled" swapped="no"/>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="label" translatable="yes">Set the tags you want to associate this bookmark with:</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">2</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkEntry" id="new_tag_entry">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="placeholder_text" translatable="yes">New tag</property>
-        <signal name="changed" handler="_on_new_tag_changed" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">3</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkEntry" id="uri_entry">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -157,65 +103,160 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="add_tag_button">
-        <property name="label" translatable="yes">Add</property>
-        <property name="visible">True</property>
-        <property name="sensitive">False</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">start</property>
-        <property name="hexpand">False</property>
-        <signal name="clicked" handler="_on_add_tag_clicked" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">3</property>
-        <property name="width">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkBox">
+      <object class="GtkFrame">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="spacing">5</property>
+        <property name="label_xalign">0</property>
         <child>
-          <object class="GtkButton" id="rename_tag_button">
-            <property name="label" translatable="yes">Rename</property>
+          <object class="GtkAlignment">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Rename tags</property>
-            <property name="halign">end</property>
-            <signal name="clicked" handler="_on_rename_tags_clicked" swapped="no"/>
+            <property name="can_focus">False</property>
+            <property name="left_padding">12</property>
+            <child>
+              <object class="GtkGrid">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <property name="margin_bottom">5</property>
+                <property name="row_spacing">5</property>
+                <property name="column_spacing">5</property>
+                <child>
+                  <object class="GtkEntry" id="new_tag_entry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="placeholder_text" translatable="yes">New tag</property>
+                    <signal name="changed" handler="_on_new_tag_changed" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="add_tag_button">
+                    <property name="label" translatable="yes">Add</property>
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="halign">start</property>
+                    <property name="hexpand">False</property>
+                    <signal name="clicked" handler="_on_add_tag_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolled">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="hscrollbar_policy">never</property>
+                    <child>
+                      <object class="GtkViewport">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="valign">start</property>
+                        <child>
+                          <object class="GtkFlowBox" id="flowbox">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="max_children_per_line">100</property>
+                            <property name="selection_mode">none</property>
+                            <signal name="size-allocate" handler="_on_flowbox_size_allocate" object="scrolled" swapped="no"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                    <property name="width">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="spacing">5</property>
+                    <child>
+                      <object class="GtkAlignment">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="hexpand">True</property>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="rename_tag_button">
+                        <property name="label" translatable="yes">Rename</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Rename tags</property>
+                        <property name="halign">end</property>
+                        <signal name="clicked" handler="_on_rename_tags_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="remove_tag_button">
+                        <property name="label" translatable="yes">Remove</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Remove tags</property>
+                        <property name="halign">end</property>
+                        <signal name="clicked" handler="_on_remove_tags_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">2</property>
+                    <property name="width">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+            </child>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
         </child>
-        <child>
-          <object class="GtkButton" id="remove_tag_button">
-            <property name="label" translatable="yes">Remove</property>
+        <child type="label">
+          <object class="GtkLabel">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Remove tags</property>
-            <property name="halign">end</property>
-            <signal name="clicked" handler="_on_remove_tags_clicked" swapped="no"/>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Set the tags you want to associate this bookmark with</property>
           </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
         </child>
       </object>
       <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">5</property>
-        <property name="width">2</property>
+        <property name="left_attach">1</property>
+        <property name="top_attach">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -230,34 +271,5 @@
     <child>
       <placeholder/>
     </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-  </object>
-  <object class="GtkListStore" id="model">
-    <columns>
-      <!-- column-name tag -->
-      <column type="gchararray"/>
-      <!-- column-name active -->
-      <column type="gboolean"/>
-    </columns>
   </object>
 </interface>
