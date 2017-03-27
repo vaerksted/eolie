@@ -90,9 +90,11 @@ class ToolbarTitle(Gtk.Bin):
         """
         # Do not show this in titlebar
         parsed = urlparse(uri)
-        if parsed.scheme == "populars" or not uri or uri == self.__uri:
+        if parsed.scheme == "populars" or not uri:
             self.__set_text_uri("")
             self.__uri = ""
+            return
+        elif uri == self.__uri:
             return
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
