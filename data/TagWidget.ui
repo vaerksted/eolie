@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.20.0 -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkEventBox" id="widget">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <signal name="enter-notify-event" handler="_on_enter_notify" swapped="no"/>
+    <signal name="leave-notify-event" handler="_on_leave_notify" swapped="no"/>
+    <child>
+      <object class="GtkOverlay">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkStack" id="stack">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkLabel" id="label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_right">10</property>
+                <property name="margin_top">10</property>
+                <property name="ellipsize">end</property>
+                <property name="max_width_chars">20</property>
+                <signal name="enter-notify-event" handler="_on_enter_notify" swapped="no"/>
+                <signal name="leave-notify-event" handler="_on_leave_notify" swapped="no"/>
+                <style>
+                  <class name="tag"/>
+                </style>
+              </object>
+              <packing>
+                <property name="name">label</property>
+                <property name="title" translatable="yes">page0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+              </object>
+              <packing>
+                <property name="name">entry</property>
+                <property name="title" translatable="yes">page0</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="index">-1</property>
+          </packing>
+        </child>
+        <child type="overlay">
+          <object class="GtkEventBox" id="close_button">
+            <property name="can_focus">False</property>
+            <property name="opacity">0.69999999999999996</property>
+            <property name="halign">end</property>
+            <property name="valign">start</property>
+            <signal name="button-press-event" handler="_on_close_button_press" swapped="no"/>
+            <signal name="enter-notify-event" handler="_on_close_enter_notify" swapped="no"/>
+            <signal name="leave-notify-event" handler="_on_close_leave_notify" swapped="no"/>
+            <child>
+              <object class="GtkImage">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="pixel_size">8</property>
+                <property name="icon_name">close-symbolic</property>
+                <property name="icon_size">0</property>
+                <style>
+                  <class name="close-button"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
