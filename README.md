@@ -8,7 +8,7 @@ Eolie is a new GNOME web browser.
 
 *FAQ: https://github.com/gnumdk/eolie/wiki
 
-For translators: https://www.transifex.com/projects/p/eolie/
+For translators: https://translate.zanata.org/project/view/eolie
 
 It provides:
 - Firefox sync support
