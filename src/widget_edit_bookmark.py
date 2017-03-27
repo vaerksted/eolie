@@ -34,6 +34,8 @@ class TagWidget(Gtk.FlowBoxChild):
         builder.add_from_resource("/org/gnome/Eolie/TagWidget.ui")
         builder.connect_signals(self)
         self.__label = builder.get_object("label")
+        self.__entry = builder.get_object("entry")
+        self.__stack = builder.get_object("stack")
         self.__close_button = builder.get_object("close_button")
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.START)
@@ -46,6 +48,35 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         self.__label.set_text(label)
         self.__label.set_tooltip_text(label)
+        self.__entry.set_text(label)
+
+    def save_entry(self):
+        """
+            Save tag name based on entry content
+        """
+        title = self.__entry.get_text()
+        previous = self.__label.get_text()
+        if previous == title:
+            return
+        # We do not handle tag fusion TODO
+        tag_id = El().bookmarks.get_tag_id(title)
+        if tag_id is not None:
+            return
+        # Update mtime for all tagged bookmarks
+        if El().sync_worker is not None:
+            mtimes = El().sync_worker.mtimes
+            if mtimes["bookmarks"] == 0:
+                mtime = round(time(), 2)
+            else:
+                mtime = mtimes["bookmarks"]
+            tag_id = El().bookmarks.get_tag_id(previous)
+            if tag_id is None:
+                return
+            for (bookmark_id, bookmark_title, uri) in\
+                    El().bookmarks.get_bookmarks(tag_id):
+                El().bookmarks.set_mtime(bookmark_id, mtime + 1)
+        El().bookmarks.rename_tag(previous, title)
+        self.__label.set_text(title)
 
     @property
     def label(self):
@@ -63,6 +94,14 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         return self.__close_button.is_visible()
 
+    @property
+    def editable(self):
+        """
+            True if removable
+            @return bool
+        """
+        return self.__stack.get_visible_child_name() == "entry"
+
     def set_removable(self, removable):
         """
             Make tag removable
@@ -72,6 +111,16 @@ class TagWidget(Gtk.FlowBoxChild):
             self.__close_button.show()
         else:
             self.__close_button.hide()
+
+    def set_editable(self, editable):
+        """
+            Make tag editable
+            @param editable as bool
+        """
+        if editable:
+            self.__stack.set_visible_child_name("entry")
+        else:
+            self.__stack.set_visible_child_name("label")
 
     def set_active(self, active):
         """
@@ -159,6 +208,7 @@ class EditBookmarkWidget(Gtk.Bin):
         self.__flowbox.set_sort_func(self.__sort_tags)
         self.__flowbox.connect("child-activated", self.__on_tag_activated)
         self.__add_tag_button = builder.get_object("add_tag_button")
+        self.__rename_tag_button = builder.get_object("rename_tag_button")
         self.__remove_tag_button = builder.get_object("remove_tag_button")
         self.__new_tag_entry = builder.get_object("new_tag_entry")
         self.__title_entry = builder.get_object("title_entry")
@@ -248,6 +298,26 @@ class EditBookmarkWidget(Gtk.Bin):
         self.__flowbox.add(tag)
         button.set_sensitive(False)
 
+    def _on_rename_tags_clicked(self, button):
+        """
+            Rename tags
+            @param button as Gtk.Button
+        """
+        if button.get_label() == _("Apply"):
+            editable = False
+            button.set_label(_("Rename"))
+            self.__remove_tag_button.show()
+            button.get_style_context().remove_class("suggested-action")
+        else:
+            editable = True
+            button.set_label(_("Apply"))
+            self.__remove_tag_button.hide()
+            button.get_style_context().add_class("suggested-action")
+        for child in self.__flowbox.get_children():
+            child.set_editable(editable)
+            if not editable:
+                child.save_entry()
+
     def _on_remove_tags_clicked(self, button):
         """
             Remove tag
@@ -255,10 +325,14 @@ class EditBookmarkWidget(Gtk.Bin):
         """
         if button.get_label() == _("Cancel"):
             removable = False
-            button.set_label(_("Remove tags"))
+            button.set_label(_("Remove"))
+            self.__rename_tag_button.show()
+            button.get_style_context().remove_class("suggested-action")
         else:
             removable = True
             button.set_label(_("Cancel"))
+            self.__rename_tag_button.hide()
+            button.get_style_context().add_class("suggested-action")
         for child in self.__flowbox.get_children():
             child.set_removable(removable)
 
@@ -311,7 +385,7 @@ class EditBookmarkWidget(Gtk.Bin):
             @param flowbox as Gtk.FlowBox
             @param child as TagWidget
         """
-        if child.removable:
+        if child.removable or child.editable:
             return
         tag_id = El().bookmarks.get_tag_id(child.label)
         if tag_id is None:
@@ -323,33 +397,3 @@ class EditBookmarkWidget(Gtk.Bin):
             El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
         child.set_active(active)
         self.__new_tag_entry.set_text(child.label)
-
-    def __on_tag_edited(self, widget, path, name):
-        """
-            Rename tag
-            @param widget as cell renderer
-            @param path as str representation of Gtk.TreePath
-            @param name as str
-        """
-        tag_id = El().bookmarks.get_tag_id(name)
-        if tag_id is not None:
-            return
-        iterator = self.__model.get_iter(path)
-        old_name = self.__model.get_value(iterator, 0)
-        has_tag = El().bookmarks.has_tag(self.__bookmark_id, old_name)
-        self.__model.remove(iterator)
-        self.__model.append([name, has_tag])
-        # Update mtime for all tagged bookmarks
-        if El().sync_worker is not None:
-            mtimes = El().sync_worker.mtimes
-            if mtimes["bookmarks"] == 0:
-                mtime = round(time(), 2)
-            else:
-                mtime = mtimes["bookmarks"]
-            tag_id = El().bookmarks.get_tag_id(old_name)
-            if tag_id is None:
-                return
-            for (bookmark_id, title, uri) in\
-                    El().bookmarks.get_bookmarks(tag_id):
-                El().bookmarks.set_mtime(bookmark_id, mtime + 1)
-        El().bookmarks.rename_tag(old_name, name)
