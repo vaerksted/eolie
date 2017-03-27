@@ -38,6 +38,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__secure_content = True
         self.__keywords_timeout = None
         self.__icon_grid_width = None
+        self.__uri = ""
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
@@ -88,14 +89,12 @@ class ToolbarTitle(Gtk.Bin):
             @param text as str
         """
         try:
-            if self.__signal_id is not None:
-                self.__entry.disconnect(self.__signal_id)
             # Do not show this in titlebar
             parsed = urlparse(uri)
             if parsed.scheme == "populars":
-                self.__entry.set_text("")
+                self.__set_text_uri("")
                 raise
-            elif not uri or uri == self.__entry.get_text():
+            elif not uri or uri == self.__uri:
                 raise
             self.__secure_content = True
             if self.__window.container.current.webview.readable[0]:
@@ -105,9 +104,10 @@ class ToolbarTitle(Gtk.Bin):
                                                                     "selected")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                "")
-            self.__entry.set_text(uri)
+            self.__uri = uri
             self.__placeholder.set_opacity(0)
             self.__entry.get_style_context().remove_class('uribar-title')
+            self.__set_text_uri(uri)
             self.__update_secure_content_indicator()
             bookmark_id = El().bookmarks.get_id(uri)
             if bookmark_id is not None:
@@ -118,8 +118,6 @@ class ToolbarTitle(Gtk.Bin):
                                                     Gtk.IconSize.MENU)
         except:
             pass
-        self.__signal_id = self.__entry.connect("changed",
-                                                self.__on_entry_changed)
 
     def set_insecure_content(self):
         """
@@ -143,6 +141,7 @@ class ToolbarTitle(Gtk.Bin):
                     not self.__popover.is_visible():
                 self.__placeholder.set_opacity(0.8)
                 self.__entry.get_style_context().add_class('uribar-title')
+                self.__set_text_uri("")
 
     def hide_popover(self):
         """
@@ -236,12 +235,13 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
-        if self.__entry.get_text():
+        if self.__uri:
             self.__placeholder.set_opacity(0)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
             self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().remove_class('uribar-title')
+        self.__set_text_uri(self.__uri)
 
     def _on_leave_notify(self, widget, event):
         """
@@ -258,10 +258,11 @@ class ToolbarTitle(Gtk.Bin):
            event.y >= allocation.height or\
            not isinstance(widget, Gtk.EventBox):
             self.__placeholder.set_opacity(0.8)
-            if not self.__entry.get_text():
+            if not self.__uri:
                 self.__placeholder.set_text(_("Search or enter address"))
             elif not self.__lock_focus:
                 self.__entry.get_style_context().add_class('uribar-title')
+                self.__set_text_uri("")
 
     def _on_entry_focus_in(self, entry, event):
         """
@@ -275,9 +276,10 @@ class ToolbarTitle(Gtk.Bin):
             self.__lock_focus = True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
+        self.__set_text_uri(self.__uri)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        if self.__entry.get_text():
+        if self.__uri:
             self.__placeholder.set_opacity(0)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
@@ -295,6 +297,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
+        self.__set_text_uri("")
         view = self.__window.container.current
         bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
         if bookmark_id is not None:
@@ -456,11 +459,22 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __set_text_uri(self, uri):
+        """
+            Set uri in Gtk.Entry
+            @param uri as str
+        """
+        if self.__signal_id is not None:
+            self.__entry.disconnect(self.__signal_id)
+        self.__entry.set_text(uri)
+        self.__signal_id = self.__entry.connect("changed",
+                                                self.__on_entry_changed)
+
     def __update_secure_content_indicator(self):
         """
             Update PRIMARY icon
         """
-        parsed = urlparse(self.__entry.get_text())
+        parsed = urlparse(self.__uri)
         if parsed.scheme == "https" and self.__secure_content:
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
