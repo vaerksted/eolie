@@ -661,10 +661,10 @@ class WebView(WebKit2.WebView):
         # Always accept response
         if decision_type == WebKit2.PolicyDecisionType.RESPONSE:
             mime_type = decision.get_response().props.mime_type
-            if "application/" in mime_type:
-                decision.download()
-            else:
+            if self.can_show_mime_type(mime_type):
                 decision.use()
+            else:
+                decision.download()
             return False
 
         uri = decision.get_navigation_action().get_request().get_uri()
