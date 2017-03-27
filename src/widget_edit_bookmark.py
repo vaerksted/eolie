@@ -323,7 +323,7 @@ class EditBookmarkWidget(Gtk.Bin):
             Remove tag
             @param button as Gtk.Button
         """
-        if button.get_label() == _("Finish"):
+        if button.get_label() == _("Finished"):
             removable = False
             button.set_label(_("Remove"))
             self.__rename_tag_button.show()
