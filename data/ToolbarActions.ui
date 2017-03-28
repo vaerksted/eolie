@@ -121,12 +121,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="pages_button">
+          <object class="GtkToggleButton" id="pages_button">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="image">image5</property>
-            <signal name="clicked" handler="_on_pages_button_clicked" swapped="no"/>
+            <signal name="toggled" handler="_on_pages_button_toggled" swapped="no"/>
             <style>
               <class name="no-padding"/>
             </style>

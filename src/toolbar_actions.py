@@ -131,13 +131,18 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.add_web_view(El().start_page, True)
         self.__window.toolbar.title.hide_popover()
 
-    def _on_pages_button_clicked(self, button):
+    def _on_pages_button_toggled(self, button):
         """
             Show pages popover
-            @param button as Gtk.Button
+            @param button as Gtk.ToggleButton
         """
+        if not button.get_active():
+            return
         popover = Gtk.Popover.new_from_model(button, El().pages_menu)
         popover.forall(self.__force_show_image)
+        popover.connect("closed",
+                        self.__on_pages_popover_closed,
+                        button)
         popover.show()
 
     def _on_filter_button_toggled(self, button):
@@ -161,11 +166,19 @@ class ToolbarActions(Gtk.Bin):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__force_show_image)
 
-    def __on_popover_closed(self, popover, model):
+    def __on_pages_popover_closed(self, popover, button):
         """
             Clear menu actions
             @param popover
-            @param model as HistoryMenu
+            @param button as Gtk.ToggleButton
+        """
+        button.set_active(False)
+
+    def __on_navigation_popover_closed(self, popover, model):
+        """
+            Clear menu actions
+            @param popover
+            @param model as HistoryMenu/None
         """
         # Let model activate actions
         GLib.idle_add(model.remove_actions)
@@ -181,7 +194,9 @@ class ToolbarActions(Gtk.Bin):
             model = HistoryMenu(El(), back_list)
             popover = Gtk.Popover.new_from_model(self.__backward, model)
             GLib.idle_add(popover.forall, self.__force_show_image)
-            popover.connect("closed", self.__on_popover_closed, model)
+            popover.connect("closed",
+                            self.__on_navigation_popover_closed,
+                            model)
             popover.show()
 
     def __on_forward_history_timeout(self):
@@ -195,5 +210,7 @@ class ToolbarActions(Gtk.Bin):
             model = HistoryMenu(El(), forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward, model)
             GLib.idle_add(popover.forall, self.__force_show_image)
-            popover.connect("closed", self.__on_popover_closed, model)
+            popover.connect("closed",
+                            self.__on_navigation_popover_closed,
+                            model)
             popover.show()
