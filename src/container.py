@@ -161,6 +161,7 @@ class Container(Gtk.Paned):
         view.webview.connect("create", self.__on_create)
         view.webview.connect("close", self.__on_close)
         view.webview.connect("save-password", self.__on_save_password)
+        view.webview.connect("script-dialog", self.__on_script_dialog)
         view.webview.connect("insecure-content-detected",
                              self.__on_insecure_content_detected)
         view.show()
@@ -254,6 +255,15 @@ class Container(Gtk.Paned):
             @param netloc as str
         """
         self.__window.toolbar.title.save_password(username, password, netloc)
+
+    def __on_script_dialog(self, webview, dialog):
+        """
+            Show message to user
+            @param webview as WebView
+            @param dialog as WebKit2.ScriptDialog
+        """
+        self.__window.toolbar.title.show_javascript(dialog)
+        return True
 
     def __on_button_press(self, webview, event):
         """

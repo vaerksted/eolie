@@ -140,6 +140,19 @@ class ToolbarTitle(Gtk.Bin):
                 self.__entry.get_style_context().add_class('uribar-title')
                 self.__set_text_uri("")
 
+    def show_javascript(self, dialog):
+        """
+            Show a popover with javascript message
+            @param dialog as WebKit2.ScriptDialog
+        """
+        from eolie.popover_javascript import JavaScriptPopover
+        popover = JavaScriptPopover(dialog)
+        popover.set_relative_to(self.__entry)
+        popover.set_pointing_to(self.__entry.get_icon_area(
+                                                Gtk.EntryIconPosition.PRIMARY))
+        popover.connect("closed", self.__on_popover_closed)
+        popover.show()
+
     def hide_popover(self):
         """
             hide popover if needed
