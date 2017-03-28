@@ -2,7 +2,7 @@
 _Name=Eolie
 _GenericName=Web browser
 _Comment=Web browser
-Icon=web-browser
+Icon=org.gnome.Eolie
 Exec=eolie %U
 Terminal=false
 Type=Application
