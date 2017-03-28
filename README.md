@@ -40,7 +40,7 @@ $ make
 ### On Ubuntu
 ```
 $ git clone https://github.com/gnumdk/eolie.git
-$ cd lollypop
+$ cd eolie
 # apt-get install autoconf libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev
 $ ./autogen.sh
 $ make
