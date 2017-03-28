@@ -214,7 +214,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.__title.set_text(title)
         if not view.is_loading():
-            GLib.timeout_add(500, self.set_snapshot, True)
+            GLib.timeout_add(1000, self.set_snapshot, True)
 
     def __on_load_changed(self, view, event):
         """
@@ -231,7 +231,7 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            GLib.timeout_add(500, self.set_snapshot, True)
+            GLib.timeout_add(1000, self.set_snapshot, True)
 
     def __on_scroll_event(self, view, event):
         """
