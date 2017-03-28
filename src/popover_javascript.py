@@ -75,7 +75,10 @@ class JavaScriptPopover(Gtk.Popover):
             Pass ok to js
             @param button as Gtk.Button
         """
-        self.__dialog.confirm_set_confirmed(True)
+        if self.__entry.is_visible():
+            self.__dialog.prompt_set_text(self.__entry.get_text())
+        else:
+            self.__dialog.confirm_set_confirmed(True)
         self.hide()
 
     def _on_cancel_button_clicked(self, button):
@@ -83,7 +86,8 @@ class JavaScriptPopover(Gtk.Popover):
             Pass ok to js
             @param button as Gtk.Button
         """
-        self.__dialog.confirm_set_confirmed(False)
+        if not self.__entry.is_visible():
+            self.__dialog.confirm_set_confirmed(False)
         self.hide()
 
 #######################
