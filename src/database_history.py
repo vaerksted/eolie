@@ -163,6 +163,7 @@ class DatabaseHistory:
             @return history_id as int
         """
         with SqlCursor(self) as sql:
+            uri = uri.rstrip('/')
             result = sql.execute("SELECT rowid\
                                   FROM history\
                                   WHERE uri=?",
