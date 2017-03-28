@@ -16,6 +16,7 @@ import sqlite3
 import itertools
 
 from eolie.utils import noaccents, get_random_string
+from eolie.define import El
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -40,7 +41,7 @@ class DatabaseBookmarks:
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
                                                popularity INT NOT NULL,
-                                               atime INT NOT NULL,
+                                               atime REAL NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
                                                position INT DEFAULT 0,
@@ -92,6 +93,10 @@ class DatabaseBookmarks:
             @param commit as bool
             @return bookmark id as int
         """
+        # Search if bookmark item exists in history
+        history_id = El().history.get_id(uri)
+        if history_id is not None:
+            guid = El().history.get_guid(history_id)
         # Find an uniq guid
         while guid is None:
             guid = get_random_string(12)
@@ -558,8 +563,11 @@ class DatabaseBookmarks:
             @param commit as bool
         """
         with SqlCursor(self) as sql:
-            previous_guid = self.get_parent_guid(bookmark_id)
-            if previous_guid is None:
+            result = sql.execute("SELECT parent_guid\
+                                  FROM parents\
+                                  WHERE bookmark_id=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is None or v[0] is None:
                 sql.execute("INSERT INTO parents\
                              (bookmark_id, parent_guid, parent_name)\
                              VALUES (?, ?, ?)",

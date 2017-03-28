@@ -179,8 +179,9 @@ class SyncWorker:
             record["histUri"] = El().history.get_uri(history_id)
             record["id"] = El().history.get_guid(history_id)
             record["title"] = El().history.get_title(history_id)
-            atime = 1000000 * El().history.get_atime(history_id)
-            record["visits"] = [{"date": atime, "type": 1}]
+            record["visits"] = []
+            for atime in El().history.get_atimes(history_id):
+                record["visits"].append({"date": atime*1000000, "type": 1})
             debug("pushing %s" % record)
             self.__client.add_history(record, bulk_keys)
         except Exception as e:
@@ -442,12 +443,11 @@ class SyncWorker:
             if El().history.get_mtime(history_id) >= record["modified"]:
                 continue
             # Try to get visit date
+            atimes = []
             try:
-                atime = round(int(history["visits"][0]["date"]) / 1000000, 2)
+                for visit in history["visits"]:
+                    atimes.append(round(int(visit["date"]) / 1000000, 2))
             except:
-                continue
-            # History item had been sync last sync
-            if atime < self.__mtimes["history"]:
                 continue
             # Ignore page with no title
             if not history["title"]:
@@ -458,16 +458,16 @@ class SyncWorker:
                 history_id = El().history.add(title,
                                               history["histUri"],
                                               history["id"],
-                                              atime,
+                                              atimes,
                                               record["modified"],
                                               False)
             else:
                 El().history.set_title(history_id,
                                        title,
                                        False)
-                El().history.set_atime(history_id,
-                                       atime,
-                                       False)
+                El().history.set_atimes(history_id,
+                                        atimes,
+                                        False)
                 El().history.set_mtime(history_id,
                                        record["modified"],
                                        False)

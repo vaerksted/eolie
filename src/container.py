@@ -303,7 +303,7 @@ class Container(Gtk.Paned):
         if parsed.scheme in ["http", "https"] and\
                 not webview.private:
             El().history.add(title, uri)
-            history_id = El().history.get_id(title, uri)
+            history_id = El().history.get_id(uri)
             if El().sync_worker is not None:
                 El().sync_worker.push_history(history_id)
 

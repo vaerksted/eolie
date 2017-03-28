@@ -326,7 +326,7 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.add_web_view(uri, True)
                 if event.button == 2:
                     self.__window.toolbar.title.hide_popover()
-            El().bookmarks.set_access_time(uri, int(time()))
+            El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
         else:
             self.emit("activate")
