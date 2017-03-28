@@ -142,7 +142,7 @@ class SyncWorker:
 #######################
     def __get_session_bulk_keys(self):
         """
-            Get a session decrypt keys
+            Get session decrypt keys
             @return keys as (b"", b"")
         """
         if self.__session is None:
