@@ -86,7 +86,8 @@ class WebView(WebKit2.WebView):
                             GLib.SpawnFlags.SEARCH_PATH, None)
             return
         elif parsed.scheme == "javascript":
-            self.run_javascript(uri, None, None)
+            uri = GLib.uri_unescape_string(uri, None)
+            self.run_javascript(uri.replace("javascript:", ""), None, None)
             return
         elif parsed.scheme not in ["http", "https", "file",
                                    "populars", "accept"]:
