@@ -325,8 +325,8 @@ class DatabaseHistory:
             filter = '%' + search + '%'
             result = sql.execute("SELECT title, uri\
                                   FROM history\
-                                  WHERE (title LIKE ?\
-                                   OR uri LIKE ?)\
+                                  WHERE title LIKE ?\
+                                   OR uri LIKE ?\
                                   ORDER BY popularity DESC,\
                                   mtime DESC LIMIT ?",
                                  (filter, filter, limit))
