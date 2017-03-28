@@ -41,6 +41,12 @@ class TagWidget(Gtk.FlowBoxChild):
         self.set_property("valign", Gtk.Align.START)
         self.add(builder.get_object("widget"))
 
+    def do_get_preferred_width(self):
+        """
+            Max width to 200
+        """
+        return (200, 200)
+
     def set_label(self, label):
         """
             Set label
