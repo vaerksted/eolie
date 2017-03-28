@@ -53,10 +53,6 @@ class ToolbarEnd(Gtk.Bin):
         builder.connect_signals(self)
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
-        # Needed to get button click with progressbar
-        eventbox = Gtk.EventBox()
-        eventbox.connect("button-release-event", self.__on_event_release_event)
-        eventbox.show()
         self.__settings_button = builder.get_object("settings_button")
         self.__progress = ProgressBar(builder.get_object("download_button"))
         if El().download_manager.get():
@@ -65,8 +61,9 @@ class ToolbarEnd(Gtk.Bin):
                                       self.__on_download)
         El().download_manager.connect("download-finish",
                                       self.__on_download)
-        eventbox.add(self.__progress)
-        builder.get_object("overlay").add_overlay(eventbox)
+        overlay = builder.get_object("overlay")
+        overlay.add_overlay(self.__progress)
+        overlay.set_overlay_pass_through(self.__progress, True)
         self.add(builder.get_object("end"))
 
         adblock_action = Gio.SimpleAction.new_stateful(
@@ -93,7 +90,7 @@ class ToolbarEnd(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_download_button_clicked(self, button):
+    def _on_download_button_toggled(self, button):
         """
             Show download popover
             @param button as Gtk.Button
@@ -304,15 +301,6 @@ class ToolbarEnd(Gtk.Bin):
                                     WebKit2.SaveMode.MHTML,
                                     None,
                                     None)
-
-    def __on_event_release_event(self, widget, event):
-        """
-            Forward event to button
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        self.__download_button.set_active(True)
-        return True
 
     def __on_exceptions_active(self, action, param):
         """
