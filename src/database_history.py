@@ -137,6 +137,7 @@ class DatabaseHistory:
         """
         with SqlCursor(self) as sql:
             sql.execute("DELETE from history")
+            sql.execute("DELETE from history_atime")
             sql.commit()
 
     def get(self, atime):
