@@ -321,16 +321,14 @@ class DatabaseHistory:
             @param limit as int
             @return (str, str)
         """
-        return []
         with SqlCursor(self) as sql:
             filter = '%' + search + '%'
             result = sql.execute("SELECT title, uri\
-                                  FROM history, history_atime\
-                                  WHERE title LIKE ?\
-                                   OR uri LIKE ?\
-                                  AND history.rowid=history_atime.history_id\
+                                  FROM history\
+                                  WHERE (title LIKE ?\
+                                   OR uri LIKE ?)\
                                   ORDER BY popularity DESC,\
-                                  atime DESC LIMIT ?",
+                                  mtime DESC LIMIT ?",
                                  (filter, filter, limit))
             return list(result)
 
