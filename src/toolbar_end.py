@@ -98,9 +98,10 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.toolbar.title.hide_popover()
-        button.get_style_context().remove_class("selected")
         popover = DownloadsPopover()
         popover.set_relative_to(button)
+        popover.connect("closed", self.__on_popover_closed)
+        self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
     def _on_home_button_clicked(self, button):
@@ -377,4 +378,5 @@ class ToolbarEnd(Gtk.Bin):
         """
             Unlock focus
         """
+        self.__download_button.get_style_context().remove_class("selected")
         self.__window.toolbar.title.set_lock_focus(False)
