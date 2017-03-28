@@ -10,12 +10,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2
+from gi.repository import Gtk, GLib, WebKit2
+
+from gettext import gettext as _
 
 
 class JavaScriptPopover(Gtk.Popover):
     """
         Show JavaScript message
+        @warning: will block current execution
     """
 
     def __init__(self, dialog):
@@ -31,7 +34,11 @@ class JavaScriptPopover(Gtk.Popover):
         widget = builder.get_object("widget")
         label = builder.get_object("label")
         image = builder.get_object("image")
+        self.__entry = builder.get_object("entry")
+        ok_button = builder.get_object("ok_button")
+        cancel_button = builder.get_object("cancel_button")
         dialog_type = dialog.get_dialog_type()
+        # Set icon
         if dialog_type == WebKit2.ScriptDialogType.ALERT:
             image.set_from_icon_name("dialog-warning-symbolic",
                                      Gtk.IconSize.DIALOG)
@@ -40,13 +47,52 @@ class JavaScriptPopover(Gtk.Popover):
                              WebKit2.ScriptDialogType.BEFORE_UNLOAD_CONFIRM]:
             image.set_from_icon_name("dialog-question-symbolic",
                                      Gtk.IconSize.DIALOG)
+            ok_button.show()
+            cancel_button.show()
+        if dialog_type == WebKit2.ScriptDialogType.PROMPT:
+            self.__entry.set_text(dialog.prompt_get_default_text())
+            self.__entry.show()
+        if dialog_type == WebKit2.ScriptDialogType.BEFORE_UNLOAD_CONFIRM:
+            ok_button.set_label(_("Continue"))
+            cancel_button.set_label(_("Leave"))
         label.set_text(dialog.get_message())
         self.add(widget)
+        self.__loop = GLib.MainLoop.new(None, False)
+        self.connect("closed", self.__on_closed)
+
+    def show(self):
+        """
+            Show widget and run loop
+        """
+        Gtk.Popover.show(self)
+        self.__loop.run()
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_ok_button_clicked(self, button):
+        """
+            Pass ok to js
+            @param button as Gtk.Button
+        """
+        self.__dialog.confirm_set_confirmed(True)
+        self.hide()
+
+    def _on_cancel_button_clicked(self, button):
+        """
+            Pass ok to js
+            @param button as Gtk.Button
+        """
+        self.__dialog.confirm_set_confirmed(False)
+        self.hide()
 
 #######################
 # PRIVATE             #
 #######################
+    def __on_closed(self, popover):
+        """
+            Quit main loop
+            @param popover as Gtk.Popover
+        """
+        self.__loop.quit()
+        self.__loop.unref()
