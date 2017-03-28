@@ -53,6 +53,7 @@ class ToolbarEnd(Gtk.Bin):
         builder.connect_signals(self)
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
+        # Needed to get button click with progressbar
         eventbox = Gtk.EventBox()
         eventbox.connect("button-release-event", self.__on_event_release_event)
         eventbox.show()
@@ -97,10 +98,12 @@ class ToolbarEnd(Gtk.Bin):
             Show download popover
             @param button as Gtk.Button
         """
+        if not button.get_active():
+            return
         self.__window.toolbar.title.hide_popover()
         popover = DownloadsPopover()
         popover.set_relative_to(button)
-        popover.connect("closed", self.__on_popover_closed)
+        popover.connect("closed", self.__on_popover_closed, button)
         self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
@@ -112,11 +115,13 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__window.container.current.webview.load_uri(El().start_page)
 
-    def _on_menu_button_clicked(self, button):
+    def _on_menu_button_toggled(self, button):
         """
             Show settings menu
-            @param button as Gtk.Button
+            @param button as Gtk.ToogleButton
         """
+        if not button.get_active():
+            return
         self.__window.toolbar.title.hide_popover()
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
@@ -150,7 +155,7 @@ class ToolbarEnd(Gtk.Bin):
         popover.add(exceptions)
         popover.child_set_property(exceptions, "submenu", "exceptions")
         popover.set_relative_to(button)
-        popover.connect("closed", self.__on_popover_closed)
+        popover.connect("closed", self.__on_popover_closed, button)
         self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
@@ -306,7 +311,8 @@ class ToolbarEnd(Gtk.Bin):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__download_button.clicked()
+        self.__download_button.set_active(True)
+        return True
 
     def __on_exceptions_active(self, action, param):
         """
@@ -374,9 +380,12 @@ class ToolbarEnd(Gtk.Bin):
             self.__timeout_id = None
             self.__download_button.get_style_context().add_class("selected")
 
-    def __on_popover_closed(self, popover):
+    def __on_popover_closed(self, popover, button):
         """
             Unlock focus
+            @param popover as Gtk.Popover
+            @param button as Gtk.Button
         """
-        self.__download_button.get_style_context().remove_class("selected")
+        button.get_style_context().remove_class("selected")
+        button.set_active(False)
         self.__window.toolbar.title.set_lock_focus(False)
