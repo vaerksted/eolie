@@ -341,7 +341,23 @@ class Application(Gtk.Application):
             else:
                 active_window.container.add_web_view(self.start_page, True,
                                                      private_browsing)
+        if self.debug:
+            active_window.container.current.webview.get_context().get_plugins(
+                                   None, self.__on_get_plugins, None)
         return 0
+
+    def __on_get_plugins(self, source, result, data):
+        """
+            Print plugins on command line
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param data as None
+        """
+        plugins = source.get_plugins_finish(result)
+        for plugin in plugins:
+            print(plugin.get_name(),
+                  plugin.get_description(),
+                  plugin.get_path())
 
     def __on_delete_event(self, window, event):
         """

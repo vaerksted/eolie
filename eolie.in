@@ -6,13 +6,14 @@ import os
 import locale
 import gettext
 
-if 'eolie_TRACE' in os.environ:
+if 'EOLIE_TRACE' in os.environ:
     from pycallgraph import PyCallGraph
     from pycallgraph.output import GraphvizOutput
 # Make sure we'll find the pygobject module, even in JHBuild
 sys.path.insert(1, '@pyexecdir@')
 # Make sure we'll find the eolie modules, even in JHBuild
 sys.path.insert(1, '@pythondir@')
+os.environ["MOZ_PLUGIN_PATH"]="/usr/lib/epiphany/plugins"
 
 from gi.repository import Gio
 
