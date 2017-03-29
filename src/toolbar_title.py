@@ -148,8 +148,6 @@ class ToolbarTitle(Gtk.Bin):
         from eolie.popover_javascript import JavaScriptPopover
         popover = JavaScriptPopover(dialog)
         popover.set_relative_to(self.__entry)
-        popover.set_pointing_to(self.__entry.get_icon_area(
-                                                Gtk.EntryIconPosition.PRIMARY))
         popover.connect("closed", self.__on_popover_closed)
         popover.show()
 
