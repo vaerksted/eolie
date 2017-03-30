@@ -16,7 +16,7 @@ import ctypes
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El, LOGINS, PASSWORDS
+from eolie.define import El, LOGINS
 from eolie.utils import get_ftp_cmd, debug
 
 
@@ -312,23 +312,20 @@ class WebView(WebKit2.WebView):
         """
             Read request for authentification
             @param request as WebKit2.FormSubmissionRequest
+            @return auth ok as bool, username as str, password as str
         """
-        auth = False
         username = ""
         password = ""
+        password_input_name = El().extensions.get_password_input_name(
+                                                                self.get_uri())
         fields = request.get_text_fields()
         if fields is None:
-            return (username, password, auth)
+            return (False, username, password)
         for k, v in fields.items():
             name = ctypes.string_at(k).decode("utf-8")
-            found = False
             if not password:
-                for search in PASSWORDS:
-                    if name.lower().find(search) != -1:
-                        password = ctypes.string_at(v).decode("utf-8")
-                        found = True
-                        break
-                if found:
+                if name == password_input_name:
+                    password = ctypes.string_at(v).decode("utf-8")
                     continue
             if not username:
                 for search in LOGINS:
@@ -337,9 +334,7 @@ class WebView(WebKit2.WebView):
                         break
             if username and password:
                 break
-        if username and password:
-            auth = True
-        return (auth, username, password)
+        return (username and password, username, password)
 
     def __set_smooth_scrolling(self, source):
         """

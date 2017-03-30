@@ -6,6 +6,7 @@ app_PYTHON = \
     container.py\
     database_adblock.py\
     database_bookmarks.py\
+    database_extensions.py\
     database_history.py\
     download_manager.py\
     define.py\

@@ -26,6 +26,7 @@ from eolie.art import Art
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
+from eolie.database_extensions import DatabaseExtensions
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
@@ -109,6 +110,7 @@ class Application(Gtk.Application):
         self.settings = Settings.new()
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
+        self.extensions = DatabaseExtensions()
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)

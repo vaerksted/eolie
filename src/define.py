@@ -36,4 +36,3 @@ class Type:
 
 
 LOGINS = ["login", "username", "user", "mail", "email"]
-PASSWORDS = ["password", "passwd", "pass"]

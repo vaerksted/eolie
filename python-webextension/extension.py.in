@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 
 from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
+from eolie.database_extensions import DatabaseExtensions
 from eolie.define import LOGINS
 
 secret = None
@@ -56,6 +57,7 @@ class Application(Gio.Application):
 app = Application.new()
 settings = Settings.new()
 adblock = DatabaseAdblock()
+extensions = DatabaseExtensions()
 
 Secret.Service.get(Secret.ServiceFlags.NONE, None, on_get_secret)
 
@@ -127,6 +129,7 @@ def on_document_loaded(webpage):
         Restore forms
         @param webpage as WebKit2WebExtension.WebPage
     """
+    uri = webpage.get_uri()
     inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
     i = 0
     username_input = None
@@ -139,6 +142,7 @@ def on_document_loaded(webpage):
         if password_input is None and\
                 inputs.item(i).get_input_type() == "password":
             password_input = inputs.item(i)
+            extensions.add_password(uri, name)
             i += 1
             continue
         if username_input is None:
@@ -150,7 +154,7 @@ def on_document_loaded(webpage):
 
     if username_input is None or password_input is None:
         return
-    parsed = urlparse(webpage.get_uri())
+    parsed = urlparse(uri)
     SecretSchema = {
         "type": Secret.SchemaAttributeType.STRING,
         "uri": Secret.SchemaAttributeType.STRING,
