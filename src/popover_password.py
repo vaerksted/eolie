@@ -110,6 +110,7 @@ class PasswordPopover(Gtk.Popover):
                 username = item.get_attributes()["login"]
                 password = secret.get().decode('utf-8')
                 if username == self.__username and self.__password == password:
+                    self.emit("closed")
                     return
                 else:
                     self.__label.set_text(_(
