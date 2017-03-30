@@ -41,10 +41,10 @@ $ make
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-# apt-get install autoconf libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev
+$ sudo apt-get install autoconf libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0
 $ ./autogen.sh
 $ make
-# make install
+$ sudo make install
 ```
 
 Instead of `make install` you might want to use `checkinstall`
