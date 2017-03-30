@@ -105,6 +105,9 @@ class SettingsDialog:
         enable_plugins.set_active(
                                 El().settings.get_value("enable-plugins"))
 
+        show_preview_check = builder.get_object("show_preview_check")
+        show_preview_check.set_active(
+                                El().settings.get_value("show-preview"))
         self.__fonts_grid = builder.get_object("fonts_grid")
         use_system_fonts = builder.get_object("system_fonts_check")
         use_system_fonts.set_active(
@@ -284,6 +287,16 @@ class SettingsDialog:
         value = GLib.Variant("i", button.get_value())
         El().settings.set_value("min-font-size", value)
         El().set_setting("minimum-font-size", button.get_value())
+
+    def _on_show_preview_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        El().settings.set_value("show-preview",
+                                GLib.Variant("b", button.get_active()))
+        for window in El().windows:
+            window.container.sidebar.update_preview_state()
 
     def _on_system_fonts_toggled(self, button):
         """

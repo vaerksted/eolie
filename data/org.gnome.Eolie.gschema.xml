@@ -66,6 +66,11 @@
             <summary>Enable developer tools</summary>
             <description></description>
         </key>
+	    <key type="b" name="show-preview">
+            <default>true</default>
+            <summary>Show page preview</summary>
+            <description></description>
+        </key>
 	    <key type="b" name="enable-plugins">
             <default>false</default>
             <summary>Enable plugins</summary>

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2
+from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2, Pango
 import cairo
 
 from eolie.define import El, ArtSize
@@ -40,6 +40,8 @@ class SidebarChild(Gtk.ListBoxRow):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SidebarChild.ui")
         builder.connect_signals(self)
+        self.__overlay = builder.get_object("overlay")
+        self.__grid = builder.get_object("grid")
         self.__title = builder.get_object("title")
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
@@ -75,12 +77,30 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         return self.__view
 
+    def set_preview_height(self, height):
+        """
+            Set child preview height
+            @param height as int
+        """
+        if height is None:
+            ctx = self.__title.get_pango_context()
+            layout = Pango.Layout.new(ctx)
+            height = int(layout.get_pixel_size()[1]) + 10
+            self.__grid.set_property("valign", Gtk.Align.CENTER)
+            self.__spinner.hide()
+        else:
+            self.__grid.set_property("valign", Gtk.Align.END)
+            self.__spinner.show()
+        self.__overlay.set_size_request(-1, height)
+
     def set_snapshot(self, save):
         """
             Set webpage preview
             @param save as bool
         """
-        if self.__view.webview.private:
+        if not El().settings.get_value("show-preview"):
+            pass
+        elif self.__view.webview.private:
             self.__image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
@@ -194,7 +214,9 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         uri = view.get_uri()
         # We are not filtered and not in private mode
-        if not self.__view.webview.private and self.get_allocated_width() != 1:
+        if not self.__view.webview.private and\
+                El().settings.get_value("show-preview") and\
+                self.get_allocated_width() != 1:
             preview = El().art.get_artwork(uri,
                                            "preview",
                                            view.get_scale_factor(),
@@ -429,6 +451,7 @@ class StackSidebar(Gtk.Grid):
             @param view as WebView
         """
         child = SidebarChild(view, self.__window)
+        self.__set_child_height(child)
         child.connect("moved", self.__on_moved)
         child.show()
         self.__listbox.add(child)
@@ -440,6 +463,13 @@ class StackSidebar(Gtk.Grid):
         for row in self.__listbox.get_children():
             row.clear_snapshot()
             row.set_snapshot(True)
+
+    def update_preview_state(self):
+        """
+            Update preview state
+        """
+        for row in self.__listbox.get_children():
+            self.__set_child_height(row)
 
     def update_visible_child(self):
         """
@@ -568,6 +598,18 @@ class StackSidebar(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __set_child_height(self, child):
+        """
+            Set child height
+            @param child as SidebarChild
+        """
+        if El().settings.get_value("show-preview"):
+            child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
+            child.set_snapshot(True)
+        else:
+            child.set_preview_height(None)
+            child.clear_snapshot()
+
     def __scroll_to_row(self, row):
         """
             Scroll to row
