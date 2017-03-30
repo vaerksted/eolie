@@ -152,6 +152,21 @@ class ToolbarTitle(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed)
         popover.show()
 
+    def show_input_warning(self, webview):
+        """
+            Show a message to user about password input field over http
+            @param webview as WebView
+        """
+        uri = webview.get_uri()
+        parsed = urlparse(uri)
+        name = El().extensions.get_password_input_name(uri)
+        if parsed.scheme == "http" and name is not None:
+            js = 'alert("%s");' % _(
+                    "Heads-up: this page is not secure.\\n"
+                    "If you type your password,\\n it will be "
+                    "visible to cybercriminals!")
+            webview.run_javascript(js, None, None)
+
     def hide_popover(self):
         """
             hide popover if needed
