@@ -77,7 +77,7 @@ class Row(Gtk.ListBoxRow):
             Cancel download
             @param button as Gtk.Button
         """
-        if self.__button_image.get_icon_name()[0] == "close-symbolic":
+        if self.__button_image.get_icon_name()[0] == "window-close-symbolic":
             self.__download.cancel()
         elif self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
             self.__download.get_web_view().download_uri(self.__uri)

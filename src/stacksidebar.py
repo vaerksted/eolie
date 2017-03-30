@@ -142,7 +142,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__image_close.set_from_icon_name("close-symbolic",
+        self.__image_close.set_from_icon_name("window-close-symbolic",
                                               Gtk.IconSize.DIALOG)
         self.__image_close.get_style_context().add_class("sidebar-close")
 
