@@ -146,6 +146,7 @@ class ToolbarTitle(Gtk.Bin):
             @param dialog as WebKit2.ScriptDialog
         """
         from eolie.popover_javascript import JavaScriptPopover
+        self.__lock_focus = True
         popover = JavaScriptPopover(dialog)
         popover.set_relative_to(self.__entry)
         popover.connect("closed", self.__on_popover_closed)
@@ -182,6 +183,7 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
         """
         from eolie.popover_password import PasswordPopover
+        self.__lock_focus = True
         popover = PasswordPopover(username, password, uri)
         popover.set_relative_to(self.__entry)
         popover.set_pointing_to(self.__entry.get_icon_area(
