@@ -402,4 +402,3 @@ class EditBookmarkWidget(Gtk.Bin):
         else:
             El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
         child.set_active(active)
-        self.__new_tag_entry.set_text(child.label)
