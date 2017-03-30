@@ -547,7 +547,7 @@ class WebView(WebKit2.WebView):
         network_available = Gio.NetworkMonitor.get_default(
                                                       ).get_network_available()
         # Ignore all others errors
-        if error.code not in [2, 4]:
+        if error.code not in [2, 4, 44]:
             return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
