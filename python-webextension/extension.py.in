@@ -24,9 +24,7 @@ from urllib.parse import urlparse
 
 from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
-from eolie.sqlcursor import SqlCursor
 from eolie.define import LOGINS
-from eolie.utils import strip_uri
 
 secret = None
 
@@ -53,6 +51,7 @@ class Application(Gio.Application):
         app.__class__ = Application
         app.cursors = {}
         return app
+
 
 app = Application.new()
 settings = Settings.new()
@@ -133,7 +132,7 @@ def on_document_loaded(webpage):
     username_input = None
     password_input = None
     while i < inputs.get_length():
-        name = inputs.item(i).get_attribute('name') 
+        name = inputs.item(i).get_attribute('name')
         if name is None:
             i += 1
             continue
@@ -169,6 +168,7 @@ def on_document_loaded(webpage):
                   username_input,
                   password_input)
 
+
 def on_page_created(extension, webpage):
     """
         Connect to send request
@@ -177,6 +177,7 @@ def on_page_created(extension, webpage):
     """
     webpage.connect("send-request", on_send_request)
     webpage.connect("document-loaded", on_document_loaded)
+
 
 def initialize(extension, arguments):
     """
