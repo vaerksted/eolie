@@ -299,26 +299,27 @@ class SidebarChild(Gtk.ListBoxRow):
                         current_uri != self.__start_uri:
                     El().art.save_artwork(self.__start_uri,
                                           surface, "preview")
-            # Manage start page cache
-            uris = [current_uri]
-            if self.__start_uri is not None and self.__start_uri not in uris:
-                uris.append(self.__start_uri)
-            surface = None
-            for uri in uris:
-                if El().art.exists(uri, "start"):
-                    continue
-                if surface is None:
-                    width = snapshot.get_width()
-                    factor = ArtSize.START_WIDTH / width
-                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                                 ArtSize.START_WIDTH,
-                                                 ArtSize.START_HEIGHT)
-                    context = cairo.Context(surface)
-                    context.scale(factor, factor)
-                    context.set_source_surface(snapshot, 0, 0)
-                    context.paint()
-                El().art.save_artwork(uri,
-                                      surface, "start")
+                # Manage start page cache
+                uris = [current_uri]
+                if self.__start_uri is not None and\
+                        self.__start_uri not in uris:
+                    uris.append(self.__start_uri)
+                surface = None
+                for uri in uris:
+                    if El().art.exists(uri, "start"):
+                        continue
+                    if surface is None:
+                        width = snapshot.get_width()
+                        factor = ArtSize.START_WIDTH / width
+                        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                     ArtSize.START_WIDTH,
+                                                     ArtSize.START_HEIGHT)
+                        context = cairo.Context(surface)
+                        context.scale(factor, factor)
+                        context.set_source_surface(snapshot, 0, 0)
+                        context.paint()
+                    El().art.save_artwork(uri,
+                                          surface, "start")
             del surface
             del snapshot
         except:
