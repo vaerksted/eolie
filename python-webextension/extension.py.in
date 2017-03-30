@@ -25,7 +25,7 @@ from urllib.parse import urlparse
 from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
 from eolie.sqlcursor import SqlCursor
-from eolie.define import LOGINS, PASSWORDS
+from eolie.define import LOGINS
 from eolie.utils import strip_uri
 
 secret = None
@@ -133,18 +133,13 @@ def on_document_loaded(webpage):
     username_input = None
     password_input = None
     while i < inputs.get_length():
-        name = inputs.item(i).get_attribute('name')
+        name = inputs.item(i).get_attribute('name') 
         if name is None:
             i += 1
             continue
-        found = False
-        if password_input is None:
-            for search in PASSWORDS:
-                if name.lower().find(search) != -1:
-                    password_input = inputs.item(i)
-                    found = True
-                    break
-        if found:
+        if password_input is None and\
+                inputs.item(i).get_input_type() == "password":
+            password_input = inputs.item(i)
             i += 1
             continue
         if username_input is None:
