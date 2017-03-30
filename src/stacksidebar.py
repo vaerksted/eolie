@@ -321,9 +321,8 @@ class SidebarChild(Gtk.ListBoxRow):
                                       surface, "start")
             del surface
             del snapshot
-        except Exception as e:
-            print("StackSidebar::__on_snapshot:", e)
-            return
+        except:
+            pass
         self.__start_uri = None
 
     def __on_notify_favicon(self, view, pointer):
