@@ -29,8 +29,11 @@ class FindWidget(Gtk.SearchBar):
         """
         Gtk.SearchBar.__init__(self)
         self.__action = None
+        self.__count = 0
+        self.__current = 0
         self.__find_controller = webview.get_find_controller()
-        grid = Gtk.Grid()
+        self.__find_controller.connect("counted-matches",
+                                       self.__on_counted_matches)
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.set_size_request(300, -1)
         self.__search_entry.connect("search-changed", self.__on_search_changed)
@@ -43,19 +46,35 @@ class FindWidget(Gtk.SearchBar):
         backward_button.set_tooltip_text(_("Search previous occurrence"))
         backward_button.connect("clicked",
                                 lambda x:
-                                self.__find_controller.search_previous())
+                                self.__on_shortcut_action(
+                                                  None,
+                                                  GLib.Variant("s", "prev")))
         backward_button.show()
         forward_button = Gtk.Button.new_from_icon_name("go-down-symbolic",
                                                        Gtk.IconSize.BUTTON)
         forward_button.set_tooltip_text(_("Search next occurrence"))
         forward_button.connect("clicked",
                                lambda x:
-                               self.__find_controller.search_next())
+                               self.__on_shortcut_action(
+                                                  None,
+                                                  GLib.Variant("s", "next")))
         forward_button.show()
-        grid.add(self.__search_entry)
-        grid.add(backward_button)
-        grid.add(forward_button)
-        grid.get_style_context().add_class('linked')
+
+        self.__label = Gtk.Label()
+        self.__label.set_property("halign", Gtk.Align.START)
+        self.__label.set_width_chars(len(_("100 of 100 matches")))
+        self.__label.show()
+
+        linked = Gtk.Grid()
+        linked.add(self.__search_entry)
+        linked.add(backward_button)
+        linked.add(forward_button)
+        linked.show()
+        linked.get_style_context().add_class('linked')
+        grid = Gtk.Grid()
+        grid.set_column_spacing(5)
+        grid.add(linked)
+        grid.add(self.__label)
         grid.show()
         self.connect_entry(self.__search_entry)
         self.set_show_close_button(True)
@@ -70,6 +89,15 @@ class FindWidget(Gtk.SearchBar):
 #######################
 # PRIVATE             #
 #######################
+    def __on_counted_matches(self, find_controller, count):
+        """
+            Update count label
+            @param find_controller as WebKit2.FindController
+            @param count as str
+        """
+        self.__count = count
+        self.__label.set_text("%s matches" % self.__count)
+
     def __on_key_press(self, widget, event):
         """
             If Esc, hide widget, why GTK doesn't do that?
@@ -82,6 +110,7 @@ class FindWidget(Gtk.SearchBar):
             self.set_search_mode(False)
         elif event.keyval == Gdk.KEY_Return:
             self.__find_controller.search_next()
+            self.__current += 1
 
     def __on_map(self, entry):
         """
@@ -105,20 +134,39 @@ class FindWidget(Gtk.SearchBar):
     def __on_shortcut_action(self, action, param):
         """
             Global shortcuts handler
-            @param action as Gio.SimpleAction
+            @param action as Gio.SimpleAction/None
             @param param as GLib.Variant
         """
         string = param.get_string()
         if string == "next":
+            self.__current += 1
+            if self.__current > self.__count:
+                self.__current = 1
             self.__find_controller.search_next()
         elif string == "prev":
+            self.__current -= 1
+            if self.__current < 1:
+                self.__current = self.__count
             self.__find_controller.search_previous()
+        self.__label.set_text("%s of %s matches" % (self.__current,
+                                                    self.__count))
 
     def __on_search_changed(self, entry):
         """
             Update highlight
             @param entry as Gtk.Entry
         """
-        self.__find_controller.search(entry.get_text(),
-                                      WebKit2.FindOptions.CASE_INSENSITIVE,
-                                      100)
+        text = entry.get_text()
+        self.__label.set_text("")
+        if len(text) < 2:
+            return
+        self.__current = 0
+        # FIXME Can't understand what is max count :/
+        self.__find_controller.count_matches(
+                                text,
+                                WebKit2.FindOptions.CASE_INSENSITIVE,
+                                100)
+        self.__find_controller.search(
+                                text,
+                                WebKit2.FindOptions.CASE_INSENSITIVE,
+                                100)
