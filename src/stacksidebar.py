@@ -46,7 +46,8 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
         self.__image_close.set_from_icon_name("applications-internet",
-                                              Gtk.IconSize.MENU)
+                                              Gtk.IconSize.INVALID)
+        self.__image_close.set_property("pixel-size", ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
         self.__title.set_label("Empty page")
         self.add(builder.get_object("widget"))
@@ -143,7 +144,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param event as Gdk.Event
         """
         self.__image_close.set_from_icon_name("window-close-symbolic",
-                                              Gtk.IconSize.MENU)
+                                              Gtk.IconSize.INVALID)
         self.__image_close.get_style_context().add_class("sidebar-close")
 
     def _on_leave_notify(self, eventbox, event):
@@ -174,10 +175,10 @@ class SidebarChild(Gtk.ListBoxRow):
         if favicon_uri is None:
             if uri == "populars://":
                 self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                      Gtk.IconSize.MENU)
+                                                      Gtk.IconSize.INVALID)
             else:
                 self.__image_close.set_from_icon_name("applications-internet",
-                                                      Gtk.IconSize.MENU)
+                                                      Gtk.IconSize.INVALID)
         else:
             favicon_db.get_favicon(favicon_uri, None,
                                    self.__set_favicon_result)
