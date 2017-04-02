@@ -50,9 +50,6 @@
               <object class="GtkEventBox" id="button">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">fill</property>
-                <property name="valign">center</property>
-                <property name="vexpand">True</property>
                 <signal name="button-press-event" handler="_on_close_button_press" swapped="no"/>
                 <child>
                   <object class="GtkImage" id="image_close">
@@ -60,7 +57,6 @@
                     <property name="height_request">22</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="pixel_size">12</property>
                   </object>
                 </child>
               </object>

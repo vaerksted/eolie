@@ -143,7 +143,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param event as Gdk.Event
         """
         self.__image_close.set_from_icon_name("window-close-symbolic",
-                                              Gtk.IconSize.DIALOG)
+                                              Gtk.IconSize.MENU)
         self.__image_close.get_style_context().add_class("sidebar-close")
 
     def _on_leave_notify(self, eventbox, event):
