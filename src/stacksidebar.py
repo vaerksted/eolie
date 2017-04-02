@@ -664,6 +664,8 @@ class StackSidebar(Gtk.Grid):
         """
         view_index = self.__get_index(view)
         row = self.__listbox.get_row_at_index(view_index)
+        if row is None:
+            return
         self.__listbox.remove(row)
         child_index = self.__get_index(str(child.view))
         if not up:
