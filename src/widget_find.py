@@ -28,6 +28,7 @@ class FindWidget(Gtk.SearchBar):
             @param webview as WebKit2.WebView
         """
         Gtk.SearchBar.__init__(self)
+        self.__webview = webview
         self.__action = None
         self.__count = 0
         self.__current = 0
@@ -123,6 +124,7 @@ class FindWidget(Gtk.SearchBar):
         El().add_action(self.__action)
         El().set_accels_for_action("app.find_shortcut::next", ["F3"])
         El().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
+        self.__search_entry.set_text(self.__webview.selection)
 
     def __on_unmap(self, entry):
         """
@@ -130,6 +132,7 @@ class FindWidget(Gtk.SearchBar):
             @param entry as Gtk.Entry
         """
         El().remove_action("find_shortcut")
+        self.__find_controller.search_finish()
 
     def __on_shortcut_action(self, action, param):
         """

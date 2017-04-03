@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, GObject, Gio, GLib, Gdk
+from gi.repository import WebKit2, Gtk, GObject, Gio, GLib, Gdk
 
 import ctypes
 from gettext import gettext as _
@@ -187,6 +187,14 @@ class WebView(WebKit2.WebView):
         """
         return self.__loaded_uri
 
+    @property
+    def selection(self):
+        """
+            Get current selection
+            @return str
+        """
+        return self.__selection
+
 #######################
 # PRIVATE             #
 #######################
@@ -196,6 +204,10 @@ class WebView(WebKit2.WebView):
             @param private as bool
         """
         self.__private = private
+        # WebKitGTK doesn't provide an API to get selection, so try to guess
+        # it from clipboard
+        self.__selection = ""
+        self.__initial_selection = ""
         self.__in_read_mode = False
         self.__readable_content = ""
         self.__js_timeout = None
@@ -208,6 +220,8 @@ class WebView(WebKit2.WebView):
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.connect("scroll-event", self.__on_scroll_event)
+        self.connect("button-press-event", self.__on_button_press_event)
+        self.connect("button-release-event", self.__on_button_release_event)
         settings = self.get_settings()
         settings.set_property('enable-java',
                               El().settings.get_value('enable-plugins'))
@@ -465,6 +479,28 @@ class WebView(WebKit2.WebView):
         """
         """
         print("WebView::__on_run_as_modal(): TODO")
+
+    def __on_button_press_event(self, widget, event):
+        """
+            Store initial selection
+            @param widget as WebKit2.WebView
+            @param event as Gdk.EventScroll
+        """
+        self.__selection = ""
+        c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
+        self.__initial_selection = c.wait_for_text()
+
+    def __on_button_release_event(self, widget, event):
+        """
+            Set current selection
+            @param widget as WebKit2.WebView
+            @param event as Gdk.EventScroll
+        """
+        c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
+        selection = c.wait_for_text()
+        if selection != self.__initial_selection:
+            self.__selection = selection if selection is not None else ""
+        self.__initial_selection = ""
 
     def __on_scroll_event(self, widget, event):
         """

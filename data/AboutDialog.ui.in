@@ -61,7 +61,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
-                <property name="uri">https://flattr.com/profile/eolie</property>
+                <property name="uri">https://flattr.com/profile/lollypop</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -75,7 +75,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="relief">none</property>
-                <property name="uri">https://www.paypal.me/eolie</property>
+                <property name="uri">https://www.paypal.me/lollypopgnome</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
