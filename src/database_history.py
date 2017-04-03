@@ -68,7 +68,7 @@ class DatabaseHistory:
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
 
-    def add(self, title, uri, guid, atimes=[], mtime=None, commit=True):
+    def add(self, title, uri, guid=None, atimes=[], mtime=None, commit=True):
         """
             Add a new entry to history, if exists, update it
             @param title as str
