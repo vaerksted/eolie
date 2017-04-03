@@ -197,8 +197,13 @@ class SyncWorker:
             self.__stop = True
             return
         try:
-            debug("deleting %s" % guid)
-            self.__client.client.delete_record("history", guid)
+            bulk_keys = self.__get_session_bulk_keys()
+            record = {}
+            record["id"] = guid
+            record["type"] = "item"
+            record["deleted"] = True
+            debug("deleting %s" % record)
+            self.__client.add_history(record, bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
         self.__stop = True
@@ -273,7 +278,7 @@ class SyncWorker:
             record["id"] = El().bookmarks.get_guid(bookmark_id)
             record["title"] = El().bookmarks.get_title(bookmark_id)
             record["tags"] = El().bookmarks.get_tags(bookmark_id)
-            record["parentid"] = El().bookmarks.get_parent_guid(bookmark_id)
+            record["parentid"] = parent_guid
             record["type"] = "bookmark"
             debug("pushing %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
@@ -283,10 +288,12 @@ class SyncWorker:
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
-            guid = El().bookmarks.get_guid(bookmark_id)
-            debug("deleting %s" % guid)
-            self.__client.client.delete_record("bookmarks", guid)
-            El().bookmarks.remove(bookmark_id)
+            record = {}
+            record["id"] = El().bookmarks.get_guid(bookmark_id)
+            record["type"] = "item"
+            record["deleted"] = True
+            debug("deleting %s" % record)
+            self.__client.add_bookmark(record, bulk_keys)
         # Push parents in this order, parents near root are handle later
         # Otherwise, order will be broken by new children updates
         while parents:
