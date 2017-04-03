@@ -7,5 +7,10 @@ Exec=eolie %U
 Terminal=false
 Type=Application
 Categories=Network;GNOME;GTK;WebBrowser;
-MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;multipart/related;application/x-mimearchive;message/rfc822;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;multipart/related;application/x-mimearchive
 StartupNotify=true
+Actions=Private
+
+[Desktop Action Private]
+_Name=New private page
+Exec=eolie -p
