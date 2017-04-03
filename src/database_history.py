@@ -68,7 +68,7 @@ class DatabaseHistory:
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
 
-    def add(self, title, uri, guid=None, atimes=[], mtime=None, commit=True):
+    def add(self, title, uri, guid, atimes=[], mtime=None, commit=True):
         """
             Add a new entry to history, if exists, update it
             @param title as str
@@ -76,6 +76,7 @@ class DatabaseHistory:
             @param atime as [int]
             @param mtime as int
             @param commit as bool
+            @return history id as int
         """
         if not uri:
             return
@@ -84,25 +85,31 @@ class DatabaseHistory:
             title = ""
         if mtime is None:
             mtime = round(time(), 2)
-        # Search if history item exists in bookmarks
-        bookmark_id = El().bookmarks.get_id(uri)
-        if bookmark_id is not None:
-            guid = El().bookmarks.get_guid(bookmark_id)
-        # Find an uniq guid
+        # No guid provided, first search in bookmarks
+        # Then in history. Db may be broken and contains multiple guid
+        # for same uri
+        if guid is None:
+            bookmark_id = El().bookmarks.get_id(uri)
+            if bookmark_id is not None:
+                guid = El().bookmarks.get_guid(bookmark_id)
+            else:
+                history_id = El().history.get_id(uri)
+                guid = El().history.get_guid(history_id)
+        # Find an uniq guid if none exists in db
         while guid is None:
             guid = get_random_string(12)
             if self.exists_guid(guid):
                 guid = None
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid, popularity FROM history\
-                                  WHERE uri=?", (uri,))
+                                  WHERE guid=?", (guid,))
             v = result.fetchone()
             if v is not None:
                 history_id = v[0]
-                sql.execute("UPDATE history set mtime=?, title=?,\
-                                 popularity=?, guid=?\
-                             WHERE uri=?", (mtime, title,
-                                            v[1]+1, guid, uri))
+                sql.execute("UPDATE history\
+                             SET uri=?, mtime=?, title=?, popularity=?\
+                             WHERE rowid=?", (uri, mtime, title,
+                                              v[1]+1, history_id))
             else:
                 result = sql.execute("INSERT INTO history\
                                       (title, uri, mtime, popularity, guid)\
@@ -120,6 +127,7 @@ class DatabaseHistory:
                                  VALUES (?, ?)", (history_id, atime))
             if commit:
                 sql.commit()
+            return history_id
 
     def remove(self, history_id):
         """
@@ -216,7 +224,7 @@ class DatabaseHistory:
             v = result.fetchone()
             if v is not None:
                 return v[0]
-            return ""
+            return None
 
     def get_mtime(self, history_id):
         """

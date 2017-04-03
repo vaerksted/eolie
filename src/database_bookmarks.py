@@ -357,7 +357,7 @@ class DatabaseBookmarks:
             v = result.fetchone()
             if v is not None:
                 return v[0]
-            return ""
+            return None
 
     def get_guids(self):
         """

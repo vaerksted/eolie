@@ -444,7 +444,12 @@ class SyncWorker:
         records = self.__client.get_history(bulk_keys)
         for record in records:
             history = record["payload"]
-            if "histUri" not in history.keys():
+            keys = history.keys()
+            # Ignore pages without a title
+            if "title" not in keys or not history["title"]:
+                continue
+            # Ignore pages without an uri (deleted)
+            if "histUri" not in keys:
                 continue
             history_id = El().history.get_id_by_guid(history["id"])
             # Nothing to apply, continue
@@ -457,28 +462,14 @@ class SyncWorker:
                     atimes.append(round(int(visit["date"]) / 1000000, 2))
             except:
                 continue
-            # Ignore page with no title
-            if not history["title"]:
-                continue
             debug("pulling %s" % record)
             title = history["title"].rstrip().lstrip()
-            if history_id is None:
-                history_id = El().history.add(title,
-                                              history["histUri"],
-                                              history["id"],
-                                              atimes,
-                                              record["modified"],
-                                              False)
-            else:
-                El().history.set_title(history_id,
-                                       title,
-                                       False)
-                El().history.set_atimes(history_id,
-                                        atimes,
-                                        False)
-                El().history.set_mtime(history_id,
-                                       record["modified"],
-                                       False)
+            history_id = El().history.add(title,
+                                          history["histUri"],
+                                          history["id"],
+                                          atimes,
+                                          record["modified"],
+                                          False)
         with SqlCursor(El().history) as sql:
             sql.commit()
         SqlCursor.remove(El().history)
