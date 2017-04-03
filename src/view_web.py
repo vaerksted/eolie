@@ -378,6 +378,9 @@ class WebView(WebKit2.WebView):
                 request.deny()
             else:
                 request.allow()
+        elif isinstance(request, WebKit2.NotificationPermissionRequest):
+            # Use can use Gnome Shell notification policy
+            request.allow()
 
     def __on_populars_scheme(self, request):
         """
