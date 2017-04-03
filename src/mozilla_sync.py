@@ -294,6 +294,7 @@ class SyncWorker:
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
+            El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handle later
         # Otherwise, order will be broken by new children updates
         while parents:
