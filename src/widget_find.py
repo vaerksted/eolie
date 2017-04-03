@@ -81,6 +81,21 @@ class FindWidget(Gtk.SearchBar):
         self.set_show_close_button(True)
         self.add(grid)
 
+    def search(self):
+        """
+            Search for current clipboard
+        """
+        self.__search_entry.set_text(self.__webview.selection)
+
+    def get_search_mode(self):
+        """
+            Whether search mode is toggled on
+            @return bool
+        """
+        new_search_needed = self.__webview.selection !=\
+            self.__search_entry.get_text()
+        return Gtk.SearchBar.get_search_mode(self) and not new_search_needed
+
     def grab_focus(self):
         """
             Forward to entry
@@ -124,7 +139,6 @@ class FindWidget(Gtk.SearchBar):
         El().add_action(self.__action)
         El().set_accels_for_action("app.find_shortcut::next", ["F3"])
         El().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
-        self.__search_entry.set_text(self.__webview.selection)
 
     def __on_unmap(self, entry):
         """
