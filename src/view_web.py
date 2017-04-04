@@ -222,25 +222,27 @@ class WebView(WebKit2.WebView):
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("button-release-event", self.__on_button_release_event)
         settings = self.get_settings()
-        settings.set_property('enable-java',
+        settings.set_property("hardware-acceleration-policy",
+                              WebKit2.HardwareAccelerationPolicy.NEVER)
+        settings.set_property("enable-java",
                               El().settings.get_value('enable-plugins'))
-        settings.set_property('enable-plugins',
+        settings.set_property("enable-plugins",
                               El().settings.get_value('enable-plugins'))
-        settings.set_property('minimum-font-size',
+        settings.set_property("minimum-font-size",
                               El().settings.get_value(
-                                'min-font-size').get_int32())
-        if El().settings.get_value('use-system-fonts'):
+                                "min-font-size").get_int32())
+        if El().settings.get_value("use-system-fonts"):
             self.__set_system_fonts(settings)
         else:
-            settings.set_property('monospace-font-family',
+            settings.set_property("monospace-font-family",
                                   El().settings.get_value(
-                                    'font-monospace').get_string())
-            settings.set_property('sans-serif-font-family',
+                                    "font-monospace").get_string())
+            settings.set_property("sans-serif-font-family",
                                   El().settings.get_value(
-                                    'font-sans-serif').get_string())
-            settings.set_property('serif-font-family',
+                                    "font-sans-serif").get_string())
+            settings.set_property("serif-font-family",
                                   El().settings.get_value(
-                                    'font-serif').get_string())
+                                    "font-serif").get_string())
         settings.set_property("auto-load-images", True)
         settings.set_property("allow-universal-access-from-file-urls", False)
         settings.set_property("allow-file-access-from-file-urls", False)
