@@ -77,9 +77,10 @@ class View(Gtk.Overlay):
         A webview with a find widget
     """
 
-    def __init__(self, private=False, parent=None, webview=None):
+    def __init__(self, ephemeral=False, parent=None, webview=None):
         """
             Init view
+            @param ephemeral as bool
             @param as parent as View
             @param webview as WebView
         """
@@ -88,7 +89,10 @@ class View(Gtk.Overlay):
         if parent is not None:
             parent.connect("destroy", self.__on_parent_destroy)
         if webview is None:
-            self.__webview = WebView(private)
+            if ephemeral:
+                self.__webview = WebView.new_ephemeral()
+            else:
+                self.__webview = WebView.new()
         else:
             self.__webview = webview
         self.__webview.show()

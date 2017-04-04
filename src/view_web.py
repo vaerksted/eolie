@@ -28,8 +28,7 @@ class WebView(WebKit2.WebView):
         self as first argument
     """
 
-    # If you add a signal here, you need to update new_with_related_view()
-    __gsignals__ = {
+    gsignals = {
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
@@ -38,13 +37,29 @@ class WebView(WebKit2.WebView):
                                                                 str)),
     }
 
-    def __init__(self, private):
+    for signal in gsignals:
+        args = gsignals[signal]
+        GObject.signal_new(signal, WebKit2.WebView,
+                           args[0], args[1], args[2])
+
+    def new():
         """
-            Init view
-            @param private as bool
+            New webview
         """
-        WebKit2.WebView.__init__(self)
-        self.__init(private)
+        view = WebKit2.WebView.new()
+        view.__class__ = WebView
+        view.__init()
+        return view
+
+    def new_ephemeral():
+        """
+            New ephemeral webview
+        """
+        context = WebKit2.WebContext.new_ephemeral()
+        view = WebKit2.WebView.new_with_context(context)
+        view.__class__ = WebView
+        view.__init()
+        return view
 
     def new_with_related_view(related):
         """
@@ -53,22 +68,8 @@ class WebView(WebKit2.WebView):
             @return WebView
         """
         view = WebKit2.WebView.new_with_related_view(related)
-        # Manually install signals
-        gsignals = {
-            "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
-            "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
-            "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-            "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
-                                                                    str,
-                                                                    str))
-        }
-        if "readable" not in GObject.signal_list_names(WebKit2.WebView):
-            for signal in gsignals:
-                args = gsignals[signal]
-                GObject.signal_new(signal, WebKit2.WebView,
-                                   args[0], args[1], args[2])
         view.__class__ = WebView
-        view.__init(related.private)
+        view.__init()
         return view
 
     def load_uri(self, uri):
@@ -174,10 +175,10 @@ class WebView(WebKit2.WebView):
     @property
     def private(self):
         """
-            True if view is private
+            True if view is private/ephemeral
             @return bool
         """
-        return self.__private
+        return self.get_property("is-ephemeral")
 
     @property
     def loaded_uri(self):
@@ -198,12 +199,10 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, private):
+    def __init(self):
         """
             Init WebView
-            @param private as bool
         """
-        self.__private = private
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
@@ -256,7 +255,6 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling", False)
         settings.set_property("enable-webaudio", True)
         settings.set_property("enable-webgl", True)
-        settings.set_property("enable-private-browsing", private)
         settings.set_property("javascript-can-access-clipboard", True)
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
@@ -279,14 +277,6 @@ class WebView(WebKit2.WebView):
         self.connect("notify::uri", self.__on_uri_changed)
 
         context = self.get_context()
-        if private:
-            context.set_cache_model(WebKit2.CacheModel.DOCUMENT_VIEWER)
-            cookie_manager = context.get_cookie_manager()
-            cookie_manager.set_accept_policy(
-                                     El().settings.get_enum("cookie-storage"))
-            cookie_manager.set_persistent_storage(
-                                        "",
-                                        WebKit2.CookiePersistentStorage.SQLITE)
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)
@@ -374,7 +364,7 @@ class WebView(WebKit2.WebView):
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected or self.__private:
+            if self.__insecure_content_detected or self.private:
                 request.deny()
             else:
                 request.allow()
@@ -525,7 +515,7 @@ class WebView(WebKit2.WebView):
             @param view as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if self.__private:
+        if self.private:
             return
         (auth, username, password) = self.__read_auth_request(request)
         if not auth:
