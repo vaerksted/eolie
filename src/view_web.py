@@ -178,7 +178,7 @@ class WebView(WebKit2.WebView):
             True if view is private/ephemeral
             @return bool
         """
-        return self.get_property("is-ephemeral")
+        return False  # self.get_property("is-ephemeral")
 
     @property
     def loaded_uri(self):
@@ -222,8 +222,6 @@ class WebView(WebKit2.WebView):
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("button-release-event", self.__on_button_release_event)
         settings = self.get_settings()
-        settings.set_property("hardware-acceleration-policy",
-                              WebKit2.HardwareAccelerationPolicy.NEVER)
         settings.set_property("enable-java",
                               El().settings.get_value('enable-plugins'))
         settings.set_property("enable-plugins",
