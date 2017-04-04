@@ -79,11 +79,12 @@
 }
 
 .download-popover {
-    border: 1px solid @theme_fg_color;
-    border-radius: 2px;
+    border: 1px solid black;
+    border-radius: 4px;
     padding: 5px;
-    color: @theme_selected_fg_color;
-    background-color: @theme_selected_bg_color;
+    color: white;
+    background-color: black;
+    opacity: 0.7;
 }
 
 .tag {
