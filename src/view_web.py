@@ -541,6 +541,9 @@ class WebView(WebKit2.WebView):
             @param download as WebKit2.Download
         """
         El().download_manager.add(download)
+        # Notify user about download
+        view = self.get_ancestor(Gtk.Overlay)
+        view.show_download(download)
 
     def __on_load_changed(self, view, event):
         """

@@ -78,6 +78,14 @@
     border-radius: 16px;
 }
 
+.download-popover {
+    border: 1px solid @theme_fg_color;
+    border-radius: 2px;
+    padding: 5px;
+    color: @theme_selected_fg_color;
+    background-color: @theme_selected_bg_color;
+}
+
 .tag {
     border: 1px solid shade(@theme_bg_color, 0.7);
     border-radius: 5px;

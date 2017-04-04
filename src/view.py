@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib, Pango
 
+from gettext import gettext as _
+
 from eolie.widget_find import FindWidget
 from eolie.view_web import WebView
 
@@ -102,6 +104,24 @@ class View(Gtk.Overlay):
         self.add_overlay(self.__uri_label)
         self.__webview.connect("mouse-target-changed",
                                self.__on_mouse_target_changed)
+
+    def show_download(self, download):
+        """
+            Notify user about download
+            @param download as WebKit2.Download
+        """
+        msg = _("Downloading from:\n%s" % download.get_request().get_uri())
+        label = Gtk.Label.new(msg)
+        label.set_markup('<span size="large"><b>%s</b></span>' %
+                         GLib.markup_escape_text(msg))
+        label.set_max_width_chars(60)
+        label.get_style_context().add_class("download-popover")
+        label.set_property("halign", Gtk.Align.CENTER)
+        label.set_property("valign", Gtk.Align.CENTER)
+        label.set_ellipsize(Pango.EllipsizeMode.END)
+        label.show()
+        self.add_overlay(label)
+        GLib.timeout_add(2000, label.destroy)
 
     @property
     def parent(self):
