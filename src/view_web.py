@@ -392,7 +392,7 @@ class WebView(WebKit2.WebView):
         for (bookmark_id, title, uri) in El().bookmarks.get_populars(20):
             items.append((title, uri))
         # Then from history
-        more = 20 - len(items)
+        more = 30 - len(items)
         if more > 0:
             uris = [item[1] for item in items]
             for (title, uri) in El().history.search("", more):
