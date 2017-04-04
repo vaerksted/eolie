@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, Secret
+from gi.repository import Gio, Secret, GObject, GLib
 
 from pickle import dump, load
 from hashlib import sha256
@@ -39,15 +39,19 @@ TOKENSERVER_URL = "https://token.services.mozilla.com/"
 FXA_SERVER_URL = "https://api.accounts.firefox.com"
 
 
-class SyncWorker:
+class SyncWorker(GObject.GObject):
     """
        Manage sync with mozilla server, will start syncing on init
     """
+    __gsignals__ = {
+        'sync-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
+    }
 
     def __init__(self):
         """
             Init worker
         """
+        GObject.GObject.__init__(self)
         self.__stop = True
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
@@ -171,7 +175,6 @@ class SyncWorker:
             @param history_id as int
         """
         if not self.__username or not self.__password:
-            self.__stop = True
             return
         try:
             bulk_keys = self.__get_session_bulk_keys()
@@ -186,7 +189,6 @@ class SyncWorker:
             self.__client.add_history(record, bulk_keys)
         except Exception as e:
             print("SyncWorker::__push_history():", e)
-        self.__stop = True
 
     def __remove_from_history(self, guid):
         """
@@ -194,7 +196,6 @@ class SyncWorker:
             @param guid as str
         """
         if not self.__username or not self.__password:
-            self.__stop = True
             return
         try:
             bulk_keys = self.__get_session_bulk_keys()
@@ -206,7 +207,6 @@ class SyncWorker:
             self.__client.add_history(record, bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
-        self.__stop = True
 
     def __sync(self, first_sync):
         """
@@ -226,6 +226,9 @@ class SyncWorker:
             bulk_keys = self.__get_session_bulk_keys()
             new_mtimes = self.__client.client.info_collections()
 
+            if self.__stop:
+                return
+
             ######################
             # History Management #
             ######################
@@ -235,6 +238,9 @@ class SyncWorker:
             # Only pull if something new available
             if self.__mtimes["history"] != new_mtimes["history"]:
                 self.__pull_history(bulk_keys)
+
+            if self.__stop:
+                return
             ########################
             # Bookmarks Management #
             ########################
@@ -243,6 +249,10 @@ class SyncWorker:
                                                  new_mtimes["bookmarks"]))
             # Push new bookmarks
             self.__push_bookmarks(bulk_keys)
+
+            if self.__stop:
+                return
+
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
@@ -254,6 +264,7 @@ class SyncWorker:
         except Exception as e:
             print("SyncWorker::__sync():", e)
         self.__stop = True
+        GLib.idle_add(self.emit, "sync-finish")
 
     def __push_bookmarks(self, bulk_keys):
         """
@@ -466,9 +477,9 @@ class SyncWorker:
             title = history["title"].rstrip().lstrip()
             history_id = El().history.add(title,
                                           history["histUri"],
+                                          record["modified"],
                                           history["id"],
                                           atimes,
-                                          record["modified"],
                                           False)
         with SqlCursor(El().history) as sql:
             sql.commit()

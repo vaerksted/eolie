@@ -13,6 +13,7 @@
 from gi.repository import Gtk, WebKit2, GLib
 
 from urllib.parse import urlparse
+from time import time
 
 from eolie.stacksidebar import StackSidebar
 from eolie.view import View
@@ -31,9 +32,12 @@ class Container(Gtk.Paned):
         """
         Gtk.Paned.__init__(self)
         self.__window = window
+        self.__history_queue = []
         self.set_position(
             El().settings.get_value("paned-width").get_int32())
         self.connect("notify::position", self.__on_notify_position)
+        if El().sync_worker is not None:
+            El().sync_worker.connect("sync-finish", self.__on_sync_finish)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -312,9 +316,16 @@ class Container(Gtk.Paned):
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https"] and\
                 not webview.private:
-            El().history.add(title, uri)
-            history_id = El().history.get_id(uri)
-            if El().sync_worker is not None:
+            mtime = round(time(), 2)
+            # Do not try to add to db if worker is syncing
+            # We may lock sqlite and current webview otherwise
+            # We use a queue and will commit items when sync is finished
+            if El().sync_worker is None:
+                El().history.add(title, uri, mtime)
+            elif El().sync_worker.syncing:
+                self.__history_queue.append((title, uri, mtime))
+            else:
+                history_id = El().history.add(title, uri, mtime)
                 El().sync_worker.push_history(history_id)
 
     def __on_enter_fullscreen(self, webview):
@@ -363,3 +374,13 @@ class Container(Gtk.Paned):
                 # Hide progress
                 GLib.timeout_add(500,
                                  self.__window.toolbar.title.progress.hide)
+
+    def __on_sync_finish(self, worker):
+        """
+            Commit queue
+            @param worker as SyncWorker
+        """
+        if self.__history_queue:
+            (title, uri, mtime) = self.__history_queue.pop(0)
+            El().history.add(title, uri, mtime)
+            GLib.idle_add(self.__on_sync_finish, worker)

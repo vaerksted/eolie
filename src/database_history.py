@@ -14,7 +14,6 @@ from gi.repository import GLib, Gio
 
 import sqlite3
 import itertools
-from time import time
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import El
@@ -68,13 +67,14 @@ class DatabaseHistory:
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
 
-    def add(self, title, uri, guid=None, atimes=[], mtime=None, commit=True):
+    def add(self, title, uri, mtime, guid=None, atimes=[], commit=True):
         """
             Add a new entry to history, if exists, update it
             @param title as str
             @param uri as str
-            @param atime as [int]
             @param mtime as int
+            @parma guid as str
+            @param atime as [int]
             @param commit as bool
             @return history id as int
         """
@@ -83,8 +83,6 @@ class DatabaseHistory:
         uri = uri.rstrip('/')
         if title is None:
             title = ""
-        if mtime is None:
-            mtime = round(time(), 2)
         # No guid provided, first search in bookmarks
         # Then in history. Db may be broken and contains multiple guid
         # for same uri
@@ -118,7 +116,7 @@ class DatabaseHistory:
                 history_id = result.lastrowid
             # Only add new atimes to db
             if not atimes:
-                atimes = [round(time(), 2)]
+                atimes = [mtime]
             current_atimes = self.get_atimes(history_id)
             for atime in atimes:
                 if atime not in current_atimes:
