@@ -20,6 +20,7 @@ from threading import Thread
 import sqlite3
 
 from eolie.define import El
+from eolie.dialog_clear_data import ClearDataDialog
 from eolie.utils import get_current_monitor_model
 
 
@@ -199,6 +200,9 @@ class SettingsDialog:
             Show clear personnal data dialog
             @param button as Gtk.button
         """
+        dialog = ClearDataDialog(self.__settings_dialog)
+        dialog.run()
+        return
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ClearData.ui")
         builder.connect_signals(self)
@@ -214,7 +218,7 @@ class SettingsDialog:
                         builder.get_object("history_button"),
                         builder.get_object("passwords_button"))
         dialog.set_titlebar(headerbar)
-        dialog.show()
+        dialog.run()
 
     def _on_manage_cookies_clicked(self, button):
         """

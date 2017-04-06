@@ -8,6 +8,7 @@ app_PYTHON = \
     database_bookmarks.py\
     database_extensions.py\
     database_history.py\
+    dialog_clear_data.py\
     download_manager.py\
     define.py\
     localized.py\
