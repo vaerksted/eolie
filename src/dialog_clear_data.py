@@ -18,6 +18,7 @@ from gettext import gettext as _
 class ClearDataDialog:
     """
         A clear data dialog
+        THANKS TO EPIPHANY DEVS FOR UI FILE!
     """
 
     class TimeSpan:
