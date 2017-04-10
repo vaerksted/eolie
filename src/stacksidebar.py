@@ -45,8 +45,12 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__title = builder.get_object("title")
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
-        self.__image_close.set_from_icon_name("applications-internet",
-                                              Gtk.IconSize.INVALID)
+        if view.webview.private:
+            self.__image_close.set_from_icon_name("window-close-symbolic",
+                                                  Gtk.IconSize.INVALID)
+        else:
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
         self.__image_close.set_property("pixel-size", ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
         self.__title.set_label("Empty page")
@@ -169,6 +173,8 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
+        if self.__view.webview.private:
+            return
         uri = self.__view.webview.get_uri()
         favicon_db = self.__view.webview.get_context().get_favicon_database()
         favicon_uri = get_favicon_best_uri(uri)
