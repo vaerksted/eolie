@@ -51,8 +51,8 @@ class Application(Gtk.Application):
             @param extension_dir as str
         """
         # First check WebKit2 version
-        # if WebKit2.MINOR_VERSION < 16:
-        #    exit("You need WebKit2GTK >= 2.16")
+        if WebKit2.MINOR_VERSION < 16:
+            exit("You need WebKit2GTK >= 2.16")
         Gtk.Application.__init__(
                             self,
                             application_id='org.gnome.Eolie',

@@ -29,7 +29,7 @@ class PagesMenu(Gio.Menu):
         Gio.Menu.__init__(self)
         self.__app = app
         action = Gio.SimpleAction(name="new-private")
-        # app.add_action(action)
+        app.add_action(action)
         action.connect('activate',
                        self.__on_private_clicked)
         item = Gio.MenuItem.new(_("New private page"), "app.new-private")
