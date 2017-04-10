@@ -676,16 +676,14 @@ class UriPopover(Gtk.Popover):
         """
         self.__infobar_confirm.set_label(button.get_label())
         self.__infobar_select.remove_all()
-        (year, month, day) = self.__calendar.get_date()
-        date = "%02d/%02d/%s" % (day, month + 1, year)
-        self.__infobar_select.append(TimeSpan.CUSTOM, _("From %s" % date))
         self.__infobar_select.append(TimeSpan.HOUR, _("From the past hour"))
         self.__infobar_select.append(TimeSpan.DAY, _("From the past day"))
         self.__infobar_select.append(TimeSpan.WEEK, _("From the past week"))
         self.__infobar_select.append(TimeSpan.FOUR_WEEK,
                                      _("From the past four weeks"))
+        self.__infobar_select.append(TimeSpan.CUSTOM, _("From selected day"))
         self.__infobar_select.append(TimeSpan.FOREVER, _("From the beginning"))
-        self.__infobar_select.set_active_id(TimeSpan.CUSTOM)
+        self.__infobar_select.set_active_id(TimeSpan.HOUR)
         self.__infobar.show()
         # GTK 3.20 https://bugzilla.gnome.org/show_bug.cgi?id=710888
         self.__infobar.queue_resize()
