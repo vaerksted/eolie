@@ -199,7 +199,7 @@ class SyncWorker(GObject.GObject):
                     debug("deleting %s" % record)
                     self.__client.add_history(record, bulk_keys)
         except Exception as e:
-            print("SyncWorker::__remove_history_empties():", e)
+            print("SyncWorker::__push_history():", e)
 
     def __remove_from_history(self, guid):
         """
