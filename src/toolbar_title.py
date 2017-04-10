@@ -562,6 +562,7 @@ class ToolbarTitle(Gtk.Bin):
     def __on_entry_changed(self, entry):
         """
             Update popover search if needed
+            @param entry as Gtk.Entry
         """
         value = entry.get_text()
         parsed = urlparse(value)
@@ -577,7 +578,7 @@ class ToolbarTitle(Gtk.Bin):
             if not is_uri and not self.__popover.is_visible():
                 self.__lock_focus = True
                 self.__popover.show()
-        else:
+        elif not self.__uri:
             self.__placeholder.set_text(_("Search or enter address"))
             self.__placeholder.set_opacity(0.8)
         if self.__keywords_timeout is not None:
