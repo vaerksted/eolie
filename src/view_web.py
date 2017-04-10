@@ -280,7 +280,9 @@ class WebView(WebKit2.WebView):
         locales = GLib.get_language_names()
         context.set_spell_checking_enabled(True)
         if locales:
-            context.set_spell_checking_languages([locales[0]])
+            user_locale = locales[0]
+            default_locale = "en_GB.UTF-8"
+            context.set_spell_checking_languages([user_locale, default_locale])
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)
