@@ -178,7 +178,7 @@ class WebView(WebKit2.WebView):
             True if view is private/ephemeral
             @return bool
         """
-        return False  # self.get_property("is-ephemeral")
+        return self.get_property("is-ephemeral")
 
     @property
     def loaded_uri(self):
