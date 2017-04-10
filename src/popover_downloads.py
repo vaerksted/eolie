@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango
+from gi.repository import Gtk, GLib, Pango, Gio
 
 from time import time
 
@@ -34,6 +34,7 @@ class Row(Gtk.ListBoxRow):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
         builder.connect_signals(self)
+        self.__preview = builder.get_object("preview")
         self.__progress = builder.get_object("progress")
         filename = GLib.filename_from_uri(download.get_destination())
         if filename is not None:
@@ -86,7 +87,7 @@ class Row(Gtk.ListBoxRow):
 
 #######################
 # PRIVATE             #
-#######################
+######################
     def __on_map(self, widget):
         """
             Connect signals
@@ -95,6 +96,20 @@ class Row(Gtk.ListBoxRow):
         self.__download.connect("finished", self.__on_finished)
         self.__download.connect("received-data", self.__on_received_data)
         self.__download.connect("failed", self.__on_failed)
+        response = self.__download.get_response()
+        if response is None:
+            return
+        destination = self.__download.get_destination()
+        if destination is None:
+            return
+        f = GLib.filename_from_uri(destination)[0]
+        (mime, uncertain) = Gio.content_type_guess(f, None)
+        if uncertain:
+            self.__preview.set_from_icon_name("text-x-generic",
+                                              Gtk.IconSize.DIALOG)
+        else:
+            icon = Gio.content_type_get_icon(mime)
+            self.__preview.set_from_gicon(icon, Gtk.IconSize.DIALOG)
 
     def __on_unmap(self, widget):
         """
