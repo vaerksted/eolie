@@ -85,6 +85,8 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
             @param event as Gdk.event
         """
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
@@ -107,6 +109,8 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
             @param event as Gdk.event
         """
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
