@@ -301,7 +301,7 @@ class Row(Gtk.ListBoxRow):
 
     def __on_button_release(self, eventbox, event):
         """
-            Got to uri
+            Handle button press in popover
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """

@@ -339,8 +339,14 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
-        if not self.__popover.is_visible():
-            self.__popover.show()
+        if event.type == Gdk.EventType.BUTTON_PRESS:
+            if not self.__popover.is_visible():
+                self.__popover.show()
+                return True
+        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+            text_len = len(self.__entry.get_text())
+            self.__entry.select_region(0, text_len)
+            return True
 
     def _on_key_press_event(self, entry, event):
         """
