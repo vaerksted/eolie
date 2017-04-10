@@ -663,10 +663,10 @@ class UriPopover(Gtk.Popover):
         """
         (year, month, day) = calendar.get_date()
         date = "%02d/%02d/%s" % (day, month + 1, year)
-        mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
-        result = El().history.get(mtime)
+        atime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
+        result = El().history.get(atime)
         self.__history_model.remove_all()
-        self.__add_history_items(result)
+        self.__add_history_items(result, (year, month, day))
         self.__infobar.hide()
 
     def _on_clear_history_clicked(self, button):
@@ -833,12 +833,15 @@ class UriPopover(Gtk.Popover):
                     break
             self.__set_bookmarks(select)
 
-    def __add_history_items(self, items):
+    def __add_history_items(self, items, date):
         """
             Add history items to model
-            @param [(history_id, title, uri, mtime)]  as [(int, str, str, int)]
+            @param [(history_id, title, uri, atime)]  as [(int, str, str, int)]
+            @param date (jj, mm, aaaa) as (int, int, int)
         """
         if items:
+            if date != self.__calendar.get_date():
+                return
             (history_id, title, uri, atime) = items.pop(0)
             item = Item()
             item.set_property("id", history_id)
@@ -847,7 +850,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("uri", uri)
             item.set_property("atime", atime)
             self.__history_model.append(item)
-            GLib.idle_add(self.__add_history_items, items)
+            GLib.idle_add(self.__add_history_items, items, date)
 
     def __get_current_box(self):
         """
