@@ -710,7 +710,6 @@ class UriPopover(Gtk.Popover):
             thread.daemon = True
             thread.start()
         infobar.hide()
-        self._on_day_selected(self.__calendar)
 
 #######################
 # PRIVATE             #
@@ -718,8 +717,10 @@ class UriPopover(Gtk.Popover):
     def __clear_history(self, atime):
         """
             Clear history for wanted atime
+            @thread safe
         """
         history_ids = El().history.clear(atime)
+        GLib.idle_add(self._on_day_selected, self.__calendar)
         if El().sync_worker is None:
             for history_id in El().history.get_empties():
                 El().history.remove(history_id)
