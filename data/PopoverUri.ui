@@ -224,6 +224,7 @@
           <object class="GtkGrid">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="row_spacing">5</property>
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
@@ -248,7 +249,8 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
+                <property name="top_attach">1</property>
+                <property name="height">2</property>
               </packing>
             </child>
             <child>
@@ -260,7 +262,76 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkInfoBar" id="infobar">
+                <property name="can_focus">False</property>
+                <signal name="response" handler="_on_infobar_response" swapped="no"/>
+                <child internal-child="action_area">
+                  <object class="GtkButtonBox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="spacing">6</property>
+                    <property name="layout_style">end</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child internal-child="content_area">
+                  <object class="GtkBox">
+                    <property name="can_focus">False</property>
+                    <property name="spacing">16</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
                 <property name="top_attach">0</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Clear history</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="valign">start</property>
+                <property name="margin_left">5</property>
+                <property name="margin_right">5</property>
+                <signal name="clicked" handler="_on_clear_history_clicked" swapped="no"/>
+                <style>
+                  <class name="linked"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
               </packing>
             </child>
           </object>

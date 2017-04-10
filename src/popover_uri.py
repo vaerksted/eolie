@@ -16,8 +16,9 @@ from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
 from locale import strcoll
+from threading import Thread
 
-from eolie.define import El, Type
+from eolie.define import El, Type, TimeSpan, TimeSpanValues
 from eolie.utils import resize_favicon, get_favicon_best_uri
 
 
@@ -376,6 +377,14 @@ class UriPopover(Gtk.Popover):
         builder.add_from_resource("/org/gnome/Eolie/PopoverUri.ui")
         builder.connect_signals(self)
         self.__scrolled_bookmarks = builder.get_object("scrolled_bookmarks")
+        self.__infobar = builder.get_object("infobar")
+        self.__infobar_confirm = Gtk.Button()
+        self.__infobar_confirm.show()
+        self.__infobar_select = Gtk.ComboBoxText()
+        self.__infobar_select.show()
+        self.__infobar.get_content_area().add(self.__infobar_select)
+        self.__infobar.add_action_widget(self.__infobar_confirm, 1)
+        self.__infobar.add_button(_("Cancel"), 2)
         self.__history_model = Gio.ListStore()
         self.__history_box = builder.get_object("history_box")
         self.__history_box.bind_model(self.__history_model,
@@ -653,15 +662,70 @@ class UriPopover(Gtk.Popover):
             @param calendar as Gtk.Calendar
         """
         (year, month, day) = calendar.get_date()
-        date = "%s/%s/%s" % (day, month + 1, year)
+        date = "%02d/%02d/%s" % (day, month + 1, year)
         mtime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
         result = El().history.get(mtime)
         self.__history_model.remove_all()
         self.__add_history_items(result)
+        self.__infobar.hide()
+
+    def _on_clear_history_clicked(self, button):
+        """
+            Ask user for confirmation
+            @param button as Gtk.Button
+        """
+        self.__infobar_confirm.set_label(button.get_label())
+        self.__infobar_select.remove_all()
+        (year, month, day) = self.__calendar.get_date()
+        date = "%02d/%02d/%s" % (day, month + 1, year)
+        self.__infobar_select.append(TimeSpan.CUSTOM, _("From %s" % date))
+        self.__infobar_select.append(TimeSpan.HOUR, _("From the past hour"))
+        self.__infobar_select.append(TimeSpan.DAY, _("From the past day"))
+        self.__infobar_select.append(TimeSpan.WEEK, _("From the past week"))
+        self.__infobar_select.append(TimeSpan.FOUR_WEEK,
+                                     _("From the past four weeks"))
+        self.__infobar_select.append(TimeSpan.FOREVER, _("From the beginning"))
+        self.__infobar_select.set_active_id(TimeSpan.CUSTOM)
+        self.__infobar.show()
+        # GTK 3.20 https://bugzilla.gnome.org/show_bug.cgi?id=710888
+        self.__infobar.queue_resize()
+
+    def _on_infobar_response(self, infobar, response_id):
+        """
+            Handle user response and remove wanted history ids
+            @param infobar as Gtk.InfoBar
+            @param response_id as int
+        """
+        if response_id == 1:
+            active_id = self.__infobar_select.get_active_id()
+            if active_id == TimeSpan.CUSTOM:
+                (year, month, day) = self.__calendar.get_date()
+                date = "%02d/%02d/%s" % (day, month + 1, year)
+                atime = mktime(
+                           datetime.strptime(date, "%d/%m/%Y").timetuple())
+            else:
+                atime = TimeSpanValues[active_id]
+            thread = Thread(target=self.__clear_history,
+                            args=(atime,))
+            thread.daemon = True
+            thread.start()
+        infobar.hide()
+        self._on_day_selected(self.__calendar)
 
 #######################
 # PRIVATE             #
 #######################
+    def __clear_history(self, atime):
+        """
+            Clear history for wanted atime
+        """
+        history_ids = El().history.clear(atime)
+        if El().sync_worker is None:
+            for history_id in El().history.get_empties():
+                El().history.remove(history_id)
+        else:
+            El().sync_worker.push_history(history_ids)
+
     def __check_sync_timer(self):
         """
             Check sync status, if sync, show spinner and reload

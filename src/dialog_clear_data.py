@@ -14,6 +14,8 @@ from gi.repository import Gtk, GLib, WebKit2
 
 from gettext import gettext as _
 
+from eolie.define import TimeSpanValues
+
 
 class ClearDataDialog:
     """
@@ -21,27 +23,12 @@ class ClearDataDialog:
         THANKS TO EPIPHANY DEVS FOR UI FILE!
     """
 
-    class TimeSpan:
-        HOUR = 0
-        DAY = 1
-        WEEK = 2
-        FOUR_WEEK = 3
-        FOREVER = 4
-
-    class ModelColumn:
+    class __ModelColumn:
         TOGGLE = 0
         TYPE = 1
         NAME = 2
         DATA = 3
         INCONSISTENT = 4
-
-    TimeSpanValues = {
-        TimeSpan.HOUR: GLib.TIME_SPAN_HOUR,
-        TimeSpan.DAY: GLib.TIME_SPAN_DAY,
-        TimeSpan.WEEK: GLib.TIME_SPAN_DAY * 7,
-        TimeSpan.FOUR_WEEK: GLib.TIME_SPAN_DAY * 7 * 4,
-        TimeSpan.FOREVER: 0
-    }
 
     def __init__(self, parent):
         """
@@ -87,17 +74,20 @@ class ClearDataDialog:
             @param path as Gtk.TreePath
         """
         iterator = self.__filter.get_iter(path)
-        item = self.__filter.get_value(iterator, self.ModelColumn.DATA)
-        toggle = not self.__filter.get_value(iterator, self.ModelColumn.TOGGLE)
-        self.__filter.set_value(iterator, self.ModelColumn.TOGGLE, toggle)
+        item = self.__filter.get_value(iterator, self.__ModelColumn.DATA)
+        toggle = not self.__filter.get_value(iterator,
+                                             self.__ModelColumn.TOGGLE)
+        self.__filter.set_value(iterator, self.__ModelColumn.TOGGLE, toggle)
         # Check children
         if item is None:
             self.__filter.set_value(iterator,
-                                    self.ModelColumn.INCONSISTENT,
+                                    self.__ModelColumn.INCONSISTENT,
                                     False)
             child = self.__filter.iter_children(iterator)
             while child is not None:
-                self.__filter.set_value(child, self.ModelColumn.TOGGLE, toggle)
+                self.__filter.set_value(child,
+                                        self.__ModelColumn.TOGGLE,
+                                        toggle)
                 child = self.__filter.iter_next(child)
         else:
             self.__check_parent(iterator)
@@ -108,7 +98,7 @@ class ClearDataDialog:
             @param combobox as Gtk.ComboBox
         """
         active = combobox.get_active()
-        self.__timespan = self.TimeSpanValues[active]
+        self.__timespan = TimeSpanValues[active]
         self.__filter.refilter()
 
     def _on_search_changed(self, entry):
@@ -135,13 +125,13 @@ class ClearDataDialog:
                 child = self.__filter.iter_children(parent.iter)
                 while child is not None:
                     if not self.__filter.get_value(child,
-                                                   self.ModelColumn.TOGGLE):
+                                                   self.__ModelColumn.TOGGLE):
                         child = self.__filter.iter_next(child)
                         continue
                     data = self.__filter.get_value(child,
-                                                   self.ModelColumn.DATA)
+                                                   self.__ModelColumn.DATA)
                     type = self.__filter.get_value(child,
-                                                   self.ModelColumn.TYPE)
+                                                   self.__ModelColumn.TYPE)
                     flag = WebKit2.WebsiteDataTypes(type)
                     if data not in items.keys():
                         items[data] = WebKit2.WebsiteDataTypes(0)
@@ -154,9 +144,9 @@ class ClearDataDialog:
         else:
             types = WebKit2.WebsiteDataTypes(0)
             for item in self.__filter:
-                if item[self.ModelColumn.TOGGLE]:
+                if item[self.__ModelColumn.TOGGLE]:
                     types |= WebKit2.WebsiteDataTypes(
-                                                   item[self.ModelColumn.TYPE])
+                                               item[self.__ModelColumn.TYPE])
             data_manager.clear(types, self.__timespan, None, None)
 
 #######################
@@ -264,15 +254,15 @@ class ClearDataDialog:
         """
         parent = self.__filter.iter_parent(iterator)
         parent_toggle = self.__filter.get_value(parent,
-                                                self.ModelColumn.TOGGLE)
+                                                self.__ModelColumn.TOGGLE)
         child = self.__filter.iter_children(parent)
         inconsistent = False
         while child is not None:
-            toggle = self.__filter.get_value(child, self.ModelColumn.TOGGLE)
+            toggle = self.__filter.get_value(child, self.__ModelColumn.TOGGLE)
             if toggle != parent_toggle:
                 inconsistent = True
             child = self.__filter.iter_next(child)
-        self.__filter.set_value(parent, self.ModelColumn.INCONSISTENT,
+        self.__filter.set_value(parent, self.__ModelColumn.INCONSISTENT,
                                 inconsistent)
 
     def __should_be_visible(self, iterator):
@@ -295,7 +285,7 @@ class ClearDataDialog:
         """
         if self.__search == "" and self.__timespan == 0:
             return True
-        item = model.get_value(iterator, self.ModelColumn.DATA)
+        item = model.get_value(iterator, self.__ModelColumn.DATA)
         if item is None:
             if self.__timespan != 0:
                 return True
@@ -303,7 +293,7 @@ class ClearDataDialog:
                 return True
             else:
                 return False
-        name = model.get_value(iterator, self.ModelColumn.NAME)
+        name = model.get_value(iterator, self.__ModelColumn.NAME)
         if self.__timespan != 0:
             return False
         elif name.lower().find(self.__search.lower()) != -1:

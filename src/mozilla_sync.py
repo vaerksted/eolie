@@ -72,14 +72,14 @@ class SyncWorker(GObject.GObject):
                            self.__on_get_secret, first_sync, False)
         return True
 
-    def push_history(self, history_id):
+    def push_history(self, history_ids):
         """
-            Add history id to remote history
-            A first call to sync() is needed to populate secrets
-            @param history_id as int
+            Push history ids
+            @param history_ids as [int]
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__push_history, args=(history_id,))
+            thread = Thread(target=self.__push_history,
+                            args=(history_ids,))
             thread.daemon = True
             thread.start()
 
@@ -169,26 +169,37 @@ class SyncWorker(GObject.GObject):
             raise e
         return bulk_keys
 
-    def __push_history(self, history_id):
+    def __push_history(self, history_ids):
         """
-            Push history
-            @param history_id as int
+            Push history ids if atime is available, else, ask to remove
+            @param history ids as [int]
         """
         if not self.__username or not self.__password:
             return
         try:
             bulk_keys = self.__get_session_bulk_keys()
-            record = {}
-            record["histUri"] = El().history.get_uri(history_id)
-            record["id"] = El().history.get_guid(history_id)
-            record["title"] = El().history.get_title(history_id)
-            record["visits"] = []
-            for atime in El().history.get_atimes(history_id):
-                record["visits"].append({"date": atime*1000000, "type": 1})
-            debug("pushing %s" % record)
-            self.__client.add_history(record, bulk_keys)
+            for history_id in history_ids:
+                record = {}
+                atimes = El().history.get_atimes(history_id)
+                guid = El().history.get_guid(history_id)
+                if atimes:
+                    record["histUri"] = El().history.get_uri(history_id)
+                    record["id"] = guid
+                    record["title"] = El().history.get_title(history_id)
+                    record["visits"] = []
+                    for atime in atimes:
+                        record["visits"].append({"date": atime*1000000,
+                                                 "type": 1})
+                    debug("pushing %s" % record)
+                    self.__client.add_history(record, bulk_keys)
+                else:
+                    record["id"] = guid
+                    record["type"] = "item"
+                    record["deleted"] = True
+                    debug("deleting %s" % record)
+                    self.__client.add_history(record, bulk_keys)
         except Exception as e:
-            print("SyncWorker::__push_history():", e)
+            print("SyncWorker::__remove_history_empties():", e)
 
     def __remove_from_history(self, guid):
         """

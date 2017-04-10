@@ -137,18 +137,39 @@ class DatabaseHistory:
                          WHERE rowid=?", (history_id,))
             sql.commit()
 
-    def clear(self):
+    def clear(self, atime=0):
         """
-            Clear history
+            Clear history from atime (current day)
+            @param atime as int
+            @return modified history ids as [int]
+        """
+        one_day = 86400
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT DISTINCT history.rowid\
+                                  FROM history, history_atime\
+                                  WHERE history_atime.history_id=history.rowid\
+                                  AND atime <= ?", (atime + one_day,))
+            items = list(itertools.chain(*result))
+            sql.execute("DELETE FROM history_atime\
+                         WHERE atime <= ?", (atime + one_day,))
+            sql.commit()
+            return items
+
+    def get_empties(self):
+        """
+            Get empties history entries (without atime)
+            @return history ids as [int]
         """
         with SqlCursor(self) as sql:
-            sql.execute("DELETE from history")
-            sql.execute("DELETE from history_atime")
-            sql.commit()
+            result = sql.execute("SELECT history.rowid FROM history\
+                                  WHERE NOT EXISTS (\
+                                    SELECT rowid FROM history_atime AS ha\
+                                    WHERE ha.history_id=history.rowid)")
+            return list(itertools.chain(*result))
 
     def get(self, atime):
         """
-            Get history
+            Get history for atime (current day)
             @param atime as int
             @return (str, str, int)
         """
@@ -158,8 +179,8 @@ class DatabaseHistory:
                                   FROM history, history_atime\
                                   WHERE history.rowid=history_atime.history_id\
                                   AND atime >= ? AND atime <= ?\
-                                  ORDER BY atime DESC LIMIT ?",
-                                 (atime, atime + one_day, atime))
+                                  ORDER BY atime DESC",
+                                 (atime, atime + one_day))
             return list(result)
 
     def get_id(self, uri):

@@ -10,9 +10,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 El = Gio.Application.get_default
+
+
+class TimeSpan:
+    HOUR = "0"
+    DAY = "1"
+    WEEK = "2"
+    FOUR_WEEK = "3"
+    FOREVER = "4"
+    CUSTOM = "5"
+
+
+TimeSpanValues = {
+    TimeSpan.HOUR: GLib.TIME_SPAN_HOUR,
+    TimeSpan.DAY: GLib.TIME_SPAN_DAY,
+    TimeSpan.WEEK: GLib.TIME_SPAN_DAY * 7,
+    TimeSpan.FOUR_WEEK: GLib.TIME_SPAN_DAY * 7 * 4,
+    TimeSpan.FOREVER: 0
+}
 
 
 class ArtSize:

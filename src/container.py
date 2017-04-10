@@ -326,7 +326,7 @@ class Container(Gtk.Paned):
                 self.__history_queue.append((title, uri, mtime))
             else:
                 history_id = El().history.add(title, uri, mtime)
-                El().sync_worker.push_history(history_id)
+                El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """
