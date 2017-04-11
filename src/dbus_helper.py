@@ -20,9 +20,13 @@ class DBusHelper:
         Simpler helper for DBus
         Pass a function to call, args and a callback
     """
-    def __init__(self, call, args, callback, data):
+
+    def __init__(self):
+        pass
+
+    def call(self, call, args, callback, data):
         """
-            Init helper
+            Call function
             @param call as str
             @param args as GLib.Variant()/None
             @param callback as function
@@ -34,8 +38,25 @@ class DBusHelper:
                         args,
                         callback, data)
         except Exception as e:
-            print("DBusHelper::__init__():", e)
+            print("DBusHelper::call():", e)
 
+    def connect(self, callback, data):
+        """
+            Connect callback to object signals
+            @param callback as function
+            @param data
+        """
+        try:
+            Gio.bus_get(Gio.BusType.SESSION, None,
+                        self.__on_get_bus, None,
+                        None,
+                        callback, data)
+        except Exception as e:
+            print("DBusHelper::connect():", e)
+
+#######################
+# PRIVATE             #
+#######################
     def __on_get_bus(self, source, result, call, args, callback, data):
         """
             Get DBus proxy
@@ -47,11 +68,16 @@ class DBusHelper:
             @param data
         """
         bus = Gio.bus_get_finish(result)
-        Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
-                          PROXY_BUS,
-                          PROXY_PATH,
-                          PROXY_BUS, None,
-                          self.__on_get_proxy, call, args, callback, data)
+        if call is None:
+            bus.signal_subscribe(None, PROXY_BUS, "UnsecureFormFocused",
+                                 PROXY_PATH, None, Gio.DBusSignalFlags.NONE,
+                                 callback, data)
+        else:
+            Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
+                              PROXY_BUS,
+                              PROXY_PATH,
+                              PROXY_BUS, None,
+                              self.__on_get_proxy, call, args, callback, data)
 
     def __on_get_proxy(self, source, result, call, args, callback, data):
         """

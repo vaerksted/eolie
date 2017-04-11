@@ -12,6 +12,8 @@
 
 from gi.repository import Gio, GLib
 
+from urllib.parse import urlparse
+
 from eolie.define import PROXY_BUS, PROXY_PATH
 
 
@@ -81,6 +83,8 @@ class ProxyExtension(Server):
       <arg type="as" name="results" direction="out" />
     </method>
 
+    <signal name='UnsecureFormFocused'>
+    </signal>
     </interface>
     </node>
     '''
@@ -92,16 +96,16 @@ class ProxyExtension(Server):
             @param forms as FormsExtension
         """
         self.__pages = {}
-        self.forms = forms
+        self.__forms = forms
         # We cannot use extension.get_page() from here => CRASH
         extension.connect("page-created", self.__on_page_created)
-        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-        Gio.bus_own_name_on_connection(bus,
+        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        Gio.bus_own_name_on_connection(self.__bus,
                                        PROXY_BUS,
                                        Gio.BusNameOwnerFlags.NONE,
                                        None,
                                        None)
-        Server.__init__(self, bus, PROXY_PATH)
+        Server.__init__(self, self.__bus, PROXY_PATH)
 
     def GetForms(self, page_id):
         """
@@ -111,8 +115,9 @@ class ProxyExtension(Server):
         """
         try:
             page = self.__pages[page_id]
-            (username, password) = self.forms.get_forms(page)
-            return (username.get_value(), password.get_value())
+            (username, password) = self.__forms.get_forms(page)
+            if username is not None and password is not None:
+                return (username.get_value(), password.get_value())
         except Exception as e:
             print("ProxyExtension::GetForms()", e)
         return (None, None)
@@ -120,11 +125,37 @@ class ProxyExtension(Server):
 #######################
 # PRIVATE             #
 #######################
+    def __on_focus(self, password, event):
+        """
+            Emit focus form signal
+            @param password as WebKit2WebExtension.DOMHTMLInputElement
+            @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        self.__bus.emit_signal(
+                          None,
+                          PROXY_PATH,
+                          PROXY_BUS,
+                          "UnsecureFormFocused",
+                          None)
+
+    def __on_document_loaded(self, webpage):
+        """
+            Check for unsecure content
+            @param webpage as WebKit2WebExtension.WebPage
+        """
+        parsed = urlparse(webpage.get_uri())
+        # Check for unsecure content
+        if parsed.scheme == "http":
+            (username, password) = self.__forms.get_forms(webpage)
+            if password is not None:
+                password.add_event_listener("focus", self.__on_focus, False)
+
     def __on_page_created(self, extension, webpage):
         """
             Cache webpage
             @param extension as WebKit2WebExtension
-            @param webpage as WebKit2WebExtension.WebPage
+            @param page as WebKit2WebExtension.WebPage
         """
+        webpage.connect("document-loaded", self.__on_document_loaded)
         page_id = webpage.get_id()
         self.__pages[page_id] = webpage

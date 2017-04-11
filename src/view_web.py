@@ -324,9 +324,10 @@ class WebView(WebKit2.WebView):
             @param page_id as int
             @param request as WebKit2.FormSubmissionRequest
         """
-        DBusHelper("GetForms",
-                   GLib.Variant("(i)", (page_id,)),
-                   self.__on_get_forms, request)
+        helper = DBusHelper()
+        helper.call("GetForms",
+                    GLib.Variant("(i)", (page_id,)),
+                    self.__on_get_forms, request)
 
     def __set_smooth_scrolling(self, source):
         """

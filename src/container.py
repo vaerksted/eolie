@@ -363,8 +363,6 @@ class Container(Gtk.Paned):
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
             if webview == self.current.webview:
-                # Show message to user if password input field over http
-                self.__window.toolbar.title.show_input_warning(webview)
                 # Give focus to webview if allowed
                 if not self.__window.toolbar.title.lock_focus:
                     if webview.get_uri() == "populars://":

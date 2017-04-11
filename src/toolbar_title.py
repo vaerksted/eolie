@@ -33,6 +33,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
+        self.__input_warning_shown = False
         self.__lock_focus = False
         self.__signal_id = None
         self.__secure_content = True
@@ -96,6 +97,7 @@ class ToolbarTitle(Gtk.Bin):
             return
         elif uri == self.__uri:
             return
+        self.__input_warning_shown = False
         self.__secure_content = True
         if self.__window.container.current.webview.readable[0]:
             self.__readable_image.get_style_context().add_class("selected")
@@ -157,15 +159,14 @@ class ToolbarTitle(Gtk.Bin):
             Show a message to user about password input field over http
             @param webview as WebView
         """
-        uri = webview.get_uri()
-        parsed = urlparse(uri)
-        name = None
-        if parsed.scheme == "http" and name is not None:
-            js = 'alert("%s");' % _(
-                    "Heads-up: this page is not secure.\\n"
-                    "If you type your password,\\n it will be "
-                    "visible to cybercriminals!")
-            webview.run_javascript(js, None, None)
+        if self.__input_warning_shown:
+            return
+        self.__input_warning_shown = True
+        js = 'alert("%s");' % _(
+                "Heads-up: this page is not secure.\\n"
+                "If you type your password,\\n it will be "
+                "visible to cybercriminals!")
+        webview.run_javascript(js, None, None)
 
     def hide_popover(self):
         """

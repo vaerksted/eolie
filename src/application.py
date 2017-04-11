@@ -30,6 +30,7 @@ from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
+from eolie.dbus_helper import DBusHelper
 
 
 class Application(Gtk.Application):
@@ -168,6 +169,8 @@ class Application(Gtk.Application):
         cookie_manager.set_persistent_storage(
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
+        helper = DBusHelper()
+        helper.connect(self.__on_extension_signal, None)
 
     def do_startup(self):
         """
@@ -477,3 +480,18 @@ class Application(Gtk.Application):
         if string == "new_window":
             window = self.__get_new_window()
             window.container.add_web_view(self.start_page, True)
+
+    def __on_extension_signal(self, connection, sender, path,
+                              interface, signal, params, data):
+        """
+            Show message on wanted window
+            @param connection as Gio.DBusConnection
+            @param sender as str
+            @param path as str
+            @param interface as str
+            @param signal as str
+            @param parameters as GLib.Variant
+            @param data
+        """
+        webview = self.active_window.container.current.webview
+        self.active_window.toolbar.title.show_input_warning(webview)
