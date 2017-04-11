@@ -422,7 +422,7 @@ class SidebarChild(Gtk.ListBoxRow):
         self.get_style_context().remove_class("drag-down")
 
 
-class StackSidebar(Gtk.Grid):
+class StackSidebar(Gtk.EventBox):
     """
         Sidebar linked to a Window Gtk.Stack
     """
@@ -432,9 +432,12 @@ class StackSidebar(Gtk.Grid):
             Init sidebar
             @param window as Window
         """
-        Gtk.Grid.__init__(self)
+        Gtk.EventBox.__init__(self)
         self.__window = window
-        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.connect("button-press-event", self.__on_button_press)
+        grid = Gtk.Grid()
+        grid.set_orientation(Gtk.Orientation.VERTICAL)
+        grid.show()
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.connect("search-changed", self._on_search_changed)
 
@@ -442,7 +445,7 @@ class StackSidebar(Gtk.Grid):
         self.__search_bar = Gtk.SearchBar.new()
         self.__search_bar.add(self.__search_entry)
         self.__search_bar.show()
-        self.add(self.__search_bar)
+        grid.add(self.__search_bar)
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_vexpand(True)
         self.__scrolled.show()
@@ -452,7 +455,8 @@ class StackSidebar(Gtk.Grid):
         self.__listbox.show()
         self.__listbox.connect("row_activated", self.__on_row_activated)
         self.__scrolled.add(self.__listbox)
-        self.add(self.__scrolled)
+        grid.add(self.__scrolled)
+        self.add(grid)
 
     def add_child(self, view):
         """
@@ -680,6 +684,14 @@ class StackSidebar(Gtk.Grid):
         if not up:
             child_index += 1
         self.__listbox.insert(row, child_index)
+
+    def __on_button_press(self, widget, event):
+        """
+            Hide popover if visible
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        self.__window.toolbar.title.hide_popover()
 
     def __on_key_press(self, widget, event):
         """
