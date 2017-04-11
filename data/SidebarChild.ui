@@ -18,7 +18,7 @@
             <property name="can_focus">False</property>
             <property name="icon_size">3</property>
             <style>
-              <class name="sidebarchild-image"/>
+              <class name="sidebar-item-image"/>
             </style>
           </object>
           <packing>
@@ -66,7 +66,7 @@
               </packing>
             </child>
             <style>
-              <class name="sidebarchild-title"/>
+              <class name="sidebar-item-title"/>
             </style>
           </object>
         </child>
@@ -77,7 +77,7 @@
             <property name="halign">center</property>
             <property name="valign">center</property>
             <style>
-              <class name="sidebarchild-spinner"/>
+              <class name="sidebar-item-spinner"/>
             </style>
           </object>
           <packing>

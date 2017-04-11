@@ -150,7 +150,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.__image_close.set_from_icon_name("window-close-symbolic",
                                               Gtk.IconSize.INVALID)
-        self.__image_close.get_style_context().add_class("sidebar-close")
+        self.__image_close.get_style_context().add_class("sidebar-item-close")
 
     def _on_leave_notify(self, eventbox, event):
         """
@@ -164,7 +164,7 @@ class SidebarChild(Gtk.ListBoxRow):
            event.y <= 0 or\
            event.y >= allocation.height:
             self.__image_close.get_style_context().remove_class(
-                                                               "sidebar-close")
+                                                          "sidebar-item-close")
             self.__set_favicon()
 
 #######################
@@ -204,7 +204,7 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_surface(resize_favicon(surface))
             del surface
             self.__image_close.get_style_context().remove_class(
-                                                               "sidebar-close")
+                                                          "sidebar-item-close")
             self.__image_close.show()
 
     def __set_snapshot_timeout(self):
@@ -434,6 +434,7 @@ class StackSidebar(Gtk.EventBox):
         """
         Gtk.EventBox.__init__(self)
         self.__window = window
+        self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
         grid = Gtk.Grid()
         grid.set_orientation(Gtk.Orientation.VERTICAL)
