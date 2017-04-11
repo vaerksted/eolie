@@ -11,6 +11,8 @@ app_PYTHON = \
     dialog_clear_data.py\
     download_manager.py\
     define.py\
+    extension_adblock.py\
+    extension_forms.py\
     localized.py\
     menu_history.py\
     menu_pages.py\
