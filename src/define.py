@@ -14,6 +14,9 @@ from gi.repository import Gio, GLib
 
 El = Gio.Application.get_default
 
+PROXY_BUS = 'org.gnome.Eolie.Proxy'
+PROXY_PATH = '/org/gnome/EolieProxy'
+
 
 class TimeSpan:
     HOUR = "0"

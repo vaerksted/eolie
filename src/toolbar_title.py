@@ -159,7 +159,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         uri = webview.get_uri()
         parsed = urlparse(uri)
-        name = El().extensions.get_password_input_name(uri)
+        name = None
         if parsed.scheme == "http" and name is not None:
             js = 'alert("%s");' % _(
                     "Heads-up: this page is not secure.\\n"

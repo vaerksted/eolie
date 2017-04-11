@@ -12,11 +12,11 @@
 
 from gi.repository import WebKit2, Gtk, GObject, Gio, GLib, Gdk
 
-import ctypes
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El, LOGINS
+from eolie.dbus_helper import DBusHelper
+from eolie.define import El
 from eolie.utils import get_ftp_cmd, debug
 
 
@@ -318,33 +318,15 @@ class WebView(WebKit2.WebView):
                         "serif-font-family",
                         system.get_value("font-name").get_string())
 
-    def __read_auth_request(self, request):
+    def __get_forms(self, page_id, request):
         """
             Read request for authentification
+            @param page_id as int
             @param request as WebKit2.FormSubmissionRequest
-            @return auth ok as bool, username as str, password as str
         """
-        username = ""
-        password = ""
-        password_input_name = El().extensions.get_password_input_name(
-                                                                self.get_uri())
-        fields = request.get_text_fields()
-        if fields is None:
-            return (False, username, password)
-        for k, v in fields.items():
-            name = ctypes.string_at(k).decode("utf-8")
-            if not password:
-                if name == password_input_name:
-                    password = ctypes.string_at(v).decode("utf-8")
-                    continue
-            if not username:
-                for search in LOGINS:
-                    if name.lower().find(search) != -1:
-                        username = ctypes.string_at(v).decode("utf-8")
-                        break
-            if username and password:
-                break
-        return (username and password, username, password)
+        DBusHelper("GetForms",
+                   GLib.Variant("(i)", (page_id,)),
+                   self.__on_get_forms, request)
 
     def __set_smooth_scrolling(self, source):
         """
@@ -355,6 +337,23 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
+
+    def __on_get_forms(self, source, result, request):
+        """
+            Set forms value
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        try:
+            (username, password) = source.call_finish(result)[0]
+            if not username or not password:
+                return
+            parsed = urlparse(self.get_uri())
+            self.emit("save-password", username, password, parsed.netloc)
+            request.submit()
+        except Exception as e:
+            print("WebView::__on_get_forms():", e)
 
     def __on_insecure_content_detected(self, webview, event):
         """
@@ -523,12 +522,7 @@ class WebView(WebKit2.WebView):
         """
         if self.private:
             return
-        (auth, username, password) = self.__read_auth_request(request)
-        if not auth:
-            return
-        parsed = urlparse(view.get_uri())
-        self.emit("save-password", username, password, parsed.netloc)
-        request.submit()
+        self.__get_forms(view.get_page_id(), request)
 
     def __on_download_started(self, context, download):
         """

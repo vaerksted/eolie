@@ -6,13 +6,14 @@ app_PYTHON = \
     container.py\
     database_adblock.py\
     database_bookmarks.py\
-    database_extensions.py\
     database_history.py\
+    dbus_helper.py\
     dialog_clear_data.py\
     download_manager.py\
     define.py\
     extension_adblock.py\
     extension_forms.py\
+    extension_proxy.py\
     localized.py\
     menu_history.py\
     menu_pages.py\

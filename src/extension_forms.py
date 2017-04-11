@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2017 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -16,7 +16,6 @@ from gi.repository import Secret
 
 from urllib.parse import urlparse
 
-from eolie.database_extensions import DatabaseExtensions
 from eolie.define import LOGINS
 
 
@@ -31,10 +30,45 @@ class FormsExtension:
             @param extension as WebKit2WebExtension
         """
         self.__secret = None
-        self.__extensions = DatabaseExtensions()
+        self.__cache = {}
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret)
         extension.connect("page-created", self.__on_page_created)
+
+    def get_forms(self, webpage):
+        """
+            Return forms for webpage
+            @param webpage as WebKit2WebExtension.WebPage
+        """
+        uri = webpage.get_uri()
+        # Return cached result if exists
+        if uri in self.__cache.keys():
+            return self.__cache[uri]
+        inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
+        i = 0
+        username_input = None
+        password_input = None
+        while i < inputs.get_length():
+            name = inputs.item(i).get_attribute('name')
+            if name is None:
+                i += 1
+                continue
+            if password_input is None and\
+                    inputs.item(i).get_input_type() == "password":
+                password_input = inputs.item(i)
+                i += 1
+                continue
+            if username_input is None and\
+                    inputs.item(i).get_input_type() != "hidden":
+                for search in LOGINS:
+                    if name.lower().find(search) != -1:
+                        username_input = inputs.item(i)
+                        break
+            i += 1
+        # Cache result
+        if username_input is not None and password_input is not None:
+            self.__cache[uri] = (username_input, password_input)
+        return (username_input, password_input)
 
 #######################
 # PRIVATE             #
@@ -54,33 +88,12 @@ class FormsExtension:
         """
         if self.__secret is None:
             return
-        uri = webpage.get_uri()
-        inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
-        i = 0
-        username_input = None
-        password_input = None
-        while i < inputs.get_length():
-            name = inputs.item(i).get_attribute('name')
-            if name is None:
-                i += 1
-                continue
-            if password_input is None and\
-                    inputs.item(i).get_input_type() == "password":
-                password_input = inputs.item(i)
-                self.__extensions.add_password(uri, name)
-                i += 1
-                continue
-            if username_input is None and\
-                    inputs.item(i).get_input_type() != "hidden":
-                for search in LOGINS:
-                    if name.lower().find(search) != -1:
-                        username_input = inputs.item(i)
-                        break
-            i += 1
+
+        (username_input, password_input) = self.get_forms(webpage)
 
         if username_input is None or password_input is None:
             return
-        parsed = urlparse(uri)
+        parsed = urlparse(webpage.get_uri())
         SecretSchema = {
             "type": Secret.SchemaAttributeType.STRING,
             "uri": Secret.SchemaAttributeType.STRING,
