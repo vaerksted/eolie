@@ -110,11 +110,12 @@ class SidebarChild(Gtk.ListBoxRow):
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
         else:
-            self.__view.webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                             WebKit2.SnapshotOptions.NONE,
-                                             None,
-                                             self.__on_snapshot,
-                                             save)
+            self.__view.webview.get_snapshot(
+                                         WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                                         WebKit2.SnapshotOptions.NONE,
+                                         None,
+                                         self.__on_snapshot,
+                                         save)
 
     def clear_snapshot(self):
         """
@@ -307,6 +308,7 @@ class SidebarChild(Gtk.ListBoxRow):
                     El().art.save_artwork(self.__start_uri,
                                           surface, "preview")
                 # Manage start page cache
+                # We also cache original URI (for populars view)
                 uris = [current_uri]
                 if self.__start_uri is not None and\
                         self.__start_uri not in uris:
