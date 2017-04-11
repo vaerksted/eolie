@@ -207,11 +207,10 @@ class ToolbarTitle(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed)
         popover.show()
 
-    def on_load_changed(self, view, event):
+    def update_load_indicator(self, view):
         """
-            Update action image
+            Update loading indicator
             @param view as WebView
-            @param event as WebKit2.LoadEvent
         """
         if view.is_loading():
             self.__action_image1.set_from_icon_name('process-stop-symbolic',

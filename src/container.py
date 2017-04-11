@@ -239,6 +239,7 @@ class Container(Gtk.Paned):
             Update window
             @param webview as WebView
         """
+        self.__window.toolbar.title.update_load_indicator(webview)
         if webview == self.current.webview:
             self.__window.toolbar.actions.set_actions(webview)
             self.__window.toolbar.title.show_readable_button(
@@ -355,7 +356,7 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.__window.toolbar.title.on_load_changed(webview, event)
+        self.__window.toolbar.title.update_load_indicator(webview)
         if event == WebKit2.LoadEvent.STARTED:
             if webview == self.current.webview:
                 self.__window.toolbar.title.progress.show()
