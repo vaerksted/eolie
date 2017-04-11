@@ -120,7 +120,7 @@ class ProxyExtension(Server):
                 return (username.get_value(), password.get_value())
         except Exception as e:
             print("ProxyExtension::GetForms()", e)
-        return (None, None)
+        return ("", "")
 
 #######################
 # PRIVATE             #
