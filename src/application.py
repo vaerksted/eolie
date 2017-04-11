@@ -98,12 +98,8 @@ class Application(Gtk.Application):
         self.__is_fs = False
         self.__setup_app_menu()
         self.set_app_menu(self.__menu)
-        if Gtk.get_minor_version() > 18:
-            cssProviderFile = Gio.File.new_for_uri(
+        cssProviderFile = Gio.File.new_for_uri(
                 'resource:///org/gnome/Eolie/application.css')
-        else:
-            cssProviderFile = Gio.File.new_for_uri(
-                'resource:///org/gnome/Eolie/application-legacy.css')
         cssProvider = Gtk.CssProvider()
         cssProvider.load_from_file(cssProviderFile)
         screen = Gdk.Screen.get_default()
