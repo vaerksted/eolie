@@ -356,23 +356,23 @@ class Container(Gtk.Paned):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        if webview != self.current.webview:
+            return
         self.__window.toolbar.title.update_load_indicator(webview)
+        parsed = urlparse(webview.get_uri())
         if event == WebKit2.LoadEvent.STARTED:
-            if webview == self.current.webview:
-                self.__window.toolbar.title.progress.show()
+            if parsed.scheme == "populars":
+                GLib.idle_add(self.__window.toolbar.title.start_search)
+            self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             pass
         elif event == WebKit2.LoadEvent.FINISHED:
-            if webview == self.current.webview:
-                # Give focus to webview if allowed
-                if not self.__window.toolbar.title.lock_focus:
-                    if webview.get_uri() == "populars://":
-                        GLib.idle_add(self.__window.toolbar.title.start_search)
-                    else:
-                        GLib.idle_add(webview.grab_focus)
-                # Hide progress
-                GLib.timeout_add(500,
-                                 self.__window.toolbar.title.progress.hide)
+            # Give focus to webview if allowed
+            if not self.__window.toolbar.title.lock_focus:
+                if parsed.scheme in ["http", "https"]:
+                    GLib.idle_add(webview.grab_focus)
+            # Hide progress
+            GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)
 
     def __on_sync_finish(self, worker):
         """
