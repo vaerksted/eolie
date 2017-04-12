@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/org/gnome/Eolie/adblock">
     <file compressed="true">adblock_www.facebook.com.js</file>
+    <file compressed="true">adblock_www.reddit.com.js</file>
   </gresource>
   <gresource prefix="/org/gnome/Eolie">
     <file compressed="true">application.css</file>
