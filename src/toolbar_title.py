@@ -295,10 +295,6 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
-        if self.__lock_focus:
-            return True
-        if self.__popover.is_visible():
-            self.__lock_focus = True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         self.__set_text_uri(self.__uri)
@@ -341,6 +337,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if event.type == Gdk.EventType.BUTTON_PRESS:
             if not self.__popover.is_visible():
+                self.__lock_focus = True
                 self.__popover.show()
         elif event.type == Gdk.EventType._2BUTTON_PRESS:
             text_len = len(self.__entry.get_text())
