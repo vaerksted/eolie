@@ -105,6 +105,12 @@ class ToolbarActions(Gtk.Bin):
             self.__timeout_id = None
             if event.button == 1:
                 self.__window.container.current.webview.go_back()
+            elif event.button == 2:
+                back_list = self.__window.container.\
+                    current.webview.get_back_forward_list().get_back_list()
+                if back_list:
+                    uri = back_list[0].get_uri()
+                    self.__window.container.add_web_view(uri, True)
             else:
                 self.__on_back_history_timeout()
 
@@ -134,6 +140,12 @@ class ToolbarActions(Gtk.Bin):
             self.__timeout_id = None
             if event.button == 1:
                 self.__window.container.current.webview.go_forward()
+            elif event.button == 2:
+                forward_list = self.__window.container.\
+                    current.webview.get_back_forward_list().get_forward_list()
+                if forward_list:
+                    uri = forward_list[0].get_uri()
+                    self.__window.container.add_web_view(uri, True)
             else:
                 self.__on_forward_history_timeout()
 
