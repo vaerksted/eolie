@@ -111,7 +111,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                          Gtk.IconSize.DIALOG)
         else:
             self.__view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                                         WebKit2.SnapshotRegion.VISIBLE,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self.__on_snapshot,
