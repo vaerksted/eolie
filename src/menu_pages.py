@@ -102,7 +102,9 @@ class PagesMenu(Gio.Menu):
             surface = db.get_favicon_finish(result)
         except:
             surface = None
-        if surface is not None:
+        if uri == "populars://":
+            item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
+        elif surface is not None:
             pixbuf = Gdk.pixbuf_get_from_surface(surface,
                                                  0,
                                                  0,
@@ -114,8 +116,6 @@ class PagesMenu(Gio.Menu):
                                                     [])
             del pixbuf
             item.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(bytes)))
-        elif uri == "populars://":
-            item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
         else:
             item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
