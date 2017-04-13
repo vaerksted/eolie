@@ -91,6 +91,8 @@ class ToolbarActions(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_back_history_timeout)
+        if event.button == 3:
+            return True
 
     def _on_back_button_release_event(self, button, event):
         """
@@ -101,7 +103,10 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
-            self.__window.container.current.webview.go_back()
+            if event.button == 1:
+                self.__window.container.current.webview.go_back()
+            else:
+                self.__on_back_history_timeout()
 
     def _on_forward_button_press_event(self, button, event):
         """
@@ -115,6 +120,8 @@ class ToolbarActions(Gtk.Bin):
         self.__window.toolbar.title.hide_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_forward_history_timeout)
+        if event.button == 3:
+            return True
 
     def _on_forward_button_release_event(self, button, event):
         """
@@ -125,7 +132,10 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
-            self.__window.container.current.webview.go_forward()
+            if event.button == 1:
+                self.__window.container.current.webview.go_forward()
+            else:
+                self.__on_forward_history_timeout()
 
     def _on_new_button_clicked(self, button):
         """
