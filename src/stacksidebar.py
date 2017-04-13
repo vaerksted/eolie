@@ -200,7 +200,10 @@ class SidebarChild(Gtk.ListBoxRow):
             surface = db.get_favicon_finish(result)
         except:
             surface = None
-        if surface is not None:
+        if surface is None:
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
+        else:
             self.__image_close.set_from_surface(resize_favicon(surface))
             del surface
             self.__image_close.get_style_context().remove_class(
