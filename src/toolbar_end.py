@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, WebKit2, Soup
+from gi.repository import Gtk, GLib, Gio, WebKit2, Soup, Pango
 
 from urllib.parse import urlparse
 from gettext import gettext as _
@@ -86,6 +86,35 @@ class ToolbarEnd(Gtk.Bin):
         self.__exceptions_action.connect("activate",
                                          self.__on_exceptions_active)
         self.__window.add_action(self.__exceptions_action)
+
+    def show_download(self, download):
+        """
+            Notify user about download
+            @param download as WebKit2.Download
+        """
+        header = Gtk.Label()
+        header.set_markup("<b>" + _("Downloading from:") + "</b>")
+        header.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        header.show()
+        uri = Gtk.Label.new(download.get_request().get_uri())
+        uri.set_max_width_chars(30)
+        uri.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        uri.show()
+        grid = Gtk.Grid()
+        grid.set_margin_start(5)
+        grid.set_margin_end(5)
+        grid.set_margin_top(5)
+        grid.set_margin_bottom(5)
+        grid.set_orientation(Gtk.Orientation.VERTICAL)
+        grid.show()
+        grid.add(header)
+        grid.add(uri)
+        popover = Gtk.Popover.new()
+        popover.add(grid)
+        popover.set_modal(False)
+        popover.set_relative_to(self.__download_button)
+        popover.show()
+        GLib.timeout_add(2000, popover.destroy)
 
 #######################
 # PROTECTED           #
