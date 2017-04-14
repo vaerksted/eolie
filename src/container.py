@@ -116,6 +116,14 @@ class Container(Gtk.Paned):
                                 GLib.Variant('i', self.get_position()))
 
     @property
+    def stop(self):
+        """
+            Stop pending tasks
+        """
+        if El().sync_worker is not None:
+            self.__on_sync_finish(El().sync_worker)
+
+    @property
     def sidebar(self):
         """
             Get sidebar

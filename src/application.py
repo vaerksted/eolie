@@ -193,6 +193,7 @@ class Application(Gtk.Application):
         try:
             session_states = []
             for window in self.__windows:
+                window.container.stop()
                 for view in window.container.views:
                     uri = view.webview.get_uri()
                     private = view.webview.private
