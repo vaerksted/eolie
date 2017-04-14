@@ -389,5 +389,6 @@ class Container(Gtk.Paned):
         """
         if self.__history_queue:
             (title, uri, mtime) = self.__history_queue.pop(0)
-            El().history.add(title, uri, mtime)
+            history_id = El().history.add(title, uri, mtime)
+            El().sync_worker.push_history([history_id])
             GLib.idle_add(self.__on_sync_finish, worker)
