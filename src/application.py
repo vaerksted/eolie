@@ -182,32 +182,6 @@ class Application(Gtk.Application):
             self.init()
             self.__get_new_window()
 
-    def prepare_to_exit(self, action=None, param=None, exit=True):
-        """
-            Save window position and view
-        """
-        self.download_manager.cancel()
-        self.adblock.stop()
-        if self.sync_worker is not None:
-            self.sync_worker.stop()
-        try:
-            session_states = []
-            for window in self.__windows:
-                window.container.stop()
-                for view in window.container.views:
-                    uri = view.webview.get_uri()
-                    private = view.webview.private
-                    state = view.webview.get_session_state().serialize()
-                    session_states.append((uri, private, state.get_data()))
-            dump(session_states,
-                 open(self.LOCAL_PATH + "/session_states.bin", "wb"))
-            dump(self.zoom_levels,
-                 open(self.LOCAL_PATH + "/zoom_levels.bin", "wb"))
-        except Exception as e:
-            print("Application::prepare_to_exit()", e)
-        if exit:
-            self.quit()
-
     def set_setting(self, key, value):
         """
             Set setting for all view
@@ -278,6 +252,34 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __save_state(self):
+        """
+            Save window position and view
+        """
+        self.download_manager.cancel()
+        self.adblock.stop()
+        if self.sync_worker is not None:
+            self.sync_worker.stop()
+        try:
+            remember_session = self.settings.get_value("remember-session")
+            session_states = []
+            for window in self.__windows:
+                window.container.stop()
+                if not remember_session:
+                    continue
+                for view in window.container.views:
+                    uri = view.webview.get_uri()
+                    private = view.webview.private
+                    state = view.webview.get_session_state().serialize()
+                    session_states.append((uri, private, state.get_data()))
+            if remember_session:
+                dump(session_states,
+                     open(self.LOCAL_PATH + "/session_states.bin", "wb"))
+                dump(self.zoom_levels,
+                     open(self.LOCAL_PATH + "/zoom_levels.bin", "wb"))
+        except Exception as e:
+            print("Application::save_state()", e)
+
     def __get_new_window(self):
         """
             Return a new window
@@ -288,6 +290,15 @@ class Application(Gtk.Application):
         window.show()
         self.__windows.append(window)
         return window
+
+    def __show_plugins(self):
+        """
+            Show available plugins on stdout
+        """
+        if self.debug:
+            self.active_window.container.current.webview.get_context(
+                                                                ).get_plugins(
+                                   None, self.__on_get_plugins, None)
 
     def __restore_state(self):
         """
@@ -344,9 +355,7 @@ class Application(Gtk.Application):
             else:
                 active_window.container.add_web_view(self.start_page, True,
                                                      private_browsing)
-        if self.debug:
-            active_window.container.current.webview.get_context().get_plugins(
-                                   None, self.__on_get_plugins, None)
+        GLib.idle_add(self.__show_plugins)
         return 0
 
     def __on_get_plugins(self, source, result, data):
@@ -369,10 +378,11 @@ class Application(Gtk.Application):
             @param event as Gdk.Event
         """
         window.container.save_position()
+        self.__save_state()
         self.__windows.remove(window)
         window.destroy()
         if not self.__windows:
-            self.prepare_to_exit()
+            self.quit()
 
     def __on_settings_activate(self, action, param):
         """
@@ -460,7 +470,7 @@ class Application(Gtk.Application):
         self.add_action(help_action)
 
         quit_action = Gio.SimpleAction.new('quit', None)
-        quit_action.connect('activate', self.prepare_to_exit)
+        quit_action.connect('activate', lambda x, y: self.__save_state())
         self.add_action(quit_action)
 
     def __on_activate(self, application):
