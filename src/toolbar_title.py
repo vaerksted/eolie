@@ -295,6 +295,10 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
+        # Needed here too because we don't want to set uri again when
+        # window get focus. (don't want to clear user input)
+        if self.__lock_focus:
+            return True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         self.__set_text_uri(self.__uri)
