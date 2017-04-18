@@ -533,7 +533,7 @@ class WebView(WebKit2.WebView):
         """
         El().download_manager.add(download)
         # Notify user about download
-        window = self.get_toplevel()
+        window = self.get_ancestor(Gtk.Window)
         if window is not None:
             window.toolbar.end.show_download(download)
 
