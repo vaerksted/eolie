@@ -240,12 +240,12 @@ class DownloadsPopover(Gtk.Popover):
             @param listbox as Gtk.ListBox
             @param row as Row
         """
-        if row.finished:
-            try:
+        try:
+            if row.finished:
                 Gtk.show_uri(None, row.download.get_destination(), int(time()))
-            except:  # Destination not found
-                pass
-            self.hide()
+                self.hide()
+        except:  # Destination not found
+            pass
 
     def __on_map(self, widget):
         """
