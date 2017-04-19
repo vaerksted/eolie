@@ -50,7 +50,9 @@ class Row(Gtk.ListBoxRow):
         if finished:
             self.__on_finished(download)
         else:
-            self.__progress.set_fraction(download.get_estimated_progress())
+            progress = download.get_estimated_progress()
+            if progress is not None:
+                self.__progress.set_fraction(progress)
         self.add(builder.get_object("row"))
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
