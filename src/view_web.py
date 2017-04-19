@@ -79,6 +79,10 @@ class WebView(WebKit2.WebView):
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
+        if uri == "about:blank":
+            WebKit2.WebView.load_plain_text(self, "")
+            self.__loaded_uri = uri
+            return
         parsed = urlparse(uri)
         # We are not a ftp browser, fall back to env
         if parsed.scheme == "ftp":

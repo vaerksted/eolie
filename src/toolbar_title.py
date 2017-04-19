@@ -451,7 +451,9 @@ class ToolbarTitle(Gtk.Bin):
         """
         uri = entry.get_text()
         parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "file", "populars"] and\
+        is_uri = parsed.scheme in ["about", "http",
+                                   "https", "file", "populars"]
+        if not is_uri and\
                 El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
@@ -567,7 +569,7 @@ class ToolbarTitle(Gtk.Bin):
         value = entry.get_text()
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
-        is_uri = parsed.scheme in ["http", "file", "https", "populars"]
+        is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
             self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
