@@ -555,6 +555,15 @@ class UriPopover(Gtk.Popover):
         El().sync_worker.sync()
         GLib.timeout_add(1000, self.__check_sync_timer)
 
+    def _on_import_button_clicked(self, button):
+        """
+            Sync with Mozilla Sync
+            @param button as Gtk.Button
+        """
+        from eolie.dialog_import_bookmarks import ImportBookmarksDialog
+        dialog = ImportBookmarksDialog(self.__window)
+        dialog.run()
+
     def _on_remove_button_clicked(self, button):
         """
             Save bookmarks to tag

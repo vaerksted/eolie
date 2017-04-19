@@ -9,6 +9,7 @@ app_PYTHON = \
     database_history.py\
     dbus_helper.py\
     dialog_clear_data.py\
+    dialog_import_bookmarks.py\
     download_manager.py\
     define.py\
     extension_adblock.py\

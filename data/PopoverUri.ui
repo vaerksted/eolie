@@ -12,6 +12,11 @@
     <property name="can_focus">False</property>
     <property name="icon_name">view-refresh-symbolic</property>
   </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">bookmark-new-symbolic</property>
+  </object>
   <object class="GtkGrid" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -172,6 +177,24 @@
                   </object>
                   <packing>
                     <property name="left_attach">3</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="import_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Import bookmarks</property>
+                    <property name="image">image3</property>
+                    <property name="relief">none</property>
+                    <signal name="clicked" handler="_on_import_button_clicked" swapped="no"/>
+                    <style>
+                      <class name="small-padding"/>
+                    </style>
+                  </object>
+                  <packing>
+                    <property name="left_attach">4</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>

@@ -77,7 +77,6 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_bookmarks_tags)
                     sql.execute(self.__create_parents)
                     sql.commit()
-                self.import_firefox()
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 
@@ -689,64 +688,70 @@ class DatabaseBookmarks:
         """
             Mozilla Firefox importer
         """
-        SqlCursor.add(self)
-        firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
-        d = Gio.File.new_for_path(firefox_path)
-        infos = d.enumerate_children(
-            'standard::name,standard::type',
-            Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
-            None)
-        sqlite_path = None
-        for info in infos:
-            if info.get_file_type() == Gio.FileType.DIRECTORY:
-                f = Gio.File.new_for_path(firefox_path +
-                                          info.get_name() + "/places.sqlite")
-                if f.query_exists():
-                    sqlite_path = f.get_path()
-                    break
-        if sqlite_path is not None:
-            c = sqlite3.connect(sqlite_path, 600.0)
-            # Add bookmarks
-            bookmarks = self.__get_firefox_bookmarks(c)
-            for (title, uri,  parent_name, bookmark_guid,
-                 parent_guid, position) in bookmarks:
-                tags = self.__get_tags_for_firefox_bookmark(c, bookmark_guid)
-                bookmark_guid = self.__clean_guid(bookmark_guid)
-                parent_guid = self.__clean_guid(parent_guid)
-                if not uri.startswith('http') or not title:
-                    continue
-                uri = uri.rstrip('/')
-                rowid = self.get_id(uri)
-                if rowid is None:
-                    # If bookmark is not tagged, we use parent name
-                    if not tags:
-                        tags = [parent_name]
-                    # Bookmarks and folder
-                    bookmark_id = self.add(title, uri, bookmark_guid,
-                                           tags, 0, False)
-                    self.set_parent(bookmark_id, parent_guid,
-                                    parent_name, False)
-                    self.set_position(bookmark_id, position, False)
-            # Add folders, we need to get them as Firefox need children order
-            parents = self.__get_firefox_parents(c)
-            for (title, parent_name, bookmark_guid,
-                 parent_guid, position) in parents:
-                bookmark_guid = self.__clean_guid(bookmark_guid)
-                parent_guid = self.__clean_guid(parent_guid)
-                if not title or bookmark_guid == "root":
-                    continue
-                uri = bookmark_guid
-                rowid = self.get_id(uri)
-                if rowid is None:
-                    # Bookmarks and folder
-                    bookmark_id = self.add(title, uri, bookmark_guid,
-                                           [], 0, False)
-                    self.set_parent(bookmark_id, parent_guid,
-                                    parent_name, False)
-                    self.set_position(bookmark_id, position, False)
-        with SqlCursor(self) as sql:
-            sql.commit()
-        SqlCursor.remove(self)
+        try:
+            SqlCursor.add(self)
+            firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
+            d = Gio.File.new_for_path(firefox_path)
+            infos = d.enumerate_children(
+                'standard::name,standard::type',
+                Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
+                None)
+            sqlite_path = None
+            for info in infos:
+                if info.get_file_type() == Gio.FileType.DIRECTORY:
+                    f = Gio.File.new_for_path(firefox_path +
+                                              info.get_name() +
+                                              "/places.sqlite")
+                    if f.query_exists():
+                        sqlite_path = f.get_path()
+                        break
+            if sqlite_path is not None:
+                c = sqlite3.connect(sqlite_path, 600.0)
+                # Add bookmarks
+                bookmarks = self.__get_firefox_bookmarks(c)
+                for (title, uri,  parent_name, bookmark_guid,
+                     parent_guid, position) in bookmarks:
+                    tags = self.__get_tags_for_firefox_bookmark(c,
+                                                                bookmark_guid)
+                    bookmark_guid = self.__clean_guid(bookmark_guid)
+                    parent_guid = self.__clean_guid(parent_guid)
+                    if not uri.startswith('http') or not title:
+                        continue
+                    uri = uri.rstrip('/')
+                    rowid = self.get_id(uri)
+                    if rowid is None:
+                        # If bookmark is not tagged, we use parent name
+                        if not tags:
+                            tags = [parent_name]
+                        # Bookmarks and folder
+                        bookmark_id = self.add(title, uri, bookmark_guid,
+                                               tags, 0, False)
+                        self.set_parent(bookmark_id, parent_guid,
+                                        parent_name, False)
+                        self.set_position(bookmark_id, position, False)
+                # Add folders, we need to get them
+                # as Firefox need children order
+                parents = self.__get_firefox_parents(c)
+                for (title, parent_name, bookmark_guid,
+                     parent_guid, position) in parents:
+                    bookmark_guid = self.__clean_guid(bookmark_guid)
+                    parent_guid = self.__clean_guid(parent_guid)
+                    if not title or bookmark_guid == "root":
+                        continue
+                    uri = bookmark_guid
+                    rowid = self.get_id(uri)
+                    if rowid is None:
+                        # Bookmarks and folder
+                        bookmark_id = self.add(title, uri, bookmark_guid,
+                                               [], 0, False)
+                        self.set_parent(bookmark_id, parent_guid,
+                                        parent_name, False)
+                        self.set_position(bookmark_id, position, False)
+            with SqlCursor(self) as sql:
+                sql.commit()
+            SqlCursor.remove(self)
+        except Exception as e:
+            print("DatabaseBookmarks::import_firefox:", e)
 
     def exists_guid(self, guid):
         """

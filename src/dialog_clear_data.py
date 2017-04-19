@@ -115,6 +115,9 @@ class ClearDataDialog:
             @param dialog as Gtk.Dialog
             @param response_id as int
         """
+        if response_id == Gtk.ResponseType.DELETE_EVENT:
+            return
+        print(response_id)
         context = WebKit2.WebContext.get_default()
         data_manager = context.get_property("website-data-manager")
         # Remove items
