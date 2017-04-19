@@ -92,6 +92,8 @@ class ToolbarEnd(Gtk.Bin):
             Notify user about download
             @param download as WebKit2.Download
         """
+        if self.__window.toolbar.title.lock_focus:
+            return
         header = Gtk.Label()
         header.set_markup("<b>" + _("Downloading from:") + "</b>")
         header.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
