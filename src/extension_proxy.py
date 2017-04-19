@@ -119,7 +119,7 @@ class ProxyExtension(Server):
             if username is not None and password is not None:
                 return (username.get_value(), password.get_value())
         except Exception as e:
-            print("ProxyExtension::GetForms()", e)
+            print("ProxyExtension::GetForms():", e)
         return ("", "")
 
 #######################
