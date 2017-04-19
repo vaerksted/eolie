@@ -241,7 +241,10 @@ class DownloadsPopover(Gtk.Popover):
             @param row as Row
         """
         if row.finished:
-            Gtk.show_uri(None, row.download.get_destination(), int(time()))
+            try:
+                Gtk.show_uri(None, row.download.get_destination(), int(time()))
+            except:  # Destination not found
+                pass
             self.hide()
 
     def __on_map(self, widget):
