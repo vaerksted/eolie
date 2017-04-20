@@ -140,7 +140,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title instead of uri
         """
-        if title:
+        if title and self.__uri:
             self.__placeholder.set_text(title)
             if not self.__lock_focus and\
                     not self.__popover.is_visible():
