@@ -212,13 +212,17 @@ class Container(Gtk.Paned):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        # Block popups
+        # Block popups, see WebView::set_popup_exception() for details
         popup_block = El().settings.get_value("popupblock")
+        parsed = urlparse(navigation_action.get_request().get_uri())
+        uri = parsed.netloc + parsed.path
         if popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,
                                WebKit2.NavigationType.RELOAD,
-                               WebKit2.NavigationType.BACK_FORWARD]:
+                               WebKit2.NavigationType.BACK_FORWARD] and\
+                uri != related.popup_exception:
+            related.set_popup_exception(uri)
             return
         from eolie.view_web import WebView
         webview = WebView.new_with_related_view(related)

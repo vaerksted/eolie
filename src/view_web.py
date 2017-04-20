@@ -104,6 +104,15 @@ class WebView(WebKit2.WebView):
         self.__loaded_uri = uri
         WebKit2.WebView.load_uri(self, uri)
 
+    def set_popup_exception(self, uri):
+        """
+            Mark uri as an exception for popup
+            Will be reseted as soon a new load request is started
+            This allow to block popup one time per request. If it's a wanted
+            popup, it will be shown on next click
+        """
+        self.__popup_exception = uri
+
     def set_setting(self, key, value):
         """
             Set setting to value
@@ -169,6 +178,14 @@ class WebView(WebKit2.WebView):
         p.run_dialog()
 
     @property
+    def popup_exception(self):
+        """
+            Get current popup exception
+            @return exception as str/None
+        """
+        return self.__popup_exception
+
+    @property
     def readable(self):
         """
             Readable status
@@ -210,6 +227,7 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
+        self.__popup_exception = None
         self.__initial_selection = ""
         self.__in_read_mode = False
         self.__readable_content = ""
@@ -548,6 +566,7 @@ class WebView(WebKit2.WebView):
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
+            self.__popup_exception = None
             self.set_setting("auto-load-images",
                              not El().settings.get_value("imgblock"))
             self.__title = ""
