@@ -83,7 +83,11 @@ def get_current_monitor_model(window):
     screen = Gdk.Screen.get_default()
     display = screen.get_display()
     monitor = display.get_monitor_at_window(window.get_window())
-    return monitor.get_model()
+    width_mm = monitor.get_width_mm()
+    height_mm = monitor.get_height_mm()
+    geometry = monitor.get_geometry()
+    return "%sx%s/%sx%s" % (width_mm, height_mm,
+                            geometry.width, geometry.height)
 
 
 def noaccents(string):
