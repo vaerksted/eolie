@@ -40,7 +40,14 @@ class ImportBookmarksDialog:
         self.__dialog = builder.get_object("dialog")
         self.__dialog.set_transient_for(parent)
         self.__listbox = builder.get_object("listbox")
-        for item in ["Firefox", "Chromium", "Chrome", _("Others")]:
+        items = ["Firefox", "Chromium", "Chrome"]
+        try:
+            from bs4 import BeautifulSoup
+            BeautifulSoup
+            items.append(_("Others"))
+        except Exception as e:
+            print("ImportBookmarksDialog::__init__():", e)
+        for item in items:
             label = Gtk.Label.new(item)
             label.show()
             self.__listbox.add(label)
