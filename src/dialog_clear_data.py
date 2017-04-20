@@ -37,7 +37,7 @@ class ClearDataDialog:
         """
         self.__search = ""
         self.__parent_iters = {}
-        self.__timespan = 0
+        self.__timespan_value = 0
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ClearData.ui")
         builder.connect_signals(self)
@@ -75,6 +75,11 @@ class ClearDataDialog:
         """
         iterator = self.__filter.get_iter(path)
         item = self.__filter.get_value(iterator, self.__ModelColumn.DATA)
+        # We are a parent, only toggled is children available
+        if item is None:
+            child = self.__filter.iter_children(iterator)
+            if child is None and self.__timespan_value == 0:
+                return
         toggle = not self.__filter.get_value(iterator,
                                              self.__ModelColumn.TOGGLE)
         self.__filter.set_value(iterator, self.__ModelColumn.TOGGLE, toggle)
@@ -98,7 +103,7 @@ class ClearDataDialog:
             @param combobox as Gtk.ComboBox
         """
         active = combobox.get_active()
-        self.__timespan = TimeSpanValues[active]
+        self.__timespan_value = TimeSpanValues[str(active)]
         self.__filter.refilter()
 
     def _on_search_changed(self, entry):
@@ -117,11 +122,10 @@ class ClearDataDialog:
         """
         if response_id == Gtk.ResponseType.DELETE_EVENT:
             return
-        print(response_id)
         context = WebKit2.WebContext.get_default()
         data_manager = context.get_property("website-data-manager")
         # Remove items
-        if self.__timespan == 0:
+        if self.__timespan_value == 0:
             items = {}
             # Assemble item and its types
             for parent in self.__filter:
@@ -140,9 +144,7 @@ class ClearDataDialog:
                         items[data] = WebKit2.WebsiteDataTypes(0)
                     items[data] |= flag
                     child = self.__filter.iter_next(child)
-            for data in items.keys():
-                types = items[data]
-                data_manager.remove(types, [data], None, None)
+            self.__remove_data(data_manager, items)
         # Clear data for types
         else:
             types = WebKit2.WebsiteDataTypes(0)
@@ -150,11 +152,22 @@ class ClearDataDialog:
                 if item[self.__ModelColumn.TOGGLE]:
                     types |= WebKit2.WebsiteDataTypes(
                                                item[self.__ModelColumn.TYPE])
-            data_manager.clear(types, self.__timespan, None, None)
+            data_manager.clear(types, self.__timespan_value, None, None)
 
 #######################
 # PRIVATE             #
 #######################
+    def __remove_data(self, data_manager, items):
+        """
+            Remove data from data_manager
+            @param data_manager as WebKit2.WebsiteDataManager
+            @param items as [{}]
+        """
+        if items:
+            (data, types) = items.popitem()
+            data_manager.remove(types, [data], None,
+                                self.__on_remove_finish, items)
+
     def __get_name(self, data_type):
         """
             Get name for type
@@ -268,17 +281,13 @@ class ClearDataDialog:
         self.__filter.set_value(parent, self.__ModelColumn.INCONSISTENT,
                                 inconsistent)
 
-    def __should_be_visible(self, iterator):
+    def __on_remove_finish(self, data_manager, result, items):
         """
-            Check if parent should be visible
-            @param iterator as Gtk.TreeIter
+            @param data_manager as WebKit2.WebsiteDataManager
+            @param result as Gio.AsyncResult
+            @param items as [{}]
         """
-        child = None
-        (result, child_iter) = self.__filter.convert_child_iter_to_iter(
-                                                                      iterator)
-        if result:
-            child = self.__filter.iter_children(child_iter)
-        return child is not None
+        self.__remove_data(data_manager, items)
 
     def __on_treeview_filter(self, model, iterator, data):
         """
@@ -286,21 +295,13 @@ class ClearDataDialog:
             @param iterator as Gtk.TreeIter
             @param data as object
         """
-        if self.__search == "" and self.__timespan == 0:
-            return True
         item = model.get_value(iterator, self.__ModelColumn.DATA)
         if item is None:
-            if self.__timespan != 0:
-                return True
-            elif self.__should_be_visible(iterator):
-                return True
-            else:
-                return False
-        name = model.get_value(iterator, self.__ModelColumn.NAME)
-        if self.__timespan != 0:
-            return False
-        elif name.lower().find(self.__search.lower()) != -1:
             return True
+        elif self.__timespan_value == 0:
+            name = model.get_value(iterator, self.__ModelColumn.NAME)
+            if name.lower().find(self.__search.lower()) != -1:
+                return True
 
     def __on_data_manager_fetch(self, data_manager, result):
         """

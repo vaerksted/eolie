@@ -713,7 +713,6 @@ class WebView(WebKit2.WebView):
         uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
         if mouse_button == 0:
-            print(uri)
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 # Block popups
                 popup_block = El().settings.get_value("popupblock")
