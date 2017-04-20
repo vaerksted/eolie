@@ -681,6 +681,58 @@ class DatabaseBookmarks:
                             AND bookmarks.del!=1)")
             sql.commit()
 
+    def import_html(self, path):
+        """
+            Import html bookmarks
+            @param path as str
+        """
+        try:
+            from bs4 import BeautifulSoup
+            SqlCursor.add(self)
+            f = Gio.File.new_for_path(path)
+            if not f.query_exists():
+                return
+            (status, content, tag) = f.load_contents(None)
+            if status:
+                data = content.decode("utf-8")
+                soup = BeautifulSoup(data, "html.parser")
+                parent_name = ""
+                position = 0
+                for dt in soup.findAll("dt"):
+                    h3 = dt.find("h3")
+                    if h3 is not None:
+                        parent_name = h3.contents[0]
+                        continue
+                    else:
+                        a = dt.find("a")
+                        uri = a.get("href")
+                        if a.get("tags") is None:
+                            tags = [parent_name]
+                        else:
+                            tags = [a.get("tags")]
+                        title = a.contents[0]
+                        if uri is None:
+                            parent_name = title
+                            continue
+                        elif not uri.startswith('http') or not title:
+                            continue
+                        uri = uri.rstrip('/')
+                        rowid = self.get_id(uri)
+                        if rowid is None:
+                            if not tags:
+                                tags = [parent_name]
+                            # Add bookmark
+                            bookmark_id = self.add(title, uri, None,
+                                                   tags, 0, False)
+                            # Set position
+                            self.set_position(bookmark_id, position, False)
+                            position += 1
+            with SqlCursor(self) as sql:
+                sql.commit()
+            SqlCursor.remove(self)
+        except Exception as e:
+            print("DatabaseBookmarks::import_html:", e)
+
     def import_chromium(self, chrome):
         """
             Chromium/Chrome importer
@@ -713,26 +765,25 @@ class DatabaseBookmarks:
                     for child in children:
                         if child["type"] == "folder":
                             parents.append((child["name"], child["children"]))
+                        elif child["type"] == "url":
+                            bookmarks.append((child["name"],
+                                             child["url"]))
+                    position = 0
+                    for bookmark in bookmarks:
+                        tags = [parent_name]
+                        title = bookmark[0]
+                        uri = bookmark[1]
+                        if not uri.startswith('http') or not title:
                             continue
-                        else:
-                            if child["type"] == "url":
-                                bookmarks.append((child["name"],
-                                                 child["url"]))
-                        position = 0
-                        for bookmark in bookmarks:
-                            tags = [parent_name]
-                            title = bookmark[0]
-                            uri = bookmark[1]
-                            if not uri.startswith('http') or not title:
-                                continue
-                            uri = uri.rstrip('/')
-                            rowid = self.get_id(uri)
-                            if rowid is None:
-                                # Add bookmark
-                                bookmark_id = self.add(title, uri, None,
-                                                       tags, 0, False)
-                                # Set position
-                                self.set_position(bookmark_id, position, False)
+                        uri = uri.rstrip('/')
+                        rowid = self.get_id(uri)
+                        if rowid is None:
+                            # Add bookmark
+                            bookmark_id = self.add(title, uri, None,
+                                                   tags, 0, False)
+                            # Set position
+                            self.set_position(bookmark_id, position, False)
+                            position += 1
                 with SqlCursor(self) as sql:
                     sql.commit()
                 SqlCursor.remove(self)

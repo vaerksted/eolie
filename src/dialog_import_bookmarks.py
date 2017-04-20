@@ -72,8 +72,26 @@ class ImportBookmarksDialog:
             El().bookmarks.import_chromium(True)
         elif index == self.__Choice.CHROMIUM:
             El().bookmarks.import_chromium(False)
+        else:
+            dialog = Gtk.FileChooserDialog(
+                                   _("Import HTML bookmarks"), self.__parent,
+                                   Gtk.FileChooserAction.OPEN,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+            dialog.connect("response", self.__on_file_chooser_response)
+            dialog.run()
+            dialog.destroy()
         self.__parent.toolbar.title.hide_popover()
 
 #######################
 # PRIVATE             #
 #######################
+    def __on_file_chooser_response(self, dialog, response_id):
+        """
+            Import file
+            @param dialog as GtkFileChooserDialog
+            @param response_id as int
+        """
+        if response_id == Gtk.ResponseType.OK:
+            path = dialog.get_filename()
+            El().bookmarks.import_html(path)
