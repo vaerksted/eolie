@@ -709,13 +709,22 @@ class WebView(WebKit2.WebView):
                 decision.download()
             return False
 
-        uri = decision.get_navigation_action().get_request().get_uri()
-        mouse_button = decision.get_navigation_action().get_mouse_button()
+        navigation_action = decision.get_navigation_action()
+        uri = navigation_action.get_request().get_uri()
+        mouse_button = navigation_action.get_mouse_button()
         if mouse_button == 0:
+            print(uri)
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, True)
-                decision.ignore()
-                return True
+                # Block popups
+                popup_block = El().settings.get_value("popupblock")
+                if not popup_block or\
+                        navigation_action.get_navigation_type() not in [
+                                       WebKit2.NavigationType.OTHER,
+                                       WebKit2.NavigationType.RELOAD,
+                                       WebKit2.NavigationType.BACK_FORWARD]:
+                    self.emit("new-page", uri, True)
+                    decision.ignore()
+                    return True
             else:
                 decision.use()
                 return False

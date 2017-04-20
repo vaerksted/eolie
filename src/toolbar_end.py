@@ -72,6 +72,13 @@ class ToolbarEnd(Gtk.Bin):
                GLib.Variant.new_boolean(El().settings.get_value("adblock")))
         adblock_action.connect("change-state", self.__on_adblock_change_state)
         self.__window.add_action(adblock_action)
+        popup_action = Gio.SimpleAction.new_stateful(
+               "popupblock",
+               None,
+               GLib.Variant.new_boolean(El().settings.get_value("popupblock")))
+        popup_action.connect("change-state",
+                             self.__on_popup_change_state)
+        self.__window.add_action(popup_action)
         image_action = Gio.SimpleAction.new_stateful(
                "imgblock",
                None,
@@ -367,17 +374,27 @@ class ToolbarEnd(Gtk.Bin):
             @param param as GLib.Variant
         """
         action.set_state(param)
-        El().settings.set_value('adblock', param)
+        El().settings.set_value("adblock", param)
         self.__window.container.current.webview.reload()
 
-    def __on_image_change_state(self, action, param):
+    def __on_popup_change_state(self, action, param):
         """
-            Set reader view
+            Update popup block state
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
         action.set_state(param)
-        El().settings.set_value('imgblock', param)
+        El().settings.set_value("popupblock", param)
+        self.__window.container.current.webview.reload()
+
+    def __on_image_change_state(self, action, param):
+        """
+            Update image block state
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        El().settings.set_value("imgblock", param)
         self.__window.container.current.webview.reload()
 
     def __on_download(self, download_manager, name=""):

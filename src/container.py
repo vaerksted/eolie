@@ -206,12 +206,20 @@ class Container(Gtk.Paned):
         view = self.__get_view_for_webview(webview)
         self.add_web_view(uri, show, webview.private, view)
 
-    def __on_create(self, related, action):
+    def __on_create(self, related, navigation_action):
         """
             Create a new view for action
             @param related as WebView
-            @param action as WebKit2.NavigationAction
+            @param navigation_action as WebKit2.NavigationAction
         """
+        # Block popups
+        popup_block = El().settings.get_value("popupblock")
+        if popup_block and\
+                navigation_action.get_navigation_type() in [
+                               WebKit2.NavigationType.OTHER,
+                               WebKit2.NavigationType.RELOAD,
+                               WebKit2.NavigationType.BACK_FORWARD]:
+            return
         from eolie.view_web import WebView
         webview = WebView.new_with_related_view(related)
         webview.connect("ready-to-show", self.__on_ready_to_show)
