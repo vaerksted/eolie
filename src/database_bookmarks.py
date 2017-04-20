@@ -16,7 +16,7 @@ import sqlite3
 import itertools
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El
+from eolie.define import El, EOLIE_LOCAL_PATH, CONFIG_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -25,11 +25,8 @@ class DatabaseBookmarks:
     """
         Eolie bookmarks db
     """
-    if GLib.getenv("XDG_DATA_HOME") is None:
-        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
-    else:
-        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
-    DB_PATH = "%s/bookmarks.db" % __LOCAL_PATH
+
+    DB_PATH = "%s/bookmarks.db" % EOLIE_LOCAL_PATH
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -67,7 +64,7 @@ class DatabaseBookmarks:
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(self.__LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema
@@ -684,6 +681,64 @@ class DatabaseBookmarks:
                             AND bookmarks.del!=1)")
             sql.commit()
 
+    def import_chromium(self, chrome):
+        """
+            Chromium/Chrome importer
+            As Eolie doesn't sync with Chromium, we do not handle parent
+            guid and just import parents as tags
+            @param chrome as bool
+        """
+        try:
+            SqlCursor.add(self)
+            import json
+            if chrome:
+                path = CONFIG_PATH + "/chrome/Default/Bookmarks"
+            else:
+                path = CONFIG_PATH + "/chromium/Default/Bookmarks"
+            f = Gio.File.new_for_path(path)
+            if not f.query_exists():
+                return
+            (status, content, tag) = f.load_contents(None)
+            if status:
+                data = content.decode("utf-8")
+                j = json.loads(data)
+                parents = []
+                # Setup initial parents
+                for root in j["roots"]:
+                    parents.append(("", j["roots"][root]["children"]))
+                # Walk parents and children
+                while parents:
+                    (parent_name, children) = parents.pop(0)
+                    bookmarks = []
+                    for child in children:
+                        if child["type"] == "folder":
+                            parents.append((child["name"], child["children"]))
+                            continue
+                        else:
+                            if child["type"] == "url":
+                                bookmarks.append((child["name"],
+                                                 child["url"]))
+                        position = 0
+                        for bookmark in bookmarks:
+                            tags = [parent_name]
+                            title = bookmark[0]
+                            uri = bookmark[1]
+                            if not uri.startswith('http') or not title:
+                                continue
+                            uri = uri.rstrip('/')
+                            rowid = self.get_id(uri)
+                            if rowid is None:
+                                # Add bookmark
+                                bookmark_id = self.add(title, uri, None,
+                                                       tags, 0, False)
+                                # Set position
+                                self.set_position(bookmark_id, position, False)
+                with SqlCursor(self) as sql:
+                    sql.commit()
+                SqlCursor.remove(self)
+        except Exception as e:
+            print("DatabaseBookmarks::import_chromium:", e)
+
     def import_firefox(self):
         """
             Mozilla Firefox importer
@@ -730,7 +785,7 @@ class DatabaseBookmarks:
                                         parent_name, False)
                         self.set_position(bookmark_id, position, False)
                 # Add folders, we need to get them
-                # as Firefox need children order
+                # as Firefox needs children order
                 parents = self.__get_firefox_parents(c)
                 for (title, parent_name, bookmark_guid,
                      parent_guid, position) in parents:

@@ -18,6 +18,20 @@ PROXY_BUS = 'org.gnome.Eolie.Proxy'
 PROXY_PATH = '/org/gnome/EolieProxy'
 
 
+# Setup common paths
+if GLib.getenv("XDG_DATA_HOME") is None:
+    LOCAL_PATH = GLib.get_home_dir() + "/.local/share"
+else:
+    LOCAL_PATH = GLib.getenv("XDG_DATA_HOME")
+
+EOLIE_LOCAL_PATH = LOCAL_PATH + "/eolie"
+
+if GLib.getenv("XDG_CONFIG_HOME") is None:
+    CONFIG_PATH = GLib.get_home_dir() + "/.config"
+else:
+    CONFIG_PATH = GLib.getenv("XDG_CONFIG_HOME")
+
+
 class TimeSpan:
     HOUR = "0"
     DAY = "1"

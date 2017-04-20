@@ -33,6 +33,7 @@ class ImportBookmarksDialog:
             Init widget
             @param parent as Gtk.Window
         """
+        self.__parent = parent
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ImportBookmarks.ui")
         builder.connect_signals(self)
@@ -67,7 +68,11 @@ class ImportBookmarksDialog:
         index = self.__listbox.get_selected_row().get_index()
         if index == self.__Choice.FIREFOX:
             El().bookmarks.import_firefox()
-        return
+        elif index == self.__Choice.CHROME:
+            El().bookmarks.import_chromium(True)
+        elif index == self.__Choice.CHROMIUM:
+            El().bookmarks.import_chromium(False)
+        self.__parent.toolbar.title.hide_popover()
 
 #######################
 # PRIVATE             #
