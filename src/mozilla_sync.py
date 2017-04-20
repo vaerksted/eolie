@@ -63,7 +63,8 @@ class SyncWorker(GObject.GObject):
             Start syncing, you need to check sync_status property
             @param first_sync as bool
         """
-        if self.syncing:
+        if self.syncing or\
+                not Gio.NetworkMonitor.get_default().get_network_available():
             return True
         self.__username = ""
         self.__password = ""
