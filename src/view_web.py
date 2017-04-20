@@ -739,7 +739,10 @@ class WebView(WebKit2.WebView):
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 # Block popups
                 popup_block = El().settings.get_value("popupblock")
-                if not popup_block or\
+                parsed = urlparse(uri)
+                exception = El().adblock.is_an_exception(parsed.netloc) or\
+                    El().adblock.is_an_exception(parsed.netloc + parsed.path)
+                if exception or not popup_block or\
                         navigation_action.get_navigation_type() not in [
                                        WebKit2.NavigationType.OTHER,
                                        WebKit2.NavigationType.RELOAD,
