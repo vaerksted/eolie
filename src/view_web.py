@@ -126,34 +126,6 @@ class WebView(WebKit2.WebView):
             settings.set_property(key, value)
         self.set_settings(settings)
 
-    def switch_read_mode(self, force=False):
-        """
-            Show a readable version of page if available.
-            If in read mode, switch back to page
-            If force, always go in read mode
-            @param force as bool
-        """
-        show = not self.__in_read_mode or force
-        if show and self.__readable_content:
-            self.__in_read_mode = True
-            html = "<html><head>\
-                    <style type='text/css'>\
-                    *:not(img) {font-size: %s;\
-                        background-color: #333333;\
-                        color: #e6e6e6;\
-                        margin-left: auto;\
-                        margin-right: auto;\
-                        width: %s}\
-                    </style></head>" % (self.__document_font_size,
-                                        self.get_allocated_width() / 1.5)
-            html += "<title>%s</title>" % self.get_title()
-            html += self.__readable_content
-            html += "</html>"
-            GLib.idle_add(self.load_html, html, None)
-        else:
-            self.__in_read_mode = False
-            self.load_uri(self.__loaded_uri)
-
     def update_zoom_level(self):
         """
             Update zoom level
@@ -186,12 +158,12 @@ class WebView(WebKit2.WebView):
         return self.__popup_exception
 
     @property
-    def readable(self):
+    def readable_content(self):
         """
-            Readable status
-            @return (in_read_mode, content) as (bool, str)
+            Readable content
+            @return content as str
         """
-        return (self.__in_read_mode, self.__readable_content)
+        return self.__readable_content
 
     @property
     def private(self):
@@ -229,14 +201,12 @@ class WebView(WebKit2.WebView):
         self.__selection = ""
         self.__popup_exception = None
         self.__initial_selection = ""
-        self.__in_read_mode = False
         self.__readable_content = ""
         self.__js_timeout = None
         self.__cancellable = Gio.Cancellable()
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
         self.__title = ""
-        self.__document_font_size = "14pt"
         self.__bad_tls = None  # Keep bad TLS certificate
         self.set_hexpand(True)
         self.set_vexpand(True)
@@ -326,10 +296,6 @@ class WebView(WebKit2.WebView):
             @param settings as WebKit2.Settings
         """
         system = Gio.Settings.new("org.gnome.desktop.interface")
-        document_font_name = system.get_value("document-font-name").get_string(
-                                                                              )
-        self.__document_font_size = str(
-                                    int(document_font_name[-2:]) * 1.3) + "pt"
         settings.set_property(
                         "monospace-font-family",
                         system.get_value("monospace-font-name").get_string())
@@ -466,8 +432,6 @@ class WebView(WebKit2.WebView):
         """
         self.__title = ""
         if view.get_uri() != "about:blank":
-            self.__readable_content = ""
-            self.__in_read_mode = False
             self.__js_timeout = None
 
     def __on_title_changed(self, webview, event):
@@ -490,7 +454,7 @@ class WebView(WebKit2.WebView):
         else:
             self.__title = title
             self.emit("title-changed", title)
-            if self.__js_timeout is None and not self.__in_read_mode:
+            if self.__js_timeout is None:
                 self.__js_timeout = GLib.timeout_add(
                                  2000,
                                  self.run_javascript_from_gresource,

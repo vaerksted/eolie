@@ -80,7 +80,7 @@
   <object class="GtkHeaderBar" id="headerbar">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="title">Import bookmarks</property>
+    <property name="title" translatable="yes">Import bookmarks</property>
     <property name="show_close_button">True</property>
     <child>
       <object class="GtkButton" id="import_button">

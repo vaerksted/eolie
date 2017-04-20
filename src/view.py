@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango
+from gi.repository import Gtk, GLib, Gio, Pango
 
 from eolie.widget_find import FindWidget
 from eolie.view_web import WebView
@@ -83,6 +83,7 @@ class View(Gtk.Overlay):
             @param webview as WebView
         """
         Gtk.Overlay.__init__(self)
+        self.__reading_view = None
         self.__parent = parent
         if parent is not None:
             parent.connect("destroy", self.__on_parent_destroy)
@@ -106,6 +107,49 @@ class View(Gtk.Overlay):
         self.add_overlay(self.__uri_label)
         self.__webview.connect("mouse-target-changed",
                                self.__on_mouse_target_changed)
+
+    def switch_read_mode(self):
+        """
+            Show a readable version of page if available.
+            If in read mode, switch back to page
+            If force, always go in read mode
+            @param force as bool
+        """
+        system = Gio.Settings.new("org.gnome.desktop.interface")
+        document_font_name = system.get_value("document-font-name").get_string(
+                                                                              )
+        document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
+        if self.__reading_view is None:
+            self.__reading_view = WebView.new()
+            self.__reading_view.show()
+            self.add_overlay(self.__reading_view)
+            if self.__webview.readable_content:
+                self.__in_read_mode = True
+                html = "<html><head>\
+                        <style type='text/css'>\
+                        *:not(img) {font-size: %s;\
+                            background-color: #333333;\
+                            color: #e6e6e6;\
+                            margin-left: auto;\
+                            margin-right: auto;\
+                            width: %s}\
+                        </style></head>" % (document_font_size,
+                                            self.get_allocated_width() / 1.5)
+                html += "<title>%s</title>" % self.__webview.get_title()
+                html += self.__webview.readable_content
+                html += "</html>"
+                GLib.idle_add(self.__reading_view.load_html, html, None)
+        else:
+            self.__reading_view.destroy()
+            self.__reading_view = None
+
+    @property
+    def reading(self):
+        """
+            True if reading
+            @return bool
+        """
+        return self.__reading_view is not None
 
     @property
     def parent(self):

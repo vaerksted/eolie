@@ -265,7 +265,7 @@ class Container(Gtk.Paned):
         if webview == self.current.webview:
             self.__window.toolbar.actions.set_actions(webview)
             self.__window.toolbar.title.show_readable_button(
-                                                    webview.readable[1] != "")
+                                                webview.readable_content != "")
             self.__window.toolbar.title.set_uri(webview.get_uri())
             if webview.is_loading():
                 self.__window.toolbar.title.progress.show()
@@ -319,7 +319,7 @@ class Container(Gtk.Paned):
         if webview == self.current.webview:
             uri = webview.get_uri()
             self.__window.toolbar.title.show_readable_button(
-                                                    webview.readable[1] != "")
+                                                webview.readable_content != "")
             self.__window.toolbar.title.set_uri(uri)
             title = webview.get_title()
             if title:
@@ -383,6 +383,9 @@ class Container(Gtk.Paned):
         self.__window.toolbar.title.update_load_indicator(webview)
         parsed = urlparse(webview.get_uri())
         if event == WebKit2.LoadEvent.STARTED:
+            # Turn off reading mode if needed
+            if self.current.reading:
+                self.current.switch_read_mode()
             if parsed.scheme == "populars":
                 GLib.idle_add(self.__window.toolbar.title.start_search)
             self.__window.toolbar.title.progress.show()

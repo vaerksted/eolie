@@ -74,8 +74,18 @@ class ToolbarTitle(Gtk.Bin):
         """
         if b:
             self.__readable.show()
+            self.set_reading()
         else:
             self.__readable.hide()
+
+    def set_reading(self):
+        """
+            Mark readable button
+        """
+        if self.__window.container.current.reading:
+            self.__readable_image.get_style_context().add_class("selected")
+        else:
+            self.__readable_image.get_style_context().remove_class("selected")
 
     def set_width(self, width):
         """
@@ -99,10 +109,6 @@ class ToolbarTitle(Gtk.Bin):
             return
         self.__input_warning_shown = False
         self.__secure_content = True
-        if self.__window.container.current.webview.readable[0]:
-            self.__readable_image.get_style_context().add_class("selected")
-        else:
-            self.__readable_image.get_style_context().remove_class("selected")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
         self.__uri = uri
@@ -371,11 +377,8 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__window.container.current.webview.switch_read_mode()
-        if self.__window.container.current.webview.readable[0]:
-            self.__readable_image.get_style_context().add_class("selected")
-        else:
-            self.__readable_image.get_style_context().remove_class("selected")
+        self.__window.container.current.switch_read_mode()
+        self.set_reading()
 
     def _on_action1_press(self, eventbox, event):
         """
