@@ -109,11 +109,15 @@ class Window(Gtk.ApplicationWindow):
         monitor_model = get_current_monitor_model(self)
         zoom_levels = El().settings.get_value(
                                          "default-zoom-level")
-        for zl in zoom_levels:
-            zoom_splited = zl.split('@')
+        user_zoom_level = False
+        for zoom_level in zoom_levels:
+            zoom_splited = zoom_level.split('@')
             if zoom_splited[0] == monitor_model:
                 self.__zoom_level = float(zoom_splited[1])
+                user_zoom_level = True
                 break
+        if not user_zoom_level:
+            self.__zoom_level = 1.0
 
     def __setup_content(self):
         """
