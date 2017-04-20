@@ -385,7 +385,6 @@ class ToolbarEnd(Gtk.Bin):
         """
         action.set_state(param)
         El().settings.set_value("popupblock", param)
-        self.__window.container.current.webview.reload()
 
     def __on_image_change_state(self, action, param):
         """
