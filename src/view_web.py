@@ -565,23 +565,27 @@ class WebView(WebKit2.WebView):
             @param view as WebView
             @param event as WebKit2.LoadEvent
         """
+        parsed = urlparse(view.get_uri())
         if event == WebKit2.LoadEvent.STARTED:
             self.__popup_exception = None
-            self.set_setting("auto-load-images",
-                             not El().settings.get_value("imgblock"))
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
+            exception = El().adblock.is_an_exception(
+                                    parsed.netloc) or\
+                        El().adblock.is_an_exception(
+                                    parsed.netloc + parsed.path)
+            imgblock = El().settings.get_value("imgblock")
+            self.set_setting("auto-load-images",
+                             not imgblock or exception)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
-                uri = view.get_uri()
                 # We need to send a title if non exists
                 if not self.__title:
                     self.__title = view.get_title()
                     if not self.__title:
                         self.__title = view.get_uri()
                     self.emit("title-changed", self.__title)
-                parsed = urlparse(uri)
                 adblock_js = "adblock_%s.js" % parsed.netloc
                 children = Gio.resources_enumerate_children(
                                           "/org/gnome/Eolie/adblock",
