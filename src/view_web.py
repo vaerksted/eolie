@@ -566,6 +566,7 @@ class WebView(WebKit2.WebView):
                             self.run_javascript_from_gresource(
                                     "/org/gnome/Eolie/adblock/" + javascript,
                                     None, None)
+                        break
 
     def __on_load_failed(self, view, event, uri, error):
         """
