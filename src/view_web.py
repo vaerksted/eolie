@@ -550,18 +550,21 @@ class WebView(WebKit2.WebView):
                     if not self.__title:
                         self.__title = view.get_uri()
                     self.emit("title-changed", self.__title)
-                adblock_js = "adblock_%s.js" % parsed.netloc
+                unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
+                javascripts = ["adblock_%s.js" % parsed.netloc,
+                               "adblock_%s.js" % unlocated_netloc]
                 children = Gio.resources_enumerate_children(
                                           "/org/gnome/Eolie/adblock",
                                           Gio.ResourceLookupFlags.NONE)
-                if adblock_js in children:
-                    exception = El().adblock.is_an_exception(
-                                    parsed.netloc) or\
-                        El().adblock.is_an_exception(
-                                    parsed.netloc + parsed.path)
-                    if not exception:
-                        self.run_javascript_from_gresource(
-                                    "/org/gnome/Eolie/adblock/" + adblock_js,
+                for javascript in javascripts:
+                    if javascript in children:
+                        exception = El().adblock.is_an_exception(
+                                        parsed.netloc) or\
+                            El().adblock.is_an_exception(
+                                        parsed.netloc + parsed.path)
+                        if not exception:
+                            self.run_javascript_from_gresource(
+                                    "/org/gnome/Eolie/adblock/" + javascript,
                                     None, None)
 
     def __on_load_failed(self, view, event, uri, error):
