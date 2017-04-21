@@ -319,12 +319,16 @@ class Container(Gtk.Paned):
         """
         if webview == self.current.webview:
             uri = webview.get_uri()
-            self.__window.toolbar.title.show_readable_button(
+            if uri:
+                self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
-            self.__window.toolbar.title.set_uri(uri)
-            title = webview.get_title()
-            if title:
-                self.__window.toolbar.title.set_title(title)
+                self.__window.toolbar.title.set_uri(uri)
+                title = webview.get_title()
+                if title:
+                    self.__window.toolbar.title.set_title(title)
+            else:
+                # Close web page if uri is null
+                self.sidebar.close_view(webview.get_ancestor(View))
 
     def __on_title_changed(self, webview, title):
         """
