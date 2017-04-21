@@ -234,6 +234,8 @@ class Row(Gtk.ListBoxRow):
         """
             @param download as WebKit2.Download
         """
+        self.__sublabel.set_label("")
+        self.set_tooltip_text("")
         self.__finished = True
         self.__progress.set_opacity(0)
         parent = self.get_parent()
