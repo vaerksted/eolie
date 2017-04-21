@@ -15,6 +15,10 @@
     background-image: none;
 }
 
+.dark {
+    background-color: rgb(51, 57, 59);
+    color: white;
+}
 
 /*
 @keyframes fadein {

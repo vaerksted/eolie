@@ -119,6 +119,7 @@ class ToolbarEnd(Gtk.Bin):
         grid.add(header)
         grid.add(uri)
         popover = Gtk.Popover.new()
+        popover.get_style_context().add_class("dark")
         popover.add(grid)
         popover.set_modal(False)
         popover.set_relative_to(self.__download_button)
