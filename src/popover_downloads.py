@@ -33,6 +33,7 @@ class Row(Gtk.ListBoxRow):
         self.__finished = finished
         self.__download_previous_time = None
         self.__download_bytes = 0
+        self.__avg_download_rates = []
         self.__uri = self.__download.get_request().get_uri()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
@@ -191,7 +192,6 @@ class Row(Gtk.ListBoxRow):
         else:
             icon = Gio.content_type_get_icon(mime)
             self.__preview.set_from_gicon(icon, Gtk.IconSize.DIALOG)
-        self.__download_previous_time = time()
 
     def __on_unmap(self, widget):
         """
@@ -216,18 +216,28 @@ class Row(Gtk.ListBoxRow):
         self.__download_bytes += length
         if self.__download_previous_time is not None:
             delta = new_time - self.__download_previous_time
-            # Update every 3 seconds
-            if delta > 3:
+            # Update every 1 seconds
+            if delta > 1:
                 bytes_per_second = 1 * self.__download_bytes /\
                                     delta
+                self.__avg_download_rates.append(bytes_per_second)
+                self.set_tooltip_text(self.__human_bytes_per_sec(
+                                                         bytes_per_second))
+                # Calculate average for last 5 rates
+                avg = 0
+                for rate in self.__avg_download_rates:
+                    avg += rate
+                if len(self.__avg_download_rates) > 5:
+                    self.__avg_download_rates.pop(0)
+                avg /= len(self.__avg_download_rates)
                 if incoming > 0:
-                    seconds = incoming / bytes_per_second
+                    seconds = incoming / avg
                     self.__sublabel.set_label(
                                             self.__human_seconds(int(seconds)))
-                    self.set_tooltip_text(self.__human_bytes_per_sec(
-                                                             bytes_per_second))
                 self.__download_bytes = 0
                 self.__download_previous_time = new_time
+        else:
+            self.__download_previous_time = new_time
         self.__progress.set_fraction(download.get_estimated_progress())
 
     def __on_finished(self, download):
