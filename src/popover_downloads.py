@@ -315,7 +315,7 @@ class DownloadsPopover(Gtk.Popover):
         """
         if row1.finished:
             return True
-        elif row1.download.get_estimated_progress() >\
+        elif row2.finished or row1.download.get_estimated_progress() >\
                 row2.download.get_estimated_progress():
             return False
 
