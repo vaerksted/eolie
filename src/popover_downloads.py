@@ -101,11 +101,13 @@ class Row(Gtk.ListBoxRow):
             @param bytes_per_sec as float
         """
         if bytes_per_sec < 1024:
-            return _("%s bytes/s" % round(bytes_per_sec, 2))
+            return _("Download speed: %s bytes/s" % round(bytes_per_sec, 2))
         elif bytes_per_sec / 1024 < 1024:
-            return _("%s KiB/s" % round(bytes_per_sec / 1024, 2))
+            return _("Download speed: %s KiB/s" % round(
+                                                   bytes_per_sec / 1024, 2))
         else:
-            return _("%s MiB/s" % round(bytes_per_sec / 1024 / 1024, 2))
+            return _("Download speed: %s MiB/s" % round(
+                                            bytes_per_sec / 1024 / 1024, 2))
 
     def __human_seconds(self, seconds):
         """
@@ -118,6 +120,7 @@ class Row(Gtk.ListBoxRow):
         hours_str = ""
         hours = -1
         minutes = -1
+        seconds_wanted = True
         # Make seconds string
         if seconds < 60:
             if seconds < 2:
@@ -137,8 +140,10 @@ class Row(Gtk.ListBoxRow):
             if minutes < 2:
                 minutes_str = _("%s minute") % minutes
             if minutes < 60:
+                seconds_wanted = False
                 minutes_str = _("%s minutes") % minutes
             else:
+                seconds_wanted = False
                 _minutes = minutes % 60
                 if _minutes < 2:
                     minutes_str = _("%s minute") % _minutes
@@ -156,10 +161,12 @@ class Row(Gtk.ListBoxRow):
         if hours_str:
             string += hours_str + ", "
         if minutes_str:
-            string += minutes_str + ", "
-        if seconds_str:
-            string += seconds_str + " " + _("remaining")
-        return string
+            string += minutes_str
+        if seconds_wanted and minutes >= 2:
+            string += ", "
+        if seconds_wanted and seconds_str:
+            string += seconds_str
+        return string + " " + _("remaining")
 
     def __on_map(self, widget):
         """
@@ -221,7 +228,6 @@ class Row(Gtk.ListBoxRow):
                                                              bytes_per_second))
                 self.__download_bytes = 0
                 self.__download_previous_time = new_time
-        # self.set_tooltip_text("%s kb/s" % kbytes_per_second)
         self.__progress.set_fraction(download.get_estimated_progress())
 
     def __on_finished(self, download):
