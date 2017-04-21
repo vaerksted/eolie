@@ -13,6 +13,7 @@
 from gi.repository import Gtk, GLib, Pango, Gio
 
 from time import time
+from gettext import gettext as _
 
 from eolie.define import El
 
@@ -30,21 +31,25 @@ class Row(Gtk.ListBoxRow):
         Gtk.ListBoxRow.__init__(self)
         self.__download = download
         self.__finished = finished
+        self.__download_previous_time = None
+        self.__download_bytes = 0
         self.__uri = self.__download.get_request().get_uri()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
         builder.connect_signals(self)
         self.__preview = builder.get_object("preview")
         self.__progress = builder.get_object("progress")
-        filename = GLib.filename_from_uri(download.get_destination())
+        self.__label = builder.get_object("label")
+        self.__sublabel = builder.get_object("sublabel")
+        destination = download.get_destination()
+        filename = None
+        if destination is not None:
+            filename = GLib.filename_from_uri(destination)
         if filename is not None:
-            builder.get_object("label").set_label(
-                                         GLib.path_get_basename(filename[0]))
-            builder.get_object("path").set_label(filename[0])
+            self.__label.set_label(GLib.path_get_basename(filename[0]))
         else:
-            builder.get_object("label").set_label(download.get_destination())
-            builder.get_object("label").set_ellipsize(
-                                                   Pango.EllipsizeMode.START)
+            self.__label.set_label(download.get_destination())
+            self.__label.set_ellipsize(Pango.EllipsizeMode.START)
         self.__button = builder.get_object("button")
         self.__button_image = builder.get_object("button_image")
         if finished:
@@ -89,12 +94,79 @@ class Row(Gtk.ListBoxRow):
 
 #######################
 # PRIVATE             #
-######################
+#######################
+    def __human_bytes_per_sec(self, bytes_per_sec):
+        """
+            Convert bytes per seconds to human visible string
+            @param bytes_per_sec as float
+        """
+        if bytes_per_sec < 1024:
+            return _("%s bytes/s" % round(bytes_per_sec, 2))
+        elif bytes_per_sec / 1024 < 1024:
+            return _("%s KiB/s" % round(bytes_per_sec / 1024, 2))
+        else:
+            return _("%s MiB/s" % round(bytes_per_sec / 1024 / 1024, 2))
+
+    def __human_seconds(self, seconds):
+        """
+            Convert time in seconds to human visible string
+            @param seconds as int
+            @return str
+        """
+        seconds_str = ""
+        minutes_str = ""
+        hours_str = ""
+        hours = -1
+        minutes = -1
+        # Make seconds string
+        if seconds < 60:
+            if seconds < 2:
+                seconds_str = _("%s second") % seconds
+            else:
+                seconds_str = _("%s seconds") % seconds
+        else:
+            _seconds = seconds % 60
+            if _seconds < 2:
+                seconds_str = _("%s second") % _seconds
+            else:
+                seconds_str = _("%s seconds") % _seconds
+
+        # Make minutes string
+        if seconds > 59:
+            minutes = int(seconds / 60)
+            if minutes < 2:
+                minutes_str = _("%s minute") % minutes
+            if minutes < 60:
+                minutes_str = _("%s minutes") % minutes
+            else:
+                _minutes = minutes % 60
+                if _minutes < 2:
+                    minutes_str = _("%s minute") % _minutes
+                else:
+                    minutes_str = _("%s minutes") % _minutes
+
+        # Make hour string
+        if minutes > 59:
+            hours = int(minutes / 60)
+            if hours < 2:
+                hours_str = _("%s hours") % hours
+            else:
+                hours_str = _("%s hour") % hours
+        string = ""
+        if hours_str:
+            string += hours_str + ", "
+        if minutes_str:
+            string += minutes_str + ", "
+        if seconds_str:
+            string += seconds_str + " " + _("remaining")
+        return string
+
     def __on_map(self, widget):
         """
             Connect signals
             @param widget as Gtk.Widget
         """
+        self.__download_previous_time = None
         self.__download.connect("finished", self.__on_finished)
         self.__download.connect("received-data", self.__on_received_data)
         self.__download.connect("failed", self.__on_failed)
@@ -112,6 +184,7 @@ class Row(Gtk.ListBoxRow):
         else:
             icon = Gio.content_type_get_icon(mime)
             self.__preview.set_from_gicon(icon, Gtk.IconSize.DIALOG)
+        self.__download_previous_time = time()
 
     def __on_unmap(self, widget):
         """
@@ -127,6 +200,28 @@ class Row(Gtk.ListBoxRow):
             @param download as WebKit2.Download
             @param length as int
         """
+        response = download.get_response()
+        if response is None:
+            return
+        incoming = response.get_content_length() -\
+            download.get_received_data_length()
+        new_time = time()
+        self.__download_bytes += length
+        if self.__download_previous_time is not None:
+            delta = new_time - self.__download_previous_time
+            # Update every 3 seconds
+            if delta > 3:
+                bytes_per_second = 1 * self.__download_bytes /\
+                                    delta
+                if incoming > 0:
+                    seconds = incoming / bytes_per_second
+                    self.__sublabel.set_label(
+                                            self.__human_seconds(int(seconds)))
+                    self.set_tooltip_text(self.__human_bytes_per_sec(
+                                                             bytes_per_second))
+                self.__download_bytes = 0
+                self.__download_previous_time = new_time
+        # self.set_tooltip_text("%s kb/s" % kbytes_per_second)
         self.__progress.set_fraction(download.get_estimated_progress())
 
     def __on_finished(self, download):
