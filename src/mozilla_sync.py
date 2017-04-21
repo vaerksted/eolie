@@ -53,6 +53,8 @@ class SyncWorker(GObject.GObject):
         """
         GObject.GObject.__init__(self)
         self.__stop = True
+        self.__username = ""
+        self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
         self.__client = MozillaSync()
