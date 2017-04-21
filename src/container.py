@@ -203,8 +203,9 @@ class Container(Gtk.Paned):
             @param uri as str
             @param show as bool
         """
-        view = self.__get_view_for_webview(webview)
-        self.add_web_view(uri, show, webview.private, view)
+        if uri:
+            view = self.__get_view_for_webview(webview)
+            self.add_web_view(uri, show, webview.private, view)
 
     def __on_create(self, related, navigation_action):
         """
