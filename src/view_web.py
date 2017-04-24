@@ -136,7 +136,7 @@ class WebView(WebKit2.WebView):
                 zoom_level = El().zoom_levels[parsed.netloc]
             else:
                 zoom_level = 100
-            zoom_level *= self.get_toplevel().zoom_level
+            zoom_level *= self.get_ancestor(Gtk.Window).zoom_level
         except Exception as e:
             print("WebView::update_zoom_level()", e)
         debug("Update zoom level: %s" % zoom_level)
