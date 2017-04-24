@@ -430,6 +430,7 @@ class WebView(WebKit2.WebView):
             @param view as WebKit2.WebView
             @param uri as GParamSpec
         """
+        self.__readable_content = ""
         self.__title = ""
         if view.get_uri() != "about:blank":
             self.__js_timeout = None
