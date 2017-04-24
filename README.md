@@ -26,7 +26,7 @@ It provides:
 - python-dbus
 - python-gobject
 - python-sqlite
-- WebKit2GTK >= 3.16
+- WebKit2GTK >= 2.16
 - Webkit introspection support
 
 ##Building from git
