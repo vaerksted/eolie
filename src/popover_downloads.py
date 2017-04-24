@@ -101,14 +101,20 @@ class Row(Gtk.ListBoxRow):
             Convert bytes per seconds to human visible string
             @param bytes_per_sec as float
         """
+        prefix = _("Download speed:")
         if bytes_per_sec < 1024:
-            return _("Download speed: %s bytes/s" % round(bytes_per_sec, 2))
+            suffix = _("bytes/s")
+            string = "%s" % round(bytes_per_sec, 2)
         elif bytes_per_sec / 1024 < 1024:
-            return _("Download speed: %s KiB/s" % round(
-                                                   bytes_per_sec / 1024, 2))
+            suffix = _("KiB/s")
+            string = "%s" % round(bytes_per_sec / 1024, 2)
         else:
-            return _("Download speed: %s MiB/s" % round(
-                                            bytes_per_sec / 1024 / 1024, 2))
+            suffix = _("MiB/s")
+            string = "%s" % round(bytes_per_sec / 1024 / 1024, 2)
+        return "%s\n%s %s %s" % (self.__label.get_text(),
+                                 prefix,
+                                 string,
+                                 suffix)
 
     def __human_seconds(self, seconds):
         """
@@ -140,7 +146,7 @@ class Row(Gtk.ListBoxRow):
             minutes = int(seconds / 60)
             if minutes < 2:
                 minutes_str = _("%s minute") % minutes
-            if minutes < 60:
+            elif minutes < 60:
                 seconds_wanted = False
                 minutes_str = _("%s minutes") % minutes
             else:
@@ -158,16 +164,16 @@ class Row(Gtk.ListBoxRow):
                 hours_str = _("%s hours") % hours
             else:
                 hours_str = _("%s hour") % hours
-        string = ""
+        string = _("Remaining time:") + " "
         if hours_str:
             string += hours_str + ", "
         if minutes_str:
             string += minutes_str
-        if seconds_wanted and minutes >= 2:
+        if seconds_wanted and minutes_str:
             string += ", "
         if seconds_wanted and seconds_str:
             string += seconds_str
-        return string + " " + _("remaining")
+        return string
 
     def __on_map(self, widget):
         """
@@ -245,7 +251,7 @@ class Row(Gtk.ListBoxRow):
             @param download as WebKit2.Download
         """
         self.__sublabel.set_label("")
-        self.set_tooltip_text("")
+        self.set_tooltip_text(self.__label.get_text())
         self.__finished = True
         self.__progress.set_opacity(0)
         parent = self.get_parent()
