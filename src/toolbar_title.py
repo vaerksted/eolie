@@ -147,6 +147,8 @@ class ToolbarTitle(Gtk.Bin):
                 self.__placeholder.set_opacity(0.8)
                 self.__entry.get_style_context().add_class('uribar-title')
                 self.__set_text_uri("")
+        elif self.__uri:
+            self.__placeholder.set_text(self.__uri)
 
     def show_javascript(self, dialog):
         """
