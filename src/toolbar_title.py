@@ -558,7 +558,6 @@ class ToolbarTitle(Gtk.Bin):
             Search for keywords for value
             @param value as str
         """
-        self.__keywords_cancellable.cancel()
         self.__keywords_cancellable.reset()
         keywords = El().search.get_keywords(value, self.__keywords_cancellable)
         for words in keywords:
@@ -588,6 +587,7 @@ class ToolbarTitle(Gtk.Bin):
             Update popover search if needed
             @param entry as Gtk.Entry
         """
+        self.__keywords_cancellable.cancel()
         value = entry.get_text()
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
