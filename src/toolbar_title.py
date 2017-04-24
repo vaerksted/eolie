@@ -260,6 +260,19 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
+    def _on_icon_press(self, widget, icon_pos, event):
+        """
+            Show cert dialog or copy uri
+            @param widget as Gtk.Widget
+            @param icon_pos as Gtk.EntryIconPosition
+            @param event as Gdk.Event
+        """
+        if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
+                "edit-copy-symbolic":
+            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(
+                                                       self.__entry.get_text(),
+                                                       -1)
+
     def _on_enter_notify(self, widget, event):
         """
             Show uri
@@ -317,7 +330,10 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__placeholder.set_text(_("Search or enter address"))
             self.__placeholder.set_opacity(0.8)
-        self.__update_secure_content_indicator()
+        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                             "edit-copy-symbolic")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           _("Copy address"))
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -517,7 +533,7 @@ class ToolbarTitle(Gtk.Bin):
         if parsed.scheme == "https" and self.__secure_content:
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
-                                        'channel-secure-symbolic')
+                                        "channel-secure-symbolic")
         elif parsed.scheme == "http":
             self.set_insecure_content()
         else:
