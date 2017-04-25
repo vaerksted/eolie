@@ -5,6 +5,11 @@
        <value nick="never" value="1"/>
        <value nick="no_third_party" value="2"/>
     </enum>
+    <enum id="org.gnome.Eolie.PanelMode">
+       <value nick="preview" value="0"/>
+       <value nick="no-preview" value="1"/>
+       <value nick="minimal" value="2"/>
+    </enum>
     <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
         <key type="ai" name="window-size">
             <default>[768, 600]</default>
@@ -20,11 +25,6 @@
             <default>true</default>
             <summary>Window maximized</summary>
             <description>Window maximized state</description>
-        </key>
-	    <key type="i" name="paned-width">
-            <default>200</default>
-            <summary>INTERNAL</summary>
-            <description></description>
         </key>
 	    <key type="b" name="adblock">
             <default>true</default>
@@ -69,11 +69,6 @@
 	    <key type="b" name="developer-extras">
             <default>false</default>
             <summary>Enable developer tools</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="show-preview">
-            <default>true</default>
-            <summary>Show page preview</summary>
             <description></description>
         </key>
 	    <key type="b" name="enable-plugins">
@@ -121,6 +116,11 @@
             <summary>Cookies storage type</summary>
             <description></description>
         </key>
+	    <key enum="org.gnome.Eolie.PanelMode" name="panel-mode">
+            <default>"preview"</default>
+            <summary>Panel mode</summary>
+            <description></description>
+        </key>        
 	    <key type="b" name="do-not-track">
             <default>true</default>
             <summary>Tell websites I do not want to be tracked</summary>

@@ -20,7 +20,7 @@ from eolie.view import View
 from eolie.define import El
 
 
-class Container(Gtk.Paned):
+class Container(Gtk.Overlay):
     """
         Main Eolie view
     """
@@ -30,12 +30,9 @@ class Container(Gtk.Paned):
             Init container
             @param window as Window
         """
-        Gtk.Paned.__init__(self)
+        Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
-        self.set_position(
-            El().settings.get_value("paned-width").get_int32())
-        self.connect("notify::position", self.__on_notify_position)
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finish", self.__on_sync_finish)
         self.__stack = Gtk.Stack()
@@ -46,9 +43,10 @@ class Container(Gtk.Paned):
         self.__stack.show()
         self.__stack_sidebar = StackSidebar(window)
         self.__stack_sidebar.show()
-        self.add1(self.__stack_sidebar)
-        self.child_set_property(self.__stack_sidebar, "shrink", False)
-        self.add2(self.__stack)
+        self.add(self.__stack)
+        self.connect("map", self.__on_map)
+        self.__stack_sidebar.set_property("halign", Gtk.Align.START)
+        self.add_overlay(self.__stack_sidebar)
 
     def add_web_view(self, uri, show, private=False, parent=None,
                      webview=None, state=None):
@@ -108,19 +106,19 @@ class Container(Gtk.Paned):
             self.__stack.add(view)
         self.__stack.set_visible_child(view)
 
-    def save_position(self):
-        """
-            Save current position
-        """
-        El().settings.set_value('paned-width',
-                                GLib.Variant('i', self.get_position()))
-
     def stop(self):
         """
             Stop pending tasks
         """
         if El().sync_worker is not None:
             self.__on_sync_finish(El().sync_worker)
+
+    def update_children_allocation(self):
+        """
+            Update stack and stacksidebar allocation
+        """
+        width = self.__stack_sidebar.get_allocated_width()
+        self.__stack.set_margin_start(width)
 
     @property
     def sidebar(self):
@@ -187,14 +185,6 @@ class Container(Gtk.Paned):
             if child.webview == webview:
                 return child
         return None
-
-    def __on_notify_position(self, paned, position):
-        """
-            Update sidebar
-            @param paned as Gtk.Paned
-            @param position as GParamInt
-        """
-        self.__stack_sidebar.update_children_snapshot()
 
     def __on_new_page(self, webview, uri, show):
         """
@@ -361,6 +351,7 @@ class Container(Gtk.Paned):
             Hide sidebar (conflict with fs)
             @param webview as WebView
         """
+        self.__stack.set_margin_start(0)
         self.__stack_sidebar.hide()
 
     def __on_leave_fullscreen(self, webview):
@@ -368,6 +359,8 @@ class Container(Gtk.Paned):
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
+        width = self.__stack_sidebar.get_allocated_width()
+        self.__stack.set_margin_start(width)
         self.__stack_sidebar.show()
 
     def __on_insecure_content_detected(self, webview, event):
@@ -403,6 +396,13 @@ class Container(Gtk.Paned):
                     GLib.idle_add(webview.grab_focus)
             # Hide progress
             GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)
+
+    def __on_map(self, widget):
+        """
+            Calculate widget margin
+            @param widget as Gtk.Widget
+        """
+        self.update_children_allocation()
 
     def __on_sync_finish(self, worker):
         """

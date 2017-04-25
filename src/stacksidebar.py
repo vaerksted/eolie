@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2, Pango
+from gi.repository import Gtk, Gdk, Gio, GLib, GObject, WebKit2, Pango
 import cairo
 
 from eolie.define import El, ArtSize
@@ -82,6 +82,18 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         return self.__view
 
+    def show_title(self, b):
+        """
+            Show page title
+            @param b as bool
+        """
+        if b:
+            self.__title.show()
+            self.__image_close.set_hexpand(False)
+        else:
+            self.__title.hide()
+            self.__image_close.set_hexpand(True)
+
     def set_preview_height(self, height):
         """
             Set child preview height
@@ -103,7 +115,7 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if not El().settings.get_value("show-preview"):
+        if El().settings.get_value("panel-mode").get_string() != "preview":
             pass
         elif self.__view.webview.private:
             self.__image.set_from_icon_name(
@@ -128,21 +140,24 @@ class SidebarChild(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
-    def _on_button_press(self, button, event):
+    def _on_button_press_event(self, button, event):
         """
-            Destroy self
+            Hide popover or close view
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
         """
         if event.button == 2:
             self.__window.container.sidebar.close_view(self.__view)
-        self.__window.toolbar.title.hide_popover()
 
-    def _on_close_button_press(self, button, event):
+    def _on_close_button_press_event(self, eventbox, event):
         """
             Destroy self
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
         """
         self.__window.container.sidebar.close_view(self.__view)
 
-    def _on_enter_notify(self, eventbox, event):
+    def _on_enter_notify_event(self, eventbox, event):
         """
             Show close button
             @param eventbox as Gtk.EventBox
@@ -152,7 +167,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                               Gtk.IconSize.INVALID)
         self.__image_close.get_style_context().add_class("sidebar-item-close")
 
-    def _on_leave_notify(self, eventbox, event):
+    def _on_leave_notify_event(self, eventbox, event):
         """
             Show close button
             @param eventbox as Gtk.EventBox
@@ -226,7 +241,8 @@ class SidebarChild(Gtk.ListBoxRow):
         uri = view.get_uri()
         # We are not filtered and not in private mode
         if not self.__view.webview.private and\
-                El().settings.get_value("show-preview") and\
+                El().settings.get_value("panel-mode").get_string() ==\
+                "preview" and\
                 self.get_allocated_width() != 1:
             preview = El().art.get_artwork(uri,
                                            "preview",
@@ -448,7 +464,6 @@ class StackSidebar(Gtk.EventBox):
         self.__search_entry.show()
         self.__search_bar = Gtk.SearchBar.new()
         self.__search_bar.add(self.__search_entry)
-        self.__search_bar.show()
         grid.add(self.__search_bar)
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_vexpand(True)
@@ -461,6 +476,19 @@ class StackSidebar(Gtk.EventBox):
         self.__scrolled.add(self.__listbox)
         grid.add(self.__scrolled)
         self.add(grid)
+        # Strange, this is needed but should not
+        self.set_hexpand(False)
+        self.connect("enter-notify-event", self.__on_enter_notify_event)
+        self.connect("leave-notify-event", self.__on_leave_notify_event)
+        self.__set_panel_mode()
+        panel_mode = El().settings.get_enum("panel-mode")
+        self.__panel_action = Gio.SimpleAction.new_stateful(
+                                                 "panel_mode",
+                                                 GLib.VariantType.new("i"),
+                                                 GLib.Variant("i", panel_mode))
+        self.__panel_action.connect("activate",
+                                    self.__on_panel_mode_active)
+        self.__window.add_action(self.__panel_action)
 
     def add_child(self, view):
         """
@@ -470,23 +498,10 @@ class StackSidebar(Gtk.EventBox):
         child = SidebarChild(view, self.__window)
         self.__set_child_height(child)
         child.connect("moved", self.__on_moved)
+        if El().settings.get_value("panel-mode").get_string() == "minimal":
+            child.show_title(False)
         child.show()
         self.__listbox.add(child)
-
-    def update_children_snapshot(self):
-        """
-            Update child snapshot
-        """
-        for row in self.__listbox.get_children():
-            row.clear_snapshot()
-            row.set_snapshot(True)
-
-    def update_preview_state(self):
-        """
-            Update preview state
-        """
-        for row in self.__listbox.get_children():
-            self.__set_child_height(row)
 
     def update_visible_child(self):
         """
@@ -508,11 +523,13 @@ class StackSidebar(Gtk.EventBox):
             @param b as bool
         """
         if b:
+            self.__search_bar.show()
             self.__search_entry.grab_focus()
             self.__search_entry.connect("key-press-event",
                                         self.__on_key_press)
             self.__listbox.set_filter_func(self.__filter_func)
         else:
+            self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self.__listbox.set_filter_func(None)
         self.__search_bar.set_search_mode(b)
@@ -615,12 +632,27 @@ class StackSidebar(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __set_panel_mode(self):
+        """
+            Set panel mode
+        """
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode == 2:
+            self.set_property("width-request", -1)
+        else:
+            self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
+        for child in self.__listbox.get_children():
+            child.show_title(panel_mode != 2)
+            self.__set_child_height(child)
+        if self.__window.container is not None:
+            self.__window.container.update_children_allocation()
+
     def __set_child_height(self, child):
         """
             Set child height
             @param child as SidebarChild
         """
-        if El().settings.get_value("show-preview"):
+        if El().settings.get_value("panel-mode").get_string() == "preview":
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
             child.set_snapshot(True)
         else:
@@ -689,6 +721,16 @@ class StackSidebar(Gtk.EventBox):
             child_index += 1
         self.__listbox.insert(row, child_index)
 
+    def __on_panel_mode_active(self, action, param):
+        """
+            Update panel mode
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        El().settings.set_enum('panel-mode', param.get_int32())
+        self.__set_panel_mode()
+
     def __on_button_press(self, widget, event):
         """
             Hide popover if visible
@@ -696,6 +738,18 @@ class StackSidebar(Gtk.EventBox):
             @param event as Gdk.Event
         """
         self.__window.toolbar.title.hide_popover()
+        if event.button == 3:
+            popover = Gtk.PopoverMenu.new()
+            builder = Gtk.Builder()
+            builder.add_from_resource("/org/gnome/Eolie/PanelMenu.ui")
+            popover.add(builder.get_object("menu"))
+            popover.set_relative_to(widget)
+            rect = widget.get_allocation()
+            rect.x = event.x
+            rect.y = event.y
+            rect.width = rect.height = 1
+            popover.set_pointing_to(rect)
+            popover.show()
 
     def __on_key_press(self, widget, event):
         """
@@ -708,6 +762,33 @@ class StackSidebar(Gtk.EventBox):
             self.__search_entry.set_text("")
             self.__window.toolbar.actions.filter_button.set_active(False)
             return True
+
+    def __on_enter_notify_event(self, eventbox, event):
+        """
+            Leave minimal mode
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if El().settings.get_value("panel-mode").get_string() == "minimal":
+            self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
+            for child in self.__listbox.get_children():
+                child.show_title(True)
+
+    def __on_leave_notify_event(self, eventbox, event):
+        """
+            Enter minimal mode if needed
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if El().settings.get_value("panel-mode").get_string() == "minimal":
+            allocation = eventbox.get_allocation()
+            if event.x <= 0 or\
+               event.x >= allocation.width or\
+               event.y <= 0 or\
+               event.y >= allocation.height:
+                self.set_property("width-request", -1)
+                for child in self.__listbox.get_children():
+                    child.show_title(False)
 
     def __on_row_activated(self, listbox, row):
         """

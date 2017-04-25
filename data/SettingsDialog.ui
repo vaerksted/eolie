@@ -466,40 +466,6 @@
                 <property name="top_attach">6</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">5</property>
-                <property name="label" translatable="yes">Pages</property>
-                <attributes>
-                  <attribute name="weight" value="bold"/>
-                </attributes>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-                <property name="width">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCheckButton" id="show_preview_check">
-                <property name="label" translatable="yes">Show preview</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">15</property>
-                <property name="draw_indicator">True</property>
-                <signal name="toggled" handler="_on_show_preview_toggled" swapped="no"/>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">1</property>
-                <property name="width">2</property>
-              </packing>
-            </child>
           </object>
           <packing>
             <property name="position">1</property>

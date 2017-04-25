@@ -377,7 +377,6 @@ class Application(Gtk.Application):
             @param window as Window
             @param event as Gdk.Event
         """
-        window.container.save_position()
         self.__save_state()
         self.__windows.remove(window)
         window.destroy()

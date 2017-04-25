@@ -34,6 +34,7 @@ class Window(Gtk.ApplicationWindow):
                                        title="Eolie")
         self.__monitor_model = ""
         self.__zoom_level = 1.0
+        self.__container = None
         self.__setup_content()
         self.setup_window()
         self.connect('realize', self.__on_realize)

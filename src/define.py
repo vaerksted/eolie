@@ -52,6 +52,7 @@ TimeSpanValues = {
 
 class ArtSize:
     FAVICON = 22
+    PREVIEW_WIDTH = 192
     PREVIEW_HEIGHT = 60
     PREVIEW_WIDTH_MARGIN = 10
     START_WIDTH = 300
