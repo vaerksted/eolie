@@ -734,6 +734,11 @@ class WebView(WebKit2.WebView):
                 self.emit("new-page", uri, True)
                 decision.ignore()
                 return True
+            elif navigation_action.get_modifiers() &\
+                    Gdk.ModifierType.CONTROL_MASK:
+                self.emit("new-page", uri, False)
+                decision.ignore()
+                return True
             else:
                 decision.use()
                 return False
