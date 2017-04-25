@@ -269,7 +269,8 @@ class Container(Gtk.Overlay):
         self.__window.toolbar.actions.set_actions(webview)
         self.__window.toolbar.title.show_readable_button(
                                             webview.readable_content != "")
-        self.__window.toolbar.title.set_uri(uri)
+        if uri is not None:
+            self.__window.toolbar.title.set_uri(uri)
         if webview.is_loading():
             self.__window.toolbar.title.progress.show()
         else:

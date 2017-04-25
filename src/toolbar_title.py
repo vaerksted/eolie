@@ -98,6 +98,11 @@ class ToolbarTitle(Gtk.Bin):
             Set uri in Gtk.Entry
             @param uri as str
         """
+        # Do not show this in titlebar
+        parsed = urlparse(uri)
+        if parsed.scheme == "populars":
+            self.set_text_entry("")
+            return
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
         self.__entry.set_text(uri)
@@ -109,24 +114,13 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        # Do not show this in titlebar
-        parsed = urlparse(uri)
-        if parsed.scheme == "populars" or not uri:
-            self.set_text_entry("")
-            self.__uri = ""
-            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                                 "system-search-symbolic")
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               "")
+        if uri == self.__uri:
             return
-        elif uri == self.__uri:
-            return
+        self.__uri = uri
         self.__input_warning_shown = False
         self.__secure_content = True
-        self.__uri = uri
         self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
-        self.set_text_entry(uri)
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
@@ -140,15 +134,17 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title instead of uri
         """
-        if title and self.__uri:
-            self.__placeholder.set_text(title)
-            if not self.__lock_focus and\
-                    not self.__popover.is_visible():
-                self.__placeholder.set_opacity(0.8)
-                self.__entry.get_style_context().add_class('uribar-title')
-                self.set_text_entry("")
-        elif self.__uri:
-            self.__placeholder.set_text(self.__uri)
+        # Do not show this in titlebar
+        parsed = urlparse(self.__uri)
+        if parsed.scheme == "populars":
+            self.__set_default_placeholder()
+            return
+        self.__placeholder.set_text(title)
+        if not self.__lock_focus and\
+                not self.__popover.is_visible():
+            self.__placeholder.set_opacity(0.8)
+            self.__entry.get_style_context().add_class('uribar-title')
+            self.set_text_entry("")
 
     def set_insecure_content(self):
         """
@@ -294,15 +290,15 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
-        if self.__uri:
+        parsed = urlparse(self.__uri)
+        if parsed.scheme in ["http", "https"]:
             self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                                  "edit-copy-symbolic")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                _("Copy address"))
             self.__placeholder.set_opacity(0)
         else:
-            self.__placeholder.set_text(_("Search or enter address"))
-            self.__placeholder.set_opacity(0.8)
+            self.__set_default_placeholder()
         self.__entry.get_style_context().remove_class("uribar-title")
         self.set_text_entry(self.__uri)
 
@@ -322,11 +318,12 @@ class ToolbarTitle(Gtk.Bin):
            not isinstance(widget, Gtk.EventBox):
             self.__update_secure_content_indicator()
             self.__placeholder.set_opacity(0.8)
-            if not self.__uri:
-                self.__placeholder.set_text(_("Search or enter address"))
-            elif not self.__lock_focus:
+            parsed = urlparse(self.__uri)
+            if parsed.scheme in ["http", "https"]:
                 self.__entry.get_style_context().add_class('uribar-title')
                 self.set_text_entry("")
+            else:
+                self.__set_default_placeholder()
 
     def _on_entry_focus_in(self, entry, event):
         """
@@ -343,11 +340,11 @@ class ToolbarTitle(Gtk.Bin):
         self.set_text_entry(self.__uri)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        if self.__uri:
+        parsed = urlparse(self.__uri)
+        if parsed.scheme in ["http", "https"]:
             self.__placeholder.set_opacity(0)
         else:
-            self.__placeholder.set_text(_("Search or enter address"))
-            self.__placeholder.set_opacity(0.8)
+            self.__set_default_placeholder()
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -525,6 +522,17 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __set_default_placeholder(self):
+        """
+            Show search placeholder
+        """
+        self.__placeholder.set_text(_("Search or enter address"))
+        self.__placeholder.set_opacity(0.8)
+        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                             "system-search-symbolic")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           "")
+
     def __update_secure_content_indicator(self):
         """
             Update PRIMARY icon, Gtk.Entry should be set
@@ -591,15 +599,16 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
             self.__popover.set_search_text(value)
+
+        parsed = urlparse(self.__uri)
         if value:
             self.__placeholder.set_opacity(0)
             # We are doing a search, show popover
             if not is_uri and not self.__popover.is_visible():
                 self.__lock_focus = True
                 self.__popover.show()
-        elif not self.__uri:
-            self.__placeholder.set_text(_("Search or enter address"))
-            self.__placeholder.set_opacity(0.8)
+        elif parsed.scheme == "populars":
+            self.__set_default_placeholder()
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None
