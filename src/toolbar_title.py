@@ -99,6 +99,7 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
+        self.__update_secure_content_indicator()
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme == "populars" or not uri:
@@ -109,13 +110,10 @@ class ToolbarTitle(Gtk.Bin):
             return
         self.__input_warning_shown = False
         self.__secure_content = True
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           "")
         self.__uri = uri
         self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__set_text_uri(uri)
-        self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
@@ -281,6 +279,10 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
+        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                             "edit-copy-symbolic")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           _("Copy address"))
         if self.__uri:
             self.__placeholder.set_opacity(0)
         else:
@@ -303,6 +305,7 @@ class ToolbarTitle(Gtk.Bin):
            event.y <= 0 or\
            event.y >= allocation.height or\
            not isinstance(widget, Gtk.EventBox):
+            self.__update_secure_content_indicator()
             self.__placeholder.set_opacity(0.8)
             if not self.__uri:
                 self.__placeholder.set_text(_("Search or enter address"))
@@ -330,10 +333,6 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__placeholder.set_text(_("Search or enter address"))
             self.__placeholder.set_opacity(0.8)
-        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                             "edit-copy-symbolic")
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           _("Copy address"))
 
     def _on_entry_focus_out(self, entry, event):
         """
@@ -355,7 +354,6 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "non-starred-symbolic"
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
-        self.__update_secure_content_indicator()
 
     def _on_button_press_event(self, entry, event):
         """
@@ -530,17 +528,17 @@ class ToolbarTitle(Gtk.Bin):
             Update PRIMARY icon
         """
         parsed = urlparse(self.__uri)
-        if parsed.scheme == "https" and self.__secure_content:
+        if not self.__uri or self.__uri != self.__entry.get_text():
+            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                                 "system-search-symbolic")
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
+        elif parsed.scheme == "https" and self.__secure_content:
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "channel-secure-symbolic")
         elif parsed.scheme == "http":
             self.set_insecure_content()
-        else:
-            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                                 "system-search-symbolic")
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               "")
 
     def __search_keywords_thread(self, value):
         """
