@@ -423,10 +423,8 @@ class ToolbarTitle(Gtk.Bin):
         if self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
         else:
-            if self.__action_image2.get_icon_name()[0] == "starred-symbolic":
-                bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
-            elif self.__action_image2.get_icon_name()[0] ==\
-                    "non-starred-symbolic":
+            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
+            if bookmark_id is None:
                 uri = view.webview.get_uri()
                 if not uri or uri == "about:blank":
                     return
