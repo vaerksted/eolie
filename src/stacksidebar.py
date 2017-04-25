@@ -511,12 +511,16 @@ class StackSidebar(Gtk.EventBox):
         """
         visible = self.__window.container.current
         for child in self.__listbox.get_children():
+            if child.view.webview.private:
+                class_name = "sidebar-item-selected-private"
+            else:
+                class_name = "sidebar-item-selected"
             if child.view == visible:
-                child.get_style_context().add_class("sidebar-item-selected")
+                child.get_style_context().add_class(class_name)
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_row, child)
             else:
-                child.get_style_context().remove_class("sidebar-item-selected")
+                child.get_style_context().remove_class(class_name)
 
     def set_filtered(self, b):
         """
