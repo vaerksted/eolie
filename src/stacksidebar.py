@@ -645,8 +645,11 @@ class StackSidebar(Gtk.EventBox):
         for child in self.__listbox.get_children():
             child.show_title(panel_mode != 2)
             self.__set_child_height(child)
+        # We need to delay update to allow widget to resize
         if self.__window.container is not None:
-            self.__window.container.update_children_allocation()
+            GLib.timeout_add(
+                         250,
+                         self.__window.container.update_children_allocation)
 
     def __set_child_height(self, child):
         """
