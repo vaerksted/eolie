@@ -93,6 +93,17 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.set_property("width_request", width)
 
+    def set_text_entry(self, uri):
+        """
+            Set uri in Gtk.Entry
+            @param uri as str
+        """
+        if self.__signal_id is not None:
+            self.__entry.disconnect(self.__signal_id)
+        self.__entry.set_text(uri)
+        self.__signal_id = self.__entry.connect("changed",
+                                                self.__on_entry_changed)
+
     def set_uri(self, uri):
         """
             Update entry
@@ -101,7 +112,7 @@ class ToolbarTitle(Gtk.Bin):
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme == "populars" or not uri:
-            self.__set_text_uri("")
+            self.set_text_entry("")
             self.__uri = ""
             self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                                  "system-search-symbolic")
@@ -115,7 +126,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__uri = uri
         self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
-        self.__set_text_uri(uri)
+        self.set_text_entry(uri)
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
@@ -124,6 +135,20 @@ class ToolbarTitle(Gtk.Bin):
             icon_name = "non-starred-symbolic"
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
+
+    def set_title(self, title):
+        """
+            Show title instead of uri
+        """
+        if title and self.__uri:
+            self.__placeholder.set_text(title)
+            if not self.__lock_focus and\
+                    not self.__popover.is_visible():
+                self.__placeholder.set_opacity(0.8)
+                self.__entry.get_style_context().add_class('uribar-title')
+                self.set_text_entry("")
+        elif self.__uri:
+            self.__placeholder.set_text(self.__uri)
 
     def set_insecure_content(self):
         """
@@ -136,20 +161,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "channel-insecure-symbolic")
-
-    def set_title(self, title):
-        """
-            Show title instead of uri
-        """
-        if title and self.__uri:
-            self.__placeholder.set_text(title)
-            if not self.__lock_focus and\
-                    not self.__popover.is_visible():
-                self.__placeholder.set_opacity(0.8)
-                self.__entry.get_style_context().add_class('uribar-title')
-                self.__set_text_uri("")
-        elif self.__uri:
-            self.__placeholder.set_text(self.__uri)
 
     def show_javascript(self, dialog):
         """
@@ -293,7 +304,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_text(_("Search or enter address"))
             self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().remove_class("uribar-title")
-        self.__set_text_uri(self.__uri)
+        self.set_text_entry(self.__uri)
 
     def _on_leave_notify(self, widget, event):
         """
@@ -315,7 +326,7 @@ class ToolbarTitle(Gtk.Bin):
                 self.__placeholder.set_text(_("Search or enter address"))
             elif not self.__lock_focus:
                 self.__entry.get_style_context().add_class('uribar-title')
-                self.__set_text_uri("")
+                self.set_text_entry("")
 
     def _on_entry_focus_in(self, entry, event):
         """
@@ -329,7 +340,7 @@ class ToolbarTitle(Gtk.Bin):
             return True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-        self.__set_text_uri(self.__uri)
+        self.set_text_entry(self.__uri)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         if self.__uri:
@@ -349,7 +360,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
-        self.__set_text_uri("")
+        self.set_text_entry("")
         view = self.__window.container.current
         bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
         if bookmark_id is not None:
@@ -514,17 +525,6 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
-    def __set_text_uri(self, uri):
-        """
-            Set uri in Gtk.Entry
-            @param uri as str
-        """
-        if self.__signal_id is not None:
-            self.__entry.disconnect(self.__signal_id)
-        self.__entry.set_text(uri)
-        self.__signal_id = self.__entry.connect("changed",
-                                                self.__on_entry_changed)
-
     def __update_secure_content_indicator(self):
         """
             Update PRIMARY icon, Gtk.Entry should be set

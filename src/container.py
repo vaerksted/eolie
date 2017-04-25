@@ -263,17 +263,21 @@ class Container(Gtk.Overlay):
             Update window
             @param webview as WebView
         """
+        uri = webview.get_uri()
+        title = webview.get_title()
         self.__window.toolbar.title.update_load_indicator(webview)
-        if webview == self.current.webview:
-            self.__window.toolbar.actions.set_actions(webview)
-            self.__window.toolbar.title.show_readable_button(
-                                                webview.readable_content != "")
-            self.__window.toolbar.title.set_uri(webview.get_uri())
-            if webview.is_loading():
-                self.__window.toolbar.title.progress.show()
-            else:
-                self.__window.toolbar.title.progress.hide()
-                self.__window.toolbar.title.set_title(webview.get_title())
+        self.__window.toolbar.actions.set_actions(webview)
+        self.__window.toolbar.title.show_readable_button(
+                                            webview.readable_content != "")
+        self.__window.toolbar.title.set_uri(uri)
+        if webview.is_loading():
+            self.__window.toolbar.title.progress.show()
+        else:
+            self.__window.toolbar.title.progress.hide()
+        if title:
+            self.__window.toolbar.title.set_title(title)
+        elif uri:
+            self.__window.toolbar.title.set_title(uri)
 
     def __on_save_password(self, webview, username, password, netloc):
         """
