@@ -103,7 +103,10 @@ class ToolbarTitle(Gtk.Bin):
         if parsed.scheme == "populars" or not uri:
             self.__set_text_uri("")
             self.__uri = ""
-            self.__update_secure_content_indicator()
+            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                                 "system-search-symbolic")
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
             return
         elif uri == self.__uri:
             return
@@ -187,6 +190,7 @@ class ToolbarTitle(Gtk.Bin):
                 self.__window.set_focus(None)
             else:
                 self._on_entry_focus_out(self.__entry, None)
+            self.__update_secure_content_indicator()
 
     def focus_entry(self):
         """
@@ -279,11 +283,11 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
-        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                             "edit-copy-symbolic")
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           _("Copy address"))
         if self.__uri:
+            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                                 "edit-copy-symbolic")
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               _("Copy address"))
             self.__placeholder.set_opacity(0)
         else:
             self.__placeholder.set_text(_("Search or enter address"))
@@ -528,12 +532,7 @@ class ToolbarTitle(Gtk.Bin):
             Update PRIMARY icon, Gtk.Entry should be set
         """
         parsed = urlparse(self.__uri)
-        if not self.__uri or self.__uri != self.__entry.get_text():
-            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                                 "system-search-symbolic")
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               "")
-        elif parsed.scheme == "https" and self.__secure_content:
+        if parsed.scheme == "https" and self.__secure_content:
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "channel-secure-symbolic")
@@ -611,4 +610,7 @@ class ToolbarTitle(Gtk.Bin):
                                                  500,
                                                  self.__search_keywords_thread,
                                                  value)
-        self.__update_secure_content_indicator()
+        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                             "system-search-symbolic")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           "")
