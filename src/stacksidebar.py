@@ -773,6 +773,7 @@ class StackSidebar(Gtk.EventBox):
         if El().settings.get_value("panel-mode").get_string() == "minimal":
             if self.__leave_timeout_id is not None:
                     GLib.source_remove(self.__leave_timeout_id)
+                    self.__leave_timeout_id = None
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
             for child in self.__listbox.get_children():
                 child.show_title(True)
