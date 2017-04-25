@@ -452,6 +452,7 @@ class StackSidebar(Gtk.EventBox):
             @param window as Window
         """
         Gtk.EventBox.__init__(self)
+        self.__leave_timeout_id = None
         self.__window = window
         self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
@@ -770,6 +771,8 @@ class StackSidebar(Gtk.EventBox):
             @param event as Gdk.Event
         """
         if El().settings.get_value("panel-mode").get_string() == "minimal":
+            if self.__leave_timeout_id is not None:
+                    GLib.source_remove(self.__leave_timeout_id)
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
             for child in self.__listbox.get_children():
                 child.show_title(True)
@@ -786,9 +789,22 @@ class StackSidebar(Gtk.EventBox):
                event.x >= allocation.width or\
                event.y <= 0 or\
                event.y >= allocation.height:
-                self.set_property("width-request", -1)
-                for child in self.__listbox.get_children():
-                    child.show_title(False)
+                if self.__leave_timeout_id is not None:
+                    GLib.source_remove(self.__leave_timeout_id)
+                self.__leave_timeout_id = GLib.timeout_add(
+                                          750,
+                                          self.__on_leave_notify_event_timeout)
+
+    def __on_leave_notify_event_timeout(self):
+        """
+            Enter minimal mode if needed
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        self.__leave_timeout_id = None
+        self.set_property("width-request", -1)
+        for child in self.__listbox.get_children():
+            child.show_title(False)
 
     def __on_row_activated(self, listbox, row):
         """
