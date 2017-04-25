@@ -33,6 +33,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
+        self.__text_entry_history = {}
         self.__input_warning_shown = False
         self.__lock_focus = False
         self.__signal_id = None
@@ -250,6 +251,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__lock_focus = locked
 
+    def remove_from_text_entry_history(self, webview):
+        """
+            Remove history for view
+            @param view as WebView
+        """
+        if webview in self.__text_entry_history.keys():
+            del self.__text_entry_history[webview]
+
     @property
     def lock_focus(self):
         """
@@ -337,7 +346,16 @@ class ToolbarTitle(Gtk.Bin):
             return True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-        self.set_text_entry(self.__uri)
+
+        # Restore previous user entry
+        webview = self.__window.container.current.webview
+        if webview in self.__text_entry_history.keys():
+            value = self.__text_entry_history[webview]
+            if value:
+                self.__placeholder.set_opacity(0)
+                self.set_text_entry(value)
+        else:
+            self.set_text_entry(self.__uri)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         parsed = urlparse(self.__uri)
@@ -590,8 +608,10 @@ class ToolbarTitle(Gtk.Bin):
             Update popover search if needed
             @param entry as Gtk.Entry
         """
-        self.__keywords_cancellable.cancel()
         value = entry.get_text()
+        webview = self.__window.container.current.webview
+        self.__text_entry_history[webview] = self.__entry.get_text()
+        self.__keywords_cancellable.cancel()
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]

@@ -229,6 +229,7 @@ class Container(Gtk.Overlay):
             Close my self
             @param webview as WebView
         """
+        self.__window.toolbar.title.remove_from_text_entry_history(webview)
         view = self.__get_view_for_webview(webview)
         if view is not None:
             self.sidebar.close_view(view)
@@ -404,7 +405,7 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(self.__window.toolbar.title.start_search)
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
-            pass
+            self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             # Give focus to webview if allowed
             if not self.__window.toolbar.title.lock_focus:
