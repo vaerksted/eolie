@@ -211,7 +211,6 @@ class Container(Gtk.Overlay):
             El().adblock.is_an_exception(parsed_related.netloc +
                                          parsed_related.path) or\
             parsed_request.netloc == parsed_related.netloc
-        print(parsed_request.netloc, parsed_related.netloc)
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,
@@ -239,7 +238,17 @@ class Container(Gtk.Overlay):
             Add view to window
             @param webview as WebView
         """
-        self.add_web_view(None, True, webview.private, None, webview)
+        view = View(webview.private, None, webview)
+        view.show()
+        popover = Gtk.Popover.new()
+        popover.add(view)
+        popover.set_relative_to(self.__window.toolbar)
+        popover.set_position(Gtk.PositionType.BOTTOM)
+        popover.set_size_request(self.__window.get_allocated_width() / 3,
+                                 self.__window.get_allocated_height() / 1.5)
+        view.webview.connect("close", lambda x: popover.destroy())
+        popover.connect("closed", lambda x: view.webview.destroy())
+        popover.show()
 
     def __on_readable(self, webview):
         """

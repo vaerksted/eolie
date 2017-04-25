@@ -69,7 +69,7 @@ class WebView(WebKit2.WebView):
         """
         view = WebKit2.WebView.new_with_related_view(related)
         view.__class__ = WebView
-        view.__init()
+        view.__init(related)
         return view
 
     def load_uri(self, uri):
@@ -136,7 +136,11 @@ class WebView(WebKit2.WebView):
                 zoom_level = El().zoom_levels[parsed.netloc]
             else:
                 zoom_level = 100
-            zoom_level *= self.get_ancestor(Gtk.Window).zoom_level
+            if self.__related_view is None:
+                zoom_level *= self.get_ancestor(Gtk.Window).zoom_level
+            else:
+                zoom_level *= self.__related_view.get_ancestor(
+                                                Gtk.Window).zoom_level
         except Exception as e:
             print("WebView::update_zoom_level()", e)
         debug("Update zoom level: %s" % zoom_level)
@@ -192,13 +196,15 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self):
+    def __init(self, related_view=None):
         """
             Init WebView
+            @param related_view as WebView
         """
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
+        self.__related_view = related_view
         self.__popup_exception = None
         self.__initial_selection = ""
         self.__readable_content = ""
