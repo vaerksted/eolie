@@ -101,7 +101,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         # Do not show this in titlebar
         parsed = urlparse(uri)
-        if parsed.scheme == "populars":
+        if parsed.scheme in ["populars", "about"]:
             self.set_text_entry("")
             return
         if self.__signal_id is not None:
@@ -137,7 +137,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
-        if parsed.scheme == "populars":
+        if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
             return
         self.__placeholder.set_text(title)
@@ -627,7 +627,7 @@ class ToolbarTitle(Gtk.Bin):
             if not is_uri and not self.__popover.is_visible():
                 self.__lock_focus = True
                 self.__popover.show()
-        elif parsed.scheme == "populars":
+        elif parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)

@@ -220,6 +220,7 @@
                 <items>
                   <item id="search" translatable="yes">Search engine</item>
                   <item id="popular" translatable="yes">Popular pages</item>
+                  <item id="blank" translatable="yes">Blank page</item>
                   <item id="address" translatable="yes">Set address</item>
                 </items>
                 <signal name="changed" handler="_on_start_changed" swapped="no"/>

@@ -211,6 +211,8 @@ class Application(Gtk.Application):
             value = self.search.uri
         elif value == "popular":
             value = "populars://"
+        elif value == "blank":
+            value = "about:blank"
         return value
 
     @property

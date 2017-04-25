@@ -401,7 +401,7 @@ class Container(Gtk.Overlay):
             # Turn off reading mode if needed
             if self.current.reading:
                 self.current.switch_read_mode()
-            if parsed.scheme == "populars":
+            if parsed.scheme in ["populars", "about"]:
                 GLib.idle_add(self.__window.toolbar.title.start_search)
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
