@@ -16,7 +16,9 @@
 }
 
 .dark {
+    border-color: rgb(51, 57, 59);
     background-color: rgb(51, 57, 59);
+    box-shadow: 1px 1px 5px 5px alpha(black, 0.4);
     color: white;
 }
 
