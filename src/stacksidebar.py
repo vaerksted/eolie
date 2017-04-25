@@ -190,6 +190,8 @@ class SidebarChild(Gtk.ListBoxRow):
             Set favicon
         """
         if self.__view.webview.private:
+            self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
+                                                  Gtk.IconSize.INVALID)
             return
         uri = self.__view.webview.get_uri()
         favicon_db = self.__view.webview.get_context().get_favicon_database()
