@@ -63,7 +63,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__progress = builder.get_object("progress")
         self.__readable = builder.get_object("readable")
         self.__placeholder = builder.get_object("placeholder")
-        self.__window.connect("leave-notify-event", self._on_leave_notify)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
@@ -99,12 +98,12 @@ class ToolbarTitle(Gtk.Bin):
             Update entry
             @param text as str
         """
-        self.__update_secure_content_indicator()
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme == "populars" or not uri:
             self.__set_text_uri("")
             self.__uri = ""
+            self.__update_secure_content_indicator()
             return
         elif uri == self.__uri:
             return
@@ -114,6 +113,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__set_text_uri(uri)
+        self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
@@ -525,7 +525,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def __update_secure_content_indicator(self):
         """
-            Update PRIMARY icon
+            Update PRIMARY icon, Gtk.Entry should be set
         """
         parsed = urlparse(self.__uri)
         if not self.__uri or self.__uri != self.__entry.get_text():
