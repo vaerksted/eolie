@@ -102,12 +102,12 @@ class ToolbarEnd(Gtk.Bin):
         if self.__window.toolbar.title.lock_focus:
             return
         header = Gtk.Label()
-        header.set_markup("<b>" + _("Downloading from:") + "</b>")
-        header.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        header.set_markup("<b>" + _("Downloading:") + "</b>")
+        header.set_ellipsize(Pango.EllipsizeMode.END)
         header.show()
-        uri = Gtk.Label.new(download.get_request().get_uri())
+        uri = Gtk.Label.new(download.get_request().get_uri().split('/')[-1])
         uri.set_max_width_chars(30)
-        uri.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.show()
         grid = Gtk.Grid()
         grid.set_margin_start(5)
