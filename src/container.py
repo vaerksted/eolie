@@ -205,18 +205,20 @@ class Container(Gtk.Overlay):
         """
         # Block popups, see WebView::set_popup_exception() for details
         popup_block = El().settings.get_value("popupblock")
-        request_parsed = urlparse(navigation_action.get_request().get_uri())
-        request_uri = request_parsed.netloc + request_parsed.path
-        parsed = urlparse(related.get_uri())
-        exception = El().adblock.is_an_exception(parsed.netloc) or\
-            El().adblock.is_an_exception(parsed.netloc + parsed.path)
+        parsed_request = urlparse(navigation_action.get_request().get_uri())
+        parsed_related = urlparse(related.get_uri())
+        exception = El().adblock.is_an_exception(parsed_related.netloc) or\
+            El().adblock.is_an_exception(parsed_related.netloc +
+                                         parsed_related.path) or\
+            parsed_request.netloc == parsed_related.netloc
+        print(parsed_request.netloc, parsed_related.netloc)
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,
                                WebKit2.NavigationType.RELOAD,
                                WebKit2.NavigationType.BACK_FORWARD] and\
-                request_uri != related.popup_exception:
-            related.set_popup_exception(request_uri)
+                parsed_request.netloc != related.popup_exception:
+            related.set_popup_exception(parsed_request.netloc)
             return
         from eolie.view_web import WebView
         webview = WebView.new_with_related_view(related)
