@@ -131,6 +131,7 @@ class Application(Gtk.Application):
                                                GLib.VariantType.new('s'))
         shortcut_action.connect('activate', self.__on_shortcut_action)
         self.add_action(shortcut_action)
+        self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
         self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
         self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
         self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
@@ -142,7 +143,8 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
         self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
-        self.set_accels_for_action("win.shortcut::settings", ["<Control>e"])
+        self.set_accels_for_action("win.shortcut::settings",
+                                   ["<Control><Shift>s"])
         self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
         self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
         self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])

@@ -71,7 +71,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Settings</property>
-                <property name="accelerator">&lt;Primary&gt;e</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;e</property>
               </object>
             </child>
           </object>
@@ -99,6 +99,13 @@
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Search for</property>
                 <property name="accelerator">&lt;Primary&gt;f</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Disable adblock for current site</property>
+                <property name="accelerator">&lt;Primary&gt;e</property>
               </object>
             </child>
           </object>
