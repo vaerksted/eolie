@@ -1,4 +1,4 @@
-#Eolie
+# Eolie
 
 
 Eolie is a new GNOME web browser.
@@ -15,7 +15,8 @@ It provides:
 - Secret password store
 - A modern ui
 
-##Depends on
+## Depends on
+
 - gtk3 >= 3.14
 - gobject-introspection
 - python3
@@ -29,7 +30,8 @@ It provides:
 - WebKit2GTK >= 2.16
 - Webkit introspection support
 
-##Building from git
+## Building from git
+
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
@@ -39,6 +41,7 @@ $ make
 ```
 
 ### On Ubuntu
+
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
@@ -49,13 +52,16 @@ $ sudo make install
 ```
 
 Instead of `make install` you might want to use `checkinstall`
+
 ```
 # apt-get install checkinstall
 # checkinstall
 ```
+
 This will allow you to uninstall eolie as a package, for example with `apt-get uninstall eolie`.
 
 ### On Fedora
+
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
