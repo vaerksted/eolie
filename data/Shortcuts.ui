@@ -36,7 +36,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">New window</property>
-                <property name="accelerator">&lt;Primary&gt;t</property>
+                <property name="accelerator">&lt;Primary&gt;n</property>
               </object>
             </child>
             <child>
