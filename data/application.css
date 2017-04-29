@@ -45,6 +45,7 @@
     margin: 2px;
     padding: 3px;
     border-radius: 2px;
+    outline-width: 0px;
 }
 
 .sidebar-item-selected {
