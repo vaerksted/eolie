@@ -31,6 +31,7 @@ class WebView(WebKit2.WebView):
     gsignals = {
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
@@ -102,6 +103,7 @@ class WebView(WebKit2.WebView):
             self.__bad_tls = None
             self.__insecure_content_detected = False
         self.__loaded_uri = uri
+        self.emit("uri-changed", uri)
         WebKit2.WebView.load_uri(self, uri)
 
     def set_popup_exception(self, uri):
@@ -536,14 +538,17 @@ class WebView(WebKit2.WebView):
             @param view as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(view.get_uri())
+        uri = view.get_uri()
+        parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self.emit("uri-changed", uri)
             self.__popup_exception = None
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
+            self.emit("uri-changed", uri)
             exception = El().adblock.is_an_exception(
                                     parsed.netloc) or\
-                        El().adblock.is_an_exception(
+                El().adblock.is_an_exception(
                                     parsed.netloc + parsed.path)
             imgblock = El().settings.get_value("imgblock")
             self.set_setting("auto-load-images",

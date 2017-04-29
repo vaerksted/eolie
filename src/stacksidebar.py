@@ -57,7 +57,7 @@ class SidebarChild(Gtk.ListBoxRow):
         self.add(builder.get_object("widget"))
         view.webview.connect("notify::favicon", self.__on_notify_favicon)
         view.webview.connect("scroll-event", self.__on_scroll_event)
-        view.webview.connect("notify::uri", self.__on_uri_changed)
+        view.webview.connect("uri-changed", self.__on_uri_changed)
         view.webview.connect("title-changed", self.__on_title_changed)
         view.webview.connect("load-changed", self.__on_load_changed)
         self.get_style_context().add_class("sidebar-item")
@@ -240,7 +240,6 @@ class SidebarChild(Gtk.ListBoxRow):
             @param view as WebView
             @param uri as str
         """
-        uri = view.get_uri()
         # We are not filtered and not in private mode
         if not self.__view.webview.private and\
                 El().settings.get_value("panel-mode").get_string() ==\

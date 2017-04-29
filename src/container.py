@@ -64,9 +64,6 @@ class Container(Gtk.Overlay):
             view.webview.restore_session_state(state)
         view.show()
         self.__stack_sidebar.add_child(view)
-        if uri is not None:
-            # Do not load uri until we are on screen
-            GLib.idle_add(view.webview.load_uri, uri)
         if show:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)
@@ -83,6 +80,9 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__stack_sidebar.update_visible_child()
+        if uri is not None:
+            # Do not load uri until we are on screen
+            view.webview.load_uri(uri)
 
     def load_uri(self, uri):
         """
@@ -161,7 +161,7 @@ class Container(Gtk.Overlay):
                              self.__on_estimated_load_progress)
         view.webview.connect("load-changed", self.__on_load_changed)
         view.webview.connect("button-press-event", self.__on_button_press)
-        view.webview.connect("notify::uri", self.__on_uri_changed)
+        view.webview.connect("uri-changed", self.__on_uri_changed)
         view.webview.connect("title-changed", self.__on_title_changed)
         view.webview.connect("enter-fullscreen", self.__on_enter_fullscreen)
         view.webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
@@ -322,17 +322,14 @@ class Container(Gtk.Overlay):
         """
             Update uri
             @param webview as WebView
-            @param uri as str
+            @param uri as GParamString (Do not use)
         """
         if webview == self.current.webview:
-            uri = webview.get_uri()
             if uri:
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
-                title = webview.get_title()
-                if title:
-                    self.__window.toolbar.title.set_title(title)
+                self.__window.toolbar.title.set_title(uri)
             else:
                 # Close web page if uri is null
                 self.sidebar.close_view(webview.get_ancestor(View))
