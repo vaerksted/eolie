@@ -43,12 +43,17 @@
     border: 1px solid shade(@theme_bg_color, 0.7);
     background-color: shade(@theme_bg_color, 1.5);
     margin: 2px;
+    padding: 3px;
     border-radius: 2px;
 }
 
-.sidebar-item-selected{
+.sidebar-item-selected {
     border-color: @theme_selected_bg_color;
     background-color: @theme_selected_bg_color;
+}
+
+.sidebar-item-selected .sidebar-item-title {
+    font-weight: bold;
 }
 
 .sidebar-item-selected-private{
