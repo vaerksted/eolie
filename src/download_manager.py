@@ -122,6 +122,10 @@ class DownloadManager(GObject.GObject):
         """
         if wanted_filename:
             extension = filename.split(".")[-1]
+            # FIXME We should find a way to pass good extension,
+            # fallback to avi
+            if extension == filename:
+                extension = "avi"
             filename = wanted_filename + "." + extension
         directory_uri = El().settings.get_value('download-uri').get_string()
         if not directory_uri:

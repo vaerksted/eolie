@@ -110,7 +110,6 @@ class Context:
             @param context as WebKit2.WebContext
             @param download as WebKit2.Download
         """
-        print("context", download)
         El().download_manager.add(download)
         # Notify user about download
         window = El().active_window
