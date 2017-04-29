@@ -22,17 +22,6 @@
     color: white;
 }
 
-/*
-@keyframes fadein {
-  0% { opacity: 0.4; }
-  100% { opacity: 1; }
-}
-    animation-name: fadein;
-    animation-duration: 5s;
-    animation-timing-function: linear;
-    animation-delay: 1ms;
-*/
-
 .sidebar-item-spinner {
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 20px;
@@ -169,6 +158,20 @@
 
 .drag {
     color: red;
+}
+
+@keyframes colorfade {
+  0% { color: inherit;}
+  50% { color: red; }
+  100% { color: inherit; }
+}
+
+.video-in-page {
+    
+    animation-name: colorfade;
+    animation-duration: 20s;
+    animation-timing-function: linear;
+    animation-delay: 1ms;
 }
 
 .row {
