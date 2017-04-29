@@ -509,7 +509,8 @@ class DownloadsPopover(Gtk.Popover):
         """
         height = 0
         for child in self.__listbox.get_children():
-            height += allocation.height
+            if child.is_visible():
+                height += allocation.height
         size = self.get_ancestor(Gtk.Window).get_size()
         if height > size[1] * 0.6:
             height = size[1] * 0.6
