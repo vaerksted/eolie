@@ -195,6 +195,13 @@ class WebView(WebKit2.WebView):
         """
         return self.__selection
 
+    @property
+    def bad_tls(self):
+        """
+            Get wrong certificate
+        """
+        return self.__bad_tls
+
 #######################
 # PRIVATE             #
 #######################
@@ -275,19 +282,6 @@ class WebView(WebKit2.WebView):
         # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
-
-        context = self.get_context()
-        locales = GLib.get_language_names()
-        context.set_spell_checking_enabled(True)
-        if locales:
-            user_locale = locales[0]
-            default_locale = "en_GB.UTF-8"
-            context.set_spell_checking_languages([user_locale, default_locale])
-        context.register_uri_scheme("populars", self.__on_populars_scheme)
-        context.register_uri_scheme("internal", self.__on_internal_scheme)
-        context.register_uri_scheme("accept", self.__on_accept_scheme)
-        context.get_security_manager().register_uri_scheme_as_local("populars")
-        context.connect("download-started", self.__on_download_started)
 
     def __check_for_network(self, uri):
         """
@@ -373,64 +367,6 @@ class WebView(WebKit2.WebView):
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
             # Use can use Gnome Shell notification policy
             request.allow()
-
-    def __on_populars_scheme(self, request):
-        """
-            Show populars web pages
-            @param request as WebKit2.URISchemeRequest
-        """
-        items = []
-        # First from bookmarks
-        for (bookmark_id, title, uri) in El().bookmarks.get_populars(20):
-            items.append((title, uri))
-        # Then from history
-        more = 30 - len(items)
-        if more > 0:
-            uris = [item[1] for item in items]
-            for (title, uri) in El().history.search("", more):
-                if uri not in uris:
-                    items.append((title, uri))
-        start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
-        end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
-        (status, start_content, tag) = start.load_contents(None)
-        (status, end_content, tag) = end.load_contents(None)
-        # Update start
-        html_start = start_content.decode("utf-8")
-        html_start = html_start.replace("@TITLE@", _("Popular pages"))
-        for (title, uri) in items:
-            path = El().art.get_path(uri, "start")
-            f = Gio.File.new_for_path(path)
-            if not f.query_exists():
-                continue
-            html_start += '<a class="child" title="%s" href="%s">' % (title,
-                                                                      uri)
-            html_start += '<img src="file://%s"></img>' % path
-            html_start += '<div class="caption">%s</div></a>' % title
-        html = html_start.encode("utf-8") + end_content
-        stream = Gio.MemoryInputStream.new_from_data(html)
-        request.finish(stream, -1, "text/html")
-
-    def __on_internal_scheme(self, request):
-        """
-            Load an internal resource
-            @param request as WebKit2.URISchemeRequest
-        """
-        # We use internal:/ because resource:/ is already used by WebKit2
-        uri = request.get_uri().replace("internal:/", "resource:/")
-        f = Gio.File.new_for_uri(uri)
-        request.finish(f.read(), -1, "image/svg+xml")
-
-    def __on_accept_scheme(self, request):
-        """
-            Accept certificate for uri
-            @param request as WebKit2.URISchemeRequest
-        """
-        if self.__bad_tls is None:
-            return
-        parsed = urlparse(request.get_uri())
-        self.get_context().allow_tls_certificate_for_host(self.__bad_tls,
-                                                          parsed.netloc)
-        self.load_uri("https://" + parsed.netloc + parsed.path)
 
     def __on_uri_changed(self, view, uri):
         """
@@ -520,18 +456,6 @@ class WebView(WebKit2.WebView):
             return
         self.__get_forms(view.get_page_id(), request)
 
-    def __on_download_started(self, context, download):
-        """
-            A new download started, handle signals
-            @param context as WebKit2.WebContext
-            @param download as WebKit2.Download
-        """
-        El().download_manager.add(download)
-        # Notify user about download
-        window = self.get_ancestor(Gtk.Window)
-        if window is not None:
-            window.toolbar.end.show_download(download)
-
     def __on_load_changed(self, view, event):
         """
             Update sidebar/urlbar
@@ -541,6 +465,7 @@ class WebView(WebKit2.WebView):
         uri = view.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            El().download_manager.remove_for_page(view.get_page_id())
             self.emit("uri-changed", uri)
             self.__popup_exception = None
             self.__title = ""

@@ -31,6 +31,7 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.dbus_helper import DBusHelper
+from eolie.context import Context
 
 
 class Application(Gtk.Application):
@@ -153,6 +154,7 @@ class Application(Gtk.Application):
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
+        Context(context)
         GLib.setenv('PYTHONPATH', self.__extension_dir, True)
         context.set_web_extensions_directory(self.__extension_dir)
 

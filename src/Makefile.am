@@ -4,6 +4,7 @@ app_PYTHON = \
     application.py\
     art.py\
     container.py\
+    context.py\
     database_adblock.py\
     database_bookmarks.py\
     database_history.py\

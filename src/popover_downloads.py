@@ -31,6 +31,7 @@ class VideoRow(Gtk.ListBoxRow):
         """
         Gtk.ListBoxRow.__init__(self)
         self.__uri = uri
+        self.__title = title
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
         # builder.connect_signals(self)
@@ -71,7 +72,7 @@ class VideoRow(Gtk.ListBoxRow):
             @param download as WebKit2.Download
             @param view as WebKit2.WebView
         """
-        El().download_manager.add(download)
+        El().download_manager.add(download, self.__title)
         GLib.idle_add(self.destroy)
         GLib.idle_add(view.destroy)
 
@@ -388,7 +389,6 @@ class DownloadsPopover(Gtk.Popover):
             @param button as Gtk.button
         """
         self.__clear_button.set_sensitive(False)
-        El().download_manager.clear_videos()
         for child in self.__listbox.get_children():
             if isinstance(child, DownloadRow):
                 El().download_manager.remove(child.download)
@@ -416,14 +416,15 @@ class DownloadsPopover(Gtk.Popover):
 
     def __populate(self):
         """
-            Populate view
+            Populate listbox
         """
         clear = False
-        for (uri, title) in El().download_manager.get_videos():
+        webview = El().active_window.container.current.webview
+        for (uri, title) in El().download_manager.get_videos(
+                                                        webview.get_page_id()):
             child = VideoRow(uri, title)
             child.connect("size-allocate", self.__on_child_size_allocate)
             child.show()
-            clear = True
             self.__listbox.add(child)
         for download in El().download_manager.get():
             child = DownloadRow(download, False)

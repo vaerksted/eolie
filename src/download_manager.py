@@ -38,19 +38,20 @@ class DownloadManager(GObject.GObject):
         helper.connect(self.__on_extension_signal, "VideoInPage")
         self.__downloads = []
         self.__finished = []
-        self.__video_uris = []
+        self.__video_uris = {}
 
-    def add(self, download):
+    def add(self, download, filename=None):
         """
             Add a download
             @param download as WebKit2.Download
+            @param filename as str/None
         """
         if download not in self.__downloads:
             self.__downloads.append(download)
             download.connect('finished', self.__on_finished)
             download.connect('failed', self.__on_failed)
             download.connect('decide-destination',
-                             self.__on_decide_destination)
+                             self.__on_decide_destination, filename)
 
     def remove(self, download):
         """
@@ -62,11 +63,13 @@ class DownloadManager(GObject.GObject):
         if download in self.__finished:
             self.__finished.remove(download)
 
-    def clear_videos(self):
+    def remove_for_page(self, page_id):
         """
-            Clear videos
+            Remove video uris for page
+            @param page_id as int
         """
-        self.__video_uris = []
+        if page_id in self.__video_uris.keys():
+            del self.__video_uris[page_id]
 
     def get(self):
         """
@@ -75,12 +78,15 @@ class DownloadManager(GObject.GObject):
         """
         return self.__downloads
 
-    def get_videos(self):
+    def get_videos(self, page_id):
         """
             Get videos available to download
-            @return uris as [str]
+            @param page_id as int
+            @return [(uri, title)] as [(str, str)]
         """
-        return self.__video_uris
+        if page_id in self.__video_uris.keys():
+            return self.__video_uris[page_id]
+        return []
 
     def get_finished(self):
         """
@@ -107,12 +113,16 @@ class DownloadManager(GObject.GObject):
 #######################
 # PRIVATE             #
 #######################
-    def __on_decide_destination(self, download, filename):
+    def __on_decide_destination(self, download, filename, wanted_filename):
         """
             Modify destination if needed
             @param download as WebKit2.Download
             @param filename as str
+            @param wanted_filename as str
         """
+        if wanted_filename:
+            extension = filename.split(".")[-1]
+            filename = wanted_filename + "." + extension
         directory_uri = El().settings.get_value('download-uri').get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
@@ -177,9 +187,10 @@ class DownloadManager(GObject.GObject):
         """
         uri = params[0]
         title = params[1]
-        if (uri, title) in self.__video_uris:
-            return
-        if len(self.__video_uris) > 3:
-            self.__video_uris.pop(0)
-        self.__video_uris.append((uri, title))
+        page_id = params[2]
+        if page_id in self.__video_uris.keys():
+            if (uri, title) not in self.__video_uris[page_id]:
+                self.__video_uris[page_id].append((uri, title))
+        else:
+            self.__video_uris[page_id] = [(uri, title)]
         self.emit("video-in-page")
