@@ -52,10 +52,6 @@
     background-color: @theme_selected_bg_color;
 }
 
-.sidebar-item-selected .sidebar-item-title {
-    font-weight: bold;
-}
-
 .sidebar-item-selected-private{
     border-color: #C71585;
     background-color: #C71585;
