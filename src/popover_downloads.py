@@ -79,6 +79,8 @@ class VideoRow(Gtk.ListBoxRow):
                                            self.__title,
                                            self.__page_id)
         GLib.idle_add(self.destroy)
+        context = view.get_context()
+        context.disconnect_by_func(self.__on_download_started)
         GLib.idle_add(view.destroy)
 
     def __on_decide_policy(self, view, decision, decision_type):
