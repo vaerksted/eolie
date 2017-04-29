@@ -172,7 +172,7 @@ class Application(Gtk.Application):
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
         helper = DBusHelper()
-        helper.connect(self.__on_extension_signal, None)
+        helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
 
     def do_startup(self):
         """

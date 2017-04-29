@@ -85,6 +85,9 @@ class ProxyExtension(Server):
 
     <signal name='UnsecureFormFocused'>
     </signal>
+    <signal name='VideoInPage'>
+        <arg type="as" name="results" direction="out" />
+    </signal>
     </interface>
     </node>
     '''
@@ -157,5 +160,25 @@ class ProxyExtension(Server):
             @param page as WebKit2WebExtension.WebPage
         """
         webpage.connect("document-loaded", self.__on_document_loaded)
+        webpage.connect("send-request", self.__on_send_request)
         page_id = webpage.get_id()
         self.__pages[page_id] = webpage
+
+    def __on_send_request(self, webpage, request, redirect):
+        """
+            Search for video in page
+            @param webpage as WebKit2WebExtension.WebPage
+            @param request as WebKit2.URIRequest
+            @param redirect as WebKit2WebExtension.URIResponse
+        """
+        extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
+        uri = request.get_uri()
+        # Search for video in page
+        if uri.split(".")[-1] in extensions:
+            args = GLib.Variant.new_tuple(GLib.Variant("s", uri))
+            self.__bus.emit_signal(
+                          None,
+                          PROXY_PATH,
+                          PROXY_BUS,
+                          "VideoInPage",
+                          args)

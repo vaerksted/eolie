@@ -16,6 +16,7 @@ from re import search
 from time import time
 
 from eolie.define import El
+from eolie.dbus_helper import DBusHelper
 
 
 class DownloadManager(GObject.GObject):
@@ -23,8 +24,9 @@ class DownloadManager(GObject.GObject):
         Downloads Manager
     """
     __gsignals__ = {
-        'download-start': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        'download-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "download-start": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "download-finish": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "video-in-page": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self):
@@ -32,8 +34,11 @@ class DownloadManager(GObject.GObject):
             Init download manager
         """
         GObject.GObject.__init__(self)
+        helper = DBusHelper()
+        helper.connect(self.__on_extension_signal, "VideoInPage")
         self.__downloads = []
         self.__finished = []
+        self.__video_uris = []
 
     def add(self, download):
         """
@@ -57,12 +62,25 @@ class DownloadManager(GObject.GObject):
         if download in self.__finished:
             self.__finished.remove(download)
 
+    def clear_videos(self):
+        """
+            Clear videos
+        """
+        self.__video_uris = []
+
     def get(self):
         """
-            Get all downloads
+            Get running downloads
             @return [WebKit2.Download]
         """
         return self.__downloads
+
+    def get_videos(self):
+        """
+            Get videos available to download
+            @return uris as [str]
+        """
+        return self.__video_uris
 
     def get_finished(self):
         """
@@ -144,3 +162,23 @@ class DownloadManager(GObject.GObject):
             @param error as GLib.Error
         """
         print("DownloadManager::__on_failed:", error)
+
+    def __on_extension_signal(self, connection, sender, path,
+                              interface, signal, params, data):
+        """
+            Emit signal
+            @param connection as Gio.DBusConnection
+            @param sender as str
+            @param path as str
+            @param interface as str
+            @param signal as str
+            @param parameters as GLib.Variant
+            @param data
+        """
+        uri = params[0]
+        if uri in self.__video_uris:
+            return
+        if len(self.__video_uris) > 3:
+            self.__video_uris.pop(0)
+        self.__video_uris.append(uri)
+        self.emit("video-in-page")

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango, Gio
+from gi.repository import Gtk, GLib, Pango, Gio, WebKit2
 
 from time import time
 from gettext import gettext as _
@@ -18,9 +18,74 @@ from gettext import gettext as _
 from eolie.define import El
 
 
-class Row(Gtk.ListBoxRow):
+class VideoRow(Gtk.ListBoxRow):
     """
-        A row
+        A video row
+    """
+
+    def __init__(self, uri):
+        """
+            Set video row
+        """
+        Gtk.ListBoxRow.__init__(self)
+        self.__uri = uri
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
+        # builder.connect_signals(self)
+        self.__preview = builder.get_object("preview")
+        builder.get_object("progress").hide()
+        builder.get_object("button").hide()
+        self.__label = builder.get_object("label")
+        self.__sublabel = builder.get_object("sublabel")
+        self.__label.set_text(_("Download this video:"))
+        self.__sublabel.set_text(uri)
+        self.__preview.set_from_icon_name("video-x-generic",
+                                          Gtk.IconSize.DIALOG)
+
+        self.add(builder.get_object("row"))
+
+    def download(self):
+        """
+            Download uri using a temp webview
+        """
+        view = WebKit2.WebView.new()
+        view.connect("decide-policy", self.__on_decide_policy)
+        context = view.get_context()
+        context.connect("download-started", self.__on_download_started, view)
+        view.load_uri(self.__uri)
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_download_started(self, context, download, view):
+        """
+            A new download started, handle signals
+            @param context as WebKit2.WebContext
+            @param download as WebKit2.Download
+            @param view as WebKit2.WebView
+        """
+        El().download_manager.add(download)
+        self.hide()
+        GLib.idle_add(self.destroy)
+        GLib.idle_add(view.destroy)
+
+    def __on_decide_policy(self, view, decision, decision_type):
+        """
+            Navigation policy
+            @param view as WebKit2.WebView
+            @param decision as WebKit2.NavigationPolicyDecision
+            @param decision_type as WebKit2.PolicyDecisionType
+            @return bool
+        """
+        # Always accept response
+        if decision_type == WebKit2.PolicyDecisionType.RESPONSE:
+            decision.download()
+            return False
+
+
+class DownloadRow(Gtk.ListBoxRow):
+    """
+        A Download row row
     """
     def __init__(self, download, finished):
         """
@@ -317,9 +382,13 @@ class DownloadsPopover(Gtk.Popover):
             @param button as Gtk.button
         """
         self.__clear_button.set_sensitive(False)
+        El().download_manager.clear_videos()
         for child in self.__listbox.get_children():
-            El().download_manager.remove(child.download)
-            if child.finished:
+            if isinstance(child, DownloadRow):
+                El().download_manager.remove(child.download)
+                if child.finished:
+                    child.destroy()
+            else:
                 child.destroy()
 
 #######################
@@ -331,7 +400,9 @@ class DownloadsPopover(Gtk.Popover):
             @param row1 as Row
             @param row2 as Row
         """
-        if row1.finished:
+        if isinstance(row1, VideoRow):
+            return False
+        elif row1.finished:
             return True
         elif row2.finished or row1.download.get_estimated_progress() >\
                 row2.download.get_estimated_progress():
@@ -341,17 +412,25 @@ class DownloadsPopover(Gtk.Popover):
         """
             Populate view
         """
+        clear = False
+        for uri in El().download_manager.get_videos():
+            child = VideoRow(uri)
+            child.connect("size-allocate", self.__on_child_size_allocate)
+            child.show()
+            clear = True
+            self.__listbox.add(child)
         for download in El().download_manager.get():
-            child = Row(download, False)
+            child = DownloadRow(download, False)
             child.connect("size-allocate", self.__on_child_size_allocate)
             child.show()
             self.__listbox.add(child)
         for download in El().download_manager.get_finished():
-            child = Row(download, True)
+            child = DownloadRow(download, True)
             child.connect("size-allocate", self.__on_child_size_allocate)
+            clear = True
             child.show()
             self.__listbox.add(child)
-        self.__clear_button.set_sensitive(El().download_manager.get_finished())
+        self.__clear_button.set_sensitive(clear)
 
     def __on_row_activated(self, listbox, row):
         """
@@ -360,7 +439,9 @@ class DownloadsPopover(Gtk.Popover):
             @param row as Row
         """
         try:
-            if row.finished:
+            if isinstance(row, VideoRow):
+                row.download()
+            elif row.finished:
                 Gtk.show_uri(None, row.download.get_destination(), int(time()))
                 self.hide()
         except:  # Destination not found
@@ -395,7 +476,7 @@ class DownloadsPopover(Gtk.Popover):
         """
         for download in El().download_manager.get():
             if str(download) == download_name:
-                child = Row(download, False)
+                child = DownloadRow(download, False)
                 child.connect("size-allocate", self.__on_child_size_allocate)
                 child.show()
                 self.__listbox.add(child)

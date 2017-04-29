@@ -126,6 +126,10 @@
     color: @theme_selected_bg_color;
 }
 
+.red {
+    color: red;
+}
+
 .bold {
     font-weight: bold;
 }

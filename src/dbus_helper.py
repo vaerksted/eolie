@@ -40,17 +40,17 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, callback, data):
+    def connect(self, callback, signal_name):
         """
             Connect callback to object signals
             @param callback as function
-            @param data
+            @param signal_name as str
         """
         try:
             Gio.bus_get(Gio.BusType.SESSION, None,
                         self.__on_get_bus, None,
                         None,
-                        callback, data)
+                        callback, signal_name)
         except Exception as e:
             print("DBusHelper::connect():", e)
 
@@ -69,9 +69,9 @@ class DBusHelper:
         """
         bus = Gio.bus_get_finish(result)
         if call is None:
-            bus.signal_subscribe(None, PROXY_BUS, "UnsecureFormFocused",
+            bus.signal_subscribe(None, PROXY_BUS, data,
                                  PROXY_PATH, None, Gio.DBusSignalFlags.NONE,
-                                 callback, data)
+                                 callback, None)
         else:
             Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
                               PROXY_BUS,
