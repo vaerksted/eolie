@@ -173,8 +173,9 @@ class ProxyExtension(Server):
         """
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
         uri = request.get_uri()
+        parsed = urlparse(uri)
         # Search for video in page
-        if uri.split(".")[-1] in extensions:
+        if parsed.path.split(".")[-1] in extensions:
             args = GLib.Variant.new_tuple(GLib.Variant("s", uri))
             self.__bus.emit_signal(
                           None,

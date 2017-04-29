@@ -39,6 +39,7 @@ class VideoRow(Gtk.ListBoxRow):
         self.__sublabel = builder.get_object("sublabel")
         self.__label.set_text(_("Download this video:"))
         self.__sublabel.set_text(uri)
+        self.set_tooltip_text(uri)
         self.__preview.set_from_icon_name("video-x-generic",
                                           Gtk.IconSize.DIALOG)
 
