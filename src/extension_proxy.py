@@ -176,7 +176,19 @@ class ProxyExtension(Server):
         parsed = urlparse(uri)
         # Search for video in page
         if parsed.path.split(".")[-1] in extensions:
-            args = GLib.Variant.new_tuple(GLib.Variant("s", uri))
+            title = webpage.get_dom_document().get_title()
+            args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
+                                          GLib.Variant("s", title))
+            self.__bus.emit_signal(
+                          None,
+                          PROXY_PATH,
+                          PROXY_BUS,
+                          "VideoInPage",
+                          args)
+        elif parsed.netloc.endswith("googlevideo.com"):
+            title = webpage.get_dom_document().get_title()
+            args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
+                                          GLib.Variant("s", title))
             self.__bus.emit_signal(
                           None,
                           PROXY_PATH,

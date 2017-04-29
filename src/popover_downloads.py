@@ -23,9 +23,11 @@ class VideoRow(Gtk.ListBoxRow):
         A video row
     """
 
-    def __init__(self, uri):
+    def __init__(self, uri, title):
         """
             Set video row
+            @param uri as str
+            @param title as str
         """
         Gtk.ListBoxRow.__init__(self)
         self.__uri = uri
@@ -38,7 +40,10 @@ class VideoRow(Gtk.ListBoxRow):
         self.__label = builder.get_object("label")
         self.__sublabel = builder.get_object("sublabel")
         self.__label.set_text(_("Download this video:"))
-        self.__sublabel.set_text(uri)
+        if title:
+            self.__sublabel.set_text(title)
+        else:
+            self.__sublabel.set_text(uri)
         self.set_tooltip_text(uri)
         self.__preview.set_from_icon_name("video-x-generic",
                                           Gtk.IconSize.DIALOG)
@@ -414,8 +419,8 @@ class DownloadsPopover(Gtk.Popover):
             Populate view
         """
         clear = False
-        for uri in El().download_manager.get_videos():
-            child = VideoRow(uri)
+        for (uri, title) in El().download_manager.get_videos():
+            child = VideoRow(uri, title)
             child.connect("size-allocate", self.__on_child_size_allocate)
             child.show()
             clear = True
