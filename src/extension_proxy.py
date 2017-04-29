@@ -187,7 +187,8 @@ class ProxyExtension(Server):
                           PROXY_BUS,
                           "VideoInPage",
                           args)
-        elif parsed.netloc.endswith("googlevideo.com"):
+        elif parsed.netloc.endswith("googlevideo.com") and\
+                parsed.path == "/videoplayback":
             args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
                                           GLib.Variant("s", title))
             self.__bus.emit_signal(
