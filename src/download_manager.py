@@ -177,7 +177,7 @@ class DownloadManager(GObject.GObject):
         """
         uri = params[0]
         title = params[1]
-        if uri in self.__video_uris:
+        if (uri, title) in self.__video_uris:
             return
         if len(self.__video_uris) > 3:
             self.__video_uris.pop(0)
