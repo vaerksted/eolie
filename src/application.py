@@ -135,6 +135,8 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
         self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
         self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
+        self.set_accels_for_action("win.shortcut::last_page",
+                                   ["<Control><Shift>t"])
         self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
         self.set_accels_for_action("win.shortcut::private",
                                    ["<Control><Shift>p"])

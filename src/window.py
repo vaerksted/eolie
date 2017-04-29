@@ -232,6 +232,8 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.print()
         elif string == "private":
             self.container.add_web_view(El().start_page, True, True)
+        elif string == "last_page":
+            El().pages_menu.activate_last_action()
         elif string == "filter":
             button = self.toolbar.actions.filter_button
             button.set_active(not button.get_active())

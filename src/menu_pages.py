@@ -38,6 +38,16 @@ class PagesMenu(Gio.Menu):
         self.__closed_section = Gio.Menu()
         self.insert_section(1, _("Closed pages"), self.__closed_section)
 
+    def activate_last_action(self):
+        """
+            Activate last action
+        """
+        if self.__closed_section.get_n_items():
+            uri = self.__closed_section.get_item_attribute_value(0, "uri")
+            encoded = sha256(uri.get_string().encode("utf-8")).hexdigest()
+            action = self.__app.lookup_action(encoded)
+            action.activate(None)
+
     def add_action(self, title, uri, private, state):
         """
             Add a new action to menu
@@ -50,9 +60,6 @@ class PagesMenu(Gio.Menu):
         if not title:
             title = uri
         encoded = sha256(uri.encode("utf-8")).hexdigest()
-        action = self.__app.lookup_action(encoded)
-        if action is not None:
-            self.__app.remove_action(encoded)
         action = Gio.SimpleAction(name=encoded)
         self.__app.add_action(action)
         action.connect('activate',
