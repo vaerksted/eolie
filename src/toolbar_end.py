@@ -238,14 +238,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         webview = self.__window.container.current.webview
-        parsed = urlparse(webview.get_uri())
-        if parsed.netloc in El().zoom_levels.keys():
-            current = El().zoom_levels[parsed.netloc]
-        else:
-            current = 100
-        current += 5
-        El().zoom_levels[parsed.netloc] = current
-        webview.update_zoom_level()
+        current = webview.zoom_in()
         button.set_label("{} %".format(current))
 
     def _on_unzoom_button_clicked(self, button):
@@ -254,14 +247,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         webview = self.__window.container.current.webview
-        parsed = urlparse(webview.get_uri())
-        if parsed.netloc in El().zoom_levels.keys():
-            current = El().zoom_levels[parsed.netloc]
-        else:
-            current = 100
-        current -= 5
-        El().zoom_levels[parsed.netloc] = current
-        webview.update_zoom_level()
+        current = webview.zoom_out()
         button.set_label("{} %".format(current))
 
     def _on_default_zoom_button_clicked(self, button):

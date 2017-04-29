@@ -155,6 +155,36 @@ class WebView(WebKit2.WebView):
         p = WebKit2.PrintOperation.new(self)
         p.run_dialog()
 
+    def zoom_in(self):
+        """
+            Zoom in view
+            @return current zoom after zoom in
+        """
+        parsed = urlparse(self.get_uri())
+        if parsed.netloc in El().zoom_levels.keys():
+            current = El().zoom_levels[parsed.netloc]
+        else:
+            current = 100
+        current += 5
+        El().zoom_levels[parsed.netloc] = current
+        self.update_zoom_level()
+        return current
+
+    def zoom_out(self):
+        """
+            Zoom in view
+            @return current zoom after zoom out
+        """
+        parsed = urlparse(self.get_uri())
+        if parsed.netloc in El().zoom_levels.keys():
+            current = El().zoom_levels[parsed.netloc]
+        else:
+            current = 100
+        current -= 5
+        El().zoom_levels[parsed.netloc] = current
+        self.update_zoom_level()
+        return current
+
     @property
     def popup_exception(self):
         """

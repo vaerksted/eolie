@@ -153,6 +153,10 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
         self.set_accels_for_action("win.shortcut::previous",
                                    ["<Control><Shift>Tab"])
+        self.set_accels_for_action("win.shortcut::zoom_in",
+                                   ["<Control>KP_Add", "<Control>plus"])
+        self.set_accels_for_action("win.shortcut::zoom_out",
+                                   ["<Control>KP_Subtract", "<Control>minus"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()
