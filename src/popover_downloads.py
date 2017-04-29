@@ -54,6 +54,7 @@ class VideoRow(Gtk.ListBoxRow):
         """
             Download uri using a temp webview
         """
+        self.hide()
         view = WebKit2.WebView.new()
         view.connect("decide-policy", self.__on_decide_policy)
         context = view.get_context()
@@ -71,7 +72,6 @@ class VideoRow(Gtk.ListBoxRow):
             @param view as WebKit2.WebView
         """
         El().download_manager.add(download)
-        self.hide()
         GLib.idle_add(self.destroy)
         GLib.idle_add(view.destroy)
 
