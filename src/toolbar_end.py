@@ -61,8 +61,6 @@ class ToolbarEnd(Gtk.Bin):
                                       self.__on_download)
         El().download_manager.connect("download-finish",
                                       self.__on_download)
-        El().download_manager.connect("video-in-page",
-                                      self.__on_video_in_page)
         overlay = builder.get_object("overlay")
         overlay.add_overlay(self.__progress)
         overlay.set_overlay_pass_through(self.__progress, True)
@@ -418,13 +416,6 @@ class ToolbarEnd(Gtk.Bin):
             self.__timeout_id = None
             self.__download_button.get_style_context().add_class("selected")
 
-    def __on_video_in_page(self, download_manager):
-        """
-            Video to download, mark us as red
-            @param downloads manager as DownloadsManager
-        """
-        self.__download_button.get_style_context().add_class("red")
-
     def __on_popover_closed(self, popover, button):
         """
             Unlock focus
@@ -432,6 +423,5 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         button.get_style_context().remove_class("selected")
-        button.get_style_context().remove_class("red")
         button.set_active(False)
         self.__window.toolbar.title.set_lock_focus(False)
