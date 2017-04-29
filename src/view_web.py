@@ -465,7 +465,7 @@ class WebView(WebKit2.WebView):
         uri = view.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
-            El().download_manager.remove_for_page(view.get_page_id())
+            El().download_manager.remove_video_for_page(view.get_page_id())
             self.emit("uri-changed", uri)
             self.__popup_exception = None
             self.__title = ""

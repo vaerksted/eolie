@@ -63,7 +63,18 @@ class DownloadManager(GObject.GObject):
         if download in self.__finished:
             self.__finished.remove(download)
 
-    def remove_for_page(self, page_id):
+    def remove_video(self, uri, title, page_id):
+        """
+            Remove video uris for page
+            @param uri
+            @param title
+            @param page_id as int
+        """
+        if page_id in self.__video_uris.keys():
+            if (uri, title) in self.__video_uris[page_id]:
+                self.__video_uris[page_id].remove((uri, title))
+
+    def remove_video_for_page(self, page_id):
         """
             Remove video uris for page
             @param page_id as int
