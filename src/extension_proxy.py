@@ -141,6 +141,7 @@ class ProxyExtension(Server):
             imgs = []
             for i in range(0, dom_list.get_length()):
                 imgs.append(dom_list.item(i).get_src())
+            return imgs
         except Exception as e:
             print("ProxyExtension::GetImages():", e)
         return []
