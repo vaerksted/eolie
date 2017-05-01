@@ -137,6 +137,8 @@ class ImagesPopover(Gtk.Popover):
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
+        self.__spinner.start()
+        self.__button.set_sensitive(False)
         for child in self.__flowbox.get_children():
             child.destroy()
         self.__links = button.get_active()
