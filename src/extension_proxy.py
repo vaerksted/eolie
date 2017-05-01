@@ -82,6 +82,10 @@ class ProxyExtension(Server):
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
+    <method name="GetImages">
+      <arg type="i" name="page_id" direction="in" />
+      <arg type="as" name="results" direction="out" />
+    </method>
 
     <signal name='UnsecureFormFocused'>
     </signal>
@@ -112,7 +116,7 @@ class ProxyExtension(Server):
 
     def GetForms(self, page_id):
         """
-            Get password form
+            Get password form page id
             @param page id as int
             @return (username_form, password_form) as (str, str)
         """
@@ -124,6 +128,22 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::GetForms():", e)
         return ("", "")
+
+    def GetImages(self, page_id):
+        """
+            Get images for page id
+            @param page id as int
+            @return [str]
+        """
+        try:
+            page = self.__pages[page_id]
+            dom_list = page.get_dom_document().get_elements_by_tag_name("img")
+            imgs = []
+            for i in range(0, dom_list.get_length()):
+                imgs.append(dom_list.item(i).get_src())
+        except Exception as e:
+            print("ProxyExtension::GetImages():", e)
+        return []
 
 #######################
 # PRIVATE             #
@@ -156,7 +176,7 @@ class ProxyExtension(Server):
     def __on_page_created(self, extension, webpage):
         """
             Cache webpage
-            @param extension as WebKit2WebExtension
+            @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
         """
         webpage.connect("document-loaded", self.__on_document_loaded)
