@@ -99,10 +99,12 @@ class ToolbarTitle(Gtk.Bin):
             Set uri in Gtk.Entry
             @param uri as str
         """
+        if self.__entry.get_text() == uri:
+            return
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme in ["populars", "about"]:
-            self.set_text_entry("")
+            self.__entry.set_text("")
             return
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
@@ -120,7 +122,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__uri = uri
         self.__input_warning_shown = False
         self.__secure_content = True
-        self.__placeholder.set_opacity(0)
         self.__entry.get_style_context().remove_class('uribar-title')
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
