@@ -55,8 +55,8 @@ class Image(Gtk.FlowBoxChild):
             grid.add(label)
             grid.show()
             self.add(grid)
-        except Exception as e:
-            print("Image::__init__()", e)
+        except:
+            pass
 
     @property
     def uri(self):
@@ -87,6 +87,7 @@ class ImagesPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.__uri = uri
+        self.__page_id = page_id
         self.__downloaded = []
         self.__cancellable = Gio.Cancellable()
         self.__filter = ""
@@ -129,6 +130,27 @@ class ImagesPopover(Gtk.Popover):
         thread.daemon = True
         thread.start()
         self.__spinner.start()
+
+    def _on_button_toggled(self, button):
+        """
+            Cancel previous download
+        """
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
+        for child in self.__flowbox.get_children():
+            child.destroy()
+        self.__links = button.get_active()
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            if button.get_active():
+                helper = DBusHelper()
+                helper.call("GetImageLinks",
+                            GLib.Variant("(i)", (self.__page_id,)),
+                            self.__on_get_images, None)
+            else:
+                helper = DBusHelper()
+                helper.call("GetImages",
+                            GLib.Variant("(i)", (self.__page_id,)),
+                            self.__on_get_images, None)
 
 #######################
 # PRIVATE             #
@@ -217,8 +239,8 @@ class ImagesPopover(Gtk.Popover):
             try:
                 f = Gio.File.new_for_path(filepath)
                 f.delete()
-            except Exception as e:
-                print("ImagesPopover::__clean_cache()", e)
+            except:
+                pass
 
     def __on_get_images(self, source, result, request):
         """

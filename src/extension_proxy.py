@@ -86,6 +86,10 @@ class ProxyExtension(Server):
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
+    <method name="GetImageLinks">
+      <arg type="i" name="page_id" direction="in" />
+      <arg type="as" name="results" direction="out" />
+    </method>
 
     <signal name='UnsecureFormFocused'>
     </signal>
@@ -138,12 +142,34 @@ class ProxyExtension(Server):
         try:
             page = self.__pages[page_id]
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
-            imgs = []
+            uris = []
             for i in range(0, dom_list.get_length()):
-                imgs.append(dom_list.item(i).get_src())
-            return imgs
+                uris.append(dom_list.item(i).get_src())
+            return uris
         except Exception as e:
             print("ProxyExtension::GetImages():", e)
+        return []
+
+    def GetImageLinks(self, page_id):
+        """
+            Get image links for page id
+            @param page id as int
+            @return [str]
+        """
+        try:
+            page = self.__pages[page_id]
+            dom_list = page.get_dom_document().get_elements_by_tag_name("a")
+            uris = []
+            for i in range(0, dom_list.get_length()):
+                href = dom_list.item(i).get_href()
+                if href is None:
+                    continue
+                ext = href.split(".")[-1]
+                if ext in ["gif", "jpg", "png", "jpeg"]:
+                    uris.append(href)
+            return uris
+        except Exception as e:
+            print("ProxyExtension::GetImagesLinks():", e)
         return []
 
 #######################
