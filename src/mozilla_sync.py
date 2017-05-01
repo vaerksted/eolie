@@ -294,6 +294,8 @@ class SyncWorker(GObject.GObject):
         parents = []
         for bookmark_id in El().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
+            if self.__stop:
+                raise("Cancelled")
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
             if parent_guid is None:
@@ -312,6 +314,8 @@ class SyncWorker(GObject.GObject):
             self.__client.add_bookmark(record, bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
+            if self.__stop:
+                raise("Cancelled")
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
@@ -323,7 +327,7 @@ class SyncWorker(GObject.GObject):
             debug("deleting %s" % record)
             self.__client.add_bookmark(record, bulk_keys)
             El().bookmarks.remove(bookmark_id)
-        # Push parents in this order, parents near root are handle later
+        # Push parents in this order, parents near root are handled later
         # Otherwise, order will be broken by new children updates
         while parents:
             parent_id = parents.pop(0)
@@ -376,6 +380,8 @@ class SyncWorker(GObject.GObject):
         else:
             to_delete = El().bookmarks.get_guids()
         for record in records:
+            if self.__stop:
+                raise("Cancelled")
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
                     bookmark["type"] not in ["folder", "bookmark"]:
@@ -454,6 +460,8 @@ class SyncWorker(GObject.GObject):
                                           bookmark["parentName"],
                                           False)
         for guid in to_delete:
+            if self.__stop:
+                raise("Cancelled")
             debug("deleting: %s" % guid)
             bookmark_id = El().bookmarks.get_id_by_guid(guid)
             if bookmark_id is not None:
