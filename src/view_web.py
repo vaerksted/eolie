@@ -445,7 +445,7 @@ class WebView(WebKit2.WebView):
             @param hit as WebKit2.HitTestResult
         """
         parsed = urlparse(view.get_uri())
-        if parsed.scheme not in ["http", "https"]:
+        if view.is_loading() or parsed.scheme not in ["http", "https"]:
             return
         # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
         # Introspection missing, Gtk.Action deprecated
