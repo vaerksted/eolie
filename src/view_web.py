@@ -450,7 +450,7 @@ class WebView(WebKit2.WebView):
         # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
         # Introspection missing, Gtk.Action deprecated
         action = Gtk.Action.new("save_imgs",
-                                _("Save all images"),
+                                _("Save images"),
                                 None,
                                 None)
         action.connect("activate", self.__on_save_images_activate)
