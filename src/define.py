@@ -31,6 +31,11 @@ if GLib.getenv("XDG_CONFIG_HOME") is None:
 else:
     CONFIG_PATH = GLib.getenv("XDG_CONFIG_HOME")
 
+if GLib.getenv("XDG_CACHE_HOME") is None:
+    CACHE_PATH = GLib.get_home_dir() + "/.cache/eolie"
+else:
+    CACHE_PATH = GLib.getenv("XDG_CACHE_HOME") + "/eolie"
+
 
 class TimeSpan:
     HOUR = "0"

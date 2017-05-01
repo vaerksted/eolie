@@ -16,16 +16,13 @@ from hashlib import sha256
 from time import time
 
 from eolie.utils import strip_uri
+from eolie.define import CACHE_PATH
 
 
 class Art:
     """
         Base art manager
     """
-    if GLib.getenv("XDG_CACHE_HOME") is None:
-        __CACHE_PATH = GLib.get_home_dir() + "/.cache/eolie"
-    else:
-        __CACHE_PATH = GLib.getenv("XDG_CACHE_HOME") + "/eolie"
 
     def __init__(self):
         """
@@ -77,7 +74,7 @@ class Art:
         strip = strip_uri(uri, False, True)
         strip = strip.replace("www.", "")
         encoded = sha256(strip.encode("utf-8")).hexdigest()
-        filepath = "%s/%s_%s.png" % (self.__CACHE_PATH, encoded, suffix)
+        filepath = "%s/%s_%s.png" % (CACHE_PATH, encoded, suffix)
         return filepath
 
     def exists(self, uri, suffix):
@@ -102,7 +99,7 @@ class Art:
             Get cache base uri
             @return str
         """
-        return GLib.filename_to_uri(self.__CACHE_PATH)
+        return GLib.filename_to_uri(CACHE_PATH)
 
 #######################
 # PROTECTED           #
@@ -115,9 +112,9 @@ class Art:
         """
             Create cache dir
         """
-        d = Gio.File.new_for_path(self.__CACHE_PATH)
+        d = Gio.File.new_for_path(CACHE_PATH)
         if not d.query_exists():
             try:
                 d.make_directory_with_parents()
             except:
-                print("Can't create %s" % self.__CACHE_PATH)
+                print("Can't create %s" % CACHE_PATH)

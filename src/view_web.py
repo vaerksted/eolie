@@ -312,6 +312,7 @@ class WebView(WebKit2.WebView):
         # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("context-menu", self.__on_context_menu)
 
     def __check_for_network(self, uri):
         """
@@ -434,6 +435,39 @@ class WebView(WebKit2.WebView):
                                  2000,
                                  self.run_javascript_from_gresource,
                                  '/org/gnome/Eolie/Readability.js', None, None)
+
+    def __on_context_menu(self, view, context_menu, event, hit):
+        """
+            Add custom items to menu
+            @param view as WebKit2.WebView
+            @param context_menu as WebKit2.ContextMenu
+            @param event as Gdk.Event
+            @param hit as WebKit2.HitTestResult
+        """
+        parsed = urlparse(view.get_uri())
+        if parsed.scheme not in ["http", "https"]:
+            return
+        # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+        # Introspection missing, Gtk.Action deprecated
+        action = Gtk.Action.new("save_imgs",
+                                _("Save all images"),
+                                None,
+                                None)
+        action.connect("activate", self.__on_save_images_activate)
+        item = WebKit2.ContextMenuItem.new(action)
+        n_items = context_menu.get_n_items()
+        if El().settings.get_value("developer-extras"):
+            context_menu.insert(item, n_items - 2)
+        else:
+            context_menu.insert(item, n_items)
+
+    def __on_save_images_activate(self, action):
+        """
+            Show images filtering popover
+            @param action as Gtk.Action
+        """
+        El().active_window.toolbar.end.save_images(self.get_uri(),
+                                                   self.get_page_id())
 
     def __on_run_as_modal(self, view):
         """

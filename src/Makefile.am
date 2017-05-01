@@ -22,6 +22,7 @@ app_PYTHON = \
     mozilla_sync.py\
     popover_cookies.py\
     popover_downloads.py\
+    popover_images.py\
     popover_javascript.py\
     popover_password.py\
     popover_uri.py\

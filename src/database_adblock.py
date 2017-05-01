@@ -231,6 +231,7 @@ class DatabaseAdblock:
                     bytes += buf
                     buf = stream.read_bytes(
                                            1024, self.__cancellable).get_data()
+                stream.close()
                 result = bytes.decode('utf-8')
                 count = 0
                 for line in result.split('\n'):

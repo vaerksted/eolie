@@ -100,6 +100,7 @@ class Search:
             while buf:
                 bytes += buf
                 buf = stream.read_bytes(1024, cancellable).get_data()
+            stream.close()
             string = bytes.decode(self.__encoding)
             # format: '["{"words"}",["result1","result2"]]'
             keywords = string.replace('[', '').replace(']', '').split(',')[1:]

@@ -128,6 +128,17 @@ class ToolbarEnd(Gtk.Bin):
         popover.show()
         GLib.timeout_add(2000, popover.destroy)
 
+    def save_images(self, uri, page_id):
+        """
+            Show a popover with all images for page id
+            @param uri as str
+            @param page_id as int
+        """
+        from eolie.popover_images import ImagesPopover
+        popover = ImagesPopover(uri, page_id)
+        popover.set_relative_to(self.__download_button)
+        popover.show()
+
 #######################
 # PROTECTED           #
 #######################
@@ -284,6 +295,8 @@ class ToolbarEnd(Gtk.Bin):
                 bytes += buf
                 buf = stream.read_bytes(1024, None).get_data()
             tmp_stream.get_output_stream().write_all(bytes)
+            stream.close()
+            tmp_stream.close()
             GLib.idle_add(self.__launch_editor, tmp)
         except Exception as e:
             print("ToolbarEnd::__show_source_code():", e)
