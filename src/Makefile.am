@@ -8,6 +8,7 @@ app_PYTHON = \
     database_adblock.py\
     database_bookmarks.py\
     database_history.py\
+    database_pishing.py\
     dbus_helper.py\
     dialog_clear_data.py\
     dialog_import_bookmarks.py\

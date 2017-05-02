@@ -360,6 +360,34 @@ class WebView(WebKit2.WebView):
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
 
+    def __show_pishing_error(self, uri):
+        """
+            Show a warning about pishing
+            @param uri as str
+        """
+        self.stop_loading()
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
+        (status, css_content, tag) = f.load_contents(None)
+        css = css_content.decode("utf-8")
+        # Hide reload button
+        css = css.replace("@button@", "display: none")
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
+        (status, content, tag) = f.load_contents(None)
+        html = content.decode("utf-8")
+        title = _("This page is dangerous")
+        detail = _("Eolie will not display this page")
+        icon = "dialog-warning-symbolic.svg"
+        html = html % (title,
+                       css,
+                       "load_uri('%s')" % uri,
+                       "internal:///org/gnome/Eolie/" + icon,
+                       title,
+                       _("%s is a pishing page") % uri,
+                       detail,
+                       "",
+                       "")
+        self.load_html(html, None)
+
     def __on_get_forms(self, source, result, request):
         """
             Set forms value
@@ -534,15 +562,18 @@ class WebView(WebKit2.WebView):
             self.__popup_exception = None
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
-            self.emit("uri-changed", uri)
-            exception = El().adblock.is_an_exception(
-                                    parsed.netloc) or\
-                El().adblock.is_an_exception(
-                                    parsed.netloc + parsed.path)
-            imgblock = El().settings.get_value("imgblock")
-            self.set_setting("auto-load-images",
-                             not imgblock or exception)
-            self.update_zoom_level()
+            if El().pishing.is_pishing(uri):
+                self.__show_pishing_error(uri)
+            else:
+                self.emit("uri-changed", uri)
+                exception = El().adblock.is_an_exception(
+                                        parsed.netloc) or\
+                    El().adblock.is_an_exception(
+                                        parsed.netloc + parsed.path)
+                imgblock = El().settings.get_value("imgblock")
+                self.set_setting("auto-load-images",
+                                 not imgblock or exception)
+                self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
                 # We need to send a title if non exists
@@ -579,7 +610,8 @@ class WebView(WebKit2.WebView):
         """
         network_available = Gio.NetworkMonitor.get_default(
                                                       ).get_network_available()
-        # Ignore all others errors
+        # Ignore this errors
+        # TODO: Understand what this error are
         if error.code not in [2, 4, 44]:
             print("WebView::__on_load_failed():", error.code)
             return False

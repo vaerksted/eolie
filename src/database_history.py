@@ -10,13 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, Gio
+from gi.repository import Gio
 
 import sqlite3
 import itertools
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El
+from eolie.define import El, EOLIE_LOCAL_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -25,11 +25,7 @@ class DatabaseHistory:
     """
         Eolie history db
     """
-    if GLib.getenv("XDG_DATA_HOME") is None:
-        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
-    else:
-        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
-    DB_PATH = "%s/history.db" % __LOCAL_PATH
+    DB_PATH = "%s/history.db" % EOLIE_LOCAL_PATH
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -56,7 +52,7 @@ class DatabaseHistory:
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(self.__LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema

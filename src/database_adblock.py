@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Soup, Gio, GLib
+from gi.repository import Soup, Gio
 
 from urllib.parse import urlparse
 import sqlite3
@@ -18,17 +18,14 @@ from time import time
 from threading import Thread
 
 from eolie.sqlcursor import SqlCursor
+from eolie.define import EOLIE_LOCAL_PATH
 
 
 class DatabaseExceptions:
     """
         Adblock exceptions
     """
-    if GLib.getenv("XDG_DATA_HOME") is None:
-        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
-    else:
-        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
-    DB_PATH = "%s/exceptions.db" % __LOCAL_PATH
+    DB_PATH = "%s/exceptions.db" % EOLIE_LOCAL_PATH
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -49,7 +46,7 @@ class DatabaseExceptions:
         # Lazy loading if not empty
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(self.__LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema
@@ -75,11 +72,7 @@ class DatabaseAdblock:
     """
         Eolie adblock db
     """
-    if GLib.getenv("XDG_DATA_HOME") is None:
-        __LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
-    else:
-        __LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
-    DB_PATH = "%s/adblock.db" % __LOCAL_PATH
+    DB_PATH = "%s/adblock.db" % EOLIE_LOCAL_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
               "http://winhelp2002.mvps.org/hosts.txt",
@@ -108,7 +101,7 @@ class DatabaseAdblock:
         # Lazy loading if not empty
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(self.__LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema
@@ -162,14 +155,13 @@ class DatabaseAdblock:
         # Only update if filters older than one week
         mtime = 0
         with SqlCursor(self) as sql:
-                result = sql.execute("SELECT mtime FROM adblock LIMIT 1")
-                v = result.fetchone()
-                if v is not None:
-                    mtime = v[0]
+            result = sql.execute("SELECT mtime FROM adblock LIMIT 1")
+            v = result.fetchone()
+            if v is not None:
+                mtime = v[0]
         self.__mtime = int(time())
         if self.__mtime - mtime < 604800:
             return
-        self.__stop = False
         if Gio.NetworkMonitor.get_default().get_network_available():
             thread = Thread(target=self.__update)
             thread.daemon = True
@@ -180,8 +172,6 @@ class DatabaseAdblock:
             Stop update
         """
         self.__cancellable.cancel()
-        self.__cancellable.reset()
-        self.__stop = True
 
     def is_blocked(self, uri):
         """
@@ -218,6 +208,7 @@ class DatabaseAdblock:
         """
             Update database
         """
+        self.__cancellable.reset()
         SqlCursor.add(self)
         result = ""
         try:
@@ -235,7 +226,7 @@ class DatabaseAdblock:
                 result = bytes.decode('utf-8')
                 count = 0
                 for line in result.split('\n'):
-                    if self.__cancellable.is_cancelled() or self.__stop:
+                    if self.__cancellable.is_cancelled():
                         raise IOError("Cancelled")
                     if line.startswith('#'):
                         continue

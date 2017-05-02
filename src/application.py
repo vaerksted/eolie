@@ -26,6 +26,7 @@ from eolie.art import Art
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
+from eolie.database_pishing import DatabasePishing
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
@@ -124,6 +125,8 @@ class Application(Gtk.Application):
             self.sync_worker = None
         self.adblock = DatabaseAdblock()
         self.adblock.update()
+        self.pishing = DatabasePishing()
+        self.pishing.update()
         self.art = Art()
         self.search = Search()
         self.download_manager = DownloadManager()
