@@ -93,6 +93,7 @@ class Application(Gtk.Application):
         self.register(None)
         if self.get_is_remote():
             Gdk.notify_startup_complete()
+        self.__listen_to_gnome_sm()
 
     def init(self):
         """
@@ -287,6 +288,22 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __listen_to_gnome_sm(self):
+        """
+            Save state on EndSession signal
+        """
+        try:
+            bus = self.get_dbus_connection()
+            bus.signal_subscribe(None,
+                                 "org.gnome.SessionManager.EndSessionDialog",
+                                 "ConfirmedLogout",
+                                 "/org/gnome/SessionManager/EndSessionDialog",
+                                 None,
+                                 Gio.DBusSignalFlags.NONE,
+                                 lambda a, b, c, d, e, f: self.__save_state())
+        except Exception as e:
+            print("Application::__listen_to_gnome_sm():", e)
+
     def __vacuum(self):
         """
             VACUUM DB
