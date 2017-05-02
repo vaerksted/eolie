@@ -173,7 +173,9 @@ class ImagesPopover(Gtk.Popover):
             directory.make_directory_with_parents()
         for child in self.__flowbox.get_children():
             if child.uri.find(self.__filter) != -1:
-                s = Gio.File.new_for_uri(child.uri)
+                encoded = sha256(child.uri.encode("utf-8")).hexdigest()
+                filepath = "%s/%s" % (CACHE_PATH, encoded)
+                s = Gio.File.new_for_path(filepath)
                 d = Gio.File.new_for_uri("%s/%s" % (destination_uri,
                                                     s.get_basename()))
                 try:
