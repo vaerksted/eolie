@@ -428,21 +428,43 @@ class DownloadsPopover(Gtk.Popover):
         for (uri, title) in El().download_manager.get_videos(
                                                         webview.get_page_id()):
             child = VideoRow(uri, title, webview.get_page_id())
-            child.connect("size-allocate", self.__on_child_size_allocate)
+            child.connect("size-allocate",
+                          lambda x, y: self.__calculate_height())
+            child.connect("destroy",
+                          lambda x: self.__calculate_height())
             child.show()
             self.__listbox.add(child)
         for download in El().download_manager.get():
             child = DownloadRow(download, False)
-            child.connect("size-allocate", self.__on_child_size_allocate)
+            child.connect("size-allocate",
+                          lambda x, y: self.__calculate_height())
+            child.connect("destroy",
+                          lambda x: self.__calculate_height())
             child.show()
             self.__listbox.add(child)
         for download in El().download_manager.get_finished():
             child = DownloadRow(download, True)
-            child.connect("size-allocate", self.__on_child_size_allocate)
+            child.connect("size-allocate",
+                          lambda x, y: self.__calculate_height())
+            child.connect("destroy",
+                          lambda x: self.__calculate_height())
             clear = True
             child.show()
             self.__listbox.add(child)
         self.__clear_button.set_sensitive(clear)
+
+    def __calculate_height(self):
+        """
+            Update popover height request
+        """
+        height = 0
+        for child in self.__listbox.get_children():
+            if child.is_visible():
+                height += child.get_allocated_height()
+        size = self.get_ancestor(Gtk.Window).get_size()
+        if height > size[1] * 0.6:
+            height = size[1] * 0.6
+        self.__scrolled.set_size_request(400, height)
 
     def __on_row_activated(self, listbox, row):
         """
@@ -489,7 +511,10 @@ class DownloadsPopover(Gtk.Popover):
         for download in El().download_manager.get():
             if str(download) == download_name:
                 child = DownloadRow(download, False)
-                child.connect("size-allocate", self.__on_child_size_allocate)
+                child.connect("size-allocate",
+                              lambda x, y: self.__calculate_height())
+                child.connect("destroy",
+                              lambda x: self.__calculate_height())
                 child.show()
                 self.__listbox.add(child)
                 break
@@ -500,18 +525,3 @@ class DownloadsPopover(Gtk.Popover):
             @param download manager as Download Manager
         """
         self.__clear_button.set_sensitive(True)
-
-    def __on_child_size_allocate(self, widget, allocation=None):
-        """
-            Update popover height request
-            @param widget as Gtk.Widget
-            @param allocation as Gdk.Rectangle
-        """
-        height = 0
-        for child in self.__listbox.get_children():
-            if child.is_visible():
-                height += allocation.height
-        size = self.get_ancestor(Gtk.Window).get_size()
-        if height > size[1] * 0.6:
-            height = size[1] * 0.6
-        self.__scrolled.set_size_request(400, height)
