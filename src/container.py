@@ -33,6 +33,7 @@ class Container(Gtk.Overlay):
         Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
+        self.__popover = None
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finish", self.__on_sync_finish)
         self.__stack = Gtk.Stack()
@@ -234,22 +235,58 @@ class Container(Gtk.Overlay):
         if view is not None:
             self.sidebar.close_view(view)
 
-    def __on_ready_to_show(self, webview):
+    def __on_ready_to_show(self, related):
         """
             Add view to window
             @param webview as WebView
         """
-        view = View(webview.private, None, webview)
+        view = View(related.private, None, related)
+        view.webview.connect("create", self.__on_create)
         view.show()
-        popover = Gtk.Popover.new()
-        popover.add(view)
-        popover.set_relative_to(self.__window.toolbar)
-        popover.set_position(Gtk.PositionType.BOTTOM)
-        popover.set_size_request(self.__window.get_allocated_width() / 3,
+        if self.__popover is None:
+            self.__popover = Gtk.Popover.new()
+            self.__popover.set_relative_to(self.__window.toolbar)
+            self.__popover.set_position(Gtk.PositionType.BOTTOM)
+            stack = Gtk.Stack.new()
+            stack.set_transition_type(Gtk.StackTransitionType.UNDER_DOWN)
+            stack.set_transition_duration(250)
+            stack.show()
+            self.__popover.add(stack)
+        else:
+            stack = self.__popover.get_child()
+        previous = stack.get_visible_child()
+        stack.add(view)
+        stack.set_visible_child(view)
+        self.__popover.set_size_request(
+                                 self.__window.get_allocated_width() / 3,
                                  self.__window.get_allocated_height() / 1.5)
-        view.webview.connect("close", lambda x: popover.destroy())
-        popover.connect("closed", lambda x: view.webview.destroy())
-        popover.show()
+        view.webview.connect("close", self.__on_web_view_close, view, previous)
+        self.__popover.connect("closed", self.__on_popover_closed)
+        self.__popover.show()
+
+    def __on_web_view_close(self, webview, view, previous):
+        """
+            Remove view from stack
+            @param webview as WebKit2.WebView
+            @param view as View
+            @param previous as View
+        """
+        stack = self.__popover.get_child()
+        close = len(stack.get_children()) == 1
+        if previous is not None:
+            stack.set_visible_child(previous)
+        GLib.timeout_add(1000, view.destroy)
+        if close:
+            self.__popover.hide()
+
+    def __on_popover_closed(self, popover):
+        """
+            Clear popover content
+            @param popover as Gtk.Popover
+        """
+        stack = self.__popover.get_child()
+        for child in stack.get_children():
+            child.destroy()
 
     def __on_readable(self, webview):
         """
