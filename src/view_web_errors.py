@@ -127,7 +127,7 @@ class WebViewErrors:
                        "load_uri('%s')" % uri,
                        "internal:///org/gnome/Eolie/" + icon,
                        title,
-                       _("%s is not available") % uri,
+                       "<b>%s</b> %s" % (uri, error.message),
                        detail,
                        "suggested-action",
                        _("Retry"))
