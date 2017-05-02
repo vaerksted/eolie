@@ -144,7 +144,9 @@ class ProxyExtension(Server):
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
             uris = []
             for i in range(0, dom_list.get_length()):
-                uris.append(dom_list.item(i).get_src())
+                uri = dom_list.item(i).get_src()
+                if uri not in uris:
+                    uris.append(uri)
             return uris
         except Exception as e:
             print("ProxyExtension::GetImages():", e)
@@ -161,12 +163,12 @@ class ProxyExtension(Server):
             dom_list = page.get_dom_document().get_elements_by_tag_name("a")
             uris = []
             for i in range(0, dom_list.get_length()):
-                href = dom_list.item(i).get_href()
-                if href is None:
+                uri = dom_list.item(i).get_href()
+                if uri is None or uri in uris:
                     continue
-                ext = href.split(".")[-1]
+                ext = uri.split(".")[-1]
                 if ext in ["gif", "jpg", "png", "jpeg"]:
-                    uris.append(href)
+                    uris.append(uri)
             return uris
         except Exception as e:
             print("ProxyExtension::GetImagesLinks():", e)
