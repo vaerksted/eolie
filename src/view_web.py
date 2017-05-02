@@ -18,9 +18,10 @@ from urllib.parse import urlparse
 from eolie.dbus_helper import DBusHelper
 from eolie.define import El
 from eolie.utils import get_ftp_cmd, debug
+from eolie.view_web_errors import WebViewErrors
 
 
-class WebView(WebKit2.WebView):
+class WebView(WebKit2.WebView, WebViewErrors):
     """
         WebKit view
         All WebKit2.WebView members available
@@ -100,7 +101,7 @@ class WebView(WebKit2.WebView):
             uri = "http://" + uri
         # Reset bad tls certificate
         elif parsed.scheme != "accept":
-            self.__bad_tls = None
+            self.reset_bad_tls()
             self.__insecure_content_detected = False
         self.__loaded_uri = uri
         self.emit("uri-changed", uri)
@@ -225,13 +226,6 @@ class WebView(WebKit2.WebView):
         """
         return self.__selection
 
-    @property
-    def bad_tls(self):
-        """
-            Get wrong certificate
-        """
-        return self.__bad_tls
-
 #######################
 # PRIVATE             #
 #######################
@@ -240,6 +234,7 @@ class WebView(WebKit2.WebView):
             Init WebView
             @param related_view as WebView
         """
+        WebViewErrors.__init__(self)
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
@@ -252,7 +247,6 @@ class WebView(WebKit2.WebView):
         self.__input_source = Gdk.InputSource.MOUSE
         self.__loaded_uri = ""
         self.__title = ""
-        self.__bad_tls = None  # Keep bad TLS certificate
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -302,11 +296,8 @@ class WebView(WebKit2.WebView):
                      self.__on_insecure_content_detected)
         self.connect("submit-form", self.__on_submit_form)
         self.connect("run-as-modal", self.__on_run_as_modal)
-        self.connect("web-process-crashed", self.__on_web_process_crashed)
         self.connect("permission_request", self.__on_permission_request)
         self.connect("load-changed", self.__on_load_changed)
-        self.connect("load-failed", self.__on_load_failed)
-        self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
         # We launch Readability.js at page loading finished
         # As Webkit2GTK doesn't allow us to get content from python
         # It sets title with content for one shot, so try to get it here
@@ -359,34 +350,6 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
-
-    def __show_pishing_error(self, uri):
-        """
-            Show a warning about pishing
-            @param uri as str
-        """
-        self.stop_loading()
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
-        (status, css_content, tag) = f.load_contents(None)
-        css = css_content.decode("utf-8")
-        # Hide reload button
-        css = css.replace("@button@", "display: none")
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
-        (status, content, tag) = f.load_contents(None)
-        html = content.decode("utf-8")
-        title = _("This page is dangerous")
-        detail = _("Eolie will not display this page")
-        icon = "dialog-warning-symbolic.svg"
-        html = html % (title,
-                       css,
-                       "load_uri('%s')" % uri,
-                       "internal:///org/gnome/Eolie/" + icon,
-                       title,
-                       _("%s is a pishing page") % uri,
-                       detail,
-                       "",
-                       "")
-        self.load_html(html, None)
 
     def __on_get_forms(self, source, result, request):
         """
@@ -563,7 +526,7 @@ class WebView(WebKit2.WebView):
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             if El().pishing.is_pishing(uri):
-                self.__show_pishing_error(uri)
+                self._show_pishing_error(uri)
             else:
                 self.emit("uri-changed", uri)
                 exception = El().adblock.is_an_exception(
@@ -599,122 +562,6 @@ class WebView(WebKit2.WebView):
                                     "/org/gnome/Eolie/adblock/" + javascript,
                                     None, None)
                         break
-
-    def __on_load_failed(self, view, event, uri, error):
-        """
-            Show error page
-            @param view as WebKit2.WebView
-            @param event as WebKit2.LoadEvent
-            @param uri as str
-            @param error as GLib.Error
-        """
-        network_available = Gio.NetworkMonitor.get_default(
-                                                      ).get_network_available()
-        # Ignore this errors
-        # TODO: Understand what this error are
-        if error.code not in [2, 4, 44]:
-            print("WebView::__on_load_failed():", error.code)
-            return False
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
-        (status, css_content, tag) = f.load_contents(None)
-        css = css_content.decode("utf-8")
-        # Hide reload button if network is down
-        if network_available:
-            css = css.replace("@button@", "")
-        else:
-            css = css.replace("@button@", "display: none")
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
-        (status, content, tag) = f.load_contents(None)
-        html = content.decode("utf-8")
-        if network_available:
-            title = _("Failed to load this web page")
-            detail = _("It may be temporarily inaccessible or moved"
-                       " to a new address.<br/>"
-                       "You may wish to verify that your internet"
-                       " connection is working correctly.")
-            icon = "dialog-information-symbolic.svg"
-        else:
-            title = _("Network not available")
-            detail = _("Check your network connection")
-            icon = "network-offline-symbolic.svg"
-        html = html % (title,
-                       css,
-                       "load_uri('%s')" % uri,
-                       "internal:///org/gnome/Eolie/" + icon,
-                       title,
-                       _("%s is not available") % uri,
-                       detail,
-                       "suggested-action",
-                       _("Retry"))
-        self.load_html(html, None)
-        if network_available:
-            # Remove preview and start as should be wrong
-            for suffix in ["preview", "start"]:
-                path = El().art.get_path(uri, suffix)
-                f = Gio.File.new_for_path(path)
-                try:
-                    f.delete()
-                except:
-                    pass
-        else:
-            GLib.timeout_add(1000, self.__check_for_network, uri)
-        return True
-
-    def __on_load_failed_tls(self, view, uri, certificate, errors):
-        """
-            Show TLS error page
-            @param view as WebKit2.WebView
-            @param certificate as Gio.TlsCertificate
-            @parma errors as Gio.TlsCertificateFlags
-        """
-        self.__bad_tls = certificate
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
-        (status, css_content, tag) = f.load_contents(None)
-        css = css_content.decode("utf-8")
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
-        (status, content, tag) = f.load_contents(None)
-        html = content.decode("utf-8")
-        if errors == Gio.TlsCertificateFlags.BAD_IDENTITY:
-            error = _("The certificate does not match this website")
-        elif errors == Gio.TlsCertificateFlags.EXPIRED:
-            error = _("The certificate has expired")
-        elif errors == Gio.TlsCertificateFlags.UNKNOWN_CA:
-            error = _("The signing certificate authority is not known")
-        elif errors == Gio.TlsCertificateFlags.GENERIC_ERROR:
-            error = _("The certificate contains errors")
-        elif errors == Gio.TlsCertificateFlags.REVOKED:
-            error = _("The certificate has been revoked")
-        elif errors == Gio.TlsCertificateFlags.INSECURE:
-            error = _("The certificate is signed using"
-                      " a weak signature algorithm")
-        elif errors == Gio.TlsCertificateFlags.NOT_ACTIVATED:
-            error = _("The certificate activation time is still in the future")
-        else:
-            error = _("The identity of this website has not been verified")
-        html = html % (_("Connection is not secure"),
-                       css,
-                       "load_uri('%s')" % uri.replace("https://",
-                                                      "accept://"),
-                       "internal:///org/gnome/Eolie/"
-                       "dialog-warning-symbolic.svg",
-                       _("Connection is not secure"),
-                       error,
-                       _("This does not look like the real %s.<br/>"
-                         "Attackers might be trying to steal or alter"
-                         " information going to or from this site"
-                         " (for example, private messages, credit card"
-                         " information, or passwords).") % uri,
-                       "destructive-action",
-                       _("Accept Risk and Proceed"))
-        self.load_html(html, None)
-        return True
-
-    def __on_web_process_crashed(self, view):
-        """
-            We just crashed :-(
-            @param view as WebKit2.WebView
-        """
-        print("WebView::__on_web_process_crashed():", view)
 
     def __on_decide_policy(self, view, decision, decision_type):
         """

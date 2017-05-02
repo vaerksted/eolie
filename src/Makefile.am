@@ -38,6 +38,7 @@ app_PYTHON = \
     toolbar_title.py\
     view.py\
     view_web.py\
+    view_web_errors.py\
     widget_edit_bookmark.py\
     widget_find.py\
     window.py
