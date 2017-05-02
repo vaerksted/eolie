@@ -24,9 +24,6 @@ from eolie.view_web_navigation import WebViewNavigation
 class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
     """
         WebKit view
-        All WebKit2.WebView members available
-        Forward all connect to internal WebKit2.WebView webview, you get
-        self as first argument
     """
 
     def new():
