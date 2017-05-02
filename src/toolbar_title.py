@@ -186,9 +186,9 @@ class ToolbarTitle(Gtk.Bin):
                 "visible to cybercriminals!")
         webview.run_javascript(js, None, None)
 
-    def hide_popover(self):
+    def close_popover(self):
         """
-            hide popover if needed
+            Close popover if needed
         """
         if self.__popover.is_visible():
             self.__lock_focus = False
@@ -417,7 +417,7 @@ class ToolbarTitle(Gtk.Bin):
             if event.keyval in [Gdk.KEY_Return,
                                 Gdk.KEY_KP_Enter,
                                 Gdk.KEY_Escape]:
-                GLib.idle_add(self.hide_popover)
+                GLib.idle_add(self.close_popover)
 
     def _on_readable_press(self, eventbox, event):
         """

@@ -83,4 +83,4 @@ class Toolbar(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__toolbar_title.hide_popover()
+        self.__toolbar_title.close_popover()

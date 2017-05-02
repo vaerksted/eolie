@@ -88,7 +88,7 @@ class ImportBookmarksDialog:
             dialog.connect("response", self.__on_file_chooser_response)
             dialog.run()
             dialog.destroy()
-        self.__parent.toolbar.title.hide_popover()
+        self.__parent.toolbar.title.close_popover()
 
 #######################
 # PRIVATE             #

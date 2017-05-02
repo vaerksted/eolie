@@ -149,7 +149,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         if not button.get_active():
             return
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         popover = DownloadsPopover()
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
@@ -161,7 +161,7 @@ class ToolbarEnd(Gtk.Bin):
             Go to home page
             @param button as Gtk.Button
         """
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         self.__window.container.current.webview.load_uri(El().start_page)
 
     def _on_menu_button_toggled(self, button):
@@ -171,7 +171,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         if not button.get_active():
             return
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
             return

@@ -574,6 +574,7 @@ class StackSidebar(Gtk.EventBox):
             @param view as View
             @return child SidebarChild
         """
+        self.__window.toolbar.title.close_popover()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
@@ -746,7 +747,7 @@ class StackSidebar(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         if event.button == 3:
             popover = Gtk.PopoverMenu.new()
             builder = Gtk.Builder()

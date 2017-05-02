@@ -88,7 +88,7 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_back_history_timeout)
         if event.button == 3:
@@ -123,7 +123,7 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_forward_history_timeout)
         if event.button == 3:
@@ -155,7 +155,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.add_web_view(El().start_page, True)
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
 
     def _on_pages_button_toggled(self, button):
         """
@@ -177,7 +177,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         self.__window.container.sidebar.set_filtered(button.get_active())
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
 
 #######################
 # PRIVATE             #

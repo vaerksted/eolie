@@ -322,11 +322,11 @@ class Row(Gtk.ListBoxRow):
                        Type.SEARCH, Type.BOOKMARK]:
             if event.button == 1:
                 self.__window.container.current.webview.load_uri(uri)
-                self.__window.toolbar.title.hide_popover()
+                self.__window.toolbar.title.close_popover()
             else:
                 self.__window.container.add_web_view(uri, True)
                 if event.button == 2:
-                    self.__window.toolbar.title.hide_popover()
+                    self.__window.toolbar.title.close_popover()
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
         else:
@@ -534,7 +534,7 @@ class UriPopover(Gtk.Popover):
                 if selected is not None:
                     uri = selected.item.get_property("uri")
                     if uri:
-                        self.__window.toolbar.title.hide_popover()
+                        self.__window.toolbar.title.close_popover()
                         self.__window.container.current.webview.load_uri(uri)
                 return True
             else:
@@ -643,7 +643,7 @@ class UriPopover(Gtk.Popover):
             Close popover
             @param widget as Gtk.Widget
         """
-        self.__window.toolbar.title.hide_popover()
+        self.__window.toolbar.title.close_popover()
 
     def _on_bookmarks_map(self, widget):
         """
