@@ -148,29 +148,29 @@ class Window(Gtk.ApplicationWindow):
            isinstance(position_setting[1], int):
             self.move(position_setting[0], position_setting[1])
 
-    def __save_size_position(self, widget):
+    def __save_size_position(self, window):
         """
             Save window state, update current view content size
-            @param: widget as Gtk.Window
+            @param: window as Gtk.Window
         """
         self.update_zoom_level(False)
         self.__timeout_configure = None
-        size = widget.get_size()
+        size = window.get_size()
         El().settings.set_value('window-size',
                                 GLib.Variant('ai', [size[0], size[1]]))
 
-        position = widget.get_position()
+        position = window.get_position()
         El().settings.set_value('window-position',
                                 GLib.Variant('ai',
                                              [position[0], position[1]]))
 
-    def __on_configure_event(self, widget, event):
+    def __on_configure_event(self, window, event):
         """
             Delay event
-            @param: widget as Gtk.Window
+            @param: window as Gtk.Window
             @param: event as Gdk.Event
         """
-        size = widget.get_size()
+        size = window.get_size()
         self.toolbar.title.set_width(size[0]/3)
         if self.__timeout_configure:
             GLib.source_remove(self.__timeout_configure)
@@ -179,7 +179,7 @@ class Window(Gtk.ApplicationWindow):
             self.__timeout_configure = GLib.timeout_add(
                                                    1000,
                                                    self.__save_size_position,
-                                                   widget)
+                                                   window)
 
     def __on_window_state_event(self, widget, event):
         """
