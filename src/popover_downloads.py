@@ -401,8 +401,6 @@ class DownloadsPopover(Gtk.Popover):
                 El().download_manager.remove(child.download)
                 if child.finished:
                     child.destroy()
-            else:
-                child.destroy()
 
 #######################
 # PRIVATE             #
