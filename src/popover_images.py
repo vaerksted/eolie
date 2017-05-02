@@ -44,6 +44,7 @@ class Image(Gtk.FlowBoxChild):
                                                        None)
             del pixbuf
             image = Gtk.Image.new_from_surface(surface)
+            image.set_size_request(ArtSize.START_HEIGHT, ArtSize.START_HEIGHT)
             image.show()
             grid = Gtk.Grid()
             grid.set_orientation(Gtk.Orientation.VERTICAL)
