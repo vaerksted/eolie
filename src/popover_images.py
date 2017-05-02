@@ -170,6 +170,7 @@ class ImagesPopover(Gtk.Popover):
             Download images to cache and display them
             @param uris as [str]
         """
+        added = False
         # First download images to cache
         for uri in uris:
             try:
@@ -191,12 +192,14 @@ class ImagesPopover(Gtk.Popover):
                                      self.__cancellable)
                 stream.write_all(bytes, self.__cancellable)
                 stream.close()
+                added = True
                 GLib.idle_add(self.__add_image, uri)
             except Exception as e:
                 print("ImagesPopover::__populate()", e)
         # Then allow user to save images
         GLib.idle_add(self.__spinner.stop)
-        GLib.idle_add(self.__button.set_sensitive, True)
+        if added:
+            GLib.idle_add(self.__button.set_sensitive, True)
 
     def __add_image(self, uri):
         """
