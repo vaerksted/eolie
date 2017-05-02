@@ -224,12 +224,13 @@ class ImagesPopover(Gtk.Popover):
         for child in self.__flowbox.get_children():
             if child.uri.find(self.__filter) != -1:
                 encoded = sha256(child.uri.encode("utf-8")).hexdigest()
+                child_basename = child.uri.split("/")[-1]
                 filepath = "%s/%s" % (CACHE_PATH, encoded)
                 s = Gio.File.new_for_path(filepath)
                 if not s.query_exists():
                     continue
                 d = Gio.File.new_for_uri("%s/%s" % (destination_uri,
-                                                    s.get_basename()))
+                                                    child_basename))
                 try:
                     s.move(d, Gio.FileCopyFlags.OVERWRITE, None, None, None)
                 except Exception as e:
