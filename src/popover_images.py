@@ -88,7 +88,6 @@ class ImagesPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.__uri = uri
         self.__page_id = page_id
-        self.__downloaded = []
         self.__cancellable = Gio.Cancellable()
         self.__filter = ""
         builder = Gtk.Builder()
@@ -157,33 +156,6 @@ class ImagesPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
-    def __move_images(self):
-        """
-            Move image to download directory
-        """
-        parsed = urlparse(self.__uri)
-        directory_uri = El().settings.get_value('download-uri').get_string()
-        if not directory_uri:
-            directory = GLib.get_user_special_dir(
-                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
-            directory_uri = GLib.filename_to_uri(directory, None)
-        destination_uri = "%s/%s" % (directory_uri, parsed.netloc)
-        directory = Gio.File.new_for_uri(destination_uri)
-        if not directory.query_exists():
-            directory.make_directory_with_parents()
-        for child in self.__flowbox.get_children():
-            if child.uri.find(self.__filter) != -1:
-                encoded = sha256(child.uri.encode("utf-8")).hexdigest()
-                filepath = "%s/%s" % (CACHE_PATH, encoded)
-                s = Gio.File.new_for_path(filepath)
-                d = Gio.File.new_for_uri("%s/%s" % (destination_uri,
-                                                    s.get_basename()))
-                try:
-                    s.move(d, Gio.FileCopyFlags.OVERWRITE, None, None, None)
-                except:
-                    pass
-        GLib.idle_add(self.hide)
-
     def __filter_func(self, child):
         """
             Filter child
@@ -214,7 +186,6 @@ class ImagesPopover(Gtk.Popover):
                 encoded = sha256(uri.encode("utf-8")).hexdigest()
                 filepath = "%s/%s" % (CACHE_PATH, encoded)
                 f = Gio.File.new_for_path(filepath)
-                self.__downloaded.append(filepath)
                 stream = f.append_to(Gio.FileCreateFlags.REPLACE_DESTINATION,
                                      self.__cancellable)
                 stream.write_all(bytes, self.__cancellable)
@@ -235,16 +206,48 @@ class ImagesPopover(Gtk.Popover):
         image.show()
         self.__flowbox.add(image)
 
+    def __move_images(self):
+        """
+            Move image to download directory
+        """
+        parsed = urlparse(self.__uri)
+        directory_uri = El().settings.get_value('download-uri').get_string()
+        if not directory_uri:
+            directory = GLib.get_user_special_dir(
+                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+            directory_uri = GLib.filename_to_uri(directory, None)
+        destination_uri = "%s/%s" % (directory_uri, parsed.netloc)
+        directory = Gio.File.new_for_uri(destination_uri)
+        if not directory.query_exists():
+            directory.make_directory_with_parents()
+        for child in self.__flowbox.get_children():
+            if child.uri.find(self.__filter) != -1:
+                encoded = sha256(child.uri.encode("utf-8")).hexdigest()
+                filepath = "%s/%s" % (CACHE_PATH, encoded)
+                s = Gio.File.new_for_path(filepath)
+                if not s.query_exists():
+                    continue
+                d = Gio.File.new_for_uri("%s/%s" % (destination_uri,
+                                                    s.get_basename()))
+                try:
+                    s.move(d, Gio.FileCopyFlags.OVERWRITE, None, None, None)
+                except Exception as e:
+                    print("ImagesPopover::__move_images()", e)
+        GLib.idle_add(self.hide)
+
     def __clean_cache(self):
         """
             Clean the cache
         """
-        for filepath in self.__downloaded:
+        for child in self.__flowbox.get_children():
+            encoded = sha256(child.uri.encode("utf-8")).hexdigest()
+            filepath = "%s/%s" % (CACHE_PATH, encoded)
+            f = Gio.File.new_for_path(filepath)
             try:
-                f = Gio.File.new_for_path(filepath)
-                f.delete()
-            except:
-                pass
+                if f.query_exists():
+                    f.delete()
+            except Exception as e:
+                print("ImagesPopover::__clean_cache():", e)
 
     def __on_get_images(self, source, result, request):
         """
