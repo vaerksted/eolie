@@ -711,7 +711,7 @@ class UriPopover(Gtk.Popover):
                 atime = mktime(
                            datetime.strptime(date, "%d/%m/%Y").timetuple())
             else:
-                atime = TimeSpanValues[active_id]
+                atime = int(time() - TimeSpanValues[active_id]/1000000)
             thread = Thread(target=self.__clear_history,
                             args=(atime,))
             thread.daemon = True

@@ -137,21 +137,20 @@ class DatabaseHistory:
                          WHERE rowid=?", (history_id,))
             sql.commit()
 
-    def clear(self, atime=0):
+    def clear(self, atime):
         """
-            Clear history from atime (current day)
+            Clear history from atime
             @param atime as int
             @return modified history ids as [int]
         """
-        one_day = 86400
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT DISTINCT history.rowid\
                                   FROM history, history_atime\
                                   WHERE history_atime.history_id=history.rowid\
-                                  AND atime <= ?", (atime + one_day,))
+                                  AND atime >= ?", (atime,))
             items = list(itertools.chain(*result))
             sql.execute("DELETE FROM history_atime\
-                         WHERE atime <= ?", (atime + one_day,))
+                         WHERE atime >= ?", (atime,))
             sql.commit()
             return items
 
