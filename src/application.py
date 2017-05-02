@@ -99,7 +99,6 @@ class Application(Gtk.Application):
         """
             Init main application
         """
-        self.__is_fs = False
         self.__setup_app_menu()
         self.set_app_menu(self.__menu)
         cssProviderFile = Gio.File.new_for_uri(
