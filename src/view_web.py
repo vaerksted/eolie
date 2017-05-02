@@ -21,17 +21,16 @@ from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
 
 
-class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
+class WebView(WebKit2.WebView):
     """
         WebKit view
     """
-
     def new():
         """
             New webview
         """
         view = WebKit2.WebView.new()
-        view.__class__ = WebView
+        view.__class__ = WebViewMeta
         view.__init()
         return view
 
@@ -41,7 +40,7 @@ class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
         """
         context = WebKit2.WebContext.new_ephemeral()
         view = WebKit2.WebView.new_with_context(context)
-        view.__class__ = WebView
+        view.__class__ = WebViewMeta
         view.__init()
         return view
 
@@ -52,7 +51,7 @@ class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
             @return WebView
         """
         view = WebKit2.WebView.new_with_related_view(related)
-        view.__class__ = WebView
+        view.__class__ = WebViewMeta
         view.__init(related)
         return view
 
@@ -316,3 +315,8 @@ class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
         if self.__input_source != source:
             self.__input_source = source
             self.__set_smooth_scrolling(source)
+
+
+class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
+    def __init__(self):
+        pass
