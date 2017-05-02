@@ -1,0 +1,11 @@
+TRANSLATORS:
+https://translate.zanata.org/project/view/eolie
+
+BUG MAY BE REJECTED IF MISSING:
+• Eolie version:
+• Gtk Version:
+• Linux distribution:
+
+If your bug is a rendering bug or a WebKit crash, you should report it here: https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
+
+<Describe your bug here>
