@@ -93,7 +93,7 @@ class ToolbarEnd(Gtk.Bin):
                                                    GLib.VariantType.new("s"),
                                                    GLib.Variant("s", "none"))
         self.__exceptions_action.connect("activate",
-                                         self.__on_exceptions_active)
+                                         self.__on_exceptions_activate)
         self.__window.add_action(self.__exceptions_action)
 
     def show_download(self, download):
@@ -342,7 +342,7 @@ class ToolbarEnd(Gtk.Bin):
                                     None,
                                     None)
 
-    def __on_exceptions_active(self, action, param):
+    def __on_exceptions_activate(self, action, param):
         """
             Update exception for current page/site
             @param action as Gio.SimpleAction

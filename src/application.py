@@ -151,7 +151,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
         self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
-        self.set_accels_for_action("win.shortcut::settings",
+        self.set_accels_for_action("app.settings",
                                    ["<Control><Shift>s"])
         self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
         self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
@@ -162,6 +162,12 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Add", "<Control>plus"])
         self.set_accels_for_action("win.shortcut::zoom_out",
                                    ["<Control>KP_Subtract", "<Control>minus"])
+        self.set_accels_for_action("win.panel_mode(0)",
+                                   ["<Control><Alt>0", "<Control><Alt>KP_0"])
+        self.set_accels_for_action("win.panel_mode(1)",
+                                   ["<Control><Alt>1", "<Control><Alt>KP_1"])
+        self.set_accels_for_action("win.panel_mode(2)",
+                                   ["<Control><Alt>2", "<Control><Alt>KP_2"])
 
         # Set some WebKit defaults
         context = WebKit2.WebContext.get_default()

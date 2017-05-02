@@ -78,7 +78,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Settings</property>
-                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;e</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
               </object>
             </child>
           </object>
@@ -140,6 +140,33 @@
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Reload page</property>
                 <property name="accelerator">&lt;Primary&gt;r</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="visible">True</property>
+            <property name="title" translatable="yes" context="shortcut window">Panel mode</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Show preview</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Alt&gt;0</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Do not show preview</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Alt&gt;1</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Minimal</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Alt&gt;2</property>
               </object>
             </child>
           </object>
