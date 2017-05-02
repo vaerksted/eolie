@@ -10,39 +10,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, GObject, Gio, GLib, Gdk
+from gi.repository import WebKit2, Gtk, Gio, Gdk
 
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.dbus_helper import DBusHelper
 from eolie.define import El
-from eolie.utils import get_ftp_cmd, debug
+from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
+from eolie.view_web_navigation import WebViewNavigation
 
 
-class WebView(WebKit2.WebView, WebViewErrors):
+class WebView(WebKit2.WebView, WebViewErrors, WebViewNavigation):
     """
         WebKit view
         All WebKit2.WebView members available
         Forward all connect to internal WebKit2.WebView webview, you get
         self as first argument
     """
-
-    gsignals = {
-        "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
-        "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
-        "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
-                                                                str,
-                                                                str)),
-    }
-
-    for signal in gsignals:
-        args = gsignals[signal]
-        GObject.signal_new(signal, WebKit2.WebView,
-                           args[0], args[1], args[2])
 
     def new():
         """
@@ -73,39 +58,6 @@ class WebView(WebKit2.WebView, WebViewErrors):
         view.__class__ = WebView
         view.__init(related)
         return view
-
-    def load_uri(self, uri):
-        """
-            Load uri
-            @param uri as str
-        """
-        self.__cancellable.cancel()
-        self.__cancellable.reset()
-        if uri == "about:blank":
-            WebKit2.WebView.load_plain_text(self, "")
-            self.__loaded_uri = uri
-            return
-        parsed = urlparse(uri)
-        # We are not a ftp browser, fall back to env
-        if parsed.scheme == "ftp":
-            argv = [get_ftp_cmd(), uri, None]
-            GLib.spawn_sync(None, argv, None,
-                            GLib.SpawnFlags.SEARCH_PATH, None)
-            return
-        elif parsed.scheme == "javascript":
-            uri = GLib.uri_unescape_string(uri, None)
-            self.run_javascript(uri.replace("javascript:", ""), None, None)
-            return
-        elif parsed.scheme not in ["http", "https", "file",
-                                   "populars", "accept"]:
-            uri = "http://" + uri
-        # Reset bad tls certificate
-        elif parsed.scheme != "accept":
-            self.reset_bad_tls()
-            self.__insecure_content_detected = False
-        self.__loaded_uri = uri
-        self.emit("uri-changed", uri)
-        WebKit2.WebView.load_uri(self, uri)
 
     def set_popup_exception(self, uri):
         """
@@ -195,28 +147,12 @@ class WebView(WebKit2.WebView, WebViewErrors):
         return self.__popup_exception
 
     @property
-    def readable_content(self):
-        """
-            Readable content
-            @return content as str
-        """
-        return self.__readable_content
-
-    @property
     def private(self):
         """
             True if view is private/ephemeral
             @return bool
         """
         return self.get_property("is-ephemeral")
-
-    @property
-    def loaded_uri(self):
-        """
-            Return loaded uri (This is not current uri!)
-            @return str
-        """
-        return self.__loaded_uri
 
     @property
     def selection(self):
@@ -235,23 +171,16 @@ class WebView(WebKit2.WebView, WebViewErrors):
             @param related_view as WebView
         """
         WebViewErrors.__init__(self)
+        WebViewNavigation.__init__(self)
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
         self.__related_view = related_view
         self.__popup_exception = None
         self.__initial_selection = ""
-        self.__readable_content = ""
-        self.__js_timeout = None
-        self.__cancellable = Gio.Cancellable()
         self.__input_source = Gdk.InputSource.MOUSE
-        self.__loaded_uri = ""
-        self.__title = ""
         self.set_hexpand(True)
         self.set_vexpand(True)
-        self.connect("scroll-event", self.__on_scroll_event)
-        self.connect("button-press-event", self.__on_button_press_event)
-        self.connect("button-release-event", self.__on_button_release_event)
         settings = self.get_settings()
         settings.set_property("enable-java",
                               El().settings.get_value('enable-plugins'))
@@ -291,28 +220,10 @@ class WebView(WebKit2.WebView, WebViewErrors):
                               True)
         settings.set_property("media-playback-allows-inline", True)
         self.set_settings(settings)
-        self.connect("decide-policy", self.__on_decide_policy)
-        self.connect("insecure-content-detected",
-                     self.__on_insecure_content_detected)
-        self.connect("submit-form", self.__on_submit_form)
-        self.connect("run-as-modal", self.__on_run_as_modal)
-        self.connect("permission_request", self.__on_permission_request)
-        self.connect("load-changed", self.__on_load_changed)
-        # We launch Readability.js at page loading finished
-        # As Webkit2GTK doesn't allow us to get content from python
-        # It sets title with content for one shot, so try to get it here
-        self.connect("notify::title", self.__on_title_changed)
-        self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("scroll-event", self.__on_scroll_event)
+        self.connect("button-press-event", self.__on_button_press_event)
+        self.connect("button-release-event", self.__on_button_release_event)
         self.connect("context-menu", self.__on_context_menu)
-
-    def __check_for_network(self, uri):
-        """
-            Load uri when network is available
-        """
-        if Gio.NetworkMonitor.get_default().get_network_available():
-            self.load_uri(uri)
-        else:
-            return True
 
     def __set_system_fonts(self, settings):
         """
@@ -330,17 +241,6 @@ class WebView(WebKit2.WebView, WebViewErrors):
                         "serif-font-family",
                         system.get_value("font-name").get_string())
 
-    def __get_forms(self, page_id, request):
-        """
-            Read request for authentification
-            @param page_id as int
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        helper = DBusHelper()
-        helper.call("GetForms",
-                    GLib.Variant("(i)", (page_id,)),
-                    self.__on_get_forms, request)
-
     def __set_smooth_scrolling(self, source):
         """
             Set smooth scrolling based on source
@@ -350,82 +250,6 @@ class WebView(WebKit2.WebView, WebViewErrors):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
         self.set_settings(settings)
-
-    def __on_get_forms(self, source, result, request):
-        """
-            Set forms value
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        try:
-            (username, password) = source.call_finish(result)[0]
-            if not username or not password:
-                return
-            parsed = urlparse(self.get_uri())
-            self.emit("save-password", username, password, parsed.netloc)
-            request.submit()
-        except Exception as e:
-            print("WebView::__on_get_forms():", e)
-
-    def __on_insecure_content_detected(self, webview, event):
-        """
-            @param webview as WebView
-            @param event as WebKit2.InsecureContentEvent
-        """
-        self.__insecure_content_detected = True
-
-    def __on_permission_request(self, webview, request):
-        """
-            Handle Webkit permissions
-            @param webview as WebKit2.WebView
-            @param request as WebKit2.PermissionRequest
-        """
-        if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected or self.private:
-                request.deny()
-            else:
-                request.allow()
-        elif isinstance(request, WebKit2.NotificationPermissionRequest):
-            # Use can use Gnome Shell notification policy
-            request.allow()
-
-    def __on_uri_changed(self, view, uri):
-        """
-            Clear readable context and title
-            @param view as WebKit2.WebView
-            @param uri as GParamSpec
-        """
-        self.__readable_content = ""
-        self.__title = ""
-        if view.get_uri() != "about:blank":
-            self.__js_timeout = None
-
-    def __on_title_changed(self, webview, event):
-        """
-            We launch Readability.js at page loading finished.
-            As Webkit2GTK doesn't allow us to get content from python,
-            it sets title with content for one shot, so try to get it here
-            @param webview as WebKit2.WebView
-            @param event as GParamSpec
-        """
-        if event.name != "title":
-            return
-        title = webview.get_title()
-        if not title or title == self.__title:
-            return
-        if title.startswith("@&$%ù²"):
-            self.__readable_content = title.replace("@&$%ù²", "")
-            self.emit("readable")
-            return
-        else:
-            self.__title = title
-            self.emit("title-changed", title)
-            if self.__js_timeout is None:
-                self.__js_timeout = GLib.timeout_add(
-                                 2000,
-                                 self.run_javascript_from_gresource,
-                                 '/org/gnome/Eolie/Readability.js', None, None)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """
@@ -459,11 +283,6 @@ class WebView(WebKit2.WebView, WebViewErrors):
         """
         El().active_window.toolbar.end.save_images(self.get_uri(),
                                                    self.get_page_id())
-
-    def __on_run_as_modal(self, view):
-        """
-        """
-        print("WebView::__on_run_as_modal(): TODO")
 
     def __on_button_press_event(self, widget, event):
         """
@@ -500,122 +319,3 @@ class WebView(WebKit2.WebView, WebViewErrors):
         if self.__input_source != source:
             self.__input_source = source
             self.__set_smooth_scrolling(source)
-
-    def __on_submit_form(self, view, request):
-        """
-            Check for auth forms
-            @param view as WebKit2.WebView
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        if self.private:
-            return
-        self.__get_forms(view.get_page_id(), request)
-
-    def __on_load_changed(self, view, event):
-        """
-            Update sidebar/urlbar
-            @param view as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        uri = view.get_uri()
-        parsed = urlparse(uri)
-        if event == WebKit2.LoadEvent.STARTED:
-            El().download_manager.remove_video_for_page(view.get_page_id())
-            self.emit("uri-changed", uri)
-            self.__popup_exception = None
-            self.__title = ""
-        if event == WebKit2.LoadEvent.COMMITTED:
-            if El().pishing.is_pishing(uri):
-                self._show_pishing_error(uri)
-            else:
-                self.emit("uri-changed", uri)
-                exception = El().adblock.is_an_exception(
-                                        parsed.netloc) or\
-                    El().adblock.is_an_exception(
-                                        parsed.netloc + parsed.path)
-                imgblock = El().settings.get_value("imgblock")
-                self.set_setting("auto-load-images",
-                                 not imgblock or exception)
-                self.update_zoom_level()
-        elif event == WebKit2.LoadEvent.FINISHED:
-            if El().settings.get_value("adblock"):
-                # We need to send a title if non exists
-                if not self.__title:
-                    self.__title = view.get_title()
-                    if not self.__title:
-                        self.__title = view.get_uri()
-                    self.emit("title-changed", self.__title)
-                unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
-                javascripts = ["adblock_%s.js" % parsed.netloc,
-                               "adblock_%s.js" % unlocated_netloc]
-                children = Gio.resources_enumerate_children(
-                                          "/org/gnome/Eolie/adblock",
-                                          Gio.ResourceLookupFlags.NONE)
-                for javascript in javascripts:
-                    if javascript in children:
-                        exception = El().adblock.is_an_exception(
-                                        parsed.netloc) or\
-                            El().adblock.is_an_exception(
-                                        parsed.netloc + parsed.path)
-                        if not exception:
-                            self.run_javascript_from_gresource(
-                                    "/org/gnome/Eolie/adblock/" + javascript,
-                                    None, None)
-                        break
-
-    def __on_decide_policy(self, view, decision, decision_type):
-        """
-            Navigation policy
-            @param view as WebKit2.WebView
-            @param decision as WebKit2.NavigationPolicyDecision
-            @param decision_type as WebKit2.PolicyDecisionType
-            @return bool
-        """
-        # Always accept response
-        if decision_type == WebKit2.PolicyDecisionType.RESPONSE:
-            mime_type = decision.get_response().props.mime_type
-            if self.can_show_mime_type(mime_type):
-                decision.use()
-            else:
-                decision.download()
-            return False
-
-        navigation_action = decision.get_navigation_action()
-        uri = navigation_action.get_request().get_uri()
-        mouse_button = navigation_action.get_mouse_button()
-        if mouse_button == 0:
-            if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                # Block popups
-                popup_block = El().settings.get_value("popupblock")
-                parsed = urlparse(uri)
-                exception = El().adblock.is_an_exception(parsed.netloc) or\
-                    El().adblock.is_an_exception(parsed.netloc + parsed.path)
-                if exception or not popup_block or\
-                        navigation_action.get_navigation_type() not in [
-                                       WebKit2.NavigationType.OTHER,
-                                       WebKit2.NavigationType.RELOAD,
-                                       WebKit2.NavigationType.BACK_FORWARD]:
-                    self.emit("new-page", uri, True)
-                    decision.ignore()
-                    return True
-            else:
-                decision.use()
-                return False
-        elif mouse_button == 1:
-            self.__loaded_uri = uri
-            if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, True)
-                decision.ignore()
-                return True
-            elif navigation_action.get_modifiers() &\
-                    Gdk.ModifierType.CONTROL_MASK:
-                self.emit("new-page", uri, False)
-                decision.ignore()
-                return True
-            else:
-                decision.use()
-                return False
-        else:
-            self.emit("new-page", uri, False)
-            decision.ignore()
-            return True

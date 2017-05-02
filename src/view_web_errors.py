@@ -19,16 +19,17 @@ from eolie.define import El
 
 class WebViewErrors:
     """
-        Implement erros view, should be inherited by a WebView
+        Implement WebView erros, should be inherited by a WebView
     """
+
     def __init__(self):
         """
-            Init errors web view
+            Init errors
         """
         self.__bad_tls = None  # Keep invalid TLS certificate
-        self.connect("load-failed", self._on_load_failed)
-        self.connect("load-failed-with-tls-errors", self._on_load_failed_tls)
-        self.connect("web-process-crashed", self._on_web_process_crashed)
+        self.connect("load-failed", self.__on_load_failed)
+        self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
+        self.connect("web-process-crashed", self.__on_web_process_crashed)
 
     def reset_bad_tls(self):
         """
@@ -74,7 +75,19 @@ class WebViewErrors:
                        "")
         self.load_html(html, None)
 
-    def _on_load_failed(self, view, event, uri, error):
+#######################
+# PRIVATE             #
+#######################
+    def __check_for_network(self, uri):
+        """
+            Load uri when network is available
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            self.load_uri(uri)
+        else:
+            return True
+
+    def __on_load_failed(self, view, event, uri, error):
         """
             Show error page
             @param view as WebKit2.WebView
@@ -87,7 +100,7 @@ class WebViewErrors:
         # Ignore this errors
         # TODO: Understand what this error are
         if error.code not in [2, 4, 44]:
-            print("WebView::__on_load_failed():", error.code)
+            print("WebViewErrors::__on_load_failed():", error.code)
             return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
@@ -134,7 +147,7 @@ class WebViewErrors:
             GLib.timeout_add(1000, self.__check_for_network, uri)
         return True
 
-    def _on_load_failed_tls(self, view, uri, certificate, errors):
+    def __on_load_failed_tls(self, view, uri, certificate, errors):
         """
             Show TLS error page
             @param view as WebKit2.WebView
@@ -183,9 +196,9 @@ class WebViewErrors:
         self.load_html(html, None)
         return True
 
-    def _on_web_process_crashed(self, view):
+    def __on_web_process_crashed(self, view):
         """
             We just crashed :-(
             @param view as WebKit2.WebView
         """
-        print("WebView::__on_web_process_crashed():", view)
+        print("WebViewErrors::__on_web_process_crashed():", view)
