@@ -19,6 +19,7 @@ from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 
 from gettext import gettext as _
 from pickle import dump, load
+from threading import Thread
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -205,6 +206,25 @@ class Application(Gtk.Application):
             for view in window.container.views:
                 view.webview.set_setting(key, value)
 
+    def quit(self, vacuum=False):
+        """
+            Quit application
+            @param vacuum as bool
+        """
+        self.download_manager.cancel()
+        self.adblock.stop()
+        if self.sync_worker is not None:
+            self.sync_worker.stop()
+        # Save webpage state
+        self.__save_state()
+        # Then vacuum db
+        if vacuum:
+            thread = Thread(target=self.__vacuum)
+            thread.daemon = True
+            thread.start()
+        else:
+            Gio.Application.quit(self)
+
     @property
     def pages_menu(self):
         """
@@ -267,14 +287,36 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __vacuum(self):
+        """
+            VACUUM DB
+            @thread safe
+        """
+        try:
+            with SqlCursor(self.bookmarks) as sql:
+                sql.isolation_level = None
+                sql.execute("VACUUM")
+                sql.isolation_level = ""
+            with SqlCursor(self.history) as sql:
+                sql.isolation_level = None
+                sql.execute("VACUUM")
+                sql.isolation_level = ""
+            with SqlCursor(self.adblock) as sql:
+                sql.isolation_level = None
+                sql.execute("VACUUM")
+                sql.isolation_level = ""
+            with SqlCursor(self.pishing) as sql:
+                sql.isolation_level = None
+                sql.execute("VACUUM")
+                sql.isolation_level = ""
+        except Exception as e:
+            print("Application::__vacuum(): ", e)
+        GLib.idle_add(Gio.Application.quit, self)
+
     def __save_state(self):
         """
             Save window position and view
         """
-        self.download_manager.cancel()
-        self.adblock.stop()
-        if self.sync_worker is not None:
-            self.sync_worker.stop()
         try:
             remember_session = self.settings.get_value("remember-session")
             session_states = []
@@ -392,11 +434,10 @@ class Application(Gtk.Application):
             @param window as Window
             @param event as Gdk.Event
         """
-        self.__save_state()
         self.__windows.remove(window)
         window.destroy()
         if not self.__windows:
-            self.quit()
+            self.quit(True)
 
     def __on_settings_activate(self, action, param):
         """
@@ -484,7 +525,7 @@ class Application(Gtk.Application):
         self.add_action(help_action)
 
         quit_action = Gio.SimpleAction.new('quit', None)
-        quit_action.connect('activate', lambda x, y: self.__save_state())
+        quit_action.connect('activate', lambda x, y: self.quit())
         self.add_action(quit_action)
 
     def __on_activate(self, application):
