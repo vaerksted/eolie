@@ -3,13 +3,13 @@
 
 Eolie is a new GNOME web browser.
 
-*Adblock helpers (please contribute): https://github.com/gnumdk/eolie-adblock
+- Adblock helpers (please contribute): https://github.com/gnumdk/eolie-adblock
 
-*For users: http://gnumdk.github.io/eolie-web (not yet)
+- For users: http://gnumdk.github.io/eolie-web (not yet)
 
-*FAQ: https://github.com/gnumdk/eolie/wiki
+- FAQ: https://github.com/gnumdk/eolie/wiki
 
-For translators: https://translate.zanata.org/project/view/eolie
+- For translators: https://translate.zanata.org/project/view/eolie
 
 It provides:
 - Firefox sync support
