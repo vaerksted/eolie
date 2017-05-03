@@ -25,6 +25,7 @@ else:
     LOCAL_PATH = GLib.getenv("XDG_DATA_HOME")
 
 EOLIE_LOCAL_PATH = LOCAL_PATH + "/eolie"
+ADBLOCK_JS = "%s/adblock_js" % EOLIE_LOCAL_PATH
 
 if GLib.getenv("XDG_CONFIG_HOME") is None:
     CONFIG_PATH = GLib.get_home_dir() + "/.config"

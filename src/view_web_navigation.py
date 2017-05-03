@@ -15,7 +15,7 @@ from gi.repository import GLib, Gio, GObject, WebKit2, Gdk
 from urllib.parse import urlparse
 
 from eolie.dbus_helper import DBusHelper
-from eolie.define import El
+from eolie.define import El, ADBLOCK_JS
 from eolie.utils import get_ftp_cmd
 
 
@@ -299,6 +299,12 @@ class WebViewNavigation:
                 self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
+                exception = El().adblock.is_an_exception(
+                                        parsed.netloc) or\
+                            El().adblock.is_an_exception(
+                                        parsed.netloc + parsed.path)
+                if exception:
+                    return
                 # We need to send a title if non exists
                 if not self.__title:
                     self.__title = view.get_title()
@@ -308,17 +314,11 @@ class WebViewNavigation:
                 unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
                 javascripts = ["adblock_%s.js" % parsed.netloc,
                                "adblock_%s.js" % unlocated_netloc]
-                children = Gio.resources_enumerate_children(
-                                          "/org/gnome/Eolie/adblock",
-                                          Gio.ResourceLookupFlags.NONE)
                 for javascript in javascripts:
-                    if javascript in children:
-                        exception = El().adblock.is_an_exception(
-                                        parsed.netloc) or\
-                            El().adblock.is_an_exception(
-                                        parsed.netloc + parsed.path)
-                        if not exception:
-                            self.run_javascript_from_gresource(
-                                    "/org/gnome/Eolie/adblock/" + javascript,
-                                    None, None)
+                    f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                         javascript))
+                    if f.query_exists():
+                        (status, content, tag) = f.load_contents(None)
+                        js = content.decode("utf-8")
+                        self.run_javascript(js, None, None)
                         break

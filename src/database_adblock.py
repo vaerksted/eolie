@@ -10,15 +10,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Soup, Gio
+from gi.repository import Soup, Gio, GLib
 
 from urllib.parse import urlparse
 import sqlite3
+from gettext import gettext as _
 from time import time
 from threading import Thread
 
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH
+from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS
 
 
 class DatabaseExceptions:
@@ -151,6 +152,26 @@ class DatabaseAdblock:
         """
             Update database
         """
+        if not Gio.NetworkMonitor.get_default().get_network_available():
+            return
+        # Update adblock_js repo
+        git = GLib.find_program_in_path("git")
+        if git is None:
+            print(_("For stronger ad blocking, install git command"))
+        else:
+            d = Gio.File.new_for_path(ADBLOCK_JS)
+            if d.query_exists():
+                argv = [git,
+                        "-C",
+                        ADBLOCK_JS,
+                        "pull"]
+            else:
+                argv = [git,
+                        "clone",
+                        "https://github.com/gnumdk/eolie-adblock.git",
+                        ADBLOCK_JS]
+            GLib.spawn_async(argv)
+
         # Get in db mtime
         # Only update if filters older than one week
         mtime = 0
@@ -162,10 +183,10 @@ class DatabaseAdblock:
         self.__mtime = int(time())
         if self.__mtime - mtime < 604800:
             return
-        if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__update)
-            thread.daemon = True
-            thread.start()
+        # Update adblock db
+        thread = Thread(target=self.__update)
+        thread.daemon = True
+        thread.start()
 
     def stop(self):
         """
