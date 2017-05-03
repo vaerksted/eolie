@@ -1,5 +1,5 @@
 #!@PYTHON@
-# Copyright (c) 2014-2016 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2014-2017 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -17,6 +17,10 @@ sys.path.insert(1, '@pyexecdir@')
 # Make sure we'll find the eolie modules, even in JHBuild
 sys.path.insert(1, '@pythondir@')
 
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+gi.require_version('Secret', '1')
 
 from gi.repository import Gio, GLib
 
@@ -118,7 +122,7 @@ class SearchEolieService(Server, Gio.Application):
     </interface>
     </node>
     '''
-    __LOLLYPOP_BUS = 'org.gnome.Eolie.SearchProvider'
+    __EOLIE_BUS = 'org.gnome.Eolie.SearchProvider'
     __SEARCH_BUS = 'org.gnome.Shell.SearchProvider2'
     __PATH_BUS = '/org/gnome/EolieSearchProvider'
 
@@ -175,14 +179,15 @@ class SearchEolieService(Server, Gio.Application):
         return self.__search(new_terms)
 
     def LaunchSearch(self, terms, utime):
-        uris = []
-        for (bookmark_id, title, uri) in self.__search(terms):
-            uris.append(self.bookmarks.get_uri(bookmark_id))
-        argv = ["eolie", uris, None]
+        argv = ["eolie"]
+        for bookmark_id in self.__search(terms):
+            argv.append(self.bookmarks.get_uri(int(bookmark_id)))
+        argv.append(None)
         GLib.spawn_async_with_pipes(
                                     None, argv, None,
                                     GLib.SpawnFlags.SEARCH_PATH |
                                     GLib.SpawnFlags.DO_NOT_REAP_CHILD, None)
+
     def __search(self, terms):
         ids = []
         search = " ".join(terms)
