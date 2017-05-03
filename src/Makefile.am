@@ -30,6 +30,7 @@ app_PYTHON = \
     search.py\
     settings.py\
     stacksidebar.py\
+    stacksidebar_child.py\
     sqlcursor.py\
     utils.py\
     toolbar.py\
