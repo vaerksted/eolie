@@ -10,9 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, Gio, GObject, WebKit2, Gdk
+from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
+from time import time
 
 from eolie.dbus_helper import DBusHelper
 from eolie.define import El, ADBLOCK_JS
@@ -82,8 +83,7 @@ class WebViewNavigation:
             uri = GLib.uri_unescape_string(uri, None)
             self.run_javascript(uri.replace("javascript:", ""), None, None)
             return
-        elif parsed.scheme not in ["http", "https", "file",
-                                   "populars", "accept"]:
+        elif parsed.scheme not in ["http", "https", "populars", "accept"]:
             uri = "http://" + uri
         # Reset bad tls certificate
         elif parsed.scheme != "accept":
@@ -234,11 +234,17 @@ class WebViewNavigation:
         navigation_action = decision.get_navigation_action()
         uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
-        if mouse_button == 0:
+        parsed = urlparse(uri)
+        if parsed.scheme not in ["http", "https", "populars", "accept"]:
+            try:
+                Gtk.show_uri(None, uri, int(time()))
+            except Exception as e:
+                print("WebViewNavigation::__on_decide_policy()", e)
+            decision.ignore()
+        elif mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 # Block popups
                 popup_block = El().settings.get_value("popupblock")
-                parsed = urlparse(uri)
                 exception = El().adblock.is_an_exception(parsed.netloc) or\
                     El().adblock.is_an_exception(parsed.netloc + parsed.path)
                 if exception or not popup_block or\
