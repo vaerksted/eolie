@@ -106,9 +106,7 @@ class ProxyExtension(Server):
             @param extension as WebKit2WebExtension.WebExtension
             @param forms as FormsExtension
         """
-        self.__pages = {}
         self.__forms = forms
-        # We cannot use extension.get_page() from here => CRASH
         extension.connect("page-created", self.__on_page_created)
         self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         Gio.bus_own_name_on_connection(self.__bus,
@@ -125,7 +123,7 @@ class ProxyExtension(Server):
             @return (username_form, password_form) as (str, str)
         """
         try:
-            page = self.__pages[page_id]
+            page = self.__extension.get_page(page_id)
             (username, password) = self.__forms.get_forms(page)
             if username is not None and password is not None:
                 return (username.get_value(), password.get_value())
@@ -140,7 +138,7 @@ class ProxyExtension(Server):
             @return [str]
         """
         try:
-            page = self.__pages[page_id]
+            page = self.__extension.get_page(page_id)
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
             uris = []
             for i in range(0, dom_list.get_length()):
@@ -159,7 +157,7 @@ class ProxyExtension(Server):
             @return [str]
         """
         try:
-            page = self.__pages[page_id]
+            page = self.__extension.get_page(page_id)
             dom_list = page.get_dom_document().get_elements_by_tag_name("a")
             uris = []
             for i in range(0, dom_list.get_length()):
@@ -210,8 +208,7 @@ class ProxyExtension(Server):
         """
         webpage.connect("document-loaded", self.__on_document_loaded)
         webpage.connect("send-request", self.__on_send_request)
-        page_id = webpage.get_id()
-        self.__pages[page_id] = webpage
+        self.__extension = extension
 
     def __on_send_request(self, webpage, request, redirect):
         """
