@@ -124,6 +124,8 @@ class ProxyExtension(Server):
         """
         try:
             page = self.__extension.get_page(page_id)
+            if page is None:
+                return ("", "")
             (username, password) = self.__forms.get_forms(page)
             if username is not None and password is not None:
                 return (username.get_value(), password.get_value())
@@ -139,6 +141,8 @@ class ProxyExtension(Server):
         """
         try:
             page = self.__extension.get_page(page_id)
+            if page is None:
+                return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
             uris = []
             for i in range(0, dom_list.get_length()):
@@ -158,6 +162,8 @@ class ProxyExtension(Server):
         """
         try:
             page = self.__extension.get_page(page_id)
+            if page is None:
+                return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("a")
             uris = []
             for i in range(0, dom_list.get_length()):
