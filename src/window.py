@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio
+from gi.repository import Gtk, GLib, Gio, Gdk
 
 from eolie.define import El
 from eolie.toolbar import Toolbar
@@ -37,14 +37,15 @@ class Window(Gtk.ApplicationWindow):
         self.__container = None
         self.__setup_content()
         self.setup_window()
-        self.connect('realize', self.__on_realize)
-        self.connect('window-state-event', self.__on_window_state_event)
-        self.connect('configure-event', self.__on_configure_event)
+        self.connect("realize", self.__on_realize)
+        self.connect("key-press-event", self.__on_key_press_event)
+        self.connect("window-state-event", self.__on_window_state_event)
+        self.connect("configure-event", self.__on_configure_event)
 
         # Set window actions
-        shortcut_action = Gio.SimpleAction.new('shortcut',
-                                               GLib.VariantType.new('s'))
-        shortcut_action.connect('activate', self.__on_shortcut_action)
+        shortcut_action = Gio.SimpleAction.new("shortcut",
+                                               GLib.VariantType.new("s"))
+        shortcut_action.connect("activate", self.__on_shortcut_action)
         self.add_action(shortcut_action)
 
     def setup_window(self):
@@ -52,7 +53,7 @@ class Window(Gtk.ApplicationWindow):
             Setup window position and size
         """
         self.__setup_pos()
-        if El().settings.get_value('window-maximized'):
+        if El().settings.get_value("window-maximized"):
             self.maximize()
 
     def update_zoom_level(self, force):
@@ -112,7 +113,7 @@ class Window(Gtk.ApplicationWindow):
                                          "default-zoom-level")
         user_zoom_level = False
         for zoom_level in zoom_levels:
-            zoom_splited = zoom_level.split('@')
+            zoom_splited = zoom_level.split("@")
             if zoom_splited[0] == monitor_model:
                 self.__zoom_level = float(zoom_splited[1])
                 user_zoom_level = True
@@ -124,7 +125,7 @@ class Window(Gtk.ApplicationWindow):
         """
             Setup window content
         """
-        self.set_default_icon_name('web-browser')
+        self.set_default_icon_name("web-browser")
         self.__toolbar = Toolbar(self)
         self.__toolbar.show()
         self.__container = Container(self)
@@ -137,12 +138,12 @@ class Window(Gtk.ApplicationWindow):
         """
             Set window position
         """
-        size_setting = El().settings.get_value('window-size')
+        size_setting = El().settings.get_value("window-size")
         if len(size_setting) == 2 and\
            isinstance(size_setting[0], int) and\
            isinstance(size_setting[1], int):
             self.resize(size_setting[0], size_setting[1])
-        position_setting = El().settings.get_value('window-position')
+        position_setting = El().settings.get_value("window-position")
         if len(position_setting) == 2 and\
            isinstance(position_setting[0], int) and\
            isinstance(position_setting[1], int):
@@ -156,12 +157,12 @@ class Window(Gtk.ApplicationWindow):
         self.update_zoom_level(False)
         self.__timeout_configure = None
         size = window.get_size()
-        El().settings.set_value('window-size',
-                                GLib.Variant('ai', [size[0], size[1]]))
+        El().settings.set_value("window-size",
+                                GLib.Variant("ai", [size[0], size[1]]))
 
         position = window.get_position()
-        El().settings.set_value('window-position',
-                                GLib.Variant('ai',
+        El().settings.set_value("window-position",
+                                GLib.Variant("ai",
                                              [position[0], position[1]]))
 
     def __on_configure_event(self, window, event):
@@ -187,8 +188,8 @@ class Window(Gtk.ApplicationWindow):
         """
         size = widget.get_size()
         self.toolbar.title.set_width(size[0]/3)
-        El().settings.set_boolean('window-maximized',
-                                  'GDK_WINDOW_STATE_MAXIMIZED' in
+        El().settings.set_boolean("window-maximized",
+                                  "GDK_WINDOW_STATE_MAXIMIZED" in
                                   event.new_window_state.value_names)
 
     def __on_realize(self, widget):
@@ -197,6 +198,17 @@ class Window(Gtk.ApplicationWindow):
             @param widget as Gtk.Widget
         """
         self.update_zoom_level(False)
+
+    def __on_key_press_event(self, widget, event):
+        """
+            Handle Back/Forward keypress
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        if event.keyval == Gdk.KEY_Back:
+            self.container.current.webview.go_back()
+        elif event.keyval == Gdk.KEY_Forward:
+            self.container.current.webview.go_forward()
 
     def __on_shortcut_action(self, action, param):
         """
