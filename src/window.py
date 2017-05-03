@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Gdk
+from gi.repository import Gtk, GLib, Gio
 
 from eolie.define import El
 from eolie.toolbar import Toolbar
@@ -38,7 +38,6 @@ class Window(Gtk.ApplicationWindow):
         self.__setup_content()
         self.setup_window()
         self.connect("realize", self.__on_realize)
-        self.connect("key-press-event", self.__on_key_press_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
 
@@ -198,17 +197,6 @@ class Window(Gtk.ApplicationWindow):
             @param widget as Gtk.Widget
         """
         self.update_zoom_level(False)
-
-    def __on_key_press_event(self, widget, event):
-        """
-            Handle Back/Forward keypress
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        if event.keyval == Gdk.KEY_Back:
-            self.container.current.webview.go_back()
-        elif event.keyval == Gdk.KEY_Forward:
-            self.container.current.webview.go_forward()
 
     def __on_shortcut_action(self, action, param):
         """

@@ -281,8 +281,10 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
         self.set_accels_for_action("app.settings",
                                    ["<Control><Shift>s"])
-        self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
-        self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
+        self.set_accels_for_action("win.shortcut::backward",
+                                   ["<Alt>Left", "XF86Back"])
+        self.set_accels_for_action("win.shortcut::forward",
+                                   ["<Alt>Right", "XF86Forward"])
         self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
         self.set_accels_for_action("win.shortcut::previous",
                                    ["<Control><Shift>Tab"])
