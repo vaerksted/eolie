@@ -534,10 +534,15 @@ class StackSidebar(Gtk.EventBox):
             self.__search_entry.connect("key-press-event",
                                         self.__on_key_press)
             self.__listbox.set_filter_func(self.__filter_func)
+            for child in self.__listbox.get_children():
+                child.show_title(True)
         else:
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self.__listbox.set_filter_func(None)
+            panel_mode = El().settings.get_enum("panel-mode")
+            for child in self.__listbox.get_children():
+                child.show_title(panel_mode != 2)
         self.__search_bar.set_search_mode(b)
 
     def next(self):
@@ -814,7 +819,7 @@ class StackSidebar(Gtk.EventBox):
         self.__leave_timeout_id = None
         self.set_property("width-request", -1)
         for child in self.__listbox.get_children():
-            child.show_title(False)
+            child.show_title(self.__search_bar.is_visible())
 
     def __on_row_activated(self, listbox, row):
         """
