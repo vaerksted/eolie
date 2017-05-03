@@ -60,6 +60,11 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param state as WebViewSessionState
         """
+        # We ignore parent if uri is not http
+        if parent is not None:
+            parsed = urlparse(parent.webview.get_uri())
+            if parsed.scheme not in ["http", "https"]:
+                parent = None
         view = self.__get_new_view(private, parent, webview)
         if state is not None:
             view.webview.restore_session_state(state)

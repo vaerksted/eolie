@@ -503,7 +503,15 @@ class StackSidebar(Gtk.EventBox):
         if El().settings.get_value("panel-mode").get_string() == "minimal":
             child.show_title(False)
         child.show()
-        self.__listbox.add(child)
+        # We want to insert child next to its parent and brothers
+        wanted_index = 1
+        i = 1
+        for row in self.__listbox.get_children():
+            if row.view == view.parent or (view.parent is not None and
+                                           row.view.parent == view.parent):
+                wanted_index = i
+            i += 1
+        self.__listbox.insert(child, wanted_index)
 
     def update_visible_child(self):
         """
