@@ -87,7 +87,7 @@ class StackSidebar(Gtk.EventBox):
                 wanted_index = i
             i += 1
         # No parent, no brother, always after current and its parents/brothers
-        if wanted_index == 1:
+        if not view.parent and wanted_index == 1:
             i = 1
             current = self.__window.container.current
             for row in self.__listbox.get_children():
@@ -97,7 +97,6 @@ class StackSidebar(Gtk.EventBox):
                            row.view.parent == current.parent):
                     wanted_index = i
                 i += 1
-
         self.__listbox.insert(child, wanted_index)
 
     def update_visible_child(self):

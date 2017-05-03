@@ -143,6 +143,13 @@ class View(Gtk.Overlay):
             self.__reading_view.destroy()
             self.__reading_view = None
 
+    def set_parent(self, view):
+        """
+            Set parent
+            @param view as View
+        """
+        self.__parent = view
+
     def free_webview(self):
         """
             Free the webview associated with view
