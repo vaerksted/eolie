@@ -260,7 +260,7 @@ class Container(Gtk.Overlay):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        mouse_button = navigation_action.get_mouse_button()
+        elapsed = time() - related.last_click_time
         # Block popups, see WebView::set_popup_exception() for details
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
@@ -268,7 +268,7 @@ class Container(Gtk.Overlay):
             El().popup_exceptions.find(parsed_related.netloc) or\
             El().popup_exceptions.find(parsed_related.netloc +
                                        parsed_related.path) or\
-            (not related.is_loading() and mouse_button != 0)
+            (not related.is_loading() and elapsed < 0.5)
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,

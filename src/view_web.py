@@ -14,6 +14,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk
 
 from gettext import gettext as _
 from urllib.parse import urlparse
+from time import time
 
 from eolie.define import El
 from eolie.utils import debug
@@ -143,6 +144,14 @@ class WebView(WebKit2.WebView):
         """
         return self.__selection
 
+    @property
+    def last_click_time(self):
+        """
+            Get last click time
+            @return float
+        """
+        return self.__last_click_time
+
 #######################
 # PRIVATE             #
 #######################
@@ -156,6 +165,7 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
+        self.__last_click_time = 0
         self.__related_view = related_view
         self.__initial_selection = ""
         self.__input_source = Gdk.InputSource.MOUSE
@@ -270,6 +280,7 @@ class WebView(WebKit2.WebView):
             @param widget as WebKit2.WebView
             @param event as Gdk.EventScroll
         """
+        self.__last_click_time = time()
         self.__selection = ""
         c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
         self.__initial_selection = c.wait_for_text()
