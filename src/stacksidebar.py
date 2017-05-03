@@ -511,6 +511,10 @@ class StackSidebar(Gtk.EventBox):
                                            row.view.parent == view.parent):
                 wanted_index = i
             i += 1
+        # No parent, no children, always after current
+        if wanted_index == 1:
+            wanted_index = self.__get_index(
+                                           self.__window.container.current) + 1
         self.__listbox.insert(child, wanted_index)
 
     def update_visible_child(self):
@@ -558,7 +562,7 @@ class StackSidebar(Gtk.EventBox):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(str(self.__window.container.current))
+        index = self.__get_index(self.__window.container.current)
         if index + 1 < len(children):
             next_row = self.__listbox.get_row_at_index(index + 1)
         else:
@@ -572,7 +576,7 @@ class StackSidebar(Gtk.EventBox):
             Show next view
         """
         children = self.__listbox.get_children()
-        index = self.__get_index(str(self.__window.container.current))
+        index = self.__get_index(self.__window.container.current)
         if index == 0:
             next_row = self.__listbox.get_row_at_index(len(children) - 1)
         else:
@@ -591,7 +595,7 @@ class StackSidebar(Gtk.EventBox):
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
-        child_index = self.__get_index(str(view))
+        child_index = self.__get_index(view)
         # Delay view destroy to allow stack animation
         child = self.__listbox.get_row_at_index(child_index)
         if child is None:
@@ -617,11 +621,11 @@ class StackSidebar(Gtk.EventBox):
                 break
         # Load brother
         if brother is not None:
-            brother_index = self.__get_index(str(brother.view))
+            brother_index = self.__get_index(brother.view)
             next_row = self.__listbox.get_row_at_index(brother_index)
         # Go back to parent page
         elif view.parent is not None:
-            parent_index = self.__get_index(str(view.parent))
+            parent_index = self.__get_index(view.parent)
             next_row = self.__listbox.get_row_at_index(parent_index)
         # Find best near page
         else:
@@ -700,14 +704,29 @@ class StackSidebar(Gtk.EventBox):
     def __get_index(self, view):
         """
             Get view index
-            @param view as str
+            @param view as View
             @return int
         """
         # Search current index
         children = self.__listbox.get_children()
         index = 0
         for child in children:
-            if str(child.view) == view:
+            if child.view == view:
+                break
+            index += 1
+        return index
+
+    def __get_index_for_string(self, view_str):
+        """
+            Get view index for str
+            @param view_str as str
+            @return int
+        """
+        # Search current index
+        children = self.__listbox.get_children()
+        index = 0
+        for child in children:
+            if str(child.view) == view_str:
                 break
             index += 1
         return index
@@ -727,19 +746,19 @@ class StackSidebar(Gtk.EventBox):
             return True
         return False
 
-    def __on_moved(self, child, view, up):
+    def __on_moved(self, child, view_str, up):
         """
             Move child row
             @param child as SidebarChild
-            @param view as str
+            @param view_str as str
             @param up as bool
         """
-        view_index = self.__get_index(view)
+        view_index = self.__get_index_for_string(view_str)
         row = self.__listbox.get_row_at_index(view_index)
         if row is None:
             return
         self.__listbox.remove(row)
-        child_index = self.__get_index(str(child.view))
+        child_index = self.__get_index(child.view)
         if not up:
             child_index += 1
         self.__listbox.insert(row, child_index)
