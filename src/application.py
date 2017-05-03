@@ -113,9 +113,9 @@ class Application(Gtk.Application):
         shortcuts_action.connect('activate', self.__on_shortcuts_activate)
         self.add_action(shortcuts_action)
 
-        help_action = Gio.SimpleAction.new('help', None)
-        help_action.connect('activate', self.__on_help_activate)
-        self.add_action(help_action)
+        # help_action = Gio.SimpleAction.new('help', None)
+        # help_action.connect('activate', self.__on_help_activate)
+        # self.add_action(help_action)
 
         quit_action = Gio.SimpleAction.new('quit', None)
         quit_action.connect('activate', lambda x, y: self.quit())
