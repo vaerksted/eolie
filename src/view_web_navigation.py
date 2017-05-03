@@ -48,6 +48,7 @@ class WebViewNavigation:
         self.__js_timeout = None
         self.__title = ""
         self.__readable_content = ""
+        self.__popups = []
         self.__loaded_uri = ""
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -92,6 +93,21 @@ class WebViewNavigation:
         self.__loaded_uri = uri
         self.emit("uri-changed", uri)
         WebKit2.WebView.load_uri(self, uri)
+
+    def add_popup(self, webview):
+        """
+            Add webview to popups
+            @webview as WebView
+        """
+        self.__popups.append(webview)
+
+    @property
+    def popups(self):
+        """
+            Get popups
+            @return [WebView]
+        """
+        return self.__popups
 
     @property
     def readable_content(self):
@@ -287,6 +303,9 @@ class WebViewNavigation:
         uri = view.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            # Destroy current popups
+            for popup in self.__popups:
+                popup.destroy()
             El().download_manager.remove_video_for_page(view.get_page_id())
             self.emit("uri-changed", uri)
             self.__popup_exception = None

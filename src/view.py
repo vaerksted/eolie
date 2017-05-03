@@ -97,12 +97,12 @@ class View(Gtk.Overlay):
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
-        grid = Gtk.Grid()
-        grid.set_orientation(Gtk.Orientation.VERTICAL)
-        grid.add(self.__find_widget)
-        grid.add(self.__webview)
-        grid.show()
-        self.add(grid)
+        self.__grid = Gtk.Grid()
+        self.__grid.set_orientation(Gtk.Orientation.VERTICAL)
+        self.__grid.add(self.__find_widget)
+        self.__grid.add(self.__webview)
+        self.__grid.show()
+        self.add(self.__grid)
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
         self.__webview.connect("mouse-target-changed",
@@ -142,6 +142,12 @@ class View(Gtk.Overlay):
         else:
             self.__reading_view.destroy()
             self.__reading_view = None
+
+    def free_webview(self):
+        """
+            Free the webview associated with view
+        """
+        self.__grid.remove(self.__webview)
 
     @property
     def reading(self):

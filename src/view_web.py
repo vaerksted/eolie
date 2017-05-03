@@ -55,15 +55,6 @@ class WebView(WebKit2.WebView):
         view.__init(related)
         return view
 
-    def set_popup_exception(self, uri):
-        """
-            Mark uri as an exception for popup
-            Will be reseted as soon a new load request is started
-            This allow to block popup one time per request. If it's a wanted
-            popup, it will be shown on next click
-        """
-        self.__popup_exception = uri
-
     def set_setting(self, key, value):
         """
             Set setting to value
@@ -135,14 +126,6 @@ class WebView(WebKit2.WebView):
         return current
 
     @property
-    def popup_exception(self):
-        """
-            Get current popup exception
-            @return exception as str/None
-        """
-        return self.__popup_exception
-
-    @property
     def private(self):
         """
             True if view is private/ephemeral
@@ -172,7 +155,6 @@ class WebView(WebKit2.WebView):
         # it from clipboard
         self.__selection = ""
         self.__related_view = related_view
-        self.__popup_exception = None
         self.__initial_selection = ""
         self.__input_source = Gdk.InputSource.MOUSE
         self.set_hexpand(True)

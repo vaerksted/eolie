@@ -19,8 +19,8 @@
             <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
             <signal name="focus-in-event" handler="_on_entry_focus_in" swapped="no"/>
             <signal name="focus-out-event" handler="_on_entry_focus_out" swapped="no"/>
-            <signal name="key-press-event" handler="_on_key_press_event" swapped="no"/>
             <signal name="icon-press" handler="_on_icon_press" swapped="no"/>
+            <signal name="key-press-event" handler="_on_key_press_event" swapped="no"/>
             <style>
               <class name="uribar"/>
             </style>
@@ -50,7 +50,7 @@
                     <property name="orientation">vertical</property>
                   </object>
                   <packing>
-                    <property name="left_attach">2</property>
+                    <property name="left_attach">3</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
@@ -72,7 +72,7 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="left_attach">3</property>
+                    <property name="left_attach">4</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
@@ -93,15 +93,15 @@
                     </child>
                   </object>
                   <packing>
-                    <property name="left_attach">0</property>
+                    <property name="left_attach">2</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEventBox" id="readable">
+                  <object class="GtkEventBox" id="readable_indicator">
                     <property name="can_focus">False</property>
                     <property name="opacity">0.80000000000000004</property>
-                    <signal name="button-press-event" handler="_on_readable_press" swapped="no"/>
+                    <signal name="button-press-event" handler="_on_readable_indicator_press" swapped="no"/>
                     <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
                     <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
                     <child>
@@ -109,6 +109,26 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="icon_name">view-dual-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEventBox" id="popup_indicator">
+                    <property name="can_focus">False</property>
+                    <property name="opacity">0.80000000000000004</property>
+                    <signal name="button-press-event" handler="_on_popup_indicator_press" swapped="no"/>
+                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                    <child>
+                      <object class="GtkImage" id="popup_image">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="icon_name">focus-windows-symbolic</property>
                       </object>
                     </child>
                   </object>
@@ -127,12 +147,12 @@
               <object class="GtkLabel" id="placeholder">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="opacity">0.8</property>
+                <property name="opacity">0.80000000000000004</property>
                 <property name="halign">start</property>
                 <property name="hexpand">True</property>
                 <property name="ellipsize">end</property>
                 <style>
-                    <class name="placeholder"/>
+                  <class name="placeholder"/>
                 </style>
               </object>
               <packing>

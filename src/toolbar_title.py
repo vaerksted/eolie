@@ -62,7 +62,8 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
-        self.__readable = builder.get_object("readable")
+        self.__readable_indicator = builder.get_object("readable_indicator")
+        self.__popup_indicator = builder.get_object("popup_indicator")
         self.__placeholder = builder.get_object("placeholder")
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
@@ -73,10 +74,10 @@ class ToolbarTitle(Gtk.Bin):
             @param b as bool
         """
         if b:
-            self.__readable.show()
+            self.__readable_indicator.show()
             self.set_reading()
         else:
-            self.__readable.hide()
+            self.__readable_indicator.hide()
 
     def set_reading(self):
         """
@@ -260,6 +261,16 @@ class ToolbarTitle(Gtk.Bin):
         if webview in self.__text_entry_history.keys():
             del self.__text_entry_history[webview]
 
+    def show_popup_indicator(self, b):
+        """
+            Show popups indicator
+            @param b as bool
+        """
+        if b:
+            self.__popup_indicator.show()
+        else:
+            self.__popup_indicator.hide()
+
     @property
     def lock_focus(self):
         """
@@ -420,7 +431,7 @@ class ToolbarTitle(Gtk.Bin):
                                 Gdk.KEY_Escape]:
                 GLib.idle_add(self.close_popover)
 
-    def _on_readable_press(self, eventbox, event):
+    def _on_readable_indicator_press(self, eventbox, event):
         """
             Reload current view/Stop loading
             @param eventbox as Gtk.EventBox
@@ -428,6 +439,22 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__window.container.current.switch_read_mode()
         self.set_reading()
+        return True
+
+    def _on_popup_indicator_press(self, eventbox, event):
+        """
+            Reload current view/Stop loading
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        for popup in self.__window.container.current.webview.popups:
+            self.__window.container.popup_view(popup)
+        if self.__entry.has_focus():
+            self.__window.set_focus(None)
+        else:
+            self._on_entry_focus_out(self.__entry, None)
+        self.__update_secure_content_indicator()
+        return True
 
     def _on_action1_press(self, eventbox, event):
         """

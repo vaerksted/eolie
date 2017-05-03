@@ -17,6 +17,7 @@ from time import time
 
 from eolie.stacksidebar import StackSidebar
 from eolie.view import View
+from eolie.popover_webview import WebViewPopover
 from eolie.define import El
 
 
@@ -33,7 +34,7 @@ class Container(Gtk.Overlay):
         Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
-        self.__popover = None
+        self.__popover = WebViewPopover()
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finish", self.__on_sync_finish)
         self.__stack = Gtk.Stack()
@@ -126,6 +127,23 @@ class Container(Gtk.Overlay):
         width = self.__stack_sidebar.get_allocated_width()
         self.__stack.set_margin_start(width)
 
+    def popup_view(self, webview):
+        """
+            Show webview in popopver
+            @param webview as WebView
+        """
+        view = View(webview.private, None, webview)
+        view.webview.connect("create", self.__on_create, True)
+        view.show()
+        self.__popover.add_webview(view)
+        if not self.__popover.is_visible():
+            self.__popover.set_size_request(
+                                 self.__window.get_allocated_width() / 3,
+                                 self.__window.get_allocated_height() / 1.5)
+            self.__popover.set_relative_to(self.__window.toolbar)
+            self.__popover.set_position(Gtk.PositionType.BOTTOM)
+            self.__popover.show()
+
     @property
     def sidebar(self):
         """
@@ -173,7 +191,7 @@ class Container(Gtk.Overlay):
         view.webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
         view.webview.connect("readable", self.__on_readable)
         view.webview.connect("new-page", self.__on_new_page)
-        view.webview.connect("create", self.__on_create)
+        view.webview.connect("create", self.__on_create, False)
         view.webview.connect("close", self.__on_close)
         view.webview.connect("save-password", self.__on_save_password)
         view.webview.connect("script-dialog", self.__on_script_dialog)
@@ -203,31 +221,20 @@ class Container(Gtk.Overlay):
             view = self.__get_view_for_webview(webview)
             self.add_web_view(uri, show, webview.private, view)
 
-    def __on_create(self, related, navigation_action):
+    def __on_create(self, related, navigation_action, force):
         """
             Create a new view for action
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
+            @param force as bool
         """
-        # Block popups, see WebView::set_popup_exception() for details
-        popup_block = El().settings.get_value("popupblock")
-        parsed_request = urlparse(navigation_action.get_request().get_uri())
-        parsed_related = urlparse(related.get_uri())
-        exception = El().adblock.is_an_exception(parsed_related.netloc) or\
-            El().adblock.is_an_exception(parsed_related.netloc +
-                                         parsed_related.path) or\
-            parsed_request.netloc == parsed_related.netloc
-        if not exception and popup_block and\
-                navigation_action.get_navigation_type() in [
-                               WebKit2.NavigationType.OTHER,
-                               WebKit2.NavigationType.RELOAD,
-                               WebKit2.NavigationType.BACK_FORWARD] and\
-                parsed_request.netloc != related.popup_exception:
-            related.set_popup_exception(parsed_request.netloc)
-            return
         from eolie.view_web import WebView
         webview = WebView.new_with_related_view(related)
-        webview.connect("ready-to-show", self.__on_ready_to_show)
+        webview.connect("ready-to-show",
+                        self.__on_ready_to_show,
+                        related,
+                        navigation_action,
+                        force)
         return webview
 
     def __on_close(self, webview):
@@ -240,58 +247,32 @@ class Container(Gtk.Overlay):
         if view is not None:
             self.sidebar.close_view(view)
 
-    def __on_ready_to_show(self, related):
+    def __on_ready_to_show(self, webview, related, navigation_action, force):
         """
             Add view to window
             @param webview as WebView
+            @param related as WebView
+            @param navigation_action as WebKit2.NavigationAction
         """
-        view = View(related.private, None, related)
-        view.webview.connect("create", self.__on_create)
-        view.show()
-        if self.__popover is None:
-            self.__popover = Gtk.Popover.new()
-            self.__popover.set_relative_to(self.__window.toolbar)
-            self.__popover.set_position(Gtk.PositionType.BOTTOM)
-            stack = Gtk.Stack.new()
-            stack.set_transition_type(Gtk.StackTransitionType.UNDER_DOWN)
-            stack.set_transition_duration(250)
-            stack.show()
-            self.__popover.add(stack)
-        else:
-            stack = self.__popover.get_child()
-        previous = stack.get_visible_child()
-        stack.add(view)
-        stack.set_visible_child(view)
-        self.__popover.set_size_request(
-                                 self.__window.get_allocated_width() / 3,
-                                 self.__window.get_allocated_height() / 1.5)
-        view.webview.connect("close", self.__on_web_view_close, view, previous)
-        self.__popover.connect("closed", self.__on_popover_closed)
-        self.__popover.show()
-
-    def __on_web_view_close(self, webview, view, previous):
-        """
-            Remove view from stack
-            @param webview as WebKit2.WebView
-            @param view as View
-            @param previous as View
-        """
-        stack = self.__popover.get_child()
-        close = len(stack.get_children()) == 1
-        if previous is not None:
-            stack.set_visible_child(previous)
-        GLib.timeout_add(1000, view.destroy)
-        if close:
-            self.__popover.hide()
-
-    def __on_popover_closed(self, popover):
-        """
-            Clear popover content
-            @param popover as Gtk.Popover
-        """
-        stack = self.__popover.get_child()
-        for child in stack.get_children():
-            child.destroy()
+        # Block popups, see WebView::set_popup_exception() for details
+        popup_block = El().settings.get_value("popupblock")
+        parsed_request = urlparse(navigation_action.get_request().get_uri())
+        parsed_related = urlparse(related.get_uri())
+        exception = force or\
+            El().adblock.is_an_exception(parsed_related.netloc) or\
+            El().adblock.is_an_exception(parsed_related.netloc +
+                                         parsed_related.path) or\
+            parsed_request.netloc == parsed_related.netloc
+        if not exception and popup_block and\
+                navigation_action.get_navigation_type() in [
+                               WebKit2.NavigationType.OTHER,
+                               WebKit2.NavigationType.RELOAD,
+                               WebKit2.NavigationType.BACK_FORWARD]:
+            related.add_popup(webview)
+            if related == self.current.webview:
+                self.__window.toolbar.title.show_popup_indicator(True)
+            return
+        self.popup_view(webview)
 
     def __on_readable(self, webview):
         """
@@ -437,6 +418,7 @@ class Container(Gtk.Overlay):
         self.__window.toolbar.title.update_load_indicator(webview)
         parsed = urlparse(webview.get_uri())
         if event == WebKit2.LoadEvent.STARTED:
+            self.__window.toolbar.title.show_popup_indicator(False)
             # Turn off reading mode if needed
             if self.current.reading:
                 self.current.switch_read_mode()
