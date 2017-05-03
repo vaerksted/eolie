@@ -296,6 +296,7 @@ class Container(Gtk.Overlay):
         uri = webview.get_uri()
         title = webview.get_title()
         self.__window.toolbar.title.update_load_indicator(webview)
+        self.__window.toolbar.title.show_popup_indicator(webview.popups)
         self.__window.toolbar.actions.set_actions(webview)
         self.__window.toolbar.title.show_readable_button(
                                             webview.readable_content != "")
