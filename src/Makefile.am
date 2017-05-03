@@ -7,6 +7,7 @@ app_PYTHON = \
     context.py\
     database_adblock.py\
     database_bookmarks.py\
+    database_exceptions.py\
     database_history.py\
     database_pishing.py\
     dbus_helper.py\

@@ -259,9 +259,9 @@ class Container(Gtk.Overlay):
         parsed_request = urlparse(navigation_action.get_request().get_uri())
         parsed_related = urlparse(related.get_uri())
         exception = force or\
-            El().adblock.is_an_exception(parsed_related.netloc) or\
-            El().adblock.is_an_exception(parsed_related.netloc +
-                                         parsed_related.path) or\
+            El().popup_exceptions.find(parsed_related.netloc) or\
+            El().popup_exceptions.find(parsed_related.netloc +
+                                       parsed_related.path) or\
             parsed_request.netloc == parsed_related.netloc
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [

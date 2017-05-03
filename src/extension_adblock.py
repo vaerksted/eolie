@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
+from eolie.database_exceptions import DatabaseExceptions
 
 
 class AdblockExtension:
@@ -28,6 +29,7 @@ class AdblockExtension:
         """
         self.__settings = Settings.new()
         self.__adblock = DatabaseAdblock()
+        self.__exceptions = DatabaseExceptions("adblock")
         extension.connect("page-created", self.__on_page_created)
 
 #######################
@@ -50,8 +52,8 @@ class AdblockExtension:
         """
         uri = request.get_uri()
         parsed = urlparse(webpage.get_uri())
-        exception = self.__adblock.is_an_exception(parsed.netloc) or\
-            self.__adblock.is_an_exception(parsed.netloc + parsed.path)
+        exception = self.__exceptions.find(parsed.netloc) or\
+            self.__exceptions.find(parsed.netloc + parsed.path)
         if self.__settings.get_value("adblock") and\
                 not exception and\
                 self.__adblock.is_blocked(uri):

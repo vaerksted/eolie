@@ -68,6 +68,7 @@ class ToolbarEnd(Gtk.Bin):
         overlay.set_overlay_pass_through(self.__progress, True)
         self.add(builder.get_object("end"))
 
+        # Setup main menu actions
         adblock_action = Gio.SimpleAction.new_stateful(
                "adblock",
                None,
@@ -88,13 +89,29 @@ class ToolbarEnd(Gtk.Bin):
         image_action.connect("change-state",
                              self.__on_image_change_state)
         self.__window.add_action(image_action)
-        self.__exceptions_action = Gio.SimpleAction.new_stateful(
-                                                   "exceptions",
+
+        # Setup exceptions actions
+        self.__adblock_exceptions = Gio.SimpleAction.new_stateful(
+                                                   "adblock_exceptions",
                                                    GLib.VariantType.new("s"),
                                                    GLib.Variant("s", "none"))
-        self.__exceptions_action.connect("activate",
-                                         self.__on_exceptions_activate)
-        self.__window.add_action(self.__exceptions_action)
+        self.__adblock_exceptions.connect("activate",
+                                          self.__on_exceptions_activate)
+        self.__window.add_action(self.__adblock_exceptions)
+        self.__image_exceptions = Gio.SimpleAction.new_stateful(
+                                                   "image_exceptions",
+                                                   GLib.VariantType.new("s"),
+                                                   GLib.Variant("s", "none"))
+        self.__image_exceptions.connect("activate",
+                                        self.__on_exceptions_activate)
+        self.__window.add_action(self.__image_exceptions)
+        self.__popup_exceptions = Gio.SimpleAction.new_stateful(
+                                                   "popup_exceptions",
+                                                   GLib.VariantType.new("s"),
+                                                   GLib.Variant("s", "none"))
+        self.__popup_exceptions.connect("activate",
+                                        self.__on_exceptions_activate)
+        self.__window.add_action(self.__popup_exceptions)
 
     def show_download(self, download):
         """
@@ -176,15 +193,36 @@ class ToolbarEnd(Gtk.Bin):
         if not uri:
             return
         parsed = urlparse(uri)
-        page_ex = El().adblock.is_an_exception(parsed.netloc +
+        # Adblock exceptions
+        page_ex = El().adblock_exceptions.find(parsed.netloc +
                                                parsed.path)
-        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        site_ex = El().adblock_exceptions.find(parsed.netloc)
         if not page_ex and not site_ex:
-            self.__exceptions_action.change_state(GLib.Variant("s", "none"))
+            self.__adblock_exceptions.change_state(GLib.Variant("s", "none"))
         elif site_ex:
-            self.__exceptions_action.change_state(GLib.Variant("s", "site"))
+            self.__adblock_exceptions.change_state(GLib.Variant("s", "site"))
         else:
-            self.__exceptions_action.change_state(GLib.Variant("s", "page"))
+            self.__adblock_exceptions.change_state(GLib.Variant("s", "page"))
+        # Image exceptions
+        page_ex = El().image_exceptions.find(parsed.netloc +
+                                             parsed.path)
+        site_ex = El().image_exceptions.find(parsed.netloc)
+        if not page_ex and not site_ex:
+            self.__image_exceptions.change_state(GLib.Variant("s", "none"))
+        elif site_ex:
+            self.__image_exceptions.change_state(GLib.Variant("s", "site"))
+        else:
+            self.__image_exceptions.change_state(GLib.Variant("s", "page"))
+        # Popup exceptions
+        page_ex = El().popup_exceptions.find(parsed.netloc +
+                                             parsed.path)
+        site_ex = El().popup_exceptions.find(parsed.netloc)
+        if not page_ex and not site_ex:
+            self.__popup_exceptions.change_state(GLib.Variant("s", "none"))
+        elif site_ex:
+            self.__popup_exceptions.change_state(GLib.Variant("s", "site"))
+        else:
+            self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
         popover = Gtk.PopoverMenu.new()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
@@ -368,22 +406,28 @@ class ToolbarEnd(Gtk.Bin):
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
             return
+        if action == self.__adblock_exceptions:
+            database = El().adblock_exceptions
+        elif action == self.__image_exceptions:
+            database = El().image_exceptions
+        else:
+            database = El().popup_exceptions
         action.set_state(param)
         parsed = urlparse(uri)
-        page_ex = El().adblock.is_an_exception(parsed.netloc + parsed.path)
-        site_ex = El().adblock.is_an_exception(parsed.netloc)
+        page_ex = database.find(parsed.netloc + parsed.path)
+        site_ex = database.find(parsed.netloc)
         # Clean previous exceptions
         if param.get_string() in ["site", "none"]:
             if page_ex:
-                El().adblock.remove_exception(parsed.netloc + parsed.path)
+                database.remove_exception(parsed.netloc + parsed.path)
         if param.get_string() in ["page", "none"]:
             if site_ex:
-                El().adblock.remove_exception(parsed.netloc)
+                database.remove_exception(parsed.netloc)
         # Add new exceptions
         if param.get_string() == "site":
-            El().adblock.add_exception(parsed.netloc)
+            database.add_exception(parsed.netloc)
         elif param.get_string() == "page":
-            El().adblock.add_exception(parsed.netloc + parsed.path)
+            database.add_exception(parsed.netloc + parsed.path)
         self.__window.container.current.webview.reload()
 
     def __on_adblock_change_state(self, action, param):

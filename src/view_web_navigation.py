@@ -262,8 +262,8 @@ class WebViewNavigation:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 # Block popups
                 popup_block = El().settings.get_value("popupblock")
-                exception = El().adblock.is_an_exception(parsed.netloc) or\
-                    El().adblock.is_an_exception(parsed.netloc + parsed.path)
+                exception = El().popup_exceptions.find(parsed.netloc) or\
+                    El().popup_exceptions.find(parsed.netloc + parsed.path)
                 if exception or not popup_block or\
                         navigation_action.get_navigation_type() not in [
                                        WebKit2.NavigationType.OTHER,
@@ -315,9 +315,9 @@ class WebViewNavigation:
                 self._show_pishing_error(uri)
             else:
                 self.emit("uri-changed", uri)
-                exception = El().adblock.is_an_exception(
+                exception = El().image_exceptions.find(
                                         parsed.netloc) or\
-                    El().adblock.is_an_exception(
+                    El().image_exceptions.find(
                                         parsed.netloc + parsed.path)
                 imgblock = El().settings.get_value("imgblock")
                 self.set_setting("auto-load-images",
@@ -325,9 +325,9 @@ class WebViewNavigation:
                 self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().settings.get_value("adblock"):
-                exception = El().adblock.is_an_exception(
+                exception = El().adblock_exceptions.find(
                                         parsed.netloc) or\
-                            El().adblock.is_an_exception(
+                            El().adblock_exceptions.find(
                                         parsed.netloc + parsed.path)
                 if exception:
                     return
