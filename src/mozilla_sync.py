@@ -30,7 +30,7 @@ from fxa.core import Client as FxAClient, Session as FxASession
 from fxa.crypto import quick_stretch_password
 from threading import Thread
 
-from eolie.define import El
+from eolie.define import El, LOCAL_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
 
@@ -203,7 +203,7 @@ class SyncWorker(GObject.GObject):
                     self.__client.add_history(record, bulk_keys)
                 self.__mtimes = self.__client.client.info_collections()
                 dump(self.__mtimes,
-                     open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+                     open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
             print("SyncWorker::__push_history():", e)
 
@@ -235,7 +235,7 @@ class SyncWorker(GObject.GObject):
             self.__stop = True
             return
         try:
-            self.__mtimes = load(open(El().LOCAL_PATH + "/mozilla_sync.bin",
+            self.__mtimes = load(open(LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
@@ -276,7 +276,7 @@ class SyncWorker(GObject.GObject):
             # Update last sync mtime
             self.__mtimes = self.__client.client.info_collections()
             dump(self.__mtimes,
-                 open(El().LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+                 open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
         except Exception as e:
             print("SyncWorker::__sync():", e)
