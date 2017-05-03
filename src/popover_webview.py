@@ -18,11 +18,13 @@ class WebViewPopover(Gtk.Popover):
         Show a popover with a webview stack
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init popover
+            @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.__window = window
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverWebView.ui')
         builder.connect_signals(self)
@@ -31,6 +33,7 @@ class WebViewPopover(Gtk.Popover):
         self.__prev_button = builder.get_object("prev_button")
         self.__next_button = builder.get_object("next_button")
         self.add(builder.get_object("widget"))
+        self.connect("map", self.__on_map)
         self.connect("closed", self.__on_closed)
 
     def add_webview(self, view):
@@ -131,11 +134,20 @@ class WebViewPopover(Gtk.Popover):
                 break
         self.__set_button_state()
 
+    def __on_map(self, popover):
+        """
+            Lock title bar
+            @param popover as Gtk.Popover
+        """
+        self.__window.toolbar.title.set_lock_focus(True)
+
     def __on_closed(self, popover):
         """
+            Unlock titlebar
             Remove children
             @param popover as Gtk.Popover
         """
+        self.__window.toolbar.title.set_lock_focus(False)
         for view in self.__stack.get_children():
             view.free_webview()
             self.__stack.remove(view)

@@ -260,18 +260,9 @@ class WebViewNavigation:
             decision.ignore()
         elif mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                # Block popups
-                popup_block = El().settings.get_value("popupblock")
-                exception = El().popup_exceptions.find(parsed.netloc) or\
-                    El().popup_exceptions.find(parsed.netloc + parsed.path)
-                if exception or not popup_block or\
-                        navigation_action.get_navigation_type() not in [
-                                       WebKit2.NavigationType.OTHER,
-                                       WebKit2.NavigationType.RELOAD,
-                                       WebKit2.NavigationType.BACK_FORWARD]:
-                    self.emit("new-page", uri, True)
-                    decision.ignore()
-                    return True
+                self.emit("new-page", uri, True)
+                decision.ignore()
+                return True
             else:
                 decision.use()
                 return False
