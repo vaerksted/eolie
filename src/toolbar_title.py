@@ -307,10 +307,11 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                _("Copy address"))
             self.__placeholder.set_opacity(0)
+            self.set_text_entry(self.__uri)
         else:
             self.__set_default_placeholder()
+            self.set_text_entry("")
         self.__entry.get_style_context().remove_class("uribar-title")
-        self.set_text_entry(self.__uri)
 
     def _on_leave_notify(self, widget, event):
         """
