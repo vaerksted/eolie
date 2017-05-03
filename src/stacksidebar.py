@@ -215,12 +215,12 @@ class StackSidebar(Gtk.EventBox):
             # We are last row, add a new one
             if len(children) == 0:
                 self.__window.container.add_web_view(El().start_page, True)
-            # We have rows next to closed, so reload current index
-            elif child_index < len(children):
-                next_row = self.__listbox.get_row_at_index(child_index)
             # We have rows before closed
             elif child_index - 1 >= 0:
                 next_row = self.__listbox.get_row_at_index(child_index - 1)
+            # We have rows next to closed, so reload current index
+            elif child_index < len(children):
+                next_row = self.__listbox.get_row_at_index(child_index)
         if next_row is not None:
             self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
