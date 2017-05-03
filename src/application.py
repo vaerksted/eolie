@@ -34,6 +34,7 @@ from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.dbus_helper import DBusHelper
 from eolie.context import Context
+from eolie.define import LOCAL_PATH
 
 
 class Application(Gtk.Application):
@@ -41,10 +42,6 @@ class Application(Gtk.Application):
         Eolie application:
     """
 
-    if GLib.getenv("XDG_DATA_HOME") is None:
-        LOCAL_PATH = GLib.get_home_dir() + "/.local/share/eolie"
-    else:
-        LOCAL_PATH = GLib.getenv("XDG_DATA_HOME") + "/eolie"
     __COOKIES_PATH = "%s/cookies.db" % LOCAL_PATH
     __FAVICONS_PATH = "%s/favicons" % LOCAL_PATH
 
