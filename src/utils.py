@@ -23,6 +23,13 @@ from base64 import b64encode
 from eolie.define import El, ArtSize
 
 
+def is_gnome():
+    """
+        Return True if desktop is Gnome
+    """
+    return GLib.getenv("XDG_CURRENT_DESKTOP") == "GNOME"
+
+
 def get_favicon_best_uri(uri):
     """
         Search in WebKit DB for best uri

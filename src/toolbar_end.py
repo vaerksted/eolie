@@ -189,6 +189,7 @@ class ToolbarEnd(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         builder.connect_signals(self)
+        widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
         parsed = urlparse(webview.get_uri())
         if parsed.scheme not in ["http", "https"]:
@@ -199,10 +200,26 @@ class ToolbarEnd(Gtk.Bin):
             current = 100
         builder.get_object("default_zoom_button").set_label(
                                                         "{} %".format(current))
-        popover.add(builder.get_object("widget"))
+        popover.add(widget)
         exceptions = builder.get_object("exceptions")
         popover.add(exceptions)
         popover.child_set_property(exceptions, "submenu", "exceptions")
+        # Merge appmenu, we assume we only have one level (section -> items)
+        if not El().prefers_app_menu():
+            separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
+            separator.show()
+            widget.add(separator)
+            menu = El().get_app_menu()
+            for i in range(0, menu.get_n_items()):
+                section = menu.get_item_link(i, "section")
+                for y in range(0, section.get_n_items()):
+                    label = section.get_item_attribute_value(y, "label")
+                    action = section.get_item_attribute_value(y, "action")
+                    item = Gtk.ModelButton.new()
+                    item.set_property("text", label.get_string())
+                    item.set_action_name(action.get_string())
+                    item.show()
+                    widget.add(item)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
         self.__window.toolbar.title.set_lock_focus(True)

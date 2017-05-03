@@ -95,102 +95,35 @@ class Application(Gtk.Application):
             Gdk.notify_startup_complete()
         self.__listen_to_gnome_sm()
 
-    def init(self):
+    def get_app_menu(self):
         """
-            Init main application
+            Setup application menu
+            @return menu as Gio.Menu
         """
-        self.__setup_app_menu()
-        self.set_app_menu(self.__menu)
-        cssProviderFile = Gio.File.new_for_uri(
-                'resource:///org/gnome/Eolie/application.css')
-        cssProvider = Gtk.CssProvider()
-        cssProvider.load_from_file(cssProviderFile)
-        screen = Gdk.Screen.get_default()
-        styleContext = Gtk.StyleContext()
-        styleContext.add_provider_for_screen(screen, cssProvider,
-                                             Gtk.STYLE_PROVIDER_PRIORITY_USER)
-        self.settings = Settings.new()
-        self.history = DatabaseHistory()
-        self.bookmarks = DatabaseBookmarks()
-        # We store cursors for main thread
-        SqlCursor.add(self.history)
-        SqlCursor.add(self.bookmarks)
-        try:
-            from eolie.mozilla_sync import SyncWorker
-            self.sync_worker = SyncWorker()
-            self.sync_worker.sync()
-            GLib.timeout_add_seconds(3600,
-                                     self.sync_worker.sync)
-        except Exception as e:
-            print("Application::init():", e)
-            self.sync_worker = None
-        self.adblock = DatabaseAdblock()
-        self.adblock.update()
-        self.pishing = DatabasePishing()
-        self.pishing.update()
-        self.art = Art()
-        self.search = Search()
-        self.download_manager = DownloadManager()
+        builder = Gtk.Builder()
+        builder.add_from_resource('/org/gnome/Eolie/Appmenu.ui')
+        menu = builder.get_object('app-menu')
 
-        shortcut_action = Gio.SimpleAction.new('shortcut',
-                                               GLib.VariantType.new('s'))
-        shortcut_action.connect('activate', self.__on_shortcut_action)
-        self.add_action(shortcut_action)
-        self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
-        self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
-        self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
-        self.set_accels_for_action("win.shortcut::last_page",
-                                   ["<Control><Shift>t"])
-        self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
-        self.set_accels_for_action("win.shortcut::private",
-                                   ["<Control><Shift>p"])
-        self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
-        self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
-        self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
-        self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
-        self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
-        self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
-        self.set_accels_for_action("app.settings",
-                                   ["<Control><Shift>s"])
-        self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
-        self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
-        self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
-        self.set_accels_for_action("win.shortcut::previous",
-                                   ["<Control><Shift>Tab"])
-        self.set_accels_for_action("win.shortcut::zoom_in",
-                                   ["<Control>KP_Add", "<Control>plus"])
-        self.set_accels_for_action("win.shortcut::zoom_out",
-                                   ["<Control>KP_Subtract", "<Control>minus"])
-        self.set_accels_for_action("win.panel_mode(0)",
-                                   ["<Control><Alt>0", "<Control><Alt>KP_0"])
-        self.set_accels_for_action("win.panel_mode(1)",
-                                   ["<Control><Alt>1", "<Control><Alt>KP_1"])
-        self.set_accels_for_action("win.panel_mode(2)",
-                                   ["<Control><Alt>2", "<Control><Alt>KP_2"])
+        settings_action = Gio.SimpleAction.new('settings', None)
+        settings_action.connect('activate', self.__on_settings_activate)
+        self.add_action(settings_action)
 
-        # Set some WebKit defaults
-        context = WebKit2.WebContext.get_default()
-        Context(context)
-        GLib.setenv('PYTHONPATH', self.__extension_dir, True)
-        context.set_web_extensions_directory(self.__extension_dir)
+        about_action = Gio.SimpleAction.new('about', None)
+        about_action.connect('activate', self.__on_about_activate)
+        self.add_action(about_action)
 
-        data_manager = WebKit2.WebsiteDataManager()
-        context.new_with_website_data_manager(data_manager)
-        context.set_process_model(
-                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
-        context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
-        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
-        if not d.query_exists():
-            d.make_directory_with_parents()
-        context.set_favicon_database_directory(self.__FAVICONS_PATH)
-        cookie_manager = context.get_cookie_manager()
-        cookie_manager.set_accept_policy(
-                                     self.settings.get_enum("cookie-storage"))
-        cookie_manager.set_persistent_storage(
-                                        self.__COOKIES_PATH,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
-        helper = DBusHelper()
-        helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
+        shortcuts_action = Gio.SimpleAction.new('shortcuts', None)
+        shortcuts_action.connect('activate', self.__on_shortcuts_activate)
+        self.add_action(shortcuts_action)
+
+        help_action = Gio.SimpleAction.new('help', None)
+        help_action.connect('activate', self.__on_help_activate)
+        self.add_action(help_action)
+
+        quit_action = Gio.SimpleAction.new('quit', None)
+        quit_action.connect('activate', lambda x, y: self.quit())
+        self.add_action(quit_action)
+        return menu
 
     def do_startup(self):
         """
@@ -199,7 +132,7 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
 
         if not self.__windows:
-            self.init()
+            self.__init()
             self.__get_new_window()
 
     def set_setting(self, key, value):
@@ -293,6 +226,104 @@ class Application(Gtk.Application):
 #######################
 # PRIVATE             #
 #######################
+    def __init(self):
+        """
+            Init main application
+        """
+        if self.prefers_app_menu():
+            menu = self.get_app_menu()
+            self.set_app_menu(menu)
+        cssProviderFile = Gio.File.new_for_uri(
+                'resource:///org/gnome/Eolie/application.css')
+        cssProvider = Gtk.CssProvider()
+        cssProvider.load_from_file(cssProviderFile)
+        screen = Gdk.Screen.get_default()
+        styleContext = Gtk.StyleContext()
+        styleContext.add_provider_for_screen(screen, cssProvider,
+                                             Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        self.settings = Settings.new()
+        self.history = DatabaseHistory()
+        self.bookmarks = DatabaseBookmarks()
+        # We store cursors for main thread
+        SqlCursor.add(self.history)
+        SqlCursor.add(self.bookmarks)
+        try:
+            from eolie.mozilla_sync import SyncWorker
+            self.sync_worker = SyncWorker()
+            self.sync_worker.sync()
+            GLib.timeout_add_seconds(3600,
+                                     self.sync_worker.sync)
+        except Exception as e:
+            print("Application::init():", e)
+            self.sync_worker = None
+        self.adblock = DatabaseAdblock()
+        self.adblock.update()
+        self.pishing = DatabasePishing()
+        self.pishing.update()
+        self.art = Art()
+        self.search = Search()
+        self.download_manager = DownloadManager()
+
+        shortcut_action = Gio.SimpleAction.new('shortcut',
+                                               GLib.VariantType.new('s'))
+        shortcut_action.connect('activate', self.__on_shortcut_action)
+        self.add_action(shortcut_action)
+        self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
+        self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
+        self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
+        self.set_accels_for_action("win.shortcut::last_page",
+                                   ["<Control><Shift>t"])
+        self.set_accels_for_action("app.shortcut::new_window", ["<Control>n"])
+        self.set_accels_for_action("win.shortcut::private",
+                                   ["<Control><Shift>p"])
+        self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
+        self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
+        self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
+        self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
+        self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
+        self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
+        self.set_accels_for_action("app.settings",
+                                   ["<Control><Shift>s"])
+        self.set_accels_for_action("win.shortcut::backward", ["<Alt>Left"])
+        self.set_accels_for_action("win.shortcut::forward", ["<Alt>Right"])
+        self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
+        self.set_accels_for_action("win.shortcut::previous",
+                                   ["<Control><Shift>Tab"])
+        self.set_accels_for_action("win.shortcut::zoom_in",
+                                   ["<Control>KP_Add", "<Control>plus"])
+        self.set_accels_for_action("win.shortcut::zoom_out",
+                                   ["<Control>KP_Subtract", "<Control>minus"])
+        self.set_accels_for_action("win.panel_mode(0)",
+                                   ["<Control><Alt>0", "<Control><Alt>KP_0"])
+        self.set_accels_for_action("win.panel_mode(1)",
+                                   ["<Control><Alt>1", "<Control><Alt>KP_1"])
+        self.set_accels_for_action("win.panel_mode(2)",
+                                   ["<Control><Alt>2", "<Control><Alt>KP_2"])
+
+        # Set some WebKit defaults
+        context = WebKit2.WebContext.get_default()
+        Context(context)
+        GLib.setenv('PYTHONPATH', self.__extension_dir, True)
+        context.set_web_extensions_directory(self.__extension_dir)
+
+        data_manager = WebKit2.WebsiteDataManager()
+        context.new_with_website_data_manager(data_manager)
+        context.set_process_model(
+                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
+        context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
+        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
+        if not d.query_exists():
+            d.make_directory_with_parents()
+        context.set_favicon_database_directory(self.__FAVICONS_PATH)
+        cookie_manager = context.get_cookie_manager()
+        cookie_manager.set_accept_policy(
+                                     self.settings.get_enum("cookie-storage"))
+        cookie_manager.set_persistent_storage(
+                                        self.__COOKIES_PATH,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
+        helper = DBusHelper()
+        helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
+
     def __listen_to_gnome_sm(self):
         """
             Save state on EndSession signal
@@ -520,35 +551,6 @@ class Application(Gtk.Application):
             @param response id as int
         """
         dialog.destroy()
-
-    def __setup_app_menu(self):
-        """
-            Setup application menu
-            @return menu as Gio.Menu
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/Appmenu.ui')
-        self.__menu = builder.get_object('app-menu')
-
-        settings_action = Gio.SimpleAction.new('settings', None)
-        settings_action.connect('activate', self.__on_settings_activate)
-        self.add_action(settings_action)
-
-        about_action = Gio.SimpleAction.new('about', None)
-        about_action.connect('activate', self.__on_about_activate)
-        self.add_action(about_action)
-
-        shortcuts_action = Gio.SimpleAction.new('shortcuts', None)
-        shortcuts_action.connect('activate', self.__on_shortcuts_activate)
-        self.add_action(shortcuts_action)
-
-        help_action = Gio.SimpleAction.new('help', None)
-        help_action.connect('activate', self.__on_help_activate)
-        self.add_action(help_action)
-
-        quit_action = Gio.SimpleAction.new('quit', None)
-        quit_action.connect('activate', lambda x, y: self.quit())
-        self.add_action(quit_action)
 
     def __on_activate(self, application):
         """
