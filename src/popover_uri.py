@@ -775,7 +775,7 @@ class UriPopover(Gtk.Popover):
             @param [(title, uri)] as [(str, str)]
         """
         if searches:
-            (title, uri) = searches.pop(0)
+            (item_id, title, uri) = searches.pop(0)
             for child in self.__search_box.get_children():
                 if child.item.get_property("uri") == uri:
                     child.item.set_property("search", self.__search)

@@ -342,11 +342,11 @@ class DatabaseHistory:
             Search string in db (uri and title)
             @param search as str
             @param limit as int
-            @return (str, str)
+            @return [(id, title, uri)] as [(int, str, str)]
         """
         with SqlCursor(self) as sql:
             filter = '%' + search + '%'
-            result = sql.execute("SELECT title, uri\
+            result = sql.execute("SELECT rowid, title, uri\
                                   FROM history\
                                   WHERE title LIKE ?\
                                    OR uri LIKE ?\
