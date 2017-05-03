@@ -235,7 +235,8 @@ class WebViewNavigation:
         uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
         parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "populars", "accept"]:
+        if parsed.scheme not in ["http", "https", "about",
+                                 "populars", "accept"]:
             try:
                 Gtk.show_uri(None, uri, int(time()))
             except Exception as e:
