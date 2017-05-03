@@ -38,7 +38,9 @@ class WebView(WebKit2.WebView):
         """
             New ephemeral webview
         """
+        from eolie.context import Context
         context = WebKit2.WebContext.new_ephemeral()
+        Context(context)
         view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta
         view.__init()

@@ -98,7 +98,7 @@ class WebViewErrors:
         network_available = Gio.NetworkMonitor.get_default(
                                                       ).get_network_available()
         # Ignore HTTP errors
-        if error.code > 100:
+        if error.code > 101:
             return False
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
