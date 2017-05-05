@@ -17,6 +17,7 @@ El = Gio.Application.get_default
 PROXY_BUS = 'org.gnome.Eolie.Proxy'
 PROXY_PATH = '/org/gnome/EolieProxy'
 
+FUA = "Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"
 
 # Setup common paths
 if GLib.getenv("XDG_DATA_HOME") is None:

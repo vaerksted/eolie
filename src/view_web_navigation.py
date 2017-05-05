@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.dbus_helper import DBusHelper
-from eolie.define import El, ADBLOCK_JS
+from eolie.define import El, ADBLOCK_JS, FUA
 from eolie.utils import get_ftp_cmd
 
 
@@ -40,6 +40,8 @@ class WebViewNavigation:
         args = gsignals[signal]
         GObject.signal_new(signal, WebKit2.WebView,
                            args[0], args[1], args[2])
+
+    __FUA_FIX = "outlook.live.com"
 
     def __init__(self):
         """
@@ -128,6 +130,15 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
+    def __update_user_agent(self, netloc):
+        """
+            Update user agent for some sites
+            @param netloc as str
+        """
+        if netloc in self.__FUA_FIX:
+            settings = self.get_settings()
+            settings.set_property("user-agent", FUA)
+
     def __get_forms(self, page_id, request):
         """
             Read request for authentification
@@ -301,6 +312,7 @@ class WebViewNavigation:
             self.emit("uri-changed", uri)
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
+            self.__update_user_agent(parsed.netloc)
             if El().pishing.is_pishing(uri):
                 self._show_pishing_error(uri)
             else:
