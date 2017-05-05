@@ -55,7 +55,8 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__spinner = builder.get_object("spinner")
         self.__title.set_label("Empty page")
         self.add(builder.get_object("widget"))
-        view.webview.connect("notify::favicon", self.__on_notify_favicon)
+        view.webview.connect("notify::favicon",
+                             lambda x, y: self.__set_favicon())
         view.webview.connect("scroll-event", self.__on_scroll_event)
         view.webview.connect("uri-changed", self.__on_uri_changed)
         view.webview.connect("title-changed", self.__on_title_changed)
@@ -354,14 +355,6 @@ class SidebarChild(Gtk.ListBoxRow):
         except:
             pass
         self.__start_uri = None
-
-    def __on_notify_favicon(self, view, pointer):
-        """
-            Set favicon
-            @param view as WebView
-            @param pointer as GParamPointer
-        """
-        self.__set_favicon()
 
     def __on_drag_begin(self, widget, context):
         """
