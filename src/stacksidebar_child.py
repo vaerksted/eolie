@@ -255,7 +255,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                            self.get_allocated_width() -
                                            ArtSize.PREVIEW_WIDTH_MARGIN,
                                            ArtSize.PREVIEW_HEIGHT)
-            if preview is not None:
+            if preview is None:
                 self.__image.clear()
             else:
                 self.__image.set_from_surface(preview)
