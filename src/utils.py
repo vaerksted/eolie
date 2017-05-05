@@ -125,23 +125,3 @@ def debug(str):
     """
     if El().debug is True:
         print(str)
-
-
-def strip_uri(uri, prefix=True, suffix=True):
-    """
-        Clean up uri
-        @param uri as str
-        @param prefix as bool
-        @param suffix as bool
-        @return str
-    """
-    parsed = urlparse(uri)
-    if prefix and suffix:
-        new_uri = "%s://%s%s" % (parsed.scheme, parsed.netloc, parsed.path)
-    elif prefix:
-        new_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-    elif suffix:
-        new_uri = "%s%s" % (parsed.netloc, parsed.path)
-    else:
-        new_uri = parsed.netloc
-    return new_uri.rstrip('/')

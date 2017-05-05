@@ -14,8 +14,8 @@ from gi.repository import Gdk, GdkPixbuf, Gio, GLib
 
 from hashlib import sha256
 from time import time
+from urllib.parse import urlparse
 
-from eolie.utils import strip_uri
 from eolie.define import CACHE_PATH
 
 
@@ -71,7 +71,10 @@ class Art:
             Return cache image path
             @return str
         """
-        strip = strip_uri(uri, False, True)
+        parsed = urlparse(uri)
+        # Remove scheme
+        strip = uri.replace("%s://" % parsed.scheme, "")
+        # Remove www
         strip = strip.replace("www.", "")
         encoded = sha256(strip.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (CACHE_PATH, encoded, suffix)
