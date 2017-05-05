@@ -299,7 +299,6 @@ class WebViewNavigation:
                 popup.destroy()
             El().download_manager.remove_video_for_page(view.get_page_id())
             self.emit("uri-changed", uri)
-            self.__popup_exception = None
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             if El().pishing.is_pishing(uri):
@@ -314,7 +313,7 @@ class WebViewNavigation:
                 self.set_setting("auto-load-images",
                                  not imgblock or exception)
                 self.update_zoom_level()
-        elif event == WebKit2.LoadEvent.FINISHED:
+            # Js adblocker
             if El().settings.get_value("adblock"):
                 exception = El().adblock_exceptions.find(
                                         parsed.netloc) or\
@@ -339,3 +338,5 @@ class WebViewNavigation:
                         js = content.decode("utf-8")
                         self.run_javascript(js, None, None)
                         break
+        elif event == WebKit2.LoadEvent.FINISHED:
+            pass
