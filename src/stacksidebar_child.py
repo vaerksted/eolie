@@ -256,6 +256,8 @@ class SidebarChild(Gtk.ListBoxRow):
                                            ArtSize.PREVIEW_WIDTH_MARGIN,
                                            ArtSize.PREVIEW_HEIGHT)
             if preview is not None:
+                self.__image.clear()
+            else:
                 self.__image.set_from_surface(preview)
                 del preview
         self.__set_favicon()
