@@ -349,7 +349,6 @@ class WebViewNavigation:
                         (status, content, tag) = f.load_contents(None)
                         js = content.decode("utf-8")
                         self.run_javascript(js, None, None)
-                        print(js)
                         break
         elif event == WebKit2.LoadEvent.FINISHED:
             pass
