@@ -191,6 +191,7 @@ class WebView(WebKit2.WebView):
                                   El().settings.get_value(
                                     "font-serif").get_string())
         settings.set_property("auto-load-images", True)
+        settings.set_property("enable-site-specific-quirks", False)
         settings.set_property("allow-universal-access-from-file-urls", False)
         settings.set_property("allow-file-access-from-file-urls", False)
         settings.set_property("enable-javascript", True)
