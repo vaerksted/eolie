@@ -298,7 +298,8 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         if self.__scroll_timeout_id is not None:
             GLib.source_remove(self.__scroll_timeout_id)
-        self.__scroll_timeout_id = GLib.timeout_add(
+        if not self.view.is_loading():
+            self.__scroll_timeout_id = GLib.timeout_add(
                                                 1000,
                                                 self.__set_snapshot_timeout)
 
