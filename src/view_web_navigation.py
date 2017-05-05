@@ -135,7 +135,7 @@ class WebViewNavigation:
             Update user agent for some sites
             @param netloc as str
         """
-        if netloc in self.__FUA_FIX:
+        if netloc and netloc in self.__FUA_FIX:
             settings = self.get_settings()
             settings.set_property("user-agent", FUA)
 
