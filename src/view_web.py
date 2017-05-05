@@ -69,7 +69,6 @@ class WebView(WebKit2.WebView):
             self.__set_system_fonts(settings)
         else:
             settings.set_property(key, value)
-        self.set_settings(settings)
 
     def update_zoom_level(self):
         """
@@ -209,7 +208,6 @@ class WebView(WebKit2.WebView):
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
         settings.set_property("media-playback-allows-inline", True)
-        self.set_settings(settings)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("button-release-event", self.__on_button_release_event)
@@ -239,7 +237,6 @@ class WebView(WebKit2.WebView):
         settings = self.get_settings()
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
-        self.set_settings(settings)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """
