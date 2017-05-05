@@ -589,7 +589,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "channel-secure-symbolic")
-        elif parsed.scheme == "http":
+        else:
             self.set_insecure_content()
 
     def __search_keywords_thread(self, value):
