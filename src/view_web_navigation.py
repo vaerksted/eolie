@@ -305,6 +305,7 @@ class WebViewNavigation:
         uri = view.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self._error = None
             # Destroy current popups
             for popup in self.__popups:
                 popup.destroy()

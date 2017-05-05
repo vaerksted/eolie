@@ -14,8 +14,6 @@ from gi.repository import GLib, Gio
 
 from gettext import gettext as _
 
-from eolie.define import El
-
 
 class WebViewErrors:
     """
@@ -27,6 +25,7 @@ class WebViewErrors:
             Init errors
         """
         self.__bad_tls = None  # Keep invalid TLS certificate
+        self._error = None
         self.connect("load-failed", self.__on_load_failed)
         self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
         self.connect("web-process-crashed", self.__on_web_process_crashed)
@@ -43,6 +42,14 @@ class WebViewErrors:
             Get invalid certificate
         """
         return self.__bad_tls
+
+    @property
+    def error(self):
+        """
+            Get current error
+            @return GLib.Error or None
+        """
+        return self._error
 
 #######################
 # PROTECTED           #
@@ -95,6 +102,7 @@ class WebViewErrors:
             @param uri as str
             @param error as GLib.Error
         """
+        self.__error = error
         network_available = Gio.NetworkMonitor.get_default(
                                                       ).get_network_available()
         # Ignore HTTP errors
@@ -132,16 +140,7 @@ class WebViewErrors:
                        "suggested-action",
                        _("Retry"))
         self.load_html(html, None)
-        if network_available:
-            # Remove preview and start as should be wrong
-            for suffix in ["preview", "start"]:
-                path = El().art.get_path(uri, suffix)
-                f = Gio.File.new_for_path(path)
-                try:
-                    f.delete()
-                except:
-                    pass
-        else:
+        if not network_available:
             GLib.timeout_add(1000, self.__check_for_network, uri)
         return True
 
@@ -199,4 +198,5 @@ class WebViewErrors:
             We just crashed :-(
             @param view as WebKit2.WebView
         """
+        self._error = GLib.Error()
         print("WebViewErrors::__on_web_process_crashed():", view)

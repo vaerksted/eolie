@@ -316,6 +316,9 @@ class SidebarChild(Gtk.ListBoxRow):
         # We are filtered
         if self.get_allocated_width() == 1:
             return
+        # Do not cache snapshot on error
+        if self.__view.webview.error is not None:
+            save = False
         try:
             snapshot = view.get_snapshot_finish(result)
             factor = self.get_allocated_width() /\
