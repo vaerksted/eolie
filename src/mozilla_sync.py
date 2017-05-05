@@ -67,13 +67,13 @@ class SyncWorker(GObject.GObject):
         """
         if self.syncing or\
                 not Gio.NetworkMonitor.get_default().get_network_available():
-            return True
+            return
         self.__username = ""
         self.__password = ""
         self.__stop = False
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret, first_sync, False)
-        return True
+        return
 
     def push_history(self, history_ids):
         """
