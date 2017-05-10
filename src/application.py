@@ -245,15 +245,7 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
-        try:
-            from eolie.mozilla_sync import SyncWorker
-            self.sync_worker = SyncWorker()
-            self.sync_worker.sync()
-            GLib.timeout_add_seconds(3600,
-                                     self.sync_worker.sync)
-        except Exception as e:
-            print("Application::init():", e)
-            self.sync_worker = None
+        self.sync_worker = None
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.pishing = DatabasePishing()
@@ -326,6 +318,20 @@ class Application(Gtk.Application):
                                         WebKit2.CookiePersistentStorage.SQLITE)
         helper = DBusHelper()
         helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
+
+    def __start_sync_worker(self):
+        """
+            Start sync worker
+        """
+        try:
+            from eolie.mozilla_sync import SyncWorker
+            self.sync_worker = SyncWorker()
+            self.sync_worker.sync()
+            GLib.timeout_add_seconds(3600,
+                                     self.sync_worker.sync)
+        except Exception as e:
+            print("Application::init():", e)
+            self.__sync_worker = None
 
     def __listen_to_gnome_sm(self):
         """
@@ -470,6 +476,7 @@ class Application(Gtk.Application):
                 active_window.container.add_web_view(self.start_page, True,
                                                      private_browsing)
         GLib.idle_add(self.__show_plugins)
+        GLib.idle_add(self.__start_sync_worker)
         return 0
 
     def __on_get_plugins(self, source, result, data):
