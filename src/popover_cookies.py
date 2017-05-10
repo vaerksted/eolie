@@ -47,8 +47,8 @@ class Row(Gtk.ListBoxRow):
         host.set_ellipsize(Pango.EllipsizeMode.END)
         host.set_property("halign", Gtk.Align.START)
         host.set_hexpand(True)
-        host.set_property('has-tooltip', True)
-        host.connect('query-tooltip', self.__on_query_tooltip)
+        host.set_property("has-tooltip", True)
+        host.connect("query-tooltip", self.__on_query_tooltip)
         host.set_max_width_chars(40)
         host.show()
         delete_button = Gtk.Button.new_from_icon_name(
@@ -94,7 +94,7 @@ class Row(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        text = ''
+        text = ""
         layout = widget.get_layout()
         label = widget.get_text()
         if layout.is_ellipsized():

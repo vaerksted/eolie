@@ -76,6 +76,9 @@ class SidebarChild(Gtk.ListBoxRow):
         self.connect("drag-motion", self.__on_drag_motion)
         self.connect("drag-leave", self.__on_drag_leave)
 
+        self.set_property("has-tooltip", True)
+        self.connect("query-tooltip", self.__on_query_tooltip)
+
     @property
     def view(self):
         """
@@ -445,3 +448,24 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.get_style_context().remove_class("drag-up")
         self.get_style_context().remove_class("drag-down")
+
+    def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
+        """
+            Show tooltip if needed
+            @param widget as Gtk.Widget
+            @param x as int
+            @param y as int
+            @param keyboard as bool
+            @param tooltip as Gtk.Tooltip
+        """
+        text = ""
+        layout = self.__title.get_layout()
+        label = self.__title.get_text()
+        if layout.is_ellipsized():
+            uri = self.__view.webview.get_uri()
+            # GLib.markup_escape_text
+            if uri is None:
+                text = "<b>%s</b>" % label
+            else:
+                text = "<b>%s</b>\n%s" % (label, uri)
+        widget.set_tooltip_markup(text)
