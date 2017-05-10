@@ -76,6 +76,8 @@ class Art:
         strip = uri.replace("%s://" % parsed.scheme, "")
         # Remove www
         strip = strip.replace("www.", "")
+        # Remove last /
+        strip = strip.rstrip("/")
         encoded = sha256(strip.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (CACHE_PATH, encoded, suffix)
         return filepath
