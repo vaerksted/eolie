@@ -331,6 +331,8 @@ class Row(Gtk.ListBoxRow):
             El().bookmarks.set_more_popular(uri)
         else:
             self.emit("activate")
+            # We force focus to stay on title entry
+            GLib.idle_add(self.__window.toolbar.title.focus_entry)
 
     def __on_edit_clicked(self, button):
         """
