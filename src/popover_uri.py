@@ -603,12 +603,19 @@ class UriPopover(Gtk.Popover):
 
     def _on_row_selected(self, listbox, row):
         """
+            Update titlebar
             Scroll to row
             @param listbox as Gtk.ListBox
             @param row as Row
         """
         if row is None:
             return
+        # Update titlebar
+        uri = row.item.get_property("uri")
+        if not uri:
+            uri = self.__window.toolbar.title.uri
+        self.__window.toolbar.title.set_text_entry(uri)
+        # Scroll to row
         scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
         if scrolled is None:
             return

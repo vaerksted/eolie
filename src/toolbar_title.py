@@ -98,7 +98,7 @@ class ToolbarTitle(Gtk.Bin):
     def set_text_entry(self, uri):
         """
             Set uri in Gtk.Entry
-            @param uri as str
+            @param uri as str/None. If None, use current uri
         """
         if self.__entry.get_text() == uri:
             return
@@ -110,6 +110,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
         self.__entry.set_text(uri)
+        self.__entry.set_position(-1)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
@@ -270,6 +271,14 @@ class ToolbarTitle(Gtk.Bin):
             self.__popup_indicator.show()
         else:
             self.__popup_indicator.hide()
+
+    @property
+    def uri(self):
+        """
+            Get current uri
+            @return str
+        """
+        return self.__uri
 
     @property
     def lock_focus(self):
