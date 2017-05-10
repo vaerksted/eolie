@@ -132,7 +132,10 @@ class WebViewPopover(Gtk.Popover):
             if view.webview == webview:
                 self.__stack.remove(view)
                 break
-        self.__set_button_state()
+        if self.__stack.get_children():
+            self.__set_button_state()
+        else:
+            self.destroy()
 
     def __on_map(self, popover):
         """
