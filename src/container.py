@@ -378,7 +378,9 @@ class Container(Gtk.Overlay):
             # We may lock sqlite and current webview otherwise
             # We use a queue and will commit items when sync is finished
             history_id = El().history.add(title, uri, mtime)
-            if El().sync_worker is None or El().sync_worker.syncing:
+            if El().sync_worker == -1:
+                pass
+            elif El().sync_worker is None or El().sync_worker.syncing:
                 self.__history_queue.append(history_id)
             else:
                 El().sync_worker.push_history([history_id])

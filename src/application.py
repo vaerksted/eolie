@@ -69,6 +69,7 @@ class Application(Gtk.Application):
                 if GLib.file_test(path, GLib.FileTest.EXISTS):
                     GLib.setenv('SSL_CERT_FILE', path, True)
                     break
+        self.__sync_worker = -1  # Not initialised
         self.__extension_dir = extension_dir
         self.__windows = []
         self.__pages_menu = PagesMenu(self)
