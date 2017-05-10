@@ -459,13 +459,11 @@ class SidebarChild(Gtk.ListBoxRow):
             @param tooltip as Gtk.Tooltip
         """
         text = ""
-        layout = self.__title.get_layout()
         label = self.__title.get_text()
-        if layout.is_ellipsized():
-            uri = self.__view.webview.get_uri()
-            # GLib.markup_escape_text
-            if uri is None:
-                text = "<b>%s</b>" % label
-            else:
-                text = "<b>%s</b>\n%s" % (label, uri)
+        uri = self.__view.webview.get_uri()
+        # GLib.markup_escape_text
+        if uri is None:
+            text = "<b>%s</b>" % label
+        else:
+            text = "<b>%s</b>\n%s" % (label, uri)
         widget.set_tooltip_markup(text)
