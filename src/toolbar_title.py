@@ -102,15 +102,17 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__entry.get_text() == uri:
             return
+        if self.__signal_id is not None:
+            self.__entry.disconnect(self.__signal_id)
         # Do not show this in titlebar
         parsed = urlparse(uri)
         if parsed.scheme in ["populars", "about"]:
             self.__entry.set_text("")
-            return
-        if self.__signal_id is not None:
-            self.__entry.disconnect(self.__signal_id)
-        self.__entry.set_text(uri)
-        self.__entry.set_position(-1)
+            self.__placeholder.set_opacity(0.8)
+        else:
+            self.__entry.set_text(uri)
+            self.__entry.set_position(-1)
+            self.__placeholder.set_opacity(0)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
@@ -326,7 +328,6 @@ class ToolbarTitle(Gtk.Bin):
                                                  "edit-copy-symbolic")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                _("Copy address"))
-            self.__placeholder.set_opacity(0)
             self.set_text_entry(self.__uri)
         else:
             self.__set_default_placeholder()
@@ -374,7 +375,6 @@ class ToolbarTitle(Gtk.Bin):
         if webview in self.__text_entry_history.keys():
             value = self.__text_entry_history[webview]
             if value:
-                self.__placeholder.set_opacity(0)
                 self.set_text_entry(value)
         else:
             self.set_text_entry(self.__uri)
