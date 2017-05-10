@@ -96,6 +96,28 @@ class Art:
                 exists = False
         return exists
 
+    def vacuum(self):
+        """
+            Remove artwork older than 1 month
+        """
+        current_time = time()
+        try:
+            d = Gio.File.new_for_path(CACHE_PATH)
+            children = d.enumerate_children("standard::name",
+                                            Gio.FileQueryInfoFlags.NONE,
+                                            None)
+            for child in children:
+                f = children.get_child(child)
+                if child.get_file_type() == Gio.FileType.REGULAR:
+                    info = f.query_info("time::modified",
+                                        Gio.FileQueryInfoFlags.NONE,
+                                        None)
+                    mtime = info.get_attribute_uint64("time::modified")
+                    if current_time - mtime > 2592000:
+                        f.delete()
+        except Exception as e:
+            print("Art::clean():", e)
+
     @property
     def base_uri(self):
         """
@@ -119,5 +141,5 @@ class Art:
         if not d.query_exists():
             try:
                 d.make_directory_with_parents()
-            except:
-                print("Can't create %s" % CACHE_PATH)
+            except Exception as e:
+                print("Art::__create_cache():", e)

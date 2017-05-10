@@ -154,7 +154,7 @@ class Application(Gtk.Application):
             self.sync_worker.stop()
         # Save webpage state
         self.__save_state()
-        # Then vacuum db
+        # Then vacuum db and artwork
         if vacuum:
             thread = Thread(target=self.__vacuum)
             thread.daemon = True
@@ -367,6 +367,7 @@ class Application(Gtk.Application):
                 sql.isolation_level = ""
         except Exception as e:
             print("Application::__vacuum(): ", e)
+        self.art.vacuum()
         GLib.idle_add(Gio.Application.quit, self)
 
     def __save_state(self):
@@ -491,9 +492,12 @@ class Application(Gtk.Application):
             @param event as Gdk.Event
         """
         self.__windows.remove(window)
-        window.destroy()
-        if not self.__windows:
+        if self.__windows:
+            window.destroy()
+        else:
+            window.hide()
             self.quit(True)
+        return True
 
     def __on_settings_activate(self, action, param):
         """
