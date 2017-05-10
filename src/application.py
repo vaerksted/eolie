@@ -320,9 +320,21 @@ class Application(Gtk.Application):
         helper = DBusHelper()
         helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
 
+    def __init_delayed(self):
+        """
+            Init delayed for startup speed reasons
+        """
+        thread = Thread(target=self.__start_sync_worker)
+        thread.daemon = True
+        thread.start()
+        thread = Thread(target=self.__show_plugins)
+        thread.daemon = True
+        thread.start()
+
     def __start_sync_worker(self):
         """
             Start sync worker
+            @thread safe
         """
         try:
             from eolie.mozilla_sync import SyncWorker
@@ -476,8 +488,7 @@ class Application(Gtk.Application):
             else:
                 active_window.container.add_web_view(self.start_page, True,
                                                      private_browsing)
-        GLib.idle_add(self.__show_plugins)
-        GLib.idle_add(self.__start_sync_worker)
+        GLib.timeout_add(1000, self.__init_delayed)
         return 0
 
     def __on_get_plugins(self, source, result, data):
