@@ -95,24 +95,25 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.set_property("width_request", width)
 
-    def set_text_entry(self, uri):
+    def set_text_entry(self, text):
         """
             Set uri in Gtk.Entry
-            @param uri as str/None. If None, use current uri
+            @param text as str
         """
-        if self.__entry.get_text() == uri:
+        if self.__entry.get_text() == text:
             return
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
         # Do not show this in titlebar
-        parsed = urlparse(uri)
+        parsed = urlparse(text)
         if parsed.scheme in ["populars", "about"]:
-            self.__entry.set_text("")
-            self.__placeholder.set_opacity(0.8)
-        else:
-            self.__entry.set_text(uri)
-            self.__entry.set_position(-1)
+            text = ""
+        self.__entry.set_text(text)
+        self.__entry.set_position(-1)
+        if text:
             self.__placeholder.set_opacity(0)
+        else:
+            self.__placeholder.set_opacity(1)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
