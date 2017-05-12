@@ -250,30 +250,35 @@ class Container(Gtk.Overlay):
 
     def __on_ready_to_show(self, webview, related, navigation_action):
         """
-            Add view to window
+            Add a new webview with related
             @param webview as WebView
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        elapsed = time() - related.last_click_time
-        # Block popups, see WebView::set_popup_exception() for details
-        popup_block = El().settings.get_value("popupblock")
-        parsed_related = urlparse(related.get_uri())
-        exception = \
-            El().popup_exceptions.find(parsed_related.netloc) or\
-            El().popup_exceptions.find(parsed_related.netloc +
-                                       parsed_related.path) or\
-            (not related.is_loading() and elapsed < 0.5)
-        if not exception and popup_block and\
-                navigation_action.get_navigation_type() in [
-                               WebKit2.NavigationType.OTHER,
-                               WebKit2.NavigationType.RELOAD,
-                               WebKit2.NavigationType.BACK_FORWARD]:
-            related.add_popup(webview)
-            if related == self.current.webview:
-                self.__window.toolbar.title.show_popup_indicator(True)
-            return
-        self.popup_view(webview)
+        properties = webview.get_window_properties()
+        if properties.get_locationbar_visible() and\
+                properties.get_toolbar_visible():
+            self.add_web_view(None, True, webview.private, None, webview)
+        else:
+            elapsed = time() - related.last_click_time
+            # Block popups, see WebView::set_popup_exception() for details
+            popup_block = El().settings.get_value("popupblock")
+            parsed_related = urlparse(related.get_uri())
+            exception = \
+                El().popup_exceptions.find(parsed_related.netloc) or\
+                El().popup_exceptions.find(parsed_related.netloc +
+                                           parsed_related.path) or\
+                (not related.is_loading() and elapsed < 0.5)
+            if not exception and popup_block and\
+                    navigation_action.get_navigation_type() in [
+                                   WebKit2.NavigationType.OTHER,
+                                   WebKit2.NavigationType.RELOAD,
+                                   WebKit2.NavigationType.BACK_FORWARD]:
+                related.add_popup(webview)
+                if related == self.current.webview:
+                    self.__window.toolbar.title.show_popup_indicator(True)
+                return
+            self.popup_view(webview)
 
     def __on_readable(self, webview):
         """
