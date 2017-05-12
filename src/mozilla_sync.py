@@ -22,7 +22,7 @@ import hmac
 import base64
 import math
 import requests
-from time import time
+from time import time, sleep
 from Crypto.Cipher import AES
 from Crypto import Random
 from requests_hawk import HawkAuth
@@ -182,6 +182,7 @@ class SyncWorker(GObject.GObject):
         try:
             bulk_keys = self.__get_session_bulk_keys()
             for history_id in history_ids:
+                sleep(0.01)
                 record = {}
                 atimes = El().history.get_atimes(history_id)
                 guid = El().history.get_guid(history_id)
@@ -296,6 +297,7 @@ class SyncWorker(GObject.GObject):
                                                    self.__mtimes["bookmarks"]):
             if self.__stop:
                 raise("Cancelled")
+            sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
             if parent_guid is None:
@@ -316,6 +318,7 @@ class SyncWorker(GObject.GObject):
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__stop:
                 raise("Cancelled")
+            sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
@@ -382,6 +385,7 @@ class SyncWorker(GObject.GObject):
         for record in records:
             if self.__stop:
                 raise("Cancelled")
+            sleep(0.01)
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
                     bookmark["type"] not in ["folder", "bookmark"]:
@@ -479,6 +483,9 @@ class SyncWorker(GObject.GObject):
         SqlCursor.add(El().history)
         records = self.__client.get_history(bulk_keys)
         for record in records:
+            if self.__stop:
+                raise("Cancelled")
+            sleep(0.01)
             history = record["payload"]
             keys = history.keys()
             # Ignore pages without a title
