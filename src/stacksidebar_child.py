@@ -37,7 +37,6 @@ class SidebarChild(Gtk.ListBoxRow):
         Gtk.ListBoxRow.__init__(self)
         self.__scroll_timeout_id = None
         self.__start_uri = None
-        self.__deny_favicon = False
         self.__view = view
         self.__window = window
         builder = Gtk.Builder()
@@ -196,9 +195,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        if self.__deny_favicon:
-            return
-        elif self.__view.webview.private:
+        if self.__view.webview.private:
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
             return
@@ -265,7 +262,6 @@ class SidebarChild(Gtk.ListBoxRow):
             else:
                 self.__image.set_from_surface(preview)
                 del preview
-        self.__set_favicon()
 
     def __on_title_changed(self, view, title):
         """
@@ -285,15 +281,13 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
-            self.__deny_favicon = True
             self.__start_uri = view.get_uri()
             self.__spinner.start()
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__deny_favicon = False
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__deny_favicon = False
+            self.__set_favicon()
             self.__spinner.stop()
             # If start_uri.netloc != uri.netloc, do not save snapshot
             parsed_start = urlparse(self.__start_uri)
