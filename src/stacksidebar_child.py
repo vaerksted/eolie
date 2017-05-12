@@ -11,7 +11,9 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2, Pango
+
 import cairo
+from urllib.parse import urlparse
 
 from eolie.define import El, ArtSize
 from eolie.utils import resize_favicon, get_favicon_best_uri
@@ -293,7 +295,14 @@ class SidebarChild(Gtk.ListBoxRow):
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__deny_favicon = False
             self.__spinner.stop()
-            GLib.timeout_add(500, self.set_snapshot, True)
+            # If start_uri.netloc != uri.netloc, do not save snapshot
+            parsed_start = urlparse(self.__start_uri)
+            parsed = urlparse(view.get_uri())
+            if parsed.netloc == parsed_start.netloc:
+                GLib.timeout_add(500, self.set_snapshot, True)
+            else:
+                GLib.timeout_add(500, self.set_snapshot, False)
+            self.__start_uri = None
 
     def __on_scroll_event(self, view, event):
         """
@@ -339,12 +348,12 @@ class SidebarChild(Gtk.ListBoxRow):
             if save:
                 El().art.save_artwork(current_uri,
                                       surface, "preview")
+                # We also cache original URI
                 if self.__start_uri is not None and\
                         current_uri != self.__start_uri:
                     El().art.save_artwork(self.__start_uri,
                                           surface, "preview")
-                # Manage start page cache
-                # We also cache original URI (for populars view)
+                # We also cache original URI
                 uris = [current_uri]
                 if self.__start_uri is not None and\
                         self.__start_uri not in uris:
@@ -369,7 +378,6 @@ class SidebarChild(Gtk.ListBoxRow):
             del snapshot
         except:
             pass
-        self.__start_uri = None
 
     def __on_drag_begin(self, widget, context):
         """
