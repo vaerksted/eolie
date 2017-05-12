@@ -471,7 +471,8 @@ class SidebarChild(Gtk.ListBoxRow):
         uri = self.__view.webview.get_uri()
         # GLib.markup_escape_text
         if uri is None:
-            text = "<b>%s</b>" % label
+            text = "<b>%s</b>" % GLib.markup_escape_text(label)
         else:
-            text = "<b>%s</b>\n%s" % (label, uri)
+            text = "<b>%s</b>\n%s" % (GLib.markup_escape_text(label),
+                                      GLib.markup_escape_text(uri))
         widget.set_tooltip_markup(text)
