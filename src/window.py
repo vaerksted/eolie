@@ -69,6 +69,14 @@ class Window(Gtk.ApplicationWindow):
             for view in self.__container.views:
                 view.webview.update_zoom_level()
 
+    def hide(self):
+        """
+            Hide window
+        """
+        self.disconnect_by_func(self.__on_window_state_event)
+        self.disconnect_by_func(self.__on_configure_event)
+        Gtk.ApplicationWindow.hide(self)
+
     @property
     def container(self):
         """
