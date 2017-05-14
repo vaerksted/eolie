@@ -4,11 +4,10 @@
     <file compressed="true">application.css</file>
     <file compressed="true">start.html</file>
     <file compressed="true">end.html</file>
+    <file compressed="true">start_file.html</file>
+    <file compressed="true">end_file.html</file>
     <file compressed="true">error.html</file>
     <file compressed="true">error.css</file>
-    <file compressed="true">dialog-information-symbolic.svg</file>
-    <file compressed="true">dialog-warning-symbolic.svg</file>
-    <file compressed="true">network-offline-symbolic.svg</file>
     <file compressed="true">Readability.js</file>
     <file preprocess="xml-stripblanks">AboutDialog.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>

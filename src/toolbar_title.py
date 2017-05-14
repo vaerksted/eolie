@@ -324,7 +324,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__lock_focus:
             return True
         parsed = urlparse(self.__uri)
-        if parsed.scheme in ["http", "https"]:
+        if parsed.scheme in ["http", "https", "file"]:
             self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                                  "edit-copy-symbolic")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
@@ -352,7 +352,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__update_secure_content_indicator()
             self.__placeholder.set_opacity(0.8)
             parsed = urlparse(self.__uri)
-            if parsed.scheme in ["http", "https"]:
+            if parsed.scheme in ["http", "https", "file"]:
                 self.__entry.get_style_context().add_class('uribar-title')
                 self.set_text_entry("")
             else:
@@ -382,7 +382,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         parsed = urlparse(self.__uri)
-        if parsed.scheme in ["http", "https"]:
+        if parsed.scheme in ["http", "https", "file"]:
             self.__placeholder.set_opacity(0)
         else:
             self.__set_default_placeholder()

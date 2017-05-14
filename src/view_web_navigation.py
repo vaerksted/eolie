@@ -86,7 +86,8 @@ class WebViewNavigation:
             uri = GLib.uri_unescape_string(uri, None)
             self.run_javascript(uri.replace("javascript:", ""), None, None)
             return
-        elif parsed.scheme not in ["http", "https", "populars", "accept"]:
+        elif parsed.scheme not in ["http", "https", "file",
+                                   "populars", "accept"]:
             uri = "http://" + uri
         # Reset bad tls certificate
         elif parsed.scheme != "accept":
@@ -262,7 +263,7 @@ class WebViewNavigation:
         uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
         parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "about",
+        if parsed.scheme not in ["http", "https", "file", "about",
                                  "populars", "accept"]:
             try:
                 Gtk.show_uri(None, uri, int(time()))

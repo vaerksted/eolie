@@ -70,11 +70,11 @@ class WebViewErrors:
         html = content.decode("utf-8")
         title = _("This page is dangerous")
         detail = _("Eolie will not display this page")
-        icon = "dialog-warning-symbolic.svg"
+        icon = "dialog-warning-symbolic"
         html = html % (title,
                        css,
                        "load_uri('%s')" % uri,
-                       "internal:///org/gnome/Eolie/" + icon,
+                       "internal:/%s" % icon,
                        title,
                        _("%s is a pishing page") % uri,
                        detail,
@@ -125,15 +125,15 @@ class WebViewErrors:
                        " to a new address.<br/>"
                        "You may wish to verify that your internet"
                        " connection is working correctly.")
-            icon = "dialog-information-symbolic.svg"
+            icon = "dialog-information-symbolic"
         else:
             title = _("Network not available")
             detail = _("Check your network connection")
-            icon = "network-offline-symbolic.svg"
+            icon = "network-offline-symbolic"
         html = html % (title,
                        css,
                        "load_uri('%s')" % uri,
-                       "internal:///org/gnome/Eolie/" + icon,
+                       "internal:/%s" % icon,
                        title,
                        "<b>%s</b> %s" % (uri, error.message),
                        detail,
@@ -179,8 +179,7 @@ class WebViewErrors:
                        css,
                        "load_uri('%s')" % uri.replace("https://",
                                                       "accept://"),
-                       "internal:///org/gnome/Eolie/"
-                       "dialog-warning-symbolic.svg",
+                       "internal:/dialog-warning-symbolic",
                        _("Connection is not secure"),
                        error,
                        _("This does not look like the real %s.<br/>"

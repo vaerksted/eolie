@@ -296,7 +296,7 @@ class SyncWorker(GObject.GObject):
         for bookmark_id in El().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
             if self.__stop:
-                raise("Cancelled")
+                raise StopIteration("Cancelled")
             sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
@@ -317,7 +317,7 @@ class SyncWorker(GObject.GObject):
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__stop:
-                raise("Cancelled")
+                raise StopIteration("Cancelled")
             sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
@@ -384,7 +384,7 @@ class SyncWorker(GObject.GObject):
             to_delete = El().bookmarks.get_guids()
         for record in records:
             if self.__stop:
-                raise("Cancelled")
+                raise StopIteration("Cancelled")
             sleep(0.01)
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
