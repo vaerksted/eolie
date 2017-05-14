@@ -252,8 +252,24 @@ class WebViewNavigation:
         """
         # Always accept response
         if decision_type == WebKit2.PolicyDecisionType.RESPONSE:
-            mime_type = decision.get_response().props.mime_type
-            if self.can_show_mime_type(mime_type):
+            response = decision.get_response()
+            mime_type = response.props.mime_type
+            uri = response.get_uri()
+            parsed = urlparse(uri)
+            if parsed.scheme == "file":
+                f = Gio.File.new_for_uri(uri)
+                info = f.query_info("standard::type",
+                                    Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
+                                    None)
+                if info.get_file_type() == Gio.FileType.REGULAR:
+                    try:
+                        Gtk.show_uri(None, uri, int(time()))
+                    except Exception as e:
+                        print("WebViewNavigation::__on_decide_policy()", e)
+                    decision.ignore()
+                else:
+                    decision.use()
+            elif self.can_show_mime_type(mime_type):
                 decision.use()
             else:
                 decision.download()
