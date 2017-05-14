@@ -465,7 +465,7 @@ class SyncWorker(GObject.GObject):
                                           False)
         for guid in to_delete:
             if self.__stop:
-                raise("Cancelled")
+                raise StopIteration("Cancelled")
             debug("deleting: %s" % guid)
             bookmark_id = El().bookmarks.get_id_by_guid(guid)
             if bookmark_id is not None:
@@ -484,7 +484,7 @@ class SyncWorker(GObject.GObject):
         records = self.__client.get_history(bulk_keys)
         for record in records:
             if self.__stop:
-                raise("Cancelled")
+                raise StopIteration("Cancelled")
             sleep(0.01)
             history = record["payload"]
             keys = history.keys()
