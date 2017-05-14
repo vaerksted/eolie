@@ -76,8 +76,10 @@ class WebViewNavigation:
             self.__loaded_uri = uri
             return
         parsed = urlparse(uri)
+        if uri.startswith("/"):
+            uri = "file://" + uri
         # We are not a ftp browser, fall back to env
-        if parsed.scheme == "ftp":
+        elif parsed.scheme == "ftp":
             argv = [get_ftp_cmd(), uri, None]
             GLib.spawn_sync(None, argv, None,
                             GLib.SpawnFlags.SEARCH_PATH, None)

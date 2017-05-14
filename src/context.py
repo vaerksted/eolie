@@ -107,36 +107,43 @@ class Context:
             html_start = html_start.replace("@SIZE@", _("Size"))
             html_start = html_start.replace("@LAST_MODIFICATION@",
                                             _("Last modification"))
-            infos = f.enumerate_children(
-                            "standard::name,standard::size,"
-                            "standard::type,time::modified",
-                            Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
-                            None)
-            dirs = {}
-            files = {}
-            for info in infos:
-                name = info.get_name()
-                uri = "%s/%s" % (f.get_path(), name)
-                mtime = info.get_attribute_uint64("time::modified")
-                size = int(info.get_size() / 1024)
-                date_str = datetime.fromtimestamp(mtime).strftime(
+            try:
+                infos = f.enumerate_children(
+                                "standard::name,standard::size,"
+                                "standard::type,time::modified",
+                                Gio.FileQueryInfoFlags.NONE,
+                                None)
+                dirs = {}
+                files = {}
+                for info in infos:
+                    name = info.get_name()
+                    uri = "file://%s/%s" % (f.get_path(), name)
+                    mtime = info.get_attribute_uint64("time::modified")
+                    size = int(info.get_size() / 1024)
+                    date_str = datetime.fromtimestamp(mtime).strftime(
                                                            "%Y-%m-%d %H:%M:%S")
-                if info.get_file_type() == Gio.FileType.DIRECTORY:
-                    dirs[uri] = (name, size, date_str)
-                else:
-                    files[uri] = (name, size, date_str)
-            for uri, (name, size, date_str) in sorted(dirs.items()):
+                    if info.get_file_type() == Gio.FileType.DIRECTORY:
+                        dirs[uri] = (name, size, date_str)
+                    else:
+                        files[uri] = (name, size, date_str)
+                for uri, (name, size, date_str) in sorted(dirs.items()):
+                    html_start += '<tr>'\
+                                  '<td><a class="dir" href="%s">%s</a></td>'\
+                                  '<td>%s KB</td>'\
+                                  '<td>%s</td></tr>' % (
+                                   uri, name, size, date_str)
+                for uri, (name, size, date_str) in sorted(files.items()):
+                    html_start += '<tr>'\
+                                  '<td><a class="file" href="%s">%s</a></td>'\
+                                  '<td>%s KB</td>'\
+                                  '<td>%s</td></tr>' % (
+                                   uri, name, size, date_str)
+            except Exception as e:
+                infos = []
                 html_start += '<tr>'\
-                              '<td><a class="dir" href="%s">%s</a></td>'\
-                              '<td>%s KB</td>'\
-                              '<td>%s</td></tr>' % (
-                               uri, name, size, date_str)
-            for uri, (name, size, date_str) in sorted(files.items()):
-                html_start += '<tr>'\
-                              '<td><a class="file" href="%s">%s</a></td>'\
-                              '<td>%s KB</td>'\
-                              '<td>%s</td></tr>' % (
-                               uri, name, size, date_str)
+                              '<td>%s</td>'\
+                              '<td></td>'\
+                              '<td></td></tr>' % e
             html = html_start.encode("utf-8") + end_content
             stream = Gio.MemoryInputStream.new_from_data(html)
             request.finish(stream, -1, "text/html")
