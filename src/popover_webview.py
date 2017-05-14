@@ -135,7 +135,7 @@ class WebViewPopover(Gtk.Popover):
         if self.__stack.get_children():
             self.__set_button_state()
         else:
-            self.destroy()
+            self.hide()
 
     def __on_map(self, popover):
         """
