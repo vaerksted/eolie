@@ -10,11 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2, GLib
+from gi.repository import Gtk, WebKit2, GLib, Gdk
 
 from urllib.parse import urlparse
 from time import time
 
+from eolie.view_web import WebView
 from eolie.stacksidebar import StackSidebar
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
@@ -50,12 +51,12 @@ class Container(Gtk.Overlay):
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
         self.add_overlay(self.__stack_sidebar)
 
-    def add_web_view(self, uri, show, private=False, parent=None,
+    def add_web_view(self, uri, window_type, private=False, parent=None,
                      webview=None, state=None):
         """
             Add a web view to container
             @param uri as str
-            @param show as bool
+            @param window_type as Gdk.WindowType.CHILD/.OFFSCREEN
             @param parent as View
             @param private as bool
             @param webview as WebView
@@ -66,10 +67,10 @@ class Container(Gtk.Overlay):
             view.webview.restore_session_state(state)
         view.show()
         self.__stack_sidebar.add_child(view)
-        if show:
+        if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)
-        else:
+        elif window_type == Gdk.WindowType.OFFSCREEN:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
@@ -122,7 +123,7 @@ class Container(Gtk.Overlay):
         width = self.__stack_sidebar.get_allocated_width()
         self.__stack.set_margin_start(width)
 
-    def popup_view(self, webview):
+    def popup_webview(self, webview):
         """
             Show webview in popopver
             @param webview as WebView
@@ -212,16 +213,24 @@ class Container(Gtk.Overlay):
         if not self.__window.toolbar.title.lock_focus:
             self.current.webview.grab_focus()
 
-    def __on_new_page(self, webview, uri, show):
+    def __on_new_page(self, webview, uri, window_type):
         """
             Open a new page, switch to view if show is True
             @param webview as WebView
             @param uri as str
-            @param show as bool
+            @param window_type as Gdk.WindowType
         """
         if uri:
-            view = self.__get_view_for_webview(webview)
-            self.add_web_view(uri, show, webview.private, view)
+            if window_type == Gdk.WindowType.SUBSURFACE:
+                if webview.private:
+                    webview = WebView.new_ephemeral()
+                else:
+                    webview = WebView.new()
+                self.popup_webview(webview)
+                GLib.idle_add(webview.load_uri, uri)
+            else:
+                parent = self.__get_view_for_webview(webview)
+                self.add_web_view(uri, window_type, webview.private, parent)
 
     def __on_create(self, related, navigation_action):
         """
@@ -230,7 +239,6 @@ class Container(Gtk.Overlay):
             @param navigation_action as WebKit2.NavigationAction
             @param force as bool
         """
-        from eolie.view_web import WebView
         webview = WebView.new_with_related_view(related)
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
@@ -258,7 +266,8 @@ class Container(Gtk.Overlay):
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
-            self.add_web_view(None, True, webview.private, None, webview)
+            self.add_web_view(None, Gdk.WindowType.CHILD,
+                              True, webview.private, None, webview)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
@@ -278,7 +287,7 @@ class Container(Gtk.Overlay):
                 if related == self.current.webview:
                     self.__window.toolbar.title.show_popup_indicator(True)
                 return
-            self.popup_view(webview)
+            self.popup_webview(webview)
 
     def __on_readable(self, webview):
         """

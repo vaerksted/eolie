@@ -324,7 +324,7 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.current.webview.load_uri(uri)
                 self.__window.toolbar.title.close_popover()
             else:
-                self.__window.container.add_web_view(uri, True)
+                self.__window.container.add_web_view(uri, Gdk.WindowType.CHILD)
                 if event.button == 2:
                     self.__window.toolbar.title.close_popover()
             El().bookmarks.set_access_time(uri, round(time(), 2))

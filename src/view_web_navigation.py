@@ -30,7 +30,7 @@ class WebViewNavigation:
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, bool)),
+        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
                                                                 str)),
@@ -271,7 +271,7 @@ class WebViewNavigation:
             decision.ignore()
         elif mouse_button == 0:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, True)
+                self.emit("new-page", uri, Gdk.WindowType.CHILD)
                 decision.ignore()
                 return True
             else:
@@ -280,19 +280,24 @@ class WebViewNavigation:
         elif mouse_button == 1:
             self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, True)
+                self.emit("new-page", uri, Gdk.WindowType.CHILD)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
-                self.emit("new-page", uri, False)
+                self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
+                decision.ignore()
+                return True
+            elif navigation_action.get_modifiers() &\
+                    Gdk.ModifierType.SHIFT_MASK:
+                self.emit("new-page", uri, Gdk.WindowType.SUBSURFACE)
                 decision.ignore()
                 return True
             else:
                 decision.use()
                 return False
         else:
-            self.emit("new-page", uri, False)
+            self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
             decision.ignore()
             return True
 

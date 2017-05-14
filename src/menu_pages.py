@@ -148,7 +148,7 @@ class PagesMenu(Gio.Menu):
             @param GVariant
         """
         self.__app.active_window.container.add_web_view(self.__app.start_page,
-                                                        True,
+                                                        Gdk.WindowType.CHILD,
                                                         True)
 
     def __on_action_clicked(self, action, variant, data):
@@ -162,5 +162,5 @@ class PagesMenu(Gio.Menu):
         private = data[1]
         state = data[2]
         GLib.idle_add(self.__app.active_window.container.add_web_view,
-                      uri, True, private, None, None, state)
+                      uri, Gdk.WindowType.CHILD, private, None, None, state)
         self.remove_action(uri)

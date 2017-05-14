@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio
+from gi.repository import Gtk, GLib, Gio, Gdk
 
 from eolie.define import El
 from eolie.toolbar import Toolbar
@@ -216,7 +216,7 @@ class Window(Gtk.ApplicationWindow):
         if string == "uri":
             self.toolbar.title.focus_entry()
         elif string == "new_page":
-            self.container.add_web_view(El().start_page, True)
+            self.container.add_web_view(El().start_page, Gdk.WindowType.CHILD)
         elif string == "close_page":
             self.container.sidebar.close_view(self.container.current)
         elif string == "reload":
@@ -239,7 +239,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":
-            self.container.add_web_view(El().start_page, True, True)
+            self.container.add_web_view(El().start_page,
+                                        Gdk.WindowType.CHILD,
+                                        True)
         elif string == "last_page":
             El().pages_menu.activate_last_action()
         elif string == "zoom_in":

@@ -436,9 +436,8 @@ class Application(Gtk.Application):
     def __restore_state(self):
         """
             Restore saved state
-            @return restored pages count as int
         """
-        count = 0
+        window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
                                      self.LOCAL_PATH + "/session_states.bin",
@@ -447,12 +446,11 @@ class Application(Gtk.Application):
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_web_view,
-                              uri, count == 0, private,
+                              uri, window_type, private,
                               None, None, webkit_state)
-                count += 1
+                window_type = Gdk.WindowType.OFFSCREEN
         except Exception as e:
             print("Application::restore_state()", e)
-        return count
 
     def __on_command_line(self, app, app_cmd_line):
         """
@@ -470,24 +468,26 @@ class Application(Gtk.Application):
             self.debug = True
         private_browsing = options.contains("private")
         if self.settings.get_value("remember-session"):
-            count = self.__restore_state()
-        else:
-            count = 0
+            self.__restore_state()
         active_window = self.active_window
+        # Open command line args
         if len(args) > 1:
             for uri in args[1:]:
-                active_window.container.add_web_view(uri, True,
+                active_window.container.add_web_view(uri,
+                                                     Gdk.WindowType.CHILD,
                                                      private_browsing)
             active_window.present()
-        elif count == 0:
-            # We already have a window, open a new one
-            if active_window.container.current:
-                window = self.__get_new_window()
-                window.container.add_web_view(self.start_page, True,
-                                              private_browsing)
-            else:
-                active_window.container.add_web_view(self.start_page, True,
-                                                     private_browsing)
+        # We already have a window, open a new one
+        elif active_window.container.current:
+            window = self.__get_new_window()
+            window.container.add_web_view(self.start_page,
+                                          Gdk.WindowType.CHILD,
+                                          private_browsing)
+        # Add default start page
+        else:
+            active_window.container.add_web_view(self.start_page,
+                                                 Gdk.WindowType.CHILD,
+                                                 private_browsing)
         GLib.timeout_add(1000, self.__init_delayed)
         return 0
 
@@ -595,7 +595,8 @@ class Application(Gtk.Application):
         string = param.get_string()
         if string == "new_window":
             window = self.__get_new_window()
-            window.container.add_web_view(self.start_page, True)
+            window.container.add_web_view(self.start_page,
+                                          Gdk.WindowType.CHILD)
 
     def __on_extension_signal(self, connection, sender, path,
                               interface, signal, params, data):
