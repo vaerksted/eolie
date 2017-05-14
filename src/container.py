@@ -276,7 +276,7 @@ class Container(Gtk.Overlay):
             view = self.__get_view_for_webview(related)
             view = self.__get_new_view(webview, None)
             view.show()
-            self.__add_view(view, Gdk.WindowType.SUBSURFACE)
+            self.__add_view(view, Gdk.WindowType.CHILD)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
