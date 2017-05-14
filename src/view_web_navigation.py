@@ -173,7 +173,7 @@ class WebViewNavigation:
             @param view as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if self.private:
+        if self.ephemeral:
             return
         self.__get_forms(view.get_page_id(), request)
 
@@ -196,7 +196,7 @@ class WebViewNavigation:
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected or self.private:
+            if self.__insecure_content_detected or self.ephemeral:
                 request.deny()
             else:
                 request.allow()

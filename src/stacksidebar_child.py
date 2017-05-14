@@ -47,7 +47,7 @@ class SidebarChild(Gtk.ListBoxRow):
         self.__title = builder.get_object("title")
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
-        if view.webview.private:
+        if view.webview.ephemeral:
             self.__image_close.set_from_icon_name("window-close-symbolic",
                                                   Gtk.IconSize.INVALID)
         else:
@@ -123,7 +123,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         if El().settings.get_value("panel-mode").get_string() != "preview":
             pass
-        elif self.__view.webview.private:
+        elif self.__view.webview.ephemeral:
             self.__image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
@@ -195,7 +195,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        if self.__view.webview.private:
+        if self.__view.webview.ephemeral:
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
             return
@@ -247,7 +247,7 @@ class SidebarChild(Gtk.ListBoxRow):
             @param uri as str
         """
         # We are not filtered and not in private mode
-        if not self.__view.webview.private and\
+        if not self.__view.webview.ephemeral and\
                 El().settings.get_value("panel-mode").get_string() ==\
                 "preview" and\
                 self.get_allocated_width() != 1:

@@ -128,7 +128,7 @@ class WebView(WebKit2.WebView):
         return current
 
     @property
-    def private(self):
+    def ephemeral(self):
         """
             True if view is private/ephemeral
             @return bool

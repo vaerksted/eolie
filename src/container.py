@@ -51,41 +51,25 @@ class Container(Gtk.Overlay):
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
         self.add_overlay(self.__stack_sidebar)
 
-    def add_web_view(self, uri, window_type, private=False, parent=None,
-                     webview=None, state=None):
+    def add_web_view(self, uri, window_type, ephemeral=False,
+                     parent=None, state=None):
         """
             Add a web view to container
             @param uri as str
-            @param window_type as Gdk.WindowType.CHILD/.OFFSCREEN
+            @param window_type as Gdk.WindowType
             @param parent as View
-            @param private as bool
-            @param webview as WebView
+            @param ephemeral as bool
             @param state as WebViewSessionState
         """
-        view = self.__get_new_view(private, parent, webview)
+        webview = View.get_new_webview(ephemeral)
+        view = self.__get_new_view(webview, parent)
         if state is not None:
-            view.webview.restore_session_state(state)
+            webview.restore_session_state(state)
         view.show()
-        self.__stack_sidebar.add_child(view)
-        if window_type == Gdk.WindowType.CHILD:
-            self.__stack.add(view)
-            self.__stack.set_visible_child(view)
-        elif window_type == Gdk.WindowType.OFFSCREEN:
-            # Little hack, we force webview to be shown (offscreen)
-            # This allow getting snapshots from webkit
-            window = Gtk.OffscreenWindow.new()
-            width = self.get_allocated_width() -\
-                self.__stack_sidebar.get_allocated_width()
-            view.set_size_request(width, self.get_allocated_height())
-            window.add(view)
-            window.show()
-            window.remove(view)
-            view.set_size_request(-1, -1)
-            self.__stack.add(view)
-        self.__stack_sidebar.update_visible_child()
+        self.__add_view(view, window_type)
         if uri is not None:
             # Do not load uri until we are on screen
-            view.webview.load_uri(uri)
+            webview.load_uri(uri)
 
     def load_uri(self, uri):
         """
@@ -128,7 +112,7 @@ class Container(Gtk.Overlay):
             Show webview in popopver
             @param webview as WebView
         """
-        view = View(webview.private, None, webview)
+        view = View(webview, None)
         view.webview.connect("create", self.__on_create)
         view.show()
         self.__popover.add_webview(view)
@@ -167,15 +151,38 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __get_new_view(self, private, parent, webview):
+    def __add_view(self, view, window_type):
+        """
+            Add view to container
+            @param view as View
+            @param window_type as Gdk.WindowType
+        """
+        self.__stack_sidebar.add_child(view)
+        if window_type == Gdk.WindowType.CHILD:
+            self.__stack.add(view)
+            self.__stack.set_visible_child(view)
+        elif window_type == Gdk.WindowType.OFFSCREEN:
+            # Little hack, we force webview to be shown (offscreen)
+            # This allow getting snapshots from webkit
+            window = Gtk.OffscreenWindow.new()
+            width = self.get_allocated_width() -\
+                self.__stack_sidebar.get_allocated_width()
+            view.set_size_request(width, self.get_allocated_height())
+            window.add(view)
+            window.show()
+            window.remove(view)
+            view.set_size_request(-1, -1)
+            self.__stack.add(view)
+        self.__stack_sidebar.update_visible_child()
+
+    def __get_new_view(self, webview, parent):
         """
             Get a new view
-            @param private as bool
             @param parent as webview
             @param webview as WebView
             @return View
         """
-        view = View(private, parent, webview)
+        view = View(webview, parent)
         view.webview.connect("map", self.__on_view_map)
         view.webview.connect("notify::estimated-load-progress",
                              self.__on_estimated_load_progress)
@@ -222,7 +229,7 @@ class Container(Gtk.Overlay):
         """
         if uri:
             if window_type == Gdk.WindowType.SUBSURFACE:
-                if webview.private:
+                if webview.ephemeral:
                     webview = WebView.new_ephemeral()
                 else:
                     webview = WebView.new()
@@ -230,7 +237,7 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 parent = self.__get_view_for_webview(webview)
-                self.add_web_view(uri, window_type, webview.private, parent)
+                self.add_web_view(uri, window_type, webview.ephemeral, parent)
 
     def __on_create(self, related, navigation_action):
         """
@@ -266,8 +273,10 @@ class Container(Gtk.Overlay):
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
-            self.add_web_view(None, Gdk.WindowType.CHILD,
-                              True, webview.private, None, webview)
+            view = self.__get_view_for_webview(related)
+            view = self.__get_new_view(webview, None)
+            view.show()
+            self.__add_view(view, Gdk.WindowType.SUBSURFACE)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
@@ -386,7 +395,7 @@ class Container(Gtk.Overlay):
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https"] and\
-                not webview.private:
+                not webview.ephemeral:
             mtime = round(time(), 2)
             # Do not try to add to db if worker is syncing
             # We may lock sqlite and current webview otherwise

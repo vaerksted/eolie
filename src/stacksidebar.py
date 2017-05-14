@@ -106,7 +106,7 @@ class StackSidebar(Gtk.EventBox):
         """
         visible = self.__window.container.current
         for child in self.__listbox.get_children():
-            if child.view.webview.private:
+            if child.view.webview.ephemeral:
                 class_name = "sidebar-item-selected-private"
             else:
                 class_name = "sidebar-item-selected"
@@ -184,7 +184,7 @@ class StackSidebar(Gtk.EventBox):
             return
         El().pages_menu.add_action(view.webview.get_title(),
                                    view.webview.get_uri(),
-                                   view.webview.private,
+                                   view.webview.ephemeral,
                                    view.webview.get_session_state())
         GLib.timeout_add(1000, view.destroy)
         child.destroy()
