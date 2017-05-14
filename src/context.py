@@ -94,7 +94,6 @@ class Context:
         info = f.query_info("standard::type",
                             Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
                             None)
-#        (mime, uncertain) = Gio.content_type_guess(f.get_path(), None)
         if info.get_file_type() == Gio.FileType.DIRECTORY:
             start = Gio.File.new_for_uri(
                                 "resource:///org/gnome/Eolie/start_file.html")
