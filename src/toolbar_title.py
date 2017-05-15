@@ -125,6 +125,7 @@ class ToolbarTitle(Gtk.Bin):
         if uri == self.__uri:
             return
         self.__uri = uri
+        self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
         self.__entry.get_style_context().remove_class('uribar-title')
