@@ -41,7 +41,7 @@ class WebViewNavigation:
         GObject.signal_new(signal, WebKit2.WebView,
                            args[0], args[1], args[2])
 
-    __FUA_FIX = "outlook.live.com"
+    __FUA_FIX = ["outlook.live.com", "login.live.com"]
 
     def __init__(self):
         """
@@ -138,12 +138,13 @@ class WebViewNavigation:
             Update user agent for some sites
             @param netloc as str
         """
-        settings = self.get_settings()
-        if netloc and netloc in self.__FUA_FIX:
-            settings.set_property("user-agent", FUA)
-        else:
-            settings.set_property("user-agent", None)
-        self.set_settings(settings)
+        if netloc:
+            settings = self.get_settings()
+            if netloc in self.__FUA_FIX:
+                settings.set_property("user-agent", FUA)
+            else:
+                settings.set_property("user-agent", None)
+            self.set_settings(settings)
 
     def __get_forms(self, page_id, request):
         """
