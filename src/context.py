@@ -90,6 +90,7 @@ class Context:
             @param request as WebKit2.URISchemeRequest
         """
         uri = request.get_uri()
+        parent = "/".join(uri.rstrip("/").split("/")[:-1])
         f = Gio.File.new_for_uri(uri)
         info = f.query_info("standard::type",
                             Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
@@ -107,6 +108,12 @@ class Context:
             html_start = html_start.replace("@SIZE@", _("Size"))
             html_start = html_start.replace("@LAST_MODIFICATION@",
                                             _("Last modification"))
+            if parent:
+                html_start += '<tr>'\
+                              '<td><a class="dir" href="%s">%s</a></td>'\
+                              '<td></td>'\
+                              '<td></td></tr>' % (
+                               parent, "..")
             try:
                 infos = f.enumerate_children(
                                 "standard::name,standard::size,"
@@ -117,7 +124,11 @@ class Context:
                 files = {}
                 for info in infos:
                     name = info.get_name()
-                    uri = "file://%s/%s" % (f.get_path(), name)
+                    if f.get_path() == "/":
+                        filename = "/%s" % name
+                    else:
+                        filename = "%s/%s" % (f.get_path(), name)
+                    uri = GLib.filename_to_uri(filename)
                     mtime = info.get_attribute_uint64("time::modified")
                     size = round((info.get_size() / 1024), 2)
                     date_str = datetime.fromtimestamp(mtime).strftime(
