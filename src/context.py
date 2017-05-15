@@ -119,7 +119,7 @@ class Context:
                     name = info.get_name()
                     uri = "file://%s/%s" % (f.get_path(), name)
                     mtime = info.get_attribute_uint64("time::modified")
-                    size = int(info.get_size() / 1024)
+                    size = round((info.get_size() / 1024), 2)
                     date_str = datetime.fromtimestamp(mtime).strftime(
                                                            "%Y-%m-%d %H:%M:%S")
                     if info.get_file_type() == Gio.FileType.DIRECTORY:
