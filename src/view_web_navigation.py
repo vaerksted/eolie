@@ -13,7 +13,6 @@
 from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
-from time import time
 
 from eolie.dbus_helper import DBusHelper
 from eolie.define import El, ADBLOCK_JS, FUA
@@ -269,7 +268,9 @@ class WebViewNavigation:
                                     None)
                 if info.get_file_type() == Gio.FileType.REGULAR:
                     try:
-                        Gtk.show_uri(None, uri, int(time()))
+                        Gtk.show_uri_on_window(El().active_window,
+                                               uri,
+                                               Gtk.get_current_event_time())
                     except Exception as e:
                         print("WebViewNavigation::__on_decide_policy()", e)
                     decision.ignore()
@@ -288,7 +289,9 @@ class WebViewNavigation:
         if parsed.scheme not in ["http", "https", "file", "about",
                                  "populars", "accept"]:
             try:
-                Gtk.show_uri(None, uri, int(time()))
+                Gtk.show_uri_on_window(El().active_window,
+                                       uri,
+                                       Gtk.get_current_event_time())
             except Exception as e:
                 print("WebViewNavigation::__on_decide_policy()", e)
             decision.ignore()
