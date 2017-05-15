@@ -138,9 +138,12 @@ class WebViewNavigation:
             Update user agent for some sites
             @param netloc as str
         """
+        settings = self.get_settings()
         if netloc and netloc in self.__FUA_FIX:
-            settings = self.get_settings()
             settings.set_property("user-agent", FUA)
+        else:
+            settings.set_property("user-agent", None)
+        self.set_settings(settings)
 
     def __get_forms(self, page_id, request):
         """
