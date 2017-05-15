@@ -107,15 +107,16 @@ class Container(Gtk.Overlay):
         width = self.__stack_sidebar.get_allocated_width()
         self.__stack.set_margin_start(width)
 
-    def popup_webview(self, webview):
+    def popup_webview(self, webview, destroy):
         """
             Show webview in popopver
             @param webview as WebView
+            @param destroy webview when popover hidden
         """
         view = View(webview, None)
         view.webview.connect("create", self.__on_create)
         view.show()
-        self.__popover.add_webview(view)
+        self.__popover.add_view(view, destroy)
         if not self.__popover.is_visible():
             self.__popover.set_size_request(
                                  self.__window.get_allocated_width() / 3,
@@ -296,7 +297,7 @@ class Container(Gtk.Overlay):
                 if related == self.current.webview:
                     self.__window.toolbar.title.show_popup_indicator(True)
                 return
-            self.popup_webview(webview)
+            self.popup_webview(webview, True)
 
     def __on_readable(self, webview):
         """

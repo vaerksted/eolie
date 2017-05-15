@@ -459,7 +459,7 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         for popup in self.__window.container.current.webview.popups:
-            self.__window.container.popup_webview(popup)
+            self.__window.container.popup_webview(popup, False)
         if self.__entry.has_focus():
             self.__window.set_focus(None)
         else:

@@ -25,6 +25,7 @@ class WebViewPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.__window = window
+        self.__to_destroy = []
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverWebView.ui')
         builder.connect_signals(self)
@@ -36,16 +37,19 @@ class WebViewPopover(Gtk.Popover):
         self.connect("map", self.__on_map)
         self.connect("closed", self.__on_closed)
 
-    def add_webview(self, view):
+    def add_view(self, view, destroy):
         """
             Add webview to popover
             @param view as View
+            @param destroy webview as bool
         """
         self.__stack.add(view)
         self.__stack.set_visible_child(view)
-        view.webview.connect("close", self.__on_webview_close)
+        view.webview.connect("close", self.__on_webview_close, destroy)
         self.__set_title()
         self.__set_button_state()
+        if destroy:
+            self.__to_destroy.append(view.webview)
 
 #######################
 # PROTECTED           #
@@ -123,10 +127,11 @@ class WebViewPopover(Gtk.Popover):
             if title:
                 self.__title.set_text(title)
 
-    def __on_webview_close(self, webview):
+    def __on_webview_close(self, webview, destroy):
         """
             Remove view from stack
             @param webview as WebView
+            @param destroy as bool
         """
         for view in self.__stack.get_children():
             if view.webview == webview:
@@ -136,6 +141,8 @@ class WebViewPopover(Gtk.Popover):
             self.__set_button_state()
         else:
             self.hide()
+        if destroy:
+            webview.destroy()
 
     def __on_map(self, popover):
         """
@@ -154,3 +161,6 @@ class WebViewPopover(Gtk.Popover):
         for view in self.__stack.get_children():
             view.free_webview()
             self.__stack.remove(view)
+        for webview in self.__to_destroy:
+            webview.destroy()
+        self.__to_destroy = []

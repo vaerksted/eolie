@@ -340,6 +340,7 @@ class WebViewNavigation:
             # Destroy current popups
             for popup in self.__popups:
                 popup.destroy()
+            self.__popups = []
             El().download_manager.remove_video_for_page(view.get_page_id())
             self.emit("uri-changed", uri)
             self.__title = ""
