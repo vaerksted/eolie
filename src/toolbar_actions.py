@@ -110,8 +110,8 @@ class ToolbarActions(Gtk.Bin):
                     current.webview.get_back_forward_list().get_back_list()
                 if back_list:
                     uri = back_list[0].get_uri()
-                    self.__window.container.add_web_view(uri,
-                                                         Gdk.WindowType.CHILD)
+                    self.__window.container.add_webview(uri,
+                                                        Gdk.WindowType.CHILD)
             else:
                 self.__on_back_history_timeout()
 
@@ -146,8 +146,8 @@ class ToolbarActions(Gtk.Bin):
                     current.webview.get_back_forward_list().get_forward_list()
                 if forward_list:
                     uri = forward_list[0].get_uri()
-                    self.__window.container.add_web_view(uri,
-                                                         Gdk.WindowType.CHILD)
+                    self.__window.container.add_webview(uri,
+                                                        Gdk.WindowType.CHILD)
             else:
                 self.__on_forward_history_timeout()
 
@@ -156,8 +156,8 @@ class ToolbarActions(Gtk.Bin):
             Add a new web view
             @param button as Gtk.Button
         """
-        self.__window.container.add_web_view(El().start_page,
-                                             Gdk.WindowType.CHILD)
+        self.__window.container.add_webview(El().start_page,
+                                            Gdk.WindowType.CHILD)
         self.__window.toolbar.title.close_popover()
 
     def _on_pages_button_toggled(self, button):

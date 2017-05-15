@@ -51,8 +51,8 @@ class Container(Gtk.Overlay):
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
         self.add_overlay(self.__stack_sidebar)
 
-    def add_web_view(self, uri, window_type, ephemeral=False,
-                     parent=None, state=None):
+    def add_webview(self, uri, window_type, ephemeral=False,
+                    parent=None, state=None):
         """
             Add a web view to container
             @param uri as str
@@ -237,7 +237,7 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 parent = self.__get_view_for_webview(webview)
-                self.add_web_view(uri, window_type, webview.ephemeral, parent)
+                self.add_webview(uri, window_type, webview.ephemeral, parent)
 
     def __on_create(self, related, navigation_action):
         """

@@ -214,8 +214,8 @@ class StackSidebar(Gtk.EventBox):
             children = self.__listbox.get_children()
             # We are last row, add a new one
             if len(children) == 0:
-                self.__window.container.add_web_view(El().start_page,
-                                                     Gdk.WindowType.CHILD)
+                self.__window.container.add_webview(El().start_page,
+                                                    Gdk.WindowType.CHILD)
             # We have rows before closed
             elif child_index - 1 >= 0:
                 next_row = self.__listbox.get_row_at_index(child_index - 1)

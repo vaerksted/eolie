@@ -216,7 +216,7 @@ class Window(Gtk.ApplicationWindow):
         if string == "uri":
             self.toolbar.title.focus_entry()
         elif string == "new_page":
-            self.container.add_web_view(El().start_page, Gdk.WindowType.CHILD)
+            self.container.add_webview(El().start_page, Gdk.WindowType.CHILD)
         elif string == "close_page":
             self.container.sidebar.close_view(self.container.current)
         elif string == "reload":
@@ -239,9 +239,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":
-            self.container.add_web_view(El().start_page,
-                                        Gdk.WindowType.CHILD,
-                                        True)
+            self.container.add_webview(El().start_page,
+                                       Gdk.WindowType.CHILD,
+                                       True)
         elif string == "last_page":
             El().pages_menu.activate_last_action()
         elif string == "zoom_in":

@@ -445,7 +445,7 @@ class Application(Gtk.Application):
             for (uri, private, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
-                GLib.idle_add(self.active_window.container.add_web_view,
+                GLib.idle_add(self.active_window.container.add_webview,
                               uri, window_type, private,
                               None, None, webkit_state)
                 window_type = Gdk.WindowType.OFFSCREEN
@@ -473,21 +473,21 @@ class Application(Gtk.Application):
         # Open command line args
         if len(args) > 1:
             for uri in args[1:]:
-                active_window.container.add_web_view(uri,
-                                                     Gdk.WindowType.CHILD,
-                                                     private_browsing)
+                active_window.container.add_webview(uri,
+                                                    Gdk.WindowType.CHILD,
+                                                    private_browsing)
             active_window.present()
         # We already have a window, open a new one
         elif active_window.container.current:
             window = self.__get_new_window()
-            window.container.add_web_view(self.start_page,
-                                          Gdk.WindowType.CHILD,
-                                          private_browsing)
+            window.container.add_webview(self.start_page,
+                                         Gdk.WindowType.CHILD,
+                                         private_browsing)
         # Add default start page
         else:
-            active_window.container.add_web_view(self.start_page,
-                                                 Gdk.WindowType.CHILD,
-                                                 private_browsing)
+            active_window.container.add_webview(self.start_page,
+                                                Gdk.WindowType.CHILD,
+                                                private_browsing)
         GLib.timeout_add(1000, self.__init_delayed)
         return 0
 
@@ -595,8 +595,8 @@ class Application(Gtk.Application):
         string = param.get_string()
         if string == "new_window":
             window = self.__get_new_window()
-            window.container.add_web_view(self.start_page,
-                                          Gdk.WindowType.CHILD)
+            window.container.add_webview(self.start_page,
+                                         Gdk.WindowType.CHILD)
 
     def __on_extension_signal(self, connection, sender, path,
                               interface, signal, params, data):

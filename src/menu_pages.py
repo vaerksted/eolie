@@ -147,9 +147,9 @@ class PagesMenu(Gio.Menu):
             @param Gio.SimpleAction
             @param GVariant
         """
-        self.__app.active_window.container.add_web_view(self.__app.start_page,
-                                                        Gdk.WindowType.CHILD,
-                                                        True)
+        self.__app.active_window.container.add_webview(self.__app.start_page,
+                                                       Gdk.WindowType.CHILD,
+                                                       True)
 
     def __on_action_clicked(self, action, variant, data):
         """
@@ -161,6 +161,6 @@ class PagesMenu(Gio.Menu):
         uri = data[0]
         private = data[1]
         state = data[2]
-        GLib.idle_add(self.__app.active_window.container.add_web_view,
+        GLib.idle_add(self.__app.active_window.container.add_webview,
                       uri, Gdk.WindowType.CHILD, private, None, None, state)
         self.remove_action(uri)
