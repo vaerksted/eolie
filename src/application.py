@@ -69,7 +69,7 @@ class Application(Gtk.Application):
                 if GLib.file_test(path, GLib.FileTest.EXISTS):
                     GLib.setenv('SSL_CERT_FILE', path, True)
                     break
-        self.__sync_worker = -1  # Not initialised
+        self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
         self.__windows = []
         self.__pages_menu = PagesMenu(self)
@@ -229,6 +229,16 @@ class Application(Gtk.Application):
         """
             Init main application
         """
+        # First init sync worker
+        try:
+            from eolie.mozilla_sync import SyncWorker
+            self.sync_worker = SyncWorker()
+            self.sync_worker.sync()
+            GLib.timeout_add_seconds(3600,
+                                     self.sync_worker.sync)
+        except Exception as e:
+            print("Application::init():", e)
+            self.sync_worker = None
         if self.prefers_app_menu():
             menu = self.get_app_menu()
             self.set_app_menu(menu)
@@ -246,7 +256,6 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
-        self.sync_worker = None
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.pishing = DatabasePishing()
@@ -319,32 +328,6 @@ class Application(Gtk.Application):
                                         WebKit2.CookiePersistentStorage.SQLITE)
         helper = DBusHelper()
         helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
-
-    def __init_delayed(self):
-        """
-            Init delayed for startup speed reasons
-        """
-        thread = Thread(target=self.__start_sync_worker)
-        thread.daemon = True
-        thread.start()
-        thread = Thread(target=self.__show_plugins)
-        thread.daemon = True
-        thread.start()
-
-    def __start_sync_worker(self):
-        """
-            Start sync worker
-            @thread safe
-        """
-        try:
-            from eolie.mozilla_sync import SyncWorker
-            self.sync_worker = SyncWorker()
-            self.sync_worker.sync()
-            GLib.timeout_add_seconds(3600,
-                                     self.sync_worker.sync)
-        except Exception as e:
-            print("Application::init():", e)
-            self.__sync_worker = None
 
     def __listen_to_gnome_sm(self):
         """
@@ -488,7 +471,9 @@ class Application(Gtk.Application):
             active_window.container.add_webview(self.start_page,
                                                 Gdk.WindowType.CHILD,
                                                 private_browsing)
-        GLib.timeout_add(1000, self.__init_delayed)
+        thread = Thread(target=self.__show_plugins)
+        thread.daemon = True
+        thread.start()
         return 0
 
     def __on_get_plugins(self, source, result, data):

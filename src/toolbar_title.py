@@ -273,6 +273,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if b:
             self.__popup_indicator.show()
+            self.__popup_indicator.set_tooltip_text(_("Blocked popups"))
         else:
             self.__popup_indicator.hide()
 

@@ -98,7 +98,7 @@ class Container(Gtk.Overlay):
             Stop pending tasks
         """
         if El().sync_worker is not None:
-            self.__on_sync_finish(El().sync_worker)
+            self.__on_sync_finish()
 
     def update_children_allocation(self):
         """
@@ -374,6 +374,7 @@ class Container(Gtk.Overlay):
             @param uri as GParamString (Do not use)
         """
         if webview == self.current.webview:
+            self.__window.toolbar.actions.set_actions(webview)
             if uri:
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
@@ -391,7 +392,6 @@ class Container(Gtk.Overlay):
         """
         if webview == self.current.webview:
             self.__window.toolbar.title.set_title(title)
-            self.__window.toolbar.actions.set_actions(webview)
         # Update history
         uri = webview.get_uri()
         parsed = urlparse(uri)
@@ -401,13 +401,12 @@ class Container(Gtk.Overlay):
             # Do not try to add to db if worker is syncing
             # We may lock sqlite and current webview otherwise
             # We use a queue and will commit items when sync is finished
-            if El().sync_worker == -1:
-                pass
-            elif El().sync_worker is None or El().sync_worker.syncing:
-                self.__history_queue.append((title, uri, mtime))
-            else:
-                history_id = El().history.add(title, uri, mtime)
-                El().sync_worker.push_history([history_id])
+            history_id = El().history.add(title, uri, mtime)
+            if El().sync_worker is not None:
+                if El().sync_worker.syncing:
+                    self.__history_queue.append(history_id)
+                else:
+                    El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """
@@ -467,13 +466,11 @@ class Container(Gtk.Overlay):
         """
         self.update_children_allocation()
 
-    def __on_sync_finish(self, worker):
+    def __on_sync_finish(self):
         """
-            Commit queue
-            @param worker as SyncWorker
+            Commit queue to sync
         """
         if self.__history_queue:
-            (title, uri, mtime) = self.__history_queue.pop(0)
-            history_id = El().history.add(title, uri, mtime)
-            worker.push_history([history_id])
-            GLib.idle_add(self.__on_sync_finish, worker)
+            history_id = self.__history_queue.pop(0)
+            El().sync_worker.push_history([history_id])
+            GLib.idle_add(self.__on_sync_finish)

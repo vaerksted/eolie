@@ -374,9 +374,8 @@ class WebViewNavigation:
                 # We need to send a title if non exists
                 if not self.__title:
                     self.__title = view.get_title()
-                    if not self.__title:
-                        self.__title = view.get_uri()
-                    self.emit("title-changed", self.__title)
+                    if self.__title:
+                        self.emit("title-changed", self.__title)
                 unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
                 javascripts = ["adblock_%s.js" % parsed.netloc,
                                "adblock_%s.js" % unlocated_netloc]
