@@ -542,6 +542,7 @@ class ToolbarTitle(Gtk.Bin):
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
         if not is_uri and\
+                not uri.startswith("/") and\
                 El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
