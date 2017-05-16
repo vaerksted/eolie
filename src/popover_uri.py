@@ -327,8 +327,10 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
                 if event.button == 2:
                     self.__window.toolbar.title.close_popover()
+            El().bookmarks.thread_lock.acquire()
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
+            El().bookmarks.thread_lock.release()
         else:
             self.emit("activate")
             # We force focus to stay on title entry
@@ -571,6 +573,7 @@ class UriPopover(Gtk.Popover):
             Save bookmarks to tag
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         for row in self.__bookmarks_box.get_selected_rows():
             item_id = row.item.get_property("id")
             El().bookmarks.delete(item_id)
@@ -579,6 +582,7 @@ class UriPopover(Gtk.Popover):
         El().bookmarks.clean_tags()
         if El().sync_worker is not None:
             El().sync_worker.sync()
+        El().bookmarks.thread_lock.release()
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
@@ -967,6 +971,7 @@ class UriPopover(Gtk.Popover):
             @param items [(bookmark_id, tag_id)] as [(int, int)]
             @param tag id as int
         """
+        El().bookmarks.thread_lock.acquire()
         tag_row = self.__tags_box.get_selected_row()
         current_tag_id = tag_row.item.get_property("id")
         for item in items:
@@ -977,6 +982,7 @@ class UriPopover(Gtk.Popover):
         El().bookmarks.clean_tags()
         if El().sync_worker is not None:
             El().sync_worker.sync()
+        El().bookmarks.thread_lock.release()
 
     def __on_row_edited(self, row):
         """

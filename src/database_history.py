@@ -14,6 +14,7 @@ from gi.repository import Gio
 
 import sqlite3
 import itertools
+from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import El, EOLIE_LOCAL_PATH
@@ -49,6 +50,7 @@ class DatabaseHistory:
         """
             Create database tables or manage update if needed
         """
+        self.thread_lock = Lock()
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
             try:

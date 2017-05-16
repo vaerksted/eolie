@@ -245,6 +245,7 @@ class EditBookmarkWidget(Gtk.Bin):
             Destroy self
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         self.disconnect_by_func(self.__on_unmap)
         El().bookmarks.set_title(self.__bookmark_id,
                                  self.__title_entry.get_text())
@@ -263,18 +264,21 @@ class EditBookmarkWidget(Gtk.Bin):
             if El().sync_worker is not None:
                 El().sync_worker.sync()
         GLib.timeout_add(1000, self.destroy)
+        El().bookmarks.thread_lock.release()
 
     def _on_del_clicked(self, button):
         """
             Remove item
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         self.disconnect_by_func(self.__on_unmap)
         El().bookmarks.delete(self.__bookmark_id)
         if isinstance(self.get_parent(), Gtk.Popover):
             self.get_parent().hide()
         else:
             self.get_parent().set_visible_child_name("bookmarks")
+        El().bookmarks.thread_lock.release()
 
     def _on_new_tag_changed(self, entry):
         """
@@ -294,6 +298,7 @@ class EditBookmarkWidget(Gtk.Bin):
             Add new tag
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         tag_title = self.__new_tag_entry.get_text()
         El().bookmarks.add_tag(tag_title, True)
         tag_id = El().bookmarks.get_tag_id(tag_title)
@@ -303,12 +308,14 @@ class EditBookmarkWidget(Gtk.Bin):
         tag.show()
         self.__flowbox.add(tag)
         button.set_sensitive(False)
+        El().bookmarks.thread_lock.release()
 
     def _on_rename_tags_clicked(self, button):
         """
             Rename tags
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         if button.get_label() == _("Apply"):
             editable = False
             button.set_label(_("Rename"))
@@ -323,12 +330,14 @@ class EditBookmarkWidget(Gtk.Bin):
             child.set_editable(editable)
             if not editable:
                 child.save_entry()
+        El().bookmarks.thread_lock.release()
 
     def _on_remove_tags_clicked(self, button):
         """
             Remove tag
             @param button as Gtk.Button
         """
+        El().bookmarks.thread_lock.acquire()
         if button.get_label() == _("Finished"):
             removable = False
             button.set_label(_("Remove"))
@@ -341,6 +350,7 @@ class EditBookmarkWidget(Gtk.Bin):
             button.get_style_context().add_class("suggested-action")
         for child in self.__flowbox.get_children():
             child.set_removable(removable)
+        El().bookmarks.thread_lock.release()
 
     def _on_flowbox_size_allocate(self, scrolled, allocation):
         """
@@ -369,6 +379,7 @@ class EditBookmarkWidget(Gtk.Bin):
             Save uri and title
             @param widget as Gtk.Widget
         """
+        El().bookmarks.thread_lock.acquire()
         El().bookmarks.set_title(self.__bookmark_id,
                                  self.__title_entry.get_text())
         El().bookmarks.set_uri(self.__bookmark_id,
@@ -384,6 +395,7 @@ class EditBookmarkWidget(Gtk.Bin):
             El().bookmarks.clean_tags()
             if El().sync_worker is not None:
                 El().sync_worker.sync()
+        El().bookmarks.thread_lock.release()
 
     def __on_tag_activated(self, flowbox, child):
         """
@@ -391,6 +403,7 @@ class EditBookmarkWidget(Gtk.Bin):
             @param flowbox as Gtk.FlowBox
             @param child as TagWidget
         """
+        El().bookmarks.thread_lock.acquire()
         if child.removable or child.editable:
             return
         tag_id = El().bookmarks.get_tag_id(child.label)
@@ -402,3 +415,4 @@ class EditBookmarkWidget(Gtk.Bin):
         else:
             El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
         child.set_active(active)
+        El().bookmarks.thread_lock.release()

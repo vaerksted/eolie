@@ -398,9 +398,9 @@ class Container(Gtk.Overlay):
         if parsed.scheme in ["http", "https"] and\
                 not webview.ephemeral:
             mtime = round(time(), 2)
-            El().thread_lock.acquire()
+            El().history.thread_lock.acquire()
             history_id = El().history.add(title, uri, mtime)
-            El().thread_lock.release()
+            El().history.thread_lock.release()
             if El().sync_worker is not None:
                 if El().sync_worker.syncing:
                     self.__history_queue.append(history_id)

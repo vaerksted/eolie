@@ -14,6 +14,7 @@ from gi.repository import GLib, Gio
 
 import sqlite3
 import itertools
+from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import El, EOLIE_LOCAL_PATH, CONFIG_PATH
@@ -61,6 +62,7 @@ class DatabaseBookmarks:
         """
             Create database tables or manage update if needed
         """
+        self.thread_lock = Lock()
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
             try:
@@ -687,6 +689,7 @@ class DatabaseBookmarks:
             @param path as str
         """
         try:
+            self.thread_lock.acquire()
             from bs4 import BeautifulSoup
             SqlCursor.add(self)
             f = Gio.File.new_for_path(path)
@@ -732,6 +735,8 @@ class DatabaseBookmarks:
             SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_html:", e)
+        finally:
+            self.thread_lock.release()
 
     def import_chromium(self, chrome):
         """
@@ -741,6 +746,7 @@ class DatabaseBookmarks:
             @param chrome as bool
         """
         try:
+            self.thread_lock.acquire()
             SqlCursor.add(self)
             import json
             if chrome:
@@ -789,12 +795,15 @@ class DatabaseBookmarks:
                 SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_chromium:", e)
+        finally:
+            self.thread_lock.release()
 
     def import_firefox(self):
         """
             Mozilla Firefox importer
         """
         try:
+            self.thread_lock.acquire()
             SqlCursor.add(self)
             firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
             d = Gio.File.new_for_path(firefox_path)
@@ -858,6 +867,8 @@ class DatabaseBookmarks:
             SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_firefox:", e)
+        finally:
+            self.thread_lock.release()
 
     def exists_guid(self, guid):
         """
