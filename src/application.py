@@ -149,14 +149,16 @@ class Application(Gtk.Application):
             Quit application
             @param vacuum as bool
         """
-        self.download_manager.cancel()
-        self.adblock.stop()
-        if self.sync_worker is not None:
-            self.sync_worker.stop()
         # Save webpage state
         self.__save_state()
-        # Then vacuum db and artwork
-        if vacuum:
+        # Stop pending tasks
+        self.download_manager.cancel()
+        self.adblock.stop()
+        # If sync is running, to avoid db lock, we do not vacuum
+        if self.sync_worker is not None and self.sync_worker.syncing:
+            self.sync_worker.stop()
+            Gio.Application.quit(self)
+        elif vacuum:
             thread = Thread(target=self.__vacuum)
             thread.daemon = True
             thread.start()
