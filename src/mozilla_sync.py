@@ -279,10 +279,10 @@ class SyncWorker(GObject.GObject):
             dump(self.__mtimes,
                  open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
+            GLib.idle_add(self.emit, "sync-finish")
         except Exception as e:
             print("SyncWorker::__sync():", e)
         self.__stop = True
-        GLib.idle_add(self.emit, "sync-finish")
 
     def __push_bookmarks(self, bulk_keys):
         """
