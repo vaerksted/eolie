@@ -401,11 +401,11 @@ class Container(Gtk.Overlay):
             # Do not try to add to db if worker is syncing
             # We may lock sqlite and current webview otherwise
             # We use a queue and will commit items when sync is finished
-            history_id = El().history.add(title, uri, mtime)
             if El().sync_worker is not None:
                 if El().sync_worker.syncing:
-                    self.__history_queue.append(history_id)
+                    self.__history_queue.append((title, uri, mtime))
                 else:
+                    history_id = El().history.add(title, uri, mtime)
                     El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
@@ -471,6 +471,7 @@ class Container(Gtk.Overlay):
             Commit queue to sync
         """
         if self.__history_queue:
-            history_id = self.__history_queue.pop(0)
+            (title, uri, mtime) = self.__history_queue.pop(0)
+            history_id = El().history.add(title, uri, mtime)
             El().sync_worker.push_history([history_id])
             GLib.idle_add(self.__on_sync_finish)
