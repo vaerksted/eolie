@@ -98,7 +98,7 @@ class Container(Gtk.Overlay):
             Stop pending tasks
         """
         if El().sync_worker is not None:
-            self.__on_sync_finish()
+            self.__on_sync_finish(El().sync_worker)
 
     def update_children_allocation(self):
         """
@@ -398,14 +398,13 @@ class Container(Gtk.Overlay):
         if parsed.scheme in ["http", "https"] and\
                 not webview.ephemeral:
             mtime = round(time(), 2)
-            # Do not try to add to db if worker is syncing
-            # We may lock sqlite and current webview otherwise
-            # We use a queue and will commit items when sync is finished
+            El().thread_lock.acquire()
+            history_id = El().history.add(title, uri, mtime)
+            El().thread_lock.release()
             if El().sync_worker is not None:
                 if El().sync_worker.syncing:
-                    self.__history_queue.append((title, uri, mtime))
+                    self.__history_queue.append(history_id)
                 else:
-                    history_id = El().history.add(title, uri, mtime)
                     El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
@@ -466,12 +465,12 @@ class Container(Gtk.Overlay):
         """
         self.update_children_allocation()
 
-    def __on_sync_finish(self):
+    def __on_sync_finish(self, worker):
         """
             Commit queue to sync
+            @param worker as SyncWorker
         """
         if self.__history_queue:
-            (title, uri, mtime) = self.__history_queue.pop(0)
-            history_id = El().history.add(title, uri, mtime)
-            El().sync_worker.push_history([history_id])
-            GLib.idle_add(self.__on_sync_finish)
+            history_id = self.__history_queue.pop(0)
+            worker.push_history([history_id])
+            GLib.idle_add(self.__on_sync_finish, worker)

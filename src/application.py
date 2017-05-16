@@ -19,7 +19,7 @@ from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 
 from gettext import gettext as _
 from pickle import dump, load
-from threading import Thread
+from threading import Thread, Lock
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -256,6 +256,7 @@ class Application(Gtk.Application):
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         # We store cursors for main thread
+        self.thread_lock = Lock()
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
         self.adblock = DatabaseAdblock()

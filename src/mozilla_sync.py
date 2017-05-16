@@ -480,23 +480,27 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        SqlCursor.add(El().history)
         records = self.__client.get_history(bulk_keys)
         for record in records:
             if self.__stop:
+                El().thread_lock.release()
                 raise StopIteration("Cancelled")
             sleep(0.01)
+            El().thread_lock.acquire()
             history = record["payload"]
             keys = history.keys()
             # Ignore pages without a title
             if "title" not in keys or not history["title"]:
+                El().thread_lock.release()
                 continue
             # Ignore pages without an uri (deleted)
             if "histUri" not in keys:
+                El().thread_lock.release()
                 continue
             history_id = El().history.get_id_by_guid(history["id"])
             # Nothing to apply, continue
             if El().history.get_mtime(history_id) >= record["modified"]:
+                El().thread_lock.release()
                 continue
             # Try to get visit date
             atimes = []
@@ -504,6 +508,7 @@ class SyncWorker(GObject.GObject):
                 for visit in history["visits"]:
                     atimes.append(round(int(visit["date"]) / 1000000, 2))
             except:
+                El().thread_lock.release()
                 continue
             debug("pulling %s" % record)
             title = history["title"].rstrip().lstrip()
@@ -512,10 +517,8 @@ class SyncWorker(GObject.GObject):
                                           record["modified"],
                                           history["id"],
                                           atimes,
-                                          False)
-        with SqlCursor(El().history) as sql:
-            sql.commit()
-        SqlCursor.remove(El().history)
+                                          True)
+            El().thread_lock.release()
 
     def __on_get_secret(self, source, result, first_sync, delete):
         """
