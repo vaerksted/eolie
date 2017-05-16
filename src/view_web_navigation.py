@@ -347,7 +347,6 @@ class WebViewNavigation:
                 popup.destroy()
             self.__popups = []
             El().download_manager.remove_video_for_page(view.get_page_id())
-            self.emit("uri-changed", uri)
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__update_user_agent(parsed.netloc)
