@@ -142,7 +142,10 @@ class DownloadManager(GObject.GObject):
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             directory_uri = GLib.filename_to_uri(directory, None)
-        destination_uri = "%s/%s" % (directory_uri, filename)
+        destination_uri = "%s/%s" % (directory_uri,
+                                     GLib.uri_escape_string(filename,
+                                                            None,
+                                                            False))
         not_ok = True
         i = 1
         try:
@@ -150,15 +153,24 @@ class DownloadManager(GObject.GObject):
                 f = Gio.File.new_for_uri(destination_uri)
                 if f.query_exists():
                     extension_less = filename.replace(".%s" % extension, "")
-                    new_filename = "%s_%s%s" % (extension_less, i, extension)
-                    destination_uri = "%s/%s" % (directory_uri, new_filename)
+                    new_filename = "%s_%s.%s" % (extension_less, i, extension)
+                    destination_uri = "%s/%s" % (directory_uri,
+                                                 GLib.uri_escape_string(
+                                                            new_filename,
+                                                            None,
+                                                            False))
                 else:
                     not_ok = False
                 i += 1
         except:
             # Fallback to be sure
-            destination_uri = "%s/%s" % (directory_uri, "@@" + filename)
-        download.set_destination(destination_uri)
+            destination_uri = "%s/@@%s" % (directory_uri,
+                                           GLib.uri_escape_string(
+                                                            filename,
+                                                            None,
+                                                            False))
+        download.set_destination(GLib.uri_unescape_string(destination_uri,
+                                                          None))
         self.emit('download-start', str(download))
 
     def __on_finished(self, download):
