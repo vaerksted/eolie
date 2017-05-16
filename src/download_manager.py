@@ -12,7 +12,6 @@
 
 from gi.repository import GObject, GLib, Gio, Gtk
 
-from re import search
 from time import time
 
 from eolie.define import El
@@ -131,8 +130,8 @@ class DownloadManager(GObject.GObject):
             @param filename as str
             @param wanted_filename as str
         """
+        extension = filename.split(".")[-1]
         if wanted_filename:
-            extension = filename.split(".")[-1]
             # FIXME We should find a way to pass good extension,
             # fallback to avi
             if extension == filename:
@@ -150,14 +149,8 @@ class DownloadManager(GObject.GObject):
             while not_ok:
                 f = Gio.File.new_for_uri(destination_uri)
                 if f.query_exists():
-                    m = search('(.*)(\.[^\./]*$)', filename)
-                    if m is not None:
-                        root_filename = m.group(1)
-                        extension = m.group(2)
-                    else:
-                        root_filename = filename
-                        extension = ""
-                    new_filename = "%s_%s%s" % (root_filename, i, extension)
+                    extension_less = filename.replace(".%s" % extension, "")
+                    new_filename = "%s_%s%s" % (extension_less, i, extension)
                     destination_uri = "%s/%s" % (directory_uri, new_filename)
                 else:
                     not_ok = False

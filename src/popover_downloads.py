@@ -265,16 +265,18 @@ class DownloadRow(Gtk.ListBoxRow):
         if response is None:
             return
         destination = self.__download.get_destination()
-        if destination is None:
-            return
-        f = GLib.filename_from_uri(destination)[0]
-        (mime, uncertain) = Gio.content_type_guess(f, None)
-        if uncertain:
+        try:
+            f = GLib.filename_from_uri(destination)[0]
+            (mime, uncertain) = Gio.content_type_guess(f, None)
+            if uncertain:
+                self.__preview.set_from_icon_name("text-x-generic",
+                                                  Gtk.IconSize.DIALOG)
+            else:
+                icon = Gio.content_type_get_icon(mime)
+                self.__preview.set_from_gicon(icon, Gtk.IconSize.DIALOG)
+        except:
             self.__preview.set_from_icon_name("text-x-generic",
                                               Gtk.IconSize.DIALOG)
-        else:
-            icon = Gio.content_type_get_icon(mime)
-            self.__preview.set_from_gicon(icon, Gtk.IconSize.DIALOG)
 
     def __on_unmap(self, widget):
         """
