@@ -41,6 +41,9 @@ class WebViewNavigation:
                            args[0], args[1], args[2])
 
     __FUA_FIX = ["outlook.live.com", "login.live.com"]
+    __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
+               "x-scheme-handler/http", "x-scheme-handler/https",
+               "multipart/related", "application/x-mimearchive"]
 
     def __init__(self):
         """
@@ -261,7 +264,9 @@ class WebViewNavigation:
             mime_type = response.props.mime_type
             uri = response.get_uri()
             parsed = urlparse(uri)
-            if parsed.scheme == "file":
+            if mime_type in self.__MIMES:
+                decision.use()
+            elif parsed.scheme == "file":
                 f = Gio.File.new_for_uri(uri)
                 info = f.query_info("standard::type",
                                     Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
