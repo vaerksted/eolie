@@ -122,12 +122,10 @@ class DownloadRow(Gtk.ListBoxRow):
         self.__label = builder.get_object("label")
         self.__sublabel = builder.get_object("sublabel")
         destination = download.get_destination()
-        filename = None
-        if destination is not None:
-            filename = GLib.filename_from_uri(destination)
-        if filename is not None:
-            self.__label.set_label(GLib.path_get_basename(filename[0]))
-        else:
+        try:
+            filename = GLib.filename_from_uri(destination)[0]
+            self.__label.set_label(GLib.path_get_basename(filename))
+        except:
             self.__label.set_label(download.get_destination())
             self.__label.set_ellipsize(Pango.EllipsizeMode.START)
         self.__button = builder.get_object("button")
