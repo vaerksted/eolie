@@ -162,5 +162,5 @@ class PagesMenu(Gio.Menu):
         private = data[1]
         state = data[2]
         GLib.idle_add(self.__app.active_window.container.add_webview,
-                      uri, Gdk.WindowType.CHILD, private, None, None, state)
+                      uri, Gdk.WindowType.CHILD, private, None, state)
         self.remove_action(uri)
