@@ -13,7 +13,7 @@
 import gi
 gi.require_version('WebKit2', '4.0')
 
-from gi.repository import Gio, Gtk, GLib, Secret
+from gi.repository import Gio, Gdk, Gtk, GLib, Secret
 
 from gettext import gettext as _
 from threading import Thread
@@ -386,6 +386,15 @@ class SettingsDialog:
         """
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret)
+
+    def _on_key_release_event(self, widget, event):
+        """
+            Destroy window if Esc
+            @param widget as Gtk.Widget
+            @param event as Gdk.event
+        """
+        if event.keyval == Gdk.KEY_Escape:
+            self.__settings_dialog.destroy()
 
 #######################
 # PRIVATE             #
