@@ -62,12 +62,12 @@ class DatabaseFileChooser:
         try:
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT rowid FROM filechooser\
-                                      WHERE uri=?", (uri,))
+                                      WHERE url=?", (url,))
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE filechooser\
-                                 SET url=?\
-                                 WHERE uri=?", (url, uri))
+                                 SET uri=?\
+                                 WHERE url=?", (uri, url))
                 else:
                     sql.execute("INSERT INTO filechooser\
                                           (url, uri)\
