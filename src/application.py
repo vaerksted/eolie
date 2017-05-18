@@ -461,7 +461,7 @@ class Application(Gtk.Application):
                 active_window.container.add_webview(uri,
                                                     Gdk.WindowType.CHILD,
                                                     private_browsing)
-            active_window.present()
+            active_window.present_with_time(Gtk.get_current_event_time())
         # We already have a window, open a new one
         elif active_window.container.current:
             window = self.__get_new_window()
@@ -571,7 +571,7 @@ class Application(Gtk.Application):
             @param application as Gio.Application
         """
         if self.__windows:
-            self.__windows[-1].present()
+            self.__windows[-1].present_with_time(Gtk.get_current_event_time())
 
     def __on_shortcut_action(self, action, param):
         """
