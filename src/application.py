@@ -74,6 +74,7 @@ class Application(Gtk.Application):
         self.__windows = []
         self.__pages_menu = PagesMenu(self)
         self.debug = False
+        self.show_tls = False
         try:
             self.zoom_levels = load(open(self.LOCAL_PATH + "/zoom_levels.bin",
                                          "rb"))
@@ -86,6 +87,9 @@ class Application(Gtk.Application):
                              GLib.OptionArg.NONE, "Debug Eolie", None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
+                             None)
+        self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Show TLS info",
                              None)
         self.connect('activate', self.__on_activate)
         self.connect('command-line', self.__on_command_line)
@@ -447,10 +451,10 @@ class Application(Gtk.Application):
         args = app_cmd_line.get_arguments()
         options = app_cmd_line.get_options_dict()
         if options.contains("debug"):
-            GLib.setenv("LIBGL_DEBUG", "verbose", True)
             GLib.setenv("WEBKIT_DEBUG", "network", True)
-            GLib.setenv("GST_DEBUG", "webkit*:5", True)
             self.debug = True
+        if options.contains("show-tls"):
+            self.show_tls = True
         private_browsing = options.contains("private")
         if self.settings.get_value("remember-session"):
             self.__restore_state()

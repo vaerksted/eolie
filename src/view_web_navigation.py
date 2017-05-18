@@ -176,17 +176,17 @@ class WebViewNavigation:
         except Exception as e:
             print("WebView::__on_get_forms():", e)
 
-    def __on_submit_form(self, view, request):
+    def __on_submit_form(self, webview, request):
         """
             Check for auth forms
-            @param view as WebKit2.WebView
+            @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
         if self.ephemeral:
             return
-        self.__get_forms(view.get_page_id(), request)
+        self.__get_forms(webview.get_page_id(), request)
 
-    def __on_run_as_modal(self, view):
+    def __on_run_as_modal(self, webview):
         """
         """
         print("WebView::__on_run_as_modal(): TODO")
@@ -213,15 +213,15 @@ class WebViewNavigation:
             # Use can use Gnome Shell notification policy
             request.allow()
 
-    def __on_uri_changed(self, view, uri):
+    def __on_uri_changed(self, webview, uri):
         """
             Clear readable context and title
-            @param view as WebKit2.WebView
+            @param webview as WebKit2.WebView
             @param uri as GParamSpec
         """
         self.__readable_content = ""
         self.__title = ""
-        if view.get_uri() != "about:blank":
+        if webview.get_uri() != "about:blank":
             self.__js_timeout = None
 
     def __on_title_changed(self, webview, event):
@@ -250,10 +250,10 @@ class WebViewNavigation:
                                  self.run_javascript_from_gresource,
                                  '/org/gnome/Eolie/Readability.js', None, None)
 
-    def __on_decide_policy(self, view, decision, decision_type):
+    def __on_decide_policy(self, webview, decision, decision_type):
         """
             Navigation policy
-            @param view as WebKit2.WebView
+            @param webview as WebKit2.WebView
             @param decision as WebKit2.NavigationPolicyDecision
             @param decision_type as WebKit2.PolicyDecisionType
             @return bool
@@ -332,13 +332,13 @@ class WebViewNavigation:
             decision.ignore()
             return True
 
-    def __on_load_changed(self, view, event):
+    def __on_load_changed(self, webview, event):
         """
             Update sidebar/urlbar
-            @param view as WebView
+            @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        uri = view.get_uri()
+        uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self._error = None
@@ -346,7 +346,7 @@ class WebViewNavigation:
             for popup in self.__popups:
                 popup.destroy()
             self.__popups = []
-            El().download_manager.remove_video_for_page(view.get_page_id())
+            El().download_manager.remove_video_for_page(webview.get_page_id())
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__update_user_agent(parsed.netloc)
@@ -372,7 +372,7 @@ class WebViewNavigation:
                     return
                 # We need to send a title if non exists
                 if not self.__title:
-                    self.__title = view.get_title()
+                    self.__title = webview.get_title()
                     if self.__title:
                         self.emit("title-changed", self.__title)
                 unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
@@ -387,4 +387,30 @@ class WebViewNavigation:
                         self.run_javascript(js, None, None)
                         break
         elif event == WebKit2.LoadEvent.FINISHED:
-            pass
+            if El().show_tls:
+                try:
+                    from OpenSSL import crypto
+                    from datetime import datetime
+                    from binascii import hexlify
+                    (valid, tls, errors) = webview.get_tls_info()
+                    if tls is not None:
+                        print("***************************************"
+                              "***************************************")
+                        cert_pem = tls.get_property("certificate-pem")
+                        cert = crypto.load_certificate(crypto.FILETYPE_PEM,
+                                                       cert_pem)
+                        subject = cert.get_subject()
+                        print("CN: %s" % subject.CN)
+                        start_bytes = cert.get_notBefore()
+                        end_bytes = cert.get_notAfter()
+                        start = datetime.strptime(start_bytes.decode("utf-8"),
+                                                  "%Y%m%d%H%M%SZ")
+                        end = datetime.strptime(end_bytes.decode("utf-8"),
+                                                "%Y%m%d%H%M%SZ")
+                        print("Valid from %s to %s" % (start, end))
+                        print("Serial number: %s" % cert.get_serial_number())
+                        print(cert_pem)
+                        print("***************************************"
+                              "***************************************")
+                except Exception as e:
+                    print("Please install OpenSSL python support:", e)
