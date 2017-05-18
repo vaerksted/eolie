@@ -13,6 +13,10 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AM_PATH_PYTHON(3.0)
 AM_PYTHON_CHECK_VERSION(3.0)
+PYTHON_CFLAGS=`${PYTHON}-config  --includes`
+PYTHON_LDFLAGS=`${PYTHON}-config  --libs`
+AC_SUBST(PYTHON_CFLAGS)
+AC_SUBST(PYTHON_LDFLAGS)
 
 GETTEXT_PACKAGE=eolie
 AC_SUBST(GETTEXT_PACKAGE)
@@ -20,12 +24,17 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",
                    [The prefix for our gettext translation domains.])
 IT_PROG_INTLTOOL(0.26)
 
+LT_INIT
+
 PKG_PROG_PKG_CONFIG([0.22])
 
 GLIB_GSETTINGS
 YELP_HELP_INIT
 GOBJECT_INTROSPECTION_REQUIRE([1.35.9])
 PKG_CHECK_MODULES([GTK], [gtk+-3.0 >= 3.14])
+PKG_CHECK_MODULES([WEBKIT2GTK], [webkit2gtk-4.0 >= 2.16])
+PKG_CHECK_MODULES([PYGOBJECT], [pygobject-3.0])
+PKG_CHECK_MODULES([WEBKIT2GTK_WEB_EXTENSION], [webkit2gtk-web-extension-4.0 >= 2.16])
 
 GLIB_COMPILE_RESOURCES=`$PKG_CONFIG --variable glib_compile_resources gio-2.0`
 WEB_EXT_FLAGS=`$PKG_CONFIG pygobject-3.0 webkit2gtk-web-extension-4.0 python3 --cflags`
@@ -37,6 +46,7 @@ AC_CONFIG_FILES([
   data/Makefile
   data/AboutDialog.ui
   src/Makefile
+  python-webextension/Makefile
   search-provider/Makefile
   po/Makefile.in
 ])

@@ -2,6 +2,12 @@
 /python-webextension/*.o
 /python-webextension/*.so
 /python-webextension/*.py
+/python-webextension/.deps/
+/python-webextension/.libs/
+/python-webextension/Makefile
+/python-webextension/Makefile.in
+/python-webextension/libpythonloader.la
+/python-webextension/libpythonloader_la-libpythonloader.lo
 /eolie-cli
 /po
 /help

@@ -43,14 +43,14 @@ service_in_files = org.gnome.Eolie.SearchProvider.service.in
 libexec_SCRIPTS = eolie-sp
 
 EXTRA_DIST = \
-        org.gnome.Eolie.SearchProvider.service.in\
-        eolie-sp.in\
+    org.gnome.Eolie.SearchProvider.service.in\
+    eolie-sp.in\
 	$(libexec_SCRIPTS)\
 	$(searchprovider_DATA) \
 	$(service_DATA)
 
 CLEANFILES = \
-        $(libexec_SCRIPTS)\
+    $(libexec_SCRIPTS)\
 	$(service_DATA)
 
 -include $(top_srcdir)/git.mk
