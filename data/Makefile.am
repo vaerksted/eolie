@@ -39,7 +39,7 @@ hicolor_icon_files = \
 	$(hicolor_icon256_DATA) \
 	$(hicolor_icon512_DATA) \
 	$(hicolor_iconscalable_DATA)\
-        icons/hicolor/org.gnome.Lollypop.svg
+        icons/hicolor/org.gnome.Eolie.svg
 
 gtk_update_hicolor_icon_cache = gtk-update-icon-cache -f -t $(datadir)/icons/hicolor
 #gtk_update_hicontrast_icon_cache = gtk-update-icon-cache -f -t $(datadir)/icons/HighContrast
