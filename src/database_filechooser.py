@@ -18,9 +18,9 @@ from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_LOCAL_PATH
 
 
-class DatabaseExceptions:
+class DatabaseFileChooser:
     """
-        Handle exceptions
+        Handle filechooser path
     """
 
     # SQLite documentation:
@@ -28,19 +28,18 @@ class DatabaseExceptions:
     # is an alias for the ROWID.
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
-    __create_exceptions = '''CREATE TABLE exceptions (
+    __create_filechooser = '''CREATE TABLE filechooser (
                                                id INTEGER PRIMARY KEY,
+                                               url TEXT NOT NULL,
                                                uri TEXT NOT NULL
                                                )'''
 
-    def __init__(self, suffix):
+    def __init__(self):
         """
             Create database tables or manage update if needed
             @param suffix as str
         """
-        self.__DB_PATH = "%s/exceptions_%s.db" % (EOLIE_LOCAL_PATH,
-                                                  suffix)
-        self.__cancellable = Gio.Cancellable.new()
+        self.__DB_PATH = "%s/filechooser.db" % EOLIE_LOCAL_PATH
         f = Gio.File.new_for_path(self.__DB_PATH)
         if not f.query_exists():
             try:
@@ -49,46 +48,47 @@ class DatabaseExceptions:
                     d.make_directory_with_parents()
                 # Create db schema
                 with SqlCursor(self) as sql:
-                    sql.execute(self.__create_exceptions)
+                    sql.execute(self.__create_filechooser)
                     sql.commit()
             except Exception as e:
-                print("DatabaseExceptions::__init__(): %s" % e)
+                print("DatabaseFileChooser::__init__(): %s" % e)
 
-    def add_exception(self, uri):
+    def add_uri_for_url(self, uri, url):
         """
-            Add an exception
+            Add an uri related to url
             @param uri as str
+            @param url as str
         """
         try:
             with SqlCursor(self) as sql:
-                sql.execute("INSERT INTO exceptions (uri) VALUES (?)", (uri,))
+                result = sql.execute("SELECT rowid FROM filechooser\
+                                      WHERE uri=?", (uri,))
+                v = result.fetchone()
+                if v is not None:
+                    sql.execute("UPDATE filechooser\
+                                 SET url=?\
+                                 WHERE uri=?", (url, uri))
+                else:
+                    sql.execute("INSERT INTO filechooser\
+                                          (url, uri)\
+                                          VALUES (?, ?)", (url, uri))
                 sql.commit()
-        except:
-            pass
+        except Exception as e:
+            print("DatabaseFilechooser::add_uri_for_url():", e)
 
-    def remove_exception(self, uri):
+    def get_uri(self, url):
         """
-            Remove an exception
-            @param uri as str
-        """
-        try:
-            with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM exceptions WHERE uri=?", (uri,))
-                sql.commit()
-        except:
-            pass
-
-    def find(self, uri):
-        """
-            True if uri is an exception
-            @param uri as str
-            @return bool
+            Get uri for url
+            @param url as str
+            @return uri as str/None
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT rowid FROM exceptions\
-                                  WHERE uri=?", (uri,))
+            result = sql.execute("SELECT uri FROM filechooser\
+                                  WHERE url=?", (url,))
             v = result.fetchone()
-            return v is not None
+            if v is not None:
+                return v[0]
+            return None
 
     def get_cursor(self):
         """

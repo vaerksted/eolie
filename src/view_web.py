@@ -213,6 +213,7 @@ class WebView(WebKit2.WebView):
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("button-release-event", self.__on_button_release_event)
         self.connect("context-menu", self.__on_context_menu)
+        self.connect("run-file-chooser", self.__on_run_file_chooser)
 
     def __set_system_fonts(self, settings):
         """
@@ -242,7 +243,7 @@ class WebView(WebKit2.WebView):
     def __on_context_menu(self, view, context_menu, event, hit):
         """
             Add custom items to menu
-            @param view as WebKit2.WebView
+            @param view as WebView
             @param context_menu as WebKit2.ContextMenu
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
@@ -275,7 +276,7 @@ class WebView(WebKit2.WebView):
     def __on_button_press_event(self, widget, event):
         """
             Store initial selection
-            @param widget as WebKit2.WebView
+            @param widget as WebView
             @param event as Gdk.EventScroll
         """
         self.__last_click_time = time()
@@ -286,7 +287,7 @@ class WebView(WebKit2.WebView):
     def __on_button_release_event(self, widget, event):
         """
             Set current selection
-            @param widget as WebKit2.WebView
+            @param widget as WebView
             @param event as Gdk.EventScroll
         """
         c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
@@ -298,7 +299,7 @@ class WebView(WebKit2.WebView):
     def __on_scroll_event(self, widget, event):
         """
             Adapt scroll speed to device
-            @param widget as WebKit2.WebView
+            @param widget as WebView
             @param event as Gdk.EventScroll
         """
         source = event.get_source_device().get_source()
@@ -308,6 +309,33 @@ class WebView(WebKit2.WebView):
         if self.__input_source != source:
             self.__input_source = source
             self.__set_smooth_scrolling(source)
+
+    def __on_run_file_chooser(self, webview, request):
+        """
+            Run own file chooser
+            @param webview as WebView
+            @param request as WebKit2.FileChooserRequest
+        """
+        from eolie.database_filechooser import DatabaseFileChooser
+        parsed = urlparse(webview.get_uri())
+        filechooser_db = DatabaseFileChooser()
+        dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
+                                           El().active_window,
+                                           Gtk.FileChooserAction.OPEN,
+                                           _("Open"),
+                                           _("Cancel"))
+        uri = filechooser_db.get_uri(parsed.netloc)
+        if uri is not None:
+            dialog.set_current_folder_uri(uri)
+        response = dialog.run()
+        if response in [Gtk.ResponseType.DELETE_EVENT,
+                        Gtk.ResponseType.CANCEL]:
+            request.cancel()
+        else:
+            request.select_files(dialog.get_filenames())
+            filechooser_db.add_uri_for_url(dialog.get_current_folder_uri(),
+                                           parsed.netloc)
+        return True
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
