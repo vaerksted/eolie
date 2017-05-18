@@ -391,7 +391,6 @@ class WebViewNavigation:
                 try:
                     from OpenSSL import crypto
                     from datetime import datetime
-                    from binascii import hexlify
                     (valid, tls, errors) = webview.get_tls_info()
                     if tls is not None:
                         print("***************************************"
