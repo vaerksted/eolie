@@ -21,6 +21,7 @@ libpythonloader_la_LDFLAGS=$(PYTHON_LDFLAGS)
 webkitextension_LTLIBRARIES = libpythonloader.la
 
 EXTRA_DIST = \
+    extension.py.in\
 	$(webkitextension_DATA)
 
 CLEANFILES = \
