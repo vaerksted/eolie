@@ -5,8 +5,12 @@
  <_name>Eolie</_name>
  <_summary>Web browser</_summary>
  <description>
+    <_p>
+	Eolie is a new GNOME web browser.
+  </_p>
  </description>
  <screenshots>
+    <screenshot type="default">https://raw.githubusercontent.com/gnumdk/lollypop-web/master/screenshot.jpg</screenshot>
  </screenshots>
  <url type="homepage">https://github.com/gnumdk/eolie</url>
  <updatecontact>cedric.bellegarde@adishatz.org</updatecontact>
