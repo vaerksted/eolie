@@ -30,7 +30,7 @@
               </object>
               <packing>
                 <property name="name">label</property>
-                <property name="title" translatable="yes">page0</property>
+                <property name="title" translatable="yes"></property>
               </packing>
             </child>
             <child>

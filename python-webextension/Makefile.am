@@ -25,6 +25,7 @@ EXTRA_DIST = \
 	$(webkitextension_DATA)
 
 CLEANFILES = \
+    extension.py\
     $(lib_LTLIBRARIES)
 
 -include $(top_srcdir)/git.mk
