@@ -411,35 +411,14 @@ class SettingsDialog:
         from eolie.mozilla_sync import MozillaSync
         from gi.repository import Secret
         import base64
+        keyB = ""
+        session = None
+        # Connect to mozilla sync
         try:
             self.__client = MozillaSync()
             session = self.__client.login(login, password)
             bid_assertion, key = self.__client.get_browserid_assertion(session)
-            schema_string = "org.gnome.Eolie.sync"
             keyB = base64.b64encode(session.keys[1]).decode("utf-8")
-            SecretSchema = {
-                "sync": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING,
-                "uid": Secret.SchemaAttributeType.STRING,
-                "token": Secret.SchemaAttributeType.STRING,
-                "keyB": Secret.SchemaAttributeType.STRING
-            }
-            SecretAttributes = {
-                "sync": "mozilla",
-                "login": login,
-                "uid": session.uid,
-                "token": session.token,
-                "keyB": keyB
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            Secret.password_store(schema, SecretAttributes,
-                                  Secret.COLLECTION_DEFAULT,
-                                  schema_string,
-                                  password,
-                                  None,
-                                  self.__on_password_stored)
             GLib.idle_add(label.set_text, _("Sync started"))
             GLib.idle_add(image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
@@ -457,6 +436,41 @@ class SettingsDialog:
                 GLib.idle_add(image.set_from_icon_name,
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
+        # Store credentials
+        try:
+            schema_string = "org.gnome.Eolie.sync"
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
+                "uid": Secret.SchemaAttributeType.STRING,
+                "token": Secret.SchemaAttributeType.STRING,
+                "keyB": Secret.SchemaAttributeType.STRING
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            if session is None:
+                uid = ""
+                token = ""
+            else:
+                uid = session.uid
+                token = session.token
+            SecretAttributes = {
+                    "sync": "mozilla",
+                    "login": login,
+                    "uid": uid,
+                    "token": token,
+                    "keyB": keyB
+            }
+
+            Secret.password_store(schema, SecretAttributes,
+                                  Secret.COLLECTION_DEFAULT,
+                                  schema_string,
+                                  password,
+                                  None,
+                                  self.__on_password_stored)
+        except Exception as e:
+            print("Settings::__connect_mozilla_sync()", e)
 
     def __on_password_stored(self, secret, result):
         """
