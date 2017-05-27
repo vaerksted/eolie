@@ -334,7 +334,6 @@ class ToolbarTitle(Gtk.Bin):
             self.set_text_entry(self.__uri)
         else:
             self.__set_default_placeholder()
-            self.set_text_entry("")
         self.__entry.get_style_context().remove_class("uribar-title")
 
     def _on_leave_notify(self, widget, event):
@@ -586,6 +585,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show search placeholder
         """
+        self.set_text_entry("")
         self.__placeholder.set_text(_("Search or enter address"))
         self.__placeholder.set_opacity(0.8)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,

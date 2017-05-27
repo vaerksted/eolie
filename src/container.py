@@ -446,8 +446,6 @@ class Container(Gtk.Overlay):
             # Turn off reading mode if needed
             if self.current.reading:
                 self.current.switch_read_mode()
-            if parsed.scheme in ["populars", "about"]:
-                GLib.idle_add(self.__window.toolbar.title.start_search)
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
@@ -455,6 +453,8 @@ class Container(Gtk.Overlay):
             # Give focus to webview
             if parsed.scheme in ["http", "https"]:
                 GLib.idle_add(self.__grab_focus_on_current)
+            else:
+                GLib.idle_add(self.__window.toolbar.title.start_search)
             # Hide progress
             GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)
 
