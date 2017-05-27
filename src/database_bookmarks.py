@@ -17,7 +17,7 @@ import itertools
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El, EOLIE_LOCAL_PATH, CONFIG_PATH
+from eolie.define import El, EOLIE_LOCAL_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -749,10 +749,11 @@ class DatabaseBookmarks:
             self.thread_lock.acquire()
             SqlCursor.add(self)
             import json
+            homedir = GLib.get_home_dir()
             if chrome:
-                path = CONFIG_PATH + "/chrome/Default/Bookmarks"
+                path = homedir + "/.config/chrome/Default/Bookmarks"
             else:
-                path = CONFIG_PATH + "/chromium/Default/Bookmarks"
+                path = homedir + "/.config/chromium/Default/Bookmarks"
             f = Gio.File.new_for_path(path)
             if not f.query_exists():
                 return
