@@ -598,12 +598,17 @@ class ToolbarTitle(Gtk.Bin):
             Update PRIMARY icon, Gtk.Entry should be set
         """
         parsed = urlparse(self.__uri)
-        if parsed.scheme == "https" and self.__secure_content:
+        if (parsed.scheme == "https" and self.__secure_content) or\
+                parsed.scheme == "file":
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "channel-secure-symbolic")
-        else:
+        elif parsed.scheme in ["http", "https"]:
             self.set_insecure_content()
+        else:
+            self.__entry.set_icon_from_icon_name(
+                                        Gtk.EntryIconPosition.PRIMARY,
+                                        "system-search-symbolic")
 
     def __search_keywords_thread(self, value):
         """
