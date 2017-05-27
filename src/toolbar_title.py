@@ -145,7 +145,6 @@ class ToolbarTitle(Gtk.Bin):
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
-            self.__set_default_placeholder()
             return
         self.__placeholder.set_text(title)
         if not self.__lock_focus and\
@@ -249,7 +248,8 @@ class ToolbarTitle(Gtk.Bin):
             Focus widget without showing
             popover allowing user to start a search
         """
-        self.__entry.grab_focus()
+        if not self.__entry.is_focus():
+            self.__entry.grab_focus()
 
     def set_lock_focus(self, locked):
         """
