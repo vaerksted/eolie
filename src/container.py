@@ -451,7 +451,7 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             # Give focus to webview
-            if parsed.scheme in ["http", "https"]:
+            if parsed.scheme in ["http", "https", "file"]:
                 GLib.idle_add(self.__grab_focus_on_current)
             else:
                 GLib.idle_add(self.__window.toolbar.title.start_search)

@@ -462,6 +462,10 @@ class Application(Gtk.Application):
         # Open command line args
         if len(args) > 1:
             for uri in args[1:]:
+                # Transform path to uri
+                f = Gio.File.new_for_path(uri)
+                if f.query_exists():
+                    uri = f.get_uri()
                 active_window.container.add_webview(uri,
                                                     Gdk.WindowType.CHILD,
                                                     private_browsing)
