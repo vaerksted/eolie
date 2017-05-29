@@ -20,6 +20,7 @@
     <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverImages.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverPassword.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">PopoverSyncAuth.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">RowDownload.ui</file>

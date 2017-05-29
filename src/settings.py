@@ -415,9 +415,9 @@ class SettingsDialog:
         session = None
         # Connect to mozilla sync
         try:
-            self.__client = MozillaSync()
-            session = self.__client.login(login, password)
-            bid_assertion, key = self.__client.get_browserid_assertion(session)
+            client = MozillaSync()
+            session = client.login(login, password)
+            bid_assertion, key = client.get_browserid_assertion(session)
             keyB = base64.b64encode(session.keys[1]).decode("utf-8")
             GLib.idle_add(label.set_text, _("Sync started"))
             GLib.idle_add(image.set_from_icon_name,
@@ -425,19 +425,16 @@ class SettingsDialog:
                           Gtk.IconSize.MENU)
         except Exception as e:
             if str(e) == "Unverified account":
-                GLib.idle_add(label.set_text,
-                              _("You've received an email"
-                                " to validate synchronization"))
-                GLib.idle_add(image.set_from_icon_name,
-                              "mail-unread-symbolic",
-                              Gtk.IconSize.MENU)
+                GLib.timeout_add(1000, self.__settings_dialog.destroy)
                 # Try to go to webmail
                 split = login.split("@")
-                GLib.timeout_add(1000, self.__settings_dialog.destroy)
-                GLib.timeout_add(1200,
-                                 El().active_window.container.add_webview,
-                                 "https://%s" % split[1],
-                                 Gdk.WindowType.CHILD)
+                GLib.idle_add(El().active_window.container.add_webview,
+                              "https://%s" % split[1],
+                              Gdk.WindowType.CHILD)
+                GLib.idle_add(
+                    El().active_window.container.toolbar.title.show_message,
+                    _("You've received an email"
+                      " to validate synchronization"))
             else:
                 GLib.idle_add(label.set_text, str(e))
                 GLib.idle_add(image.set_from_icon_name,

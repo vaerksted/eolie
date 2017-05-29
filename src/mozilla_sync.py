@@ -44,7 +44,8 @@ class SyncWorker(GObject.GObject):
        Manage sync with mozilla server, will start syncing on init
     """
     __gsignals__ = {
-        'sync-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "password-needed": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "sync-finished": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -71,6 +72,9 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__stop = False
+        # We force session reset to user last stored token
+        if first_sync:
+            self.__session = None
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret, first_sync, False)
         return
@@ -282,7 +286,8 @@ class SyncWorker(GObject.GObject):
             GLib.idle_add(self.emit, "sync-finish")
         except Exception as e:
             print("SyncWorker::__sync():", e)
-            self.__status = False
+            if str(e) == "The authentication token could not be found":
+                GLib.idle_add(self.emit, "password-needed")
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
