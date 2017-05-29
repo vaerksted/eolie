@@ -282,6 +282,7 @@ class SyncWorker(GObject.GObject):
             GLib.idle_add(self.emit, "sync-finish")
         except Exception as e:
             print("SyncWorker::__sync():", e)
+            self.__status = False
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
