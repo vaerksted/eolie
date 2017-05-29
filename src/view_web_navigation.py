@@ -221,8 +221,10 @@ class WebViewNavigation:
         """
         self.__readable_content = ""
         self.__title = ""
-        if webview.get_uri() != "about:blank":
+        uri = webview.get_uri()
+        if uri != "about:blank":
             self.__js_timeout = None
+        self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
         """
@@ -353,7 +355,6 @@ class WebViewNavigation:
             if El().pishing.is_pishing(uri):
                 self._show_pishing_error(uri)
             else:
-                self.emit("uri-changed", uri)
                 exception = El().image_exceptions.find(
                                         parsed.netloc) or\
                     El().image_exceptions.find(
