@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, GLib
+from gi.repository import Gtk, Gdk, GLib
 
 from eolie.define import El, ArtSize
 from eolie.stacksidebar_child import SidebarChild
@@ -56,15 +56,7 @@ class StackSidebar(Gtk.EventBox):
         self.set_hexpand(False)
         self.connect("enter-notify-event", self.__on_enter_notify_event)
         self.connect("leave-notify-event", self.__on_leave_notify_event)
-        self.__set_panel_mode()
-        panel_mode = El().settings.get_enum("panel-mode")
-        self.__panel_action = Gio.SimpleAction.new_stateful(
-                                                 "panel_mode",
-                                                 GLib.VariantType.new("i"),
-                                                 GLib.Variant("i", panel_mode))
-        self.__panel_action.connect("activate",
-                                    self.__on_panel_mode_active)
-        self.__window.add_action(self.__panel_action)
+        self.set_panel_mode()
 
     def add_child(self, view):
         """
@@ -226,20 +218,7 @@ class StackSidebar(Gtk.EventBox):
             self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
-#######################
-# PROTECTED           #
-#######################
-    def _on_search_changed(self, entry):
-        """
-            Update filter
-            @param entry as Gtk.Entry
-        """
-        self.__listbox.invalidate_filter()
-
-#######################
-# PRIVATE             #
-#######################
-    def __set_panel_mode(self):
+    def set_panel_mode(self):
         """
             Set panel mode
         """
@@ -257,6 +236,19 @@ class StackSidebar(Gtk.EventBox):
                          250,
                          self.__window.container.update_children_allocation)
 
+#######################
+# PROTECTED           #
+#######################
+    def _on_search_changed(self, entry):
+        """
+            Update filter
+            @param entry as Gtk.Entry
+        """
+        self.__listbox.invalidate_filter()
+
+#######################
+# PRIVATE             #
+#######################
     def __set_child_height(self, child):
         """
             Set child height
@@ -346,16 +338,6 @@ class StackSidebar(Gtk.EventBox):
             child_index += 1
         self.__listbox.insert(row, child_index)
 
-    def __on_panel_mode_active(self, action, param):
-        """
-            Update panel mode
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        El().settings.set_enum('panel-mode', param.get_int32())
-        self.__set_panel_mode()
-
     def __on_button_press(self, widget, event):
         """
             Hide popover if visible
@@ -363,19 +345,7 @@ class StackSidebar(Gtk.EventBox):
             @param event as Gdk.EventButton
         """
         self.__window.toolbar.title.close_popover()
-        if event.button == 3:
-            popover = Gtk.PopoverMenu.new()
-            builder = Gtk.Builder()
-            builder.add_from_resource("/org/gnome/Eolie/PanelMenu.ui")
-            popover.add(builder.get_object("menu"))
-            popover.set_relative_to(widget)
-            rect = widget.get_allocation()
-            rect.x = event.x
-            rect.y = event.y
-            rect.width = rect.height = 1
-            popover.set_pointing_to(rect)
-            popover.show()
-        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.__window.container.add_webview(El().start_page,
                                                 Gdk.WindowType.CHILD)
 

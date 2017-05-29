@@ -72,7 +72,6 @@ class Application(Gtk.Application):
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
         self.__windows = []
-        self.__pages_menu = PagesMenu(self)
         self.debug = False
         self.show_tls = False
         try:
@@ -257,6 +256,7 @@ class Application(Gtk.Application):
         styleContext.add_provider_for_screen(screen, cssProvider,
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.settings = Settings.new()
+        self.__pages_menu = PagesMenu(self)
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         # We store cursors for main thread
