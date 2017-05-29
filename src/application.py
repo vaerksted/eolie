@@ -138,7 +138,18 @@ class Application(Gtk.Application):
 
         if not self.__windows:
             self.__init()
-            self.__get_new_window()
+            self.get_new_window()
+
+    def get_new_window(self):
+        """
+            Return a new window
+            @return Window
+        """
+        window = Window(self)
+        window.connect('delete-event', self.__on_delete_event)
+        window.show()
+        self.__windows.append(window)
+        return window
 
     def set_setting(self, key, value):
         """
@@ -405,17 +416,6 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::save_state()", e)
 
-    def __get_new_window(self):
-        """
-            Return a new window
-            @return Window
-        """
-        window = Window(self)
-        window.connect('delete-event', self.__on_delete_event)
-        window.show()
-        self.__windows.append(window)
-        return window
-
     def __show_plugins(self):
         """
             Show available plugins on stdout
@@ -462,7 +462,7 @@ class Application(Gtk.Application):
         if self.settings.get_value("remember-session"):
             self.__restore_state()
         if options.contains("new"):
-            active_window = self.__get_new_window()
+            active_window = self.get_new_window()
         else:
             active_window = self.active_window
         # Open command line args
@@ -478,7 +478,7 @@ class Application(Gtk.Application):
             active_window.present_with_time(Gtk.get_current_event_time())
         # We already have a window, open a new one
         elif active_window.container.current:
-            window = self.__get_new_window()
+            window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD,
                                          private_browsing)
@@ -595,7 +595,7 @@ class Application(Gtk.Application):
         """
         string = param.get_string()
         if string == "new_window":
-            window = self.__get_new_window()
+            window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD)
 

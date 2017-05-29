@@ -431,6 +431,13 @@ class SettingsDialog:
                 GLib.idle_add(image.set_from_icon_name,
                               "mail-unread-symbolic",
                               Gtk.IconSize.MENU)
+                # Try to go to webmail
+                split = login.split("@")
+                GLib.timeout_add(1000, self.__settings_dialog.destroy)
+                GLib.timeout_add(1200,
+                                 El().active_window.container.add_webview,
+                                 "https://%s" % split[1],
+                                 Gdk.WindowType.CHILD)
             else:
                 GLib.idle_add(label.set_text, str(e))
                 GLib.idle_add(image.set_from_icon_name,
