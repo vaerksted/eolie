@@ -134,6 +134,7 @@ class ToolbarTitle(Gtk.Bin):
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
+            self.__set_default_placeholder()
             return
         self.__placeholder.set_text(title)
         if not self.__lock_focus and\
