@@ -15,7 +15,6 @@
     <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ClearData.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ImportBookmarks.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PanelMenu.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
