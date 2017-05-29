@@ -156,30 +156,12 @@ class SettingsDialog:
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
                                 El().settings.get_value("do-not-track"))
-        label = builder.get_object("result_label")
-        sync_button = builder.get_object("sync_button")
-        if El().sync_worker is not None:
-            login_entry = builder.get_object("login_entry")
-            login_entry.set_text(El().sync_worker.username)
-            password_entry = builder.get_object("password_entry")
-            image = builder.get_object("result_image")
-            if El().sync_worker.status:
-                label.set_text(_("Synchronization is working"))
-                image.set_from_icon_name("network-transmit-receive-symbolic",
-                                         Gtk.IconSize.MENU)
-            sync_button.connect("clicked", self.__on_sync_button_clicked,
-                                login_entry, password_entry,
-                                label, image)
-        else:
-            try:
-                from eolie.mozilla_sync import SyncWorker
-                SyncWorker  # Just make PEP8 happy
-            except Exception as e:
-                label.set_text(
-                      _("Synchronization is not available"
-                        " on your computer:\n %s") % e)
-                sync_button.set_sensitive(False)
-
+        self.__result_label = builder.get_object("result_label")
+        self.__sync_button = builder.get_object("sync_button")
+        self.__login_entry = builder.get_object("login_entry")
+        self.__password_entry = builder.get_object("password_entry")
+        self.__result_image = builder.get_object("result_image")
+        self.__setup_sync_button()
         builder.connect_signals(self)
 
     def show(self):
@@ -396,16 +378,76 @@ class SettingsDialog:
         if event.keyval == Gdk.KEY_Escape:
             self.__settings_dialog.destroy()
 
+    def _on_sync_button_clicked(self, button):
+        """
+            Connect to Mozilla Sync to get tokens
+            @param button as Gtk.Button
+        """
+        if El().sync_worker.status:
+            El().sync_worker.stop()
+            El().sync_worker.delete_secret()
+            self.__setup_sync_button()
+        else:
+            El().sync_worker.delete_secret()
+            if self.__result_image.get_icon_name() ==\
+                    "content-loading-symbolic":
+                return
+            self.__result_label.set_text(_("Connecting…"))
+            self.__result_image.set_from_icon_name("content-loading-symbolic",
+                                                   Gtk.IconSize.MENU)
+            thread = Thread(target=self.__connect_mozilla_sync,
+                            args=(self.__login_entry.get_text(),
+                                  self.__password_entry.get_text()))
+            thread.daemon = True
+            thread.start()
+
 #######################
 # PRIVATE             #
 #######################
-    def __connect_mozilla_sync(self, login, password, label, image):
+    def __setup_sync_button(self, status=False):
+        """
+            Setup sync button based on current sync status
+            @param status as bool
+        """
+        self.__sync_button.get_style_context().remove_class(
+                                                          "destructive-action")
+        self.__sync_button.get_style_context().remove_class(
+                                                          "suggested-action")
+        if El().sync_worker is not None:
+            if El().sync_worker.username:
+                self.__login_entry.set_text(El().sync_worker.username)
+            if status or El().sync_worker.status:
+                self.__result_label.set_text(_("Synchronization is working"))
+                self.__result_image.set_from_icon_name(
+                                         "network-transmit-receive-symbolic",
+                                         Gtk.IconSize.MENU)
+                self.__sync_button.get_style_context().add_class(
+                                                          "destructive-action")
+                self.__sync_button.set_label(_("Cancel synchronization"))
+            else:
+                self.__result_label.set_text(
+                                           _("Synchronization is not working"))
+                self.__result_image.set_from_icon_name(
+                                         "computer-fail-symbolic",
+                                         Gtk.IconSize.MENU)
+                self.__sync_button.get_style_context().add_class(
+                                                          "suggested-action")
+                self.__sync_button.set_label(_("Allow synchronization"))
+        else:
+            try:
+                from eolie.mozilla_sync import SyncWorker
+                SyncWorker  # Just make PEP8 happy
+            except Exception as e:
+                self.__result_label.set_text(
+                      _("Synchronization is not available"
+                        " on your computer:\n %s") % e)
+                self.__sync_button.set_sensitive(False)
+
+    def __connect_mozilla_sync(self, login, password):
         """
             Connect to mozilla sync
             @param login as str
             @param password as str
-            @param label as Gtk.Label
-            @param image as Gtk.Image
             @thread safe
         """
         from eolie.mozilla_sync import MozillaSync
@@ -419,8 +461,8 @@ class SettingsDialog:
             session = client.login(login, password)
             bid_assertion, key = client.get_browserid_assertion(session)
             keyB = base64.b64encode(session.keys[1]).decode("utf-8")
-            GLib.idle_add(label.set_text, _("Sync started"))
-            GLib.idle_add(image.set_from_icon_name,
+            GLib.idle_add(self.__result_label.set_text, _("Sync started"))
+            GLib.idle_add(self.__result_image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
                           Gtk.IconSize.MENU)
         except Exception as e:
@@ -436,8 +478,8 @@ class SettingsDialog:
                     _("You've received an email"
                       " to validate synchronization"))
             else:
-                GLib.idle_add(label.set_text, str(e))
-                GLib.idle_add(image.set_from_icon_name,
+                GLib.idle_add(self.__result_label.set_text, str(e))
+                GLib.idle_add(self.__result_image.set_from_icon_name,
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
         # Store credentials
@@ -473,6 +515,7 @@ class SettingsDialog:
                                   password,
                                   None,
                                   self.__on_password_stored)
+            GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             print("Settings::__connect_mozilla_sync()", e)
 
@@ -484,28 +527,6 @@ class SettingsDialog:
         """
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
-
-    def __on_sync_button_clicked(self, button, login_entry, password_entry,
-                                 label, image):
-        """
-            Connect to Mozilla Sync to get tokens
-            @param button as Gtk.Button
-            @param login_entry as Gtk.Entry
-            @param password_entry as Gtk.Entry
-            @param label as Gtk.Label
-            @param image as Gtk.Image
-        """
-        El().sync_worker.delete_secret()
-        if image.get_icon_name() == "content-loading-symbolic":
-            return
-        label.set_text(_("Connecting…"))
-        image.set_from_icon_name("content-loading-symbolic", Gtk.IconSize.MENU)
-        thread = Thread(target=self.__connect_mozilla_sync,
-                        args=(login_entry.get_text(),
-                              password_entry.get_text(),
-                              label, image))
-        thread.daemon = True
-        thread.start()
 
     def __on_get_secret(self, source, result):
         """

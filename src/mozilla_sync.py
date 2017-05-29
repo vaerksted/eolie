@@ -58,7 +58,7 @@ class SyncWorker(GObject.GObject):
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__status = False
-        self.__client = MozillaSync()
+        self.__mozilla_sync = MozillaSync()
         self.__session = None
 
     def sync(self, first_sync=False):
@@ -72,6 +72,7 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__stop = False
+        self.__status = True
         # We force session reset to user last stored token
         if first_sync:
             self.__session = None
@@ -107,6 +108,8 @@ class SyncWorker(GObject.GObject):
         """
         self.__username = ""
         self.__password = ""
+        self.__session = None
+        self.__status = False
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret, False, True)
 
@@ -157,7 +160,7 @@ class SyncWorker(GObject.GObject):
             @return keys as (b"", b"")
         """
         if self.__session is None:
-            self.__session = FxASession(self.__client.client,
+            self.__session = FxASession(self.__mozilla_sync.fxa_client,
                                         self.__username,
                                         quick_stretch_password(
                                                         self.__username,
@@ -166,11 +169,10 @@ class SyncWorker(GObject.GObject):
                                         self.__token)
             self.__session.keys = [b"", self.__keyB]
         try:
-            self.__status = True
             self.__session.check_session_status()
-            bid_assertion, key = self.__client.get_browserid_assertion(
+            bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
                                                             self.__session)
-            bulk_keys = self.__client.connect(bid_assertion, key)
+            bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
         except Exception as e:
             self.__status = False
             raise e
@@ -199,14 +201,14 @@ class SyncWorker(GObject.GObject):
                         record["visits"].append({"date": atime*1000000,
                                                  "type": 1})
                     debug("pushing %s" % record)
-                    self.__client.add_history(record, bulk_keys)
+                    self.__mozilla_sync.add_history(record, bulk_keys)
                 else:
                     record["id"] = guid
                     record["type"] = "item"
                     record["deleted"] = True
                     debug("deleting %s" % record)
-                    self.__client.add_history(record, bulk_keys)
-                self.__mtimes = self.__client.client.info_collections()
+                    self.__mozilla_sync.add_history(record, bulk_keys)
+                self.__mtimes = self.__mozilla_sync.client.info_collections()
                 dump(self.__mtimes,
                      open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
@@ -226,7 +228,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__client.add_history(record, bulk_keys)
+            self.__mozilla_sync.add_history(record, bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
@@ -246,7 +248,7 @@ class SyncWorker(GObject.GObject):
             self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         try:
             bulk_keys = self.__get_session_bulk_keys()
-            new_mtimes = self.__client.client.info_collections()
+            new_mtimes = self.__mozilla_sync.client.info_collections()
 
             if self.__stop:
                 return
@@ -279,7 +281,7 @@ class SyncWorker(GObject.GObject):
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
             # Update last sync mtime
-            self.__mtimes = self.__client.client.info_collections()
+            self.__mtimes = self.__mozilla_sync.client.info_collections()
             dump(self.__mtimes,
                  open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
@@ -288,6 +290,7 @@ class SyncWorker(GObject.GObject):
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
                 GLib.idle_add(self.emit, "password-needed")
+            self.__status = False
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
@@ -319,7 +322,7 @@ class SyncWorker(GObject.GObject):
             record["parentid"] = parent_guid
             record["type"] = "bookmark"
             debug("pushing %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add_bookmark(record, bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__stop:
@@ -334,7 +337,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add_bookmark(record, bulk_keys)
             El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handled later
         # Otherwise, order will be broken by new children updates
@@ -368,7 +371,7 @@ class SyncWorker(GObject.GObject):
             record["title"] = parent_name
             record["children"] = children
             debug("pushing parent %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add_bookmark(record, bulk_keys)
         El().bookmarks.clean_tags()
 
     def __pull_bookmarks(self, bulk_keys, first_sync):
@@ -380,7 +383,7 @@ class SyncWorker(GObject.GObject):
         """
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
-        records = self.__client.get_bookmarks(bulk_keys)
+        records = self.__mozilla_sync.get_bookmarks(bulk_keys)
         # We get all guids here and remove them while sync
         # At the end, we have deleted records
         # On fist sync, keep all
@@ -486,7 +489,7 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        records = self.__client.get_history(bulk_keys)
+        records = self.__mozilla_sync.get_history(bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
@@ -585,6 +588,7 @@ class SyncWorker(GObject.GObject):
             if result is not None:
                 items = source.search_finish(result)
                 if not items:
+                    self.__status = False
                     return
                 if delete:
                     items[0].delete(None, None)
@@ -593,6 +597,7 @@ class SyncWorker(GObject.GObject):
                                          self.__on_load_secret,
                                          first_sync)
             else:
+                self.__status = False
                 # Sync not configured, just remove pending deleted bookmarks
                 for bookmark_id in El().get_deleted_ids():
                     El().bookmarks.remove(bookmark_id)
@@ -608,7 +613,7 @@ class MozillaSync(object):
         """
             Init client
         """
-        self.__client = FxAClient()
+        self.__fxa_client = FxAClient()
 
     def login(self, login, password):
         """
@@ -617,7 +622,7 @@ class MozillaSync(object):
             @param password as str
             @return fxaSession
         """
-        fxaSession = self.__client.login(login, password, keys=True)
+        fxaSession = self.__fxa_client.login(login, password, keys=True)
         fxaSession.fetch_keys()
         return fxaSession
 
@@ -711,6 +716,13 @@ class MozillaSync(object):
             Get client
         """
         return self.__client
+
+    @property
+    def fxa_client(self):
+        """
+            Get fxa client
+        """
+        return self.__fxa_client
 
 #######################
 # PRIVATE             #
