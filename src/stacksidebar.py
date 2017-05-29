@@ -360,7 +360,7 @@ class StackSidebar(Gtk.EventBox):
         """
             Hide popover if visible
             @param widget as Gtk.Widget
-            @param event as Gdk.Event
+            @param event as Gdk.EventButton
         """
         self.__window.toolbar.title.close_popover()
         if event.button == 3:
@@ -375,6 +375,9 @@ class StackSidebar(Gtk.EventBox):
             rect.width = rect.height = 1
             popover.set_pointing_to(rect)
             popover.show()
+        elif event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.__window.container.add_webview(El().start_page,
+                                                Gdk.WindowType.CHILD)
 
     def __on_key_press(self, widget, event):
         """
