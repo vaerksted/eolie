@@ -87,6 +87,9 @@ class Application(Gtk.Application):
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
                              None)
+        self.add_main_option("new", b'n', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Add a new window",
+                             None)
         self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
@@ -458,7 +461,10 @@ class Application(Gtk.Application):
         private_browsing = options.contains("private")
         if self.settings.get_value("remember-session"):
             self.__restore_state()
-        active_window = self.active_window
+        if options.contains("new"):
+            active_window = self.__get_new_window()
+        else:
+            active_window = self.active_window
         # Open command line args
         if len(args) > 1:
             for uri in args[1:]:
