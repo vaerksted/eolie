@@ -283,7 +283,7 @@ class SyncWorker(GObject.GObject):
             dump(self.__mtimes,
                  open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
-            GLib.idle_add(self.emit, "sync-finish")
+            GLib.idle_add(self.emit, "sync-finished")
         except Exception as e:
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
