@@ -118,7 +118,7 @@ class Art:
                     if current_time - mtime > 2592000:
                         f.delete()
         except Exception as e:
-            print("Art::clean():", e)
+            print("Art::vacuum():", e)
 
     @property
     def base_uri(self):
