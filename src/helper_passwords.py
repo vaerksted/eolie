@@ -14,6 +14,7 @@ import gi
 gi.require_version('Secret', '1')
 from gi.repository import Secret, GLib
 
+from uuid import uuid3, NAMESPACE_DNS
 from urllib.parse import urlparse
 from eolie.utils import debug
 
@@ -43,11 +44,11 @@ class PasswordsHelper:
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "uri": Secret.SchemaAttributeType.STRING,
+                "uuid": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "uri": parsed.netloc,
+                "uuid": str(uuid3(NAMESPACE_DNS, parsed.netloc)),
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
@@ -105,12 +106,12 @@ class PasswordsHelper:
                                                         parsed.netloc)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "uri": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING,
+                "uuid": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "uri": parsed.netloc,
+                "uuid": str(uuid3(NAMESPACE_DNS, parsed.netloc)),
                 "login": login
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
