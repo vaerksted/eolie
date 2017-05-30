@@ -13,7 +13,7 @@
 import gi
 gi.require_version('WebKit2', '4.0')
 
-from gi.repository import Gio, Gdk, Gtk, GLib, Secret
+from gi.repository import Gio, Gdk, Gtk, GLib
 
 from gettext import gettext as _
 from threading import Thread
@@ -165,6 +165,7 @@ class SettingsDialog:
         self.__result_image = builder.get_object("result_image")
         self.__setup_sync_button()
         builder.connect_signals(self)
+        self.__helper.get_sync(self.__on_get_sync)
 
     def show(self):
         """
@@ -415,8 +416,6 @@ class SettingsDialog:
         self.__sync_button.get_style_context().remove_class(
                                                           "suggested-action")
         if El().sync_worker is not None:
-            if El().sync_worker.username:
-                self.__login_entry.set_text(El().sync_worker.username)
             if status or El().sync_worker.status:
                 self.__result_label.set_text(_("Synchronization is working"))
                 self.__result_image.set_from_icon_name(
@@ -484,41 +483,19 @@ class SettingsDialog:
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
         # Store credentials
-        try:
-            schema_string = "org.gnome.Eolie.sync"
-            SecretSchema = {
-                "sync": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING,
-                "uid": Secret.SchemaAttributeType.STRING,
-                "token": Secret.SchemaAttributeType.STRING,
-                "keyB": Secret.SchemaAttributeType.STRING
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            if session is None:
-                uid = ""
-                token = ""
-            else:
-                uid = session.uid
-                token = session.token
-            SecretAttributes = {
-                    "sync": "mozilla",
-                    "login": login,
-                    "uid": uid,
-                    "token": token,
-                    "keyB": keyB
-            }
-
-            Secret.password_store(schema, SecretAttributes,
-                                  Secret.COLLECTION_DEFAULT,
-                                  schema_string,
-                                  password,
-                                  None,
-                                  self.__on_password_stored)
-            GLib.idle_add(self.__setup_sync_button, True)
-        except Exception as e:
-            print("Settings::__connect_mozilla_sync()", e)
+        if session is None:
+            uid = ""
+            token = ""
+        else:
+            uid = session.uid
+            token = session.token
+        self.__helper.store_sync_password(login,
+                                          password,
+                                          uid,
+                                          token,
+                                          keyB,
+                                          self.__on_password_stored)
+        GLib.idle_add(self.__setup_sync_button, True)
 
     def __on_password_stored(self, secret, result):
         """
@@ -528,3 +505,12 @@ class SettingsDialog:
         """
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
+
+    def __on_get_sync(self, username, password):
+        """
+            Set username and password
+            @param username as str
+            @param password as str
+        """
+        self.__login_entry.set_text(username)
+        self.__password_entry.set_text(password)

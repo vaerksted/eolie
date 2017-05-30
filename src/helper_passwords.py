@@ -12,7 +12,7 @@
 
 import gi
 gi.require_version('Secret', '1')
-from gi.repository import Secret
+from gi.repository import Secret, GLib
 
 from urllib.parse import urlparse
 
@@ -37,9 +37,8 @@ class PasswordsHelper:
             @param callback as function
             @param args
         """
-        if self.__secret is None:
-            return
         try:
+            self.__wait_for_secret(self.get, uri, callback, *args)
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
@@ -61,13 +60,82 @@ class PasswordsHelper:
         except Exception as e:
             print("PasswordsHelper::get():", e)
 
+    def get_sync(self, callback, *args):
+        """
+            Get sync password
+            @param callback as function
+        """
+        try:
+            self.__wait_for_secret(self.get_sync, callback, *args)
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "sync": "mozilla"
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema, SecretAttributes,
+                                 Secret.SearchFlags.NONE,
+                                 None,
+                                 self.__on_secret_search,
+                                 callback,
+                                 *args)
+        except Exception as e:
+            print("PasswordsHelper::get_sync():", e)
+
+    def store_sync_password(self, login, password, uid, token, keyB, callback):
+        """
+            Store Mozilla Sync password
+            @param login as str
+            @param password as str
+            @param uid as str
+            @param token as str
+            @param keyB as str
+            @param callback as function
+        """
+        try:
+            self.__wait_for_secret(self.store_sync_password,
+                                   login,
+                                   password,
+                                   uid,
+                                   token,
+                                   keyB,
+                                   callback)
+            schema_string = "org.gnome.Eolie.sync"
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
+                "uid": Secret.SchemaAttributeType.STRING,
+                "token": Secret.SchemaAttributeType.STRING,
+                "keyB": Secret.SchemaAttributeType.STRING
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            SecretAttributes = {
+                    "sync": "mozilla",
+                    "login": login,
+                    "uid": uid,
+                    "token": token,
+                    "keyB": keyB
+            }
+            Secret.password_store(schema, SecretAttributes,
+                                  Secret.COLLECTION_DEFAULT,
+                                  schema_string,
+                                  password,
+                                  None,
+                                  callback)
+        except Exception as e:
+            print("PasswordsHelper::store_sync_password():", e)
+
     def clear(self):
         """
             Clear passwords
         """
-        if self.__secret is None:
-            return
         try:
+            self.__wait_for_secret(self.clear)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING
             }
@@ -88,6 +156,19 @@ class PasswordsHelper:
 #######################
 # PRIVATE             #
 #######################
+    def __wait_for_secret(self, call, *args):
+        """
+            Wait for secret
+            @param call as function to call
+            @param args
+            @raise exception if waiting
+        """
+        # Wait for secret
+        if self.__secret is None:
+            GLib.timeout_add(1000, call, *args)
+        if self.__secret in [None, -1]:
+            raise Exception("Waiting Secret service")
+
     def __on_load_secret(self, source, result, callback, *args):
         """
             Set username/password input
@@ -149,4 +230,5 @@ class PasswordsHelper:
         try:
             self.__secret = Secret.Service.get_finish(result)
         except Exception as e:
+            self.__secret = -1
             print("PasswordsHelper::__on_get_secret()", e)
