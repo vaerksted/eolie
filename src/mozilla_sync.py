@@ -489,7 +489,7 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        records = self.__mozilla_sync.get_history("history", bulk_keys)
+        records = self.__mozilla_sync.get("history", bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
