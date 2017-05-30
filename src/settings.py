@@ -451,7 +451,7 @@ class SettingsDialog:
             @thread safe
         """
         try:
-            El().sync_worker.login(username, password)
+            El().sync_worker.login({"login": username}, password)
             GLib.idle_add(self.__result_label.set_text, _("Sync started"))
             GLib.idle_add(self.__result_image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
