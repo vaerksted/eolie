@@ -383,7 +383,7 @@ class SyncWorker(GObject.GObject):
         """
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
-        records = self.__mozilla_sync.get_bookmarks(bulk_keys)
+        records = self.__mozilla_sync.get("bookmarks", bulk_keys)
         # We get all guids here and remove them while sync
         # At the end, we have deleted records
         # On fist sync, keep all
@@ -489,7 +489,7 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        records = self.__mozilla_sync.get_history(bulk_keys)
+        records = self.__mozilla_sync.get_history("history", bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
@@ -660,29 +660,18 @@ class MozillaSync(object):
                               base64.b64decode(keys["default"][1]))
         return bulk_keys
 
-    def get_bookmarks(self, bulk_keys):
+    def get_records(self, collection, bulk_keys):
         """
-            Return bookmarks payload
+            Return records payload
+            @param collection as str
             @param bulk keys as KeyBundle
             @return [{}]
         """
-        bookmarks = []
+        records = []
         for record in self.__client.get_records('bookmarks'):
             record["payload"] = self.__decrypt_payload(record, bulk_keys)
-            bookmarks.append(record)
-        return bookmarks
-
-    def get_history(self, bulk_keys):
-        """
-            Return history payload
-            @param bulk keys as KeyBundle
-            @return [{}]
-        """
-        history = []
-        for record in self.__client.get_records('history'):
-            record["payload"] = self.__decrypt_payload(record, bulk_keys)
-            history.append(record)
-        return history
+            records.append(record)
+        return records
 
     def add(self, item, collection, bulk_keys):
         """
@@ -697,18 +686,6 @@ class MozillaSync(object):
         record["payload"] = payload
         record["id"] = item["id"]
         self.__client.put_record(collection, record)
-
-    def get_passwords(self, bulk_keys):
-        """
-            Get mozilla passwords
-            @param bulk keys as KeyBundle
-            @return [{}]
-        """
-        passwords = []
-        for record in self.__client.get_records("passwords"):
-            record["payload"] = self.__decrypt_payload(record, bulk_keys)
-            passwords.append(record)
-        return passwords
 
     def get_browserid_assertion(self, session,
                                 tokenserver_url=TOKENSERVER_URL):
