@@ -10,9 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Secret
+from gi.repository import Gtk
 
 from gettext import gettext as _
+from urllib.parse import urlparse
+
+from eolie.helper_passwords import PasswordsHelper
 
 
 class PasswordPopover(Gtk.Popover):
@@ -20,7 +23,7 @@ class PasswordPopover(Gtk.Popover):
         Tell user to save form password
     """
 
-    def __init__(self, username, password, netloc):
+    def __init__(self, username, password, uri):
         """
             Init popover
             @param username as str
@@ -28,15 +31,16 @@ class PasswordPopover(Gtk.Popover):
             @param netloc as str
         """
         Gtk.Popover.__init__(self)
-        self.__secret_item = None
+        self.__helper = PasswordsHelper()
         self.__username = username
         self.__password = password
-        self.__netloc = netloc
+        self.__uri = uri
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverPassword.ui')
         builder.connect_signals(self)
         self.__label = builder.get_object('label')
-        builder.get_object('uri').set_text(netloc)
+        parsed = urlparse(uri)
+        builder.get_object('uri').set_text(parsed.netloc)
         builder.get_object('username').set_text(username)
         builder.get_object('password').set_text(password)
         self.add(builder.get_object('widget'))
@@ -50,33 +54,11 @@ class PasswordPopover(Gtk.Popover):
             @param button as Gtk.Button
         """
         try:
-            schema_string = "org.gnome.Eolie: %s@%s" % (self.__username,
-                                                        self.__netloc)
-            if self.__secret_item is None:
-                SecretSchema = {
-                    "type": Secret.SchemaAttributeType.STRING,
-                    "uri": Secret.SchemaAttributeType.STRING,
-                    "login": Secret.SchemaAttributeType.STRING,
-                }
-                SecretAttributes = {
-                    "type": "eolie web login",
-                    "uri": self.__netloc,
-                    "login": self.__username
-                }
-                schema = Secret.Schema.new("org.gnome.Eolie",
-                                           Secret.SchemaFlags.NONE,
-                                           SecretSchema)
-                Secret.password_store(schema, SecretAttributes,
-                                      Secret.COLLECTION_DEFAULT,
-                                      schema_string,
-                                      self.__password,
-                                      None, None)
-            else:
-                value = Secret.Value.new(self.__password,
-                                         len(self.__password),
-                                         "")
-                self.__secret_item.set_secret(value, None, None)
-                self.__secret_item.set_label(schema_string, None, None)
+            self.__helper.clear(self.__uri)
+            self.__helper.store(self.__username,
+                                self.__password,
+                                self.__uri,
+                                None)
             self.destroy()
         except Exception as e:
             print("PasswordPopover::_on_save_clicked()", e)
@@ -85,79 +67,27 @@ class PasswordPopover(Gtk.Popover):
         """
             Overwrite show
         """
-        self.__search_for_password()
+        self.__helper.get(self.__uri,
+                          self.__on_get_password)
 
 #######################
 # PRIVATE             #
 #######################
-    def __search_for_password(self):
-        """
-           Search for password
-        """
-        Secret.Service.get(Secret.ServiceFlags.NONE,
-                           None, self.__on_get_secret)
-
-    def __on_load_secret(self, item, result):
+    def __on_get_password(self, attributes, password):
         """
             Set username/password input
-            @param item as Secret.Item
-            @param result as Gio.AsyncResult
+            @param attributes as {}
+            @param password as str
         """
         try:
-            self.__secret_item = item
-            secret = item.get_secret()
-            if self.__secret_item is not None:
-                username = item.get_attributes()["login"]
-                password = secret.get().decode('utf-8')
-                if username == self.__username and self.__password == password:
-                    self.emit("closed")
-                    return
-                else:
-                    self.__label.set_text(_(
-                                       "Do you want to modify this password?"))
-            Gtk.Popover.show(self)
-        except Exception as e:
-            print("PasswordPopover::on_load_secret()", e)
-
-    def __on_secret_search(self, secret, result):
-        """
-            Set username/password input
-            @param secret as Secret.secret
-            @param result as Gio.AsyncResult
-        """
-        try:
-            if result is not None:
-                items = secret.search_finish(result)
-                if not items:
-                    Gtk.Popover.show(self)
-                    return
-                items[0].load_secret(None,
-                                     self.__on_load_secret)
+            if attributes is None:
+                Gtk.Popover.show(self)
+            elif attributes["login"] == self.__username and\
+                    self.__password == password:
+                self.emit("closed")
             else:
                 Gtk.Popover.show(self)
+                self.__label.set_text(_(
+                                   "Do you want to modify this password?"))
         except Exception as e:
-            print("PasswordPopover::__on_secret_search()", e)
-
-    def __on_get_secret(self, source, result):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-        """
-        try:
-            secret = Secret.Service.get_finish(result)
-            SecretSchema = {
-                "uri": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING,
-            }
-            SecretAttributes = {
-                "uri": self.__netloc,
-                "login": self.__username
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search)
-        except Exception as e:
-            print("PasswordPopover::__on_get_secret()", e)
+            print("PasswordPopover::on_load_secret()", e)

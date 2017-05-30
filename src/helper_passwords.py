@@ -86,7 +86,46 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::get_sync(): %s" % e)
 
-    def store_sync_password(self, login, password, uid, token, keyB, callback):
+    def store(self, login, password, uri, callback):
+        """
+            Store password
+            @param login as str
+            @param password as str
+            @param uri as str
+            @param callback as function
+        """
+        try:
+            self.__wait_for_secret(self.store,
+                                   login,
+                                   password,
+                                   uri,
+                                   callback)
+            parsed = urlparse(uri)
+            schema_string = "org.gnome.Eolie: %s@%s" % (login,
+                                                        parsed.netloc)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+                "uri": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+                "uri": parsed.netloc,
+                "login": login
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            Secret.password_store(schema, SecretAttributes,
+                                  Secret.COLLECTION_DEFAULT,
+                                  schema_string,
+                                  password,
+                                  None,
+                                  callback)
+        except Exception as e:
+            debug("PasswordsHelper::store(): %s" % e)
+
+    def store_sync(self, login, password, uid, token, keyB, callback):
         """
             Store Mozilla Sync password
             @param login as str
@@ -97,7 +136,7 @@ class PasswordsHelper:
             @param callback as function
         """
         try:
-            self.__wait_for_secret(self.store_sync_password,
+            self.__wait_for_secret(self.store_sync,
                                    login,
                                    password,
                                    uid,
@@ -129,7 +168,34 @@ class PasswordsHelper:
                                   None,
                                   callback)
         except Exception as e:
-            debug("PasswordsHelper::store_sync_password(): %s" % e)
+            debug("PasswordsHelper::store_sync(): %s" % e)
+
+    def clear(self, uri):
+        """
+            Clear password
+            @param uri as str
+        """
+        try:
+            parsed = urlparse(uri)
+            self.__wait_for_secret(self.clear)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+                "uri": Secret.SchemaAttributeType.STRING,
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+                "uri": parsed.netloc
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema,
+                                 SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_clear_search)
+        except Exception as e:
+            debug("PasswordsHelper::clear(): %s" % e)
 
     def clear_sync(self):
         """
@@ -153,7 +219,7 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::clear_sync(): %s" % e)
 
-    def clear(self):
+    def clear_all(self):
         """
             Clear passwords
         """
@@ -174,7 +240,7 @@ class PasswordsHelper:
                                  None,
                                  self.__on_clear_search)
         except Exception as e:
-            debug("PasswordsHelper::clear(): %s" % e)
+            debug("PasswordsHelper::clear_all(): %s" % e)
 
 #######################
 # PRIVATE             #
@@ -200,14 +266,13 @@ class PasswordsHelper:
             @param callback as function
             @param args
         """
-        try:
-            secret = source.get_secret()
-            if secret is not None:
-                callback(source.get_attributes(),
-                         secret.get().decode('utf-8'),
-                         *args)
-        except Exception as e:
-            debug("PasswordsHelper::__on_load_secret(): %s" % e)
+        secret = source.get_secret()
+        if secret is not None:
+            callback(source.get_attributes(),
+                     secret.get().decode('utf-8'),
+                     *args)
+        else:
+            raise Exception("No secret")
 
     def __on_clear_search(self, source, result):
         """
@@ -234,14 +299,18 @@ class PasswordsHelper:
         try:
             if result is not None:
                 items = self.__secret.search_finish(result)
-                if not items:
-                    return
-                items[0].load_secret(None,
-                                     self.__on_load_secret,
-                                     callback,
-                                     *args)
+                if items:
+                    items[0].load_secret(None,
+                                         self.__on_load_secret,
+                                         callback,
+                                         *args)
+                else:
+                    callback(None, None, *args)
+            else:
+                callback(None, None, *args)
         except Exception as e:
             debug("PasswordsHelper::__on_secret_search(): %s" % e)
+            callback(None, None, *args)
 
     def __on_get_secret(self, source, result):
         """

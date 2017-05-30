@@ -102,6 +102,8 @@ class FormsExtension:
             @param username_input as WebKit2WebExtension.DOMElement
             @param password_input as WebKit2WebExtension.DOMElement
         """
+        if attributes is None:
+            return
         try:
             username_input.set_value(attributes["login"])
             password_input.set_value(password)

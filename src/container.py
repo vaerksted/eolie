@@ -332,15 +332,15 @@ class Container(Gtk.Overlay):
         elif uri:
             self.__window.toolbar.title.set_title(uri)
 
-    def __on_save_password(self, webview, username, password, netloc):
+    def __on_save_password(self, webview, username, password, uri):
         """
             Ask user to save password
             @param webview as WebView
             @param username as str
             @param password as str
-            @param netloc as str
+            @param uri as str
         """
-        self.__window.toolbar.title.show_password(username, password, netloc)
+        self.__window.toolbar.title.show_password(username, password, uri)
 
     def __on_script_dialog(self, webview, dialog):
         """

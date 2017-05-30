@@ -68,6 +68,8 @@ class SyncWorker(GObject.GObject):
             @param password as str
             @raise exceptions
         """
+        if attributes is None:
+            return
         keyB = ""
         session = None
         # Connect to mozilla sync
@@ -82,12 +84,12 @@ class SyncWorker(GObject.GObject):
         else:
             uid = session.uid
             token = session.token
-        self.__helper.store_sync_password(attributes["login"],
-                                          password,
-                                          uid,
-                                          token,
-                                          keyB,
-                                          lambda x, y: self.sync(True))
+        self.__helper.store_sync(attributes["login"],
+                                 password,
+                                 uid,
+                                 token,
+                                 keyB,
+                                 lambda x, y: self.sync(True))
 
     def sync(self, first_sync=False):
         """
@@ -269,7 +271,9 @@ class SyncWorker(GObject.GObject):
             self.__mtimes = load(open(LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
-            self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
+            self.__mtimes = {"bookmarks": 0.1,
+                             "history": 0.1,
+                             "passwords": 0.1}
         try:
             bulk_keys = self.__get_session_bulk_keys()
             new_mtimes = self.__mozilla_sync.client.info_collections()
@@ -277,6 +281,18 @@ class SyncWorker(GObject.GObject):
             if self.__stop:
                 return
 
+            ######################
+            # Passwords Management #
+            ######################
+            debug("local passwords: %s, remote passwords: %s" % (
+                                                 self.__mtimes["passwords"],
+                                                 new_mtimes["passwords"]))
+            # Only pull if something new available
+            # if self.__mtimes["passwords"] != new_mtimes["passwords"]:
+            # self.__pull_passwords(bulk_keys)
+
+            if self.__stop:
+                return
             ######################
             # History Management #
             ######################
@@ -505,6 +521,19 @@ class SyncWorker(GObject.GObject):
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
+    def __pull_passwords(self, bulk_keys):
+        """
+            Pull from passwords
+            @param bulk_keys as KeyBundle
+            @raise StopIteration
+        """
+        debug("pull passwords")
+        records = self.__mozilla_sync.get_records("passwords", bulk_keys)
+        for record in records:
+            if self.__stop:
+                raise StopIteration("Cancelled")
+            sleep(0.01)
+
     def __pull_history(self, bulk_keys):
         """
             Pull from history
@@ -556,6 +585,8 @@ class SyncWorker(GObject.GObject):
             Set params and start sync
             @param first_sync as bool
         """
+        if attributes is None:
+            return
         try:
             self.__username = attributes["login"]
             self.__password = password
@@ -634,7 +665,7 @@ class MozillaSync(object):
             @return [{}]
         """
         records = []
-        for record in self.__client.get_records('bookmarks'):
+        for record in self.__client.get_records(collection):
             record["payload"] = self.__decrypt_payload(record, bulk_keys)
             records.append(record)
         return records

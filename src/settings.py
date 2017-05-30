@@ -369,7 +369,7 @@ class SettingsDialog:
             Clear personnal data
             @param button as Gtk.Button
         """
-        self.__helper.clear()
+        self.__helper.clear_all()
 
     def _on_key_release_event(self, widget, event):
         """
@@ -491,6 +491,8 @@ class SettingsDialog:
             @param attributes as {}
             @param password as str
         """
+        if attributes is None:
+            return
         try:
             self.__login_entry.set_text(attributes["login"])
             self.__password_entry.set_text(password)
