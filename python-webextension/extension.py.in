@@ -21,6 +21,7 @@ from gi.repository import Gio
 from eolie.extension_forms import FormsExtension
 from eolie.extension_adblock import AdblockExtension
 from eolie.extension_proxy import ProxyExtension
+from eolie.settings import Settings
 
 
 class Application(Gio.Application):
@@ -42,6 +43,7 @@ def initialize(extension, arguments):
         Connect to page created
         @param extension as WebKit2WebExtension.WebExtension
     """
-    AdblockExtension(extension)
-    forms = FormsExtension(extension)
+    settings = Settings.new()
+    AdblockExtension(extension, settings)
+    forms = FormsExtension(extension, settings)
     ProxyExtension(extension, forms)

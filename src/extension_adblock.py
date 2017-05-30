@@ -12,7 +12,6 @@
 
 from urllib.parse import urlparse
 
-from eolie.settings import Settings
 from eolie.database_adblock import DatabaseAdblock
 from eolie.database_exceptions import DatabaseExceptions
 
@@ -22,12 +21,13 @@ class AdblockExtension:
         Handle adblocking
     """
 
-    def __init__(self, extension):
+    def __init__(self, extension, settings):
         """
             Connect wanted signal
             @param extension as WebKit2WebExtension
+            @param settings as Settings
         """
-        self.__settings = Settings.new()
+        self.__settings = settings
         self.__adblock = DatabaseAdblock()
         self.__exceptions = DatabaseExceptions("adblock")
         extension.connect("page-created", self.__on_page_created)

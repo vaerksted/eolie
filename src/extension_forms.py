@@ -16,7 +16,7 @@ from gi.repository import Secret
 
 from urllib.parse import urlparse
 
-from eolie.define import El, LOGINS
+from eolie.define import LOGINS
 
 
 class FormsExtension:
@@ -24,13 +24,15 @@ class FormsExtension:
         Handle forms prefill
     """
 
-    def __init__(self, extension):
+    def __init__(self, extension, settings):
         """
             Connect wanted signal
             @param extension as WebKit2WebExtension
+            @param settings as Settings
         """
         self.__secret = None
         self.__cache = {}
+        self.__settings = settings
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret)
         extension.connect("page-created", self.__on_page_created)
@@ -87,7 +89,7 @@ class FormsExtension:
             @param webpage as WebKit2WebExtension.WebPage
         """
         if self.__secret is None or\
-                not El().settings.get_value("remember-passwords"):
+                not self.__settings.get_value("remember-passwords"):
             return
 
         (username_input, password_input) = self.get_forms(webpage)
