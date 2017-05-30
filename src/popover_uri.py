@@ -377,6 +377,7 @@ class UriPopover(Gtk.Popover):
         self.__window = window
         self.__input = False
         self.set_modal(False)
+        self.get_style_context().add_class("box-shadow")
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverUri.ui")
         builder.connect_signals(self)

@@ -177,6 +177,10 @@
     padding: 0px;
 }
 
+.box-shadow {
+    box-shadow: 1px 1px 5px 5px alpha(black, 0.3);
+}
+
 .edit-button {
 	box-shadow: none;
 	min-height: 24px;
