@@ -61,11 +61,12 @@ class SyncWorker(GObject.GObject):
         self.__session = None
         self.__helper = PasswordsHelper()
 
-    def login(self, attributes, password):
+    def login(self, attributes, password, uri):
         """
             Login to service
             @param attributes as {}
             @param password as str
+            @param uri as None
             @raise exceptions
         """
         if attributes is None:
@@ -288,8 +289,8 @@ class SyncWorker(GObject.GObject):
                                                  self.__mtimes["passwords"],
                                                  new_mtimes["passwords"]))
             # Only pull if something new available
-            if self.__mtimes["passwords"] != new_mtimes["passwords"]:
-                self.__pull_passwords(bulk_keys)
+            # if self.__mtimes["passwords"] != new_mtimes["passwords"]:
+            #    self.__pull_passwords(bulk_keys)
 
             if self.__stop:
                 return
@@ -588,9 +589,12 @@ class SyncWorker(GObject.GObject):
                                           True)
             El().history.thread_lock.release()
 
-    def __start_sync(self, attributes, password, first_sync):
+    def __start_sync(self, attributes, password, uri, first_sync):
         """
             Set params and start sync
+            @param attributes as {}
+            @param password as str
+            @param uri as None
             @param first_sync as bool
         """
         if attributes is None:

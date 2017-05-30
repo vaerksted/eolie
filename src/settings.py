@@ -485,11 +485,12 @@ class SettingsDialog:
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
 
-    def __on_get_sync(self, attributes, password):
+    def __on_get_sync(self, attributes, password, uri):
         """
             Set username and password
             @param attributes as {}
             @param password as str
+            @param uri as None
         """
         if attributes is None:
             return

@@ -14,7 +14,6 @@ import gi
 gi.require_version('Secret', '1')
 from gi.repository import Secret, GLib
 
-from uuid import uuid3, NAMESPACE_DNS
 from urllib.parse import urlparse
 from eolie.utils import debug
 
@@ -44,19 +43,20 @@ class PasswordsHelper:
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "uuid": Secret.SchemaAttributeType.STRING,
+                "hostname": Secret.SchemaAttributeType.STRING
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "uuid": str(uuid3(NAMESPACE_DNS, parsed.netloc)),
+                "hostname": parsed.netloc
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
             self.__secret.search(schema, SecretAttributes,
-                                 Secret.SearchFlags.NONE,
+                                 Secret.SearchFlags.ALL,
                                  None,
                                  self.__on_secret_search,
+                                 uri,
                                  callback,
                                  *args)
         except Exception as e:
@@ -82,17 +82,19 @@ class PasswordsHelper:
                                  Secret.SearchFlags.NONE,
                                  None,
                                  self.__on_secret_search,
+                                 None,
                                  callback,
                                  *args)
         except Exception as e:
             debug("PasswordsHelper::get_sync(): %s" % e)
 
-    def store(self, login, password, uri, callback):
+    def store(self, login, password, uri, uuid, callback):
         """
             Store password
             @param login as str
             @param password as str
             @param uri as str
+            @param uuid as str
             @param callback as function
         """
         try:
@@ -107,12 +109,18 @@ class PasswordsHelper:
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "uuid": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING
+                "login": Secret.SchemaAttributeType.STRING,
+                "hostname": Secret.SchemaAttributeType.STRING,
+                "formSubmitURL": Secret.SchemaAttributeType.STRING
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "uuid": str(uuid3(NAMESPACE_DNS, parsed.netloc)),
-                "login": login
+                "uuid": uuid,
+                "login": login,
+                "hostname": parsed.netloc,
+                "formSubmitURL": "%s://%s%s" % (parsed.scheme,
+                                                parsed.netloc,
+                                                parsed.path)
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
@@ -181,11 +189,13 @@ class PasswordsHelper:
             self.__wait_for_secret(self.clear)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "uri": Secret.SchemaAttributeType.STRING,
+                "formSubmitURL": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "uri": parsed.netloc
+                "formSubmitURL": "%s://%s%s" % (parsed.scheme,
+                                                parsed.netloc,
+                                                parsed.path)
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
@@ -259,7 +269,7 @@ class PasswordsHelper:
         if self.__secret in [None, -1]:
             raise Exception("Waiting Secret service")
 
-    def __on_load_secret(self, source, result, callback, *args):
+    def __on_load_secret(self, source, result, uri, callback, *args):
         """
             Set username/password input
             @param source as GObject.Object
@@ -271,6 +281,7 @@ class PasswordsHelper:
         if secret is not None:
             callback(source.get_attributes(),
                      secret.get().decode('utf-8'),
+                     uri,
                      *args)
         else:
             raise Exception("No secret")
@@ -289,23 +300,25 @@ class PasswordsHelper:
         except Exception as e:
             debug("SettingsDialog::__on_clear_search(): %s" % e)
 
-    def __on_secret_search(self, source, result, callback, *args):
+    def __on_secret_search(self, source, result, uri, callback, *args):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param uri as str/None
             @param callback as function
             @param args
         """
         try:
             if result is not None:
                 items = self.__secret.search_finish(result)
-                if items:
-                    items[0].load_secret(None,
-                                         self.__on_load_secret,
-                                         callback,
-                                         *args)
-                else:
+                for item in items:
+                    item.load_secret(None,
+                                     self.__on_load_secret,
+                                     uri,
+                                     callback,
+                                     *args)
+                if not items:
                     callback(None, None, *args)
             else:
                 callback(None, None, *args)

@@ -16,6 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
+from uuid import uuid3, NAMESPACE_DNS
 
 
 class PasswordPopover(Gtk.Popover):
@@ -54,10 +55,12 @@ class PasswordPopover(Gtk.Popover):
             @param button as Gtk.Button
         """
         try:
+            parsed = urlparse(self.__uri)
             self.__helper.clear(self.__uri)
             self.__helper.store(self.__username,
                                 self.__password,
                                 self.__uri,
+                                str(uuid3(NAMESPACE_DNS, parsed.netloc)),
                                 None)
             self.destroy()
         except Exception as e:
@@ -73,11 +76,12 @@ class PasswordPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
-    def __on_get_password(self, attributes, password):
+    def __on_get_password(self, attributes, password, uri):
         """
             Set username/password input
             @param attributes as {}
             @param password as str
+            @param uri as str
         """
         try:
             if attributes is None:
