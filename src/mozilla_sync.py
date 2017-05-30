@@ -119,6 +119,25 @@ class SyncWorker(GObject.GObject):
             thread.daemon = True
             thread.start()
 
+    def push_password(self, username, userform,
+                      password, passform, uri, uuid):
+        """
+            Push password
+            @param username as str
+            @param userform as str
+            @param password as str
+            @param passform as str
+            @param uri as str
+            @param uuid as str
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            thread = Thread(target=self.__push_password,
+                            args=(username, userform,
+                                  password, passform,
+                                  uri, uuid))
+            thread.daemon = True
+            thread.start()
+
     def remove_from_history(self, guid):
         """
             Remove history id from remote history
@@ -248,6 +267,38 @@ class SyncWorker(GObject.GObject):
                      open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
             print("SyncWorker::__push_history():", e)
+
+    def __push_password(self, username, userform,
+                        password, passform, uri, uuid):
+        """
+            Push password
+            @param username as str
+            @param userform as str
+            @param password as str
+            @param passform as str
+            @param uri as str
+            @param uuid as str
+        """
+        if not self.__username or not self.__password:
+            return
+        try:
+            bulk_keys = self.__get_session_bulk_keys()
+            record = {}
+            record["id"] = "{%s}" % uuid
+            record["hostname"] = uri
+            record["formSubmitURL"] = uri
+            record["httpRealm"] = None
+            record["username"] = username
+            record["password"] = password
+            record["usernameField"] = userform
+            record["passwordField"] = passform
+            mtime = int(time()*1000)
+            record["timeCreated"] = mtime
+            record["timePasswordChanged"] = mtime
+            debug("pushing %s" % record)
+            self.__mozilla_sync.add(record, "passwords", bulk_keys)
+        except Exception as e:
+            print("SyncWorker::__push_password():", e)
 
     def __remove_from_history(self, guid):
         """
@@ -562,9 +613,10 @@ class SyncWorker(GObject.GObject):
             if self.__stop:
                 raise StopIteration("Cancelled")
             sleep(0.01)
+            debug("pulling %s" % record)
             password = record["payload"]
             if "formSubmitURL" in password.keys():
-                self.__helper.clear(password["id"])
+                self.__helper.clear(password["formSubmitURL"])
                 self.__helper.store(password["username"],
                                     password["password"],
                                     password["formSubmitURL"],

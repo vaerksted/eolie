@@ -32,6 +32,8 @@ class WebViewNavigation:
         "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
+                                                                str,
+                                                                str,
                                                                 str)),
     }
 
@@ -167,10 +169,14 @@ class WebViewNavigation:
             @param request as WebKit2.FormSubmissionRequest
         """
         try:
-            (username, password) = source.call_finish(result)[0]
+            (username, userform,
+             password, passform) = source.call_finish(result)[0]
             if not username or not password:
                 return
-            self.emit("save-password", username, password, self.get_uri())
+            self.emit("save-password",
+                      username, userform,
+                      password, passform,
+                      self.get_uri())
             request.submit()
         except Exception as e:
             print("WebView::__on_get_forms():", e)

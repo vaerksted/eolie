@@ -14,9 +14,10 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 from urllib.parse import urlparse
+from uuid import uuid3, NAMESPACE_DNS
 
 from eolie.helper_passwords import PasswordsHelper
-from uuid import uuid3, NAMESPACE_DNS
+from eolie.define import El
 
 
 class CredentialsPopover(Gtk.Popover):
@@ -24,7 +25,7 @@ class CredentialsPopover(Gtk.Popover):
         Tell user to save form credentials
     """
 
-    def __init__(self, username, password, uri):
+    def __init__(self, username, userform, password, passform, uri):
         """
             Init popover
             @param username as str
@@ -34,7 +35,9 @@ class CredentialsPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.__helper = PasswordsHelper()
         self.__username = username
+        self.__userform = userform
         self.__password = password
+        self.__passform = passform
         self.__uri = uri
         self.__uuid = None
         builder = Gtk.Builder()
@@ -57,13 +60,23 @@ class CredentialsPopover(Gtk.Popover):
         """
         try:
             parsed = urlparse(self.__uri)
-            if self.__uuid is not None:
+            uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+            if self.__uuid is None:
+                self.__uuid = str(uuid3(NAMESPACE_DNS, parsed.netloc))
+            else:
                 self.__helper.clear(self.__uuid)
             self.__helper.store(self.__username,
                                 self.__password,
-                                self.__uri,
-                                str(uuid3(NAMESPACE_DNS, parsed.netloc)),
+                                uri,
+                                self.__uuid,
                                 None)
+            if El().sync_worker is not None:
+                El().sync_worker.push_password(self.__username,
+                                               self.__userform,
+                                               self.__password,
+                                               self.__passform,
+                                               uri,
+                                               self.__uuid)
             self.destroy()
         except Exception as e:
             print("CredentialsPopover::_on_save_clicked()", e)

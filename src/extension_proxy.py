@@ -128,7 +128,10 @@ class ProxyExtension(Server):
                 return ("", "")
             (username, password) = self.__forms.get_forms(page)
             if username is not None and password is not None:
-                return (username.get_value(), password.get_value())
+                return (username.get_value(),
+                        username.get_name(),
+                        password.get_value(),
+                        password.get_name())
         except Exception as e:
             print("ProxyExtension::GetForms():", e)
         return ("", "")
