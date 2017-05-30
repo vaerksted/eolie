@@ -67,12 +67,12 @@ class Row(Gtk.ListBoxRow):
         """
             Delete password
         """
+        self.hide()
         uri = self.__item.get_property("uri")
         if El().sync_worker is None:
             self.__helper.clear(uri)
         else:
             El().sync_worker.remove_from_passwords(uri)
-        GLib.idle_add(self.destroy)
 
     @property
     def item(self):

@@ -212,8 +212,8 @@ class PasswordsHelper:
             @param uri as str
         """
         try:
-            parsed = urlparse(uri)
             self.__wait_for_secret(self.clear, uri)
+            parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "formSubmitURL": Secret.SchemaAttributeType.STRING,

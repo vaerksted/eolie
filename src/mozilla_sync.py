@@ -155,7 +155,7 @@ class SyncWorker(GObject.GObject):
             @param uri as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__helper.get(uri, self.__remove_from_passwords)
+            self.__helper.get(uri, self.__remove_from_passwords_thread)
 
     def delete_secret(self):
         """
@@ -337,6 +337,18 @@ class SyncWorker(GObject.GObject):
             self.__helper.clear(uri)
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
+
+    def __remove_from_passwords_thread(self, attributes, password, uri):
+        """
+            Remove password from passwords collection
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+        """
+        thread = Thread(target=self.__remove_from_passwords,
+                        args=(attributes, password, uri))
+        thread.daemon = True
+        thread.start()
 
     def __sync(self, first_sync):
         """
