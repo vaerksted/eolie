@@ -19,6 +19,7 @@ app_PYTHON = \
     extension_forms.py\
     extension_proxy.py\
     helper_dbus.py\
+    helper_passwords.py\
     localized.py\
     menu_history.py\
     menu_pages.py\

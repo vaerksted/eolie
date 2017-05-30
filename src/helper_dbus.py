@@ -18,7 +18,6 @@ from eolie.define import PROXY_BUS, PROXY_PATH
 class DBusHelper:
     """
         Simpler helper for DBus
-        Pass a function to call, args and a callback
     """
 
     def __init__(self):
