@@ -270,7 +270,10 @@ class StackSidebar(Gtk.EventBox):
         if scrolled is None:
             return
         adj = scrolled.get_vadjustment().get_value()
-        y = row.translate_coordinates(self.__listbox, 0, 0)[1]
+        coordinates = row.translate_coordinates(self.__listbox, 0, 0)
+        if coordinates is None:
+            return
+        y = coordinates[1]
         if y + row.get_allocated_height() >\
                 scrolled.get_allocated_height() + adj or\
                 y - row.get_allocated_height() < 0 + adj:
