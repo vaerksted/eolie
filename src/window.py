@@ -10,7 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Gdk
+from gi.repository import Gtk, GLib, Gio, Gdk, Soup
+
+from threading import Thread
 
 from eolie.define import El
 from eolie.toolbar import Toolbar
@@ -180,6 +182,37 @@ class Window(Gtk.ApplicationWindow):
         self.__toolbar.set_show_close_button(True)
         self.add(self.__container)
 
+    def __show_source_code(self, uri):
+        """
+            Show source code for uri
+            @param uri as str
+            @thread safe
+        """
+        try:
+            (tmp, tmp_stream) = Gio.File.new_tmp("XXXXXX.html")
+            session = Soup.Session.new()
+            request = session.request(uri)
+            stream = request.send(None)
+            bytes = bytearray(0)
+            buf = stream.read_bytes(1024, None).get_data()
+            while buf:
+                bytes += buf
+                buf = stream.read_bytes(1024, None).get_data()
+            tmp_stream.get_output_stream().write_all(bytes)
+            stream.close()
+            tmp_stream.close()
+            GLib.idle_add(self.__launch_editor, tmp)
+        except Exception as e:
+            print("Window::__show_source_code():", e)
+
+    def __launch_editor(self, f):
+        """
+            Launch text editor
+            @param f as Gio.File
+        """
+        appinfo = Gio.app_info_get_default_for_type("text/plain", False)
+        appinfo.launch([f], None)
+
     def __setup_pos(self):
         """
             Set window position
@@ -285,6 +318,12 @@ class Window(Gtk.ApplicationWindow):
             self.container.sidebar.close_view(self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
+        elif string == "source":
+            uri = self.container.current.webview.get_uri()
+            thread = Thread(target=self.__show_source_code,
+                            args=(uri,))
+            thread.daemon = True
+            thread.start()
         elif string == "find":
             find_widget = self.container.current.find_widget
             search_mode = find_widget.get_search_mode()

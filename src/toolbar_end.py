@@ -10,12 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, WebKit2, Soup, Pango
+from gi.repository import Gtk, GLib, Gio, WebKit2, Pango
 
 from urllib.parse import urlparse
 from gettext import gettext as _
-
-from threading import Thread
 
 from eolie.define import El
 from eolie.popover_downloads import DownloadsPopover
@@ -253,8 +251,6 @@ class ToolbarEnd(Gtk.Bin):
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
         parsed = urlparse(webview.get_uri())
-        if parsed.scheme not in ["http", "https"]:
-            builder.get_object("source_button").set_sensitive(False)
         if parsed.netloc in El().zoom_levels.keys():
             current = El().zoom_levels[parsed.netloc]
         else:
@@ -309,18 +305,6 @@ class ToolbarEnd(Gtk.Bin):
         action = self.__window.lookup_action("shortcut")
         action.activate(GLib.Variant("s", "print"))
 
-    def _on_source_button_clicked(self, button):
-        """
-            Show current page source
-            @param button as Gtk.button
-        """
-        button.get_ancestor(Gtk.Popover).hide()
-        uri = self.__window.container.current.webview.get_uri()
-        thread = Thread(target=self.__show_source_code,
-                        args=(uri,))
-        thread.daemon = True
-        thread.start()
-
     def _on_zoom_button_clicked(self, button):
         """
             Zoom current page
@@ -368,37 +352,6 @@ class ToolbarEnd(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
-    def __show_source_code(self, uri):
-        """
-            Show source code for uri
-            @param uri as str
-            @thread safe
-        """
-        try:
-            (tmp, tmp_stream) = Gio.File.new_tmp("XXXXXX.html")
-            session = Soup.Session.new()
-            request = session.request(uri)
-            stream = request.send(None)
-            bytes = bytearray(0)
-            buf = stream.read_bytes(1024, None).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(1024, None).get_data()
-            tmp_stream.get_output_stream().write_all(bytes)
-            stream.close()
-            tmp_stream.close()
-            GLib.idle_add(self.__launch_editor, tmp)
-        except Exception as e:
-            print("ToolbarEnd::__show_source_code():", e)
-
-    def __launch_editor(self, f):
-        """
-            Launch text editor
-            @param f as Gio.File
-        """
-        appinfo = Gio.app_info_get_default_for_type("text/plain", False)
-        appinfo.launch([f], None)
-
     def __hide_progress(self):
         """
             Hide progress if needed

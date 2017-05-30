@@ -14,10 +14,44 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">New window</property>
+                <property name="accelerator">&lt;Primary&gt;n</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Settings</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Fullscreen</property>
+                <property name="accelerator">F11</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Quit</property>
+                <property name="accelerator">&lt;Primary&gt;q</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Enter location</property>
                 <property name="accelerator">&lt;Primary&gt;l</property>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="visible">True</property>
+            <property name="title" translatable="yes" context="shortcut window">Pages</property>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
@@ -37,13 +71,6 @@
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">New private page</property>
                 <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;p</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">New window</property>
-                <property name="accelerator">&lt;Primary&gt;n</property>
               </object>
             </child>
             <child>
@@ -77,22 +104,8 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Settings</property>
+                <property name="title" translatable="yes" context="shortcut window">Show source code</property>
                 <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Fullscreen</property>
-                <property name="accelerator">F11</property>
-              </object>
-            </child>
-            <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Quit</property>
-                <property name="accelerator">&lt;Primary&gt;q</property>
               </object>
             </child>
           </object>

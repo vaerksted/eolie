@@ -373,20 +373,19 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="source_button">
+          <object class="GtkToggleButton" id="fullscreen_button">
             <property name="width_request">48</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">Show page source</property>
             <property name="hexpand">True</property>
-            <property name="image">image3</property>
-            <signal name="clicked" handler="_on_source_button_clicked" swapped="no"/>
+            <property name="image">image40</property>
+            <signal name="toggled" handler="_on_fullscreen_button_toggled" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <style>
@@ -447,22 +446,6 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkToggleButton" id="fullscreen_button">
-            <property name="width_request">48</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="hexpand">True</property>
-            <property name="image">image40</property>
-            <signal name="toggled" handler="_on_fullscreen_button_toggled" swapped="no"/>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
           </packing>
         </child>
         <style>
