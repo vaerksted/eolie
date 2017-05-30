@@ -166,8 +166,6 @@ class Application(Gtk.Application):
             Quit application
             @param vacuum as bool
         """
-        Gio.Application.quit(self)
-        return
         # Save webpage state
         self.__save_state()
         # Stop pending tasks
