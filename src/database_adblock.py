@@ -86,7 +86,10 @@ class DatabaseAdblock:
                         "clone",
                         "https://github.com/gnumdk/eolie-adblock.git",
                         ADBLOCK_JS]
-            GLib.spawn_async(argv)
+            (pid, a1, a2, a3) = GLib.spawn_async(argv,
+                                                 standard_output=False,
+                                                 standard_error=True)
+            GLib.spawn_close_pid(pid)
 
         # Get in db mtime
         # Only update if filters older than one week
