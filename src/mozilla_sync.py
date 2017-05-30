@@ -383,7 +383,7 @@ class SyncWorker(GObject.GObject):
         """
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
-        records = self.__mozilla_sync.get("bookmarks", bulk_keys)
+        records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
         # We get all guids here and remove them while sync
         # At the end, we have deleted records
         # On fist sync, keep all
@@ -489,7 +489,7 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        records = self.__mozilla_sync.get("history", bulk_keys)
+        records = self.__mozilla_sync.get_records("history", bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
