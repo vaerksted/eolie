@@ -26,7 +26,6 @@ class FormsExtension:
             @param settings as Settings
         """
         self.__helper = PasswordsHelper()
-        self.__cache = {}
         self.__settings = settings
         extension.connect("page-created", self.__on_page_created)
 
@@ -34,11 +33,9 @@ class FormsExtension:
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
+            @return (WebKit2WebExtension.DOMElement,
+                     WebKit2WebExtension.DOMElement)
         """
-        uri = webpage.get_uri()
-        # Return cached result if exists
-        if uri in self.__cache.keys():
-            return self.__cache[uri]
         inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
         i = 0
         username_input = None
@@ -60,9 +57,6 @@ class FormsExtension:
                         username_input = inputs.item(i)
                         break
             i += 1
-        # Cache result
-        if username_input is not None and password_input is not None:
-            self.__cache[uri] = (username_input, password_input)
         return (username_input, password_input)
 
 #######################

@@ -536,12 +536,14 @@ class SyncWorker(GObject.GObject):
             sleep(0.01)
             password = record["payload"]
             if "formSubmitURL" in password.keys():
-                self.__helper.clear(password["formSubmitURL"])
+                self.__helper.clear(password["id"])
                 self.__helper.store(password["username"],
                                     password["password"],
                                     password["formSubmitURL"],
                                     password["id"],
                                     None)
+            elif "deleted" in password.keys():  # We assume True
+                self.__helper.clear(password["id"])
 
     def __pull_history(self, bulk_keys):
         """

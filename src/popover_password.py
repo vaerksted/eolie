@@ -36,6 +36,7 @@ class PasswordPopover(Gtk.Popover):
         self.__username = username
         self.__password = password
         self.__uri = uri
+        self.__uuid = None
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverPassword.ui')
         builder.connect_signals(self)
@@ -56,7 +57,8 @@ class PasswordPopover(Gtk.Popover):
         """
         try:
             parsed = urlparse(self.__uri)
-            self.__helper.clear(self.__uri)
+            if self.__uuid is not None:
+                self.__helper.clear(self.__uuid)
             self.__helper.store(self.__username,
                                 self.__password,
                                 self.__uri,
@@ -91,6 +93,7 @@ class PasswordPopover(Gtk.Popover):
                 self.emit("closed")
             else:
                 Gtk.Popover.show(self)
+                self.__uuid = attributes["id"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
         except Exception as e:

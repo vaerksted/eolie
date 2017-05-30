@@ -118,7 +118,7 @@ class ProxyExtension(Server):
 
     def GetForms(self, page_id):
         """
-            Get password form page id
+            Get password forms for page id
             @param page id as int
             @return (username_form, password_form) as (str, str)
         """
