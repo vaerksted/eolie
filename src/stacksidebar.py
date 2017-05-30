@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, Gio
 
 from eolie.define import El, ArtSize
 from eolie.stacksidebar_child import SidebarChild
@@ -27,6 +27,12 @@ class StackSidebar(Gtk.EventBox):
             @param window as Window
         """
         Gtk.EventBox.__init__(self)
+        try:
+            system = Gio.Settings.new("org.gnome.desktop.interface")
+            self.__animate = system.get_value("enable-animations")
+        except:
+            self.__animate = False
+        self.__animation_cancel = Gio.Cancellable()
         self.__leave_timeout_id = None
         self.__window = window
         self.get_style_context().add_class("sidebar")
@@ -249,6 +255,31 @@ class StackSidebar(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __animate_width_request(self, width, first_iteration=False):
+        """
+            Add some animation to width request
+            @param width as int
+            @param first_iteration as bool
+        """
+        if first_iteration:
+            if not self.__animate:
+                self.set_property("width-request", width)
+                return
+            else:
+                self.__animation_cancel.reset()
+        elif self.__animation_cancel.is_cancelled():
+            return
+
+        grow = width != -1
+        current = self.get_property("width-request")
+        if grow and current < width:
+            self.set_property("width-request", current + 1)
+        elif width < current:
+            self.set_property("width-request", current - 1)
+        else:
+            return
+        GLib.timeout_add(1, self.__animate_width_request, width)
+
     def __set_child_height(self, child):
         """
             Set child height
@@ -374,7 +405,8 @@ class StackSidebar(Gtk.EventBox):
             if self.__leave_timeout_id is not None:
                     GLib.source_remove(self.__leave_timeout_id)
                     self.__leave_timeout_id = None
-            self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
+            self.__animation_cancel.cancel()
+            self.__animate_width_request(ArtSize.PREVIEW_WIDTH, True)
             for child in self.__listbox.get_children():
                 child.show_title(True)
 
@@ -393,7 +425,7 @@ class StackSidebar(Gtk.EventBox):
                 if self.__leave_timeout_id is not None:
                     GLib.source_remove(self.__leave_timeout_id)
                 self.__leave_timeout_id = GLib.timeout_add(
-                                          750,
+                                          500,
                                           self.__on_leave_notify_event_timeout)
 
     def __on_leave_notify_event_timeout(self):
@@ -403,7 +435,8 @@ class StackSidebar(Gtk.EventBox):
             @param event as Gdk.Event
         """
         self.__leave_timeout_id = None
-        self.set_property("width-request", -1)
+        self.__animation_cancel.cancel()
+        self.__animate_width_request(-1, True)
         for child in self.__listbox.get_children():
             child.show_title(self.__search_bar.is_visible())
 
