@@ -383,7 +383,6 @@ class Container(Gtk.Overlay):
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
-                self.__window.toolbar.title.set_title(uri)
             else:
                 # Close web page if uri is null
                 self.sidebar.close_view(webview.get_ancestor(View))
