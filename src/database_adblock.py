@@ -86,9 +86,9 @@ class DatabaseAdblock:
                         "clone",
                         "https://github.com/gnumdk/eolie-adblock.git",
                         ADBLOCK_JS]
-            (pid, a1, a2, a3) = GLib.spawn_async(argv,
-                                                 standard_output=False,
-                                                 standard_error=True)
+            (pid, a1, a2, a3) = GLib.spawn_async(
+                                    argv,
+                                    flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
             GLib.spawn_close_pid(pid)
 
         # Get in db mtime
