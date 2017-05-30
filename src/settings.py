@@ -474,7 +474,8 @@ class SettingsDialog:
                               "https://%s" % split[1],
                               Gdk.WindowType.CHILD)
                 GLib.idle_add(
-                    El().active_window.container.toolbar.title.show_message,
+                    El().active_window.toolbar.title.show_message,
+                    El().active_window.container.current.webview,
                     _("You've received an email"
                       " to validate synchronization"))
             else:
