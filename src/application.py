@@ -33,7 +33,7 @@ from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
-from eolie.dbus_helper import DBusHelper
+from eolie.helper_dbus import DBusHelper
 from eolie.context import Context
 from eolie.define import LOCAL_PATH
 
@@ -166,6 +166,8 @@ class Application(Gtk.Application):
             Quit application
             @param vacuum as bool
         """
+        Gio.Application.quit(self)
+        return
         # Save webpage state
         self.__save_state()
         # Stop pending tasks
@@ -348,7 +350,7 @@ class Application(Gtk.Application):
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
         helper = DBusHelper()
-        helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
+        helper.connect("UnsecureFormFocused", self.__on_extension_signal)
 
     def __listen_to_gnome_sm(self):
         """

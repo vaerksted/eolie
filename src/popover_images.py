@@ -16,7 +16,7 @@ from hashlib import sha256
 from threading import Thread
 from urllib.parse import urlparse
 
-from eolie.dbus_helper import DBusHelper
+from eolie.helper_dbus import DBusHelper
 from eolie.define import CACHE_PATH, ArtSize, El
 
 

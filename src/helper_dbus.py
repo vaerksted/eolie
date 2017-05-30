@@ -40,11 +40,11 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, callback, signal_name):
+    def connect(self, signal_name, callback):
         """
             Connect callback to object signals
-            @param callback as function
             @param signal_name as str
+            @param callback as function
         """
         try:
             Gio.bus_get(Gio.BusType.SESSION, None,
