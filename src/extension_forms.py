@@ -16,7 +16,7 @@ from gi.repository import Secret
 
 from urllib.parse import urlparse
 
-from eolie.define import LOGINS
+from eolie.define import El, LOGINS
 
 
 class FormsExtension:
@@ -86,7 +86,8 @@ class FormsExtension:
             Restore forms
             @param webpage as WebKit2WebExtension.WebPage
         """
-        if self.__secret is None:
+        if self.__secret is None or\
+                not El().settings.get_value("remember-passwords"):
             return
 
         (username_input, password_input) = self.get_forms(webpage)
