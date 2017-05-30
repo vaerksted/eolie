@@ -1,6 +1,6 @@
 # Eolie
 
-![Eolie logo](https://raw.githubusercontent.com/gnumdk/eolie/readme_logo/data/icons/hicolor/256x256/apps/org.gnome.Eolie.png)
+![Eolie logo](https://raw.githubusercontent.com/gnumdk/eolie/master/data/icons/hicolor/256x256/apps/org.gnome.Eolie.png)
 
 Eolie is a new GNOME web browser.
 
