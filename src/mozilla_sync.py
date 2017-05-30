@@ -288,8 +288,8 @@ class SyncWorker(GObject.GObject):
                                                  self.__mtimes["passwords"],
                                                  new_mtimes["passwords"]))
             # Only pull if something new available
-            # if self.__mtimes["passwords"] != new_mtimes["passwords"]:
-            # self.__pull_passwords(bulk_keys)
+            if self.__mtimes["passwords"] != new_mtimes["passwords"]:
+                self.__pull_passwords(bulk_keys)
 
             if self.__stop:
                 return
@@ -528,11 +528,19 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull passwords")
+        self.__helper.clear_all()
         records = self.__mozilla_sync.get_records("passwords", bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
             sleep(0.01)
+            password = record["payload"]
+            if "hostname" in password.keys():
+                self.__helper.clear(password["hostname"])
+                self.__helper.store(password["username"],
+                                    password["password"],
+                                    password["hostname"],
+                                    None)
 
     def __pull_history(self, bulk_keys):
         """
