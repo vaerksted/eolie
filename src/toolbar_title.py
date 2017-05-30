@@ -68,17 +68,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def show_readable_button(self, b):
-        """
-            Show readable button
-            @param b as bool
-        """
-        if b:
-            self.__readable_indicator.show()
-            self.set_reading()
-        else:
-            self.__readable_indicator.hide()
-
     def set_reading(self):
         """
             Mark readable button
@@ -145,6 +134,7 @@ class ToolbarTitle(Gtk.Bin):
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
+            self.__set_default_placeholder()
             return
         self.__placeholder.set_text(title)
         if not self.__lock_focus and\
@@ -177,19 +167,66 @@ class ToolbarTitle(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed)
         popover.show()
 
+    def show_message(self, webview, msg):
+        """
+            Show a message to user
+            @param webview as WebView
+            @param msg as str
+        """
+        js = 'alert("%s");' % msg
+        webview.run_javascript(js, None, None)
+
     def show_input_warning(self, webview):
         """
             Show a message to user about password input field over http
             @param webview as WebView
         """
+        # FIXME should be handled per webview
         if self.__input_warning_shown:
             return
         self.__input_warning_shown = True
-        js = 'alert("%s");' % _(
+        self.show_message(webview, _(
                 "Heads-up: this page is not secure.\\n"
                 "If you type your password,\\n it will be "
-                "visible to cybercriminals!")
-        webview.run_javascript(js, None, None)
+                "visible to cybercriminals!"))
+
+    def show_readable_button(self, b):
+        """
+            Show readable button
+            @param b as bool
+        """
+        if b:
+            self.__readable_indicator.show()
+            self.set_reading()
+        else:
+            self.__readable_indicator.hide()
+
+    def show_password(self, username, password, uri):
+        """
+            Show a popover allowing user to save password
+            @param username as str
+            @param password as str
+            @param uri as str
+        """
+        from eolie.popover_password import PasswordPopover
+        self.__lock_focus = True
+        popover = PasswordPopover(username, password, uri)
+        popover.set_relative_to(self.__entry)
+        popover.set_pointing_to(self.__entry.get_icon_area(
+                                                Gtk.EntryIconPosition.PRIMARY))
+        popover.connect("closed", self.__on_popover_closed)
+        popover.show()
+
+    def show_popup_indicator(self, b):
+        """
+            Show popups indicator
+            @param b as bool
+        """
+        if b:
+            self.__popup_indicator.show()
+            self.__popup_indicator.set_tooltip_text(_("Blocked popups"))
+        else:
+            self.__popup_indicator.hide()
 
     def close_popover(self):
         """
@@ -214,22 +251,6 @@ class ToolbarTitle(Gtk.Bin):
         if not self.__popover.is_visible():
             self.__lock_focus = True
             self.__popover.show()
-
-    def save_password(self, username, password, uri):
-        """
-            Show a popover allowing user to save password
-            @param username as str
-            @param password as str
-            @param uri as str
-        """
-        from eolie.popover_password import PasswordPopover
-        self.__lock_focus = True
-        popover = PasswordPopover(username, password, uri)
-        popover.set_relative_to(self.__entry)
-        popover.set_pointing_to(self.__entry.get_icon_area(
-                                                Gtk.EntryIconPosition.PRIMARY))
-        popover.connect("closed", self.__on_popover_closed)
-        popover.show()
 
     def update_load_indicator(self, view):
         """
@@ -265,17 +286,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         if webview in self.__text_entry_history.keys():
             del self.__text_entry_history[webview]
-
-    def show_popup_indicator(self, b):
-        """
-            Show popups indicator
-            @param b as bool
-        """
-        if b:
-            self.__popup_indicator.show()
-            self.__popup_indicator.set_tooltip_text(_("Blocked popups"))
-        else:
-            self.__popup_indicator.hide()
 
     @property
     def uri(self):

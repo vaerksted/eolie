@@ -15,7 +15,7 @@ from gi.repository import GObject, GLib, Gio, Gtk
 from time import time
 
 from eolie.define import El
-from eolie.dbus_helper import DBusHelper
+from eolie.helper_dbus import DBusHelper
 
 
 class DownloadManager(GObject.GObject):
@@ -34,7 +34,7 @@ class DownloadManager(GObject.GObject):
         """
         GObject.GObject.__init__(self)
         helper = DBusHelper()
-        helper.connect(self.__on_extension_signal, "VideoInPage")
+        helper.connect("VideoInPage", self.__on_extension_signal)
         self.__downloads = []
         self.__finished = []
         self.__video_uris = {}

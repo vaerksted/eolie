@@ -33,7 +33,7 @@ from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
-from eolie.dbus_helper import DBusHelper
+from eolie.helper_dbus import DBusHelper
 from eolie.context import Context
 from eolie.define import LOCAL_PATH
 
@@ -72,7 +72,6 @@ class Application(Gtk.Application):
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
         self.__windows = []
-        self.__pages_menu = PagesMenu(self)
         self.debug = False
         self.show_tls = False
         try:
@@ -87,6 +86,9 @@ class Application(Gtk.Application):
                              GLib.OptionArg.NONE, "Debug Eolie", None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
+                             None)
+        self.add_main_option("new", b'n', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Add a new window",
                              None)
         self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Show TLS info",
@@ -136,7 +138,18 @@ class Application(Gtk.Application):
 
         if not self.__windows:
             self.__init()
-            self.__get_new_window()
+            self.get_new_window()
+
+    def get_new_window(self):
+        """
+            Return a new window
+            @return Window
+        """
+        window = Window(self)
+        window.connect('delete-event', self.__on_delete_event)
+        window.show()
+        self.__windows.append(window)
+        return window
 
     def set_setting(self, key, value):
         """
@@ -257,6 +270,7 @@ class Application(Gtk.Application):
         styleContext.add_provider_for_screen(screen, cssProvider,
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.settings = Settings.new()
+        self.__pages_menu = PagesMenu(self)
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         # We store cursors for main thread
@@ -286,6 +300,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::private",
                                    ["<Control><Shift>p"])
         self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
+        self.set_accels_for_action("win.shortcut::quit", ["<Control>q"])
         self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
         self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
@@ -333,7 +348,7 @@ class Application(Gtk.Application):
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
         helper = DBusHelper()
-        helper.connect(self.__on_extension_signal, "UnsecureFormFocused")
+        helper.connect("UnsecureFormFocused", self.__on_extension_signal)
 
     def __listen_to_gnome_sm(self):
         """
@@ -402,17 +417,6 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::save_state()", e)
 
-    def __get_new_window(self):
-        """
-            Return a new window
-            @return Window
-        """
-        window = Window(self)
-        window.connect('delete-event', self.__on_delete_event)
-        window.show()
-        self.__windows.append(window)
-        return window
-
     def __show_plugins(self):
         """
             Show available plugins on stdout
@@ -458,7 +462,10 @@ class Application(Gtk.Application):
         private_browsing = options.contains("private")
         if self.settings.get_value("remember-session"):
             self.__restore_state()
-        active_window = self.active_window
+        if options.contains("new"):
+            active_window = self.get_new_window()
+        else:
+            active_window = self.active_window
         # Open command line args
         if len(args) > 1:
             for uri in args[1:]:
@@ -472,7 +479,7 @@ class Application(Gtk.Application):
             active_window.present_with_time(Gtk.get_current_event_time())
         # We already have a window, open a new one
         elif active_window.container.current:
-            window = self.__get_new_window()
+            window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD,
                                          private_browsing)
@@ -589,7 +596,7 @@ class Application(Gtk.Application):
         """
         string = param.get_string()
         if string == "new_window":
-            window = self.__get_new_window()
+            window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD)
 

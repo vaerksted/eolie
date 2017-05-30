@@ -11,7 +11,6 @@ app_PYTHON = \
     database_filechooser.py\
     database_history.py\
     database_pishing.py\
-    dbus_helper.py\
     dialog_clear_data.py\
     dialog_import_bookmarks.py\
     download_manager.py\
@@ -19,6 +18,8 @@ app_PYTHON = \
     extension_adblock.py\
     extension_forms.py\
     extension_proxy.py\
+    helper_dbus.py\
+    helper_passwords.py\
     localized.py\
     menu_history.py\
     menu_pages.py\

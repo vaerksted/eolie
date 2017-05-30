@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.dbus_helper import DBusHelper
+from eolie.helper_dbus import DBusHelper
 from eolie.define import El, ADBLOCK_JS, FUA
 from eolie.utils import get_ftp_cmd
 
@@ -182,7 +182,7 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if self.ephemeral:
+        if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
         self.__get_forms(webview.get_page_id(), request)
 

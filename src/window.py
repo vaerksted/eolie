@@ -31,7 +31,8 @@ class Window(Gtk.ApplicationWindow):
         self.__timeout_configure = None
         Gtk.ApplicationWindow.__init__(self,
                                        application=app,
-                                       title="Eolie")
+                                       title="Eolie",
+                                       icon_name="org.gnome.Eolie")
         self.__monitor_model = ""
         self.__zoom_level = 1.0
         self.__container = None
@@ -132,7 +133,6 @@ class Window(Gtk.ApplicationWindow):
         """
             Setup window content
         """
-        self.set_default_icon_name("web-browser")
         self.__toolbar = Toolbar(self)
         self.__toolbar.show()
         self.__container = Container(self)
@@ -215,6 +215,8 @@ class Window(Gtk.ApplicationWindow):
         string = param.get_string()
         if string == "uri":
             self.toolbar.title.focus_entry()
+        elif string == "quit":
+            El().quit(True)
         elif string == "new_page":
             self.container.add_webview(El().start_page, Gdk.WindowType.CHILD)
         elif string == "close_page":

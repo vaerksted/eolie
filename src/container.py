@@ -37,7 +37,8 @@ class Container(Gtk.Overlay):
         self.__history_queue = []
         self.__popover = WebViewPopover(window)
         if El().sync_worker is not None:
-            El().sync_worker.connect("sync-finish", self.__on_sync_finish)
+            El().sync_worker.connect("sync-finished",
+                                     self.__on_sync_finished)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -48,6 +49,7 @@ class Container(Gtk.Overlay):
         self.__stack_sidebar.show()
         self.add(self.__stack)
         self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
         self.add_overlay(self.__stack_sidebar)
 
@@ -98,7 +100,7 @@ class Container(Gtk.Overlay):
             Stop pending tasks
         """
         if El().sync_worker is not None:
-            self.__on_sync_finish(El().sync_worker)
+            self.__on_sync_finished(El().sync_worker)
 
     def update_children_allocation(self):
         """
@@ -338,7 +340,7 @@ class Container(Gtk.Overlay):
             @param password as str
             @param netloc as str
         """
-        self.__window.toolbar.title.save_password(username, password, netloc)
+        self.__window.toolbar.title.show_password(username, password, netloc)
 
     def __on_script_dialog(self, webview, dialog):
         """
@@ -378,7 +380,6 @@ class Container(Gtk.Overlay):
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
-                self.__window.toolbar.title.set_title(uri)
             else:
                 # Close web page if uri is null
                 self.sidebar.close_view(webview.get_ancestor(View))
@@ -468,7 +469,15 @@ class Container(Gtk.Overlay):
         """
         self.update_children_allocation()
 
-    def __on_sync_finish(self, worker):
+    def __on_unmap(self, widget):
+        """
+            Disconnect sync signal
+            @param widget as Gtk.Widget
+        """
+        if El().sync_worker is not None:
+            El().sync_worker.disconnect_by_func(self.__on_sync_finished)
+
+    def __on_sync_finished(self, worker):
         """
             Commit queue to sync
             @param worker as SyncWorker
@@ -476,4 +485,4 @@ class Container(Gtk.Overlay):
         if self.__history_queue:
             history_id = self.__history_queue.pop(0)
             worker.push_history([history_id])
-            GLib.idle_add(self.__on_sync_finish, worker)
+            GLib.idle_add(self.__on_sync_finished, worker)

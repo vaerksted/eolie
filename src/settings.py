@@ -13,7 +13,7 @@
 import gi
 gi.require_version('WebKit2', '4.0')
 
-from gi.repository import Gio, Gdk, Gtk, GLib, Secret
+from gi.repository import Gio, Gdk, Gtk, GLib
 
 from gettext import gettext as _
 from threading import Thread
@@ -21,6 +21,7 @@ from threading import Thread
 from eolie.define import El
 from eolie.dialog_clear_data import ClearDataDialog
 from eolie.utils import get_current_monitor_model
+from eolie.helper_passwords import PasswordsHelper
 
 
 class Settings(Gio.Settings):
@@ -53,6 +54,7 @@ class SettingsDialog:
             Init dialog
             @param window as Window
         """
+        self.__helper = PasswordsHelper()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SettingsDialog.ui")
 
@@ -156,31 +158,14 @@ class SettingsDialog:
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
                                 El().settings.get_value("do-not-track"))
-        label = builder.get_object("result_label")
-        sync_button = builder.get_object("sync_button")
-        if El().sync_worker is not None:
-            login_entry = builder.get_object("login_entry")
-            login_entry.set_text(El().sync_worker.username)
-            password_entry = builder.get_object("password_entry")
-            image = builder.get_object("result_image")
-            if El().sync_worker.status:
-                label.set_text(_("Synchronization is working"))
-                image.set_from_icon_name("network-transmit-receive-symbolic",
-                                         Gtk.IconSize.MENU)
-            sync_button.connect("clicked", self.__on_sync_button_clicked,
-                                login_entry, password_entry,
-                                label, image)
-        else:
-            try:
-                from eolie.mozilla_sync import SyncWorker
-                SyncWorker  # Just make PEP8 happy
-            except Exception as e:
-                label.set_text(
-                      _("Synchronization is not available"
-                        " on your computer:\n %s") % e)
-                sync_button.set_sensitive(False)
-
+        self.__result_label = builder.get_object("result_label")
+        self.__sync_button = builder.get_object("sync_button")
+        self.__login_entry = builder.get_object("login_entry")
+        self.__password_entry = builder.get_object("password_entry")
+        self.__result_image = builder.get_object("result_image")
+        self.__setup_sync_button()
         builder.connect_signals(self)
+        self.__helper.get_sync(self.__on_get_sync)
 
     def show(self):
         """
@@ -384,8 +369,7 @@ class SettingsDialog:
             Clear personnal data
             @param button as Gtk.Button
         """
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret)
+        self.__helper.clear()
 
     def _on_key_release_event(self, widget, event):
         """
@@ -396,81 +380,101 @@ class SettingsDialog:
         if event.keyval == Gdk.KEY_Escape:
             self.__settings_dialog.destroy()
 
+    def _on_sync_button_clicked(self, button):
+        """
+            Connect to Mozilla Sync to get tokens
+            @param button as Gtk.Button
+        """
+        if El().sync_worker.status:
+            El().sync_worker.stop()
+            El().sync_worker.delete_secret()
+            self.__setup_sync_button()
+        else:
+            El().sync_worker.delete_secret()
+            if self.__result_image.get_icon_name() ==\
+                    "content-loading-symbolic":
+                return
+            self.__result_label.set_text(_("Connecting…"))
+            self.__result_image.set_from_icon_name("content-loading-symbolic",
+                                                   Gtk.IconSize.MENU)
+            thread = Thread(target=self.__connect_mozilla_sync,
+                            args=(self.__login_entry.get_text(),
+                                  self.__password_entry.get_text()))
+            thread.daemon = True
+            thread.start()
+
 #######################
 # PRIVATE             #
 #######################
-    def __connect_mozilla_sync(self, login, password, label, image):
+    def __setup_sync_button(self, status=False):
+        """
+            Setup sync button based on current sync status
+            @param status as bool
+        """
+        self.__sync_button.get_style_context().remove_class(
+                                                          "destructive-action")
+        self.__sync_button.get_style_context().remove_class(
+                                                          "suggested-action")
+        if El().sync_worker is not None:
+            if status or El().sync_worker.status:
+                self.__result_label.set_text(_("Synchronization is working"))
+                self.__result_image.set_from_icon_name(
+                                         "network-transmit-receive-symbolic",
+                                         Gtk.IconSize.MENU)
+                self.__sync_button.get_style_context().add_class(
+                                                          "destructive-action")
+                self.__sync_button.set_label(_("Cancel synchronization"))
+            else:
+                self.__result_label.set_text(
+                                           _("Synchronization is not working"))
+                self.__result_image.set_from_icon_name(
+                                         "computer-fail-symbolic",
+                                         Gtk.IconSize.MENU)
+                self.__sync_button.get_style_context().add_class(
+                                                          "suggested-action")
+                self.__sync_button.set_label(_("Allow synchronization"))
+        else:
+            try:
+                from eolie.mozilla_sync import SyncWorker
+                SyncWorker  # Just make PEP8 happy
+            except Exception as e:
+                self.__result_label.set_text(
+                      _("Synchronization is not available"
+                        " on your computer:\n %s") % e)
+                self.__sync_button.set_sensitive(False)
+
+    def __connect_mozilla_sync(self, username, password):
         """
             Connect to mozilla sync
-            @param login as str
+            @param username as str
             @param password as str
-            @param label as Gtk.Label
-            @param image as Gtk.Image
             @thread safe
         """
-        from eolie.mozilla_sync import MozillaSync
-        from gi.repository import Secret
-        import base64
-        keyB = ""
-        session = None
-        # Connect to mozilla sync
         try:
-            self.__client = MozillaSync()
-            session = self.__client.login(login, password)
-            bid_assertion, key = self.__client.get_browserid_assertion(session)
-            keyB = base64.b64encode(session.keys[1]).decode("utf-8")
-            GLib.idle_add(label.set_text, _("Sync started"))
-            GLib.idle_add(image.set_from_icon_name,
+            El().sync_worker.login({"login": username}, password)
+            GLib.idle_add(self.__result_label.set_text, _("Sync started"))
+            GLib.idle_add(self.__result_image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
                           Gtk.IconSize.MENU)
         except Exception as e:
             if str(e) == "Unverified account":
-                GLib.idle_add(label.set_text,
-                              _("You've received an email"
-                                " to validate synchronization"))
-                GLib.idle_add(image.set_from_icon_name,
-                              "mail-unread-symbolic",
-                              Gtk.IconSize.MENU)
+                GLib.timeout_add(1000, self.__settings_dialog.destroy)
+                # Try to go to webmail
+                split = username.split("@")
+                GLib.idle_add(El().active_window.container.add_webview,
+                              "https://%s" % split[1],
+                              Gdk.WindowType.CHILD)
+                GLib.idle_add(
+                    El().active_window.toolbar.title.show_message,
+                    El().active_window.container.current.webview,
+                    _("You've received an email"
+                      " to validate synchronization"))
             else:
-                GLib.idle_add(label.set_text, str(e))
-                GLib.idle_add(image.set_from_icon_name,
+                GLib.idle_add(self.__result_label.set_text, str(e))
+                GLib.idle_add(self.__result_image.set_from_icon_name,
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
-        # Store credentials
-        try:
-            schema_string = "org.gnome.Eolie.sync"
-            SecretSchema = {
-                "sync": Secret.SchemaAttributeType.STRING,
-                "login": Secret.SchemaAttributeType.STRING,
-                "uid": Secret.SchemaAttributeType.STRING,
-                "token": Secret.SchemaAttributeType.STRING,
-                "keyB": Secret.SchemaAttributeType.STRING
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            if session is None:
-                uid = ""
-                token = ""
-            else:
-                uid = session.uid
-                token = session.token
-            SecretAttributes = {
-                    "sync": "mozilla",
-                    "login": login,
-                    "uid": uid,
-                    "token": token,
-                    "keyB": keyB
-            }
-
-            Secret.password_store(schema, SecretAttributes,
-                                  Secret.COLLECTION_DEFAULT,
-                                  schema_string,
-                                  password,
-                                  None,
-                                  self.__on_password_stored)
-        except Exception as e:
-            print("Settings::__connect_mozilla_sync()", e)
+        GLib.idle_add(self.__setup_sync_button, True)
 
     def __on_password_stored(self, secret, result):
         """
@@ -481,60 +485,14 @@ class SettingsDialog:
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
 
-    def __on_sync_button_clicked(self, button, login_entry, password_entry,
-                                 label, image):
+    def __on_get_sync(self, attributes, password):
         """
-            Connect to Mozilla Sync to get tokens
-            @param button as Gtk.Button
-            @param login_entry as Gtk.Entry
-            @param password_entry as Gtk.Entry
-            @param label as Gtk.Label
-            @param image as Gtk.Image
-        """
-        El().sync_worker.delete_secret()
-        if image.get_icon_name() == "content-loading-symbolic":
-            return
-        label.set_text(_("Connecting…"))
-        image.set_from_icon_name("content-loading-symbolic", Gtk.IconSize.MENU)
-        thread = Thread(target=self.__connect_mozilla_sync,
-                        args=(login_entry.get_text(),
-                              password_entry.get_text(),
-                              label, image))
-        thread.daemon = True
-        thread.start()
-
-    def __on_get_secret(self, source, result):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
+            Set username and password
+            @param attributes as {}
+            @param password as str
         """
         try:
-            secret = Secret.Service.get_finish(result)
-            SecretSchema = {
-                "type": Secret.SchemaAttributeType.STRING
-            }
-            SecretAttributes = {
-                "type": "eolie web login"
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search)
+            self.__login_entry.set_text(attributes["login"])
+            self.__password_entry.set_text(password)
         except Exception as e:
-            print("SettingsDialog::__on_get_secret()", e)
-
-    def __on_secret_search(self, source, result):
-        """
-            Set username/password input
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-        """
-        try:
-            if result is not None:
-                items = source.search_finish(result)
-                for item in items:
-                    item.delete(None, None)
-        except Exception as e:
-            print("SettingsDialog::__on_secret_search()", e)
+            print("SettingsDialog::__on_get_sync()", e)

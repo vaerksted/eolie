@@ -18,7 +18,6 @@ from eolie.define import PROXY_BUS, PROXY_PATH
 class DBusHelper:
     """
         Simpler helper for DBus
-        Pass a function to call, args and a callback
     """
 
     def __init__(self):
@@ -40,11 +39,11 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, callback, signal_name):
+    def connect(self, signal_name, callback):
         """
             Connect callback to object signals
-            @param callback as function
             @param signal_name as str
+            @param callback as function
         """
         try:
             Gio.bus_get(Gio.BusType.SESSION, None,

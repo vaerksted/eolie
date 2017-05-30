@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, Secret, GObject, GLib
+from gi.repository import Gio, GObject, GLib
 
 from pickle import dump, load
 from hashlib import sha256
@@ -33,6 +33,7 @@ from threading import Thread
 from eolie.define import El, LOCAL_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
+from eolie.helper_passwords import PasswordsHelper
 
 
 TOKENSERVER_URL = "https://token.services.mozilla.com/"
@@ -44,7 +45,7 @@ class SyncWorker(GObject.GObject):
        Manage sync with mozilla server, will start syncing on init
     """
     __gsignals__ = {
-        'sync-finish': (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "sync-finished": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self):
@@ -56,9 +57,37 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
-        self.__status = False
-        self.__client = MozillaSync()
+        self.__mozilla_sync = MozillaSync()
         self.__session = None
+        self.__helper = PasswordsHelper()
+
+    def login(self, attributes, password):
+        """
+            Login to service
+            @param attributes as {}
+            @param password as str
+            @raise exceptions
+        """
+        keyB = ""
+        session = None
+        # Connect to mozilla sync
+        session = self.__mozilla_sync.login(attributes["login"], password)
+        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
+                                                                       session)
+        keyB = base64.b64encode(session.keys[1]).decode("utf-8")
+        # Store credentials
+        if session is None:
+            uid = ""
+            token = ""
+        else:
+            uid = session.uid
+            token = session.token
+        self.__helper.store_sync_password(attributes["login"],
+                                          password,
+                                          uid,
+                                          token,
+                                          keyB,
+                                          lambda x, y: self.sync(True))
 
     def sync(self, first_sync=False):
         """
@@ -71,9 +100,10 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__stop = False
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret, first_sync, False)
-        return
+        # We force session reset to user last stored token
+        if first_sync:
+            self.__session = None
+        self.__helper.get_sync(self.__start_sync, first_sync)
 
     def push_history(self, history_ids):
         """
@@ -103,8 +133,9 @@ class SyncWorker(GObject.GObject):
         """
         self.__username = ""
         self.__password = ""
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret, False, True)
+        self.__session = None
+        self.__stop = True
+        self.__helper.clear_sync()
 
     def stop(self):
         """
@@ -134,7 +165,11 @@ class SyncWorker(GObject.GObject):
             True if sync is working
             @return bool
         """
-        return self.__status
+        try:
+            self.__mozilla_sync.client.info_collections()
+            return True
+        except:
+            return False
 
     @property
     def username(self):
@@ -153,7 +188,7 @@ class SyncWorker(GObject.GObject):
             @return keys as (b"", b"")
         """
         if self.__session is None:
-            self.__session = FxASession(self.__client.client,
+            self.__session = FxASession(self.__mozilla_sync.fxa_client,
                                         self.__username,
                                         quick_stretch_password(
                                                         self.__username,
@@ -161,15 +196,10 @@ class SyncWorker(GObject.GObject):
                                         self.__uid,
                                         self.__token)
             self.__session.keys = [b"", self.__keyB]
-        try:
-            self.__status = True
-            self.__session.check_session_status()
-            bid_assertion, key = self.__client.get_browserid_assertion(
-                                                            self.__session)
-            bulk_keys = self.__client.connect(bid_assertion, key)
-        except Exception as e:
-            self.__status = False
-            raise e
+        self.__session.check_session_status()
+        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
+                                                                self.__session)
+        bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
         return bulk_keys
 
     def __push_history(self, history_ids):
@@ -195,14 +225,14 @@ class SyncWorker(GObject.GObject):
                         record["visits"].append({"date": atime*1000000,
                                                  "type": 1})
                     debug("pushing %s" % record)
-                    self.__client.add_history(record, bulk_keys)
+                    self.__mozilla_sync.add(record, "history", bulk_keys)
                 else:
                     record["id"] = guid
                     record["type"] = "item"
                     record["deleted"] = True
                     debug("deleting %s" % record)
-                    self.__client.add_history(record, bulk_keys)
-                self.__mtimes = self.__client.client.info_collections()
+                    self.__mozilla_sync.add(record, "history", bulk_keys)
+                self.__mtimes = self.__mozilla_sync.client.info_collections()
                 dump(self.__mtimes,
                      open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
@@ -222,7 +252,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__client.add_history(record, bulk_keys)
+            self.__mozilla_sync.add(record, "history", bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
@@ -242,7 +272,7 @@ class SyncWorker(GObject.GObject):
             self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         try:
             bulk_keys = self.__get_session_bulk_keys()
-            new_mtimes = self.__client.client.info_collections()
+            new_mtimes = self.__mozilla_sync.client.info_collections()
 
             if self.__stop:
                 return
@@ -275,14 +305,15 @@ class SyncWorker(GObject.GObject):
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
             # Update last sync mtime
-            self.__mtimes = self.__client.client.info_collections()
+            self.__mtimes = self.__mozilla_sync.client.info_collections()
             dump(self.__mtimes,
                  open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
-            GLib.idle_add(self.emit, "sync-finish")
+            GLib.idle_add(self.emit, "sync-finished")
         except Exception as e:
             print("SyncWorker::__sync():", e)
-            self.__status = False
+            if str(e) == "The authentication token could not be found":
+                self.__helper.get_sync(self.login)
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
@@ -314,7 +345,7 @@ class SyncWorker(GObject.GObject):
             record["parentid"] = parent_guid
             record["type"] = "bookmark"
             debug("pushing %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__stop:
@@ -329,7 +360,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
             El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handled later
         # Otherwise, order will be broken by new children updates
@@ -363,7 +394,7 @@ class SyncWorker(GObject.GObject):
             record["title"] = parent_name
             record["children"] = children
             debug("pushing parent %s" % record)
-            self.__client.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         El().bookmarks.clean_tags()
 
     def __pull_bookmarks(self, bulk_keys, first_sync):
@@ -375,7 +406,7 @@ class SyncWorker(GObject.GObject):
         """
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
-        records = self.__client.get_bookmarks(bulk_keys)
+        records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
         # We get all guids here and remove them while sync
         # At the end, we have deleted records
         # On fist sync, keep all
@@ -481,7 +512,7 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull history")
-        records = self.__client.get_history(bulk_keys)
+        records = self.__mozilla_sync.get_records("history", bulk_keys)
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
@@ -520,79 +551,24 @@ class SyncWorker(GObject.GObject):
                                           True)
             El().history.thread_lock.release()
 
-    def __on_get_secret(self, source, result, first_sync, delete):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param fisrt_sync as bool
-            @param delete as bool
-        """
-        try:
-            secret = Secret.Service.get_finish(result)
-            SecretSchema = {
-                "sync": Secret.SchemaAttributeType.STRING
-            }
-            SecretAttributes = {
-                "sync": "mozilla",
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search, first_sync, delete)
-        except Exception as e:
-            print("SyncWorker::__on_get_secret()", e)
-
-    def __on_load_secret(self, source, result, first_sync):
+    def __start_sync(self, attributes, password, first_sync):
         """
             Set params and start sync
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
             @param first_sync as bool
         """
         try:
-            secret = source.get_secret()
-            attributes = source.get_attributes()
-            if secret is not None:
-                self.__username = attributes["login"]
-                self.__password = secret.get().decode('utf-8')
-                self.__token = attributes["token"]
-                self.__uid = attributes["uid"]
-                self.__keyB = base64.b64decode(attributes["keyB"])
-                if Gio.NetworkMonitor.get_default().get_network_available():
-                    thread = Thread(target=self.__sync,
-                                    args=(first_sync,))
-                    thread.daemon = True
-                    thread.start()
+            self.__username = attributes["login"]
+            self.__password = password
+            self.__token = attributes["token"]
+            self.__uid = attributes["uid"]
+            self.__keyB = base64.b64decode(attributes["keyB"])
+            if Gio.NetworkMonitor.get_default().get_network_available():
+                thread = Thread(target=self.__sync,
+                                args=(first_sync,))
+                thread.daemon = True
+                thread.start()
         except Exception as e:
-            print("SyncWorker::__on_load_secret()", e)
-
-    def __on_secret_search(self, source, result, first_sync, delete):
-        """
-            Set username/password input
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param first_sync as bool
-            @param delete as bool
-        """
-        try:
-            if result is not None:
-                items = source.search_finish(result)
-                if not items:
-                    return
-                if delete:
-                    items[0].delete(None, None)
-                else:
-                    items[0].load_secret(None,
-                                         self.__on_load_secret,
-                                         first_sync)
-            else:
-                # Sync not configured, just remove pending deleted bookmarks
-                for bookmark_id in El().get_deleted_ids():
-                    El().bookmarks.remove(bookmark_id)
-        except Exception as e:
-            print("SyncWorker::__on_secret_search()", e)
+            print("SyncWorker::__start_sync()", e)
 
 
 class MozillaSync(object):
@@ -603,7 +579,7 @@ class MozillaSync(object):
         """
             Init client
         """
-        self.__client = FxAClient()
+        self.__fxa_client = FxAClient()
 
     def login(self, login, password):
         """
@@ -612,7 +588,7 @@ class MozillaSync(object):
             @param password as str
             @return fxaSession
         """
-        fxaSession = self.__client.login(login, password, keys=True)
+        fxaSession = self.__fxa_client.login(login, password, keys=True)
         fxaSession.fetch_keys()
         return fxaSession
 
@@ -650,45 +626,32 @@ class MozillaSync(object):
                               base64.b64decode(keys["default"][1]))
         return bulk_keys
 
-    def get_bookmarks(self, bulk_keys):
+    def get_records(self, collection, bulk_keys):
         """
-            Return bookmarks payload
+            Return records payload
+            @param collection as str
             @param bulk keys as KeyBundle
             @return [{}]
         """
-        bookmarks = []
+        records = []
         for record in self.__client.get_records('bookmarks'):
             record["payload"] = self.__decrypt_payload(record, bulk_keys)
-            bookmarks.append(record)
-        return bookmarks
+            records.append(record)
+        return records
 
-    def get_history(self, bulk_keys):
+    def add(self, item, collection, bulk_keys):
         """
-            Return history payload
-            @param bulk keys as KeyBundle
-            @return [{}]
+            Add bookmark
+            @param bookmark as {}
+            @param collection as str
+            @param bulk_keys as KeyBundle
         """
-        history = []
-        for record in self.__client.get_records('history'):
-            record["payload"] = self.__decrypt_payload(record, bulk_keys)
-            history.append(record)
-        return history
-
-    def add_bookmark(self, bookmark, bulk_keys):
-        payload = self.__encrypt_payload(bookmark, bulk_keys)
+        payload = self.__encrypt_payload(item, bulk_keys)
         record = {}
         record["modified"] = round(time(), 2)
         record["payload"] = payload
-        record["id"] = bookmark["id"]
-        self.__client.put_record("bookmarks", record)
-
-    def add_history(self, history, bulk_keys):
-        payload = self.__encrypt_payload(history, bulk_keys)
-        record = {}
-        record["modified"] = round(time(), 2)
-        record["payload"] = payload
-        record["id"] = history["id"]
-        self.__client.put_record("history", record)
+        record["id"] = item["id"]
+        self.__client.put_record(collection, record)
 
     def get_browserid_assertion(self, session,
                                 tokenserver_url=TOKENSERVER_URL):
@@ -706,6 +669,13 @@ class MozillaSync(object):
             Get client
         """
         return self.__client
+
+    @property
+    def fxa_client(self):
+        """
+            Get fxa client
+        """
+        return self.__fxa_client
 
 #######################
 # PRIVATE             #
