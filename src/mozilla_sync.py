@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, Secret, GObject, GLib
+from gi.repository import Gio, GObject, GLib
 
 from pickle import dump, load
 from hashlib import sha256
@@ -137,8 +137,7 @@ class SyncWorker(GObject.GObject):
         self.__password = ""
         self.__session = None
         self.__status = False
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret, False, True)
+        self.__helper.clear_sync()
 
     def stop(self):
         """

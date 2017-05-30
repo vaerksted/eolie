@@ -130,6 +130,28 @@ class PasswordsHelper:
         except Exception as e:
             print("PasswordsHelper::store_sync_password():", e)
 
+    def clear_sync(self):
+        """
+            Clear sync secrets
+        """
+        try:
+            SecretSchema = {
+                "sync": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "sync": "mozilla"
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema,
+                                 SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_clear_search)
+        except Exception as e:
+            print("PasswordsHelper::clear_sync():", e)
+
     def clear(self):
         """
             Clear passwords
