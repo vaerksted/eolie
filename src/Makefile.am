@@ -25,10 +25,11 @@ app_PYTHON = \
     menu_pages.py\
     mozilla_sync.py\
     popover_cookies.py\
+    popover_credentials.py\
     popover_downloads.py\
     popover_images.py\
     popover_javascript.py\
-    popover_password.py\
+    popover_passwords.py\
     popover_uri.py\
     popover_webview.py\
     search.py\

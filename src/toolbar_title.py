@@ -208,9 +208,9 @@ class ToolbarTitle(Gtk.Bin):
             @param password as str
             @param uri as str
         """
-        from eolie.popover_password import PasswordPopover
+        from eolie.popover_password import PasswordCredentials
         self.__lock_focus = True
-        popover = PasswordPopover(username, password, uri)
+        popover = PasswordCredentials(username, password, uri)
         popover.set_relative_to(self.__entry)
         popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))

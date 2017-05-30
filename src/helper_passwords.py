@@ -31,6 +31,33 @@ class PasswordsHelper:
         Secret.Service.get(Secret.ServiceFlags.NONE, None,
                            self.__on_get_secret)
 
+    def get_all(self, callback, *args):
+        """
+            Call function
+            @param callback as function
+            @param args
+        """
+        try:
+            self.__wait_for_secret(self.get_all, callback, *args)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema, SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_secret_search,
+                                 None,
+                                 callback,
+                                 *args)
+        except Exception as e:
+            debug("PasswordsHelper::get_all(): %s" % e)
+
     def get(self, uri, callback, *args):
         """
             Call function
@@ -186,7 +213,7 @@ class PasswordsHelper:
         """
         try:
             parsed = urlparse(uri)
-            self.__wait_for_secret(self.clear)
+            self.__wait_for_secret(self.clear, uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "formSubmitURL": Secret.SchemaAttributeType.STRING,
@@ -235,7 +262,7 @@ class PasswordsHelper:
             Clear passwords
         """
         try:
-            self.__wait_for_secret(self.clear)
+            self.__wait_for_secret(self.clear_all)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING
             }

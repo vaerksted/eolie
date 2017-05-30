@@ -19,9 +19,9 @@ from eolie.helper_passwords import PasswordsHelper
 from uuid import uuid3, NAMESPACE_DNS
 
 
-class PasswordPopover(Gtk.Popover):
+class CredentialsPopover(Gtk.Popover):
     """
-        Tell user to save form password
+        Tell user to save form credentials
     """
 
     def __init__(self, username, password, uri):
@@ -38,7 +38,7 @@ class PasswordPopover(Gtk.Popover):
         self.__uri = uri
         self.__uuid = None
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/PopoverPassword.ui')
+        builder.add_from_resource('/org/gnome/Eolie/PopoverCredentials.ui')
         builder.connect_signals(self)
         self.__label = builder.get_object('label')
         parsed = urlparse(uri)
@@ -66,7 +66,7 @@ class PasswordPopover(Gtk.Popover):
                                 None)
             self.destroy()
         except Exception as e:
-            print("PasswordPopover::_on_save_clicked()", e)
+            print("CredentialsPopover::_on_save_clicked()", e)
 
     def show(self):
         """
@@ -97,4 +97,4 @@ class PasswordPopover(Gtk.Popover):
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
         except Exception as e:
-            print("PasswordPopover::on_load_secret()", e)
+            print("CredentialsPopover::on_load_secret()", e)

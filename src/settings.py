@@ -200,8 +200,11 @@ class SettingsDialog:
             Launch searhorse
             @param button as Gtk.Button
         """
-        argv = [GLib.find_program_in_path("seahorse")]
-        GLib.spawn_async(argv)
+        from eolie.popover_passwords import PasswordsPopover
+        popover = PasswordsPopover()
+        popover.populate()
+        popover.set_relative_to(button)
+        popover.show()
 
     def _on_tracking_toggled(self, button):
         """
@@ -363,13 +366,6 @@ class SettingsDialog:
         if uri is None:
             uri = ""
         El().settings.set_value("download-uri", GLib.Variant("s", uri))
-
-    def _on_clear_passwords_clicked(self, button):
-        """
-            Clear personnal data
-            @param button as Gtk.Button
-        """
-        self.__helper.clear_all()
 
     def _on_key_release_event(self, widget, event):
         """
