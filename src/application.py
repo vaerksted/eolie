@@ -307,7 +307,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
         self.set_accels_for_action("win.shortcut::source",
-                                   ["<Control><Shift>s"])
+                                   ["<Control><Shift>c"])
         self.set_accels_for_action("win.shortcut::fullscreen", ["F11"])
         self.set_accels_for_action("app.settings",
                                    ["<Control><Shift>s"])

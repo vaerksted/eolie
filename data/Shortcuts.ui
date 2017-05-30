@@ -105,7 +105,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Show source code</property>
-                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;c</property>
               </object>
             </child>
           </object>
