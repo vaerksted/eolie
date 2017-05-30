@@ -53,13 +53,37 @@ class PasswordsHelper:
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
             self.__secret.search(schema, SecretAttributes,
-                                 Secret.ServiceFlags.NONE,
+                                 Secret.SearchFlags.NONE,
                                  None,
                                  self.__on_secret_search,
                                  callback,
                                  *args)
         except Exception as e:
             print("PasswordsHelper::get():", e)
+
+    def clear(self):
+        """
+            Clear passwords
+        """
+        if self.__secret is None:
+            return
+        try:
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "type": "eolie web login"
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema,
+                                 SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_clear_search)
+        except Exception as e:
+            print("PasswordsHelper::clear():", e)
 
 #######################
 # PRIVATE             #
@@ -81,6 +105,20 @@ class PasswordsHelper:
                          *args)
         except Exception as e:
             print("PasswordsHelper::__on_load_secret()", e)
+
+    def __on_clear_search(self, source, result):
+        """
+            Clear passwords
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            if result is not None:
+                items = source.search_finish(result)
+                for item in items:
+                    item.delete(None, None)
+        except Exception as e:
+            print("SettingsDialog::__on_clear_search()", e)
 
     def __on_secret_search(self, source, result, callback, *args):
         """

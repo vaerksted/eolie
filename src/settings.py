@@ -21,6 +21,7 @@ from threading import Thread
 from eolie.define import El
 from eolie.dialog_clear_data import ClearDataDialog
 from eolie.utils import get_current_monitor_model
+from eolie.helper_passwords import PasswordsHelper
 
 
 class Settings(Gio.Settings):
@@ -53,6 +54,7 @@ class SettingsDialog:
             Init dialog
             @param window as Window
         """
+        self.__helper = PasswordsHelper()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SettingsDialog.ui")
 
@@ -366,8 +368,7 @@ class SettingsDialog:
             Clear personnal data
             @param button as Gtk.Button
         """
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret)
+        self.__helper.clear()
 
     def _on_key_release_event(self, widget, event):
         """
@@ -451,7 +452,6 @@ class SettingsDialog:
             @thread safe
         """
         from eolie.mozilla_sync import MozillaSync
-        from gi.repository import Secret
         import base64
         keyB = ""
         session = None
@@ -528,39 +528,3 @@ class SettingsDialog:
         """
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
-
-    def __on_get_secret(self, source, result):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-        """
-        try:
-            secret = Secret.Service.get_finish(result)
-            SecretSchema = {
-                "type": Secret.SchemaAttributeType.STRING
-            }
-            SecretAttributes = {
-                "type": "eolie web login"
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search)
-        except Exception as e:
-            print("SettingsDialog::__on_get_secret()", e)
-
-    def __on_secret_search(self, source, result):
-        """
-            Set username/password input
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-        """
-        try:
-            if result is not None:
-                items = source.search_finish(result)
-                for item in items:
-                    item.delete(None, None)
-        except Exception as e:
-            print("SettingsDialog::__on_secret_search()", e)
