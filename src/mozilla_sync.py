@@ -201,13 +201,13 @@ class SyncWorker(GObject.GObject):
                         record["visits"].append({"date": atime*1000000,
                                                  "type": 1})
                     debug("pushing %s" % record)
-                    self.__mozilla_sync.add_history(record, bulk_keys)
+                    self.__mozilla_sync.add(record, "history", bulk_keys)
                 else:
                     record["id"] = guid
                     record["type"] = "item"
                     record["deleted"] = True
                     debug("deleting %s" % record)
-                    self.__mozilla_sync.add_history(record, bulk_keys)
+                    self.__mozilla_sync.add(record, "history", bulk_keys)
                 self.__mtimes = self.__mozilla_sync.client.info_collections()
                 dump(self.__mtimes,
                      open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
@@ -228,7 +228,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__mozilla_sync.add_history(record, bulk_keys)
+            self.__mozilla_sync.add(record, "history", bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
@@ -322,7 +322,7 @@ class SyncWorker(GObject.GObject):
             record["parentid"] = parent_guid
             record["type"] = "bookmark"
             debug("pushing %s" % record)
-            self.__mozilla_sync.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
             if self.__stop:
@@ -337,7 +337,7 @@ class SyncWorker(GObject.GObject):
             record["type"] = "item"
             record["deleted"] = True
             debug("deleting %s" % record)
-            self.__mozilla_sync.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
             El().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handled later
         # Otherwise, order will be broken by new children updates
@@ -371,7 +371,7 @@ class SyncWorker(GObject.GObject):
             record["title"] = parent_name
             record["children"] = children
             debug("pushing parent %s" % record)
-            self.__mozilla_sync.add_bookmark(record, bulk_keys)
+            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         El().bookmarks.clean_tags()
 
     def __pull_bookmarks(self, bulk_keys, first_sync):
@@ -684,21 +684,31 @@ class MozillaSync(object):
             history.append(record)
         return history
 
-    def add_bookmark(self, bookmark, bulk_keys):
-        payload = self.__encrypt_payload(bookmark, bulk_keys)
+    def add(self, item, collection, bulk_keys):
+        """
+            Add bookmark
+            @param bookmark as {}
+            @param collection as str
+            @param bulk_keys as KeyBundle
+        """
+        payload = self.__encrypt_payload(item, bulk_keys)
         record = {}
         record["modified"] = round(time(), 2)
         record["payload"] = payload
-        record["id"] = bookmark["id"]
-        self.__client.put_record("bookmarks", record)
+        record["id"] = item["id"]
+        self.__client.put_record(collection, record)
 
-    def add_history(self, history, bulk_keys):
-        payload = self.__encrypt_payload(history, bulk_keys)
-        record = {}
-        record["modified"] = round(time(), 2)
-        record["payload"] = payload
-        record["id"] = history["id"]
-        self.__client.put_record("history", record)
+    def get_passwords(self, bulk_keys):
+        """
+            Get mozilla passwords
+            @param bulk keys as KeyBundle
+            @return [{}]
+        """
+        passwords = []
+        for record in self.__client.get_records("passwords"):
+            record["payload"] = self.__decrypt_payload(record, bulk_keys)
+            passwords.append(record)
+        return passwords
 
     def get_browserid_assertion(self, session,
                                 tokenserver_url=TOKENSERVER_URL):
