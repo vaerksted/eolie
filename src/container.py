@@ -374,7 +374,6 @@ class Container(Gtk.Overlay):
             @param uri as GParamString (Do not use)
         """
         if webview == self.current.webview:
-            self.__window.toolbar.actions.set_actions(webview)
             if uri:
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
@@ -455,6 +454,7 @@ class Container(Gtk.Overlay):
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__window.toolbar.actions.set_actions(webview)
             # Give focus to webview
             if focus_in_view:
                 GLib.idle_add(self.__grab_focus_on_current)
