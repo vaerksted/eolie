@@ -300,6 +300,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::private",
                                    ["<Control><Shift>p"])
         self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
+        self.set_accels_for_action("win.shortcut::quit", ["<Control>q"])
         self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
         self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])

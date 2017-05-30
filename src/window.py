@@ -215,6 +215,8 @@ class Window(Gtk.ApplicationWindow):
         string = param.get_string()
         if string == "uri":
             self.toolbar.title.focus_entry()
+        elif string == "quit":
+            El().quit(True)
         elif string == "new_page":
             self.container.add_webview(El().start_page, Gdk.WindowType.CHILD)
         elif string == "close_page":
