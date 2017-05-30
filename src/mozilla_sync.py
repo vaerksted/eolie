@@ -33,6 +33,7 @@ from threading import Thread
 from eolie.define import El, LOCAL_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
+from eolie.helper_passwords import PasswordsHelper
 
 
 TOKENSERVER_URL = "https://token.services.mozilla.com/"
@@ -44,8 +45,7 @@ class SyncWorker(GObject.GObject):
        Manage sync with mozilla server, will start syncing on init
     """
     __gsignals__ = {
-        "password-needed": (GObject.SignalFlags.RUN_FIRST, None, ()),
-        "sync-finished": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "sync-finished": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self):
@@ -60,6 +60,35 @@ class SyncWorker(GObject.GObject):
         self.__status = False
         self.__mozilla_sync = MozillaSync()
         self.__session = None
+        self.__helper = PasswordsHelper()
+
+    def login(self, attributes, password):
+        """
+            Login to service
+            @param attributes as {}
+            @param password as str
+            @raise exceptions
+        """
+        keyB = ""
+        session = None
+        # Connect to mozilla sync
+        session = self.__mozilla_sync.login(attributes["login"], password)
+        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
+                                                                       session)
+        keyB = base64.b64encode(session.keys[1]).decode("utf-8")
+        # Store credentials
+        if session is None:
+            uid = ""
+            token = ""
+        else:
+            uid = session.uid
+            token = session.token
+        self.__helper.store_sync_password(attributes["login"],
+                                          password,
+                                          uid,
+                                          token,
+                                          keyB,
+                                          lambda x, y: self.sync(True))
 
     def sync(self, first_sync=False):
         """
@@ -76,9 +105,7 @@ class SyncWorker(GObject.GObject):
         # We force session reset to user last stored token
         if first_sync:
             self.__session = None
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret, first_sync, False)
-        return
+        self.__helper.get_sync(self.__start_sync, first_sync)
 
     def push_history(self, history_ids):
         """
@@ -289,8 +316,9 @@ class SyncWorker(GObject.GObject):
         except Exception as e:
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
-                GLib.idle_add(self.emit, "password-needed")
-            self.__status = False
+                self.__helper.get_sync(self.login)
+            else:
+                self.__status = False
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
@@ -528,81 +556,24 @@ class SyncWorker(GObject.GObject):
                                           True)
             El().history.thread_lock.release()
 
-    def __on_get_secret(self, source, result, first_sync, delete):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param fisrt_sync as bool
-            @param delete as bool
-        """
-        try:
-            secret = Secret.Service.get_finish(result)
-            SecretSchema = {
-                "sync": Secret.SchemaAttributeType.STRING
-            }
-            SecretAttributes = {
-                "sync": "mozilla",
-            }
-            schema = Secret.Schema.new("org.gnome.Eolie",
-                                       Secret.SchemaFlags.NONE,
-                                       SecretSchema)
-            secret.search(schema, SecretAttributes, Secret.ServiceFlags.NONE,
-                          None, self.__on_secret_search, first_sync, delete)
-        except Exception as e:
-            print("SyncWorker::__on_get_secret()", e)
-
-    def __on_load_secret(self, source, result, first_sync):
+    def __start_sync(self, attributes, password, first_sync):
         """
             Set params and start sync
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
             @param first_sync as bool
         """
         try:
-            secret = source.get_secret()
-            attributes = source.get_attributes()
-            if secret is not None:
-                self.__username = attributes["login"]
-                self.__password = secret.get().decode('utf-8')
-                self.__token = attributes["token"]
-                self.__uid = attributes["uid"]
-                self.__keyB = base64.b64decode(attributes["keyB"])
-                if Gio.NetworkMonitor.get_default().get_network_available():
-                    thread = Thread(target=self.__sync,
-                                    args=(first_sync,))
-                    thread.daemon = True
-                    thread.start()
+            self.__username = attributes["login"]
+            self.__password = password
+            self.__token = attributes["token"]
+            self.__uid = attributes["uid"]
+            self.__keyB = base64.b64decode(attributes["keyB"])
+            if Gio.NetworkMonitor.get_default().get_network_available():
+                thread = Thread(target=self.__sync,
+                                args=(first_sync,))
+                thread.daemon = True
+                thread.start()
         except Exception as e:
-            print("SyncWorker::__on_load_secret()", e)
-
-    def __on_secret_search(self, source, result, first_sync, delete):
-        """
-            Set username/password input
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param first_sync as bool
-            @param delete as bool
-        """
-        try:
-            if result is not None:
-                items = source.search_finish(result)
-                if not items:
-                    self.__status = False
-                    return
-                if delete:
-                    items[0].delete(None, None)
-                else:
-                    items[0].load_secret(None,
-                                         self.__on_load_secret,
-                                         first_sync)
-            else:
-                self.__status = False
-                # Sync not configured, just remove pending deleted bookmarks
-                for bookmark_id in El().get_deleted_ids():
-                    El().bookmarks.remove(bookmark_id)
-        except Exception as e:
-            print("SyncWorker::__on_secret_search()", e)
+            print("SyncWorker::__start_sync()", e)
 
 
 class MozillaSync(object):

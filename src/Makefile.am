@@ -29,7 +29,6 @@ app_PYTHON = \
     popover_images.py\
     popover_javascript.py\
     popover_password.py\
-    popover_sync_auth.py\
     popover_uri.py\
     popover_webview.py\
     search.py\

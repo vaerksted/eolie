@@ -201,19 +201,6 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__readable_indicator.hide()
 
-    def show_sync_auth(self):
-        """
-            Show sync auth dialog
-        """
-        from eolie.popover_sync_auth import SyncAuthPopover
-        self.__lock_focus = True
-        popover = SyncAuthPopover()
-        popover.set_relative_to(self.__entry)
-        popover.set_pointing_to(self.__entry.get_icon_area(
-                                                Gtk.EntryIconPosition.PRIMARY))
-        popover.connect("closed", self.__on_popover_closed)
-        popover.show()
-
     def show_password(self, username, password, uri):
         """
             Show a popover allowing user to save password

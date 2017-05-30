@@ -93,16 +93,17 @@ class FormsExtension:
                           username_input,
                           password_input)
 
-    def __set_input(self, username, password, username_input, password_input):
+    def __set_input(self, attributes, password,
+                    username_input, password_input):
         """
             Set username/password input
-            @param username as str
+            @param attributes as {}
             @param password as str
             @param username_input as WebKit2WebExtension.DOMElement
             @param password_input as WebKit2WebExtension.DOMElement
         """
         try:
-            username_input.set_value(username)
+            username_input.set_value(attributes["login"])
             password_input.set_value(password)
         except Exception as e:
             print("FormsExtension::__set_input()", e)

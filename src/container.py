@@ -39,8 +39,6 @@ class Container(Gtk.Overlay):
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finished",
                                      self.__on_sync_finished)
-            El().sync_worker.connect("password-needed",
-                                     self.__on_password_needed)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -478,7 +476,6 @@ class Container(Gtk.Overlay):
         """
         if El().sync_worker is not None:
             El().sync_worker.disconnect_by_func(self.__on_sync_finished)
-            El().sync_worker.disconnect_by_func(self.__on_password_needed)
 
     def __on_sync_finished(self, worker):
         """
@@ -489,10 +486,3 @@ class Container(Gtk.Overlay):
             history_id = self.__history_queue.pop(0)
             worker.push_history([history_id])
             GLib.idle_add(self.__on_sync_finished, worker)
-
-    def __on_password_needed(self, worker):
-        """
-            Show sync auth dialog
-            @param worker as SyncWorker
-        """
-        self.__window.toolbar.title.show_sync_auth()

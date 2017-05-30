@@ -443,23 +443,15 @@ class SettingsDialog:
                         " on your computer:\n %s") % e)
                 self.__sync_button.set_sensitive(False)
 
-    def __connect_mozilla_sync(self, login, password):
+    def __connect_mozilla_sync(self, username, password):
         """
             Connect to mozilla sync
-            @param login as str
+            @param username as str
             @param password as str
             @thread safe
         """
-        from eolie.mozilla_sync import MozillaSync
-        import base64
-        keyB = ""
-        session = None
-        # Connect to mozilla sync
         try:
-            client = MozillaSync()
-            session = client.login(login, password)
-            bid_assertion, key = client.get_browserid_assertion(session)
-            keyB = base64.b64encode(session.keys[1]).decode("utf-8")
+            El().sync_worker.login(username, password)
             GLib.idle_add(self.__result_label.set_text, _("Sync started"))
             GLib.idle_add(self.__result_image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
@@ -468,7 +460,7 @@ class SettingsDialog:
             if str(e) == "Unverified account":
                 GLib.timeout_add(1000, self.__settings_dialog.destroy)
                 # Try to go to webmail
-                split = login.split("@")
+                split = username.split("@")
                 GLib.idle_add(El().active_window.container.add_webview,
                               "https://%s" % split[1],
                               Gdk.WindowType.CHILD)
@@ -482,19 +474,6 @@ class SettingsDialog:
                 GLib.idle_add(self.__result_image.set_from_icon_name,
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
-        # Store credentials
-        if session is None:
-            uid = ""
-            token = ""
-        else:
-            uid = session.uid
-            token = session.token
-        self.__helper.store_sync_password(login,
-                                          password,
-                                          uid,
-                                          token,
-                                          keyB,
-                                          self.__on_password_stored)
         GLib.idle_add(self.__setup_sync_button, True)
 
     def __on_password_stored(self, secret, result):
@@ -506,11 +485,14 @@ class SettingsDialog:
         if El().sync_worker is not None:
             El().sync_worker.sync(True)
 
-    def __on_get_sync(self, username, password):
+    def __on_get_sync(self, attributes, password):
         """
             Set username and password
-            @param username as str
+            @param attributes as {}
             @param password as str
         """
-        self.__login_entry.set_text(username)
-        self.__password_entry.set_text(password)
+        try:
+            self.__login_entry.set_text(attributes["login"])
+            self.__password_entry.set_text(password)
+        except Exception as e:
+            print("SettingsDialog::__on_get_sync()", e)

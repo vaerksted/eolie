@@ -179,9 +179,8 @@ class PasswordsHelper:
         """
         try:
             secret = source.get_secret()
-            attributes = source.get_attributes()
             if secret is not None:
-                callback(attributes["login"],
+                callback(source.get_attributes(),
                          secret.get().decode('utf-8'),
                          *args)
         except Exception as e:
