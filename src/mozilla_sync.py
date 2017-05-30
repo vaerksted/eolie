@@ -130,6 +130,14 @@ class SyncWorker(GObject.GObject):
             thread.daemon = True
             thread.start()
 
+    def remove_from_passwords(self, uri):
+        """
+            Remove password from passwords collection
+            @param uri as str
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            self.__helper.get(uri, self.__remove_from_passwords)
+
     def delete_secret(self):
         """
             Delete sync secret
@@ -258,6 +266,26 @@ class SyncWorker(GObject.GObject):
             self.__mozilla_sync.add(record, "history", bulk_keys)
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
+
+    def __remove_from_passwords(self, attributes, password, uri):
+        """
+            Remove password from passwords collection
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+        """
+        if not self.__username or not self.__password:
+            return
+        try:
+            bulk_keys = self.__get_session_bulk_keys()
+            record = {}
+            record["id"] = attributes["uuid"]
+            record["deleted"] = True
+            debug("deleting %s" % record)
+            self.__mozilla_sync.add(record, "passwords", bulk_keys)
+            self.__helper.clear(uri)
+        except Exception as e:
+            print("SyncWorker::__remove_from_passwords():", e)
 
     def __sync(self, first_sync):
         """

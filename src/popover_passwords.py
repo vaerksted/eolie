@@ -13,6 +13,7 @@
 from gi.repository import Gtk, GObject, Pango, GLib
 
 from eolie.helper_passwords import PasswordsHelper
+from eolie.define import El
 
 
 class Item(GObject.GObject):
@@ -28,13 +29,15 @@ class Row(Gtk.ListBoxRow):
         A cookie row
     """
 
-    def __init__(self, item):
+    def __init__(self, item, helper):
         """
             Init row
             @param item as Item
+            @param helper as PasswordsHelper
         """
         Gtk.ListBoxRow.__init__(self)
         self.__item = item
+        self.__helper = helper
         self.get_style_context().add_class("row")
         grid = Gtk.Grid()
         grid.set_column_spacing(10)
@@ -60,6 +63,17 @@ class Row(Gtk.ListBoxRow):
         grid.show()
         self.add(grid)
 
+    def delete(self):
+        """
+            Delete password
+        """
+        uri = self.__item.get_property("uri")
+        if El().sync_worker is None:
+            self.__helper.clear(uri)
+        else:
+            El().sync_worker.remove_from_passwords(uri)
+        GLib.idle_add(self.destroy)
+
     @property
     def item(self):
         """
@@ -76,9 +90,7 @@ class Row(Gtk.ListBoxRow):
             Delete item from cookies
             @param button as Gtk.Button
         """
-        helper = PasswordsHelper()
-        helper.clear(self.__item.get_property("uri"))
-        GLib.idle_add(self.destroy)
+        self.delete()
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -108,6 +120,7 @@ class PasswordsPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.__filter = ""
+        self.__helper = PasswordsHelper()
         self.set_position(Gtk.PositionType.BOTTOM)
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverPasswords.ui')
@@ -121,8 +134,7 @@ class PasswordsPopover(Gtk.Popover):
         """
             Populate popover
         """
-        helper = PasswordsHelper()
-        helper.get_all(self.__add_password)
+        self.__helper.get_all(self.__add_password)
 
 #######################
 # PROTECTED           #
@@ -140,8 +152,8 @@ class PasswordsPopover(Gtk.Popover):
             Remove all passwords
             @param button as Gtk.Button
         """
-        helper = PasswordsHelper()
-        helper.clear_all()
+        for child in self.__listbox.get_children():
+            child.delete()
 
 #######################
 # PRIVATE             #
@@ -160,8 +172,10 @@ class PasswordsPopover(Gtk.Popover):
             @param password as str
             @param uri as None
         """
+        if attributes is None:
+            return
         item = Item()
         item.set_property("uri", attributes["formSubmitURL"])
-        child = Row(item)
+        child = Row(item, self.__helper)
         child.show()
         self.__listbox.add(child)

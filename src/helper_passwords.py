@@ -292,7 +292,7 @@ class PasswordsHelper:
         """
         # Wait for secret
         if self.__secret is None:
-            GLib.timeout_add(1000, call, *args)
+            GLib.idle_add(call, *args)
         if self.__secret in [None, -1]:
             raise Exception("Waiting Secret service")
 
@@ -311,7 +311,7 @@ class PasswordsHelper:
                      uri,
                      *args)
         else:
-            raise Exception("No secret")
+            callback(None, None, uri, *args)
 
     def __on_clear_search(self, source, result):
         """
@@ -346,12 +346,12 @@ class PasswordsHelper:
                                      callback,
                                      *args)
                 if not items:
-                    callback(None, None, *args)
+                    callback(None, None, uri, *args)
             else:
-                callback(None, None, *args)
+                callback(None, None, uri, *args)
         except Exception as e:
             debug("PasswordsHelper::__on_secret_search(): %s" % e)
-            callback(None, None, *args)
+            callback(None, None, uri, *args)
 
     def __on_get_secret(self, source, result):
         """
