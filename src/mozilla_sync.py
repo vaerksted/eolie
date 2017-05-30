@@ -57,7 +57,6 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
-        self.__status = False
         self.__mozilla_sync = MozillaSync()
         self.__session = None
         self.__helper = PasswordsHelper()
@@ -101,7 +100,6 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__stop = False
-        self.__status = True
         # We force session reset to user last stored token
         if first_sync:
             self.__session = None
@@ -136,7 +134,7 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__session = None
-        self.__status = False
+        self.__stop = True
         self.__helper.clear_sync()
 
     def stop(self):
@@ -167,7 +165,11 @@ class SyncWorker(GObject.GObject):
             True if sync is working
             @return bool
         """
-        return self.__status
+        try:
+            self.__mozilla_sync.client.info_collections()
+            return True
+        except:
+            return False
 
     @property
     def username(self):
@@ -194,14 +196,10 @@ class SyncWorker(GObject.GObject):
                                         self.__uid,
                                         self.__token)
             self.__session.keys = [b"", self.__keyB]
-        try:
-            self.__session.check_session_status()
-            bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
-                                                            self.__session)
-            bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
-        except Exception as e:
-            self.__status = False
-            raise e
+        self.__session.check_session_status()
+        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
+                                                                self.__session)
+        bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
         return bulk_keys
 
     def __push_history(self, history_ids):
@@ -242,7 +240,7 @@ class SyncWorker(GObject.GObject):
 
     def __remove_from_history(self, guid):
         """
-            Remove from history
+            Remove from hisself.__mozilla_sync.client.info_collections()tory
             @param guid as str
         """
         if not self.__username or not self.__password:
@@ -316,8 +314,6 @@ class SyncWorker(GObject.GObject):
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
                 self.__helper.get_sync(self.login)
-            else:
-                self.__status = False
         self.__stop = True
 
     def __push_bookmarks(self, bulk_keys):
