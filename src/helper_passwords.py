@@ -15,6 +15,7 @@ gi.require_version('Secret', '1')
 from gi.repository import Secret, GLib
 
 from urllib.parse import urlparse
+from eolie.utils import debug
 
 
 class PasswordsHelper:
@@ -58,7 +59,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            print("PasswordsHelper::get():", e)
+            debug("PasswordsHelper::get(): %s" % e)
 
     def get_sync(self, callback, *args):
         """
@@ -83,7 +84,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            print("PasswordsHelper::get_sync():", e)
+            debug("PasswordsHelper::get_sync(): %s" % e)
 
     def store_sync_password(self, login, password, uid, token, keyB, callback):
         """
@@ -128,7 +129,7 @@ class PasswordsHelper:
                                   None,
                                   callback)
         except Exception as e:
-            print("PasswordsHelper::store_sync_password():", e)
+            debug("PasswordsHelper::store_sync_password(): %s" % e)
 
     def clear_sync(self):
         """
@@ -150,7 +151,7 @@ class PasswordsHelper:
                                  None,
                                  self.__on_clear_search)
         except Exception as e:
-            print("PasswordsHelper::clear_sync():", e)
+            debug("PasswordsHelper::clear_sync(): %s" % e)
 
     def clear(self):
         """
@@ -173,7 +174,7 @@ class PasswordsHelper:
                                  None,
                                  self.__on_clear_search)
         except Exception as e:
-            print("PasswordsHelper::clear():", e)
+            debug("PasswordsHelper::clear(): %s" % e)
 
 #######################
 # PRIVATE             #
@@ -206,7 +207,7 @@ class PasswordsHelper:
                          secret.get().decode('utf-8'),
                          *args)
         except Exception as e:
-            print("PasswordsHelper::__on_load_secret()", e)
+            debug("PasswordsHelper::__on_load_secret(): %s" % e)
 
     def __on_clear_search(self, source, result):
         """
@@ -220,7 +221,7 @@ class PasswordsHelper:
                 for item in items:
                     item.delete(None, None)
         except Exception as e:
-            print("SettingsDialog::__on_clear_search()", e)
+            debug("SettingsDialog::__on_clear_search(): %s" % e)
 
     def __on_secret_search(self, source, result, callback, *args):
         """
@@ -240,7 +241,7 @@ class PasswordsHelper:
                                      callback,
                                      *args)
         except Exception as e:
-            print("PasswordsHelper::__on_secret_search()", e)
+            debug("PasswordsHelper::__on_secret_search(): %s" % e)
 
     def __on_get_secret(self, source, result):
         """
@@ -252,4 +253,4 @@ class PasswordsHelper:
             self.__secret = Secret.Service.get_finish(result)
         except Exception as e:
             self.__secret = -1
-            print("PasswordsHelper::__on_get_secret()", e)
+            debug("PasswordsHelper::__on_get_secret(): %s" % e)
