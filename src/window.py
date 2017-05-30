@@ -70,6 +70,33 @@ class Window(Gtk.ApplicationWindow):
             for view in self.__container.views:
                 view.webview.update_zoom_level()
 
+    def fullscreen(self):
+        """
+            Prepare window to fullscreen and enter fullscreen
+        """
+        self.__fullscreen_toolbar = Toolbar(self)
+        self.__fullscreen_toolbar.end.show_fullscreen_button(True)
+        self.__fullscreen_toolbar.show()
+        self.container.on_view_map(self.container.current.webview)
+        revealer = Gtk.Revealer.new()
+        revealer.set_property("valign", Gtk.Align.START)
+        revealer.add(self.__fullscreen_toolbar)
+        revealer.show()
+        self.__container.add_overlay(revealer)
+        Gtk.ApplicationWindow.fullscreen(self)
+        self.connect("motion-notify-event", self.__on_motion_notify_event)
+
+    def unfullscreen(self):
+        """
+            Prepare window to unfullscreen and leave fullscreen
+        """
+        self.disconnect_by_func(self.__on_motion_notify_event)
+        GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
+        GLib.idle_add(self.__fullscreen_toolbar.destroy)
+        self.__fullscreen_toolbar = None
+        self.container.on_view_map(self.container.current.webview)
+        Gtk.ApplicationWindow.unfullscreen(self)
+
     def hide(self):
         """
             Hide window
@@ -99,7 +126,10 @@ class Window(Gtk.ApplicationWindow):
             Get window toolbar
             @return Toolbar
         """
-        return self.__toolbar
+        if self.__fullscreen_toolbar is None:
+            return self.__toolbar
+        else:
+            return self.__fullscreen_toolbar
 
     @property
     def zoom_level(self):
@@ -108,6 +138,14 @@ class Window(Gtk.ApplicationWindow):
            @return float
         """
         return self.__zoom_level
+
+    @property
+    def is_fullscreen(self):
+        """
+            True if fullscreen
+            @return bool
+        """
+        return self.__fullscreen_toolbar is not None
 
 ############
 # Private  #
@@ -134,6 +172,7 @@ class Window(Gtk.ApplicationWindow):
             Setup window content
         """
         self.__toolbar = Toolbar(self)
+        self.__fullscreen_toolbar = None
         self.__toolbar.show()
         self.__container = Container(self)
         self.__container.show()
@@ -192,12 +231,30 @@ class Window(Gtk.ApplicationWindow):
     def __on_window_state_event(self, widget, event):
         """
             Save maximised state
+            @param: window as Gtk.Window
+            @param: event as Gdk.Event
         """
         size = widget.get_size()
         self.toolbar.title.set_width(size[0]/3)
         El().settings.set_boolean("window-maximized",
                                   "GDK_WINDOW_STATE_MAXIMIZED" in
                                   event.new_window_state.value_names)
+
+    def __on_motion_notify_event(self, widget, event):
+        """
+            Reaveal/hide toolbar if needed
+            @param: widget as Gtk.Widget
+            @param: event as Gdk.EventMotion
+        """
+        revealer = self.__fullscreen_toolbar.get_parent()
+        if self.__fullscreen_toolbar.lock_focus or (
+                revealer.get_reveal_child() and
+                not revealer.get_child_revealed()):
+            return
+        if event.y < 10 + revealer.get_allocated_height():
+            revealer.set_reveal_child(True)
+        else:
+            revealer.set_reveal_child(False)
 
     def __on_realize(self, widget):
         """
@@ -215,6 +272,11 @@ class Window(Gtk.ApplicationWindow):
         string = param.get_string()
         if string == "uri":
             self.toolbar.title.focus_entry()
+        elif string == "fullscreen":
+            if self.is_fullscreen:
+                self.unfullscreen()
+            else:
+                self.fullscreen()
         elif string == "quit":
             El().quit(True)
         elif string == "new_page":

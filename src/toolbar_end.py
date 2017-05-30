@@ -54,6 +54,7 @@ class ToolbarEnd(Gtk.Bin):
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
+        self.__fullscreen_button = builder.get_object("fullscreen_button")
         self.__progress = ProgressBar(builder.get_object("download_button"))
         if El().download_manager.get():
             self._progress.show()
@@ -156,6 +157,16 @@ class ToolbarEnd(Gtk.Bin):
         popover.set_relative_to(self.__download_button)
         popover.show()
 
+    def show_fullscreen_button(self, b):
+        """
+            Show button to leave fullscreen mode
+            @param b as bool
+        """
+        if b:
+            self.__fullscreen_button.show()
+        else:
+            self.__fullscreen_button.hide()
+
 #######################
 # PROTECTED           #
 #######################
@@ -172,6 +183,12 @@ class ToolbarEnd(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed, button)
         self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
+
+    def _on_fullscreen_button_clicked(self, button):
+        """
+            Leave fullscreen mode
+        """
+        self.__window.unfullscreen()
 
     def _on_home_button_clicked(self, button):
         """
@@ -226,6 +243,12 @@ class ToolbarEnd(Gtk.Bin):
         popover = Gtk.PopoverMenu.new()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
+        fullscreen_button = builder.get_object("fullscreen_button")
+        if self.__window.is_fullscreen:
+            fullscreen_button.set_active(True)
+            fullscreen_button.set_tooltip_text(_("Leave fullscreen"))
+        else:
+            fullscreen_button.set_tooltip_text(_("Enter fullscreen"))
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
@@ -315,6 +338,18 @@ class ToolbarEnd(Gtk.Bin):
         webview = self.__window.container.current.webview
         current = webview.zoom_out()
         button.set_label("{} %".format(current))
+
+    def _on_fullscreen_button_toggled(self, button):
+        """
+            Restore default zoom level
+            @param button as Gtk.ToggleButton
+        """
+        if button.get_active():
+            if not self.__window.is_fullscreen:
+                self.__window.fullscreen()
+        else:
+            if self.__window.is_fullscreen:
+                self.__window.unfullscreen()
 
     def _on_default_zoom_button_clicked(self, button):
         """

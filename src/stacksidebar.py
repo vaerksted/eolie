@@ -121,6 +121,12 @@ class StackSidebar(Gtk.EventBox):
             @param b as bool
         """
         if b:
+            if self.__window.toolbar.lock_focus and\
+                    self.__window.is_fullscreen:
+                height = self.__window.toolbar.get_allocated_height()
+                self.__search_bar.set_margin_top(height)
+            else:
+                self.__search_bar.set_margin_top(0)
             self.__search_bar.show()
             self.__search_entry.grab_focus()
             self.__search_entry.connect("key-press-event",

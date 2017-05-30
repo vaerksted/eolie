@@ -7,6 +7,12 @@
     <property name="can_focus">False</property>
     <property name="icon_name">user-home-symbolic</property>
   </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="tooltip_text" translatable="yes">Leave fullscreen</property>
+    <property name="icon_name">view-restore-symbolic</property>
+  </object>
   <object class="GtkBox" id="end">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -14,6 +20,20 @@
     <property name="valign">center</property>
     <property name="vexpand">False</property>
     <property name="spacing">5</property>
+    <child>
+      <object class="GtkButton" id="fullscreen_button">
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="image">image3</property>
+        <signal name="clicked" handler="_on_fullscreen_button_clicked" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="pack_type">end</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
     <child>
       <object class="GtkToggleButton" id="menu_button">
         <property name="visible">True</property>
@@ -36,7 +56,7 @@
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="pack_type">end</property>
-        <property name="position">0</property>
+        <property name="position">1</property>
       </packing>
     </child>
     <child>
@@ -69,7 +89,7 @@
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="pack_type">end</property>
-        <property name="position">2</property>
+        <property name="position">3</property>
       </packing>
     </child>
     <child>
@@ -84,7 +104,7 @@
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="pack_type">end</property>
-        <property name="position">3</property>
+        <property name="position">4</property>
       </packing>
     </child>
   </object>

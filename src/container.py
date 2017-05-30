@@ -127,6 +127,29 @@ class Container(Gtk.Overlay):
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.show()
 
+    def on_view_map(self, webview):
+        """
+            Update window
+            @param webview as WebView
+        """
+        uri = webview.get_uri()
+        title = webview.get_title()
+        self.__window.toolbar.title.update_load_indicator(webview)
+        self.__window.toolbar.title.show_popup_indicator(webview.popups)
+        self.__window.toolbar.actions.set_actions(webview)
+        self.__window.toolbar.title.show_readable_button(
+                                            webview.readable_content != "")
+        if uri is not None:
+            self.__window.toolbar.title.set_uri(uri)
+        if webview.is_loading():
+            self.__window.toolbar.title.progress.show()
+        else:
+            self.__window.toolbar.title.progress.hide()
+        if title:
+            self.__window.toolbar.title.set_title(title)
+        elif uri:
+            self.__window.toolbar.title.set_title(uri)
+
     @property
     def sidebar(self):
         """
@@ -186,7 +209,7 @@ class Container(Gtk.Overlay):
             @return View
         """
         view = View(webview, parent)
-        view.webview.connect("map", self.__on_view_map)
+        view.webview.connect("map", self.on_view_map)
         view.webview.connect("notify::estimated-load-progress",
                              self.__on_estimated_load_progress)
         view.webview.connect("load-changed", self.__on_load_changed)
@@ -308,29 +331,6 @@ class Container(Gtk.Overlay):
         """
         if webview == self.current.webview:
             self.__window.toolbar.title.show_readable_button(True)
-
-    def __on_view_map(self, webview):
-        """
-            Update window
-            @param webview as WebView
-        """
-        uri = webview.get_uri()
-        title = webview.get_title()
-        self.__window.toolbar.title.update_load_indicator(webview)
-        self.__window.toolbar.title.show_popup_indicator(webview.popups)
-        self.__window.toolbar.actions.set_actions(webview)
-        self.__window.toolbar.title.show_readable_button(
-                                            webview.readable_content != "")
-        if uri is not None:
-            self.__window.toolbar.title.set_uri(uri)
-        if webview.is_loading():
-            self.__window.toolbar.title.progress.show()
-        else:
-            self.__window.toolbar.title.progress.hide()
-        if title:
-            self.__window.toolbar.title.set_title(title)
-        elif uri:
-            self.__window.toolbar.title.set_title(uri)
 
     def __on_save_password(self, webview, username, password, uri):
         """

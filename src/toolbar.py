@@ -51,6 +51,15 @@ class Toolbar(Gtk.EventBox):
         self.__headerbar.set_show_close_button(show)
 
     @property
+    def lock_focus(self):
+        """
+            Get lock focus
+            @return bool
+        """
+        return self.__toolbar_title.lock_focus or\
+            self.__toolbar_actions.lock_focus
+
+    @property
     def title(self):
         """
             Toolbar title
