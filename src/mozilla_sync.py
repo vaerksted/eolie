@@ -240,7 +240,7 @@ class SyncWorker(GObject.GObject):
 
     def __remove_from_history(self, guid):
         """
-            Remove from hisself.__mozilla_sync.client.info_collections()tory
+            Remove from history
             @param guid as str
         """
         if not self.__username or not self.__password:
