@@ -529,7 +529,6 @@ class SyncWorker(GObject.GObject):
             @raise StopIteration
         """
         debug("pull passwords")
-        self.__helper.clear_all()
         records = self.__mozilla_sync.get_records("passwords", bulk_keys)
         for record in records:
             if self.__stop:
