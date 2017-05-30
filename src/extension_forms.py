@@ -103,7 +103,11 @@ class FormsExtension:
             @param username_input as WebKit2WebExtension.DOMElement
             @param password_input as WebKit2WebExtension.DOMElement
         """
-        if attributes is None or password_input.get_value():
+        # Do not set anything if no attributes or
+        # If we have already text in input and we are not a perfect completion
+        if attributes is None or (
+                password_input.get_value() and
+                uri != attributes["formSubmitURL"]):
             return
         try:
             username_input.set_value(attributes["login"])
