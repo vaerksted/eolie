@@ -106,8 +106,8 @@ class CredentialsPopover(Gtk.Popover):
                 self.emit("closed")
             else:
                 Gtk.Popover.show(self)
-                self.__uuid = attributes["id"]
+                self.__uuid = attributes["uuid"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
         except Exception as e:
-            print("CredentialsPopover::on_load_secret()", e)
+            print("CredentialsPopover::__on_get_password()", e)
