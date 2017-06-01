@@ -54,9 +54,9 @@ class WebViewErrors:
 #######################
 # PROTECTED           #
 #######################
-    def _show_pishing_error(self, uri):
+    def _show_phishing_error(self, uri):
         """
-            Show a warning about pishing
+            Show a warning about phishing
             @param uri as str
         """
         self.stop_loading()
@@ -76,7 +76,7 @@ class WebViewErrors:
                        "load_uri('%s')" % uri,
                        "internal:/%s" % icon,
                        title,
-                       _("%s is a pishing page") % uri,
+                       _("%s is a phishing page") % uri,
                        detail,
                        "",
                        "")

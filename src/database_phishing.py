@@ -21,18 +21,18 @@ from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_LOCAL_PATH
 
 
-class DatabasePishing:
+class DatabasePhishing:
     """
-        Pishing database
+        Phishing database
     """
-    DB_PATH = "%s/pishing.db" % EOLIE_LOCAL_PATH
+    DB_PATH = "%s/phishing.db" % EOLIE_LOCAL_PATH
     __URI = "http://data.phishtank.com/data/online-valid.json"
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
-    __create_pishinbg = '''CREATE TABLE pishing (
+    __create_pishinbg = '''CREATE TABLE phishing (
                                                id INTEGER PRIMARY KEY,
                                                uri TEXT NOT NULL,
                                                mtime INT NOT NULL
@@ -55,7 +55,7 @@ class DatabasePishing:
                     sql.execute(self.__create_pishinbg)
                     sql.commit()
             except Exception as e:
-                print("DatabasePishing::__init__(): %s" % e)
+                print("DatabasePhishing::__init__(): %s" % e)
 
     def update(self):
         """
@@ -65,7 +65,7 @@ class DatabasePishing:
         # Only update if filters older than one day
         mtime = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM pishing LIMIT 1")
+            result = sql.execute("SELECT mtime FROM phishing LIMIT 1")
             v = result.fetchone()
             if v is not None:
                 mtime = v[0]
@@ -77,21 +77,21 @@ class DatabasePishing:
             thread.daemon = True
             thread.start()
 
-    def is_pishing(self, uri):
+    def is_phishing(self, uri):
         """
-            True if uri is pishing
+            True if uri is phishing
             @param uri as str
             @return bool
         """
         uri = uri.rstrip("/")
         try:
             with SqlCursor(self) as sql:
-                result = sql.execute("SELECT uri FROM pishing\
+                result = sql.execute("SELECT uri FROM phishing\
                                       WHERE uri=?", (uri,))
                 v = result.fetchone()
                 return v is not None
         except Exception as e:
-            print("DatabasePishing::is_pishing():", e)
+            print("DatabasePhishing::is_phishing():", e)
             return False
 
     def stop(self):
@@ -139,7 +139,7 @@ class DatabasePishing:
                 for item in j:
                     if self.__cancellable.is_cancelled():
                         raise IOError("Cancelled")
-                    sql.execute("INSERT INTO pishing\
+                    sql.execute("INSERT INTO phishing\
                                  (uri, mtime) VALUES (?, ?)",
                                 (item["url"].rstrip("/"), self.__mtime))
                     count += 1
@@ -149,9 +149,9 @@ class DatabasePishing:
                 sql.commit()
             # Delete removed entries
             with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM pishing\
+                sql.execute("DELETE FROM phishing\
                              WHERE mtime!=?", (self.__mtime,))
             sql.commit()
             SqlCursor.remove(self)
         except Exception as e:
-            print("DatabasePishing::__update()", e)
+            print("DatabasePhishing::__update()", e)

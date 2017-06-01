@@ -368,8 +368,8 @@ class WebViewNavigation:
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__update_user_agent(parsed.netloc)
-            if El().pishing.is_pishing(uri):
-                self._show_pishing_error(uri)
+            if El().phishing.is_phishing(uri):
+                self._show_phishing_error(uri)
             else:
                 exception = El().image_exceptions.find(
                                         parsed.netloc) or\

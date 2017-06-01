@@ -28,7 +28,7 @@ from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
 from eolie.database_exceptions import DatabaseExceptions
-from eolie.database_pishing import DatabasePishing
+from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
@@ -278,11 +278,11 @@ class Application(Gtk.Application):
         SqlCursor.add(self.bookmarks)
         self.adblock = DatabaseAdblock()
         self.adblock.update()
-        self.pishing = DatabasePishing()
+        self.phishing = DatabasePhishing()
         self.adblock_exceptions = DatabaseExceptions("adblock")
         self.popup_exceptions = DatabaseExceptions("popup")
         self.image_exceptions = DatabaseExceptions("image")
-        self.pishing.update()
+        self.phishing.update()
         self.art = Art()
         self.search = Search()
         self.download_manager = DownloadManager()
@@ -387,7 +387,7 @@ class Application(Gtk.Application):
                 sql.isolation_level = None
                 sql.execute("VACUUM")
                 sql.isolation_level = ""
-            with SqlCursor(self.pishing) as sql:
+            with SqlCursor(self.phishing) as sql:
                 sql.isolation_level = None
                 sql.execute("VACUUM")
                 sql.isolation_level = ""

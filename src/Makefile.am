@@ -10,7 +10,7 @@ app_PYTHON = \
     database_exceptions.py\
     database_filechooser.py\
     database_history.py\
-    database_pishing.py\
+    database_phishing.py\
     dialog_clear_data.py\
     dialog_import_bookmarks.py\
     download_manager.py\
