@@ -558,7 +558,11 @@ class ToolbarTitle(Gtk.Bin):
         if not is_uri and\
                 not uri.startswith("/") and\
                 El().search.is_search(uri):
-            uri = El().search.get_search_uri(uri)
+            # Use specified search engine
+            if len(uri) > 1 and uri[1] == " ":
+                uri = El().search.get_search_uri(uri[2:], uri[0])
+            else:
+                uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
         self.__window.container.current.webview.grab_focus()
 

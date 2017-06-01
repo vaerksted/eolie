@@ -81,13 +81,19 @@ class Search:
                 self.__encoding = self.__ENGINES[engine][3]
                 break
 
-    def get_search_uri(self, words):
+    def get_search_uri(self, words, shortcut=""):
         """
             Return search uri for words
             @param words as str
+            @param shortcut as str
             @return str
         """
-        return self.__search % words
+        if shortcut:
+            for engine in self.__ENGINES:
+                if self.__ENGINES[engine][4] == shortcut:
+                    return self.__ENGINES[engine][1] % words
+        else:
+            return self.__search % words
 
     def get_keywords(self, words, cancellable):
         """
