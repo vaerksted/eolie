@@ -151,7 +151,7 @@ class Window(Gtk.ApplicationWindow):
             True if fullscreen
             @return bool
         """
-        return self.__window_state & Gdk.WindowState.MAXIMIZED
+        return self.__window_state & Gdk.WindowState.FULLSCREEN
 
 ############
 # Private  #
