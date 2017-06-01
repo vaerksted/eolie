@@ -226,14 +226,12 @@ class ProxyExtension(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        title = webpage.get_dom_document().get_title()
-        if title is None:
-            return
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
         uri = request.get_uri()
         parsed = urlparse(uri)
         # Search for video in page
         if parsed.path.split(".")[-1] in extensions:
+            title = parsed.path.split("/")[-1]
             args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
                                           GLib.Variant("s", title),
                                           GLib.Variant("i", webpage.get_id()))
@@ -245,6 +243,9 @@ class ProxyExtension(Server):
                           args)
         elif parsed.netloc.endswith("googlevideo.com") and\
                 parsed.path == "/videoplayback":
+            title = webpage.get_dom_document().get_title()
+            if title is None:
+                title = uri
             args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
                                           GLib.Variant("s", title),
                                           GLib.Variant("i", webpage.get_id()))
