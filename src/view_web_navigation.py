@@ -56,6 +56,7 @@ class WebViewNavigation:
         self.__readable_content = ""
         self.__popups = []
         self.__loaded_uri = ""
+        self.__js_load = False
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -89,6 +90,7 @@ class WebViewNavigation:
                             GLib.SpawnFlags.SEARCH_PATH, None)
             return
         elif parsed.scheme == "javascript":
+            self.__js_load = True
             uri = GLib.uri_unescape_string(uri, None)
             self.run_javascript(uri.replace("javascript:", ""), None, None)
             return
@@ -109,6 +111,14 @@ class WebViewNavigation:
             @webview as WebView
         """
         self.__popups.append(webview)
+
+    @property
+    def js_load(self):
+        """
+            True if current action was a js execution. Useful when opening
+            a related view to check if popup is wanted
+        """
+        return self.__js_load
 
     @property
     def popups(self):
@@ -345,6 +355,7 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        self.__js_load = False
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:

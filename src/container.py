@@ -311,6 +311,7 @@ class Container(Gtk.Overlay):
             popup_block = El().settings.get_value("popupblock")
             parsed_related = urlparse(related.get_uri())
             exception = \
+                related.js_load or\
                 El().popup_exceptions.find(parsed_related.netloc) or\
                 El().popup_exceptions.find(parsed_related.netloc +
                                            parsed_related.path) or\
