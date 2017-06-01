@@ -75,7 +75,7 @@ class Application(Gtk.Application):
         self.debug = False
         self.show_tls = False
         try:
-            self.zoom_levels = load(open(self.LOCAL_PATH + "/zoom_levels.bin",
+            self.zoom_levels = load(open(LOCAL_PATH + "/zoom_levels.bin",
                                          "rb"))
         except:
             self.zoom_levels = {}
@@ -414,9 +414,9 @@ class Application(Gtk.Application):
                     session_states.append((uri, private, state.get_data()))
             if remember_session:
                 dump(session_states,
-                     open(self.LOCAL_PATH + "/session_states.bin", "wb"))
+                     open(LOCAL_PATH + "/session_states.bin", "wb"))
                 dump(self.zoom_levels,
-                     open(self.LOCAL_PATH + "/zoom_levels.bin", "wb"))
+                     open(LOCAL_PATH + "/zoom_levels.bin", "wb"))
         except Exception as e:
             print("Application::save_state()", e)
 
@@ -436,7 +436,7 @@ class Application(Gtk.Application):
         window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
-                                     self.LOCAL_PATH + "/session_states.bin",
+                                     LOCAL_PATH + "/session_states.bin",
                                      "rb"))
             for (uri, private, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
