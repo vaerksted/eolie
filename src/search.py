@@ -46,7 +46,7 @@ class Search:
             'Yahoo': [
                 # Translators: Yahoo url for your country
                 _("https://www.yahoo.com"),
-                # Translators: Google url for your country
+                # Translators: Yahoo url for your country
                 _("https://us.search.yahoo.com") + "/search?p=%s&ei=UTF-8",
                 'https://ca.search.yahoo.com/sugg/ff?'
                 'command=%s&output=fxjson&appid=fd',
