@@ -54,7 +54,7 @@ class JavaScriptPopover(Gtk.Popover):
             self.__entry.show()
         if dialog_type == WebKit2.ScriptDialogType.BEFORE_UNLOAD_CONFIRM:
             ok_button.set_label(_("Continue"))
-            cancel_button.set_label(_("Leave"))
+            cancel_button.set_label(_("Cancel"))
         label.set_text(dialog.get_message())
         self.add(widget)
         self.__loop = GLib.MainLoop.new(None, False)
