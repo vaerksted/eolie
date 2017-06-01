@@ -106,7 +106,9 @@ class Container(Gtk.Overlay):
         """
             Update stack and stacksidebar allocation
         """
-        width = self.__stack_sidebar.get_allocated_width()
+        width = self.__stack_sidebar.get_property("width-request")
+        if width < 0:
+            width = 0
         self.__stack.set_margin_start(width)
 
     def popup_webview(self, webview, destroy):

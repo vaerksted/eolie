@@ -121,7 +121,7 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if El().settings.get_value("panel-mode").get_string() != "preview":
+        if self.__window.container.sidebar.panel_mode != 0:
             pass
         elif self.__view.webview.ephemeral:
             self.__image.set_from_icon_name(
@@ -248,8 +248,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         # We are not filtered and not in private mode
         if not self.__view.webview.ephemeral and\
-                El().settings.get_value("panel-mode").get_string() ==\
-                "preview" and\
+                self.__window.container.sidebar.panel_mode == 0 and\
                 self.get_allocated_width() != 1:
             preview = El().art.get_artwork(uri,
                                            "preview",

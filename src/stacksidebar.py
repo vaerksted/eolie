@@ -72,7 +72,7 @@ class StackSidebar(Gtk.EventBox):
         child = SidebarChild(view, self.__window)
         self.__set_child_height(child)
         child.connect("moved", self.__on_moved)
-        if El().settings.get_value("panel-mode").get_string() == "minimal":
+        if self.__panel_mode == 2:
             child.show_title(False)
         child.show()
 
@@ -138,9 +138,8 @@ class StackSidebar(Gtk.EventBox):
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self.__listbox.set_filter_func(None)
-            panel_mode = El().settings.get_enum("panel-mode")
             for child in self.__listbox.get_children():
-                child.show_title(panel_mode != 2)
+                child.show_title(self.__panel_mode)
         self.__search_bar.set_search_mode(b)
 
     def next(self):
@@ -230,23 +229,35 @@ class StackSidebar(Gtk.EventBox):
             self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
-    def set_panel_mode(self):
+    def set_panel_mode(self, panel_mode=None):
         """
             Set panel mode
+            @param panel_mode as int
         """
-        panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == 2:
+        if panel_mode is None:
+            self.__panel_mode = El().settings.get_enum("panel-mode")
+        else:
+            self.__panel_mode = panel_mode
+        if self.__panel_mode == 2:
             self.set_property("width-request", -1)
         else:
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
         for child in self.__listbox.get_children():
-            child.show_title(panel_mode != 2)
+            child.show_title(self.__panel_mode != 2)
             self.__set_child_height(child)
         # We need to delay update to allow widget to resize
         if self.__window.container is not None:
             GLib.timeout_add(
                          250,
                          self.__window.container.update_children_allocation)
+
+    @property
+    def panel_mode(self):
+        """
+            Get current panel mode
+            @return int
+        """
+        return self.__panel_mode
 
 #######################
 # PROTECTED           #
@@ -291,7 +302,7 @@ class StackSidebar(Gtk.EventBox):
             Set child height
             @param child as SidebarChild
         """
-        if El().settings.get_value("panel-mode").get_string() == "preview":
+        if self.__panel_mode == 0:
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
             child.set_snapshot(True)
         else:
@@ -407,7 +418,7 @@ class StackSidebar(Gtk.EventBox):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_value("panel-mode").get_string() == "minimal":
+        if self.__panel_mode == 2:
             if self.__leave_timeout_id is not None:
                     GLib.source_remove(self.__leave_timeout_id)
                     self.__leave_timeout_id = None
@@ -422,7 +433,7 @@ class StackSidebar(Gtk.EventBox):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_value("panel-mode").get_string() == "minimal":
+        if self.__panel_mode == 2:
             allocation = eventbox.get_allocation()
             if event.x <= 0 or\
                event.x >= allocation.width or\
