@@ -20,6 +20,7 @@ from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 from gettext import gettext as _
 from pickle import dump, load
 from threading import Thread
+from urllib.parse import urlparse
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -409,14 +410,17 @@ class Application(Gtk.Application):
                     continue
                 for view in window.container.views:
                     uri = view.webview.get_uri()
-                    private = view.webview.private
+                    parsed = urlparse(uri)
+                    if parsed.scheme not in ["http", "https"]:
+                        continue
+                    ephemeral = view.webview.ephemeral
                     state = view.webview.get_session_state().serialize()
-                    session_states.append((uri, private, state.get_data()))
+                    session_states.append((uri, ephemeral, state.get_data()))
             if remember_session:
                 dump(session_states,
                      open(LOCAL_PATH + "/session_states.bin", "wb"))
-                dump(self.zoom_levels,
-                     open(LOCAL_PATH + "/zoom_levels.bin", "wb"))
+            dump(self.zoom_levels,
+                 open(LOCAL_PATH + "/zoom_levels.bin", "wb"))
         except Exception as e:
             print("Application::save_state()", e)
 
@@ -432,21 +436,25 @@ class Application(Gtk.Application):
     def __restore_state(self):
         """
             Restore saved state
+            @return True as bool if restored
         """
+        restored = False
         window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
                                      LOCAL_PATH + "/session_states.bin",
                                      "rb"))
-            for (uri, private, state) in session_states:
+            for (uri, ephemeral, state) in session_states:
+                restored = True
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_webview,
-                              uri, window_type, private,
-                              None, None, webkit_state)
+                              uri, window_type, ephemeral,
+                              None, webkit_state)
                 window_type = Gdk.WindowType.OFFSCREEN
         except Exception as e:
             print("Application::restore_state()", e)
+        return restored
 
     def __on_command_line(self, app, app_cmd_line):
         """
@@ -462,9 +470,10 @@ class Application(Gtk.Application):
             self.debug = True
         if options.contains("show-tls"):
             self.show_tls = True
-        private_browsing = options.contains("private")
+        ephemeral = options.contains("private")
+        restored = False
         if self.settings.get_value("remember-session"):
-            self.__restore_state()
+            restored = self.__restore_state()
         if options.contains("new"):
             active_window = self.get_new_window()
         else:
@@ -478,19 +487,19 @@ class Application(Gtk.Application):
                     uri = f.get_uri()
                 active_window.container.add_webview(uri,
                                                     Gdk.WindowType.CHILD,
-                                                    private_browsing)
+                                                    ephemeral)
             active_window.present_with_time(Gtk.get_current_event_time())
         # We already have a window, open a new one
         elif active_window.container.current:
             window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD,
-                                         private_browsing)
+                                         ephemeral)
         # Add default start page
-        else:
+        elif not restored:
             active_window.container.add_webview(self.start_page,
                                                 Gdk.WindowType.CHILD,
-                                                private_browsing)
+                                                ephemeral)
         thread = Thread(target=self.__show_plugins)
         thread.daemon = True
         thread.start()
@@ -515,8 +524,8 @@ class Application(Gtk.Application):
             @param window as Window
             @param event as Gdk.Event
         """
-        self.__windows.remove(window)
-        if self.__windows:
+        if len(self.__windows) > 1:
+            self.__windows.remove(window)
             window.destroy()
         else:
             window.hide()
