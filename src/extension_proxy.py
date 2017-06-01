@@ -125,7 +125,7 @@ class ProxyExtension(Server):
         try:
             page = self.__extension.get_page(page_id)
             if page is None:
-                return ("", "")
+                return ("", "", "", "")
             (username, password) = self.__forms.get_forms(page)
             if username is not None and password is not None:
                 return (username.get_value(),
@@ -134,7 +134,7 @@ class ProxyExtension(Server):
                         password.get_name())
         except Exception as e:
             print("ProxyExtension::GetForms():", e)
-        return ("", "")
+        return ("", "", "", "")
 
     def GetImages(self, page_id):
         """
