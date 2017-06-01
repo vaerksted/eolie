@@ -35,7 +35,7 @@ It provides:
 ## Special python modules
 For full support, please install this python modules:
 ```
-# pip3 install requests-hawk PyFxA pycrypto beautifulsoup4
+# pip3 install requests-hawk PyFxA pycrypto beautifulsoup4 cryptography
 ```
 
 ## For packagers
