@@ -445,9 +445,11 @@ class Container(Gtk.Overlay):
         if webview != self.current.webview:
             return
         self.__window.toolbar.title.update_load_indicator(webview)
-        parsed = urlparse(webview.get_uri())
+        uri = webview.get_uri()
+        parsed = urlparse(uri)
         focus_in_view = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
+            self.__window.toolbar.title.set_title(uri)
             # Give focus to url bar
             if not focus_in_view:
                 GLib.idle_add(self.__window.toolbar.title.start_search,
@@ -458,6 +460,7 @@ class Container(Gtk.Overlay):
                 self.current.switch_read_mode()
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
+            self.__window.toolbar.title.set_title(uri)
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__window.toolbar.actions.set_actions(webview)
