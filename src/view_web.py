@@ -127,6 +127,24 @@ class WebView(WebKit2.WebView):
         self.update_zoom_level()
         return current
 
+    def set_delayed_uri(self, uri):
+        """
+            Set delayed uri
+            @param uri as str
+        """
+        self.__delayed_uri = uri
+
+    @property
+    def delayed_uri(self):
+        """
+            Get delayed uri (one time)
+            @return str
+        """
+        try:
+            return self.__delayed_uri
+        finally:
+            self.__delayed_uri = None
+
     @property
     def ephemeral(self):
         """
@@ -165,6 +183,7 @@ class WebView(WebKit2.WebView):
         # it from clipboard
         self.__selection = ""
         self.__last_click_time = 0
+        self.__delayed_uri = None
         self.__related_view = related_view
         self.__initial_selection = ""
         self.__input_source = Gdk.InputSource.MOUSE

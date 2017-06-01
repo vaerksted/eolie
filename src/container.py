@@ -54,7 +54,7 @@ class Container(Gtk.Overlay):
         self.add_overlay(self.__stack_sidebar)
 
     def add_webview(self, uri, window_type, ephemeral=False,
-                    parent=None, state=None):
+                    parent=None, state=None, load=True):
         """
             Add a web view to container
             @param uri as str
@@ -70,8 +70,12 @@ class Container(Gtk.Overlay):
         view.show()
         self.__add_view(view, window_type)
         if uri is not None:
-            # Do not load uri until we are on screen
-            webview.load_uri(uri)
+            if load:
+                # Do not load uri until we are on screen
+                GLib.idle_add(webview.load_uri, uri)
+            else:
+                webview.set_delayed_uri(uri)
+                webview.emit("title-changed", uri)
 
     def load_uri(self, uri):
         """
@@ -134,7 +138,11 @@ class Container(Gtk.Overlay):
             Update window
             @param webview as WebView
         """
-        uri = webview.get_uri()
+        uri = webview.delayed_uri
+        if uri is None:
+            uri = webview.get_uri()
+        else:
+            webview.load_uri(uri)
         title = webview.get_title()
         self.__window.toolbar.title.update_load_indicator(webview)
         self.__window.toolbar.title.show_popup_indicator(webview.popups)

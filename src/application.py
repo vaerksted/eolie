@@ -438,23 +438,22 @@ class Application(Gtk.Application):
             Restore saved state
             @return True as bool if restored
         """
-        restored = False
         window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
                                      LOCAL_PATH + "/session_states.bin",
                                      "rb"))
             for (uri, ephemeral, state) in session_states:
-                restored = True
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_webview,
                               uri, window_type, ephemeral,
-                              None, webkit_state)
+                              None, webkit_state,
+                              window_type == Gdk.WindowType.CHILD)
                 window_type = Gdk.WindowType.OFFSCREEN
         except Exception as e:
             print("Application::restore_state()", e)
-        return restored
+        return window_type != Gdk.WindowType.CHILD
 
     def __on_command_line(self, app, app_cmd_line):
         """
