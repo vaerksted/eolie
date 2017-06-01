@@ -271,12 +271,12 @@ class Window(Gtk.ApplicationWindow):
             @param: window as Gtk.Window
             @param: event as Gdk.EventWindowState
         """
-        if event.new_window_state & Gdk.WindowState.MAXIMIZED:
+        if event.changed_mask & Gdk.WindowState.MAXIMIZED:
             size = widget.get_size()
             self.toolbar.title.set_width(size[0]/3)
             El().settings.set_boolean("window-maximized",
-                                      "GDK_WINDOW_STATE_MAXIMIZED" in
-                                      event.new_window_state.value_names)
+                                      event.new_window_state &
+                                      Gdk.WindowState.MAXIMIZED)
         self.__window_state = event.new_window_state
 
     def __on_motion_notify_event(self, widget, event):
