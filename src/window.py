@@ -72,9 +72,10 @@ class Window(Gtk.ApplicationWindow):
             for view in self.__container.views:
                 view.webview.update_zoom_level()
 
-    def fullscreen(self):
+    def fullscreen(self, force=True):
         """
             Prepare window to fullscreen and enter fullscreen
+            @param force as bool
         """
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
@@ -85,19 +86,22 @@ class Window(Gtk.ApplicationWindow):
         revealer.add(self.__fullscreen_toolbar)
         revealer.show()
         self.__container.add_overlay(revealer)
-        Gtk.ApplicationWindow.fullscreen(self)
+        if force:
+            Gtk.ApplicationWindow.fullscreen(self)
         self.connect("motion-notify-event", self.__on_motion_notify_event)
 
-    def unfullscreen(self):
+    def unfullscreen(self, force=True):
         """
             Prepare window to unfullscreen and leave fullscreen
+            @param force as bool
         """
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
         self.__fullscreen_toolbar = None
         self.container.on_view_map(self.container.current.webview)
-        Gtk.ApplicationWindow.unfullscreen(self)
+        if force:
+            Gtk.ApplicationWindow.unfullscreen(self)
 
     def hide(self):
         """
@@ -147,7 +151,7 @@ class Window(Gtk.ApplicationWindow):
             True if fullscreen
             @return bool
         """
-        return self.__fullscreen_toolbar is not None
+        return self.__window_state & Gdk.WindowState.MAXIMIZED
 
 ############
 # Private  #
@@ -265,13 +269,15 @@ class Window(Gtk.ApplicationWindow):
         """
             Save maximised state
             @param: window as Gtk.Window
-            @param: event as Gdk.Event
+            @param: event as Gdk.EventWindowState
         """
-        size = widget.get_size()
-        self.toolbar.title.set_width(size[0]/3)
-        El().settings.set_boolean("window-maximized",
-                                  "GDK_WINDOW_STATE_MAXIMIZED" in
-                                  event.new_window_state.value_names)
+        if event.new_window_state & Gdk.WindowState.MAXIMIZED:
+            size = widget.get_size()
+            self.toolbar.title.set_width(size[0]/3)
+            El().settings.set_boolean("window-maximized",
+                                      "GDK_WINDOW_STATE_MAXIMIZED" in
+                                      event.new_window_state.value_names)
+        self.__window_state = event.new_window_state
 
     def __on_motion_notify_event(self, widget, event):
         """
@@ -315,6 +321,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "new_page":
             self.container.add_webview(El().start_page, Gdk.WindowType.CHILD)
         elif string == "close_page":
+            if self.is_fullscreen:
+                self.container.current.webview.emit("leave-fullscreen")
+                Gtk.ApplicationWindow.unfullscreen(self)
             self.container.sidebar.close_view(self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
