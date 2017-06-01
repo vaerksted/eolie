@@ -27,27 +27,32 @@ class Search:
             _("https://www.google.com"),
             'https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8',
             'https://www.google.com/complete/search?client=firefox&q=%s',
-            'unicode_escape'
+            'unicode_escape',
+            'g'
             ],
         'DuckDuckGo': [
             'https://duckduckgo.com',
             'https://duckduckgo.com/?q=%s',
             'https://ac.duckduckgo.com/ac/?q=%s&type=list',
-            'utf-8'
+            'utf-8',
+            'd'
             ],
         'Yahoo': [
             # Translators: Yahoo url for your country
             _("https://www.yahoo.com"),
-            'https://search.yahoo.com/yhs/search?p=%s&ei=UTF-8',
+            # Translators: Google url for your country
+            _("https://us.search.yahoo.com/search?p=%s&ei=UTF-8"),
             'https://ca.search.yahoo.com/sugg/ff?'
             'command=%s&output=fxjson&appid=fd',
-            'utf-8'
+            'utf-8',
+            'y'
             ],
         'Bing': [
             'https://www.bing.com',
             'https://www.bing.com/search?q=%s',
             'https://www.bing.com/osjson.aspx?query=%s&form=OSDJAS',
-            'utf-8'
+            'utf-8',
+            'b'
             ]
         }
 
