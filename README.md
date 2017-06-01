@@ -32,6 +32,15 @@ It provides:
 - WebKit2GTK >= 2.16
 - Webkit introspection support
 
+## Special python modules
+For full support, please install this python modules:
+```
+# pip3 install requests-hawk PyFxA pycrypto beautifulsoup4
+```
+
+## For packagers
+Full deps here: https://github.com/flathub/org.gnome.Eolie
+
 ## Building from git
 
 ```
