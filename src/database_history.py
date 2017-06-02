@@ -316,14 +316,16 @@ class DatabaseHistory:
             @return [(uri, title)]
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT uri, title\
-                                  FROM history\
-                                  WHERE opened=1")
-            sql.execute("UPDATE history\
-                         SET opened=0\
-                         WHERE opened=1")
-            sql.commit()
-            return list(result)
+            try:
+                result = sql.execute("SELECT uri, title\
+                                      FROM history\
+                                      WHERE opened=1")
+                return list(result)
+            finally:
+                sql.execute("UPDATE history\
+                             SET opened=0\
+                             WHERE opened=1")
+                sql.commit()
 
     def set_page_state(self, uri, mtime=None):
         """
