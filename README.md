@@ -49,6 +49,7 @@ $ cd eolie
 $ ./autogen.sh
 $ make
 # make install
+# update-desktop-database
 ```
 
 ### On Ubuntu
@@ -60,6 +61,7 @@ $ sudo apt-get install autoconf libglib2.0-dev intltool yelp-tools libgireposito
 $ ./autogen.sh
 $ make
 $ sudo make install
+$ sudo update-desktop-database
 ```
 
 Instead of `make install` you might want to use `checkinstall`
@@ -80,5 +82,6 @@ $ cd eolie
 $ ./autogen.sh
 $ make
 # make install
+# update-desktop-database
 ```
 
