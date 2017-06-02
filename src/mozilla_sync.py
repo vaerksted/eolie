@@ -361,42 +361,50 @@ class SyncWorker(GObject.GObject):
         try:
             bulk_keys = self.__get_session_bulk_keys()
             new_mtimes = self.__mozilla_sync.client.info_collections()
-
             if self.__stop:
                 return
 
-            ######################
+            ########################
             # Passwords Management #
-            ######################
-            debug("local passwords: %s, remote passwords: %s" % (
-                                                 self.__mtimes["passwords"],
-                                                 new_mtimes["passwords"]))
-            # Only pull if something new available
-            if self.__mtimes["passwords"] != new_mtimes["passwords"]:
-                self.__pull_passwords(bulk_keys)
+            ########################
+            try:
+                debug("local passwords: %s, remote passwords: %s" % (
+                                                    self.__mtimes["passwords"],
+                                                    new_mtimes["passwords"]))
+                # Only pull if something new available
+                if self.__mtimes["passwords"] != new_mtimes["passwords"]:
+                    self.__pull_passwords(bulk_keys)
+            except:
+                pass  # No passwords in sync
 
             if self.__stop:
                 return
             ######################
             # History Management #
             ######################
-            debug("local history: %s, remote history: %s" % (
-                                                 self.__mtimes["history"],
-                                                 new_mtimes["history"]))
-            # Only pull if something new available
-            if self.__mtimes["history"] != new_mtimes["history"]:
-                self.__pull_history(bulk_keys)
+            try:
+                debug("local history: %s, remote history: %s" % (
+                                                     self.__mtimes["history"],
+                                                     new_mtimes["history"]))
+                # Only pull if something new available
+                if self.__mtimes["history"] != new_mtimes["history"]:
+                    self.__pull_history(bulk_keys)
+            except:
+                pass  # No history in sync
 
             if self.__stop:
                 return
             ########################
             # Bookmarks Management #
             ########################
-            debug("local bookmarks: %s, remote bookmarks: %s" % (
-                                                 self.__mtimes["bookmarks"],
-                                                 new_mtimes["bookmarks"]))
-            # Push new bookmarks
-            self.__push_bookmarks(bulk_keys)
+            try:
+                debug("local bookmarks: %s, remote bookmarks: %s" % (
+                                                    self.__mtimes["bookmarks"],
+                                                    new_mtimes["bookmarks"]))
+                # Push new bookmarks
+                self.__push_bookmarks(bulk_keys)
+            except:
+                pass  # No bookmarks in sync
 
             if self.__stop:
                 return
