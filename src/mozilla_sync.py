@@ -374,7 +374,7 @@ class SyncWorker(GObject.GObject):
                                                  new_mtimes["passwords"]))
             # Only pull if something new available
             if self.__mtimes["passwords"] != new_mtimes["passwords"]:
-                self.__pull_passwords(bulk_keys)
+                self.__pull_passwords(bulk_keys, new_mtimes["passwords"])
 
             if self.__stop:
                 return
@@ -386,7 +386,7 @@ class SyncWorker(GObject.GObject):
                                                  new_mtimes["history"]))
             # Only pull if something new available
             if self.__mtimes["history"] != new_mtimes["history"]:
-                self.__pull_history(bulk_keys)
+                self.__pull_history(bulk_keys, new_mtimes["history"])
 
             if self.__stop:
                 return
@@ -404,7 +404,9 @@ class SyncWorker(GObject.GObject):
 
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
-                self.__pull_bookmarks(bulk_keys, first_sync)
+                self.__pull_bookmarks(bulk_keys,
+                                      new_mtimes["bookmarks"],
+                                      first_sync)
             # Update last sync mtime
             self.__mtimes = self.__mozilla_sync.client.info_collections()
             dump(self.__mtimes,
@@ -498,10 +500,11 @@ class SyncWorker(GObject.GObject):
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         El().bookmarks.clean_tags()
 
-    def __pull_bookmarks(self, bulk_keys, first_sync):
+    def __pull_bookmarks(self, bulk_keys, collection_mtime, first_sync):
         """
             Pull from bookmarks
             @param bulk_keys as KeyBundle
+            @param collection_mtime as int
             @param first_sync as bool
             @raise StopIteration
         """
@@ -518,6 +521,8 @@ class SyncWorker(GObject.GObject):
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
+            if record["modified"] < collection_mtime:
+                continue
             sleep(0.01)
             bookmark = record["payload"]
             if "type" not in bookmark.keys() or\
@@ -606,10 +611,11 @@ class SyncWorker(GObject.GObject):
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
-    def __pull_passwords(self, bulk_keys):
+    def __pull_passwords(self, bulk_keys, collection_mtime):
         """
             Pull from passwords
             @param bulk_keys as KeyBundle
+            @param collection_mtime as int
             @raise StopIteration
         """
         debug("pull passwords")
@@ -617,6 +623,8 @@ class SyncWorker(GObject.GObject):
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
+            if record["modified"] < collection_mtime:
+                continue
             sleep(0.01)
             debug("pulling %s" % record)
             password = record["payload"]
@@ -630,10 +638,11 @@ class SyncWorker(GObject.GObject):
             elif "deleted" in password.keys():  # We assume True
                 self.__helper.clear(password["id"])
 
-    def __pull_history(self, bulk_keys):
+    def __pull_history(self, bulk_keys, collection_mtime):
         """
             Pull from history
             @param bulk_keys as KeyBundle
+            @param collection_mtime as int
             @raise StopIteration
         """
         debug("pull history")
@@ -641,6 +650,8 @@ class SyncWorker(GObject.GObject):
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
+            if record["modified"] < collection_mtime:
+                continue
             sleep(0.01)
             El().history.thread_lock.acquire()
             history = record["payload"]
