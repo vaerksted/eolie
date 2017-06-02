@@ -163,9 +163,12 @@ class SettingsDialog:
         self.__login_entry = builder.get_object("login_entry")
         self.__password_entry = builder.get_object("password_entry")
         self.__result_image = builder.get_object("result_image")
-        self.__setup_sync_button()
         builder.connect_signals(self)
         self.__helper.get_sync(self.__on_get_sync)
+
+        thread = Thread(target=self.__get_sync_status)
+        thread.daemon = True
+        thread.start()
 
     def show(self):
         """
@@ -381,16 +384,15 @@ class SettingsDialog:
             Connect to Mozilla Sync to get tokens
             @param button as Gtk.Button
         """
-        if El().sync_worker.status:
+        icon_name = self.__result_image.get_icon_name()
+        if icon_name == "network-transmit-receive-symbolic":
             El().sync_worker.stop(True)
             El().sync_worker.delete_secret()
             self.__setup_sync_button()
         else:
             El().sync_worker.delete_secret()
-            if self.__result_image.get_icon_name() ==\
-                    "content-loading-symbolic":
-                return
             self.__result_label.set_text(_("Connecting…"))
+            button.set_sensitive(False)
             self.__result_image.set_from_icon_name("content-loading-symbolic",
                                                    Gtk.IconSize.MENU)
             thread = Thread(target=self.__connect_mozilla_sync,
@@ -402,42 +404,57 @@ class SettingsDialog:
 #######################
 # PRIVATE             #
 #######################
-    def __setup_sync_button(self, status=False):
+    def __get_sync_status(self):
+        """
+            Get sync status
+            @thread safe
+        """
+        if El().sync_worker is not None:
+            status = El().sync_worker.status
+            GLib.idle_add(self.__setup_sync_button, status)
+        else:
+            GLib.idle_add(self.__missing_fxa)
+
+    def __setup_sync_button(self, status):
         """
             Setup sync button based on current sync status
             @param status as bool
         """
+        self.__sync_button.set_sensitive(True)
         self.__sync_button.get_style_context().remove_class(
                                                           "destructive-action")
         self.__sync_button.get_style_context().remove_class(
                                                           "suggested-action")
-        if El().sync_worker is not None:
-            if status or El().sync_worker.status:
-                self.__result_label.set_text(_("Synchronization is working"))
-                self.__result_image.set_from_icon_name(
-                                         "network-transmit-receive-symbolic",
-                                         Gtk.IconSize.MENU)
-                self.__sync_button.get_style_context().add_class(
-                                                          "destructive-action")
-                self.__sync_button.set_label(_("Cancel synchronization"))
-            else:
-                self.__result_label.set_text(
-                                           _("Synchronization is not working"))
-                self.__result_image.set_from_icon_name(
-                                         "computer-fail-symbolic",
-                                         Gtk.IconSize.MENU)
-                self.__sync_button.get_style_context().add_class(
-                                                          "suggested-action")
-                self.__sync_button.set_label(_("Allow synchronization"))
+        if status:
+            self.__result_label.set_text(_("Synchronization is working"))
+            self.__result_image.set_from_icon_name(
+                                     "network-transmit-receive-symbolic",
+                                     Gtk.IconSize.MENU)
+            self.__sync_button.get_style_context().add_class(
+                                                      "destructive-action")
+            self.__sync_button.set_label(_("Cancel synchronization"))
         else:
-            try:
-                from eolie.mozilla_sync import SyncWorker
-                SyncWorker  # Just make PEP8 happy
-            except Exception as e:
-                self.__result_label.set_text(
-                      _("Synchronization is not available"
-                        " on your computer:\n %s") % e)
-                self.__sync_button.set_sensitive(False)
+            self.__result_label.set_text(
+                                       _("Synchronization is not working"))
+            self.__result_image.set_from_icon_name(
+                                     "computer-fail-symbolic",
+                                     Gtk.IconSize.MENU)
+            self.__sync_button.get_style_context().add_class(
+                                                      "suggested-action")
+            self.__sync_button.set_label(_("Allow synchronization"))
+
+    def __missing_fxa(self):
+        """
+            Show a message about missing fxa module
+        """
+        try:
+            from eolie.mozilla_sync import SyncWorker
+            SyncWorker  # Just make PEP8 happy
+        except Exception as e:
+            self.__result_label.set_text(
+                  _("Synchronization is not available"
+                    " on your computer:\n %s") % e)
+            self.__sync_button.set_sensitive(False)
 
     def __connect_mozilla_sync(self, username, password):
         """
@@ -448,10 +465,6 @@ class SettingsDialog:
         """
         try:
             El().sync_worker.login({"login": username}, password)
-            GLib.idle_add(self.__result_label.set_text, _("Sync started"))
-            GLib.idle_add(self.__result_image.set_from_icon_name,
-                          "network-transmit-receive-symbolic",
-                          Gtk.IconSize.MENU)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             print("SettingsDialog::__connect_mozilla_sync():", e)

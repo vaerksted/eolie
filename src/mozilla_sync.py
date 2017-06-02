@@ -49,6 +49,7 @@ class SyncWorker(GObject.GObject):
         self.__mozilla_sync = None
         self.__session = None
         self.__helper = PasswordsHelper()
+        self.__helper.get_sync(self.__set_credentials)
 
     def login(self, attributes, password):
         """
@@ -97,7 +98,9 @@ class SyncWorker(GObject.GObject):
         # We force session reset to user last stored token
         if first_sync:
             self.__session = None
-        self.__helper.get_sync(self.__start_sync, first_sync)
+        thread = Thread(target=self.__sync, args=(first_sync,))
+        thread.daemon = True
+        thread.start()
         return True
 
     def push_history(self, history_ids):
@@ -193,9 +196,11 @@ class SyncWorker(GObject.GObject):
         try:
             if self.__mozilla_sync is None:
                 self.__mozilla_sync = MozillaSync()
+            self.__get_session_bulk_keys()
             self.__mozilla_sync.client.info_collections()
             return True
-        except:
+        except Exception as e:
+            print("MozillaSync::status:", e)
             return False
 
     @property
@@ -698,13 +703,12 @@ class SyncWorker(GObject.GObject):
                                           True)
             El().history.thread_lock.release()
 
-    def __start_sync(self, attributes, password, uri, first_sync):
+    def __set_credentials(self, attributes, password, uri):
         """
-            Set params and start sync
+            Set credentials
             @param attributes as {}
             @param password as str
             @param uri as None
-            @param first_sync as bool
         """
         if attributes is None:
             return
@@ -715,13 +719,8 @@ class SyncWorker(GObject.GObject):
             self.__token = attributes["token"]
             self.__uid = attributes["uid"]
             self.__keyB = b64decode(attributes["keyB"])
-            if Gio.NetworkMonitor.get_default().get_network_available():
-                thread = Thread(target=self.__sync,
-                                args=(first_sync,))
-                thread.daemon = True
-                thread.start()
         except Exception as e:
-            print("SyncWorker::__start_sync()", e)
+            print("SyncWorker::__set_credentials()", e)
 
 
 class MozillaSync(object):
