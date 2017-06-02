@@ -106,13 +106,8 @@ class PagesMenu(Gio.Menu):
                        (uri, private, state))
         if len(title) > 60:
             title = title[0:60] + "…"
-        if state is not None:
-            webkit_state = state.serialize().get_data()
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
-        if state is not None:
-            item.set_attribute_value("state", GLib.Variant("s", webkit_state))
-        item.set_attribute_value("private", GLib.Variant("b", private))
         # Try to set icon
         context = WebKit2.WebContext.get_default()
         favicon_db = context.get_favicon_database()
@@ -213,21 +208,10 @@ class PagesMenu(Gio.Menu):
                                                                       "uri")
             if uri_attr is None:
                 continue
-            priv_attr = self.__closed_section.get_item_attribute_value(
-                                                                   i,
-                                                                   "private")
-            state_attr = self.__closed_section.get_item_attribute_value(
-                                                                       i,
-                                                                       "state")
-            if state_attr is not None:
-                webkit_state = WebKit2.WebViewSessionState(
-                                       GLib.Bytes.new(state_attr.get_string()))
-            else:
-                webkit_state = None
             GLib.idle_add(self.__app.active_window.container.add_webview,
                           uri_attr.get_string(), Gdk.WindowType.OFFSCREEN,
-                          priv_attr.get_boolean(),
-                          None, webkit_state, False)
+                          False,
+                          None, None, False)
             self.__closed_section.remove(i)
 
     def __on_action_clicked(self, action, variant, data):
