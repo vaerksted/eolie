@@ -199,8 +199,7 @@ class SyncWorker(GObject.GObject):
             self.__get_session_bulk_keys()
             self.__mozilla_sync.client.info_collections()
             return True
-        except Exception as e:
-            print("MozillaSync::status:", e)
+        except:
             return False
 
     @property

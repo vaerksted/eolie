@@ -384,11 +384,11 @@ class SettingsDialog:
             Connect to Mozilla Sync to get tokens
             @param button as Gtk.Button
         """
-        icon_name = self.__result_image.get_icon_name()
+        icon_name = self.__result_image.get_icon_name()[0]
         if icon_name == "network-transmit-receive-symbolic":
             El().sync_worker.stop(True)
             El().sync_worker.delete_secret()
-            self.__setup_sync_button()
+            self.__setup_sync_button(False)
         else:
             El().sync_worker.delete_secret()
             self.__result_label.set_text(_("Connecting…"))
