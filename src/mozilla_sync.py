@@ -82,7 +82,7 @@ class SyncWorker(GObject.GObject):
                                  uid,
                                  token,
                                  keyB,
-                                 lambda x, y: self.sync(True))
+                                 self.__on_password_stored)
 
     def sync(self, loop=False, first_sync=False):
         """
@@ -94,11 +94,6 @@ class SyncWorker(GObject.GObject):
                 not Gio.NetworkMonitor.get_default().get_network_available():
             return
         self.__stop = False
-        # We force session reset to user last stored token
-        if first_sync:
-            self.__username = ""
-            self.__password = ""
-            self.__session = None
         thread = Thread(target=self.__sync, args=(first_sync,))
         thread.daemon = True
         thread.start()
@@ -170,7 +165,7 @@ class SyncWorker(GObject.GObject):
         """
         self.__stop = True
         if force:
-            self.__mozilla_sync = None
+            self.__session = None
 
     @property
     def mtimes(self):
@@ -721,6 +716,17 @@ class SyncWorker(GObject.GObject):
             self.__keyB = b64decode(attributes["keyB"])
         except Exception as e:
             print("SyncWorker::__set_credentials()", e)
+
+    def __on_password_stored(self, secret, result):
+        """
+            Update credentials
+            @param secret as Secret
+            @param result as Gio.AsyncResult
+        """
+        if El().sync_worker is not None:
+            self.__helper.get_sync(self.__set_credentials)
+            # Wait for credentials
+            GLib.timeout_add(10, El().sync_worker.sync, True)
 
 
 class MozillaSync(object):

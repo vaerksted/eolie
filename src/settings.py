@@ -486,15 +486,6 @@ class SettingsDialog:
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
 
-    def __on_password_stored(self, secret, result):
-        """
-            Update credentials
-            @param secret as Secret
-            @param result as Gio.AsyncResult
-        """
-        if El().sync_worker is not None:
-            El().sync_worker.sync(False, True)
-
     def __on_get_sync(self, attributes, password, uri):
         """
             Set username and password
