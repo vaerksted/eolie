@@ -493,7 +493,7 @@ class SettingsDialog:
             @param result as Gio.AsyncResult
         """
         if El().sync_worker is not None:
-            El().sync_worker.sync(True)
+            El().sync_worker.sync(False, True)
 
     def __on_get_sync(self, attributes, password, uri):
         """

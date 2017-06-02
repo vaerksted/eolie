@@ -84,24 +84,25 @@ class SyncWorker(GObject.GObject):
                                  keyB,
                                  lambda x, y: self.sync(True))
 
-    def sync(self, first_sync=False):
+    def sync(self, loop=False, first_sync=False):
         """
             Start syncing, you need to check sync_status property
+            @param loop as bool -> for GLib.timeout_add()
             @param first_sync as bool
         """
         if self.syncing or\
                 not Gio.NetworkMonitor.get_default().get_network_available():
             return
-        self.__username = ""
-        self.__password = ""
         self.__stop = False
         # We force session reset to user last stored token
         if first_sync:
+            self.__username = ""
+            self.__password = ""
             self.__session = None
         thread = Thread(target=self.__sync, args=(first_sync,))
         thread.daemon = True
         thread.start()
-        return True
+        return loop
 
     def push_history(self, history_ids):
         """
