@@ -15,19 +15,8 @@ from gi.repository import Gio, GObject, GLib
 
 from pickle import dump, load
 from hashlib import sha256
-from binascii import hexlify
 import json
-import six
-import hmac
-import base64
-import math
-import requests
 from time import time, sleep
-from Crypto.Cipher import AES
-from Crypto import Random
-from requests_hawk import HawkAuth
-from fxa.core import Client as FxAClient, Session as FxASession
-from fxa.crypto import quick_stretch_password
 from threading import Thread
 
 from eolie.define import El, LOCAL_PATH
@@ -71,13 +60,14 @@ class SyncWorker(GObject.GObject):
         """
         if attributes is None:
             return
+        from base64 import b64encode
         keyB = ""
         session = None
         # Connect to mozilla sync
         session = self.__mozilla_sync.login(attributes["login"], password)
         bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
                                                                        session)
-        keyB = base64.b64encode(session.keys[1]).decode("utf-8")
+        keyB = b64encode(session.keys[1]).decode("utf-8")
         # Store credentials
         if session is None:
             uid = ""
@@ -219,6 +209,8 @@ class SyncWorker(GObject.GObject):
             @return keys as (b"", b"")
         """
         if self.__session is None:
+            from fxa.core import Session as FxASession
+            from fxa.crypto import quick_stretch_password
             self.__session = FxASession(self.__mozilla_sync.fxa_client,
                                         self.__username,
                                         quick_stretch_password(
@@ -694,12 +686,13 @@ class SyncWorker(GObject.GObject):
         """
         if attributes is None:
             return
+        from base64 import b64decode
         try:
             self.__username = attributes["login"]
             self.__password = password
             self.__token = attributes["token"]
             self.__uid = attributes["uid"]
-            self.__keyB = base64.b64decode(attributes["keyB"])
+            self.__keyB = b64decode(attributes["keyB"])
             if Gio.NetworkMonitor.get_default().get_network_available():
                 thread = Thread(target=self.__sync,
                                 args=(first_sync,))
@@ -717,6 +710,7 @@ class MozillaSync(object):
         """
             Init client
         """
+        from fxa.core import Client as FxAClient
         self.__fxa_client = FxAClient()
 
     def login(self, login, password):
@@ -738,6 +732,7 @@ class MozillaSync(object):
         """
         state = None
         if key is not None:
+            from binascii import hexlify
             state = hexlify(sha256(key).digest()[0:16])
         self.__client = SyncClient(bid_assertion, state)
         sync_keys = KeyBundle.fromMasterKey(
@@ -760,8 +755,9 @@ class MozillaSync(object):
             return None
 
         # Now use those keys to decrypt the records of interest.
-        bulk_keys = KeyBundle(base64.b64decode(keys["default"][0]),
-                              base64.b64decode(keys["default"][1]))
+        from base64 import b64decode
+        bulk_keys = KeyBundle(b64decode(keys["default"][0]),
+                              b64decode(keys["default"][1]))
         return bulk_keys
 
     def get_records(self, collection, bulk_keys):
@@ -825,18 +821,20 @@ class MozillaSync(object):
             @param key bundle as KeyBundle
             @return encrypted record payload
         """
+        from Crypto.Cipher import AES
+        from Crypto import Random
+        from hmac import new
+        from base64 import b64encode
         plaintext = json.dumps(record).encode("utf-8")
         # Input strings must be a multiple of 16 in length
         length = 16 - (len(plaintext) % 16)
         plaintext += bytes([length]) * length
         iv = Random.new().read(16)
         aes = AES.new(key_bundle.encryption_key, AES.MODE_CBC, iv)
-        ciphertext = base64.b64encode(aes.encrypt(plaintext))
-        _hmac = hmac.new(key_bundle.hmac_key,
-                         ciphertext,
-                         sha256).hexdigest()
+        ciphertext = b64encode(aes.encrypt(plaintext))
+        _hmac = new(key_bundle.hmac_key, ciphertext, sha256).hexdigest()
         payload = {"ciphertext": ciphertext.decode("utf-8"),
-                   "IV": base64.b64encode(iv).decode("utf-8"), "hmac": _hmac}
+                   "IV": b64encode(iv).decode("utf-8"), "hmac": _hmac}
         return json.dumps(payload)
 
     def __decrypt_payload(self, record, key_bundle):
@@ -846,16 +844,19 @@ class MozillaSync(object):
             @param key bundle as KeyBundle
             @return uncrypted record payload
         """
+        from Crypto.Cipher import AES
+        from hmac import new
+        from base64 import b64decode
         j = json.loads(record["payload"])
         # Always check the hmac before decrypting anything.
-        expected_hmac = hmac.new(key_bundle.hmac_key,
-                                 j['ciphertext'].encode("utf-8"),
-                                 sha256).hexdigest()
+        expected_hmac = new(key_bundle.hmac_key,
+                            j['ciphertext'].encode("utf-8"),
+                            sha256).hexdigest()
         if j['hmac'] != expected_hmac:
             raise ValueError("HMAC mismatch: %s != %s" % (j['hmac'],
                                                           expected_hmac))
-        ciphertext = base64.b64decode(j['ciphertext'])
-        iv = base64.b64decode(j['IV'])
+        ciphertext = b64decode(j['ciphertext'])
+        iv = b64decode(j['IV'])
         aes = AES.new(key_bundle.encryption_key, AES.MODE_CBC, iv)
         plaintext = aes.decrypt(ciphertext).strip().decode("utf-8")
         # Remove any CBC block padding,
@@ -883,9 +884,10 @@ class KeyBundle:
             @param salt as str
             @param IKM as str
         """
+        from hmac import new
         if salt is None:
             salt = b"\x00" * hashmod().digest_size
-        return hmac.new(salt, IKM, hashmod).digest()
+        return new(salt, IKM, hashmod).digest()
 
     def HKDF_expand(PRK, info, length, hashmod=sha256):
         """
@@ -894,14 +896,16 @@ class KeyBundle:
             @param info as str
             @param length as int
         """
+        from hmac import new
+        from math import ceil
         digest_size = hashmod().digest_size
-        N = int(math.ceil(length * 1.0 / digest_size))
+        N = int(ceil(length * 1.0 / digest_size))
         assert N <= 255
         T = b""
         output = []
         for i in range(1, N + 1):
             data = T + (info + chr(i)).encode()
-            T = hmac.new(PRK, data, hashmod).digest()
+            T = new(PRK, data, hashmod).digest()
             output.append(T)
         return b"".join(output)[:length]
 
@@ -938,6 +942,7 @@ class TokenserverClient(object):
             Asks for new temporary token given a BrowserID assertion
             @param duration as str
         """
+        from requests import get
         authorization = 'BrowserID %s' % self.__bid_assertion
         headers = {
             'Authorization': authorization,
@@ -949,8 +954,7 @@ class TokenserverClient(object):
             params['duration'] = int(duration)
 
         url = self.__server_url.rstrip('/') + '/1.0/sync/1.5'
-        raw_resp = requests.get(url, headers=headers, params=params,
-                                verify=True)
+        raw_resp = get(url, headers=headers, params=params, verify=True)
         raw_resp.raise_for_status()
         return raw_resp.json()
 
@@ -968,6 +972,7 @@ class SyncClient(object):
             @param credentials as {}
             @param server_url as str
         """
+        from requests_hawk import HawkAuth
         if bid_assertion is not None and client_state is not None:
             ts_client = TokenserverClient(bid_assertion, client_state,
                                           tokenserver_url)
@@ -986,8 +991,9 @@ class SyncClient(object):
             @param url as str
             @param kwargs as requests.request named args
         """
+        from requests import request, exceptions
         url = self.__api_endpoint.rstrip('/') + '/' + url.lstrip('/')
-        raw_resp = requests.request(method, url, auth=self.__auth, **kwargs)
+        raw_resp = request(method, url, auth=self.__auth, **kwargs)
         raw_resp.raise_for_status()
 
         if raw_resp.status_code == 304:
@@ -995,8 +1001,7 @@ class SyncClient(object):
                 raw_resp.status_code,
                 raw_resp.reason,
                 raw_resp.url)
-            raise requests.exceptions.HTTPError(http_error_msg,
-                                                response=raw_resp)
+            raise exceptions.HTTPError(http_error_msg, response=raw_resp)
         return raw_resp.json()
 
     def info_collections(self, **kwargs):
@@ -1137,6 +1142,7 @@ class SyncClient(object):
             Note that the server may impose a limit on the amount of data
             submitted for storage in a single BSO.
         """
+        import six
         # XXX: Workaround until request-hawk supports the json parameter. (#17)
         if isinstance(record, six.string_types):
             record = json.loads(record)
