@@ -262,7 +262,9 @@ class EditBookmarkWidget(Gtk.Bin):
                                          mtimes["bookmarks"] + 1)
             El().bookmarks.clean_tags()
             if El().sync_worker is not None:
-                El().sync_worker.sync()
+                El().sync_worker.stop()
+                # To be sure stop is done
+                GLib.timeout_add(1000, El().sync_worker.sync)
         GLib.timeout_add(1000, self.destroy)
         El().bookmarks.thread_lock.release()
 
@@ -394,7 +396,9 @@ class EditBookmarkWidget(Gtk.Bin):
                                          mtimes["bookmarks"] + 1)
             El().bookmarks.clean_tags()
             if El().sync_worker is not None:
-                El().sync_worker.sync()
+                El().sync_worker.stop()
+                # To be sure stop is done
+                GLib.timeout_add(1000, El().sync_worker.sync)
         El().bookmarks.thread_lock.release()
 
     def __on_tag_activated(self, flowbox, child):
