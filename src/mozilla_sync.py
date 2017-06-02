@@ -50,12 +50,11 @@ class SyncWorker(GObject.GObject):
         self.__session = None
         self.__helper = PasswordsHelper()
 
-    def login(self, attributes, password, uri):
+    def login(self, attributes, password):
         """
             Login to service
             @param attributes as {}
             @param password as str
-            @param uri as None
             @raise exceptions
         """
         if attributes is None:

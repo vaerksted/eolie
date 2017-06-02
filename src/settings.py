@@ -452,7 +452,9 @@ class SettingsDialog:
             GLib.idle_add(self.__result_image.set_from_icon_name,
                           "network-transmit-receive-symbolic",
                           Gtk.IconSize.MENU)
+            GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
+            print("SettingsDialog::__connect_mozilla_sync():", e)
             if str(e) == "Unverified account":
                 GLib.timeout_add(1000, self.__settings_dialog.destroy)
                 # Try to go to webmail
@@ -470,7 +472,6 @@ class SettingsDialog:
                 GLib.idle_add(self.__result_image.set_from_icon_name,
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
-        GLib.idle_add(self.__setup_sync_button, True)
 
     def __on_password_stored(self, secret, result):
         """
