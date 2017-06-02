@@ -174,8 +174,14 @@ class PasswordsPopover(Gtk.Popover):
         """
         if attributes is None:
             return
-        item = Item()
-        item.set_property("uri", attributes["formSubmitURL"])
-        child = Row(item, self.__helper)
-        child.show()
-        self.__listbox.add(child)
+        try:
+            item = Item()
+            item.set_property("uri", attributes["formSubmitURL"])
+            child = Row(item, self.__helper)
+            child.show()
+            self.__listbox.add(child)
+        except:
+            # Here because firsts Eolie releases do not
+            # provide formSubmitURL
+            # FIXME Remove later
+            pass
