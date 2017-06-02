@@ -292,7 +292,7 @@ class PasswordsHelper:
         """
         # Wait for secret
         if self.__secret is None:
-            GLib.idle_add(call, *args)
+            GLib.timeout_add(250, call, *args)
         if self.__secret in [None, -1]:
             raise Exception("Waiting Secret service")
 
