@@ -19,7 +19,7 @@ import json
 from time import time, sleep
 from threading import Thread
 
-from eolie.define import El, LOCAL_PATH
+from eolie.define import El, EOLIE_LOCAL_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
 from eolie.helper_passwords import PasswordsHelper
@@ -257,7 +257,7 @@ class SyncWorker(GObject.GObject):
                     self.__mozilla_sync.add(record, "history", bulk_keys)
                 self.__mtimes = self.__mozilla_sync.client.info_collections()
                 dump(self.__mtimes,
-                     open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+                     open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
         except Exception as e:
             print("SyncWorker::__push_history():", e)
 
@@ -353,7 +353,7 @@ class SyncWorker(GObject.GObject):
             self.__stop = True
             return
         try:
-            self.__mtimes = load(open(LOCAL_PATH + "/mozilla_sync.bin",
+            self.__mtimes = load(open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1,
@@ -410,7 +410,7 @@ class SyncWorker(GObject.GObject):
             # Update last sync mtime
             self.__mtimes = self.__mozilla_sync.client.info_collections()
             dump(self.__mtimes,
-                 open(LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+                 open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
             GLib.idle_add(self.emit, "sync-finished")
         except Exception as e:
