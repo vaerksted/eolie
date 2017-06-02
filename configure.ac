@@ -1,6 +1,6 @@
 AC_PREREQ(2.63)
 AC_INIT([eolie],
-        [0.6],
+        [0.7],
         [https://github.com/gnumdk/eolie],
         [eolie],
         [https://github.com/gnumdk/eolie])
