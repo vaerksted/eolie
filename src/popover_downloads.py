@@ -123,8 +123,7 @@ class DownloadRow(Gtk.ListBoxRow):
         self.__sublabel = builder.get_object("sublabel")
         destination = download.get_destination()
         try:
-            filename = GLib.filename_from_uri(destination)[0]
-            self.__label.set_label(GLib.path_get_basename(filename))
+            self.__label.set_label(destination.split("/")[-1])
         except:
             self.__label.set_label(download.get_destination())
             self.__label.set_ellipsize(Pango.EllipsizeMode.START)

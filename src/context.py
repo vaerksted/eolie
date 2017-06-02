@@ -195,7 +195,3 @@ class Context:
             @param download as WebKit2.Download
         """
         El().download_manager.add(download)
-        # Notify user about download
-        window = El().active_window
-        if window is not None:
-            window.toolbar.end.show_download(download)

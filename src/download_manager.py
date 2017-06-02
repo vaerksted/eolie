@@ -172,6 +172,10 @@ class DownloadManager(GObject.GObject):
         download.set_destination(GLib.uri_unescape_string(destination_uri,
                                                           None))
         self.emit('download-start', str(download))
+        # Notify user about download
+        window = El().active_window
+        if window is not None:
+            window.toolbar.end.show_download(download)
 
     def __on_finished(self, download):
         """

@@ -123,7 +123,11 @@ class ToolbarEnd(Gtk.Bin):
         header.set_markup("<b>" + _("Downloading:") + "</b>")
         header.set_ellipsize(Pango.EllipsizeMode.END)
         header.show()
-        uri = Gtk.Label.new(download.get_request().get_uri().split('/')[-1])
+        destination = download.get_destination()
+        try:
+            uri = Gtk.Label.new(destination.split("/")[-1])
+        except:
+            uri = Gtk.Label.new(download.get_destination())
         uri.set_max_width_chars(30)
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.show()
