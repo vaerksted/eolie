@@ -63,7 +63,8 @@ class PagesMenu(Gio.Menu):
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
         if not El().settings.get_value("remember-session"):
-            self.__append_opened_pages()
+            # Delayed to let webkit db initialize
+            GLib.timeout_add(1000, self.__append_opened_pages)
 
     def activate_last_action(self):
         """
