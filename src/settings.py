@@ -382,7 +382,7 @@ class SettingsDialog:
             @param button as Gtk.Button
         """
         if El().sync_worker.status:
-            El().sync_worker.stop()
+            El().sync_worker.stop(True)
             El().sync_worker.delete_secret()
             self.__setup_sync_button()
         else:

@@ -159,11 +159,14 @@ class SyncWorker(GObject.GObject):
         self.__stop = True
         self.__helper.clear_sync()
 
-    def stop(self):
+    def stop(self, force=False):
         """
-            Stop update
+            Stop update, if force, kill session too
+            @param force as bool
         """
         self.__stop = True
+        if force:
+            self.__mozilla_sync = None
 
     @property
     def mtimes(self):
