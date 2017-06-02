@@ -46,7 +46,7 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
-        self.__mozilla_sync = MozillaSync()
+        self.__mozilla_sync = None
         self.__session = None
         self.__helper = PasswordsHelper()
 
@@ -60,6 +60,8 @@ class SyncWorker(GObject.GObject):
         if attributes is None:
             return
         from base64 import b64encode
+        if self.__mozilla_sync is None:
+            self.__mozilla_sync = MozillaSync()
         keyB = ""
         session = None
         # Connect to mozilla sync
@@ -186,6 +188,8 @@ class SyncWorker(GObject.GObject):
             @return bool
         """
         try:
+            if self.__mozilla_sync is None:
+                self.__mozilla_sync = MozillaSync()
             self.__mozilla_sync.client.info_collections()
             return True
         except:
@@ -207,6 +211,8 @@ class SyncWorker(GObject.GObject):
             Get session decrypt keys
             @return keys as (b"", b"")
         """
+        if self.__mozilla_sync is None:
+            self.__mozilla_sync = MozillaSync()
         if self.__session is None:
             from fxa.core import Session as FxASession
             from fxa.crypto import quick_stretch_password

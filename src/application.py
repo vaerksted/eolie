@@ -246,9 +246,14 @@ class Application(Gtk.Application):
         try:
             from eolie.mozilla_sync import SyncWorker
             self.sync_worker = SyncWorker()
-            self.sync_worker.sync()
+            # Run a first sync in 10 seconds, speed up app start
+            GLib.timeout_add_seconds(10,
+                                     self.sync_worker.sync,
+                                     False)
+            # Then run a sync every hour
             GLib.timeout_add_seconds(3600,
-                                     self.sync_worker.sync)
+                                     self.sync_worker.sync,
+                                     True)
         except Exception as e:
             print("Application::init():", e)
             self.sync_worker = None
