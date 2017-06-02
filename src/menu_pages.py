@@ -36,6 +36,10 @@ class PagesMenu(Gio.Menu):
         app.add_action(action)
         action.connect('activate',
                        self.__on_private_clicked)
+        action = Gio.SimpleAction(name="openall")
+        app.add_action(action)
+        action.connect('activate',
+                       self.__on_openall_clicked)
         panel_mode = app.settings.get_enum("panel-mode")
         self.__panel_action = Gio.SimpleAction.new_stateful(
                                                  "panel_mode",
@@ -62,7 +66,14 @@ class PagesMenu(Gio.Menu):
         self.append_submenu(_("View"), submenu)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
-        if not El().settings.get_value("remember-session"):
+        item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
+        item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
+        self.append_item(item)
+        if El().settings.get_value("remember-session"):
+            # Clear db
+            # FIXME
+            El().history.get_opened_pages()
+        else:
             # Delayed to let webkit db initialize
             GLib.timeout_add(1000, self.__append_opened_pages)
 
@@ -95,8 +106,13 @@ class PagesMenu(Gio.Menu):
                        (uri, private, state))
         if len(title) > 60:
             title = title[0:60] + "…"
+        if state is not None:
+            webkit_state = state.serialize().get_data()
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
+        if state is not None:
+            item.set_attribute_value("state", GLib.Variant("s", webkit_state))
+        item.set_attribute_value("private", GLib.Variant("b", private))
         # Try to set icon
         context = WebKit2.WebContext.get_default()
         favicon_db = context.get_favicon_database()
@@ -111,7 +127,7 @@ class PagesMenu(Gio.Menu):
         action = self.__app.lookup_action(encoded)
         if action is not None:
             self.__app.remove_action(encoded)
-            for i in range(0, self.__closed_section.get_n_items()):
+            for i in range(0, self.__closed_section.get_n_items() - 1):
                 attribute = self.__closed_section.get_item_attribute_value(
                                                                          i,
                                                                          "uri")
@@ -185,6 +201,34 @@ class PagesMenu(Gio.Menu):
         self.__app.active_window.container.add_webview(self.__app.start_page,
                                                        Gdk.WindowType.CHILD,
                                                        True)
+
+    def __on_openall_clicked(self, action, variant):
+        """
+            Add all entries
+            @param Gio.SimpleAction
+            @param GVariant
+        """
+        for i in range(0, self.__closed_section.get_n_items()):
+            uri_attr = self.__closed_section.get_item_attribute_value(i,
+                                                                      "uri")
+            if uri_attr is None:
+                continue
+            priv_attr = self.__closed_section.get_item_attribute_value(
+                                                                   i,
+                                                                   "private")
+            state_attr = self.__closed_section.get_item_attribute_value(
+                                                                       i,
+                                                                       "state")
+            if state_attr is not None:
+                webkit_state = WebKit2.WebViewSessionState(
+                                       GLib.Bytes.new(state_attr.get_string()))
+            else:
+                webkit_state = None
+            GLib.idle_add(self.__app.active_window.container.add_webview,
+                          uri_attr.get_string(), Gdk.WindowType.OFFSCREEN,
+                          priv_attr.get_boolean(),
+                          None, webkit_state, False)
+            self.__closed_section.remove(i)
 
     def __on_action_clicked(self, action, variant, data):
         """
