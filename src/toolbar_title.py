@@ -79,7 +79,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def set_width(self, width):
         """
-            Set Gtk.Scale progress width
+            Set Gtk.Entry width
             @param width as int
         """
         self.set_property("width_request", width)
