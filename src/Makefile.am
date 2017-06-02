@@ -11,6 +11,7 @@ app_PYTHON = \
     database_filechooser.py\
     database_history.py\
     database_phishing.py\
+    database_upgrade.py\
     dialog_clear_data.py\
     dialog_import_bookmarks.py\
     download_manager.py\
