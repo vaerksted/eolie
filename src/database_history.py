@@ -39,6 +39,7 @@ class DatabaseHistory:
                                                uri TEXT NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
+                                               opened INT NOT NULL DEFAULT 0,
                                                popularity INT NOT NULL
                                                )'''
     __create_history_atime = '''CREATE TABLE history_atime (
