@@ -107,6 +107,7 @@ class SyncWorker(GObject.GObject):
         if first_sync:
             self.__session = None
         self.__helper.get_sync(self.__start_sync, first_sync)
+        return True
 
     def push_history(self, history_ids):
         """
