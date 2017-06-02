@@ -176,6 +176,7 @@ class StackSidebar(Gtk.EventBox):
             @param view as View
             @return child SidebarChild
         """
+        El().history.set_page_state(view.webview.get_uri())
         self.__window.toolbar.title.close_popover()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)

@@ -343,6 +343,7 @@ class WebViewNavigation:
                 return True
             else:
                 decision.use()
+                El().history.set_page_state(webview.get_uri())
                 return False
         else:
             self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)

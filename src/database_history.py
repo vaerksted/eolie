@@ -310,6 +310,42 @@ class DatabaseHistory:
             if commit:
                 sql.commit()
 
+    def get_opened_pages(self):
+        """
+            Get page with opened state
+            @return [(uri, title)]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri, title\
+                                  FROM history\
+                                  WHERE opened=1")
+            sql.execute("UPDATE history\
+                         SET opened=0\
+                         WHERE opened=1")
+            sql.commit()
+            return list(result)
+
+    def set_page_state(self, uri, mtime=None):
+        """
+            Mark page with uri as opened if mtime is not None
+            @param uri as str
+            @param mtime as double
+        """
+        if uri is None:
+            return
+        uri = uri.rstrip('/')
+        with SqlCursor(self) as sql:
+            if mtime is None:
+                sql.execute("UPDATE history\
+                             SET opened=0\
+                             WHERE uri=?\
+                             AND opened=1", (uri,))
+            else:
+                sql.execute("UPDATE history\
+                             SET opened=1 WHERE uri=?\
+                             AND mtime=?", (uri, mtime))
+            sql.commit()
+
     def set_atimes(self, history_id, atimes, commit=True):
         """
             Set history atime

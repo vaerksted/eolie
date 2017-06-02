@@ -416,6 +416,7 @@ class Container(Gtk.Overlay):
             mtime = round(time(), 2)
             El().history.thread_lock.acquire()
             history_id = El().history.add(title, uri, mtime)
+            El().history.set_page_state(uri, mtime)
             El().history.thread_lock.release()
             if El().sync_worker is not None:
                 if El().sync_worker.syncing:

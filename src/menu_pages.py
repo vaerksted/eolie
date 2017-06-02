@@ -15,6 +15,8 @@ from gi.repository import Gio, GLib, Gdk, WebKit2
 from gettext import gettext as _
 from hashlib import sha256
 
+from eolie.define import El
+
 
 class PagesMenu(Gio.Menu):
     """
@@ -60,6 +62,8 @@ class PagesMenu(Gio.Menu):
         self.append_submenu(_("View"), submenu)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
+        if not El().settings.get_value("remember-session"):
+            self.__append_opened_pages()
 
     def activate_last_action(self):
         """
@@ -120,6 +124,13 @@ class PagesMenu(Gio.Menu):
 #######################
 # PRIVATE             #
 #######################
+    def __append_opened_pages(self):
+        """
+            Append opened pages ie pages opened on last session
+        """
+        for (uri, title) in El().history.get_opened_pages():
+            self.add_action(title, uri, False, None)
+
     def __set_favicon_result(self, db, result, item, uri):
         """
             Set favicon db result

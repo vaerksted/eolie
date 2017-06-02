@@ -185,14 +185,6 @@ class Application(Gtk.Application):
             Gio.Application.quit(self)
 
     @property
-    def pages_menu(self):
-        """
-            Get pages menu
-            @return PagesMenu
-        """
-        return self.__pages_menu
-
-    @property
     def start_page(self):
         """
             Get start page
@@ -272,7 +264,6 @@ class Application(Gtk.Application):
         styleContext.add_provider_for_screen(screen, cssProvider,
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.settings = Settings.new()
-        self.__pages_menu = PagesMenu(self)
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         # We store cursors for main thread
@@ -288,6 +279,7 @@ class Application(Gtk.Application):
         self.art = Art()
         self.search = Search()
         self.download_manager = DownloadManager()
+        self.pages_menu = PagesMenu(self)
 
         # Db upgrade
         db_version = self.settings.get_value("db-version").get_int32()
