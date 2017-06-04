@@ -66,14 +66,12 @@ class PagesMenu(Gio.Menu):
         self.append_submenu(_("View"), submenu)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
-        item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
-        item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
-        self.append_item(item)
-        if El().settings.get_value("remember-session"):
-            # Clear db
-            # FIXME
-            El().history.get_opened_pages()
-        else:
+        remember_session = El().settings.get_value("remember-session")
+        opened_pages = El().history.get_opened_pages()
+        if not remember_session and opened_pages:
+            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
+            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
+            self.append_item(item)
             # Delayed to not slow down startup
             GLib.timeout_add(1000, self.__append_opened_pages)
 
@@ -136,11 +134,12 @@ class PagesMenu(Gio.Menu):
 #######################
 # PRIVATE             #
 #######################
-    def __append_opened_pages(self):
+    def __append_opened_pages(self, opened_pages):
         """
             Append opened pages ie pages opened on last session
+            @param opened_pages as [(str, str)]
         """
-        for (uri, title) in El().history.get_opened_pages():
+        for (uri, title) in opened_pages:
             self.add_action(title, uri, False, None)
 
     def __set_favicon_result(self, db, result, item, uri):
