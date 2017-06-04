@@ -69,19 +69,22 @@ class DatabaseHistory:
                     sql.commit()
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
+        # DB upgrade
         version = 0
         with SqlCursor(self) as sql:
             result = sql.execute("PRAGMA user_version")
             v = result.fetchone()
             if v is not None:
                 version = v[0]
-            for i in range(version+1, len(self.__UPGRADES)+1):
-                try:
-                    sql.execute(self.__UPGRADES[i])
-                except:
-                    print("History DB upgrade %s failed" % i)
-            sql.execute("PRAGMA user_version=%s" % len(self.__UPGRADES))
-            sql.commit()
+            new_version = len(self.__UPGRADES)
+            if version < new_version:
+                for i in range(version+1, new_version + 1):
+                    try:
+                        sql.execute(self.__UPGRADES[i])
+                    except:
+                        print("History DB upgrade %s failed" % i)
+                sql.execute("PRAGMA user_version=%s" % new_version)
+                sql.commit()
 
     def add(self, title, uri, mtime, guid=None, atimes=[], commit=True):
         """
