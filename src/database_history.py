@@ -55,6 +55,7 @@ class DatabaseHistory:
         """
             Create database tables or manage update if needed
         """
+        new_version = len(self.__UPGRADES)
         self.thread_lock = Lock()
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
@@ -66,6 +67,7 @@ class DatabaseHistory:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_history)
                     sql.execute(self.__create_history_atime)
+                    sql.execute("PRAGMA user_version=%s" % new_version)
                     sql.commit()
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
@@ -76,7 +78,6 @@ class DatabaseHistory:
             v = result.fetchone()
             if v is not None:
                 version = v[0]
-            new_version = len(self.__UPGRADES)
             if version < new_version:
                 for i in range(version+1, new_version + 1):
                     try:
