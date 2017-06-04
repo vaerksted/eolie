@@ -40,6 +40,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__secure_content = True
         self.__keywords_timeout = None
         self.__icon_grid_width = None
+        self.__width = -1
         self.__uri = ""
         self.__keywords_cancellable = Gio.Cancellable.new()
         builder = Gtk.Builder()
@@ -77,12 +78,22 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__readable_image.get_style_context().remove_class("selected")
 
+    def do_get_preferred_width(self):
+        """
+            Overwrite do_get_preferred_width => nat_width == self.__width
+        """
+        (min_width, nat_width) = Gtk.Bin.do_get_preferred_width(self)
+        if self.__width != -1:
+            nat_width = self.__width
+        return (min_width, nat_width)
+
     def set_width(self, width):
         """
             Set Gtk.Entry width
             @param width as int
         """
-        self.set_property("width_request", width)
+        self.__width = width
+        self.queue_resize()
 
     def set_text_entry(self, text):
         """
