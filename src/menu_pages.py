@@ -69,11 +69,8 @@ class PagesMenu(Gio.Menu):
         remember_session = El().settings.get_value("remember-session")
         opened_pages = El().history.get_opened_pages()
         if not remember_session and opened_pages:
-            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
-            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
-            self.append_item(item)
             # Delayed to not slow down startup
-            GLib.timeout_add(1000, self.__append_opened_pages)
+            GLib.timeout_add(1000, self.__append_opened_pages, opened_pages)
 
     def activate_last_action(self):
         """
@@ -171,13 +168,16 @@ class PagesMenu(Gio.Menu):
         else:
             item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
+        if self.__closed_section.get_n_items() == 2:
+            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
+            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
+            self.append_item(item)
 
     def __clean_actions(self):
         """
-            Remove one action from history if needed
+            Manager an history of max 20 items
         """
-        count = self.get_n_items()
-        if count > 20:
+        if self.__closed_section.get_n_items() > 21:
             uri = self.__closed_section.get_item_attribute_value(
                                                          0, "uri").get_string()
             encoded = sha256(uri.encode("utf-8")).hexdigest()
