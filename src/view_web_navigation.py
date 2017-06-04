@@ -76,6 +76,7 @@ class WebViewNavigation:
             Load uri
             @param uri as str
         """
+        self._error = None
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
             self.__loaded_uri = uri
@@ -344,6 +345,7 @@ class WebViewNavigation:
             else:
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
+                self._error = None
                 return False
         else:
             self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
@@ -360,7 +362,6 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
-            self._error = None
             # Destroy current popups
             for popup in self.__popups:
                 popup.destroy()
