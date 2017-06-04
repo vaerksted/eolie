@@ -59,6 +59,7 @@ class WebViewErrors:
             Show a warning about phishing
             @param uri as str
         """
+        self._error = GLib.Error()
         self.stop_loading()
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
@@ -151,6 +152,7 @@ class WebViewErrors:
             @param certificate as Gio.TlsCertificate
             @parma errors as Gio.TlsCertificateFlags
         """
+        self._error = GLib.Error()
         self.__bad_tls = certificate
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
