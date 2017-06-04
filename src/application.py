@@ -25,7 +25,6 @@ from urllib.parse import urlparse
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
 from eolie.art import Art
-from eolie.database_upgrade import DatabaseUpgrade
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
@@ -285,12 +284,6 @@ class Application(Gtk.Application):
         self.search = Search()
         self.download_manager = DownloadManager()
         self.pages_menu = PagesMenu(self)
-
-        # Db upgrade
-        db_version = self.settings.get_value("db-version").get_int32()
-        upgrade = DatabaseUpgrade(db_version)
-        db_version = upgrade.do_db_upgrade()
-        self.settings.set_value("db-version", GLib.Variant("i", db_version))
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))

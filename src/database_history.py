@@ -28,6 +28,10 @@ class DatabaseHistory:
     """
     DB_PATH = "%s/history.db" % EOLIE_LOCAL_PATH
 
+    __UPGRADES = {
+        1: "ALTER TABLE history ADD opened INT NOT NULL DEFAULT 0"
+    }
+
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
@@ -65,6 +69,19 @@ class DatabaseHistory:
                     sql.commit()
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
+        version = 0
+        with SqlCursor(self) as sql:
+            result = sql.execute("PRAGMA user_version")
+            v = result.fetchone()
+            if v is not None:
+                version = v[0]
+            for i in range(version+1, len(self.__UPGRADES)+1):
+                try:
+                    sql.execute(self.__UPGRADES[i])
+                except:
+                    print("History DB upgrade %s failed" % i)
+            sql.execute("PRAGMA user_version=%s" % len(self.__UPGRADES))
+            sql.commit()
 
     def add(self, title, uri, mtime, guid=None, atimes=[], commit=True):
         """
