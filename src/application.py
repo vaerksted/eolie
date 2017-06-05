@@ -313,9 +313,12 @@ class Application(Gtk.Application):
                                    ["<Alt>Left", "XF86Back"])
         self.set_accels_for_action("win.shortcut::forward",
                                    ["<Alt>Right", "XF86Forward"])
-        self.set_accels_for_action("win.shortcut::next", ["<Control>Tab"])
+        self.set_accels_for_action("win.shortcut::next",
+                                   ["<Control>Tab",
+                                    "<Control>Page_Up"])
         self.set_accels_for_action("win.shortcut::previous",
-                                   ["<Control><Shift>Tab"])
+                                   ["<Control><Shift>Tab",
+                                    "<Control>Page_Down"])
         self.set_accels_for_action("win.shortcut::zoom_in",
                                    ["<Control>KP_Add", "<Control>plus"])
         self.set_accels_for_action("win.shortcut::zoom_out",
