@@ -106,11 +106,6 @@
             <summary>Minimum font size</summary>
             <description></description>
         </key>
-	    <key type="i" name="db-version">
-            <default>0</default>
-            <summary></summary>
-            <description></description>
-        </key>
 	    <key type="as" name="default-zoom-level">
             <default>[]</default>
             <summary>INTERNAL</summary>
