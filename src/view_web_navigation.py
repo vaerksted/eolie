@@ -53,7 +53,6 @@ class WebViewNavigation:
         """
         self.__js_timeout = None
         self.__title = ""
-        self.__readable_content = ""
         self.__popups = []
         self.__loaded_uri = ""
         self.__js_load = False
@@ -128,14 +127,6 @@ class WebViewNavigation:
             @return [WebView]
         """
         return self.__popups
-
-    @property
-    def readable_content(self):
-        """
-            Readable content
-            @return content as str
-        """
-        return self.__readable_content
 
     @property
     def loaded_uri(self):
@@ -235,7 +226,7 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param uri as GParamSpec
         """
-        self.__readable_content = ""
+        self._readable_content = ""
         self.__title = ""
         uri = webview.get_uri()
         if uri != "about:blank":
@@ -255,18 +246,13 @@ class WebViewNavigation:
         title = webview.get_title()
         if not title or title == self.__title:
             return
-        if title.startswith("@&$%ù²"):
-            self.__readable_content = title.replace("@&$%ù²", "")
-            self.emit("readable")
-            return
-        else:
-            self.__title = title
-            self.emit("title-changed", title)
-            if self.__js_timeout is None:
-                self.__js_timeout = GLib.timeout_add(
-                                 2000,
-                                 self.run_javascript_from_gresource,
-                                 '/org/gnome/Eolie/Readability.js', None, None)
+        self.__title = title
+        self.emit("title-changed", title)
+        if self.__js_timeout is None:
+            self.__js_timeout = GLib.timeout_add(
+                             2000,
+                             self.run_javascript_from_gresource,
+                             '/org/gnome/Eolie/Readability.js', None, None)
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """

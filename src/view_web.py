@@ -169,6 +169,14 @@ class WebView(WebKit2.WebView):
         """
         return self.__last_click_time
 
+    @property
+    def readable_content(self):
+        """
+            Readable content
+            @return content as str
+        """
+        return self._readable_content
+
 #######################
 # PRIVATE             #
 #######################
@@ -182,6 +190,7 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
+        self._readable_content = ""
         self.__last_click_time = 0
         self.__delayed_uri = None
         self.__related_view = related_view
@@ -233,6 +242,7 @@ class WebView(WebKit2.WebView):
         self.connect("button-release-event", self.__on_button_release_event)
         self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
+        self.connect("script-dialog", self.__on_script_dialog)
 
     def __set_system_fonts(self, settings):
         """
@@ -355,6 +365,17 @@ class WebView(WebKit2.WebView):
             filechooser_db.add_uri_for_url(dialog.get_current_folder_uri(),
                                            parsed.netloc)
         return True
+
+    def __on_script_dialog(self, webview, dialog):
+        """
+            Show message to user
+            @param webview as WebView
+            @param dialog as WebKit2.ScriptDialog
+        """
+        if dialog.get_message().startswith("@&$%ù²"):
+            self._readable_content = dialog.get_message().replace("@&$%ù²", "")
+            self.emit("readable")
+            return True
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
