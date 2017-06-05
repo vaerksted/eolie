@@ -90,9 +90,11 @@ class PagesMenu(Gio.Menu):
             @param private as bool
             @param state as WebKit2.WebViewSessionState
         """
-        self.__clean_actions()
+        if not uri:
+            return
         if not title:
             title = uri
+        self.__clean_actions()
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
         self.__app.add_action(action)
