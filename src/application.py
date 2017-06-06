@@ -324,11 +324,11 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Add", "<Control>plus"])
         self.set_accels_for_action("win.shortcut::zoom_out",
                                    ["<Control>KP_Subtract", "<Control>minus"])
-        self.set_accels_for_action("win.panel_mode(0)",
+        self.set_accels_for_action("app.panel_mode(0)",
                                    ["<Control><Alt>0", "<Control><Alt>KP_0"])
-        self.set_accels_for_action("win.panel_mode(1)",
+        self.set_accels_for_action("app.panel_mode(1)",
                                    ["<Control><Alt>1", "<Control><Alt>KP_1"])
-        self.set_accels_for_action("win.panel_mode(2)",
+        self.set_accels_for_action("app.panel_mode(2)",
                                    ["<Control><Alt>2", "<Control><Alt>KP_2"])
 
         # Set some WebKit defaults
