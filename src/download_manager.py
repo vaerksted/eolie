@@ -32,8 +32,6 @@ class DownloadManager(GObject.GObject):
             Init download manager
         """
         GObject.GObject.__init__(self)
-        # FIXME
-        # El().helper.connect("VideoInPage", self.__on_extension_signal)
         self.__downloads = []
         self.__finished = []
         self.__video_uris = {}
@@ -50,6 +48,20 @@ class DownloadManager(GObject.GObject):
             download.connect('failed', self.__on_failed)
             download.connect('decide-destination',
                              self.__on_decide_destination, filename)
+
+    def add_video(self, uri, title, page_id):
+        """
+            Emit video-in-page signal
+            @param uri as str
+            @param title as str
+            @param page_id as int
+        """
+        if page_id in self.__video_uris.keys():
+            if (uri, title) not in self.__video_uris[page_id]:
+                self.__video_uris[page_id].append((uri, title))
+        else:
+            self.__video_uris[page_id] = [(uri, title)]
+        self.emit("video-in-page")
 
     def remove(self, download):
         """
@@ -72,7 +84,7 @@ class DownloadManager(GObject.GObject):
             if (uri, title) in self.__video_uris[page_id]:
                 self.__video_uris[page_id].remove((uri, title))
 
-    def remove_video_for_page(self, page_id):
+    def remove_videos_for_page(self, page_id):
         """
             Remove video uris for page
             @param page_id as int
@@ -195,25 +207,3 @@ class DownloadManager(GObject.GObject):
             @param error as GLib.Error
         """
         print("DownloadManager::__on_failed:", error)
-
-    def __on_extension_signal(self, connection, sender, path,
-                              interface, signal, params, data):
-        """
-            Emit signal
-            @param connection as Gio.DBusConnection
-            @param sender as str
-            @param path as str
-            @param interface as str
-            @param signal as str
-            @param parameters as GLib.Variant
-            @param data
-        """
-        uri = params[0]
-        title = params[1]
-        page_id = params[2]
-        if page_id in self.__video_uris.keys():
-            if (uri, title) not in self.__video_uris[page_id]:
-                self.__video_uris[page_id].append((uri, title))
-        else:
-            self.__video_uris[page_id] = [(uri, title)]
-        self.emit("video-in-page")

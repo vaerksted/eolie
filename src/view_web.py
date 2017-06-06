@@ -245,6 +245,8 @@ class WebView(WebKit2.WebView):
         self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("script-dialog", self.__on_script_dialog)
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
 
     def __set_system_fonts(self, settings):
         """
@@ -378,6 +380,39 @@ class WebView(WebKit2.WebView):
             self._readable_content = dialog.get_message().replace("@&$%ù²", "")
             self.emit("readable")
             return True
+
+    def __on_map(self, webview):
+        """
+            Connect signals
+            @parma webview as WebView
+        """
+        page_id = webview.get_page_id()
+        El().helper.connect("VideoInPage", self.__on_extension_signal, page_id)
+
+    def __on_unmap(self, webview):
+        """
+            Disconnect signals
+            @parma webview as WebView
+        """
+        page_id = webview.get_page_id()
+        El().helper.disconnect("VideoInPage", page_id)
+
+    def __on_extension_signal(self, connection, sender, path,
+                              interface, signal, params, data):
+        """
+            Add video to download manager
+            @param connection as Gio.DBusConnection
+            @param sender as str
+            @param path as str
+            @param interface as str
+            @param signal as str
+            @param parameters as GLib.Variant
+            @param data
+        """
+        uri = params[0]
+        title = params[1]
+        page_id = params[2]
+        El().download_manager.add_video(uri, title, page_id)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):

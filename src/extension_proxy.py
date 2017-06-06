@@ -281,13 +281,13 @@ class ProxyExtension(Server):
         # Create proxy if None
         if self.__proxy_bus is None:
             self.__proxy_bus = PROXY_BUS % webpage.get_id()
-            bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-            Gio.bus_own_name_on_connection(bus,
+            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            Gio.bus_own_name_on_connection(self.__bus,
                                            self.__proxy_bus,
                                            Gio.BusNameOwnerFlags.NONE,
                                            None,
                                            None)
-            Server.__init__(self, bus, PROXY_PATH)
+            Server.__init__(self, self.__bus, PROXY_PATH)
         # Remove any previous event listener
         for form in self.__listened_forms:
             form.remove_event_listener("input", self.__on_input, False)

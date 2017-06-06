@@ -350,7 +350,7 @@ class WebViewNavigation:
             for popup in self.__popups:
                 popup.destroy()
             self.__popups = []
-            El().download_manager.remove_video_for_page(webview.get_page_id())
+            El().download_manager.remove_videos_for_page(webview.get_page_id())
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__update_user_agent(parsed.netloc)

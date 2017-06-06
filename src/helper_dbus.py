@@ -21,7 +21,7 @@ class DBusHelper:
     """
 
     def __init__(self):
-        pass
+        self.__signals = {}
 
     def call(self, call, args, callback, data, page_id):
         """
@@ -55,6 +55,17 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::connect():", e)
 
+    def disconnect(self, signal_name, page_id):
+        """
+            Disconnect signal
+            @param signal_name as str
+            @param page_id as int
+        """
+        if page_id in self.__signals.keys():
+            (bus, subscribe_id) = self.__signals[page_id]
+            bus.signal_unsubscribe(subscribe_id)
+            del self.__signals[page_id]
+
 #######################
 # PRIVATE             #
 #######################
@@ -73,10 +84,11 @@ class DBusHelper:
         proxy_bus = PROXY_BUS % page_id
         bus = Gio.bus_get_finish(result)
         if call is None:
-            bus.signal_subscribe(None, proxy_bus, data,
-                                 PROXY_PATH, None,
-                                 Gio.DBusSignalFlags.NONE,
-                                 callback, None)
+            subscribe_id = bus.signal_subscribe(None, proxy_bus, data,
+                                                PROXY_PATH, None,
+                                                Gio.DBusSignalFlags.NONE,
+                                                callback, None)
+            self.__signals[page_id] = (bus, subscribe_id)
         else:
             Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
                               proxy_bus,
