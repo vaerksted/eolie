@@ -200,4 +200,25 @@ class WebViewErrors:
             @param view as WebKit2.WebView
         """
         self._error = GLib.Error()
-        print("WebViewErrors::__on_web_process_crashed():", view)
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
+        (status, css_content, tag) = f.load_contents(None)
+        css = css_content.decode("utf-8")
+        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
+        (status, content, tag) = f.load_contents(None)
+        html = content.decode("utf-8")
+        html = html % (_("WebKit web engine crashed"),
+                       css,
+                       "load_uri('https://bugs.webkit.org/"
+                       "enter_bug.cgi?product=WebKit')",
+                       "internal:/help-faq-symbolic",
+                       _("WebKit web engine crashed"),
+                       "",
+                       _("The webpage was terminated unexpectedly."
+                         "To continue, reload or go to another page.<br/><br/>"
+                         "If problem persist, you can report a bug :)<br/>"
+                         "Use <b>'Webkit Gtk'</b> as component.<br/>"
+                         "Set <b>[GTK]</b> as subject prefix."),
+                       "suggested-action",
+                       _("Report a bug now"))
+        self.load_html(html, view.get_uri())
+        return True
