@@ -84,14 +84,14 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Previous page</property>
-                <property name="accelerator">&lt;Primary&gt;Page_Down</property>
+                <property name="accelerator">&lt;Primary&gt;Page_Up</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Next page</property>
-                <property name="accelerator">&lt;Primary&gt;Page_Up</property>
+                <property name="accelerator">&lt;Primary&gt;Page_Down</property>
               </object>
             </child>
             <child>
