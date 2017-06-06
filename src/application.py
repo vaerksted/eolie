@@ -400,6 +400,15 @@ class Application(Gtk.Application):
         self.art.vacuum()
         GLib.idle_add(Gio.Application.quit, self)
 
+    def __show_plugins(self):
+        """
+            Show available plugins on stdout
+        """
+        if self.debug:
+            self.active_window.container.current.webview.get_context(
+                                                                ).get_plugins(
+                                   None, self.__on_get_plugins, None)
+
     def __save_state(self):
         """
             Save window position and view
@@ -427,15 +436,6 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::save_state()", e)
 
-    def __show_plugins(self):
-        """
-            Show available plugins on stdout
-        """
-        if self.debug:
-            self.active_window.container.current.webview.get_context(
-                                                                ).get_plugins(
-                                   None, self.__on_get_plugins, None)
-
     def __restore_state(self):
         """
             Restore saved state
@@ -454,6 +454,8 @@ class Application(Gtk.Application):
                               None, webkit_state,
                               window_type == Gdk.WindowType.CHILD)
                 window_type = Gdk.WindowType.OFFSCREEN
+            dump([],
+                 open(LOCAL_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::restore_state()", e)
         return window_type != Gdk.WindowType.CHILD
