@@ -315,10 +315,10 @@ class Application(Gtk.Application):
                                    ["<Alt>Right", "XF86Forward"])
         self.set_accels_for_action("win.shortcut::next",
                                    ["<Control>Tab",
-                                    "<Control>Page_Up"])
+                                    "<Control>Page_Down"])
         self.set_accels_for_action("win.shortcut::previous",
                                    ["<Control><Shift>Tab",
-                                    "<Control>Page_Down"])
+                                    "<Control>Page_Up"])
         self.set_accels_for_action("win.shortcut::zoom_in",
                                    ["<Control>KP_Add", "<Control>plus"])
         self.set_accels_for_action("win.shortcut::zoom_out",
