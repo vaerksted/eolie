@@ -306,7 +306,7 @@ class WebView(WebKit2.WebView):
         """
             Store initial selection
             @param widget as WebView
-            @param event as Gdk.EventScroll
+            @param event as Gdk.Event
         """
         self.__last_click_time = time()
         self.__selection = ""

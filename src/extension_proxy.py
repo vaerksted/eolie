@@ -15,6 +15,7 @@ from gi.repository import Gio, GLib
 from urllib.parse import urlparse
 
 from eolie.define import PROXY_BUS, PROXY_PATH
+from eolie.list import LinkedList
 
 
 class Server:
@@ -78,7 +79,11 @@ class ProxyExtension(Server):
     <node>
     <interface name="org.gnome.Eolie.Proxy">
 
-    <method name="GetForms">
+    <method name="SetPreviousForm">
+    </method>
+    <method name="SetNextForm">
+    </method>
+    <method name="GetAuthForms">
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
@@ -107,6 +112,10 @@ class ProxyExtension(Server):
             @param forms as FormsExtension
         """
         self.__forms = forms
+        self.__focused = None
+        self.__form_history = {}
+        self.__password_form = None
+        self.__listened_forms = []
         extension.connect("page-created", self.__on_page_created)
         self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         Gio.bus_own_name_on_connection(self.__bus,
@@ -116,7 +125,7 @@ class ProxyExtension(Server):
                                        None)
         Server.__init__(self, self.__bus, PROXY_PATH)
 
-    def GetForms(self, page_id):
+    def GetAuthForms(self, page_id):
         """
             Get password forms for page id
             @param page id as int
@@ -126,14 +135,14 @@ class ProxyExtension(Server):
             page = self.__extension.get_page(page_id)
             if page is None:
                 return ("", "", "", "")
-            (username, password) = self.__forms.get_forms(page)
+            (username, password, others) = self.__forms.get_forms(page)
             if username is not None and password is not None:
                 return (username.get_value(),
                         username.get_name(),
                         password.get_value(),
                         password.get_name())
         except Exception as e:
-            print("ProxyExtension::GetForms():", e)
+            print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")
 
     def GetImages(self, page_id):
@@ -181,13 +190,50 @@ class ProxyExtension(Server):
             print("ProxyExtension::GetImagesLinks():", e)
         return []
 
+    def SetPreviousForm(self):
+        """
+            Set focused form to previous value
+        """
+        if self.__focused is None:
+            return
+        try:
+            if self.__focused in self.__form_history.keys():
+                current_value = self.__focused.get_value()
+                item = self.__form_history[self.__focused]
+                # User added some text, keep it
+                if item.value != current_value:
+                    next = LinkedList(current_value.rstrip(" "), None, item)
+                    if item is not None:
+                        item.set_next(next)
+                    item = next
+                if item.prev:
+                    self.__form_history[self.__focused] = item.prev
+                    self.__focused.set_value(item.prev.value)
+        except Exception as e:
+            print("ProxyExtension::SetPreviousForm():", e)
+
+    def SetNextForm(self):
+        """
+            Set focused form to next value
+        """
+        if self.__focused is None:
+            return
+        try:
+            if self.__focused in self.__form_history.keys():
+                item = self.__form_history[self.__focused]
+                if item.next:
+                    self.__form_history[self.__focused] = item.next
+                    self.__focused.set_value(item.next.value)
+        except Exception as e:
+            print("ProxyExtension::SetNextForm():", e)
+
 #######################
 # PRIVATE             #
 #######################
-    def __on_focus(self, password, event):
+    def __on_password_focus(self, password, event):
         """
-            Emit focus form signal
-            @param password as WebKit2WebExtension.DOMHTMLInputElement
+            Emit unsecure focus form signal
+            @param password as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
         self.__bus.emit_signal(
@@ -197,17 +243,72 @@ class ProxyExtension(Server):
                           "UnsecureFormFocused",
                           None)
 
+    def __on_focus(self, form, event):
+        """
+            Emit unsecure focus form signal
+            @param form as WebKit2WebExtension.DOMElement
+            @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        self.__focused = form
+
+    def __on_input(self, form, event):
+        """
+            Send input signal
+            @param form as WebKit2WebExtension.DOMElement
+            @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        # Clear history if nothing and return
+        new_value = form.get_value()
+        if not new_value:
+            if form in self.__form_history.keys():
+                del self.__form_history[form]
+            return
+
+        previous_value = ""
+        item = LinkedList("", None, None)
+        if form in self.__form_history.keys():
+            item = self.__form_history[form]
+            previous_value = item.value
+        # Here we try to get words
+        # If we are LTR then add words on space
+        if len(new_value) > len(previous_value):
+            if new_value.endswith(" "):
+                next = LinkedList(new_value.rstrip(" "), None, item)
+                if item is not None:
+                    item.set_next(next)
+                self.__form_history[form] = next
+
     def __on_document_loaded(self, webpage):
         """
             Check for unsecure content
             @param webpage as WebKit2WebExtension.WebPage
         """
+        # Remove any previous event listener
+        for form in self.__listened_forms:
+            form.remove_event_listener("input", self.__on_input, False)
+            form.remove_event_listener("focus", self.__on_input, False)
+        if self.__password_form is not None:
+            self.__password_form.remove_event_listener(
+                                                      "focus",
+                                                      self.__on_password_focus,
+                                                      False)
+        self.__focused = None
+        self.__form_history = {}
+        self.__listened_forms = []
+        self.__password_form = None
+
+        # Manage forms in page
         parsed = urlparse(webpage.get_uri())
+        (username, password, others) = self.__forms.get_forms(webpage)
         # Check for unsecure content
-        if parsed.scheme == "http":
-            (username, password) = self.__forms.get_forms(webpage)
-            if password is not None:
-                password.add_event_listener("focus", self.__on_focus, False)
+        if parsed.scheme == "http" and password is not None:
+            self.__password_form.add_event_listener("focus",
+                                                    self.__on_password_focus,
+                                                    False)
+        for form in others:
+            self.__listened_forms.append(form)
+            form.add_event_listener("input", self.__on_input, False)
+            form.add_event_listener("focus", self.__on_focus, False)
 
     def __on_page_created(self, extension, webpage):
         """

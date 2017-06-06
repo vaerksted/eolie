@@ -241,6 +241,7 @@ class Application(Gtk.Application):
         """
             Init main application
         """
+        self.helper = DBusHelper()
         # First init sync worker
         try:
             from eolie.mozilla_sync import SyncWorker
@@ -351,8 +352,7 @@ class Application(Gtk.Application):
         cookie_manager.set_persistent_storage(
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
-        helper = DBusHelper()
-        helper.connect("UnsecureFormFocused", self.__on_extension_signal)
+        self.helper.connect("UnsecureFormFocused", self.__on_extension_signal)
 
     def __listen_to_gnome_sm(self):
         """

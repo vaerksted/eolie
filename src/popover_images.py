@@ -16,7 +16,6 @@ from hashlib import sha256
 from threading import Thread
 from urllib.parse import urlparse
 
-from eolie.helper_dbus import DBusHelper
 from eolie.define import CACHE_PATH, ArtSize, El
 
 
@@ -102,10 +101,9 @@ class ImagesPopover(Gtk.Popover):
         self.__button = builder.get_object("button")
         self.add(widget)
         if Gio.NetworkMonitor.get_default().get_network_available():
-            helper = DBusHelper()
-            helper.call("GetImages",
-                        GLib.Variant("(i)", (page_id,)),
-                        self.__on_get_images, None)
+            El().helper.call("GetImages",
+                             GLib.Variant("(i)", (page_id,)),
+                             self.__on_get_images, None)
         (width, height) = El().active_window.get_size()
         self.set_size_request(width / 2, height / 1.5)
         self.connect("closed", self.__on_closed)
@@ -144,15 +142,13 @@ class ImagesPopover(Gtk.Popover):
         self.__links = button.get_active()
         if Gio.NetworkMonitor.get_default().get_network_available():
             if button.get_active():
-                helper = DBusHelper()
-                helper.call("GetImageLinks",
-                            GLib.Variant("(i)", (self.__page_id,)),
-                            self.__on_get_images, None)
+                El().helper.call("GetImageLinks",
+                                 GLib.Variant("(i)", (self.__page_id,)),
+                                 self.__on_get_images, None)
             else:
-                helper = DBusHelper()
-                helper.call("GetImages",
-                            GLib.Variant("(i)", (self.__page_id,)),
-                            self.__on_get_images, None)
+                El().helper.call("GetImages",
+                                 GLib.Variant("(i)", (self.__page_id,)),
+                                 self.__on_get_images, None)
 
 #######################
 # PRIVATE             #

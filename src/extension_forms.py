@@ -33,15 +33,22 @@ class FormsExtension:
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
-            @return (WebKit2WebExtension.DOMElement,
-                     WebKit2WebExtension.DOMElement)
+            @return (WebKit2WebExtension.DOMElement,   => username
+                     WebKit2WebExtension.DOMElement,   => password
+                     [WebKit2WebExtension.DOMElement]) => others
         """
-        inputs = webpage.get_dom_document().get_elements_by_tag_name('input')
+        others = []
+        dom_document = webpage.get_dom_document()
+        inputs = dom_document.get_elements_by_tag_name("input")
+        textareas = dom_document.get_elements_by_tag_name("textarea")
         i = 0
         username_input = None
         password_input = None
         while i < inputs.get_length():
-            name = inputs.item(i).get_attribute('name')
+            if inputs.item(i).get_input_type() == "hidden":
+                i += 1
+                continue
+            name = inputs.item(i).get_attribute("name")
             if name is None:
                 i += 1
                 continue
@@ -50,14 +57,19 @@ class FormsExtension:
                 password_input = inputs.item(i)
                 i += 1
                 continue
-            if username_input is None and\
-                    inputs.item(i).get_input_type() != "hidden":
+            if username_input is None:
                 for search in LOGINS:
                     if name.lower().find(search) != -1:
                         username_input = inputs.item(i)
                         break
+            if username_input is None:
+                others.append(inputs.item(i))
             i += 1
-        return (username_input, password_input)
+        i = 0
+        while i < textareas.get_length():
+            others.append(textareas.item(i))
+            i += 1
+        return (username_input, password_input, others)
 
 #######################
 # PRIVATE             #
@@ -78,7 +90,7 @@ class FormsExtension:
         if not self.__settings.get_value("remember-passwords"):
             return
 
-        (username_input, password_input) = self.get_forms(webpage)
+        (username_input, password_input, others) = self.get_forms(webpage)
 
         if username_input is None or password_input is None:
             return

@@ -10,10 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Pango
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
 from eolie.widget_find import FindWidget
 from eolie.view_web import WebView
+from eolie.define import El
 
 
 class UriLabel(Gtk.EventBox):
@@ -108,6 +109,7 @@ class View(Gtk.Overlay):
         self.add(self.__grid)
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
+        self.connect("key-press-event", self.__on_key_press_event)
         self.__webview.connect("mouse-target-changed",
                                self.__on_mouse_target_changed)
 
@@ -194,6 +196,18 @@ class View(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
+    def __on_key_press_event(self, widget, event):
+        """
+            Handle Ctrl+Z and Ctrl+Shift+Z (forms undo/redo)
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        if event.state & Gdk.ModifierType.CONTROL_MASK:
+            if event.keyval == Gdk.KEY_z:
+                El().helper.call("SetPreviousForm", None, None, None)
+            elif event.keyval == Gdk.KEY_Z:
+                El().helper.call("SetNextForm", None, None, None)
+
     def __on_mouse_target_changed(self, view, hit, modifiers):
         """
             Show uri in title bar

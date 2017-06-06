@@ -14,7 +14,6 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.helper_dbus import DBusHelper
 from eolie.define import El, ADBLOCK_JS, FUA
 from eolie.utils import get_ftp_cmd
 
@@ -158,10 +157,9 @@ class WebViewNavigation:
             @param page_id as int
             @param request as WebKit2.FormSubmissionRequest
         """
-        helper = DBusHelper()
-        helper.call("GetForms",
-                    GLib.Variant("(i)", (page_id,)),
-                    self.__on_get_forms, request)
+        El().helper.call("GetAuthForms",
+                         GLib.Variant("(i)", (page_id,)),
+                         self.__on_get_forms, request)
 
     def __on_get_forms(self, source, result, request):
         """
