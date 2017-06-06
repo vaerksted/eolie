@@ -159,7 +159,7 @@ class WebViewNavigation:
         """
         El().helper.call("GetAuthForms",
                          GLib.Variant("(i)", (page_id,)),
-                         self.__on_get_forms, request)
+                         self.__on_get_forms, request, page_id)
 
     def __on_get_forms(self, source, result, request):
         """

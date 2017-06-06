@@ -202,11 +202,12 @@ class View(Gtk.Overlay):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
+        page_id = self.webview.get_page_id()
         if event.state & Gdk.ModifierType.CONTROL_MASK:
             if event.keyval == Gdk.KEY_z:
-                El().helper.call("SetPreviousForm", None, None, None)
+                El().helper.call("SetPreviousForm", None, None, None, page_id)
             elif event.keyval == Gdk.KEY_Z:
-                El().helper.call("SetNextForm", None, None, None)
+                El().helper.call("SetNextForm", None, None, None, page_id)
 
     def __on_mouse_target_changed(self, view, hit, modifiers):
         """

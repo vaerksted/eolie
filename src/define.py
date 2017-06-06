@@ -14,8 +14,9 @@ from gi.repository import Gio, GLib
 
 El = Gio.Application.get_default
 
-PROXY_BUS = 'org.gnome.Eolie.Proxy'
+PROXY_BUS = 'org.gnome.Eolie.Proxy.Page%s'
 PROXY_PATH = '/org/gnome/EolieProxy'
+PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 
 FUA = "Mozilla/5.0 (X11; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0"
 

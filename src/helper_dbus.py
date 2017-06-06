@@ -12,7 +12,7 @@
 
 from gi.repository import Gio
 
-from eolie.define import PROXY_BUS, PROXY_PATH
+from eolie.define import PROXY_BUS, PROXY_PATH, PROXY_INTERFACE
 
 
 class DBusHelper:
@@ -23,40 +23,43 @@ class DBusHelper:
     def __init__(self):
         pass
 
-    def call(self, call, args, callback, data):
+    def call(self, call, args, callback, data, page_id):
         """
             Call function
             @param call as str
             @param args as GLib.Variant()/None
             @param callback as function
             @param data
+            @param page_id as int
         """
         try:
             Gio.bus_get(Gio.BusType.SESSION, None,
                         self.__on_get_bus, call,
                         args,
-                        callback, data)
+                        callback, data, page_id)
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, signal_name, callback):
+    def connect(self, signal_name, callback, page_id):
         """
             Connect callback to object signals
             @param signal_name as str
             @param callback as function
+            @param page_id as int
         """
         try:
             Gio.bus_get(Gio.BusType.SESSION, None,
                         self.__on_get_bus, None,
                         None,
-                        callback, signal_name)
+                        callback, signal_name, page_id)
         except Exception as e:
             print("DBusHelper::connect():", e)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_get_bus(self, source, result, call, args, callback, data):
+    def __on_get_bus(self, source, result, call,
+                     args, callback, data, page_id):
         """
             Get DBus proxy
             @param source as GObject.Object
@@ -65,17 +68,20 @@ class DBusHelper:
             @param args as GLib.Variant()/None
             @param callback as function
             @param data
+            @param page_id as int
         """
+        proxy_bus = PROXY_BUS % page_id
         bus = Gio.bus_get_finish(result)
         if call is None:
-            bus.signal_subscribe(None, PROXY_BUS, data,
-                                 PROXY_PATH, None, Gio.DBusSignalFlags.NONE,
+            bus.signal_subscribe(None, proxy_bus, data,
+                                 PROXY_PATH, None,
+                                 Gio.DBusSignalFlags.NONE,
                                  callback, None)
         else:
             Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
-                              PROXY_BUS,
+                              proxy_bus,
                               PROXY_PATH,
-                              PROXY_BUS, None,
+                              PROXY_INTERFACE, None,
                               self.__on_get_proxy, call, args, callback, data)
 
     def __on_get_proxy(self, source, result, call, args, callback, data):

@@ -32,7 +32,8 @@ class DownloadManager(GObject.GObject):
             Init download manager
         """
         GObject.GObject.__init__(self)
-        El().helper.connect("VideoInPage", self.__on_extension_signal)
+        # FIXME
+        # El().helper.connect("VideoInPage", self.__on_extension_signal)
         self.__downloads = []
         self.__finished = []
         self.__video_uris = {}

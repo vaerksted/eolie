@@ -111,19 +111,14 @@ class ProxyExtension(Server):
             @param extension as WebKit2WebExtension.WebExtension
             @param forms as FormsExtension
         """
+        self.__proxy_bus = None
         self.__forms = forms
         self.__focused = None
         self.__form_history = {}
         self.__password_form = None
         self.__listened_forms = []
         extension.connect("page-created", self.__on_page_created)
-        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-        Gio.bus_own_name_on_connection(self.__bus,
-                                       PROXY_BUS,
-                                       Gio.BusNameOwnerFlags.NONE,
-                                       None,
-                                       None)
-        Server.__init__(self, self.__bus, PROXY_PATH)
+        self.__bus = None
 
     def GetAuthForms(self, page_id):
         """
@@ -239,7 +234,7 @@ class ProxyExtension(Server):
         self.__bus.emit_signal(
                           None,
                           PROXY_PATH,
-                          PROXY_BUS,
+                          self.__proxy_bus,
                           "UnsecureFormFocused",
                           None)
 
@@ -283,6 +278,16 @@ class ProxyExtension(Server):
             Check for unsecure content
             @param webpage as WebKit2WebExtension.WebPage
         """
+        # Create proxy if None
+        if self.__proxy_bus is None:
+            self.__proxy_bus = PROXY_BUS % webpage.get_id()
+            bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            Gio.bus_own_name_on_connection(bus,
+                                           self.__proxy_bus,
+                                           Gio.BusNameOwnerFlags.NONE,
+                                           None,
+                                           None)
+            Server.__init__(self, bus, PROXY_PATH)
         # Remove any previous event listener
         for form in self.__listened_forms:
             form.remove_event_listener("input", self.__on_input, False)
@@ -339,7 +344,7 @@ class ProxyExtension(Server):
             self.__bus.emit_signal(
                           None,
                           PROXY_PATH,
-                          PROXY_BUS,
+                          self.__proxy_bus,
                           "VideoInPage",
                           args)
         elif parsed.netloc.endswith("googlevideo.com") and\
@@ -353,6 +358,6 @@ class ProxyExtension(Server):
             self.__bus.emit_signal(
                           None,
                           PROXY_PATH,
-                          PROXY_BUS,
+                          self.__proxy_bus,
                           "VideoInPage",
                           args)
