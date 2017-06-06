@@ -121,9 +121,7 @@ class SidebarChild(Gtk.ListBoxRow):
             Set webpage preview
             @param save as bool
         """
-        if self.__window.container.sidebar.panel_mode != 0:
-            pass
-        elif self.__view.webview.ephemeral:
+        if self.__view.webview.ephemeral:
             self.__image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
@@ -325,52 +323,59 @@ class SidebarChild(Gtk.ListBoxRow):
         if self.__view.webview.error is not None:
             save = False
         try:
-            snapshot = view.get_snapshot_finish(result)
-            factor = self.get_allocated_width() /\
-                snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         self.get_allocated_width() -
-                                         ArtSize.PREVIEW_WIDTH_MARGIN,
-                                         ArtSize.PREVIEW_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, 0, 0)
-            context.paint()
-            self.__image.set_from_surface(surface)
             current_uri = view.get_uri()
-            if save:
-                El().art.save_artwork(current_uri,
-                                      surface, "preview")
-                # We also cache original URI
-                if self.__start_uri is not None and\
-                        current_uri != self.__start_uri:
-                    El().art.save_artwork(self.__start_uri,
+            snapshot = view.get_snapshot_finish(result)
+
+            if self.__window.container.sidebar.panel_mode == 0:
+                # Set sidebar child image
+                factor = self.get_allocated_width() /\
+                    snapshot.get_width()
+                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                             self.get_allocated_width() -
+                                             ArtSize.PREVIEW_WIDTH_MARGIN,
+                                             ArtSize.PREVIEW_HEIGHT)
+                context = cairo.Context(surface)
+                context.scale(factor, factor)
+                context.set_source_surface(snapshot, 0, 0)
+                context.paint()
+                self.__image.set_from_surface(surface)
+
+                # Save image to cache
+                if save:
+                    El().art.save_artwork(current_uri,
                                           surface, "preview")
-                # We also cache original URI
-                uris = [current_uri]
-                if self.__start_uri is not None and\
-                        self.__start_uri not in uris:
-                    uris.append(self.__start_uri)
-                surface = None
-                for uri in uris:
-                    if El().art.exists(uri, "start"):
-                        continue
-                    if surface is None:
-                        height = snapshot.get_height()
-                        factor = ArtSize.START_HEIGHT / height
-                        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                                     ArtSize.START_WIDTH,
-                                                     ArtSize.START_HEIGHT)
-                        context = cairo.Context(surface)
-                        context.scale(factor, factor)
-                        context.set_source_surface(snapshot, 0, 0)
-                        context.paint()
-                    El().art.save_artwork(uri,
-                                          surface, "start")
+                    # We also cache original URI
+                    if self.__start_uri is not None and\
+                            current_uri != self.__start_uri:
+                        El().art.save_artwork(self.__start_uri,
+                                              surface, "preview")
+                del surface
+
+            # Save start image to cache
+            # We also cache original URI
+            uris = [current_uri]
+            if self.__start_uri is not None and\
+                    self.__start_uri not in uris:
+                uris.append(self.__start_uri)
+            surface = None
+            for uri in uris:
+                if El().art.exists(uri, "start"):
+                    continue
+                if surface is None:
+                    height = snapshot.get_height()
+                    factor = ArtSize.START_HEIGHT / height
+                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                 ArtSize.START_WIDTH,
+                                                 ArtSize.START_HEIGHT)
+                    context = cairo.Context(surface)
+                    context.scale(factor, factor)
+                    context.set_source_surface(snapshot, 0, 0)
+                    context.paint()
+                El().art.save_artwork(uri, surface, "start")
             del surface
             del snapshot
-        except:
-            pass
+        except Exception as e:
+            print("SidebarChild::__on_snapshot():", e)
 
     def __on_drag_begin(self, widget, context):
         """
