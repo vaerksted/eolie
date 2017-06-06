@@ -46,6 +46,27 @@
                 <property name="accelerator">&lt;Primary&gt;l</property>
               </object>
             </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Show bookmarks</property>
+                <property name="accelerator">&lt;Primary&gt;b</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Show history</property>
+                <property name="accelerator">&lt;Primary&gt;h</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Search</property>
+                <property name="accelerator">&lt;Primary&gt;k</property>
+              </object>
+            </child>
           </object>
         </child>
         <child>
