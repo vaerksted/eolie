@@ -445,7 +445,7 @@ class ToolbarTitle(Gtk.Bin):
             if not self.__popover.is_visible():
                 self._on_entry_focus_in(entry, event)
                 self.__lock_focus = True
-                self.__popover.show()
+                self.__popover.show("bookmarks")
         elif event.type == Gdk.EventType._2BUTTON_PRESS:
             text_len = len(self.__entry.get_text())
             self.__entry.select_region(0, text_len)
@@ -703,7 +703,7 @@ class ToolbarTitle(Gtk.Bin):
             # We are doing a search, show popover
             if not is_uri and not self.__popover.is_visible():
                 self.__lock_focus = True
-                self.__popover.show()
+                self.__popover.show("bookmarks")
         elif parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
         if self.__keywords_timeout is not None:
