@@ -364,7 +364,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param dialog as WebKit2.ScriptDialog
         """
-        if dialog.get_message().startswith("@&$%ù²"):
+        if not dialog.get_message().startswith("@&$%ù²"):
             self.__window.toolbar.title.show_javascript(dialog)
             return True
 
