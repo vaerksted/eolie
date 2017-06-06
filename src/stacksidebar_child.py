@@ -324,6 +324,8 @@ class SidebarChild(Gtk.ListBoxRow):
             save = False
         try:
             current_uri = view.get_uri()
+            if current_uri is None:
+                return
             snapshot = view.get_snapshot_finish(result)
 
             if self.__window.container.sidebar.panel_mode == 0:
