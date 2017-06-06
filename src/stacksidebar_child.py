@@ -125,7 +125,8 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
-        else:
+        elif not self.__view.webview.is_loading() and\
+                self.get_allocated_width() != 1:
             self.__view.webview.get_snapshot(
                                          WebKit2.SnapshotRegion.VISIBLE,
                                          WebKit2.SnapshotOptions.NONE,
@@ -316,9 +317,6 @@ class SidebarChild(Gtk.ListBoxRow):
             @param save as bool
             @warning view here is WebKit2.WebView, not WebView
         """
-        # We are filtered
-        if self.get_allocated_width() == 1:
-            return
         # Do not cache snapshot on error
         if self.__view.webview.error is not None:
             save = False
