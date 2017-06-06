@@ -107,7 +107,7 @@ class WebView(WebKit2.WebView):
             current = El().zoom_levels[parsed.netloc]
         else:
             current = 100
-        current += 5
+        current += 10
         El().zoom_levels[parsed.netloc] = current
         self.update_zoom_level()
         return current
@@ -122,7 +122,9 @@ class WebView(WebKit2.WebView):
             current = El().zoom_levels[parsed.netloc]
         else:
             current = 100
-        current -= 5
+        current -= 10
+        if current == 0:
+            return 10
         El().zoom_levels[parsed.netloc] = current
         self.update_zoom_level()
         return current
