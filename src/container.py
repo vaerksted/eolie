@@ -110,9 +110,12 @@ class Container(Gtk.Overlay):
         """
             Update stack and stacksidebar allocation
         """
-        width = self.__stack_sidebar.get_allocated_width()
-        if width < 0:
-            width = 0
+        if self.__window.fullscreen:
+            width = self.__stack_sidebar.get_property("width-request")
+            if width < 0:
+                width = 0
+        else:
+            width = self.__stack_sidebar.get_allocated_width()
         self.__stack.set_margin_start(width)
 
     def popup_webview(self, webview, destroy):
@@ -432,6 +435,7 @@ class Container(Gtk.Overlay):
         """
         self.__stack.set_margin_start(0)
         self.__stack_sidebar.hide()
+        GLib.idle_add(self.update_children_allocation)
 
     def __on_leave_fullscreen(self, webview):
         """
@@ -441,6 +445,7 @@ class Container(Gtk.Overlay):
         width = self.__stack_sidebar.get_allocated_width()
         self.__stack.set_margin_start(width)
         self.__stack_sidebar.show()
+        GLib.idle_add(self.update_children_allocation)
 
     def __on_insecure_content_detected(self, webview, event):
         """
