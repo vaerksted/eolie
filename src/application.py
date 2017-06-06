@@ -352,8 +352,6 @@ class Application(Gtk.Application):
         cookie_manager.set_persistent_storage(
                                         self.__COOKIES_PATH,
                                         WebKit2.CookiePersistentStorage.SQLITE)
-        # FIXME
-        # elf.helper.connect("UnsecureFormFocused", self.__on_extension_signal)
 
     def __listen_to_gnome_sm(self):
         """
@@ -611,18 +609,3 @@ class Application(Gtk.Application):
             window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          Gdk.WindowType.CHILD)
-
-    def __on_extension_signal(self, connection, sender, path,
-                              interface, signal, params, data):
-        """
-            Show message on wanted window
-            @param connection as Gio.DBusConnection
-            @param sender as str
-            @param path as str
-            @param interface as str
-            @param signal as str
-            @param parameters as GLib.Variant
-            @param data
-        """
-        webview = self.active_window.container.current.webview
-        self.active_window.toolbar.title.show_input_warning(webview)

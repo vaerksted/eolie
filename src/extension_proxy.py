@@ -307,6 +307,7 @@ class ProxyExtension(Server):
         (username, password, others) = self.__forms.get_forms(webpage)
         # Check for unsecure content
         if parsed.scheme == "http" and password is not None:
+            self.__password_form = password
             self.__password_form.add_event_listener("focus",
                                                     self.__on_password_focus,
                                                     False)

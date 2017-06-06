@@ -387,7 +387,10 @@ class WebView(WebKit2.WebView):
             @parma webview as WebView
         """
         page_id = webview.get_page_id()
-        El().helper.connect("VideoInPage", self.__on_extension_signal, page_id)
+        El().helper.connect("VideoInPage",
+                            self.__on_video_in_page, page_id)
+        El().helper.connect("UnsecureFormFocused",
+                            self.__on_unsecure_form_focused, page_id)
 
     def __on_unmap(self, webview):
         """
@@ -396,9 +399,10 @@ class WebView(WebKit2.WebView):
         """
         page_id = webview.get_page_id()
         El().helper.disconnect("VideoInPage", page_id)
+        El().helper.disconnect("UnsecureFormFocused", page_id)
 
-    def __on_extension_signal(self, connection, sender, path,
-                              interface, signal, params, data):
+    def __on_video_in_page(self, connection, sender, path,
+                           interface, signal, params, data):
         """
             Add video to download manager
             @param connection as Gio.DBusConnection
@@ -413,6 +417,20 @@ class WebView(WebKit2.WebView):
         title = params[1]
         page_id = params[2]
         El().download_manager.add_video(uri, title, page_id)
+
+    def __on_unsecure_form_focused(self, connection, sender, path,
+                                   interface, signal, params, data):
+        """
+            Show a warning to user
+            @param connection as Gio.DBusConnection
+            @param sender as str
+            @param path as str
+            @param interface as str
+            @param signal as str
+            @param parameters as GLib.Variant
+            @param data
+        """
+        El().active_window.toolbar.title.show_input_warning(self)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
