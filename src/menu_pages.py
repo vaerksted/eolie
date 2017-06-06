@@ -90,6 +90,7 @@ class PagesMenu(Gio.Menu):
             @param private as bool
             @param state as WebKit2.WebViewSessionState
         """
+        # Close all item
         if not uri:
             return
         if not title:
