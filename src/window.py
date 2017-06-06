@@ -375,3 +375,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "filter":
             button = self.toolbar.actions.filter_button
             button.set_active(not button.get_active())
+        elif string == "history":
+            self.toolbar.title.focus_entry("history")
+        elif string == "search":
+            self.toolbar.title.focus_entry("search")

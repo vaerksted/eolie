@@ -258,14 +258,15 @@ class ToolbarTitle(Gtk.Bin):
                 self._on_entry_focus_out(self.__entry, None)
             self.__update_secure_content_indicator()
 
-    def focus_entry(self):
+    def focus_entry(self, child="bookmarks"):
         """
             Focus entry
+            @param child as str
         """
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
             self.__lock_focus = True
-            self.__popover.show()
+            self.__popover.show(child)
 
     def update_load_indicator(self, view):
         """

@@ -291,7 +291,8 @@ class Application(Gtk.Application):
         shortcut_action.connect('activate', self.__on_shortcut_action)
         self.add_action(shortcut_action)
         self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
-        self.set_accels_for_action("win.shortcut::uri", ["<Control>l"])
+        self.set_accels_for_action("win.shortcut::uri",
+                                   ["<Control>l", "<Control>b"])
         self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
         self.set_accels_for_action("win.shortcut::last_page",
                                    ["<Control><Shift>t"])
@@ -302,11 +303,14 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::quit", ["<Control>q"])
         self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
         self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
-        self.set_accels_for_action("win.shortcut::reload", ["<Control>r"])
+        self.set_accels_for_action("win.shortcut::reload",
+                                   ["<Control>r", "F5"])
         self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
         self.set_accels_for_action("win.shortcut::source",
                                    ["<Control><Shift>c"])
+        self.set_accels_for_action("win.shortcut::history", ["<Control>h"])
+        self.set_accels_for_action("win.shortcut::search", ["<Control>k"])
         self.set_accels_for_action("win.shortcut::fullscreen", ["F11"])
         self.set_accels_for_action("app.settings",
                                    ["<Control><Shift>s"])

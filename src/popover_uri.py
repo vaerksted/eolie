@@ -414,13 +414,13 @@ class UriPopover(Gtk.Popover):
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
 
-    @property
-    def input(self):
+    def show(self, child):
         """
-            Get input type
-            @return Input
+            Show popover and wanted child
+            @param child as str
         """
-        return self.__input
+        self.__stack.set_visible_child_name(child)
+        Gtk.Popover.show(self)
 
     def set_search_text(self, search):
         """
@@ -548,6 +548,14 @@ class UriPopover(Gtk.Popover):
         else:
             self.__input = Input.NONE
             return False
+
+    @property
+    def input(self):
+        """
+            Get input type
+            @return Input
+        """
+        return self.__input
 
 #######################
 # PROTECTED           #
