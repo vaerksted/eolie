@@ -24,24 +24,24 @@
 
 .sidebar-item-title {
     padding: 0px;
-    box-shadow: 1px 1px 3px 3px rgba(255, 255, 255, 0.85);
-    background-color: rgba(255, 255, 255, 0.85);
-    color: black;
-    text-shadow: 1px 1px white;
+    box-shadow: 1px 1px 3px 3px alpha(shade(@theme_bg_color, 1.7), 0.85);
+    background-color: alpha(shade(@theme_bg_color, 1.7), 0.85);
+    color: @theme_fg_color;
+    text-shadow: 1px 1px shade(@theme_bg_color, 1.7);
 }
 
 .sidebar-item-image {
-    background-color: @theme_selected_fg_color;
+    background-color: shade(@theme_bg_color, 1.7);
 }
 
 .sidebar-item-close {
     background-color: transparent;
-    color: black;
+    color: @theme_fg_color;
 }
 
 .sidebar-item {
-    border: 1px solid shade(@theme_bg_color, 0.7);
-    background-color: shade(@theme_bg_color, 1.5);
+    border: 1px solid shade(@theme_bg_color, 1.7);
+    background-color: shade(@theme_bg_color, 1.7);
     margin: 2px;
     padding: 3px;
     border-radius: 2px;
