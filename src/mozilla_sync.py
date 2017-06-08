@@ -371,7 +371,7 @@ class SyncWorker(GObject.GObject):
             @param first_sync as bool
         """
         debug("Start syncing")
-        if not self.__username or not self.__password:
+        if not self.__username or not self.__password or not self.__token:
             self.__stop = True
             return
         try:
@@ -721,6 +721,9 @@ class SyncWorker(GObject.GObject):
             self.__token = attributes["token"]
             self.__uid = attributes["uid"]
             self.__keyB = b64decode(attributes["keyB"])
+            # Force login if no token
+            if not self.__token:
+                self.login(attributes, password)
         except Exception as e:
             print("SyncWorker::__set_credentials()", e)
 
