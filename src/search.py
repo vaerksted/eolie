@@ -81,19 +81,17 @@ class Search:
                 self.__encoding = self.__ENGINES[engine][3]
                 break
 
-    def get_search_uri(self, words, shortcut=""):
+    def get_search_uri(self, words):
         """
             Return search uri for words
             @param words as str
-            @param shortcut as str
             @return str
         """
-        if shortcut:
+        if len(words) > 2 and words[1] == ":":
             for engine in self.__ENGINES:
-                if self.__ENGINES[engine][4] == shortcut:
-                    return self.__ENGINES[engine][1] % words
-        else:
-            return self.__search % words
+                if words.startswith("%s:" % self.__ENGINES[engine][4]):
+                    return self.__ENGINES[engine][1] % words[2:]
+        return self.__search % words
 
     def get_keywords(self, words, cancellable):
         """
@@ -129,7 +127,8 @@ class Search:
             @return bool
         """
         # String contains space, not an uri
-        search = string.find(" ") != -1
+        search = string.find(" ") != -1 or\
+            (len(string) > 2 and string[1] == ":")
         if not search:
             # String contains dot, is an uri
             # String contains dot, is an uri
