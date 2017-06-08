@@ -342,9 +342,9 @@ class WebView(WebKit2.WebView):
         if source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
-        if self.__input_source != source:
-            self.__input_source = source
-            self.__set_smooth_scrolling(source)
+        # if self.__input_source != source:
+        #    self.__input_source = source
+        #    self.__set_smooth_scrolling(source)
 
     def __on_run_file_chooser(self, webview, request):
         """
