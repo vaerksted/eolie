@@ -110,7 +110,7 @@ class Container(Gtk.Overlay):
         """
             Update stack and stacksidebar allocation
         """
-        if self.__window.fullscreen:
+        if self.__window.is_fullscreen:
             width = self.__stack_sidebar.get_property("width-request")
             if width < 0:
                 width = 0
