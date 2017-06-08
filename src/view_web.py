@@ -41,6 +41,9 @@ class WebView(WebKit2.WebView):
         """
         from eolie.context import Context
         context = WebKit2.WebContext.new_ephemeral()
+        context.set_process_model(
+                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
+        context.set_web_extensions_directory(El().extension_dir)
         Context(context)
         view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta

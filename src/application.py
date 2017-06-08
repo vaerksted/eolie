@@ -234,6 +234,14 @@ class Application(Gtk.Application):
         """
         return self.__FAVICONS_PATH + "/WebpageIcons.db"
 
+    @property
+    def extension_dir(self):
+        """
+            Extension dir path
+            @return str
+        """
+        return self.__extension_dir
+
 #######################
 # PRIVATE             #
 #######################
