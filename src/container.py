@@ -435,15 +435,12 @@ class Container(Gtk.Overlay):
         """
         self.__stack.set_margin_start(0)
         self.__stack_sidebar.hide()
-        GLib.idle_add(self.update_children_allocation)
 
     def __on_leave_fullscreen(self, webview):
         """
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
-        width = self.__stack_sidebar.get_allocated_width()
-        self.__stack.set_margin_start(width)
         self.__stack_sidebar.show()
         GLib.idle_add(self.update_children_allocation)
 
