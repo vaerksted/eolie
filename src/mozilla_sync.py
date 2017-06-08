@@ -82,7 +82,8 @@ class SyncWorker(GObject.GObject):
                                  uid,
                                  token,
                                  keyB,
-                                 self.__on_password_stored)
+                                 self.on_password_stored,
+                                 True)
 
     def sync(self, loop=False, first_sync=False):
         """
@@ -166,6 +167,19 @@ class SyncWorker(GObject.GObject):
         self.__stop = True
         if force:
             self.__session = None
+
+    def on_password_stored(self, secret, result, sync):
+        """
+            Update credentials
+            @param secret as Secret
+            @param result as Gio.AsyncResult
+            @param sync as bool
+        """
+        if El().sync_worker is not None:
+            self.__helper.get_sync(self.__set_credentials)
+            # Wait for credentials
+            if sync:
+                GLib.timeout_add(10, El().sync_worker.sync, True)
 
     @property
     def mtimes(self):
@@ -524,13 +538,7 @@ class SyncWorker(GObject.GObject):
         debug("pull bookmarks")
         SqlCursor.add(El().bookmarks)
         records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
-        # We get all guids here and remove them while sync
-        # At the end, we have deleted records
-        # On fist sync, keep all
-        if first_sync:
-            to_delete = []
-        else:
-            to_delete = El().bookmarks.get_guids()
+        children_array = []
         for record in records:
             if self.__stop:
                 raise StopIteration("Cancelled")
@@ -538,19 +546,26 @@ class SyncWorker(GObject.GObject):
                 continue
             sleep(0.01)
             bookmark = record["payload"]
-            if "type" not in bookmark.keys() or\
-                    bookmark["type"] not in ["folder", "bookmark"]:
-                continue
             bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
-            # This bookmark exists, remove from to delete
-            if bookmark["id"] in to_delete:
-                to_delete.remove(bookmark["id"])
             # Nothing to apply, continue
             if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
             debug("pulling %s" % record)
-            if bookmark_id is None:
-                if "bmkUri" in bookmark.keys():
+            # Keep folder only for firefox compatiblity
+            if "type" in bookmark.keys() and bookmark["type"] == "folder":
+                if bookmark_id is None:
+                    bookmark_id = El().bookmarks.add(bookmark["title"],
+                                                     bookmark["id"],
+                                                     bookmark["id"],
+                                                     [],
+                                                     False)
+                # Will calculate position later
+                if "children" in bookmark.keys():
+                    children_array.append(bookmark["children"])
+            # We have a bookmark, add it
+            elif "type" in bookmark.keys() and "bmkUri" in bookmark.keys():
+                # Add a new bookmark
+                if bookmark_id is None:
                     # Use parent name if no bookmarks tags
                     if "tags" not in bookmark.keys() or\
                             not bookmark["tags"]:
@@ -564,63 +579,59 @@ class SyncWorker(GObject.GObject):
                                                      bookmark["id"],
                                                      bookmark["tags"],
                                                      False)
+                # Update bookmark
                 else:
-                    bookmark["tags"] = []
-                    bookmark_id = El().bookmarks.add(bookmark["title"],
-                                                     bookmark["id"],
-                                                     bookmark["id"],
-                                                     bookmark["tags"],
-                                                     False)
-            else:
-                El().bookmarks.set_title(bookmark_id,
-                                         bookmark["title"],
-                                         False)
-                if "bmkUri" in bookmark.keys():
+                    El().bookmarks.set_title(bookmark_id,
+                                             bookmark["title"],
+                                             False)
                     El().bookmarks.set_uri(bookmark_id,
                                            bookmark["bmkUri"],
                                            False)
-                elif "children" in bookmark.keys():
-                    position = 0
-                    for child in bookmark["children"]:
-                        bid = El().bookmarks.get_id_by_guid(child)
-                        El().bookmarks.set_position(bid,
-                                                    position,
-                                                    False)
-                        position += 1
-                # Remove previous tags
-                current_tags = El().bookmarks.get_tags(bookmark_id)
-                for tag in El().bookmarks.get_tags(bookmark_id):
-                    if "tags" in bookmark.keys() and\
-                            tag not in bookmark["tags"]:
-                        tag_id = El().bookmarks.get_tag_id(tag)
-                        current_tags.remove(tag)
-                        El().bookmarks.del_tag_from(tag_id,
-                                                    bookmark_id,
-                                                    False)
-                if "tags" in bookmark.keys():
-                    for tag in bookmark["tags"]:
-                        # Tag already associated
-                        if tag in current_tags:
-                            continue
-                        tag_id = El().bookmarks.get_tag_id(tag)
-                        if tag_id is None:
-                            tag_id = El().bookmarks.add_tag(tag, False)
-                        El().bookmarks.add_tag_to(tag_id, bookmark_id, False)
-            El().bookmarks.set_mtime(bookmark_id,
-                                     record["modified"],
-                                     False)
-            if "parentName" in bookmark.keys():
+                    # Update tags
+                    current_tags = El().bookmarks.get_tags(bookmark_id)
+                    for tag in El().bookmarks.get_tags(bookmark_id):
+                        if "tags" in bookmark.keys() and\
+                                tag not in bookmark["tags"]:
+                            tag_id = El().bookmarks.get_tag_id(tag)
+                            current_tags.remove(tag)
+                            El().bookmarks.del_tag_from(tag_id,
+                                                        bookmark_id,
+                                                        False)
+                    if "tags" in bookmark.keys():
+                        for tag in bookmark["tags"]:
+                            # Tag already associated
+                            if tag in current_tags:
+                                continue
+                            tag_id = El().bookmarks.get_tag_id(tag)
+                            if tag_id is None:
+                                tag_id = El().bookmarks.add_tag(tag, False)
+                            El().bookmarks.add_tag_to(tag_id,
+                                                      bookmark_id,
+                                                      False)
+                    El().bookmarks.set_mtime(bookmark_id,
+                                             record["modified"],
+                                             False)
+            # Deleted bookmark
+            elif "deleted" in bookmark.keys():
+                El().bookmarks.remove(bookmark_id)
+            # Update parent name if available
+            if bookmark_id is not None and "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
                                           bookmark["parentid"],
                                           bookmark["parentName"],
                                           False)
-        for guid in to_delete:
-            if self.__stop:
-                raise StopIteration("Cancelled")
-            debug("deleting: %s" % guid)
-            bookmark_id = El().bookmarks.get_id_by_guid(guid)
-            if bookmark_id is not None:
-                El().bookmarks.remove(bookmark_id, False)
+                El().bookmarks.set_mtime(bookmark_id,
+                                         record["modified"],
+                                         False)
+        # Update bookmark position
+        for children in children_array:
+            position = 0
+            for child in children:
+                bid = El().bookmarks.get_id_by_guid(child)
+                El().bookmarks.set_position(bid,
+                                            position,
+                                            False)
+                position += 1
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
 
@@ -667,35 +678,31 @@ class SyncWorker(GObject.GObject):
             El().history.thread_lock.acquire()
             history = record["payload"]
             keys = history.keys()
-            # Ignore pages without a title
-            if "title" not in keys or not history["title"]:
-                El().history.thread_lock.release()
-                continue
-            # Ignore pages without an uri (deleted)
-            if "histUri" not in keys:
-                El().history.thread_lock.release()
-                continue
             history_id = El().history.get_id_by_guid(history["id"])
-            # Nothing to apply, continue
-            if El().history.get_mtime(history_id) >= record["modified"]:
-                El().history.thread_lock.release()
-                continue
-            # Try to get visit date
-            atimes = []
-            try:
-                for visit in history["visits"]:
-                    atimes.append(round(int(visit["date"]) / 1000000, 2))
-            except:
-                El().history.thread_lock.release()
-                continue
-            debug("pulling %s" % record)
-            title = history["title"].rstrip().lstrip()
-            history_id = El().history.add(title,
-                                          history["histUri"],
-                                          record["modified"],
-                                          history["id"],
-                                          atimes,
-                                          True)
+            # Check we have a valid history item
+            if "histUri" in keys and\
+                    "title" in keys and\
+                    history["title"] and\
+                    El().history.get_mtime(history_id) < record["modified"]:
+                # Try to get visit date
+                atimes = []
+                try:
+                    for visit in history["visits"]:
+                        atimes.append(round(int(visit["date"]) / 1000000, 2))
+                except:
+                    El().history.thread_lock.release()
+                    continue
+                debug("pulling %s" % record)
+                title = history["title"].rstrip().lstrip()
+                history_id = El().history.add(title,
+                                              history["histUri"],
+                                              record["modified"],
+                                              history["id"],
+                                              atimes,
+                                              True)
+            elif "deleted" in keys:
+                history_id = El().history.get_id_by_guid(history_id)
+                El().history.remove(history_id)
             El().history.thread_lock.release()
 
     def __set_credentials(self, attributes, password, uri):
@@ -716,17 +723,6 @@ class SyncWorker(GObject.GObject):
             self.__keyB = b64decode(attributes["keyB"])
         except Exception as e:
             print("SyncWorker::__set_credentials()", e)
-
-    def __on_password_stored(self, secret, result):
-        """
-            Update credentials
-            @param secret as Secret
-            @param result as Gio.AsyncResult
-        """
-        if El().sync_worker is not None:
-            self.__helper.get_sync(self.__set_credentials)
-            # Wait for credentials
-            GLib.timeout_add(10, El().sync_worker.sync, True)
 
 
 class MozillaSync(object):

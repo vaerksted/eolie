@@ -468,6 +468,7 @@ class SettingsDialog:
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             print("SettingsDialog::__connect_mozilla_sync():", e)
+            GLib.idle_add(self.__sync_button.set_sensitive, True)
             if str(e) == "Unverified account":
                 GLib.timeout_add(1000, self.__settings_dialog.destroy)
                 # Try to go to webmail
@@ -480,6 +481,13 @@ class SettingsDialog:
                     El().active_window.container.current.webview,
                     _("You've received an email"
                       " to validate synchronization"))
+                self.__helper.store_sync(username,
+                                         password,
+                                         "",
+                                         "",
+                                         "",
+                                         El().sync_worker.on_password_stored,
+                                         False)
             else:
                 GLib.idle_add(self.__result_label.set_text, str(e))
                 GLib.idle_add(self.__result_image.set_from_icon_name,

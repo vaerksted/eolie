@@ -161,7 +161,7 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::store(): %s" % e)
 
-    def store_sync(self, login, password, uid, token, keyB, callback):
+    def store_sync(self, login, password, uid, token, keyB, callback, data):
         """
             Store Mozilla Sync password
             @param login as str
@@ -170,6 +170,7 @@ class PasswordsHelper:
             @param token as str
             @param keyB as str
             @param callback as function
+            @param data
         """
         try:
             self.__wait_for_secret(self.store_sync,
@@ -202,7 +203,8 @@ class PasswordsHelper:
                                   schema_string,
                                   password,
                                   None,
-                                  callback)
+                                  callback,
+                                  data)
         except Exception as e:
             debug("PasswordsHelper::store_sync(): %s" % e)
 
