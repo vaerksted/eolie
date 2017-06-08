@@ -79,15 +79,15 @@ class WebViewNavigation:
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
             self.__loaded_uri = uri
-        elif uri.startswith("/"):
-            uri = "file://" + uri
         # We are not a ftp browser, fall back to env
         elif parsed.scheme == "ftp":
             argv = [get_ftp_cmd(), uri, None]
             GLib.spawn_sync(None, argv, None,
                             GLib.SpawnFlags.SEARCH_PATH, None)
         else:
-            if parsed.scheme == "javascript":
+            if uri.startswith("/"):
+                uri = "file://" + uri
+            elif parsed.scheme == "javascript":
                 self.__js_load = True
                 uri = GLib.uri_unescape_string(uri, None)
                 self.run_javascript(uri.replace("javascript:", ""), None, None)
