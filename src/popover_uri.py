@@ -542,7 +542,9 @@ class UriPopover(Gtk.Popover):
                     if uri:
                         self.__window.toolbar.title.close_popover()
                         self.__window.container.current.webview.load_uri(uri)
-                return True
+                    return True
+                else:
+                    return False
             else:
                 self.__input = Input.NONE
                 return False
