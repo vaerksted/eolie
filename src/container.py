@@ -22,7 +22,7 @@ from eolie.popover_webview import WebViewPopover
 from eolie.define import El
 
 
-class Container(Gtk.Overlay):
+class Container(Gtk.Grid):
     """
         Main Eolie view
     """
@@ -32,7 +32,7 @@ class Container(Gtk.Overlay):
             Init container
             @param window as Window
         """
-        Gtk.Overlay.__init__(self)
+        Gtk.Grid.__init__(self)
         self.__window = window
         self.__history_queue = []
         self.__popover = WebViewPopover(window)
@@ -47,11 +47,10 @@ class Container(Gtk.Overlay):
         self.__stack.show()
         self.__stack_sidebar = StackSidebar(window)
         self.__stack_sidebar.show()
+        self.add(self.__stack_sidebar)
         self.add(self.__stack)
-        self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
-        self.add_overlay(self.__stack_sidebar)
 
     def add_webview(self, uri, window_type, ephemeral=False,
                     parent=None, state=None, load=True):
@@ -105,18 +104,6 @@ class Container(Gtk.Overlay):
         """
         if El().sync_worker is not None:
             self.__on_sync_finished(El().sync_worker)
-
-    def update_children_allocation(self):
-        """
-            Update stack and stacksidebar allocation
-        """
-        if self.__window.is_fullscreen:
-            width = self.__stack_sidebar.get_property("width-request")
-            if width < 0:
-                width = 0
-        else:
-            width = self.__stack_sidebar.get_allocated_width()
-        self.__stack.set_margin_start(width)
 
     def popup_webview(self, webview, destroy):
         """
@@ -433,7 +420,6 @@ class Container(Gtk.Overlay):
             Hide sidebar (conflict with fs)
             @param webview as WebView
         """
-        self.__stack.set_margin_start(0)
         self.__stack_sidebar.hide()
 
     def __on_leave_fullscreen(self, webview):
@@ -442,7 +428,6 @@ class Container(Gtk.Overlay):
             @param webview as WebView
         """
         self.__stack_sidebar.show()
-        GLib.idle_add(self.update_children_allocation)
 
     def __on_insecure_content_detected(self, webview, event):
         """
@@ -483,13 +468,6 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(self.__grab_focus_on_current)
             # Hide progress
             GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)
-
-    def __on_map(self, widget):
-        """
-            Calculate widget margin
-            @param widget as Gtk.Widget
-        """
-        self.update_children_allocation()
 
     def __on_unmap(self, widget):
         """

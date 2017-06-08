@@ -47,7 +47,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEventBox" id="button">
+              <object class="GtkEventBox" id="close">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <signal name="button-press-event" handler="_on_close_button_press_event" swapped="no"/>

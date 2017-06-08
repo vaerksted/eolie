@@ -160,7 +160,8 @@ class SidebarChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__window.container.sidebar.close_view(self.__view)
+        if self.__window.container.sidebar.panel_mode != 2:
+            self.__window.container.sidebar.close_view(self.__view)
 
     def _on_enter_notify_event(self, eventbox, event):
         """
@@ -168,6 +169,8 @@ class SidebarChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.__window.container.sidebar.panel_mode == 2:
+            return
         self.__image_close.set_from_icon_name("window-close-symbolic",
                                               Gtk.IconSize.INVALID)
         self.__image_close.get_style_context().add_class("sidebar-item-close")
@@ -178,6 +181,8 @@ class SidebarChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.__window.container.sidebar.panel_mode == 2:
+            return
         allocation = eventbox.get_allocation()
         if event.x <= 0 or\
            event.x >= allocation.width or\

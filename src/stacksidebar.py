@@ -56,12 +56,9 @@ class StackSidebar(Gtk.EventBox):
         self.__listbox.show()
         self.__listbox.connect("row_activated", self.__on_row_activated)
         self.__scrolled.add(self.__listbox)
+        self.set_hexpand(False)
         grid.add(self.__scrolled)
         self.add(grid)
-        # Strange, this is needed but should not
-        self.set_hexpand(False)
-        self.connect("enter-notify-event", self.__on_enter_notify_event)
-        self.connect("leave-notify-event", self.__on_leave_notify_event)
         self.set_panel_mode()
 
     def add_child(self, view):
@@ -246,11 +243,6 @@ class StackSidebar(Gtk.EventBox):
         for child in self.__listbox.get_children():
             child.show_title(self.__panel_mode != 2)
             self.__set_child_height(child)
-        # We need to delay update to allow widget to resize
-        if self.__window.container is not None:
-            GLib.timeout_add(
-                         250,
-                         self.__window.container.update_children_allocation)
 
     @property
     def panel_mode(self):
@@ -273,31 +265,6 @@ class StackSidebar(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __animate_width_request(self, width, first_iteration=False):
-        """
-            Add some animation to width request
-            @param width as int
-            @param first_iteration as bool
-        """
-        if first_iteration:
-            if not self.__animate:
-                self.set_property("width-request", width)
-                return
-            else:
-                self.__animation_cancel.reset()
-        elif self.__animation_cancel.is_cancelled():
-            return
-
-        grow = width != -1
-        current = self.get_property("width-request")
-        if grow and current < width:
-            self.set_property("width-request", current + 1)
-        elif width < current:
-            self.set_property("width-request", current - 1)
-        else:
-            return
-        GLib.timeout_add(1, self.__animate_width_request, width)
-
     def __set_child_height(self, child):
         """
             Set child height
@@ -412,51 +379,6 @@ class StackSidebar(Gtk.EventBox):
             self.__search_entry.set_text("")
             self.__window.toolbar.actions.filter_button.set_active(False)
             return True
-
-    def __on_enter_notify_event(self, eventbox, event):
-        """
-            Leave minimal mode
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__panel_mode == 2:
-            if self.__leave_timeout_id is not None:
-                    GLib.source_remove(self.__leave_timeout_id)
-                    self.__leave_timeout_id = None
-            self.__animation_cancel.cancel()
-            self.__animate_width_request(ArtSize.PREVIEW_WIDTH, True)
-            for child in self.__listbox.get_children():
-                child.show_title(True)
-
-    def __on_leave_notify_event(self, eventbox, event):
-        """
-            Enter minimal mode if needed
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__panel_mode == 2:
-            allocation = eventbox.get_allocation()
-            if event.x <= 0 or\
-               event.x >= allocation.width or\
-               event.y <= 0 or\
-               event.y >= allocation.height:
-                if self.__leave_timeout_id is not None:
-                    GLib.source_remove(self.__leave_timeout_id)
-                self.__leave_timeout_id = GLib.timeout_add(
-                                          500,
-                                          self.__on_leave_notify_event_timeout)
-
-    def __on_leave_notify_event_timeout(self):
-        """
-            Enter minimal mode if needed
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        self.__leave_timeout_id = None
-        self.__animation_cancel.cancel()
-        self.__animate_width_request(-1, True)
-        for child in self.__listbox.get_children():
-            child.show_title(self.__search_bar.is_visible())
 
     def __on_row_activated(self, listbox, row):
         """
