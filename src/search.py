@@ -132,7 +132,9 @@ class Search:
         search = string.find(" ") != -1
         if not search:
             # String contains dot, is an uri
-            search = string.find(".") == -1
+            # String contains dot, is an uri
+            search = string.find(".") == -1 and\
+                string.find(":") == -1
         return search
 
     @property

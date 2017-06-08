@@ -75,34 +75,32 @@ class WebViewNavigation:
             @param uri as str
         """
         self._error = None
+        parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
             self.__loaded_uri = uri
-            return
-        parsed = urlparse(uri)
-        if uri.startswith("/"):
+        elif uri.startswith("/"):
             uri = "file://" + uri
         # We are not a ftp browser, fall back to env
         elif parsed.scheme == "ftp":
             argv = [get_ftp_cmd(), uri, None]
             GLib.spawn_sync(None, argv, None,
                             GLib.SpawnFlags.SEARCH_PATH, None)
-            return
-        elif parsed.scheme == "javascript":
-            self.__js_load = True
-            uri = GLib.uri_unescape_string(uri, None)
-            self.run_javascript(uri.replace("javascript:", ""), None, None)
-            return
-        elif parsed.scheme not in ["http", "https", "file",
-                                   "populars", "accept"]:
-            uri = "http://" + uri
-        # Reset bad tls certificate
-        elif parsed.scheme != "accept":
-            self.reset_bad_tls()
-            self.__insecure_content_detected = False
-        self.__loaded_uri = uri
-        self.emit("uri-changed", uri)
-        WebKit2.WebView.load_uri(self, uri)
+        else:
+            if parsed.scheme == "javascript":
+                self.__js_load = True
+                uri = GLib.uri_unescape_string(uri, None)
+                self.run_javascript(uri.replace("javascript:", ""), None, None)
+            elif parsed.scheme not in ["http", "https", "file",
+                                       "populars", "accept"]:
+                uri = "http://" + uri
+            # Reset bad tls certificate
+            if parsed.scheme != "accept":
+                self.reset_bad_tls()
+                self.__insecure_content_detected = False
+            self.__loaded_uri = uri
+            self.emit("uri-changed", uri)
+            WebKit2.WebView.load_uri(self, uri)
 
     def add_popup(self, webview):
         """
