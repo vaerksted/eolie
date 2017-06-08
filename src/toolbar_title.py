@@ -615,6 +615,8 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show search placeholder
         """
+        if self.__placeholder.get_text() == _("Search or enter address"):
+            return
         self.set_text_entry("")
         self.__placeholder.set_text(_("Search or enter address"))
         self.__placeholder.set_opacity(0.8)

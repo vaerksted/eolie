@@ -470,8 +470,7 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.set_title(uri)
             # Give focus to url bar
             if not focus_in_view:
-                GLib.idle_add(self.__window.toolbar.title.start_search,
-                              priority=GLib.PRIORITY_HIGH_IDLE)
+                self.__window.toolbar.title.start_search()
             self.__window.toolbar.title.show_popup_indicator(False)
             # Turn off reading mode if needed
             if self.current.reading:

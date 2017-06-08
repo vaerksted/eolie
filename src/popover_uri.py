@@ -462,6 +462,7 @@ class UriPopover(Gtk.Popover):
             self.__input = Input.TAGS
             self.__tags_box.get_style_context().add_class("input")
             self.__bookmarks_box.get_style_context().remove_class("input")
+            self.__window.toolbar.title.set_text_entry("")
             return True
         elif event.keyval == Gdk.KEY_Right and self.__input == Input.TAGS:
             self.__input = Input.BOOKMARKS
@@ -628,7 +629,7 @@ class UriPopover(Gtk.Popover):
         # Update titlebar
         uri = row.item.get_property("uri")
         if not uri:
-            uri = self.__window.toolbar.title.uri
+            return
         self.__window.toolbar.title.set_text_entry(uri)
         # Scroll to row
         scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
