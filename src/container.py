@@ -22,7 +22,7 @@ from eolie.popover_webview import WebViewPopover
 from eolie.define import El
 
 
-class Container(Gtk.Grid):
+class Container(Gtk.Overlay):
     """
         Main Eolie view
     """
@@ -32,7 +32,7 @@ class Container(Gtk.Grid):
             Init container
             @param window as Window
         """
-        Gtk.Grid.__init__(self)
+        Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
         self.__popover = WebViewPopover(window)
@@ -47,8 +47,11 @@ class Container(Gtk.Grid):
         self.__stack.show()
         self.__stack_sidebar = StackSidebar(window)
         self.__stack_sidebar.show()
-        self.add(self.__stack_sidebar)
-        self.add(self.__stack)
+        grid = Gtk.Grid()
+        grid.add(self.__stack_sidebar)
+        grid.add(self.__stack)
+        grid.show()
+        self.add(grid)
         self.connect("unmap", self.__on_unmap)
         self.__stack_sidebar.set_property("halign", Gtk.Align.START)
 
