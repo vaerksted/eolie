@@ -521,7 +521,7 @@ class DatabaseBookmarks:
                                   WHERE bookmarks.atime != 0\
                                   AND bookmarks.del=0\
                                   AND bookmarks.guid != bookmarks.uri\
-                                  ORDER BY bookmarks.atime DESC")
+                                  ORDER BY bookmarks.mtime DESC")
             return list(result)
 
     def set_title(self, bookmark_id, title, commit=True):
