@@ -79,7 +79,6 @@ class Window(Gtk.ApplicationWindow):
             @param force as bool
         """
         self.__container.sidebar.set_panel_mode(2)
-        GLib.idle_add(self.__container.sidebar.hide)
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
         self.__fullscreen_toolbar.show()
@@ -99,7 +98,6 @@ class Window(Gtk.ApplicationWindow):
             @param force as bool
         """
         self.__container.sidebar.set_panel_mode()
-        self.__container.sidebar.show()
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
@@ -295,16 +293,10 @@ class Window(Gtk.ApplicationWindow):
                 revealer.get_reveal_child() and
                 not revealer.get_child_revealed()):
             return
-        if event.y < 10 + revealer.get_allocated_height():
+        if event.y < revealer.get_allocated_height():
             revealer.set_reveal_child(True)
         else:
             revealer.set_reveal_child(False)
-        sidebar_width = self.__container.sidebar.get_allocated_width()
-        if event.x < 10 + sidebar_width:
-            self.__container.sidebar.show()
-        else:
-            self.__container.sidebar.set_property("width-request", -1)
-            GLib.idle_add(self.__container.sidebar.hide)
 
     def __on_realize(self, widget):
         """
