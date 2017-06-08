@@ -36,7 +36,7 @@ from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.context import Context
-from eolie.define import LOCAL_PATH
+from eolie.define import EOLIE_LOCAL_PATH
 
 
 class Application(Gtk.Application):
@@ -44,8 +44,8 @@ class Application(Gtk.Application):
         Eolie application:
     """
 
-    __COOKIES_PATH = "%s/cookies.db" % LOCAL_PATH
-    __FAVICONS_PATH = "%s/favicons" % LOCAL_PATH
+    __COOKIES_PATH = "%s/cookies.db" % EOLIE_LOCAL_PATH
+    __FAVICONS_PATH = "%s/favicons" % EOLIE_LOCAL_PATH
 
     def __init__(self, extension_dir):
         """
@@ -76,7 +76,7 @@ class Application(Gtk.Application):
         self.debug = False
         self.show_tls = False
         try:
-            self.zoom_levels = load(open(LOCAL_PATH + "/zoom_levels.bin",
+            self.zoom_levels = load(open(EOLIE_LOCAL_PATH + "/zoom_levels.bin",
                                          "rb"))
         except:
             self.zoom_levels = {}
@@ -438,9 +438,9 @@ class Application(Gtk.Application):
                     session_states.append((uri, ephemeral, state.get_data()))
             if remember_session:
                 dump(session_states,
-                     open(LOCAL_PATH + "/session_states.bin", "wb"))
+                     open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
             dump(self.zoom_levels,
-                 open(LOCAL_PATH + "/zoom_levels.bin", "wb"))
+                 open(EOLIE_LOCAL_PATH + "/zoom_levels.bin", "wb"))
         except Exception as e:
             print("Application::save_state()", e)
 
@@ -452,7 +452,7 @@ class Application(Gtk.Application):
         window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
-                                     LOCAL_PATH + "/session_states.bin",
+                                     EOLIE_LOCAL_PATH + "/session_states.bin",
                                      "rb"))
             for (uri, ephemeral, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
@@ -463,7 +463,7 @@ class Application(Gtk.Application):
                               window_type == Gdk.WindowType.CHILD)
                 window_type = Gdk.WindowType.OFFSCREEN
             dump([],
-                 open(LOCAL_PATH + "/session_states.bin", "wb"))
+                 open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::restore_state()", e)
         return window_type != Gdk.WindowType.CHILD
