@@ -142,7 +142,6 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title instead of uri
         """
-        print("set", title)
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
