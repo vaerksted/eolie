@@ -552,7 +552,9 @@ class SyncWorker(GObject.GObject):
                 continue
             debug("pulling %s" % record)
             # Keep folder only for firefox compatiblity
-            if "type" in bookmark.keys() and bookmark["type"] == "folder":
+            if "type" in bookmark.keys() and bookmark["type"] == "folder"\
+                    and bookmark["id"] is not None\
+                    and bookmark["title"]:
                 if bookmark_id is None:
                     bookmark_id = El().bookmarks.add(bookmark["title"],
                                                      bookmark["id"],
@@ -563,7 +565,9 @@ class SyncWorker(GObject.GObject):
                 if "children" in bookmark.keys():
                     children_array.append(bookmark["children"])
             # We have a bookmark, add it
-            elif "type" in bookmark.keys() and "bmkUri" in bookmark.keys():
+            elif "type" in bookmark.keys() and bookmark["type"] == "bookmark"\
+                    and bookmark["id"] is not None\
+                    and bookmark["title"]:
                 # Add a new bookmark
                 if bookmark_id is None:
                     # Use parent name if no bookmarks tags
