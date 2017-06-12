@@ -1,6 +1,6 @@
 AC_PREREQ(2.63)
 AC_INIT([eolie],
-        [0.8],
+        [m4_esyscmd_s([git describe --tags])],
         [https://github.com/gnumdk/eolie],
         [eolie],
         [https://github.com/gnumdk/eolie])
