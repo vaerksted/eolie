@@ -526,7 +526,6 @@ class UriPopover(Gtk.Popover):
                         box.select_row(None)
                         self.__input = Input.NONE
                         box.get_style_context().remove_class("input")
-                        return False
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
@@ -542,15 +541,11 @@ class UriPopover(Gtk.Popover):
                     if uri:
                         self.__window.toolbar.title.close_popover()
                         self.__window.container.current.webview.load_uri(uri)
-                    return True
-                else:
-                    return False
+                        return True
             else:
                 self.__input = Input.NONE
-                return False
         else:
             self.__input = Input.NONE
-            return False
 
     @property
     def input(self):
