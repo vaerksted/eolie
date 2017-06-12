@@ -423,9 +423,9 @@ class Application(Gtk.Application):
             Show available plugins on stdout
         """
         if self.debug:
-            self.active_window.container.current.webview.get_context(
-                                                                ).get_plugins(
-                                   None, self.__on_get_plugins, None)
+            WebKit2.WebContext.get_default().get_plugins(None,
+                                                         self.__on_get_plugins,
+                                                         None)
 
     def __save_state(self):
         """
