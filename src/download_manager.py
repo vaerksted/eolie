@@ -180,8 +180,11 @@ class DownloadManager(GObject.GObject):
                                                             filename,
                                                             None,
                                                             False))
-        download.set_destination(GLib.uri_unescape_string(destination_uri,
-                                                          None))
+
+        # WebKit is a little stupid, it is unable to download escaped strings
+        # It fails do download uri with suggested filename too if contains %
+        webkit_uri = GLib.uri_unescape_string(destination_uri, None)
+        download.set_destination(webkit_uri.replace("%", ""))
         self.emit('download-start', str(download))
         # Notify user about download
         window = El().active_window

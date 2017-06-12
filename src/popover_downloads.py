@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango, Gio, WebKit2
+from gi.repository import Gtk, GLib, Gio, WebKit2
 
 from time import time
 from gettext import gettext as _
@@ -122,11 +122,10 @@ class DownloadRow(Gtk.ListBoxRow):
         self.__label = builder.get_object("label")
         self.__sublabel = builder.get_object("sublabel")
         destination = download.get_destination()
-        try:
+        if destination is None:
+            self.__label.set_label(_("Unknown destination"))
+        else:
             self.__label.set_label(destination.split("/")[-1])
-        except:
-            self.__label.set_label(download.get_destination())
-            self.__label.set_ellipsize(Pango.EllipsizeMode.START)
         self.__button = builder.get_object("button")
         self.__button_image = builder.get_object("button_image")
         if finished:
