@@ -237,7 +237,7 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param event as GParamSpec
         """
-        if event.name != "title" or self.is_loading():
+        if event.name != "title":
             return
         title = webview.get_title()
         if not title or title == self.__title:
@@ -371,6 +371,11 @@ class WebViewNavigation:
                                         parsed.netloc + parsed.path)
                 if exception:
                     return
+                # We need to send a title if non exists
+                if not self.__title:
+                    self.__title = webview.get_title()
+                    if self.__title:
+                        self.emit("title-changed", self.__title)
                 unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
                 javascripts = ["adblock_%s.js" % parsed.netloc,
                                "adblock_%s.js" % unlocated_netloc]
