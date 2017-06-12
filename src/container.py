@@ -383,7 +383,7 @@ class Container(Gtk.Overlay):
         """
             Update uri
             @param webview as WebView
-            @param uri as GParamString (Do not use)
+            @param uri as str
         """
         if webview == self.current.webview:
             if uri:
@@ -471,6 +471,10 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(self.__grab_focus_on_current)
             # Hide progress
             GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)
+            # In case of a download, title was set
+            # to uri in [STARTED, COMMITED], so force a title update
+            if webview.get_title():
+                self.__window.toolbar.title.set_title(webview.get_title())
 
     def __on_unmap(self, widget):
         """

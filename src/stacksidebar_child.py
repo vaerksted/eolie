@@ -300,6 +300,8 @@ class SidebarChild(Gtk.ListBoxRow):
             else:
                 GLib.timeout_add(500, self.set_snapshot, False)
             self.__start_uri = None
+            if view.get_title():
+                self.__title.set_text(view.get_title())
 
     def __on_scroll_event(self, view, event):
         """
