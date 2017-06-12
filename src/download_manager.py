@@ -141,6 +141,9 @@ class DownloadManager(GObject.GObject):
             @param filename as str
             @param wanted_filename as str
         """
+        # WebKit fails do download uri
+        # with suggested filename too if contains %
+        filename = filename.replace("%", "")
         extension = filename.split(".")[-1]
         if wanted_filename:
             # FIXME We should find a way to pass good extension,
@@ -181,10 +184,8 @@ class DownloadManager(GObject.GObject):
                                                             None,
                                                             False))
 
-        # WebKit is a little stupid, it is unable to download escaped strings
-        # It fails do download uri with suggested filename too if contains %
         webkit_uri = GLib.uri_unescape_string(destination_uri, None)
-        download.set_destination(webkit_uri.replace("%", ""))
+        download.set_destination(webkit_uri)
         self.emit('download-start', str(download))
         # Notify user about download
         window = El().active_window
