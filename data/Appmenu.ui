@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <interface domain="eolie">
   <menu id="app-menu">
-    <section>
+    <section id="main">
       <item>
         <attribute name="action">app.settings</attribute>
         <attribute name="label" translatable="yes">_Preferences</attribute>

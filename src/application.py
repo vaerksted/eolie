@@ -47,11 +47,13 @@ class Application(Gtk.Application):
     __COOKIES_PATH = "%s/cookies.db" % EOLIE_LOCAL_PATH
     __FAVICONS_PATH = "%s/favicons" % EOLIE_LOCAL_PATH
 
-    def __init__(self, extension_dir):
+    def __init__(self, version, extension_dir):
         """
             Create application
+            @param version as str
             @param extension_dir as str
         """
+        self.__version = version
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 16:
             exit("You need WebKit2GTK >= 2.16")
@@ -107,27 +109,35 @@ class Application(Gtk.Application):
             @return menu as Gio.Menu
         """
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/Appmenu.ui')
-        menu = builder.get_object('app-menu')
+        builder.add_from_resource("/org/gnome/Eolie/Appmenu.ui")
+        menu = builder.get_object("app-menu")
 
-        settings_action = Gio.SimpleAction.new('settings', None)
-        settings_action.connect('activate', self.__on_settings_activate)
+        if len(self.__version.split("-")) > 1:
+            report_item = Gio.MenuItem.new(_("Report a bug"), "app.report")
+            section = builder.get_object("main")
+            section.insert_item(2, report_item)
+            report_action = Gio.SimpleAction.new("report", None)
+            report_action.connect("activate", self.__on_report_activate)
+            self.add_action(report_action)
+
+        settings_action = Gio.SimpleAction.new("settings", None)
+        settings_action.connect("activate", self.__on_settings_activate)
         self.add_action(settings_action)
 
-        about_action = Gio.SimpleAction.new('about', None)
-        about_action.connect('activate', self.__on_about_activate)
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.__on_about_activate)
         self.add_action(about_action)
 
-        shortcuts_action = Gio.SimpleAction.new('shortcuts', None)
-        shortcuts_action.connect('activate', self.__on_shortcuts_activate)
+        shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
+        shortcuts_action.connect("activate", self.__on_shortcuts_activate)
         self.add_action(shortcuts_action)
 
         # help_action = Gio.SimpleAction.new('help', None)
         # help_action.connect('activate', self.__on_help_activate)
         # self.add_action(help_action)
 
-        quit_action = Gio.SimpleAction.new('quit', None)
-        quit_action.connect('activate', lambda x, y: self.quit())
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", lambda x, y: self.quit())
         self.add_action(quit_action)
         return menu
 
@@ -552,6 +562,37 @@ class Application(Gtk.Application):
         """
         dialog = SettingsDialog(self.active_window)
         dialog.show()
+
+    def __on_report_activate(self, action, param):
+        """
+            Launch bug report page
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        argv = ["uname", "-a", None]
+        (s, o, e, s) = GLib.spawn_sync(None,
+                                       argv,
+                                       None,
+                                       GLib.SpawnFlags.SEARCH_PATH,
+                                       None)
+        if o:
+            os = o.decode("utf-8")
+        else:
+            os = "Unknown"
+
+        github = "https://github.com/gnumdk/eolie/issues/new?body="
+        body = "###Environment\n"\
+               "- Eolie version: %s\n"\
+               "- GTK+ version: %s.%s\n"\
+               "- Operating system: %s\n\n" % (
+                                self.__version,
+                                Gtk.get_major_version(),
+                                Gtk.get_minor_version(),
+                                os)
+        url = github + GLib.uri_escape_string(body, "", False)
+        self.active_window.container.add_webview(url,
+                                                 Gdk.WindowType.CHILD,
+                                                 False)
 
     def __on_about_activate(self, action, param):
         """
