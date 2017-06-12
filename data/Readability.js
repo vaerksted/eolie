@@ -2103,9 +2103,12 @@ var uri = {
   scheme: loc.protocol.substr(0, loc.protocol.indexOf(":")),
   pathBase: loc.protocol + "//" + loc.host + loc.pathname.substr(0, loc.pathname.lastIndexOf("/") + 1)
 };
-var documentClone = document.cloneNode(true); 
-reader = new Readability(uri, documentClone);
-if (reader.isProbablyReaderable(false) )
+
+reader = new Readability(uri, document);
+if (reader.isProbablyReaderable(false))
+    // Youtube fails if we do a document.cloneNode(), so only do this if isProbablyReaderable()
+    var documentClone = document.cloneNode(true);
+    reader = new Readability(uri, documentClone);
     article = reader.parse();
     // BIG HACK but webkitgtk doesn't allow us to read result from js
     var previous_title = document.title;
