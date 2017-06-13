@@ -616,7 +616,6 @@ class UriPopover(Gtk.Popover):
 
     def _on_row_selected(self, listbox, row):
         """
-            Update titlebar
             Scroll to row
             @param listbox as Gtk.ListBox
             @param row as Row
