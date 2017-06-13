@@ -457,7 +457,12 @@ class UriPopover(Gtk.Popover):
         """
         if not self.is_visible():
             return False
-        if event.keyval == Gdk.KEY_Up and self.__input == Input.NONE:
+        if event.state & Gdk.ModifierType.CONTROL_MASK and\
+                event.keyval == Gdk.KEY_a:
+            box = self.__get_current_box()
+            if box is not None:
+                box.select_all()
+        elif event.keyval == Gdk.KEY_Up and self.__input == Input.NONE:
             return False
         elif event.keyval == Gdk.KEY_Left and self.__input == Input.BOOKMARKS:
             self.__input = Input.TAGS
@@ -486,14 +491,14 @@ class UriPopover(Gtk.Popover):
                     self.__input = Input.TAGS
                 else:
                     self.__input = Input.NONE
-                box = self.__get_current_box()
+                box = self.__get_current_input_box()
                 if box is not None:
                     rows = box.get_children()
                     if rows:
                         box.select_row(None)
                         box.select_row(rows[0])
                 return True
-            box = self.__get_current_box()
+            box = self.__get_current_input_box()
             rows = box.get_children()
             if box is None or not rows:
                 self.__input = Input.NONE
@@ -534,7 +539,7 @@ class UriPopover(Gtk.Popover):
                         self.__set_bookmarks(item_id)
                     return True
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
-            box = self.__get_current_box()
+            box = self.__get_current_input_box()
             if box is not None:
                 selected = box.get_selected_row()
                 if selected is not None:
@@ -928,6 +933,21 @@ class UriPopover(Gtk.Popover):
     def __get_current_box(self):
         """
             Get current box
+            @return Gtk.ListBox
+        """
+        name = self.__stack.get_visible_child_name()
+        box = None
+        if name == "bookmarks":
+            box = self.__bookmarks_box
+        elif name == "history":
+            box = self.__history_box
+        elif name == "search":
+            box = self.__search_box
+        return box
+
+    def __get_current_input_box(self):
+        """
+            Get current box with input
             @return Gtk.ListBox
         """
         box = None
