@@ -169,12 +169,11 @@ class WebViewNavigation:
         try:
             (username, userform,
              password, passform) = source.call_finish(result)[0]
-            if not username or not password:
-                return
-            self.emit("save-password",
-                      username, userform,
-                      password, passform,
-                      self.get_uri())
+            if username and password:
+                self.emit("save-password",
+                          username, userform,
+                          password, passform,
+                          self.get_uri())
             request.submit()
         except Exception as e:
             print("WebView::__on_get_forms():", e)
