@@ -645,10 +645,20 @@ class Application(Gtk.Application):
             os = "Unknown"
 
         github = "https://github.com/gnumdk/eolie/issues/new?body="
-        body = "###Environment\n"\
-               "- Eolie version: %s\n"\
-               "- GTK+ version: %s.%s\n"\
-               "- Operating system: %s\n\n" % (
+        body = """
+TRANSLATORS:
+https://translate.zanata.org/project/view/eolie
+
+### Environment
+- Eolie version: %s
+- GTK+ version: %s.%s
+- Operating system: %s
+
+### Bug/Feature
+If your bug is a rendering bug or a WebKit crash, you should report it here:
+https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
+
+<Describe your bug here>""" % (
                                 self.__version,
                                 Gtk.get_major_version(),
                                 Gtk.get_minor_version(),
