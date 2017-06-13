@@ -376,6 +376,7 @@ class UriPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.__window = window
         self.__input = False
+        self.__bookmarks_modifier = 0
         self.set_modal(False)
         self.get_style_context().add_class("box-shadow")
         builder = Gtk.Builder()
@@ -558,6 +559,15 @@ class UriPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
+    def _on_bookmarks_button_press_event(self, widget, event):
+        """
+            Store state for current click
+            @param widget as Gtk.Widget
+            @param event as Gdk.EventButton
+        """
+        # https://bugzilla.gnome.org/show_bug.cgi?id=733108
+        self.__bookmarks_modifier = event.state
+
     def _on_sync_button_clicked(self, button):
         """
             Sync with Mozilla Sync
@@ -620,7 +630,13 @@ class UriPopover(Gtk.Popover):
             @param listbox as Gtk.ListBox
             @param row as Row
         """
-        if row is None:
+
+        if self.__bookmarks_modifier & Gdk.ModifierType.SHIFT_MASK:
+            self.__fix_bug_733108(listbox, row)
+
+        if row is None or len(listbox.get_selected_rows()) > 1:
+            uri = self.__window.container.current.webview.get_uri()
+            self.__window.toolbar.title.set_text_entry(uri)
             return
         # Update titlebar
         uri = row.item.get_property("uri")
@@ -740,6 +756,36 @@ class UriPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
+    def __fix_bug_733108(self, listbox, selected_row):
+        """
+            Make selection
+            @param listbox as Gtk.ListBox
+            @param selected_row as Row
+        """
+        self.__bookmarks_modifier = 0
+        # Search for first and last selected rows
+        another_selected_row = None
+        found_selected = False
+        for row in listbox.get_selected_rows():
+            if row == selected_row:
+                found_selected = True
+            else:
+                another_selected_row = row
+                # Descending selection, we do not need to check for another
+                # selected row
+                if not found_selected:
+                    break
+        if another_selected_row is not None:
+            another_index = another_selected_row.get_index()
+            current_index = selected_row.get_index()
+            if found_selected:
+                r = range(current_index, another_index)
+            else:
+                r = range(another_index + 1, current_index)
+            for i in r:
+                row = listbox.get_row_at_index(i)
+                listbox.select_row(row)
+
     def __clear_history(self, atime):
         """
             Clear history for wanted atime
