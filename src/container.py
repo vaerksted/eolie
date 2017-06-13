@@ -262,7 +262,7 @@ class Container(Gtk.Overlay):
                     webview = WebView.new_ephemeral()
                 else:
                     webview = WebView.new()
-                self.popup_webview(webview)
+                self.popup_webview(webview, True)
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 parent = self.__get_view_for_webview(webview)
