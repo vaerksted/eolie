@@ -312,7 +312,9 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if self.ephemeral or not El().settings.get_value("remember-passwords"):
+        if webview.is_loading() or\
+                self.ephemeral or\
+                not El().settings.get_value("remember-passwords"):
             return
         self.__get_forms(webview.get_page_id(), request)
 
