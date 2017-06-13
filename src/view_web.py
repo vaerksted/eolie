@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, Gio, Gdk
+from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -248,6 +248,7 @@ class WebView(WebKit2.WebView):
         self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("script-dialog", self.__on_script_dialog)
+        self.connect("submit-form", self.__on_submit_form)
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
 
@@ -275,6 +276,45 @@ class WebView(WebKit2.WebView):
         settings = self.get_settings()
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
+
+    def __get_forms(self, page_id, request):
+        """
+            Read request for authentification
+            @param page_id as int
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        El().helper.call("GetAuthForms",
+                         GLib.Variant("(i)", (page_id,)),
+                         self.__on_get_forms, request, page_id)
+
+    def __on_get_forms(self, source, result, request):
+        """
+            Set forms value
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        try:
+            (username, userform,
+             password, passform) = source.call_finish(result)[0]
+            if username and password:
+                self.emit("save-password",
+                          username, userform,
+                          password, passform,
+                          self.get_uri())
+            request.submit()
+        except Exception as e:
+            print("WebView::__on_get_forms():", e)
+
+    def __on_submit_form(self, webview, request):
+        """
+            Check for auth forms
+            @param webview as WebKit2.WebView
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        if self.ephemeral or not El().settings.get_value("remember-passwords"):
+            return
+        self.__get_forms(webview.get_page_id(), request)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """

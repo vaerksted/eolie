@@ -59,7 +59,6 @@ class WebViewNavigation:
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
-        self.connect("submit-form", self.__on_submit_form)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
         self.connect("load-changed", self.__on_load_changed)
@@ -148,45 +147,6 @@ class WebViewNavigation:
             else:
                 settings.set_property("user-agent", None)
             self.set_settings(settings)
-
-    def __get_forms(self, page_id, request):
-        """
-            Read request for authentification
-            @param page_id as int
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        El().helper.call("GetAuthForms",
-                         GLib.Variant("(i)", (page_id,)),
-                         self.__on_get_forms, request, page_id)
-
-    def __on_get_forms(self, source, result, request):
-        """
-            Set forms value
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        try:
-            (username, userform,
-             password, passform) = source.call_finish(result)[0]
-            if username and password:
-                self.emit("save-password",
-                          username, userform,
-                          password, passform,
-                          self.get_uri())
-            request.submit()
-        except Exception as e:
-            print("WebView::__on_get_forms():", e)
-
-    def __on_submit_form(self, webview, request):
-        """
-            Check for auth forms
-            @param webview as WebKit2.WebView
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        if self.ephemeral or not El().settings.get_value("remember-passwords"):
-            return
-        self.__get_forms(webview.get_page_id(), request)
 
     def __on_run_as_modal(self, webview):
         """
