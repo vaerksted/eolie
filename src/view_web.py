@@ -15,8 +15,9 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
+from ctypes import string_at
 
-from eolie.define import El
+from eolie.define import El, LOGINS
 from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
@@ -312,11 +313,22 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        if webview.is_loading() or\
-                self.ephemeral or\
-                not El().settings.get_value("remember-passwords"):
+        if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
-        self.__get_forms(webview.get_page_id(), request)
+        fields = request.get_text_fields()
+        if fields is None:
+            return
+        username_input_found = False
+        for k, v in fields.items():
+            if username_input_found:
+                break
+            name = string_at(k).decode("utf-8")
+            for search in LOGINS:
+                if name.lower().find(search) != -1:
+                    username_input_found = True
+                    break
+        if username_input_found:
+            self.__get_forms(webview.get_page_id(), request)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """
