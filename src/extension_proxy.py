@@ -79,6 +79,10 @@ class ProxyExtension(Server):
     <node>
     <interface name="org.gnome.Eolie.Proxy">
 
+    <method name="FormsFilled">
+        <arg type="i" name="page_id" direction="in" />
+        <arg type="b" name="results" direction="out" />
+    </method>
     <method name="SetPreviousForm">
     </method>
     <method name="SetNextForm">
@@ -119,6 +123,13 @@ class ProxyExtension(Server):
         self.__listened_forms = []
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
+
+    def FormsFilled(self, page_id):
+        """
+            True if form contains data
+            @param page_id as int
+        """
+        return len(self.__form_history.keys()) > 0
 
     def GetAuthForms(self, page_id):
         """

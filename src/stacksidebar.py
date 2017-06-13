@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, Gdk, GLib, Gio
 
+from gettext import gettext as _
+
 from eolie.define import El, ArtSize
 from eolie.stacksidebar_child import SidebarChild
 
@@ -169,63 +171,13 @@ class StackSidebar(Gtk.EventBox):
 
     def close_view(self, view):
         """
-            close current view
+            Ask user before closing view if forms filled
             @param view as View
-            @return child SidebarChild
         """
-        El().history.set_page_state(view.webview.get_uri())
-        self.__window.toolbar.title.close_popover()
-        # Needed to unfocus titlebar
-        self.__window.set_focus(None)
-        was_current = view == self.__window.container.current
-        child_index = self.__get_index(view)
-        # Delay view destroy to allow stack animation
-        child = self.__listbox.get_row_at_index(child_index)
-        if child is None:
-            return
-        El().pages_menu.add_action(view.webview.get_title(),
-                                   view.webview.get_uri(),
-                                   view.webview.ephemeral,
-                                   view.webview.get_session_state())
-        GLib.timeout_add(1000, view.destroy)
-        child.destroy()
-        # Nothing to do if was not current page
-        if not was_current:
-            return
-        next_row = None
-
-        # First we search a child with same parent as closed
-        brother = None
-        for child in self.__listbox.get_children():
-            if view.parent is not None and\
-                    child.view != view and\
-                    child.view.parent == view.parent:
-                brother = child
-                break
-        # Load brother
-        if brother is not None:
-            brother_index = self.__get_index(brother.view)
-            next_row = self.__listbox.get_row_at_index(brother_index)
-        # Go back to parent page
-        elif view.parent is not None:
-            parent_index = self.__get_index(view.parent)
-            next_row = self.__listbox.get_row_at_index(parent_index)
-        # Find best near page
-        else:
-            children = self.__listbox.get_children()
-            # We are last row, add a new one
-            if len(children) == 0:
-                self.__window.container.add_webview(El().start_page,
-                                                    Gdk.WindowType.CHILD)
-            # We have rows before closed
-            elif child_index - 1 >= 0:
-                next_row = self.__listbox.get_row_at_index(child_index - 1)
-            # We have rows next to closed, so reload current index
-            elif child_index < len(children):
-                next_row = self.__listbox.get_row_at_index(child_index)
-        if next_row is not None:
-            self.__window.container.set_visible_view(next_row.view)
-        self.update_visible_child()
+        page_id = view.webview.get_page_id()
+        El().helper.call("FormsFilled",
+                         GLib.Variant("(i)", (page_id,)),
+                         self.__on_forms_filled, view, page_id)
 
     def set_panel_mode(self, panel_mode=None):
         """
@@ -265,6 +217,65 @@ class StackSidebar(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __close_view(self, view):
+        """
+            close current view
+            @param view as View
+        """
+        El().history.set_page_state(view.webview.get_uri())
+        self.__window.toolbar.title.close_popover()
+        # Needed to unfocus titlebar
+        self.__window.set_focus(None)
+        was_current = view == self.__window.container.current
+        child_index = self.__get_index(view)
+        # Delay view destroy to allow stack animation
+        child = self.__listbox.get_row_at_index(child_index)
+        if child is None:
+            return
+        El().pages_menu.add_action(view.webview.get_title(),
+                                   view.webview.get_uri(),
+                                   view.webview.ephemeral,
+                                   view.webview.get_session_state())
+        GLib.timeout_add(1000, view.destroy)
+        child.destroy()
+        # Nothing to do if was not current page
+        if not was_current:
+            return False
+        next_row = None
+
+        # First we search a child with same parent as closed
+        brother = None
+        for child in self.__listbox.get_children():
+            if view.parent is not None and\
+                    child.view != view and\
+                    child.view.parent == view.parent:
+                brother = child
+                break
+        # Load brother
+        if brother is not None:
+            brother_index = self.__get_index(brother.view)
+            next_row = self.__listbox.get_row_at_index(brother_index)
+        # Go back to parent page
+        elif view.parent is not None:
+            parent_index = self.__get_index(view.parent)
+            next_row = self.__listbox.get_row_at_index(parent_index)
+        # Find best near page
+        else:
+            children = self.__listbox.get_children()
+            # We are last row, add a new one
+            if len(children) == 0:
+                self.__window.container.add_webview(El().start_page,
+                                                    Gdk.WindowType.CHILD)
+            # We have rows before closed
+            elif child_index - 1 >= 0:
+                next_row = self.__listbox.get_row_at_index(child_index - 1)
+            # We have rows next to closed, so reload current index
+            elif child_index < len(children):
+                next_row = self.__listbox.get_row_at_index(child_index)
+        if next_row is not None:
+            self.__window.container.set_visible_view(next_row.view)
+        self.update_visible_child()
+
     def __set_child_height(self, child):
         """
             Set child height
@@ -339,6 +350,44 @@ class StackSidebar(Gtk.EventBox):
                 (title is not None and title.find(filter) != -1):
             return True
         return False
+
+    def __on_forms_filled(self, source, result, view):
+        """
+            Ask user to close view, if ok, close view
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param view as View
+        """
+        def on_response_id(dialog, response_id, view, self):
+            if response_id == Gtk.ResponseType.CLOSE:
+                self.__close_view(view)
+            dialog.destroy()
+
+        def on_close(widget, dialog):
+            dialog.response(Gtk.ResponseType.CLOSE)
+
+        def on_cancel(widget, dialog):
+            dialog.response(Gtk.ResponseType.CANCEL)
+
+        try:
+            result = source.call_finish(result)[0]
+            if result:
+                builder = Gtk.Builder()
+                builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
+                dialog = builder.get_object("dialog")
+                label = builder.get_object("label")
+                close = builder.get_object("close")
+                cancel = builder.get_object("cancel")
+                label.set_text(_("Do you really want to close this page?"))
+                dialog.set_transient_for(self.__window)
+                dialog.connect("response", on_response_id, view, self)
+                close.connect("clicked", on_close, dialog)
+                cancel.connect("clicked", on_cancel, dialog)
+                dialog.run()
+            else:
+                self.__close_view(view)
+        except Exception as e:
+            print("StackSidebar::__on_forms_filled():", e)
 
     def __on_moved(self, child, view_str, up):
         """

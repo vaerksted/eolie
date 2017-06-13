@@ -250,12 +250,12 @@ class ImagesPopover(Gtk.Popover):
             except Exception as e:
                 print("ImagesPopover::__clean_cache():", e)
 
-    def __on_get_images(self, source, result, request):
+    def __on_get_images(self, source, result, data):
         """
             Add images to flowbox
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param request as WebKit2.FormSubmissionRequest
+            @param data
         """
         uris = source.call_finish(result)
         thread = Thread(target=self.__populate, args=(uris[0],))

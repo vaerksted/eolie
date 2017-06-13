@@ -527,6 +527,78 @@ class Application(Gtk.Application):
         thread.start()
         return 0
 
+    def __close_window(self, window):
+        """
+            Close window
+        """
+        if len(self.__windows) > 1:
+            self.__windows.remove(window)
+            window.destroy()
+        else:
+            window.hide()
+            self.quit(True)
+
+    def __try_closing(self, window, views):
+        """
+            Try closing all views
+        """
+        if views:
+            view = views.pop(0)
+            page_id = view.webview.get_page_id()
+            self.helper.call("FormsFilled",
+                             GLib.Variant("(i)", (page_id,)),
+                             self.__on_forms_filled, (window, views), page_id)
+        else:
+            self.__close_window(window)
+
+    def __on_forms_filled(self, source, result, data):
+        """
+            Ask user to close view, if ok, close view
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param data as (Window, [View])
+        """
+        def on_response_id(dialog, response_id, data, self):
+            if response_id == Gtk.ResponseType.CLOSE:
+                window = data[0]
+                views = data[1]
+                if views:
+                    self.__try_closing(window, views)
+                else:
+                    self.__close_window(window)
+            dialog.destroy()
+
+        def on_close(widget, dialog):
+            dialog.response(Gtk.ResponseType.CLOSE)
+
+        def on_cancel(widget, dialog):
+            dialog.response(Gtk.ResponseType.CANCEL)
+
+        try:
+            window = data[0]
+            views = data[1]
+            result = source.call_finish(result)[0]
+            if result:
+                builder = Gtk.Builder()
+                builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
+                dialog = builder.get_object("dialog")
+                label = builder.get_object("label")
+                close = builder.get_object("close")
+                cancel = builder.get_object("cancel")
+                label.set_text(_("Do you really want to quit Eolie?"))
+                dialog.set_transient_for(window)
+                dialog.connect("response", on_response_id, data, self)
+                close.connect("clicked", on_close, dialog)
+                cancel.connect("clicked", on_cancel, dialog)
+                dialog.run()
+            else:
+                if views:
+                    self.__try_closing(window, views)
+                else:
+                    self.__close_window(window)
+        except Exception as e:
+            print("Application::__on_forms_filled():", e)
+
     def __on_get_plugins(self, source, result, data):
         """
             Print plugins on command line
@@ -546,12 +618,8 @@ class Application(Gtk.Application):
             @param window as Window
             @param event as Gdk.Event
         """
-        if len(self.__windows) > 1:
-            self.__windows.remove(window)
-            window.destroy()
-        else:
-            window.hide()
-            self.quit(True)
+        # Ask for user if needed
+        self.__try_closing(window, window.container.views)
         return True
 
     def __on_settings_activate(self, action, param):
