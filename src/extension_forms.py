@@ -50,9 +50,6 @@ class FormsExtension:
                 continue
             name = inputs.item(i).get_attribute("name")
             input_id = inputs.item(i).get_attribute("id")
-            if name is None:
-                i += 1
-                continue
             if password_input is None and\
                     inputs.item(i).get_input_type() == "password":
                 password_input = inputs.item(i)
@@ -60,8 +57,10 @@ class FormsExtension:
                 continue
             if username_input is None:
                 for search in LOGINS:
-                    if name.lower().find(search) != -1 or\
-                            input_id.lower().find(search) != -1:
+                    if (name is not None and
+                            name.lower().find(search) != -1) or\
+                            (input_id is not None and
+                                input_id.lower().find(search) != -1):
                         username_input = inputs.item(i)
                         break
             if username_input is None:
