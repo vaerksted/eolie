@@ -457,12 +457,7 @@ class UriPopover(Gtk.Popover):
         """
         if not self.is_visible():
             return False
-        if event.state & Gdk.ModifierType.CONTROL_MASK and\
-                event.keyval == Gdk.KEY_a:
-            box = self.__get_current_box()
-            if box is not None:
-                box.select_all()
-        elif event.keyval == Gdk.KEY_Up and self.__input == Input.NONE:
+        if event.keyval == Gdk.KEY_Up and self.__input == Input.NONE:
             return False
         elif event.keyval == Gdk.KEY_Left and self.__input == Input.BOOKMARKS:
             self.__input = Input.TAGS
