@@ -217,6 +217,13 @@ class ProxyExtension(Server):
                 if item.prev:
                     self.__form_history[self.__focused] = item.prev
                     self.__focused.set_value(item.prev.value)
+            else:
+                new_value = self.__focused.get_value().rstrip(" ")
+                if new_value:
+                    item = LinkedList(new_value, None, None)
+                    next = LinkedList("", item, None)
+                    self.__form_history[self.__focused] = next
+                    self.__focused.set_value("")
         except Exception as e:
             print("ProxyExtension::SetPreviousForm():", e)
 
