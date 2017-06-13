@@ -112,13 +112,9 @@ class Application(Gtk.Application):
         builder.add_from_resource("/org/gnome/Eolie/Appmenu.ui")
         menu = builder.get_object("app-menu")
 
-        if len(self.__version.split("-")) > 1:
-            report_item = Gio.MenuItem.new(_("Report a bug"), "app.report")
-            section = builder.get_object("main")
-            section.insert_item(2, report_item)
-            report_action = Gio.SimpleAction.new("report", None)
-            report_action.connect("activate", self.__on_report_activate)
-            self.add_action(report_action)
+        report_action = Gio.SimpleAction.new("report", None)
+        report_action.connect("activate", self.__on_report_activate)
+        self.add_action(report_action)
 
         settings_action = Gio.SimpleAction.new("settings", None)
         settings_action.connect("activate", self.__on_settings_activate)
