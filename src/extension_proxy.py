@@ -88,6 +88,7 @@ class ProxyExtension(Server):
     <method name="SetNextForm">
     </method>
     <method name="GetAuthForms">
+      <arg type="as" name="forms" direction="in" />
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
@@ -119,7 +120,7 @@ class ProxyExtension(Server):
         self.__forms = forms
         self.__focused = None
         self.__form_history = {}
-        self.__password_form = None
+        self.__password_forms = []
         self.__listened_forms = []
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
@@ -131,9 +132,10 @@ class ProxyExtension(Server):
         """
         return len(self.__form_history.keys()) > 0
 
-    def GetAuthForms(self, page_id):
+    def GetAuthForms(self, forms, page_id):
         """
             Get password forms for page id
+            @param forms as [str]
             @param page id as int
             @return (username_form, password_form) as (str, str)
         """
@@ -141,7 +143,7 @@ class ProxyExtension(Server):
             page = self.__extension.get_page(page_id)
             if page is None:
                 return ("", "", "", "")
-            (username, password, others) = self.__forms.get_forms(page)
+            (username, password) = self.__forms.get_auth_forms(forms, page)
             if username is not None and password is not None:
                 return (username.get_value(),
                         username.get_name(),
@@ -303,26 +305,26 @@ class ProxyExtension(Server):
         for form in self.__listened_forms:
             form.remove_event_listener("input", self.__on_input, False)
             form.remove_event_listener("focus", self.__on_input, False)
-        if self.__password_form is not None:
-            self.__password_form.remove_event_listener(
-                                                      "focus",
-                                                      self.__on_password_focus,
-                                                      False)
+        for form in self.__password_forms:
+            form.remove_event_listener("focus",
+                                       self.__on_password_focus,
+                                       False)
         self.__focused = None
         self.__form_history = {}
         self.__listened_forms = []
-        self.__password_form = None
+        self.__password_forms = []
 
         # Manage forms in page
         parsed = urlparse(webpage.get_uri())
-        (username, password, others) = self.__forms.get_forms(webpage)
+        forms = self.__forms.get_forms(webpage)
+
         # Check for unsecure content
-        if parsed.scheme == "http" and password is not None:
-            self.__password_form = password
-            self.__password_form.add_event_listener("focus",
-                                                    self.__on_password_focus,
-                                                    False)
-        for form in others:
+        for form in forms:
+            if parsed.scheme == "http" and form.get_input_type() == "password":
+                self.__password_forms.append(form)
+                form.add_event_listener("focus",
+                                        self.__on_password_focus,
+                                        False)
             self.__listened_forms.append(form)
             form.add_event_listener("input", self.__on_input, False)
             form.add_event_listener("focus", self.__on_focus, False)

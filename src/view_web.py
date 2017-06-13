@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from time import time
 from ctypes import string_at
 
-from eolie.define import El, LOGINS
+from eolie.define import El
 from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
@@ -278,14 +278,15 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
 
-    def __get_forms(self, page_id, request):
+    def __get_forms(self, forms, page_id, request):
         """
             Read request for authentification
+            @param forms as [str]
             @param page_id as int
             @param request as WebKit2.FormSubmissionRequest
         """
         El().helper.call("GetAuthForms",
-                         GLib.Variant("(i)", (page_id,)),
+                         GLib.Variant("(asi)", (forms, page_id)),
                          self.__on_get_forms, request, page_id)
 
     def __on_get_forms(self, source, result, request):
@@ -318,17 +319,11 @@ class WebView(WebKit2.WebView):
         fields = request.get_text_fields()
         if fields is None:
             return
-        username_input_found = False
+        forms = []
         for k, v in fields.items():
-            if username_input_found:
-                break
             name = string_at(k).decode("utf-8")
-            for search in LOGINS:
-                if name.lower().find(search) != -1:
-                    username_input_found = True
-                    break
-        if username_input_found:
-            self.__get_forms(webview.get_page_id(), request)
+            forms.append(name)
+            self.__get_forms(forms, webview.get_page_id(), request)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """

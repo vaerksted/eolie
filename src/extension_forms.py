@@ -10,6 +10,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urlparse
+
 from eolie.define import LOGINS
 from eolie.helper_passwords import PasswordsHelper
 
@@ -29,18 +31,49 @@ class FormsExtension:
         self.__settings = settings
         extension.connect("page-created", self.__on_page_created)
 
+    def has_password(self, webpage):
+        """
+            True if webpage has a password input
+        """
+        dom_document = webpage.get_dom_document()
+        inputs = dom_document.get_elements_by_tag_name("input")
+        i = 0
+        while i < inputs.get_length():
+            if inputs.item(i).get_input_type() == "password":
+                return True
+            i += 1
+        return False
+
     def get_forms(self, webpage):
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
-            @return (WebKit2WebExtension.DOMElement,   => username
-                     WebKit2WebExtension.DOMElement,   => password
-                     [WebKit2WebExtension.DOMElement]) => others
+            @return [WebKit2WebExtension.DOMElement]
         """
-        others = []
+        forms = []
         dom_document = webpage.get_dom_document()
         inputs = dom_document.get_elements_by_tag_name("input")
         textareas = dom_document.get_elements_by_tag_name("textarea")
+        i = 0
+        while i < inputs.get_length():
+            if inputs.item(i).get_input_type() != "hidden":
+                forms.append(inputs.item(i))
+            i += 1
+        i = 0
+        while i < textareas.get_length():
+            forms.append(textareas.item(i))
+            i += 1
+        return forms
+
+    def get_auth_forms(self, forms, webpage):
+        """
+            Return auth forms for webpage
+            @param webpage as WebKit2WebExtension.WebPage
+            @return (WebKit2WebExtension.DOMElement,   => username
+                     WebKit2WebExtension.DOMElement)   => password
+        """
+        dom_document = webpage.get_dom_document()
+        inputs = dom_document.get_elements_by_tag_name("input")
         i = 0
         username_input = None
         password_input = None
@@ -51,11 +84,13 @@ class FormsExtension:
             name = inputs.item(i).get_attribute("name")
             input_id = inputs.item(i).get_attribute("id")
             if password_input is None and\
-                    inputs.item(i).get_input_type() == "password":
+                    inputs.item(i).get_input_type() == "password" and\
+                    (not forms or name in forms or input_id in forms):
                 password_input = inputs.item(i)
                 i += 1
                 continue
-            if username_input is None:
+            if username_input is None and\
+                    (not forms or name in forms or input_id in forms):
                 for search in LOGINS:
                     if (name is not None and
                             name.lower().find(search) != -1) or\
@@ -63,14 +98,8 @@ class FormsExtension:
                                 input_id.lower().find(search) != -1):
                         username_input = inputs.item(i)
                         break
-            if username_input is None:
-                others.append(inputs.item(i))
             i += 1
-        i = 0
-        while i < textareas.get_length():
-            others.append(textareas.item(i))
-            i += 1
-        return (username_input, password_input, others)
+        return (username_input, password_input)
 
 #######################
 # PRIVATE             #
@@ -90,33 +119,35 @@ class FormsExtension:
         """
         if not self.__settings.get_value("remember-passwords"):
             return
+        if self.has_password(webpage):
+            self.__helper.get(webpage.get_uri(),
+                              self.__set_input,
+                              webpage)
 
-        (username_input, password_input, others) = self.get_forms(webpage)
-
-        if username_input is None or password_input is None:
-            return
-        self.__helper.get(webpage.get_uri(),
-                          self.__set_input,
-                          username_input,
-                          password_input)
-
-    def __set_input(self, attributes, password, uri,
-                    username_input, password_input):
+    def __set_input(self, attributes, password, uri, webpage):
         """
             Set username/password input
             @param attributes as {}
             @param password as str
             @param uri as str
-            @param username_input as WebKit2WebExtension.DOMElement
-            @param password_input as WebKit2WebExtension.DOMElement
+            @param webpage as WebKit2WebExtension.WebPage
         """
+        parsed = urlparse(uri)
+        submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         # Do not set anything if no attributes or
         # If we have already text in input and we are not a perfect completion
-        if attributes is None or (
-                password_input.get_value() and
-                uri != attributes["formSubmitURL"]):
+        if attributes is None or attributes["formSubmitURL"] != submit_uri:
             return
         try:
+            forms = []
+            # Try to get attributes, new in Eolie 0.9
+            try:
+                forms.append(attributes["userform"])
+                forms.append(attributes["passform"])
+            except:
+                pass
+            (username_input, password_input) = self.get_auth_forms(forms,
+                                                                   webpage)
             username_input.set_value(attributes["login"])
             password_input.set_value(password)
         except Exception as e:

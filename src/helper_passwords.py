@@ -115,13 +115,15 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::get_sync(): %s" % e)
 
-    def store(self, login, password, uri, uuid, callback):
+    def store(self, login, password, uri, uuid, userform, passform, callback):
         """
             Store password
             @param login as str
             @param password as str
             @param uri as str
             @param uuid as str
+            @param userform as str
+            @param passform as str
             @param callback as function
         """
         try:
@@ -138,7 +140,9 @@ class PasswordsHelper:
                 "uuid": Secret.SchemaAttributeType.STRING,
                 "login": Secret.SchemaAttributeType.STRING,
                 "hostname": Secret.SchemaAttributeType.STRING,
-                "formSubmitURL": Secret.SchemaAttributeType.STRING
+                "formSubmitURL": Secret.SchemaAttributeType.STRING,
+                "userform": Secret.SchemaAttributeType.STRING,
+                "passform": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "type": "eolie web login",
@@ -147,7 +151,9 @@ class PasswordsHelper:
                 "hostname": parsed.netloc,
                 "formSubmitURL": "%s://%s%s" % (parsed.scheme,
                                                 parsed.netloc,
-                                                parsed.path)
+                                                parsed.path),
+                "userform": userform,
+                "passform": passform
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,

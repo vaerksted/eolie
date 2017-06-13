@@ -69,6 +69,8 @@ class CredentialsPopover(Gtk.Popover):
                                 self.__password,
                                 uri,
                                 self.__uuid,
+                                self.__userform,
+                                self.__passform,
                                 None)
             if El().sync_worker is not None:
                 El().sync_worker.push_password(self.__username,

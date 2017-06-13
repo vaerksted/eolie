@@ -661,6 +661,8 @@ class SyncWorker(GObject.GObject):
                                     password["password"],
                                     password["formSubmitURL"],
                                     password["id"],
+                                    password["usernameField"],
+                                    password["passwordField"],
                                     None)
             elif "deleted" in password.keys():  # We assume True
                 self.__helper.clear(password["id"])
