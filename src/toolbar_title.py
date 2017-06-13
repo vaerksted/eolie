@@ -563,7 +563,7 @@ class ToolbarTitle(Gtk.Bin):
             Go to url or search for words
             @param entry as Gtk.Entry
         """
-        uri = entry.get_text()
+        uri = entry.get_text().lstrip().rstrip()
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
