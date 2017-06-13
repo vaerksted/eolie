@@ -60,7 +60,7 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="selection_mode">multiple</property>
-                        <signal name="button-press-event" handler="_on_bookmarks_button_press_event" swapped="no"/>
+                        <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
                         <signal name="row-selected" handler="_on_row_selected" swapped="no"/>
                         <signal name="selected-rows-changed" handler="_on_selected_rows_changed" swapped="no"/>
                       </object>
@@ -267,6 +267,7 @@
                         <property name="selection_mode">multiple</property>
                         <signal name="map" handler="_on_history_map" swapped="no"/>
                         <signal name="row-selected" handler="_on_row_selected" swapped="no"/>
+                        <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
                       </object>
                     </child>
                   </object>

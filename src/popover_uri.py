@@ -376,7 +376,7 @@ class UriPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.__window = window
         self.__input = False
-        self.__bookmarks_modifier = 0
+        self.__modifier = 0
         self.set_modal(False)
         self.get_style_context().add_class("box-shadow")
         builder = Gtk.Builder()
@@ -564,14 +564,14 @@ class UriPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
-    def _on_bookmarks_button_press_event(self, widget, event):
+    def _on_button_press_event(self, widget, event):
         """
             Store state for current click
             @param widget as Gtk.Widget
             @param event as Gdk.EventButton
         """
         # https://bugzilla.gnome.org/show_bug.cgi?id=733108
-        self.__bookmarks_modifier = event.state
+        self.__modifier = event.state
 
     def _on_sync_button_clicked(self, button):
         """
@@ -636,7 +636,7 @@ class UriPopover(Gtk.Popover):
             @param row as Row
         """
 
-        if self.__bookmarks_modifier & Gdk.ModifierType.SHIFT_MASK:
+        if self.__modifier & Gdk.ModifierType.SHIFT_MASK:
             self.__fix_bug_733108(listbox, row)
 
         if row is None or len(listbox.get_selected_rows()) > 1:
@@ -767,7 +767,7 @@ class UriPopover(Gtk.Popover):
             @param listbox as Gtk.ListBox
             @param selected_row as Row
         """
-        self.__bookmarks_modifier = 0
+        self.__modifier = 0
         # Search for first and last selected rows
         another_selected_row = None
         found_selected = False
