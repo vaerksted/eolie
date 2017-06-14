@@ -21,6 +21,7 @@ from gettext import gettext as _
 from pickle import dump, load
 from threading import Thread
 from urllib.parse import urlparse
+from getpass import getuser
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -45,7 +46,7 @@ class Application(Gtk.Application):
     """
 
     __COOKIES_PATH = "%s/cookies.db" % EOLIE_LOCAL_PATH
-    __FAVICONS_PATH = "%s/favicons" % EOLIE_LOCAL_PATH
+    __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
     def __init__(self, version, extension_dir):
         """
@@ -353,6 +354,10 @@ class Application(Gtk.Application):
         context.set_process_model(
                             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
+        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
+        if not d.query_exists():
+            d.make_directory_with_parents()
+        context.set_favicon_database_directory(self.__FAVICONS_PATH)
         cookie_manager = context.get_cookie_manager()
         cookie_manager.set_accept_policy(
                                      self.settings.get_enum("cookie-storage"))
