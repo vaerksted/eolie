@@ -89,7 +89,6 @@ class Context:
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
-        GLib.idle_add(stream.close)
 
     def __on_file_scheme(self, request):
         """
@@ -168,7 +167,6 @@ class Context:
                 html = html_start.encode("utf-8") + end_content
                 stream = Gio.MemoryInputStream.new_from_data(html)
                 request.finish(stream, -1, "text/html")
-                GLib.idle_add(stream.close)
             else:
                 request.finish(f.read(), -1, None)
         except Exception as e:
