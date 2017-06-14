@@ -216,10 +216,13 @@ class SidebarChild(Gtk.ListBoxRow):
                 surface = self.__view.webview.get_favicon()
                 if surface is not None and not El().art.exists(uri, "favicon"):
                     El().art.save_artwork(uri, surface, "favicon")
-                    if self.__view.webview.related_uri is not None and\
-                            self.__view.webview.related_uri != uri:
-                        El().art.save_artwork(self.__view.webview.related_uri,
-                                              surface, "favicon")
+            if surface is not None and\
+                    self.__view.webview.related_uri is not None and\
+                    self.__view.webview.related_uri != uri and\
+                    not El().art.exists(self.__view.webview.related_uri,
+                                        "favicon"):
+                El().art.save_artwork(self.__view.webview.related_uri,
+                                      surface, "favicon")
             # Set favicon
             if surface is None:
                 self.__image_close.set_from_icon_name("applications-internet",
@@ -334,7 +337,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                           surface, "preview")
                     # We also cache related URI
                     if view.related_uri is not None and\
-                            view.webview.related_uri != current_uri:
+                            view.related_uri != current_uri:
                         El().art.save_artwork(view.related_uri,
                                               surface, "preview")
                 del surface

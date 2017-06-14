@@ -75,6 +75,7 @@ class WebViewNavigation:
             @param uri as str
         """
         self._error = None
+        self.__related_uri = uri
         parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
@@ -108,13 +109,6 @@ class WebViewNavigation:
             @webview as WebView
         """
         self.__popups.append(webview)
-
-    def set_related_uri(self, uri):
-        """
-            Set related uri
-            @param uri as str
-        """
-        self.__related_uri = uri
 
     @property
     def related_uri(self):
