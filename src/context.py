@@ -79,7 +79,13 @@ class Context:
             html_start += '<a class="child" title="%s" href="%s">' % (title,
                                                                       uri)
             html_start += '<img src="file://%s"></img>' % path
-            html_start += '<div class="caption">%s</div></a>' % title
+            html_start += '<div class="caption">%s' % title
+            favicon_path = El().art.get_path(uri, "favicon")
+            favicon = Gio.File.new_for_path(favicon_path)
+            if favicon.query_exists():
+                html_start += '<img class="favicon" src="%s"></img>' % \
+                    favicon.get_uri()
+            html_start += '</div></a>'
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")

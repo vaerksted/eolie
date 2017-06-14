@@ -13,7 +13,6 @@
 .child {
     position: relative;
     vertical-align: top;
-    text-align: center;
     margin: 10px;
     border: 1px solid #eeeeec;
     border-radius: 3px;
@@ -36,10 +35,21 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
     opacity: 0.85;
     position: absolute;
     bottom: 0;
     width: 300px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+}
+
+.favicon {
+    max-width: 22px;
+    max-height: 22px;
+    position: absolute;
+    right: 0;
 }
 
 a:hover, a:visited, a:link, a:active
