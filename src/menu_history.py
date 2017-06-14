@@ -51,7 +51,7 @@ class HistoryMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             # Try to set icon
-            filepath = El().artwork.get_path(uri, "favicon")
+            filepath = El().art.get_path(uri, "favicon")
             f = Gio.File.new_for_path(filepath)
             if f.query_exists():
                 icon = Gio.FileIcon.new(f)
