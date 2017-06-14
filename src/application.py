@@ -582,6 +582,7 @@ class Application(Gtk.Application):
                 else:
                     self.__close_window(window)
         except Exception as e:
+            self.__close_window(window)
             print("Application::__on_forms_filled():", e)
 
     def __on_get_plugins(self, source, result, data):

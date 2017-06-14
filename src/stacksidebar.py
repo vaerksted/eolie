@@ -387,6 +387,7 @@ class StackSidebar(Gtk.EventBox):
             else:
                 self.__close_view(view)
         except Exception as e:
+            self.__close_view(view)
             print("StackSidebar::__on_forms_filled():", e)
 
     def __on_moved(self, child, view_str, up):
