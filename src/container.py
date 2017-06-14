@@ -462,10 +462,10 @@ class Container(Gtk.Overlay):
                 self.current.switch_read_mode()
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
+            self.__window.toolbar.actions.set_actions(webview)
             self.__window.toolbar.title.set_title(uri)
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__window.toolbar.actions.set_actions(webview)
             # Give focus to webview
             if focus_in_view:
                 GLib.idle_add(self.__grab_focus_on_current)
