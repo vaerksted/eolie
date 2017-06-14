@@ -234,13 +234,6 @@ class Application(Gtk.Application):
         return self.__COOKIES_PATH
 
     @property
-    def favicons_path(self):
-        """
-            Cookies sqlite db path
-        """
-        return self.__FAVICONS_PATH + "/WebpageIcons.db"
-
-    @property
     def extension_dir(self):
         """
             Extension dir path
@@ -360,10 +353,6 @@ class Application(Gtk.Application):
         context.set_process_model(
                             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
-        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
-        if not d.query_exists():
-            d.make_directory_with_parents()
-        context.set_favicon_database_directory(self.__FAVICONS_PATH)
         cookie_manager = context.get_cookie_manager()
         cookie_manager.set_accept_policy(
                                      self.settings.get_enum("cookie-storage"))

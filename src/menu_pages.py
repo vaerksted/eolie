@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib, Gdk, WebKit2
+from gi.repository import Gio, GLib, Gdk
 
 from gettext import gettext as _
 from hashlib import sha256
@@ -107,10 +107,18 @@ class PagesMenu(Gio.Menu):
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
         # Try to set icon
-        context = WebKit2.WebContext.get_default()
-        favicon_db = context.get_favicon_database()
-        favicon_db.get_favicon(uri, None,
-                               self.__set_favicon_result, item, uri)
+        filepath = El().art.get_path(uri, "favicon")
+        f = Gio.File.new_for_path(filepath)
+        if f.query_exists():
+            icon = Gio.FileIcon.new(f)
+            item.set_icon(icon)
+        else:
+            item.set_icon(Gio.ThemedIcon.new("applications-internet"))
+        self.__closed_section.insert_item(0, item)
+        if self.__closed_section.get_n_items() == 2:
+            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
+            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
+            self.append_item(item)
 
     def remove_action(self, uri):
         """
@@ -141,40 +149,6 @@ class PagesMenu(Gio.Menu):
         """
         for (uri, title) in opened_pages:
             self.add_action(title, uri, False, None)
-
-    def __set_favicon_result(self, db, result, item, uri):
-        """
-            Set favicon db result
-            @param db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param item as Gio.MenuItem
-            @param uri as str
-        """
-        try:
-            surface = db.get_favicon_finish(result)
-        except:
-            surface = None
-        if uri == "populars://":
-            item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
-        elif surface is not None:
-            pixbuf = Gdk.pixbuf_get_from_surface(surface,
-                                                 0,
-                                                 0,
-                                                 surface.get_width(),
-                                                 surface.get_height())
-            del surface
-            (saved, bytes) = pixbuf.save_to_bufferv("png",
-                                                    [None],
-                                                    [])
-            del pixbuf
-            item.set_icon(Gio.BytesIcon.new(GLib.Bytes.new(bytes)))
-        else:
-            item.set_icon(Gio.ThemedIcon.new("applications-internet"))
-        self.__closed_section.insert_item(0, item)
-        if self.__closed_section.get_n_items() == 2:
-            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
-            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
-            self.append_item(item)
 
     def __clean_actions(self):
         """

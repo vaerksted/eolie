@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango, WebKit2
+from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
 
 from gettext import gettext as _
 from time import mktime, time
@@ -18,8 +18,7 @@ from datetime import datetime
 from locale import strcoll
 from threading import Thread
 
-from eolie.define import El, Type, TimeSpan, TimeSpanValues
-from eolie.utils import resize_favicon, get_favicon_best_uri
+from eolie.define import El, Type, TimeSpan, TimeSpanValues, ArtSize
 
 
 class Item(GObject.GObject):
@@ -185,34 +184,17 @@ class Row(Gtk.ListBoxRow):
             @param favicon as Gtk.Image
             @param uri as str
         """
-        favicon_uri = get_favicon_best_uri(self.__item.get_property("uri"))
-        if favicon_uri is not None:
-            context = WebKit2.WebContext.get_default()
-            favicon_db = context.get_favicon_database()
-            favicon_db.get_favicon(favicon_uri, None,
-                                   self.__set_favicon_result, favicon)
-        else:
-            favicon.set_from_icon_name("applications-internet",
-                                       Gtk.IconSize.LARGE_TOOLBAR)
-            favicon.show()
-
-    def __set_favicon_result(self, db, result, favicon):
-        """
-            Set favicon db result
-            @param db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param favicon as Gtk.Image
-        """
-        try:
-            surface = db.get_favicon_finish(result)
-        except:
-            surface = None
-        if surface is None:
-            favicon.set_from_icon_name("applications-internet",
-                                       Gtk.IconSize.LARGE_TOOLBAR)
-        else:
-            favicon.set_from_surface(resize_favicon(surface))
+        surface = El().art.get_artwork(self.__item.get_property("uri"),
+                                       "favicon",
+                                       self.get_scale_factor(),
+                                       ArtSize.FAVICON,
+                                       ArtSize.FAVICON)
+        if surface is not None:
+            favicon.set_from_surface(surface)
             del surface
+        else:
+            favicon.set_from_icon_name("applications-internet",
+                                       Gtk.IconSize.LARGE_TOOLBAR)
         favicon.show()
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):

@@ -13,10 +13,9 @@
 from gi.repository import Gtk, Gdk, GLib, GObject, WebKit2, Pango
 
 import cairo
-from urllib.parse import urlparse
 
 from eolie.define import El, ArtSize
-from eolie.utils import resize_favicon, get_favicon_best_uri
+from eolie.utils import resize_favicon
 
 
 class SidebarChild(Gtk.ListBoxRow):
@@ -36,7 +35,6 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         Gtk.ListBoxRow.__init__(self)
         self.__scroll_timeout_id = None
-        self.__start_uri = None
         self.__view = view
         self.__window = window
         builder = Gtk.Builder()
@@ -199,43 +197,36 @@ class SidebarChild(Gtk.ListBoxRow):
         """
             Set favicon
         """
-        if self.__view.webview.ephemeral:
+        uri = self.__view.webview.get_uri()
+        self.__image_close.get_style_context().remove_class(
+                                                          "sidebar-item-close")
+        if uri == "populars://":
+            self.__image_close.set_from_icon_name("emote-love-symbolic",
+                                                  Gtk.IconSize.INVALID)
+        elif self.__view.webview.ephemeral:
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
-            return
-        uri = self.__view.webview.get_uri()
-        favicon_db = self.__view.webview.get_context().get_favicon_database()
-        favicon_uri = get_favicon_best_uri(uri)
-        if favicon_uri is None:
-            if uri == "populars://":
-                self.__image_close.set_from_icon_name("emote-love-symbolic",
-                                                      Gtk.IconSize.INVALID)
-            else:
+        else:
+            # First use favicon cached by Eolie
+            surface = El().art.get_artwork(uri, "favicon",
+                                           self.get_scale_factor(),
+                                           ArtSize.FAVICON, ArtSize.FAVICON)
+            # Then favicon cached by WebKitGTK
+            if surface is None:
+                surface = self.__view.webview.get_favicon()
+                if surface is not None and not El().art.exists(uri, "favicon"):
+                    El().art.save_artwork(uri, surface, "favicon")
+                    if self.__view.webview.related_uri is not None and\
+                            self.__view.webview.related_uri != uri:
+                        El().art.save_artwork(self.__view.webview.related_uri,
+                                              surface, "favicon")
+            # Set favicon
+            if surface is None:
                 self.__image_close.set_from_icon_name("applications-internet",
                                                       Gtk.IconSize.INVALID)
-        else:
-            favicon_db.get_favicon(favicon_uri, None,
-                                   self.__set_favicon_result)
-
-    def __set_favicon_result(self, db, result):
-        """
-            Set favicon db result
-            @param db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-        """
-        try:
-            surface = db.get_favicon_finish(result)
-        except:
-            surface = None
-        if surface is None:
-            self.__image_close.set_from_icon_name("applications-internet",
-                                                  Gtk.IconSize.INVALID)
-        else:
-            self.__image_close.set_from_surface(resize_favicon(surface))
-            del surface
-            self.__image_close.get_style_context().remove_class(
-                                                          "sidebar-item-close")
-            self.__image_close.show()
+            else:
+                self.__image_close.set_from_surface(resize_favicon(surface))
+                del surface
 
     def __set_snapshot_timeout(self):
         """
@@ -284,7 +275,6 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
-            self.__start_uri = view.get_uri()
             self.__spinner.start()
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
@@ -292,14 +282,7 @@ class SidebarChild(Gtk.ListBoxRow):
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__set_favicon()
             self.__spinner.stop()
-            # If start_uri.netloc != uri.netloc, do not save snapshot
-            parsed_start = urlparse(self.__start_uri)
-            parsed = urlparse(view.get_uri())
-            if parsed.netloc == parsed_start.netloc:
-                GLib.timeout_add(500, self.set_snapshot, True)
-            else:
-                GLib.timeout_add(500, self.set_snapshot, False)
-            self.__start_uri = None
+            GLib.timeout_add(500, self.set_snapshot, True)
 
     def __on_scroll_event(self, view, event):
         """
@@ -349,19 +332,19 @@ class SidebarChild(Gtk.ListBoxRow):
                 if save:
                     El().art.save_artwork(current_uri,
                                           surface, "preview")
-                    # We also cache original URI
-                    if self.__start_uri is not None and\
-                            current_uri != self.__start_uri:
-                        El().art.save_artwork(self.__start_uri,
+                    # We also cache related URI
+                    if view.related_uri is not None and\
+                            view.webview.related_uri != current_uri:
+                        El().art.save_artwork(view.related_uri,
                                               surface, "preview")
                 del surface
 
             # Save start image to cache
             # We also cache original URI
             uris = [current_uri]
-            if self.__start_uri is not None and\
-                    self.__start_uri not in uris:
-                uris.append(self.__start_uri)
+            if view.related_uri is not None and\
+                    view.related_uri not in uris:
+                uris.append(view.related_uri)
             surface = None
             for uri in uris:
                 if El().art.exists(uri, "start"):

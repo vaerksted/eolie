@@ -55,6 +55,7 @@ class WebViewNavigation:
         self.__popups = []
         self.__loaded_uri = ""
         self.__js_load = False
+        self.__related_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -107,6 +108,21 @@ class WebViewNavigation:
             @webview as WebView
         """
         self.__popups.append(webview)
+
+    def set_related_uri(self, uri):
+        """
+            Set related uri
+            @param uri as str
+        """
+        self.__related_uri = uri
+
+    @property
+    def related_uri(self):
+        """
+            Related uri
+            @return str
+        """
+        return self.__related_uri
 
     @property
     def js_load(self):
@@ -287,6 +303,7 @@ class WebViewNavigation:
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None
+                self.__related_uri = None
                 return False
         else:
             self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
