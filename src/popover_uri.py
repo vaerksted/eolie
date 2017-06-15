@@ -343,7 +343,15 @@ class Row(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         tag_id = self.__item.get_property("id")
-        for (bid, title, uri) in El().bookmarks.get_bookmarks(tag_id):
+        if tag_id == Type.POPULARS:
+            items = El().bookmarks.get_populars(50)
+        elif tag_id == Type.RECENTS:
+            items = El().bookmarks.get_recents()
+        elif tag_id == Type.UNCLASSIFIED:
+            items = El().bookmarks.get_unclassified()
+        else:
+            items = El().bookmarks.get_bookmarks(tag_id)
+        for (bid, title, uri) in items:
             GLib.idle_add(self.__window.container.add_webview,
                           uri, Gdk.WindowType.OFFSCREEN, False,
                           None, None, False)
@@ -701,7 +709,7 @@ class UriPopover(Gtk.Popover):
                    _("Populars")),
                   (Type.RECENTS,
                    _("Recents")),
-                  (Type.NONE,
+                  (Type.UNCLASSIFIED,
                    _("Unclassified"))]
         self.__add_tags(static + El().bookmarks.get_all_tags(), current)
 
@@ -983,7 +991,7 @@ class UriPopover(Gtk.Popover):
             items = El().bookmarks.get_populars(50)
         elif tag_id == Type.RECENTS:
             items = El().bookmarks.get_recents()
-        elif tag_id == Type.NONE:
+        elif tag_id == Type.UNCLASSIFIED:
             items = El().bookmarks.get_unclassified()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)

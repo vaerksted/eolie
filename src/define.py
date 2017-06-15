@@ -76,7 +76,8 @@ class Type:
     HISTORY = -6
     SEARCH = -7
     TAG = -8
-    SEPARATOR = -9
+    UNCLASSIFIED = -9
+    SEPARATOR = -10
 
 
 LOGINS = ["login", "username", "user", "mail", "email"]
