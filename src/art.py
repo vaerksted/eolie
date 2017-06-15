@@ -53,6 +53,8 @@ class Art:
             @param height as int
             @return cairo.surface
         """
+        if uri is None:
+            return None
         filepath = self.get_path(uri, suffix)
         f = Gio.File.new_for_path(filepath)
         if f.query_exists():
@@ -69,8 +71,10 @@ class Art:
     def get_path(self, uri, suffix):
         """
             Return cache image path
-            @return str
+            @return str/None
         """
+        if uri is None:
+            return None
         parsed = urlparse(uri)
         # Remove scheme
         strip = uri.replace("%s://" % parsed.scheme, "")

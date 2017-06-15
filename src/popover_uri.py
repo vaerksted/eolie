@@ -125,7 +125,8 @@ class Row(Gtk.ListBoxRow):
                                                      Gtk.IconSize.MENU)
             delete_button.get_image().set_opacity(0.5)
             delete_button.connect("clicked", self.__on_delete_clicked)
-            delete_button.get_style_context().add_class("edit-button")
+            delete_button.get_style_context().add_class("overlay-button")
+            delete_button.set_tooltip_text(_("Delete page from history"))
             delete_button.show()
             grid.add(delete_button)
         if item_type == Type.BOOKMARK:
@@ -134,9 +135,20 @@ class Row(Gtk.ListBoxRow):
                                                      Gtk.IconSize.MENU)
             edit_button.get_image().set_opacity(0.5)
             edit_button.connect("clicked", self.__on_edit_clicked)
-            edit_button.get_style_context().add_class("edit-button")
+            edit_button.get_style_context().add_class("overlay-button")
+            edit_button.set_tooltip_text(_("Edit bookmark"))
             edit_button.show()
             grid.add(edit_button)
+        elif item_type == Type.TAG:
+            open_button = Gtk.Button.new_from_icon_name(
+                                                     "web-browser-symbolic",
+                                                     Gtk.IconSize.MENU)
+            open_button.get_image().set_opacity(0.5)
+            open_button.connect("clicked", self.__on_open_clicked)
+            open_button.get_style_context().add_class("overlay-button")
+            open_button.set_tooltip_text(_("Open all pages for this tag"))
+            open_button.show()
+            grid.add(open_button)
         grid.show()
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
@@ -324,6 +336,17 @@ class Row(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         self.emit("edited")
+
+    def __on_open_clicked(self, button):
+        """
+            Open all bookmarks
+            @param button as Gtk.Button
+        """
+        tag_id = self.__item.get_property("id")
+        for (bid, title, uri) in El().bookmarks.get_bookmarks(tag_id):
+            GLib.idle_add(self.__window.container.add_webview,
+                          uri, Gdk.WindowType.OFFSCREEN, False,
+                          None, None, False)
 
     def __on_delete_clicked(self, button):
         """
