@@ -108,10 +108,8 @@ class SidebarChild(Gtk.ListBoxRow):
             layout = Pango.Layout.new(ctx)
             height = int(layout.get_pixel_size()[1]) + 10
             self.__grid.set_property("valign", Gtk.Align.CENTER)
-            self.__spinner.hide()
         else:
             self.__grid.set_property("valign", Gtk.Align.END)
-            self.__spinner.show()
         self.__overlay.set_size_request(-1, height)
 
     def set_snapshot(self, save):
