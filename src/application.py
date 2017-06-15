@@ -78,11 +78,6 @@ class Application(Gtk.Application):
         self.__windows = []
         self.debug = False
         self.show_tls = False
-        try:
-            self.zoom_levels = load(open(EOLIE_LOCAL_PATH + "/zoom_levels.bin",
-                                         "rb"))
-        except:
-            self.zoom_levels = {}
         self.cursors = {}
         GLib.set_application_name('Eolie')
         GLib.set_prgname('eolie')
@@ -439,8 +434,6 @@ class Application(Gtk.Application):
             if remember_session:
                 dump(session_states,
                      open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
-            dump(self.zoom_levels,
-                 open(EOLIE_LOCAL_PATH + "/zoom_levels.bin", "wb"))
         except Exception as e:
             print("Application::save_state()", e)
 

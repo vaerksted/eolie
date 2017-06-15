@@ -205,6 +205,7 @@ class ToolbarEnd(Gtk.Bin):
             Show settings menu
             @param button as Gtk.ToogleButton
         """
+        from eolie.database_settings import DatabaseSettings
         if not button.get_active():
             return
         self.__window.toolbar.title.close_popover()
@@ -254,10 +255,10 @@ class ToolbarEnd(Gtk.Bin):
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
-        parsed = urlparse(webview.get_uri())
-        if parsed.netloc in El().zoom_levels.keys():
-            current = El().zoom_levels[parsed.netloc]
-        else:
+
+        settings_db = DatabaseSettings()
+        current = settings_db.get_zoom(webview.get_uri())
+        if current is None:
             current = 100
         builder.get_object("default_zoom_button").set_label(
                                                         "{} %".format(current))
@@ -344,14 +345,12 @@ class ToolbarEnd(Gtk.Bin):
             Restore default zoom level
             @param button as Gtk.Button
         """
-        try:
-            webview = self.__window.container.current.webview
-            parsed = urlparse(webview.get_uri())
-            del El().zoom_levels[parsed.netloc]
-            webview.update_zoom_level()
-            button.set_label("100 %")
-        except:
-            pass
+        from eolie.database_settings import DatabaseSettings
+        webview = self.__window.container.current.webview
+        settings_db = DatabaseSettings()
+        settings_db.set_zoom(100, webview.get_uri())
+        webview.update_zoom_level()
+        button.set_label("100 %")
 
 #######################
 # PRIVATE             #

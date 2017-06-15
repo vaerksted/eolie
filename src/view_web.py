@@ -78,11 +78,11 @@ class WebView(WebKit2.WebView):
         """
             Update zoom level
         """
+        from eolie.database_settings import DatabaseSettings
         try:
-            parsed = urlparse(self.get_uri())
-            if parsed.netloc in El().zoom_levels.keys():
-                zoom_level = El().zoom_levels[parsed.netloc]
-            else:
+            settings_db = DatabaseSettings()
+            zoom_level = settings_db.get_zoom(self.get_uri())
+            if zoom_level is None:
                 zoom_level = 100
             if self.__related_view is None:
                 zoom_level *= self.get_ancestor(Gtk.Window).zoom_level
@@ -106,13 +106,13 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        parsed = urlparse(self.get_uri())
-        if parsed.netloc in El().zoom_levels.keys():
-            current = El().zoom_levels[parsed.netloc]
-        else:
+        from eolie.database_settings import DatabaseSettings
+        settings_db = DatabaseSettings()
+        current = settings_db.get_zoom(self.get_uri())
+        if current is None:
             current = 100
         current += 10
-        El().zoom_levels[parsed.netloc] = current
+        settings_db.set_zoom(current, self.get_uri())
         self.update_zoom_level()
         return current
 
@@ -121,15 +121,15 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom out
         """
-        parsed = urlparse(self.get_uri())
-        if parsed.netloc in El().zoom_levels.keys():
-            current = El().zoom_levels[parsed.netloc]
-        else:
+        from eolie.database_settings import DatabaseSettings
+        settings_db = DatabaseSettings()
+        current = settings_db.get_zoom(self.get_uri())
+        if current is None:
             current = 100
         current -= 10
         if current == 0:
             return 10
-        El().zoom_levels[parsed.netloc] = current
+        settings_db.set_zoom(current, self.get_uri())
         self.update_zoom_level()
         return current
 

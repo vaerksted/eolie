@@ -34,7 +34,7 @@ class DatabaseSettings:
                                                url TEXT NOT NULL,
                                                chooseruri TEXT,
                                                languages TEXT,
-                                               zoom FLOAT
+                                               zoom INT
                                                )'''
 
     def __init__(self):
@@ -73,7 +73,6 @@ class DatabaseSettings:
                                  SET chooseruri=?\
                                  WHERE url=?", (chooseruri, parsed.netloc))
                 else:
-                    print(parsed.netloc, chooseruri, "plop")
                     sql.execute("INSERT INTO settings\
                                           (url, chooseruri)\
                                           VALUES (?, ?)", (parsed.netloc,
@@ -91,6 +90,46 @@ class DatabaseSettings:
         parsed = urlparse(url)
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT chooseruri FROM settings\
+                                  WHERE url=?", (parsed.netloc,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
+    def set_zoom(self, zoom, url):
+        """
+            Set zoom for url
+            @param zoom as int
+            @param url as str
+        """
+        parsed = urlparse(url)
+        try:
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT rowid FROM settings\
+                                      WHERE url=?", (parsed.netloc,))
+                v = result.fetchone()
+                if v is not None:
+                    sql.execute("UPDATE settings\
+                                 SET zoom=?\
+                                 WHERE url=?", (zoom, parsed.netloc))
+                else:
+                    sql.execute("INSERT INTO settings\
+                                          (url, zoom)\
+                                          VALUES (?, ?)", (parsed.netloc,
+                                                           zoom))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseFilechooser::set_zoom():", e)
+
+    def get_zoom(self, url):
+        """
+            Get zoom for url
+            @param url as str
+            @return zoom as int/None
+        """
+        parsed = urlparse(url)
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT zoom FROM settings\
                                   WHERE url=?", (parsed.netloc,))
             v = result.fetchone()
             if v is not None:
