@@ -102,8 +102,8 @@ class PagesMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_action_clicked,
                        (uri, private, state))
-        if len(title) > 60:
-            title = title[0:60] + "…"
+        if len(title) > 40:
+            title = title[0:40] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
         # Try to set icon
