@@ -13,14 +13,15 @@
 from gi.repository import Gio
 
 import sqlite3
+from urllib.parse import urlparse
 
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_LOCAL_PATH
 
 
-class DatabaseFileChooser:
+class DatabaseSettings:
     """
-        Handle filechooser path
+        Store various settings for webpage
     """
 
     # SQLite documentation:
@@ -28,10 +29,12 @@ class DatabaseFileChooser:
     # is an alias for the ROWID.
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
-    __create_filechooser = '''CREATE TABLE filechooser (
+    __create_settings = '''CREATE TABLE settings (
                                                id INTEGER PRIMARY KEY,
                                                url TEXT NOT NULL,
-                                               uri TEXT NOT NULL
+                                               chooseruri TEXT,
+                                               languages TEXT,
+                                               zoom FLOAT
                                                )'''
 
     def __init__(self):
@@ -39,7 +42,7 @@ class DatabaseFileChooser:
             Create database tables or manage update if needed
             @param suffix as str
         """
-        self.__DB_PATH = "%s/filechooser.db" % EOLIE_LOCAL_PATH
+        self.__DB_PATH = "%s/settings.db" % EOLIE_LOCAL_PATH
         f = Gio.File.new_for_path(self.__DB_PATH)
         if not f.query_exists():
             try:
@@ -48,43 +51,47 @@ class DatabaseFileChooser:
                     d.make_directory_with_parents()
                 # Create db schema
                 with SqlCursor(self) as sql:
-                    sql.execute(self.__create_filechooser)
+                    sql.execute(self.__create_settings)
                     sql.commit()
             except Exception as e:
-                print("DatabaseFileChooser::__init__(): %s" % e)
+                print("DatabaseSettings::__init__(): %s" % e)
 
-    def add_uri_for_url(self, uri, url):
+    def set_chooser_uri(self, chooseruri, url):
         """
             Add an uri related to url
-            @param uri as str
+            @param chooseruri as str
             @param url as str
         """
+        parsed = urlparse(url)
         try:
             with SqlCursor(self) as sql:
-                result = sql.execute("SELECT rowid FROM filechooser\
-                                      WHERE url=?", (url,))
+                result = sql.execute("SELECT rowid FROM settings\
+                                      WHERE url=?", (parsed.netloc,))
                 v = result.fetchone()
                 if v is not None:
-                    sql.execute("UPDATE filechooser\
-                                 SET uri=?\
-                                 WHERE url=?", (uri, url))
+                    sql.execute("UPDATE settings\
+                                 SET chooseruri=?\
+                                 WHERE url=?", (chooseruri, parsed.netloc))
                 else:
-                    sql.execute("INSERT INTO filechooser\
-                                          (url, uri)\
-                                          VALUES (?, ?)", (url, uri))
+                    print(parsed.netloc, chooseruri, "plop")
+                    sql.execute("INSERT INTO settings\
+                                          (url, chooseruri)\
+                                          VALUES (?, ?)", (parsed.netloc,
+                                                           chooseruri))
                 sql.commit()
         except Exception as e:
-            print("DatabaseFilechooser::add_uri_for_url():", e)
+            print("DatabaseFilechooser::set_chooser_uri():", e)
 
-    def get_uri(self, url):
+    def get_chooser_uri(self, url):
         """
-            Get uri for url
+            Get chooser uri for url
             @param url as str
-            @return uri as str/None
+            @return chooseruri as str/None
         """
+        parsed = urlparse(url)
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT uri FROM filechooser\
-                                  WHERE url=?", (url,))
+            result = sql.execute("SELECT chooseruri FROM settings\
+                                  WHERE url=?", (parsed.netloc,))
             v = result.fetchone()
             if v is not None:
                 return v[0]

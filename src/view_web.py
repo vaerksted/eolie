@@ -401,25 +401,24 @@ class WebView(WebKit2.WebView):
             @param webview as WebView
             @param request as WebKit2.FileChooserRequest
         """
-        from eolie.database_filechooser import DatabaseFileChooser
-        parsed = urlparse(webview.get_uri())
-        filechooser_db = DatabaseFileChooser()
+        from eolie.database_settings import DatabaseSettings
+        uri = webview.get_uri()
+        settings_db = DatabaseSettings()
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
                                            El().active_window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
-        uri = filechooser_db.get_uri(parsed.netloc)
-        if uri is not None:
-            dialog.set_current_folder_uri(uri)
+        chooser_uri = settings_db.get_chooser_uri(uri)
+        if chooser_uri is not None:
+            dialog.set_current_folder_uri(chooser_uri)
         response = dialog.run()
         if response in [Gtk.ResponseType.DELETE_EVENT,
                         Gtk.ResponseType.CANCEL]:
             request.cancel()
         else:
             request.select_files(dialog.get_filenames())
-            filechooser_db.add_uri_for_url(dialog.get_current_folder_uri(),
-                                           parsed.netloc)
+            settings_db.set_chooser_uri(dialog.get_current_folder_uri(), uri)
         return True
 
     def __on_script_dialog(self, webview, dialog):
