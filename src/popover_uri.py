@@ -32,8 +32,8 @@ class Item(GObject.GObject):
                            default="")
     atime = GObject.Property(type=int,
                              default=0)
-    position = GObject.Property(type=int,
-                                default=0)
+    score = GObject.Property(type=int,
+                             default=0)
     search = GObject.Property(type=str,
                               default="")
 
@@ -456,7 +456,7 @@ class UriPopover(Gtk.Popover):
         item.set_property("title", words)
         item.set_property("uri", El().search.get_search_uri(words))
         item.set_property("search", self.__search)
-        item.set_property("position", -1)
+        item.set_property("score", -1)
         child = Row(item, self.__window)
         child.connect("edited", self.__on_row_edited)
         child.show()
@@ -832,9 +832,9 @@ class UriPopover(Gtk.Popover):
             @param row1 as Row
             @param row2 as Row
         """
-        pos1 = row1.item.get_property("position")
-        pos2 = row2.item.get_property("position")
-        return pos2 > 0 and pos2 < pos1
+        pos1 = row1.item.get_property("score")
+        pos2 = row2.item.get_property("score")
+        return pos2 > 0 and pos1 < pos2
 
     def __sort_tags(self, row1, row2):
         """
@@ -847,17 +847,17 @@ class UriPopover(Gtk.Popover):
         return strcoll(row1.item.get_property("title"),
                        row2.item.get_property("title"))
 
-    def __add_searches(self, searches, position=0):
+    def __add_searches(self, searches):
         """
             Add searches to model
             @param [(title, uri)] as [(str, str)]
         """
         if searches:
-            (item_id, title, uri) = searches.pop(0)
+            (title, uri, score) = searches.pop(0)
             for child in self.__search_box.get_children():
                 if child.item.get_property("uri") == uri:
                     child.item.set_property("search", self.__search)
-                    child.item.set_property("position", position)
+                    child.item.set_property("score", score)
                     GLib.idle_add(self.__add_searches, searches)
                     return
             item = Item()
@@ -865,16 +865,17 @@ class UriPopover(Gtk.Popover):
             item.set_property("title", title)
             item.set_property("uri", uri)
             item.set_property("search", self.__search)
-            item.set_property("position", position)
+            item.set_property("score", score)
             child = Row(item, self.__window)
             child.connect("edited", self.__on_row_edited)
             child.show()
             self.__search_box.add(child)
-            GLib.idle_add(self.__add_searches, searches, position + 1)
+            GLib.idle_add(self.__add_searches, searches)
         else:
             for child in self.__search_box.get_children():
                 if child.item.get_property("search") != self.__search:
                     child.destroy()
+            self.__search_box.invalidate_sort()
 
     def __add_bookmarks(self, bookmarks):
         """
@@ -976,8 +977,9 @@ class UriPopover(Gtk.Popover):
         if search == '':
             result = El().history.search(search, 50)
         else:
-            result = El().bookmarks.search(search, 10)
-            result += El().history.search(search, 10)
+            result = El().history.search(search, 15)
+            result += El().bookmarks.search(search, 15)
+
         self.__add_searches(result)
 
     def __set_bookmarks(self, tag_id):

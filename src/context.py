@@ -74,7 +74,7 @@ class Context:
         more = 30 - len(items)
         if more > 0:
             uris = [item[1] for item in items]
-            for (history_id, title, uri) in El().history.search("", more):
+            for (title, uri, score) in El().history.search("", more):
                 if uri not in uris:
                     items.append((title, uri))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")

@@ -14,6 +14,7 @@ from gi.repository import Gio
 
 import sqlite3
 import itertools
+from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
@@ -406,16 +407,78 @@ class DatabaseHistory:
             @param limit as int
             @return [(id, title, uri)] as [(int, str, str)]
         """
+        words = search.split(" ")
+        if "" in words:
+            words.remove("")
+        items = []
         with SqlCursor(self) as sql:
-            filter = '%' + search + '%'
-            result = sql.execute("SELECT rowid, title, uri\
-                                  FROM history\
-                                  WHERE title LIKE ?\
-                                   OR uri LIKE ?\
-                                  ORDER BY popularity DESC,\
-                                  mtime DESC LIMIT ?",
-                                 (filter, filter, limit))
-            return list(result)
+            filters = ()
+            for word in words:
+                if not word:
+                    continue
+                filters += ("%" + word + "%", "%" + word + "%")
+            filters += (limit,)
+            request = "SELECT title, uri\
+                       FROM history"
+            if words:
+                request += " WHERE"
+            else:
+                request += " ORDER BY length(uri) ASC,\
+                            popularity DESC, mtime DESC"
+            words_copy = list(words)
+            while words_copy:
+                word = words_copy.pop(0)
+                if word:
+                    request += " (title LIKE ? OR uri LIKE ?)"
+                    if words_copy:
+                        request += " AND "
+            request += " LIMIT ?"
+
+            result = sql.execute(request, filters)
+            items += list(result)
+
+            # And then search containing one item
+            request = "SELECT title, uri\
+                       FROM history"
+            if words:
+                request += " WHERE"
+            else:
+                request += " ORDER BY length(uri) ASC,\
+                            popularity DESC, mtime DESC"
+            words_copy = list(words)
+            while words_copy:
+                word = words_copy.pop(0)
+                if word:
+                    request += " (title LIKE ? OR uri LIKE ?)"
+                    if words_copy:
+                        request += " OR "
+            request += " LIMIT ?"
+            result = sql.execute(request, filters)
+            items += list(result)
+        # Do some scoring calculation on items
+        scored_items = []
+        uris = []
+        for item in items:
+            score = 0
+            for word in words:
+                # Title match
+                if item[0].find(word) != -1:
+                    score += 1
+                # URI match
+                elif item[1].find(word) != -1:
+                    score += 1
+                    parsed = urlparse(item[1])
+                    # If netloc match word, +1
+                    if parsed.netloc.find(word + "."):
+                        score += 1
+                    # If root +10
+                    if not parsed.path:
+                        score += 10
+            scored_item = (item[0], item[1], score)
+            if item[1] not in uris:
+                scored_items.append(scored_item)
+                uris.append(item[1])
+        return scored_items
 
     def exists_guid(self, guid):
         """
