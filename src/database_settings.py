@@ -63,6 +63,8 @@ class DatabaseSettings:
             @param url as str
         """
         parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
         try:
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
@@ -79,7 +81,7 @@ class DatabaseSettings:
                                                            chooseruri))
                 sql.commit()
         except Exception as e:
-            print("DatabaseFilechooser::set_chooser_uri():", e)
+            print("DatabaseSettings::set_chooser_uri():", e)
 
     def get_chooser_uri(self, url):
         """
@@ -103,6 +105,8 @@ class DatabaseSettings:
             @param url as str
         """
         parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
         try:
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
@@ -119,7 +123,7 @@ class DatabaseSettings:
                                                            zoom))
                 sql.commit()
         except Exception as e:
-            print("DatabaseFilechooser::set_zoom():", e)
+            print("DatabaseSettings::set_zoom():", e)
 
     def get_zoom(self, url):
         """
@@ -135,6 +139,72 @@ class DatabaseSettings:
             if v is not None:
                 return v[0]
             return None
+
+    def get_languages(self, url):
+        """
+            Get languages for url
+            @param url as str
+            @return codes as [str]
+            @raise if not found
+        """
+        parsed = urlparse(url)
+        with SqlCursor(self) as sql:
+                result = sql.execute("SELECT languages FROM settings\
+                                      WHERE url=?", (parsed.netloc,))
+                v = result.fetchone()
+                if v is not None:
+                    languages = v[0]
+                    if languages:
+                        return languages.split(";")
+                    else:
+                        return []
+                else:
+                    return None
+
+    def add_language(self, code, url):
+        """
+            Add language for url
+            @param code as str
+            @param url as str
+        """
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
+        try:
+            with SqlCursor(self) as sql:
+                codes = self.get_languages(url)
+                if codes is not None:
+                    if code not in codes:
+                        codes.append(code)
+                    sql.execute("UPDATE settings\
+                                 SET languages=?\
+                                 WHERE url=?", (";".join(codes),
+                                                parsed.netloc))
+                else:
+                    sql.execute("INSERT INTO settings\
+                                          (url, languages)\
+                                          VALUES (?, ?)", (parsed.netloc,
+                                                           code))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseSettings::add_language():", e)
+
+    def remove_language(self, code, url):
+        """
+            Remove language for url
+            @param code as str
+            @param url as str
+        """
+        parsed = urlparse(url)
+        codes = self.get_languages(url)
+        if code in codes:
+            codes.remove(code)
+            with SqlCursor(self) as sql:
+                sql.execute("UPDATE settings\
+                                 SET languages=?\
+                                 WHERE url=?", (";".join(codes),
+                                                parsed.netloc))
+                sql.commit()
 
     def get_cursor(self):
         """

@@ -206,6 +206,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.ToogleButton
         """
         from eolie.database_settings import DatabaseSettings
+        from eolie.languages import LanguagesWidget
         if not button.get_active():
             return
         self.__window.toolbar.title.close_popover()
@@ -264,8 +265,12 @@ class ToolbarEnd(Gtk.Bin):
                                                         "{} %".format(current))
         popover.add(widget)
         exceptions = builder.get_object("exceptions")
+        languages = LanguagesWidget(uri)
+        languages.show()
         popover.add(exceptions)
+        popover.add(languages)
         popover.child_set_property(exceptions, "submenu", "exceptions")
+        popover.child_set_property(languages, "submenu", "languages")
         # Merge appmenu, we assume we only have one level (section -> items)
         if not El().prefers_app_menu():
             separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)

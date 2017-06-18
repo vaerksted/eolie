@@ -321,6 +321,7 @@ class WebViewNavigation:
             El().download_manager.remove_videos_for_page(webview.get_page_id())
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
+            self.update_spell_checking()
             self.__update_user_agent(parsed.netloc)
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)

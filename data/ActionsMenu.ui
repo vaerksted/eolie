@@ -558,5 +558,18 @@
         <property name="top_attach">6</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="text" translatable="yes">Spell checking</property>
+        <property name="menu_name">languages</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">7</property>
+      </packing>
+    </child>
   </object>
 </interface>

@@ -30,12 +30,25 @@ class Context:
             @param context as WebKit2.WebContext
         """
         self.__context = context
+        context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
+        context.set_favicon_database_directory(El().favicons_path)
+        cookie_manager = context.get_cookie_manager()
+        cookie_manager.set_accept_policy(
+                                     El().settings.get_enum("cookie-storage"))
+        cookie_manager.set_persistent_storage(
+                                        El().cookies_path,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
+        context.set_web_extensions_directory(El().extension_dir)
+        context.set_process_model(
+                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
+        context.set_spell_checking_enabled(
+                                 El().settings.get_value("enable-spell-check"))
         locales = GLib.get_language_names()
-        context.set_spell_checking_enabled(True)
-        if locales:
-            user_locale = locales[0]
-            default_locale = "en_GB.UTF-8"
-            context.set_spell_checking_languages([user_locale, default_locale])
+        try:
+            user_locale = locales[0].split("_")[0]
+            context.set_spell_checking_languages([user_locale])
+        except:
+            pass
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)

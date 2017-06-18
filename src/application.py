@@ -36,7 +36,6 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
-from eolie.context import Context
 from eolie.define import EOLIE_LOCAL_PATH
 
 
@@ -230,6 +229,13 @@ class Application(Gtk.Application):
         return self.__COOKIES_PATH
 
     @property
+    def favicons_path(self):
+        """
+            Cookies sqlite db path
+        """
+        return self.__FAVICONS_PATH
+
+    @property
     def extension_dir(self):
         """
             Extension dir path
@@ -244,6 +250,10 @@ class Application(Gtk.Application):
         """
             Init main application
         """
+        GLib.setenv('PYTHONPATH', self.__extension_dir, True)
+        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
+        if not d.query_exists():
+            d.make_directory_with_parents()
         self.helper = DBusHelper()
         # First init sync worker
         try:
@@ -337,28 +347,6 @@ class Application(Gtk.Application):
                                    ["<Control><Alt>1", "<Control><Alt>KP_1"])
         self.set_accels_for_action("app.panel_mode(2)",
                                    ["<Control><Alt>2", "<Control><Alt>KP_2"])
-
-        # Set some WebKit defaults
-        context = WebKit2.WebContext.get_default()
-        Context(context)
-        GLib.setenv('PYTHONPATH', self.__extension_dir, True)
-        context.set_web_extensions_directory(self.__extension_dir)
-
-        data_manager = WebKit2.WebsiteDataManager()
-        context.new_with_website_data_manager(data_manager)
-        context.set_process_model(
-                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
-        context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
-        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
-        if not d.query_exists():
-            d.make_directory_with_parents()
-        context.set_favicon_database_directory(self.__FAVICONS_PATH)
-        cookie_manager = context.get_cookie_manager()
-        cookie_manager.set_accept_policy(
-                                     self.settings.get_enum("cookie-storage"))
-        cookie_manager.set_persistent_storage(
-                                        self.__COOKIES_PATH,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
 
     def __listen_to_gnome_sm(self):
         """

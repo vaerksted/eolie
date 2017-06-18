@@ -21,6 +21,7 @@ from eolie.define import El
 from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
+from eolie.context import Context
 
 
 class WebView(WebKit2.WebView):
@@ -31,7 +32,11 @@ class WebView(WebKit2.WebView):
         """
             New webview
         """
-        view = WebKit2.WebView.new()
+        data_manager = WebKit2.WebsiteDataManager()
+        context = WebKit2.WebContext.new_with_website_data_manager(
+                                                                  data_manager)
+        Context(context)
+        view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta
         view.__init()
         return view
@@ -42,9 +47,6 @@ class WebView(WebKit2.WebView):
         """
         from eolie.context import Context
         context = WebKit2.WebContext.new_ephemeral()
-        context.set_process_model(
-                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
-        context.set_web_extensions_directory(El().extension_dir)
         Context(context)
         view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta
@@ -140,6 +142,17 @@ class WebView(WebKit2.WebView):
         """
         self.__delayed_uri = uri
 
+    def update_spell_checking(self):
+        """
+            Update spell checking
+        """
+        from eolie.database_settings import DatabaseSettings
+        settings_db = DatabaseSettings()
+        codes = settings_db.get_languages(self.get_uri())
+        # If None, default user language
+        if codes is not None:
+            self.get_context().set_spell_checking_languages(codes)
+
     @property
     def delayed_uri(self):
         """
@@ -204,6 +217,7 @@ class WebView(WebKit2.WebView):
         self.__input_source = Gdk.InputSource.MOUSE
         self.set_hexpand(True)
         self.set_vexpand(True)
+        # Set settings
         settings = self.get_settings()
         settings.set_property("enable-java",
                               El().settings.get_value('enable-plugins'))
