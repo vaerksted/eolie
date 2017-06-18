@@ -65,19 +65,25 @@ class Container(Gtk.Overlay):
             @param ephemeral as bool
             @param state as WebViewSessionState
         """
-        webview = View.get_new_webview(ephemeral)
-        view = self.__get_new_view(webview, parent)
-        if state is not None:
-            webview.restore_session_state(state)
-        view.show()
-        self.__add_view(view, window_type)
-        if uri is not None:
-            if load:
-                # Do not load uri until we are on screen
-                GLib.idle_add(webview.load_uri, uri)
-            else:
-                webview.set_delayed_uri(uri)
-                webview.emit("title-changed", uri)
+        # Use current page if possible
+        if parent is None and state is None and\
+                self.current is not None and\
+                self.current.webview.get_uri() == "about:blank":
+            self.current.webview.load_uri(uri)
+        else:
+            webview = View.get_new_webview(ephemeral)
+            view = self.__get_new_view(webview, parent)
+            if state is not None:
+                webview.restore_session_state(state)
+            view.show()
+            self.__add_view(view, window_type)
+            if uri is not None:
+                if load:
+                    # Do not load uri until we are on screen
+                    GLib.idle_add(webview.load_uri, uri)
+                else:
+                    webview.set_delayed_uri(uri)
+                    webview.emit("title-changed", uri)
 
     def load_uri(self, uri):
         """
@@ -186,7 +192,7 @@ class Container(Gtk.Overlay):
             @param view as View
             @param window_type as Gdk.WindowType
         """
-        self.__stack_sidebar.add_child(view)
+        self.__stack_sidebar.add_child(view, window_type)
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)

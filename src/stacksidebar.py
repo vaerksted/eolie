@@ -63,10 +63,11 @@ class StackSidebar(Gtk.EventBox):
         self.add(grid)
         self.set_panel_mode()
 
-    def add_child(self, view):
+    def add_child(self, view, window_type):
         """
             Add child to sidebar
             @param view as WebView
+            @param window_type as Gdk.WindowType
         """
         child = SidebarChild(view, self.__window)
         self.__set_child_height(child)
@@ -75,26 +76,18 @@ class StackSidebar(Gtk.EventBox):
             child.show_title(False)
         child.show()
 
-        # We want to insert child next to its parent and brothers
-        wanted_index = 1
-        i = 1
-        for row in self.__listbox.get_children():
-            if row.view == view.parent or (view.parent is not None and
-                                           row.view.parent == view.parent):
-                wanted_index = i
-            i += 1
-        # No parent, no brother, always after current and its parents/brothers
-        if not view.parent and wanted_index == 1:
+        if window_type == Gdk.WindowType.CHILD:
+            # We want to insert child next to its parent and brothers
+            wanted_index = 1
             i = 1
-            current = self.__window.container.current
             for row in self.__listbox.get_children():
-                if current == row.view or\
-                       row.view.parent == current or (
-                           row.view.parent is not None and
-                           row.view.parent == current.parent):
+                if row.view == view.parent or (view.parent is not None and
+                                               row.view.parent == view.parent):
                     wanted_index = i
                 i += 1
-        self.__listbox.insert(child, wanted_index)
+            self.__listbox.insert(child, wanted_index)
+        else:
+            self.__listbox.insert(child, -1)
 
     def update_visible_child(self):
         """
