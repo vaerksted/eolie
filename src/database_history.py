@@ -423,8 +423,7 @@ class DatabaseHistory:
             if words:
                 request += " WHERE"
             else:
-                request += " ORDER BY length(uri) ASC,\
-                            popularity DESC, mtime DESC"
+                request += " ORDER BY popularity DESC, mtime DESC"
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -432,6 +431,8 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
+            if words:
+                request += " ORDER BY length(uri) ASC"
             request += " LIMIT ?"
 
             result = sql.execute(request, filters)
@@ -443,8 +444,7 @@ class DatabaseHistory:
             if words:
                 request += " WHERE"
             else:
-                request += " ORDER BY length(uri) ASC,\
-                            popularity DESC, mtime DESC"
+                request += " ORDER BY popularity DESC, mtime DESC"
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -452,6 +452,8 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
+            if words:
+                request += " ORDER BY length(uri) ASC"
             request += " LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
