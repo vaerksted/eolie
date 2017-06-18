@@ -342,6 +342,7 @@ class Row(Gtk.ListBoxRow):
             Open all bookmarks
             @param button as Gtk.Button
         """
+        self.__window.toolbar.title.close_popover()
         tag_id = self.__item.get_property("id")
         if tag_id == Type.POPULARS:
             items = El().bookmarks.get_populars(50)
