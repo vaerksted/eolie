@@ -47,9 +47,8 @@ class LanguageRow(Gtk.EventBox):
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
         user_code = ""
-        try:
-            codes = settings_db.get_languages(uri)
-        except:
+        codes = settings_db.get_languages(uri)
+        if codes is None:
             codes = []
             locales = GLib.get_language_names()
             if locales:
