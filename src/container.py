@@ -472,6 +472,9 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.set_title(uri)
             self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
+            title = webview.get_title()
+            if title is not None:
+                self.__window.toolbar.title.set_title(title)
             # Give focus to webview
             if focus_in_view:
                 GLib.idle_add(self.__grab_focus_on_current)
