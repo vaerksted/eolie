@@ -205,15 +205,19 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
         else:
-            # First use favicon cached by Eolie
-            surface = El().art.get_artwork(uri, "favicon",
-                                           self.get_scale_factor(),
-                                           ArtSize.FAVICON, ArtSize.FAVICON)
+            surface = None
+            if El().art.exists(uri, "favicon"):
+                # First use favicon cached by Eolie
+                surface = El().art.get_artwork(uri, "favicon",
+                                               self.get_scale_factor(),
+                                               ArtSize.FAVICON,
+                                               ArtSize.FAVICON)
             # Then favicon cached by WebKitGTK
             if surface is None:
                 surface = self.__view.webview.get_favicon()
                 if surface is not None and not El().art.exists(uri, "favicon"):
                     El().art.save_artwork(uri, surface, "favicon")
+            # Save favicon for related uri
             if surface is not None and\
                     self.__view.webview.related_uri is not None and\
                     self.__view.webview.related_uri != uri and\

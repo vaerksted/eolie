@@ -354,6 +354,7 @@ class WebViewNavigation:
                         self.run_javascript(js, None, None)
                         break
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__related_uri = None
             if El().show_tls:
                 try:
                     from OpenSSL import crypto
