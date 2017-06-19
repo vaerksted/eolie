@@ -43,10 +43,9 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, signal_name, callback, page_id):
+    def connect(self, callback, page_id):
         """
             Connect callback to object signals
-            @param signal_name as str
             @param callback as function
             @param page_id as int
         """
@@ -61,10 +60,9 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::connect():", e)
 
-    def disconnect(self, signal_name, page_id):
+    def disconnect(self, page_id):
         """
             Disconnect signal
-            @param signal_name as str
             @param page_id as int
         """
         if page_id in self.__signals.keys():
