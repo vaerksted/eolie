@@ -204,34 +204,58 @@ class SidebarChild(Gtk.ListBoxRow):
         elif self.__view.webview.ephemeral:
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
-        else:
-            surface = None
-            if El().art.exists(uri, "favicon"):
-                # First use favicon cached by Eolie
-                surface = El().art.get_artwork(uri, "favicon",
-                                               self.get_scale_factor(),
-                                               ArtSize.FAVICON,
-                                               ArtSize.FAVICON)
-            # Then favicon cached by WebKitGTK
-            if surface is None:
-                surface = self.__view.webview.get_favicon()
-                if surface is not None and not El().art.exists(uri, "favicon"):
-                    El().art.save_artwork(uri, surface, "favicon")
-            # Save favicon for related uri
-            if surface is not None and\
-                    self.__view.webview.related_uri is not None and\
-                    self.__view.webview.related_uri != uri and\
-                    not El().art.exists(self.__view.webview.related_uri,
-                                        "favicon"):
-                El().art.save_artwork(self.__view.webview.related_uri,
-                                      surface, "favicon")
-            # Set favicon
-            if surface is None:
-                self.__image_close.set_from_icon_name("applications-internet",
-                                                      Gtk.IconSize.INVALID)
-            else:
-                self.__image_close.set_from_surface(resize_favicon(surface))
+        # First use favicon cached by Eolie
+        elif El().art.exists(uri, "favicon"):
+            surface = El().art.get_artwork(uri, "favicon",
+                                           self.get_scale_factor(),
+                                           ArtSize.FAVICON,
+                                           ArtSize.FAVICON)
+            if surface is not None:
+                self.__image_close.set_from_surface(surface)
+                self.__set_favicon_related(surface,
+                                           uri,
+                                           self.__view.webview.related_uri)
                 del surface
+        else:
+            context = self.__view.webview.get_context()
+            favicon_db = context.get_favicon_database()
+            favicon_db.get_favicon(uri, None, self.__set_favicon_result, uri)
+
+    def __set_favicon_related(self, surface, uri, related_uri):
+        """
+            Set favicon for related uri
+            @param surface as cairo.surface
+            @param uri as str
+            @param related_uri as str
+        """
+        if related_uri is not None and\
+                related_uri != uri and\
+                not El().art.exists(related_uri, "favicon"):
+            El().art.save_artwork(related_uri, surface, "favicon")
+
+    def __set_favicon_result(self, db, result, uri):
+        """
+            Set favicon db result
+            @param db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+            @param uri as str
+        """
+        try:
+            surface = db.get_favicon_finish(result)
+        except:
+            surface = None
+        if surface is None:
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
+        else:
+            resized = resize_favicon(surface)
+            El().art.save_artwork(uri, resized, "favicon")
+            self.__set_favicon_related(resized,
+                                       uri,
+                                       self.__view.webview.related_uri)
+            self.__image_close.set_from_surface(resized)
+            del resized
+            del surface
 
     def __set_snapshot_timeout(self):
         """

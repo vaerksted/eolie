@@ -34,8 +34,6 @@ def resize_favicon(favicon):
         @param favicon as cairo.surface
         @return cairo.surface
     """
-    if favicon is None:
-        return None
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                  ArtSize.FAVICON,
                                  ArtSize.FAVICON)
@@ -44,7 +42,6 @@ def resize_favicon(favicon):
     context.scale(factor, factor)
     context.set_source_surface(favicon, 0, 0)
     context.paint()
-    del favicon
     return surface
 
 
