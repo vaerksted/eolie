@@ -130,7 +130,15 @@ class ProxyExtension(Server):
             True if form contains data
             @param page_id as int
         """
-        return len(self.__form_history.keys()) > 0
+        page = self.__extension.get_page(page_id)
+        forms = self.__forms.get_forms(page)
+
+        # Check for unsecure content
+        for form in forms:
+            value = form.get_value()
+            if value is not None and len(value) > 30:
+                return True
+        return False
 
     def GetAuthForms(self, forms, page_id):
         """

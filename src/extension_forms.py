@@ -56,7 +56,7 @@ class FormsExtension:
         textareas = dom_document.get_elements_by_tag_name("textarea")
         i = 0
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() != "hidden":
+            if inputs.item(i).get_input_type() not in ["submit", "hidden"]:
                 forms.append(inputs.item(i))
             i += 1
         i = 0
