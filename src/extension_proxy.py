@@ -83,9 +83,6 @@ class ProxyExtension(Server):
         <arg type="i" name="page_id" direction="in" />
         <arg type="b" name="results" direction="out" />
     </method>
-    <method name="ClearFormsHistory">
-        <arg type="i" name="page_id" direction="in" />
-    </method>
     <method name="SetPreviousForm">
     </method>
     <method name="SetNextForm">
@@ -134,13 +131,6 @@ class ProxyExtension(Server):
             @param page_id as int
         """
         return len(self.__form_history.keys()) > 0
-
-    def ClearFormsHistory(self, page_id):
-        """
-            Clear forms history for page id
-            @param page_id as int
-        """
-        self.__form_history = {}
 
     def GetAuthForms(self, forms, page_id):
         """

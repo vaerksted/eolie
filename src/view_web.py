@@ -328,12 +328,7 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        page_id = webview.get_page_id()
-        El().helper.call("ClearFormsHistory",
-                         GLib.Variant("(i)", (page_id,)),
-                         None, None, page_id)
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
-            request.submit()
             return
         fields = request.get_text_fields()
         if fields is None:
@@ -342,7 +337,7 @@ class WebView(WebKit2.WebView):
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
             forms.append(name)
-            self.__get_forms(forms, page_id, request)
+            self.__get_forms(forms, webview.get_page_id(), request)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """
