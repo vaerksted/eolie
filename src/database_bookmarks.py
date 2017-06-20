@@ -954,9 +954,9 @@ class DatabaseBookmarks:
                     # If netloc match word, +1
                     if parsed.netloc.find(word + "."):
                         score += 1
-                    # If root +10
+                    # If root +1
                     if not parsed.path:
-                        score += 10
+                        score += 1
             scored_item = (item[0], item[1], score)
             if item[1] not in uris:
                 scored_items.append(scored_item)
