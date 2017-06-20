@@ -408,8 +408,9 @@ class DatabaseHistory:
             @return [(id, title, uri)] as [(int, str, str)]
         """
         words = search.split(" ")
-        if "" in words:
-            words.remove("")
+        # Remove empty items
+        words = [value.strip() for value in words]
+        words = list(filter(lambda x: x != '', words))
         items = []
         with SqlCursor(self) as sql:
             filters = ()
@@ -427,10 +428,9 @@ class DatabaseHistory:
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
-                if word:
-                    request += " (title LIKE ? OR uri LIKE ?)"
-                    if words_copy:
-                        request += " AND "
+                request += " (title LIKE ? OR uri LIKE ?)"
+                if words_copy:
+                    request += " AND "
             if words:
                 request += " ORDER BY length(uri) ASC"
             request += " LIMIT ?"
@@ -448,10 +448,9 @@ class DatabaseHistory:
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
-                if word:
-                    request += " (title LIKE ? OR uri LIKE ?)"
-                    if words_copy:
-                        request += " OR "
+                request += " (title LIKE ? OR uri LIKE ?)"
+                if words_copy:
+                    request += " OR "
             if words:
                 request += " ORDER BY length(uri) ASC"
             request += " LIMIT ?"
