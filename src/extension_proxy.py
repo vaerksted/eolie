@@ -332,7 +332,8 @@ class ProxyExtension(Server):
 
         # Manage forms in page
         parsed = urlparse(webpage.get_uri())
-        forms = self.__forms.get_textarea_forms(webpage)
+        forms = self.__forms.get_input_forms(webpage) +\
+            self.__forms.get_textarea_forms(webpage)
 
         # Check for unsecure content
         for form in forms:
