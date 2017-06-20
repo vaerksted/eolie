@@ -131,12 +131,13 @@ class ProxyExtension(Server):
             @param page_id as int
         """
         page = self.__extension.get_page(page_id)
-        forms = self.__forms.get_forms(page)
+        forms = self.__forms.get_textarea_forms(page)
 
         # Check for unsecure content
         for form in forms:
             value = form.get_value()
-            if value is not None and len(value) > 30:
+            default = form.get_default_value()
+            if value is not None and value != default and len(value) > 30:
                 return True
         return False
 
@@ -331,7 +332,7 @@ class ProxyExtension(Server):
 
         # Manage forms in page
         parsed = urlparse(webpage.get_uri())
-        forms = self.__forms.get_forms(webpage)
+        forms = self.__forms.get_textarea_forms(webpage)
 
         # Check for unsecure content
         for form in forms:

@@ -44,7 +44,7 @@ class FormsExtension:
             i += 1
         return False
 
-    def get_forms(self, webpage):
+    def get_input_forms(self, webpage):
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
@@ -53,12 +53,24 @@ class FormsExtension:
         forms = []
         dom_document = webpage.get_dom_document()
         inputs = dom_document.get_elements_by_tag_name("input")
-        textareas = dom_document.get_elements_by_tag_name("textarea")
         i = 0
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() not in ["submit", "hidden"]:
+            if inputs.item(i).get_input_type() not in ["password",
+                                                       "submit",
+                                                       "hidden"]:
                 forms.append(inputs.item(i))
             i += 1
+        return forms
+
+    def get_textarea_forms(self, webpage):
+        """
+            Return forms for webpage
+            @param webpage as WebKit2WebExtension.WebPage
+            @return [WebKit2WebExtension.DOMElement]
+        """
+        forms = []
+        dom_document = webpage.get_dom_document()
+        textareas = dom_document.get_elements_by_tag_name("textarea")
         i = 0
         while i < textareas.get_length():
             forms.append(textareas.item(i))
