@@ -5,6 +5,7 @@
   <object class="GtkGrid" id="languages">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="column_spacing">10</property>
     <signal name="map" handler="_on_map" object="listbox" swapped="no"/>
     <child>
       <object class="GtkModelButton">
@@ -20,6 +21,7 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">0</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -53,6 +55,8 @@
       <object class="GtkSwitch" id="switch">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
+        <property name="tooltip_text" translatable="yes">Enable spell checking</property>
+        <property name="halign">start</property>
         <property name="margin_left">2</property>
         <property name="margin_right">2</property>
         <property name="margin_top">2</property>
@@ -61,7 +65,21 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkImage">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Enable spell checking</property>
+        <property name="halign">end</property>
+        <property name="icon_name">tools-check-spelling-symbolic</property>
+        <property name="icon_size">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
   </object>
