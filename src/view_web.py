@@ -28,9 +28,10 @@ class WebView(WebKit2.WebView):
     """
         WebKit view
     """
-    def new():
+    def new(window):
         """
             New webview
+            @param window as Window
         """
         data_manager = WebKit2.WebsiteDataManager()
         context = WebKit2.WebContext.new_with_website_data_manager(
@@ -38,30 +39,32 @@ class WebView(WebKit2.WebView):
         Context(context)
         view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta
-        view.__init()
+        view.__init(None, window)
         return view
 
-    def new_ephemeral():
+    def new_ephemeral(window):
         """
             New ephemeral webview
+            @param window as Window
         """
         from eolie.context import Context
         context = WebKit2.WebContext.new_ephemeral()
         Context(context)
         view = WebKit2.WebView.new_with_context(context)
         view.__class__ = WebViewMeta
-        view.__init()
+        view.__init(None, window)
         return view
 
-    def new_with_related_view(related):
+    def new_with_related_view(related, window):
         """
             Create a new WebView related to view
             @param related as WebView
+            @param window as Window
             @return WebView
         """
         view = WebKit2.WebView.new_with_related_view(related)
         view.__class__ = WebViewMeta
-        view.__init(related)
+        view.__init(related, window)
         return view
 
     def set_setting(self, key, value):
@@ -199,13 +202,15 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view=None):
+    def __init(self, related_view, window):
         """
             Init WebView
             @param related_view as WebView
+            @param window as Window
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
+        self.__window = window
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
         self.__selection = ""
@@ -384,15 +389,15 @@ class WebView(WebKit2.WebView):
             @param action as Gtk.Action
             @param uri as str
         """
-        El().active_window.container.add_webview(uri, Gdk.WindowType.CHILD)
+        self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
 
     def __on_save_images_activate(self, action):
         """
             Show images filtering popover
             @param action as Gtk.Action
         """
-        El().active_window.toolbar.end.save_images(self.get_uri(),
-                                                   self.get_page_id())
+        self.__window.toolbar.end.save_images(self.get_uri(),
+                                              self.get_page_id())
 
     def __on_button_press_event(self, widget, event):
         """
@@ -441,7 +446,7 @@ class WebView(WebKit2.WebView):
         uri = webview.get_uri()
         settings_db = DatabaseSettings()
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
-                                           El().active_window,
+                                           self.__window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
@@ -502,7 +507,7 @@ class WebView(WebKit2.WebView):
             page_id = params[2]
             El().download_manager.add_video(uri, title, page_id)
         elif signal == "UnsecureFormFocused":
-            El().active_window.toolbar.title.show_input_warning(self)
+            self.__window.toolbar.title.show_input_warning(self)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):

@@ -242,7 +242,7 @@ class WebViewNavigation:
                                     None)
                 if info.get_file_type() == Gio.FileType.REGULAR:
                     try:
-                        Gtk.show_uri_on_window(El().active_window,
+                        Gtk.show_uri_on_window(self.__window,
                                                uri,
                                                Gtk.get_current_event_time())
                     except Exception as e:
@@ -263,7 +263,7 @@ class WebViewNavigation:
         if parsed.scheme not in ["http", "https", "file", "about",
                                  "populars", "accept"]:
             try:
-                Gtk.show_uri_on_window(El().active_window,
+                Gtk.show_uri_on_window(self.__window,
                                        uri,
                                        Gtk.get_current_event_time())
             except Exception as e:

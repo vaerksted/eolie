@@ -71,7 +71,7 @@ class Container(Gtk.Overlay):
                 self.current.webview.get_uri() == "about:blank":
             self.current.webview.load_uri(uri)
         else:
-            webview = View.get_new_webview(ephemeral)
+            webview = View.get_new_webview(ephemeral, self.__window)
             view = self.__get_new_view(webview, parent)
             if state is not None:
                 webview.restore_session_state(state)
@@ -217,7 +217,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @return View
         """
-        view = View(webview, parent)
+        view = View(webview, parent, self.__window)
         view.webview.connect("map", self.on_view_map)
         view.webview.connect("notify::estimated-load-progress",
                              self.__on_estimated_load_progress)
@@ -281,7 +281,7 @@ class Container(Gtk.Overlay):
             @param navigation_action as WebKit2.NavigationAction
             @param force as bool
         """
-        webview = WebView.new_with_related_view(related)
+        webview = WebView.new_with_related_view(related, self.__window)
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,
