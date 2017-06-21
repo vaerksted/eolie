@@ -56,7 +56,7 @@ class Row(Gtk.ListBoxRow):
                                                      Gtk.IconSize.MENU)
         delete_button.get_image().set_opacity(0.5)
         delete_button.connect("clicked", self.__on_delete_clicked)
-        delete_button.get_style_context().add_class("edit-button")
+        delete_button.get_style_context().add_class("overlay-button")
         delete_button.show()
         grid.add(host)
         grid.add(delete_button)
