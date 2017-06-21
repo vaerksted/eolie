@@ -128,7 +128,7 @@ class View(Gtk.Overlay):
                                                                               )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
         if self.__reading_view is None:
-            self.__reading_view = WebView.new()
+            self.__reading_view = WebView.new(self.__window)
             self.__reading_view.show()
             self.add_overlay(self.__reading_view)
             if self.__webview.readable_content:
