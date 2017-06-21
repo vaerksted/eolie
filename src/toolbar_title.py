@@ -43,10 +43,21 @@ class ToolbarTitle(Gtk.Bin):
         self.__width = -1
         self.__uri = ""
         self.__keywords_cancellable = Gio.Cancellable.new()
+
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
         builder.connect_signals(self)
+
         self.__entry = builder.get_object("entry")
+        # Inline completion
+        self.__completion_model = Gtk.ListStore(str)
+        self.__completion = Gtk.EntryCompletion.new()
+        self.__completion.set_model(self.__completion_model)
+        self.__completion.set_text_column(0)
+        self.__completion.set_inline_completion(True)
+        self.__completion.set_popup_completion(False)
+        self.__entry.set_completion(self.__completion)
+
         self.__popover = UriPopover(window)
         self.__popover.set_relative_to(self)
         self.__popover.connect("closed", self.__on_popover_closed)
@@ -422,6 +433,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__lock_focus:
             return True
+        self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
@@ -565,6 +577,13 @@ class ToolbarTitle(Gtk.Bin):
         """
         uri = entry.get_text().lstrip().rstrip()
         parsed = urlparse(uri)
+        # Search a missing scheme
+        if not parsed.scheme:
+            db_uri = El().history.get_match(uri)
+            if db_uri is not None:
+                db_parsed = urlparse(db_uri)
+                uri = "%s://%s" % (db_parsed.scheme, uri)
+
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
         if not is_uri and\
@@ -573,6 +592,7 @@ class ToolbarTitle(Gtk.Bin):
             uri = El().search.get_search_uri(uri)
         self.__window.container.load_uri(uri)
         self.__window.container.current.webview.grab_focus()
+        self.__completion_model.clear()
 
     def _on_icon_grid_size_allocate(self, grid, allocation):
         """
@@ -644,10 +664,9 @@ class ToolbarTitle(Gtk.Bin):
             @param value a str
         """
         self.__keywords_timeout = None
-        self.__thread = Thread(target=self.__search_keywords,
-                               args=(value,))
-        self.__thread.daemon = True
-        self.__thread.start()
+        thread = Thread(target=self.__search_keywords, args=(value,))
+        thread.daemon = True
+        thread.start()
 
     def __search_keywords(self, value):
         """
@@ -660,6 +679,20 @@ class ToolbarTitle(Gtk.Bin):
             if words:
                 GLib.idle_add(self.__popover.add_keywords,
                               words.replace('"', ''))
+
+    def __populate_completion(self, uri):
+        """
+            @param uri as str
+        """
+        match = El().history.get_match(uri)
+        if match is not None:
+            match_parsed = urlparse(match)
+            self.__completion_model.clear()
+            if match_parsed.path.find(uri.split("/")[-1]) != -1:
+                self.__completion_model.append([match_parsed.netloc +
+                                                match_parsed.path])
+            else:
+                self.__completion_model.append([match_parsed.netloc])
 
     def __on_popover_closed(self, popover):
         """
@@ -684,6 +717,17 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
+
+        # Text change comes from completion validation ie Enter
+        for completion in self.__completion_model:
+            if completion[0] == value:
+                return
+
+        # Populate completion model
+        thread = Thread(target=self.__populate_completion, args=(value,))
+        thread.daemon = True
+        thread.start()
+
         webview = self.__window.container.current.webview
         self.__text_entry_history[webview] = self.__entry.get_text()
         self.__keywords_cancellable.cancel()

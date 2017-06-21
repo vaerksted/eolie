@@ -319,6 +319,24 @@ class DatabaseHistory:
                                   WHERE mtime > ?", (mtime,))
             return list(itertools.chain(*result))
 
+    def get_match(self, uri):
+        """
+            Try to get best uri matching
+            @parma uri as str
+            @return str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri\
+                                  FROM history\
+                                  WHERE uri like ?\
+                                  ORDER BY popularity DESC\
+                                  LIMIT 1",
+                                 ("%" + uri + "%",))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
     def set_title(self, history_id, title, commit=True):
         """
             Set history title
