@@ -582,7 +582,10 @@ class ToolbarTitle(Gtk.Bin):
             db_uri = El().history.get_match(uri)
             if db_uri is not None:
                 db_parsed = urlparse(db_uri)
-                uri = "%s://%s" % (db_parsed.scheme, uri)
+                if db_parsed.netloc.startswith("www."):
+                    uri = "%s://www.%s" % (db_parsed.scheme, uri)
+                else:
+                    uri = "%s://%s" % (db_parsed.scheme, uri)
 
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
@@ -688,11 +691,12 @@ class ToolbarTitle(Gtk.Bin):
         if match is not None:
             match_parsed = urlparse(match)
             self.__completion_model.clear()
+            netloc = match_parsed.netloc.replace("www.", "")
             if match_parsed.path.find(uri.split("/")[-1]) != -1:
-                self.__completion_model.append([match_parsed.netloc +
+                self.__completion_model.append([netloc +
                                                 match_parsed.path])
             else:
-                self.__completion_model.append([match_parsed.netloc])
+                self.__completion_model.append([netloc])
 
     def __on_popover_closed(self, popover):
         """
