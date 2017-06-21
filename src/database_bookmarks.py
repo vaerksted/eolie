@@ -891,8 +891,9 @@ class DatabaseBookmarks:
             @return [(id, title, uri)] as [(int, str, str)]
         """
         words = search.split(" ")
-        if "" in words:
-            words.remove("")
+        # Remove empty items
+        words = [value.strip() for value in words]
+        words = list(filter(lambda x: x != '', words))
         items = []
         with SqlCursor(self) as sql:
             filters = ()
