@@ -43,16 +43,17 @@ class DBusHelper:
         except Exception as e:
             print("DBusHelper::call():", e)
 
-    def connect(self, callback, page_id):
+    def connect(self, signal, callback, page_id):
         """
             Connect callback to object signals
+            @param signal as str
             @param callback as function
             @param page_id as int
         """
         try:
             bus = El().get_dbus_connection()
             proxy_bus = PROXY_BUS % page_id
-            subscribe_id = bus.signal_subscribe(None, proxy_bus, None,
+            subscribe_id = bus.signal_subscribe(None, proxy_bus, signal,
                                                 PROXY_PATH, None,
                                                 Gio.DBusSignalFlags.NONE,
                                                 callback, None)

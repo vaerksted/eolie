@@ -479,7 +479,7 @@ class WebView(WebKit2.WebView):
             @parma webview as WebView
         """
         page_id = webview.get_page_id()
-        El().helper.connect(self.__on_signal, page_id)
+        El().helper.connect(None, self.__on_signal, page_id)
 
     def __on_unmap(self, webview):
         """
