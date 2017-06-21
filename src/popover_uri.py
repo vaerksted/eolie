@@ -807,7 +807,8 @@ class UriPopover(Gtk.Popover):
             Clear history for wanted atime
             @thread safe
         """
-        history_ids = El().history.clear(atime)
+        history_ids = El().history.get_from_atime(atime)
+        El().history.clear_from(atime)
         GLib.idle_add(self._on_day_selected, self.__calendar)
         if El().sync_worker is None:
             for history_id in El().history.get_empties():

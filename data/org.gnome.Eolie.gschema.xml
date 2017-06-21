@@ -1,135 +1,152 @@
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-    <enum id="org.gnome.Eolie.Cookie">
-       <value nick="always" value="0"/>
-       <value nick="never" value="1"/>
-       <value nick="no_third_party" value="2"/>
-    </enum>
-    <enum id="org.gnome.Eolie.PanelMode">
-       <value nick="preview" value="0"/>
-       <value nick="no-preview" value="1"/>
-       <value nick="minimal" value="2"/>
-    </enum>
-    <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
-        <key type="ai" name="window-size">
-            <default>[768, 600]</default>
-            <summary>Window size</summary>
-            <description>Window size (width and height)</description>
-        </key>
-        <key type="ai" name="window-position">
-            <default>[]</default>
-            <summary>Window position</summary>
-            <description>Window position (x and y)</description>
-        </key>
-        <key type="b" name="window-maximized">
-            <default>true</default>
-            <summary>Window maximized</summary>
-            <description>Window maximized state</description>
-        </key>
-	    <key type="b" name="adblock">
-            <default>true</default>
-            <summary>Block ads on pages</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="popupblock">
-            <default>true</default>
-            <summary>Block unwanted popups on pages</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="imgblock">
-            <default>false</default>
-            <summary>Block images on pages</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="download-uri">
-            <default>""</default>
-            <summary>Download folder URI</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="open-downloads">
-            <default>true</default>
-            <summary>Open finished downloads</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="search-engine">
-            <default>"Google"</default>
-            <summary>Web search engine</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="remember-session">
-            <default>false</default>
-            <summary>Remember sessions</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="remember-passwords">
-            <default>false</default>
-            <summary>Remember passwords</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="developer-extras">
-            <default>false</default>
-            <summary>Enable developer tools</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="enable-plugins">
-            <default>false</default>
-            <summary>Enable plugins</summary>
-            <description></description>
-        </key>
-	    <key type="b" name="use-system-fonts">
-            <default>false</default>
-            <summary>Use system fonts</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="font-sans-serif">
-            <default>"Sans 10"</default>
-            <summary>Sans serif font</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="font-serif">
-            <default>"Serif 10"</default>
-            <summary>Serif font</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="font-monospace">
-            <default>"Monospace 10"</default>
-            <summary>Monospace font</summary>
-            <description></description>
-        </key>
-	    <key type="s" name="start-page">
-            <default>"search"</default>
-            <summary>Open this page on startup</summary>
-            <description></description>
-        </key>
-	    <key type="i" name="min-font-size">
-            <default>5</default>
-            <summary>Minimum font size</summary>
-            <description></description>
-        </key>
-	    <key type="as" name="default-zoom-level">
-            <default>[]</default>
-            <summary>INTERNAL</summary>
-            <description></description>
-        </key>
-	    <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
-            <default>"no_third_party"</default>
-            <summary>Cookies storage type</summary>
-            <description></description>
-        </key>
-	    <key enum="org.gnome.Eolie.PanelMode" name="panel-mode">
-            <default>"preview"</default>
-            <summary>Panel mode</summary>
-            <description></description>
-        </key>        
-	    <key type="b" name="do-not-track">
-            <default>true</default>
-            <summary>Tell websites I do not want to be tracked</summary>
-            <description></description>
-        </key>
-        <key type="b" name="enable-spell-check">
-            <default>true</default>
-            <summary>Enable spell checking</summary>
-            <description></description>
-        </key>
-    </schema>
+   <enum id="org.gnome.Eolie.Cookie">
+      <value nick="always" value="0" />
+      <value nick="never" value="1" />
+      <value nick="no_third_party" value="2" />
+   </enum>
+  <enum id="org.gnome.Eolie.History">
+      <value nick="day" value="1" />
+      <value nick="week" value="2" />
+      <value nick="4week" value="3" />
+      <value nick="year" value="4" />
+      <value nick="forever" value="5" />
+      <value nick="never" value="6" />
+   </enum>
+   <enum id="org.gnome.Eolie.PanelMode">
+      <value nick="preview" value="0" />
+      <value nick="no-preview" value="1" />
+      <value nick="minimal" value="2" />
+   </enum>
+   <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
+      <key type="ai" name="window-size">
+         <default>[768, 600]</default>
+         <summary>Window size</summary>
+         <description>Window size (width and height)</description>
+      </key>
+      <key type="ai" name="window-position">
+         <default>[]</default>
+         <summary>Window position</summary>
+         <description>Window position (x and y)</description>
+      </key>
+      <key type="b" name="window-maximized">
+         <default>true</default>
+         <summary>Window maximized</summary>
+         <description>Window maximized state</description>
+      </key>
+      <key type="b" name="adblock">
+         <default>true</default>
+         <summary>Block ads on pages</summary>
+         <description />
+      </key>
+      <key type="b" name="popupblock">
+         <default>true</default>
+         <summary>Block unwanted popups on pages</summary>
+         <description />
+      </key>
+      <key type="b" name="imgblock">
+         <default>false</default>
+         <summary>Block images on pages</summary>
+         <description />
+      </key>
+      <key type="s" name="download-uri">
+         <default>""</default>
+         <summary>Download folder URI</summary>
+         <description />
+      </key>
+      <key type="b" name="open-downloads">
+         <default>true</default>
+         <summary>Open finished downloads</summary>
+         <description />
+      </key>
+      <key type="s" name="search-engine">
+         <default>"Google"</default>
+         <summary>Web search engine</summary>
+         <description />
+      </key>
+      <key type="b" name="remember-session">
+         <default>false</default>
+         <summary>Remember sessions</summary>
+         <description />
+      </key>
+      <key type="b" name="remember-passwords">
+         <default>false</default>
+         <summary>Remember passwords</summary>
+         <description />
+      </key>
+      <key type="b" name="developer-extras">
+         <default>false</default>
+         <summary>Enable developer tools</summary>
+         <description />
+      </key>
+      <key type="b" name="enable-plugins">
+         <default>false</default>
+         <summary>Enable plugins</summary>
+         <description />
+      </key>
+      <key type="b" name="use-system-fonts">
+         <default>false</default>
+         <summary>Use system fonts</summary>
+         <description />
+      </key>
+      <key type="s" name="font-sans-serif">
+         <default>"Sans 10"</default>
+         <summary>Sans serif font</summary>
+         <description />
+      </key>
+      <key type="s" name="font-serif">
+         <default>"Serif 10"</default>
+         <summary>Serif font</summary>
+         <description />
+      </key>
+      <key type="s" name="font-monospace">
+         <default>"Monospace 10"</default>
+         <summary>Monospace font</summary>
+         <description />
+      </key>
+      <key type="s" name="start-page">
+         <default>"search"</default>
+         <summary>Open this page on startup</summary>
+         <description />
+      </key>
+      <key type="i" name="min-font-size">
+         <default>5</default>
+         <summary>Minimum font size</summary>
+         <description />
+      </key>
+      <key type="as" name="default-zoom-level">
+         <default>[]</default>
+         <summary>INTERNAL</summary>
+         <description />
+      </key>
+      <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
+         <default>"no_third_party"</default>
+         <summary>Cookies storage type</summary>
+         <description />
+      </key>
+      <key enum="org.gnome.Eolie.History" name="history-storage">
+         <default>"forever"</default>
+         <summary>History storage type</summary>
+         <description />
+      </key>
+      <key enum="org.gnome.Eolie.PanelMode" name="panel-mode">
+         <default>"preview"</default>
+         <summary>Panel mode</summary>
+         <description />
+      </key>
+      <key type="b" name="do-not-track">
+         <default>true</default>
+         <summary>Tell websites I do not want to be tracked</summary>
+         <description />
+      </key>
+      <key type="b" name="enable-spell-check">
+         <default>true</default>
+         <summary>Enable spell checking</summary>
+         <description />
+      </key>
+   </schema>
 </schemalist>
+
+

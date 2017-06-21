@@ -23,6 +23,7 @@ from pickle import dump, load
 from threading import Thread
 from urllib.parse import urlparse
 from getpass import getuser
+from time import time
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -37,7 +38,7 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
-from eolie.define import EOLIE_LOCAL_PATH
+from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues
 
 
 class Application(Gtk.Application):
@@ -174,6 +175,13 @@ class Application(Gtk.Application):
         # Stop pending tasks
         self.download_manager.cancel()
         self.adblock.stop()
+        # Clear history
+        active_id = str(self.settings.get_enum("history-storage"))
+        if active_id != TimeSpan.FOREVER:
+            atime = time()
+            if active_id != TimeSpan.NEVER:
+                atime -= TimeSpanValues[active_id]/1000000
+            self.history.clear_to(int(atime))
         # If sync is running, to avoid db lock, we do not vacuum
         if self.sync_worker is not None and self.sync_worker.syncing:
             self.sync_worker.stop()

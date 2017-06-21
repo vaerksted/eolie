@@ -45,8 +45,10 @@ class TimeSpan:
     DAY = "1"
     WEEK = "2"
     FOUR_WEEK = "3"
-    FOREVER = "4"
-    CUSTOM = "5"
+    YEAR = "4"
+    FOREVER = "5"
+    NEVER = "6"
+    CUSTOM = "7"
 
 
 TimeSpanValues = {
@@ -54,6 +56,7 @@ TimeSpanValues = {
     TimeSpan.DAY: GLib.TIME_SPAN_DAY,
     TimeSpan.WEEK: GLib.TIME_SPAN_DAY * 7,
     TimeSpan.FOUR_WEEK: GLib.TIME_SPAN_DAY * 7 * 4,
+    TimeSpan.YEAR: GLib.TIME_SPAN_DAY * 365,
     TimeSpan.FOREVER: 0
 }
 

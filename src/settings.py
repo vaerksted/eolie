@@ -145,6 +145,10 @@ class SettingsDialog:
         storage = El().settings.get_enum("cookie-storage")
         cookies_combo.set_active_id(str(storage))
 
+        history_combo = builder.get_object("history_combo")
+        storage = El().settings.get_enum("history-storage")
+        history_combo.set_active_id(str(storage))
+
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
                                 El().settings.get_value("remember-passwords"))
@@ -213,13 +217,20 @@ class SettingsDialog:
 
     def _on_cookies_changed(self, combo):
         """
-            Save engine
+            Save cookies setting
             @param combo as Gtk.ComboBoxText
         """
         El().settings.set_enum("cookie-storage", int(combo.get_active_id()))
         for window in El().windows:
             for view in window.container.views:
                 El().set_cookie_manager(view.webview.get_context())
+
+    def _on_history_changed(self, combo):
+        """
+            Save history keep setting
+            @param combo as Gtk.ComboBoxText
+        """
+        El().settings.set_enum("history-storage", int(combo.get_active_id()))
 
     def _on_default_zoom_changed(self, button):
         """

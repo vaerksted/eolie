@@ -158,9 +158,29 @@ class DatabaseHistory:
                          WHERE rowid=?", (history_id,))
             sql.commit()
 
-    def clear(self, atime):
+    def clear_from(self, atime):
         """
             Clear history from atime
+            @param atime as int
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE FROM history_atime\
+                         WHERE atime >= ?", (atime,))
+            sql.commit()
+
+    def clear_to(self, atime):
+        """
+            Clear history to atime
+            @param atime as int
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("DELETE FROM history_atime\
+                         WHERE atime <= ?", (atime,))
+            sql.commit()
+
+    def get_from_atime(self, atime):
+        """
+            Get history ids from atime
             @param atime as int
             @return modified history ids as [int]
         """
@@ -169,11 +189,7 @@ class DatabaseHistory:
                                   FROM history, history_atime\
                                   WHERE history_atime.history_id=history.rowid\
                                   AND atime >= ?", (atime,))
-            items = list(itertools.chain(*result))
-            sql.execute("DELETE FROM history_atime\
-                         WHERE atime >= ?", (atime,))
-            sql.commit()
-            return items
+            return list(itertools.chain(*result))
 
     def get_empties(self):
         """
