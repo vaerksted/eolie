@@ -230,17 +230,24 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         try:
             surface = db.get_favicon_finish(result)
+            save = True
         except:
-            surface = None
+            surface = self.__view.webview.get_favicon()
+            # Getting favicon is not accurate
+            # We don't know if it really is for current uri
+            # So don't save
+            save = False
+
         if surface is None:
             self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.INVALID)
         else:
             resized = resize_favicon(surface)
-            El().art.save_artwork(uri, resized, "favicon")
-            self.__set_favicon_related(resized,
-                                       uri,
-                                       self.__view.webview.related_uri)
+            if save:
+                El().art.save_artwork(uri, resized, "favicon")
+                self.__set_favicon_related(resized,
+                                           uri,
+                                           self.__view.webview.related_uri)
             self.__image_close.set_from_surface(resized)
             del resized
             del surface
