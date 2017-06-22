@@ -72,11 +72,9 @@ class Container(Gtk.Overlay):
             self.current.webview.load_uri(uri)
         else:
             webview = View.get_new_webview(ephemeral, self.__window)
-            view = self.__get_new_view(webview, parent)
             if state is not None:
                 webview.restore_session_state(state)
-            view.show()
-            self.add_view(view, window_type)
+            self.add_view(webview, parent, window_type)
             if uri is not None:
                 if load:
                     # Do not load uri until we are on screen
@@ -85,12 +83,15 @@ class Container(Gtk.Overlay):
                     webview.set_delayed_uri(uri)
                     webview.emit("title-changed", uri)
 
-    def add_view(self, view, window_type):
+    def add_view(self, webview, parent, window_type):
         """
             Add view to container
-            @param view as View
+            @param webview as WebView
+            @param parent as WebView
             @param window_type as Gdk.WindowType
         """
+        view = self.__get_new_view(webview, parent)
+        view.show()
         self.__stack_sidebar.add_child(view, window_type)
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
@@ -308,11 +309,10 @@ class Container(Gtk.Overlay):
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
-            view = self.__get_view_for_webview(related)
-            view = self.__get_new_view(webview, None)
-            view.show()
             active_window = El().get_new_window()
-            active_window.container.add_view(view, Gdk.WindowType.CHILD)
+            active_window.container.add_view(webview,
+                                             None,
+                                             Gdk.WindowType.CHILD)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
