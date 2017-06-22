@@ -204,10 +204,13 @@ class SidebarChild(Gtk.ListBoxRow):
         elif self.__view.webview.ephemeral:
             self.__image_close.set_from_icon_name("user-not-tracked-symbolic",
                                                   Gtk.IconSize.INVALID)
-        else:
+        elif uri:
             context = self.__view.webview.get_context()
             favicon_db = context.get_favicon_database()
             favicon_db.get_favicon(uri, None, self.__set_favicon_result, uri)
+        else:
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
 
     def __set_favicon_related(self, surface, uri, related_uri):
         """
