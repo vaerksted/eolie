@@ -353,18 +353,19 @@ class WebView(WebKit2.WebView):
             @param hit as WebKit2.HitTestResult
         """
         parsed = urlparse(view.get_uri())
-        # Add an item for open in a new page
-        # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-        # Introspection missing, Gtk.Action deprecated
-        action = Gtk.Action.new("open_new_page",
-                                _("Open link in a new page"),
-                                None,
-                                None)
-        action.connect("activate",
-                       self.__on_open_new_page_activate,
-                       hit.get_link_uri())
-        item = WebKit2.ContextMenuItem.new(action)
-        context_menu.insert(item, 1)
+        if hit.context_is_link():
+            # Add an item for open in a new page
+            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+            # Introspection missing, Gtk.Action deprecated
+            action = Gtk.Action.new("open_new_page",
+                                    _("Open link in a new page"),
+                                    None,
+                                    None)
+            action.connect("activate",
+                           self.__on_open_new_page_activate,
+                           hit.get_link_uri())
+            item = WebKit2.ContextMenuItem.new(action)
+            context_menu.insert(item, 1)
 
         # Add an item for open all images
         if view.is_loading() or parsed.scheme not in ["http", "https"]:
