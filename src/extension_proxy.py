@@ -307,16 +307,6 @@ class ProxyExtension(Server):
             Check for unsecure content
             @param webpage as WebKit2WebExtension.WebPage
         """
-        # Create proxy if None
-        if self.__proxy_bus is None:
-            self.__proxy_bus = PROXY_BUS % webpage.get_id()
-            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-            Gio.bus_own_name_on_connection(self.__bus,
-                                           self.__proxy_bus,
-                                           Gio.BusNameOwnerFlags.NONE,
-                                           None,
-                                           None)
-            Server.__init__(self, self.__bus, PROXY_PATH)
         # Remove any previous event listener
         for form in self.__listened_forms:
             form.remove_event_listener("input", self.__on_input, False)
@@ -355,6 +345,16 @@ class ProxyExtension(Server):
             @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
         """
+        # Create proxy if None
+        if self.__proxy_bus is None:
+            self.__proxy_bus = PROXY_BUS % webpage.get_id()
+            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            Gio.bus_own_name_on_connection(self.__bus,
+                                           self.__proxy_bus,
+                                           Gio.BusNameOwnerFlags.NONE,
+                                           None,
+                                           None)
+            Server.__init__(self, self.__bus, PROXY_PATH)
         webpage.connect("document-loaded", self.__on_document_loaded)
         webpage.connect("send-request", self.__on_send_request)
         self.__extension = extension
@@ -366,16 +366,6 @@ class ProxyExtension(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        # Create proxy if None
-        if self.__proxy_bus is None:
-            self.__proxy_bus = PROXY_BUS % webpage.get_id()
-            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-            Gio.bus_own_name_on_connection(self.__bus,
-                                           self.__proxy_bus,
-                                           Gio.BusNameOwnerFlags.NONE,
-                                           None,
-                                           None)
-            Server.__init__(self, self.__bus, PROXY_PATH)
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
         uri = request.get_uri()
         parsed = urlparse(uri)
