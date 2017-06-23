@@ -563,6 +563,7 @@ class UriPopover(Gtk.Popover):
                 self.__input = Input.NONE
         else:
             self.__input = Input.NONE
+        return False
 
     @property
     def input(self):

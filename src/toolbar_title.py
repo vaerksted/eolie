@@ -479,6 +479,27 @@ class ToolbarTitle(Gtk.Bin):
                                 Gdk.KEY_KP_Enter,
                                 Gdk.KEY_Escape]:
                 GLib.idle_add(self.close_popover)
+                uri = entry.get_text().lstrip().rstrip()
+                parsed = urlparse(uri)
+                # Search a missing scheme
+                if uri.find(".") != -1 and not parsed.scheme:
+                    db_uri = El().history.get_match(uri)
+                    if db_uri is not None:
+                        db_parsed = urlparse(db_uri)
+                        if db_parsed.netloc.startswith("www."):
+                            uri = "%s://www.%s" % (db_parsed.scheme, uri)
+                        else:
+                            uri = "%s://%s" % (db_parsed.scheme, uri)
+
+                is_uri = parsed.scheme in ["about", "http",
+                                           "https", "file", "populars"]
+                if not is_uri and\
+                        not uri.startswith("/") and\
+                        El().search.is_search(uri):
+                    uri = El().search.get_search_uri(uri)
+                self.__window.container.load_uri(uri)
+                self.__window.container.current.webview.grab_focus()
+                self.__completion_model.clear()
 
     def _on_readable_indicator_press(self, eventbox, event):
         """
@@ -569,33 +590,6 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         eventbox.set_opacity(0.8)
-
-    def _on_activate(self, entry):
-        """
-            Go to url or search for words
-            @param entry as Gtk.Entry
-        """
-        uri = entry.get_text().lstrip().rstrip()
-        parsed = urlparse(uri)
-        # Search a missing scheme
-        if uri.find(".") != -1 and not parsed.scheme:
-            db_uri = El().history.get_match(uri)
-            if db_uri is not None:
-                db_parsed = urlparse(db_uri)
-                if db_parsed.netloc.startswith("www."):
-                    uri = "%s://www.%s" % (db_parsed.scheme, uri)
-                else:
-                    uri = "%s://%s" % (db_parsed.scheme, uri)
-
-        is_uri = parsed.scheme in ["about", "http",
-                                   "https", "file", "populars"]
-        if not is_uri and\
-                not uri.startswith("/") and\
-                El().search.is_search(uri):
-            uri = El().search.get_search_uri(uri)
-        self.__window.container.load_uri(uri)
-        self.__window.container.current.webview.grab_focus()
-        self.__completion_model.clear()
 
     def _on_icon_grid_size_allocate(self, grid, allocation):
         """
