@@ -197,7 +197,7 @@ class DatabaseSettings:
         """
         parsed = urlparse(url)
         codes = self.get_languages(url)
-        if code in codes:
+        if codes is not None and code in codes:
             codes.remove(code)
             with SqlCursor(self) as sql:
                 sql.execute("UPDATE settings\
