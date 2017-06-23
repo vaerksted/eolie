@@ -55,7 +55,7 @@ class ToolbarEnd(Gtk.Bin):
         self.__fullscreen_button = builder.get_object("fullscreen_button")
         self.__progress = ProgressBar(builder.get_object("download_button"))
         if El().download_manager.get():
-            self._progress.show()
+            self.__progress.show()
         El().download_manager.connect("download-start",
                                       self.__on_download)
         El().download_manager.connect("download-finish",
