@@ -48,8 +48,8 @@ class VideoRow(Gtk.ListBoxRow):
         else:
             self.__sublabel.set_text(uri)
         tooltip = uri
-        if len(tooltip) > 40:
-            tooltip = tooltip[0:40] + "…"
+        if len(tooltip) > 100:
+            tooltip = tooltip[0:100] + "…"
         self.set_tooltip_text(tooltip)
         self.__preview.set_from_icon_name("video-x-generic",
                                           Gtk.IconSize.DIALOG)
