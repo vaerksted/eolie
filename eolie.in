@@ -20,7 +20,7 @@ from gi.repository import Gio
 localedir = '@localedir@'
 pkgdatadir = '@pkgdatadir@'
 
-sys.path.insert(1, '@pkgdatadir@/webextension')
+sys.path.insert(1, '@pkgdatadir@/webkitextension')
 
 from eolie.application import Application
 
