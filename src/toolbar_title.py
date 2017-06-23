@@ -578,7 +578,7 @@ class ToolbarTitle(Gtk.Bin):
         uri = entry.get_text().lstrip().rstrip()
         parsed = urlparse(uri)
         # Search a missing scheme
-        if not parsed.scheme:
+        if uri.find(".") != -1 and not parsed.scheme:
             db_uri = El().history.get_match(uri)
             if db_uri is not None:
                 db_parsed = urlparse(db_uri)
