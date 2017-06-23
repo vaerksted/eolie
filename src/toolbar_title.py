@@ -475,9 +475,9 @@ class ToolbarTitle(Gtk.Bin):
             return True
         else:
             self.__entry.get_style_context().add_class('input')
-            if event.keyval in [Gdk.KEY_Return,
-                                Gdk.KEY_KP_Enter,
-                                Gdk.KEY_Escape]:
+            if event.keyval == Gdk.KEY_Escape:
+                GLib.idle_add(self.close_popover)
+            elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                 GLib.idle_add(self.close_popover)
                 uri = entry.get_text().lstrip().rstrip()
                 parsed = urlparse(uri)
