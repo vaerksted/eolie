@@ -366,6 +366,16 @@ class ProxyExtension(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
+        # Create proxy if None
+        if self.__proxy_bus is None:
+            self.__proxy_bus = PROXY_BUS % webpage.get_id()
+            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            Gio.bus_own_name_on_connection(self.__bus,
+                                           self.__proxy_bus,
+                                           Gio.BusNameOwnerFlags.NONE,
+                                           None,
+                                           None)
+            Server.__init__(self, self.__bus, PROXY_PATH)
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
         uri = request.get_uri()
         parsed = urlparse(uri)
