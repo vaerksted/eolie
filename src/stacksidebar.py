@@ -128,7 +128,7 @@ class StackSidebar(Gtk.EventBox):
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self.__listbox.set_filter_func(None)
             for child in self.__listbox.get_children():
-                child.show_title(self.__panel_mode)
+                child.show_title(self.__panel_mode != 2)
         self.__search_bar.set_search_mode(b)
 
     def next(self):
