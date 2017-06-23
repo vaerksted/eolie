@@ -85,20 +85,18 @@ class Context:
         html_start = start_content.decode("utf-8")
         html_start = html_start.replace("@TITLE@", _("Popular pages"))
         for (title, uri) in items:
-            path = El().art.get_path(uri, "start")
-            f = Gio.File.new_for_path(path)
-            if not f.query_exists():
-                continue
-            html_start += '<a class="child" title="%s" href="%s">' % (title,
-                                                                      uri)
-            html_start += '<img src="file://%s"></img>' % path
-            html_start += '<div class="caption">%s' % title
             favicon_path = El().art.get_path(uri, "favicon")
             favicon = Gio.File.new_for_path(favicon_path)
-            if favicon.query_exists():
-                html_start += '<img class="favicon" src="%s"></img>' % \
-                    favicon.get_uri()
-            html_start += '</div></a>'
+            path = El().art.get_path(uri, "start")
+            thumbnail = Gio.File.new_for_path(path)
+            if not thumbnail.query_exists() or not favicon.query_exists():
+                continue
+            html_start += '<a class="child" title="%s" href="%s">\
+                           <img src="file://%s"></img>\
+                           <div class="caption">%s\
+                           <img class="favicon" src="%s"></img>\
+                           </div></a>' % (title, uri, path,
+                                          title, favicon.get_uri())
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
