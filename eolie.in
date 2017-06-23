@@ -20,8 +20,6 @@ from gi.repository import Gio
 localedir = '@localedir@'
 pkgdatadir = '@pkgdatadir@'
 
-sys.path.insert(1, '@pkgdatadir@/webkitextension')
-
 from eolie.application import Application
 
 def install_excepthook():
