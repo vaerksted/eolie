@@ -439,13 +439,15 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.get_style_context().remove_class("input")
         self.set_text_entry("")
         view = self.__window.container.current
-        bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
-        if bookmark_id is not None:
-            icon_name = "starred-symbolic"
-        else:
-            icon_name = "non-starred-symbolic"
-        self.__action_image2.set_from_icon_name(icon_name,
-                                                Gtk.IconSize.MENU)
+        uri = view.webview.get_uri()
+        if uri is not None:
+            bookmark_id = El().bookmarks.get_id(uri)
+            if bookmark_id is not None:
+                icon_name = "starred-symbolic"
+            else:
+                icon_name = "non-starred-symbolic"
+            self.__action_image2.set_from_icon_name(icon_name,
+                                                    Gtk.IconSize.MENU)
 
     def _on_button_press_event(self, entry, event):
         """
