@@ -165,6 +165,12 @@ class WebView(WebKit2.WebView):
         item = LinkedList(text, None, self.__text_entry)
         self.__text_entry = item
 
+    def clear_text_entry(self):
+        """
+            Clear text entry history
+        """
+        self.__text_entry = LinkedList("", None, None)
+
     def get_current_text_entry(self):
         """
             Get currnet text entry value
@@ -262,7 +268,6 @@ class WebView(WebKit2.WebView):
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
-        self.__text_entry = LinkedList("", None, None)
         self.__window = window
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard
@@ -275,6 +280,7 @@ class WebView(WebKit2.WebView):
         self.__input_source = Gdk.InputSource.MOUSE
         self.set_hexpand(True)
         self.set_vexpand(True)
+        self.clear_text_entry()
         # Set settings
         settings = self.get_settings()
         settings.set_property("enable-java",

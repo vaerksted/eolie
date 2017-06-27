@@ -402,13 +402,13 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         webview = self.__window.container.current.webview
-        value = webview.get_current_text_entry()
-        if value is not None:
-            self.set_text_entry(value)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         parsed = urlparse(self.__uri)
-        if parsed.scheme in ["http", "https", "file"]:
+        value = webview.get_current_text_entry()
+        if value:
+            self.set_text_entry(value)
+        elif parsed.scheme in ["http", "https", "file"]:
             self.set_text_entry(self.__uri)
             self.__placeholder.set_opacity(0)
         else:
@@ -487,7 +487,7 @@ class ToolbarTitle(Gtk.Bin):
                 GLib.idle_add(self.close_popover)
             # Close popover, save current entry and load text content
             elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
-                webview.add_text_entry(uri)
+                webview.clear_text_entry()
                 GLib.idle_add(self.close_popover)
                 parsed = urlparse(uri)
                 # Search a missing scheme
