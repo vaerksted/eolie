@@ -22,6 +22,7 @@ from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
 from eolie.context import Context
+from eolie.list import LinkedList
 
 
 class WebView(WebKit2.WebView):
@@ -156,6 +157,57 @@ class WebView(WebKit2.WebView):
         if codes is not None:
             self.get_context().set_spell_checking_languages(codes)
 
+    def add_text_entry(self, text):
+        """
+            Add an uri to text entry list
+            @param text as str
+        """
+        item = LinkedList(text, None, self.__text_entry)
+        self.__text_entry = item
+
+    def get_current_text_entry(self):
+        """
+            Get currnet text entry value
+            @return text as str
+        """
+        current = None
+        if self.__text_entry is not None:
+            current = self.__text_entry.value
+        return current
+
+    def get_prev_text_entry(self, current_value=None):
+        """
+            Get previous text entry value
+            @param current_value as str
+            @return text as str
+        """
+        previous = None
+        if self.__text_entry.prev is not None:
+            # Append current to list as it is missing
+            if current_value != self.__text_entry.value:
+                item = LinkedList(current_value, None, self.__text_entry)
+                self.__text_entry.set_next(item)
+                previous = self.__text_entry.value
+            else:
+                current = self.__text_entry
+                previous = self.__text_entry.prev.value
+                if previous is not None:
+                    self.__text_entry = self.__text_entry.prev
+                    self.__text_entry.set_next(current)
+        return previous
+
+    def get_next_text_entry(self):
+        """
+            Get next text entry value
+            @return text as str
+        """
+        next = None
+        if self.__text_entry.next is not None:
+            next = self.__text_entry.next.value
+            if next is not None:
+                self.__text_entry = self.__text_entry.next
+        return next
+
     @property
     def delayed_uri(self):
         """
@@ -210,6 +262,7 @@ class WebView(WebKit2.WebView):
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
+        self.__text_entry = LinkedList("", None, None)
         self.__window = window
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard

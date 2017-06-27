@@ -33,7 +33,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         Gtk.Bin.__init__(self)
         self.__window = window
-        self.__text_entry_history = {}
         self.__input_warning_shown = False
         self.__lock_focus = False
         self.__signal_id = None
@@ -119,6 +118,8 @@ class ToolbarTitle(Gtk.Bin):
         parsed = urlparse(text)
         if parsed.scheme in ["populars", "about"]:
             text = ""
+        # Should not be needed but set_text("") do not clear text
+        self.__entry.delete_text(0, -1)
         self.__entry.set_text(text)
         self.__entry.set_position(-1)
         if text:
@@ -306,14 +307,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__lock_focus = locked
 
-    def remove_from_text_entry_history(self, webview):
-        """
-            Remove history for view
-            @param view as WebView
-        """
-        if webview in self.__text_entry_history.keys():
-            del self.__text_entry_history[webview]
-
     @property
     def uri(self):
         """
@@ -408,19 +401,15 @@ class ToolbarTitle(Gtk.Bin):
             return True
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
-
-        # Restore previous user entry
         webview = self.__window.container.current.webview
-        if webview in self.__text_entry_history.keys():
-            value = self.__text_entry_history[webview]
-            if value:
-                self.set_text_entry(value)
-        else:
-            self.set_text_entry(self.__uri)
+        value = webview.get_current_text_entry()
+        if value is not None:
+            self.set_text_entry(value)
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["http", "https", "file"]:
+            self.set_text_entry(self.__uri)
             self.__placeholder.set_opacity(0)
         else:
             self.__set_default_placeholder()
@@ -469,19 +458,37 @@ class ToolbarTitle(Gtk.Bin):
         """
             Forward to popover history listbox if needed
             @param entry as Gtk.Entry
-            @param event as Gdk.Event
+            @param event as Gdk.EventKey
         """
+        webview = self.__window.container.current.webview
+        uri = entry.get_text().lstrip().rstrip()
+
+        # Walk history if Ctrl + [zZ]
+        if event.state & Gdk.ModifierType.CONTROL_MASK:
+            value = None
+            if event.keyval == Gdk.KEY_z:
+                value = webview.get_prev_text_entry(uri)
+            elif event.keyval == Gdk.KEY_Z:
+                value = webview.get_next_text_entry()
+            if value is not None:
+                self.set_text_entry(value)
+            return
+
+        # Forward event to popover, if not used, handle input
         forwarded = self.__popover.forward_event(event)
         if forwarded:
             self.__entry.get_style_context().remove_class('input')
             return True
         else:
             self.__entry.get_style_context().add_class('input')
+            # Close popover and save current entry
             if event.keyval == Gdk.KEY_Escape:
+                webview.add_text_entry(uri)
                 GLib.idle_add(self.close_popover)
+            # Close popover, save current entry and load text content
             elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+                webview.add_text_entry(uri)
                 GLib.idle_add(self.close_popover)
-                uri = entry.get_text().lstrip().rstrip()
                 parsed = urlparse(uri)
                 # Search a missing scheme
                 if uri.find(".") != -1 and not parsed.scheme:
@@ -500,8 +507,11 @@ class ToolbarTitle(Gtk.Bin):
                         El().search.is_search(uri):
                     uri = El().search.get_search_uri(uri)
                 self.__window.container.load_uri(uri)
-                self.__window.container.current.webview.grab_focus()
+                webview.grab_focus()
                 self.__completion_model.clear()
+            elif len(uri) > 1 and (event.keyval == Gdk.KEY_slash or
+                                   event.keyval == Gdk.KEY_space):
+                webview.add_text_entry(uri)
 
     def _on_readable_indicator_press(self, eventbox, event):
         """
@@ -728,8 +738,6 @@ class ToolbarTitle(Gtk.Bin):
         thread.daemon = True
         thread.start()
 
-        webview = self.__window.container.current.webview
-        self.__text_entry_history[webview] = self.__entry.get_text()
         self.__keywords_cancellable.cancel()
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()

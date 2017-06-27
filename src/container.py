@@ -294,7 +294,6 @@ class Container(Gtk.Overlay):
             Close my self
             @param webview as WebView
         """
-        self.__window.toolbar.title.remove_from_text_entry_history(webview)
         view = self.__get_view_for_webview(webview)
         if view is not None:
             self.sidebar.close_view(view)
@@ -471,7 +470,6 @@ class Container(Gtk.Overlay):
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__window.toolbar.actions.set_actions(webview)
             self.__window.toolbar.title.set_title(uri)
-            self.__window.toolbar.title.remove_from_text_entry_history(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             title = webview.get_title()
             if title is not None:
