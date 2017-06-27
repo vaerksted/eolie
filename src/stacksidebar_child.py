@@ -124,7 +124,7 @@ class SidebarChild(Gtk.ListBoxRow):
         elif not self.__view.webview.is_loading() and\
                 self.get_allocated_width() != 1:
             self.__view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.VISIBLE,
+                                         WebKit2.SnapshotRegion.FULL_DOCUMENT,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self.__on_snapshot,
