@@ -483,7 +483,8 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.get_style_context().add_class('input')
             # Close popover and save current entry
             if event.keyval == Gdk.KEY_Escape:
-                webview.add_text_entry(uri)
+                self.__entry.delete_text(0, -1)
+                webview.clear_text_entry()
                 GLib.idle_add(self.close_popover)
             # Close popover, save current entry and load text content
             elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
@@ -556,16 +557,17 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        view = self.__window.container.current
+        webview = self.__window.container.current.webview
         if self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
+            webview.clear_text_entry()
         else:
-            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
+            bookmark_id = El().bookmarks.get_id(webview.get_uri())
             if bookmark_id is None:
-                uri = view.webview.get_uri()
+                uri = webview.get_uri()
                 if not uri or uri == "about:blank":
                     return
-                title = view.webview.get_title()
+                title = webview.get_title()
                 if not title:
                     title = uri
                 self.__action_image2.set_from_icon_name("starred-symbolic",
@@ -706,17 +708,18 @@ class ToolbarTitle(Gtk.Bin):
 
     def __on_popover_closed(self, popover):
         """
-            Destroy popover
+            Clean titlebar if UriPopover, else update star
             @param popover as Gtk.popover
         """
         self.__lock_focus = False
-        uri = self.__window.container.current.webview.get_uri()
-        self.__entry.delete_selection()
-        if uri is not None:
-            self.set_uri(uri)
+        webview = self.__window.container.current.webview
+        if popover == self.__popover:
+            value = self.__entry.get_text().lstrip().rstrip()
+            if value:
+                webview.add_text_entry(value)
+            self.__entry.delete_selection()
         if isinstance(popover, EditBookmarkWidget):
-            view = self.__window.container.current
-            bookmark_id = El().bookmarks.get_id(view.webview.get_uri())
+            bookmark_id = El().bookmarks.get_id(webview.get_uri())
             if bookmark_id is None:
                 self.__action_image2.set_from_icon_name("non-starred-symbolic",
                                                         Gtk.IconSize.MENU)
