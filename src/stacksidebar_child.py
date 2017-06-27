@@ -377,8 +377,8 @@ class SidebarChild(Gtk.ListBoxRow):
                 if El().art.exists(uri, "start"):
                     continue
                 if surface is None:
-                    height = snapshot.get_height()
-                    factor = ArtSize.START_HEIGHT / height
+                    # Set start image scale factor
+                    factor = ArtSize.START_WIDTH / snapshot.get_width()
                     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                                  ArtSize.START_WIDTH,
                                                  ArtSize.START_HEIGHT)
