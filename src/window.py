@@ -363,8 +363,6 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.zoom_in()
         elif string == "zoom_out":
             self.container.current.webview.zoom_out()
-        elif string == "last_page":
-            El().pages_menu.activate_last_action()
         elif string == "filter":
             button = self.toolbar.actions.filter_button
             button.set_active(not button.get_active())
