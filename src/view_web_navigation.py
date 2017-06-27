@@ -260,6 +260,7 @@ class WebViewNavigation:
         uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
         parsed = urlparse(uri)
+        self.clear_text_entry()
         if parsed.scheme not in ["http", "https", "file", "about",
                                  "populars", "accept"]:
             try:
