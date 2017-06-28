@@ -13,6 +13,7 @@
 from gi.repository import Gio, GLib
 
 from hashlib import sha256
+from gettext import gettext as _
 
 from eolie.define import El
 
@@ -32,6 +33,8 @@ class FormMenu(Gio.Menu):
         Gio.Menu.__init__(self)
         self.__app = app
         self.__page_id = page_id
+        self.__section = Gio.Menu()
+        self.append_section(_("Saved credentials"), self.__section)
 
     def add_attributes(self, attributes, uri):
         """
@@ -53,7 +56,7 @@ class FormMenu(Gio.Menu):
                        attributes)
         label = attributes["login"].replace("_", "__")
         item = Gio.MenuItem.new(label, "app.%s" % encoded)
-        self.append_item(item)
+        self.__section.append_item(item)
 
 #######################
 # PRIVATE             #
