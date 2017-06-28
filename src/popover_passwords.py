@@ -131,6 +131,7 @@ class PasswordsPopover(Gtk.Popover):
         builder.connect_signals(self)
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
+        self.__listbox.set_sort_func(self.__sort_func)
         self.add(builder.get_object('widget'))
         self.set_size_request(400, 300)
 
@@ -168,6 +169,15 @@ class PasswordsPopover(Gtk.Popover):
             @param row as Row
         """
         return self.__filter in row.item.get_property("uri")
+
+    def __sort_func(self, row1, row2):
+        """
+            Sort rows
+            @param row1 as Row
+            @param row2 as Row
+        """
+        return row2.item.get_property("username") <\
+            row1.item.get_property("username")
 
     def __add_password(self, attributes, password, uri, index, count):
         """
