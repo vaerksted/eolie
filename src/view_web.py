@@ -14,7 +14,6 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
-from time import time
 from ctypes import string_at
 
 from eolie.define import El
@@ -23,6 +22,7 @@ from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
 from eolie.context import Context
 from eolie.list import LinkedList
+from eolie.menu_form import FormMenu
 
 
 class WebView(WebKit2.WebView):
@@ -247,7 +247,10 @@ class WebView(WebKit2.WebView):
             Get last click time
             @return float
         """
-        return self.__last_click_time
+        if self.__last_click_event:
+            return self.__last_click_event["time"]
+        else:
+            return 0
 
     @property
     def readable_content(self):
@@ -273,7 +276,7 @@ class WebView(WebKit2.WebView):
         # it from clipboard
         self.__selection = ""
         self._readable_content = ""
-        self.__last_click_time = 0
+        self.__last_click_event = {}
         self.__delayed_uri = None
         self.__related_view = related_view
         self.__initial_selection = ""
@@ -463,9 +466,11 @@ class WebView(WebKit2.WebView):
         """
             Store initial selection
             @param widget as WebView
-            @param event as Gdk.Event
+            @param event as Gdk.EventButton
         """
-        self.__last_click_time = time()
+        self.__last_click_event = {"x": event.x,
+                                   "y": event.y,
+                                   "time": event.time}
         self.__selection = ""
         c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
         self.__initial_selection = c.wait_for_text()
@@ -568,6 +573,18 @@ class WebView(WebKit2.WebView):
             El().download_manager.add_video(uri, title, page_id)
         elif signal == "UnsecureFormFocused":
             self.__window.toolbar.title.show_input_warning(self)
+        elif signal == "FormFocused":
+            if self.__last_click_event:
+                model = FormMenu(El(), params[0],
+                                 self.get_uri(), self.get_page_id())
+                popover = Gtk.Popover.new_from_model(self, model)
+                rect = Gdk.Rectangle()
+                rect.x = self.__last_click_event["x"]
+                rect.y = self.__last_click_event["y"]
+                rect.width = rect.height = 1
+                popover.set_pointing_to(rect)
+                popover.show()
+                self.__last_click_event = {}
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):

@@ -314,10 +314,14 @@ class PasswordsHelper:
         """
         secret = source.get_secret()
         if secret is not None:
-            callback(source.get_attributes(),
-                     secret.get().decode('utf-8'),
-                     uri,
-                     *args)
+            attributes = source.get_attributes()
+            if "userform" in attributes.keys():
+                callback(source.get_attributes(),
+                         secret.get().decode('utf-8'),
+                         uri,
+                         *args)
+            else:
+                callback(None, None, uri, *args)
         else:
             callback(None, None, uri, *args)
 

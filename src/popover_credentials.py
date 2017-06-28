@@ -101,10 +101,12 @@ class CredentialsPopover(Gtk.Popover):
             @param uri as str
         """
         try:
-            if attributes is None:
+            if attributes is None or attributes["login"] != self.__username:
                 Gtk.Popover.show(self)
             elif attributes["login"] == self.__username and\
-                    self.__password == password:
+                    self.__password == password and\
+                    attributes["userform"] == self.__userform and\
+                    attributes["passform"] == self.__passform:
                 self.emit("closed")
             else:
                 Gtk.Popover.show(self)

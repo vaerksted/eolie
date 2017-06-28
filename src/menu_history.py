@@ -76,7 +76,7 @@ class HistoryMenu(Gio.Menu):
 #######################
     def __on_action_clicked(self, action, variant, item):
         """
-            Add to playlists
+            Load history
             @param Gio.SimpleAction
             @param GVariant
             @param item as WebKit2.BackForwardListItem

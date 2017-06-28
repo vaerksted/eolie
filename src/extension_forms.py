@@ -80,6 +80,7 @@ class FormsExtension:
     def get_auth_forms(self, forms, webpage):
         """
             Return auth forms for webpage
+            @param forms as [str]
             @param webpage as WebKit2WebExtension.WebPage
             @return (WebKit2WebExtension.DOMElement,   => username
                      WebKit2WebExtension.DOMElement)   => password
@@ -113,6 +114,37 @@ class FormsExtension:
             i += 1
         return (username_input, password_input)
 
+    def set_input_forms(self, attributes, password,
+                        uri, webpage, username=None):
+        """
+            Set username/password input
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+            @param webpage as WebKit2WebExtension.WebPage
+            @param username as str/None
+        """
+        parsed = urlparse(uri)
+        if parsed.scheme != "https":
+            return
+        submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+        # Do not set anything if no attributes or
+        # If we have already text in input and we are not a perfect completion
+        if attributes is None or\
+                (username is not None and attributes["login"] != username) or\
+                attributes["formSubmitURL"] != submit_uri:
+            return
+        try:
+            forms = []
+            forms.append(attributes["userform"])
+            forms.append(attributes["passform"])
+            (username_input, password_input) = self.get_auth_forms(forms,
+                                                                   webpage)
+            username_input.set_value(attributes["login"])
+            password_input.set_value(password)
+        except Exception as e:
+            print("FormsExtension::set_input()", e)
+
 #######################
 # PRIVATE             #
 #######################
@@ -133,34 +165,5 @@ class FormsExtension:
             return
         if self.has_password(webpage):
             self.__helper.get(webpage.get_uri(),
-                              self.__set_input,
+                              self.set_input_forms,
                               webpage)
-
-    def __set_input(self, attributes, password, uri, webpage):
-        """
-            Set username/password input
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param webpage as WebKit2WebExtension.WebPage
-        """
-        parsed = urlparse(uri)
-        submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-        # Do not set anything if no attributes or
-        # If we have already text in input and we are not a perfect completion
-        if attributes is None or attributes["formSubmitURL"] != submit_uri:
-            return
-        try:
-            forms = []
-            # Try to get attributes, new in Eolie 0.9
-            try:
-                forms.append(attributes["userform"])
-                forms.append(attributes["passform"])
-            except:
-                pass
-            (username_input, password_input) = self.get_auth_forms(forms,
-                                                                   webpage)
-            username_input.set_value(attributes["login"])
-            password_input.set_value(password)
-        except Exception as e:
-            print("FormsExtension::__set_input()", e)

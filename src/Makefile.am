@@ -23,6 +23,7 @@ app_PYTHON = \
     languages.py\
     list.py\
     localized.py\
+    menu_form.py\
     menu_history.py\
     menu_pages.py\
     mozilla_sync.py\

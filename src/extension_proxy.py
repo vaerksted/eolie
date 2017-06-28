@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.define import PROXY_BUS, PROXY_PATH
 from eolie.list import LinkedList
+from eolie.helper_passwords import PasswordsHelper
 
 
 class Server:
@@ -92,6 +93,11 @@ class ProxyExtension(Server):
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
+    <method name="SetAuthForms">
+      <arg type="s" name="username" direction="in" />
+      <arg type="as" name="forms" direction="in" />
+      <arg type="i" name="page_id" direction="in" />
+    </method>
     <method name="GetImages">
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
@@ -102,6 +108,9 @@ class ProxyExtension(Server):
     </method>
 
     <signal name='UnsecureFormFocused'>
+    </signal>
+    <signal name='FormFocused'>
+        <arg type="as" name="forms" direction="out" />
     </signal>
     <signal name='VideoInPage'>
         <arg type="as" name="results" direction="out" />
@@ -161,6 +170,25 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")
+
+    def SetAuthForms(self, username, forms, page_id):
+        """
+            Get password forms for page id
+            @param username as str
+            @param forms as [str]
+            @param page id as int
+        """
+        try:
+            page = self.__extension.get_page(page_id)
+            if page is None:
+                return
+            helper = PasswordsHelper()
+            helper.get(page.get_uri(),
+                       self.__forms.set_input_forms,
+                       page,
+                       username)
+        except Exception as e:
+            print("ProxyExtension::SetAuthForms():", e)
 
     def GetImages(self, page_id):
         """
@@ -269,10 +297,17 @@ class ProxyExtension(Server):
 
     def __on_focus(self, form, event):
         """
-            Emit unsecure focus form signal
+            Keep last focused form and emit signal
             @param form as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
+        args = GLib.Variant.new_tuple(GLib.Variant("s", form.get_name()))
+        self.__bus.emit_signal(
+                          None,
+                          PROXY_PATH,
+                          self.__proxy_bus,
+                          "FormFocused",
+                          args)
         self.__focused = form
 
     def __on_input(self, form, event):
