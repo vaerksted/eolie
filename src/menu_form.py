@@ -51,7 +51,8 @@ class FormMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_action_clicked,
                        attributes)
-        item = Gio.MenuItem.new(attributes["login"], "app.%s" % encoded)
+        label = attributes["login"].replace("_", "__")
+        item = Gio.MenuItem.new(label, "app.%s" % encoded)
         self.append_item(item)
 
 #######################
