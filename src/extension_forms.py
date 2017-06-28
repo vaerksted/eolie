@@ -125,7 +125,8 @@ class FormsExtension:
             @param username as str/None
         """
         parsed = urlparse(uri)
-        if parsed.scheme != "https":
+        # Allow unsecure completion if wanted by user
+        if parsed.scheme != "https" and username is None:
             return
         submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         # Do not set anything if no attributes or
