@@ -592,7 +592,7 @@ class WebView(WebKit2.WebView):
             El().download_manager.add_video(uri, title, page_id)
         elif signal == "UnsecureFormFocused":
             self.__window.toolbar.title.show_input_warning(self)
-        elif signal == "FormFocused":
+        elif signal == "InputMouseDown":
             if self.__last_click_event:
                 model = FormMenu(El(), params[0], self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)

@@ -108,7 +108,7 @@ class ProxyExtension(Server):
 
     <signal name='UnsecureFormFocused'>
     </signal>
-    <signal name='FormFocused'>
+    <signal name='InputMouseDown'>
         <arg type="as" name="forms" direction="out" />
     </signal>
     <signal name='VideoInPage'>
@@ -295,18 +295,25 @@ class ProxyExtension(Server):
 
     def __on_focus(self, form, event):
         """
-            Keep last focused form and emit signal
+            Keep last focused form
             @param form as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        self.__focused = form
+
+    def __on_mouse_down(self, form, event):
+        """
+           Emit Input mouse down signal
+           @param form as WebKit2WebExtension.DOMElement
+           @param event as WebKit2WebExtension.DOMUIEvent
         """
         args = GLib.Variant.new_tuple(GLib.Variant("s", form.get_name()))
         self.__bus.emit_signal(
                           None,
                           PROXY_PATH,
                           self.__proxy_bus,
-                          "FormFocused",
+                          "InputMouseDown",
                           args)
-        self.__focused = form
 
     def __on_input(self, form, event):
         """
@@ -343,7 +350,10 @@ class ProxyExtension(Server):
         # Remove any previous event listener
         for form in self.__listened_forms:
             form.remove_event_listener("input", self.__on_input, False)
-            form.remove_event_listener("focus", self.__on_input, False)
+            form.remove_event_listener("focus", self.__on_focus, False)
+            form.remove_event_listener("mousedown",
+                                       self.__on_mouse_down,
+                                       False)
         for form in self.__password_forms:
             form.remove_event_listener("focus",
                                        self.__on_password_focus,
@@ -366,9 +376,10 @@ class ProxyExtension(Server):
         # Manage forms input
         for form in self.__forms.get_input_forms(webpage) +\
                 self.__forms.get_textarea_forms(webpage):
-                self.__listened_forms.append(form)
-                form.add_event_listener("input", self.__on_input, False)
-                form.add_event_listener("focus", self.__on_focus, False)
+            self.__listened_forms.append(form)
+            form.add_event_listener("input", self.__on_input, False)
+            form.add_event_listener("focus", self.__on_focus, False)
+            form.add_event_listener("mousedown", self.__on_mouse_down, False)
 
     def __on_page_created(self, extension, webpage):
         """
