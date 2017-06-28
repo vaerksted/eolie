@@ -77,6 +77,22 @@ class FormsExtension:
             i += 1
         return forms
 
+    def get_password_forms(self, webpage):
+        """
+            Return forms for webpage
+            @param webpage as WebKit2WebExtension.WebPage
+            @return [WebKit2WebExtension.DOMElement]
+        """
+        forms = []
+        dom_document = webpage.get_dom_document()
+        inputs = dom_document.get_elements_by_tag_name("input")
+        i = 0
+        while i < inputs.get_length():
+            if inputs.item(i).get_input_type() == "password":
+                forms.append(inputs.item(i))
+            i += 1
+        return forms
+
     def get_auth_forms(self, forms, webpage):
         """
             Return auth forms for webpage

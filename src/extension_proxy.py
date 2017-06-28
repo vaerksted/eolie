@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib, WebKit2WebExtension
+from gi.repository import Gio, GLib
 
 from urllib.parse import urlparse
 
@@ -357,19 +357,17 @@ class ProxyExtension(Server):
 
         # Manage forms in page
         parsed = urlparse(webpage.get_uri())
-        forms = self.__forms.get_input_forms(webpage) +\
-            self.__forms.get_textarea_forms(webpage)
 
         # Check for unsecure content
-        for form in forms:
-            if isinstance(form, WebKit2WebExtension.DOMHTMLInputElement) and\
-                    parsed.scheme == "http" and\
-                    form.get_input_type() == "password":
+        for form in self.__forms.get_password_forms(webpage):
+            if parsed.scheme == "http":
                 self.__password_forms.append(form)
                 form.add_event_listener("focus",
                                         self.__on_password_focus,
                                         False)
-            else:
+        # Manage forms input
+        for form in self.__forms.get_input_forms(webpage) +\
+                self.__forms.get_textarea_forms(webpage):
                 self.__listened_forms.append(form)
                 form.add_event_listener("input", self.__on_input, False)
                 form.add_event_listener("focus", self.__on_focus, False)
