@@ -214,9 +214,10 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::store_sync(): %s" % e)
 
-    def clear(self, uri):
+    def clear(self, username, uri):
         """
             Clear password
+            @param username as str
             @param uri as str
         """
         try:
@@ -224,10 +225,12 @@ class PasswordsHelper:
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
                 "formSubmitURL": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "type": "eolie web login",
+                "login": username,
                 "formSubmitURL": "%s://%s%s" % (parsed.scheme,
                                                 parsed.netloc,
                                                 parsed.path)

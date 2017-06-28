@@ -141,13 +141,16 @@ class SyncWorker(GObject.GObject):
             thread.daemon = True
             thread.start()
 
-    def remove_from_passwords(self, uri):
+    def remove_from_passwords(self, username, uri):
         """
             Remove password from passwords collection
+            @param username as str
             @param uri as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__helper.get(uri, self.__remove_from_passwords_thread)
+            self.__helper.get(uri,
+                              self.__remove_from_passwords_thread,
+                              username)
 
     def delete_secret(self):
         """
@@ -333,14 +336,16 @@ class SyncWorker(GObject.GObject):
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
-    def __remove_from_passwords(self, attributes, password, uri):
+    def __remove_from_passwords(self, attributes, password, uri, username):
         """
             Remove password from passwords collection
             @param attributes as {}
             @param password as str
             @param uri as str
+            @param username as str
         """
-        if not self.__username or not self.__password:
+        if not self.__username or not self.__password or\
+                attributes is None or username != attributes["login"]:
             return
         try:
             bulk_keys = self.__get_session_bulk_keys()
@@ -349,12 +354,12 @@ class SyncWorker(GObject.GObject):
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
-            self.__helper.clear(uri)
+            self.__helper.clear(username, uri)
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
 
     def __remove_from_passwords_thread(self, attributes, password, uri,
-                                       index, count):
+                                       index, count, username):
         """
             Remove password from passwords collection
             @param attributes as {}
@@ -362,9 +367,10 @@ class SyncWorker(GObject.GObject):
             @param uri as str
             @param index as int
             @param count as int
+            @param username as str
         """
         thread = Thread(target=self.__remove_from_passwords,
-                        args=(attributes, password, uri))
+                        args=(attributes, password, uri, username))
         thread.daemon = True
         thread.start()
 

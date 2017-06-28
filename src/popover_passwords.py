@@ -17,6 +17,8 @@ from eolie.define import El
 
 
 class Item(GObject.GObject):
+    username = GObject.Property(type=str,
+                                default="")
     uri = GObject.Property(type=str,
                            default="")
 
@@ -43,7 +45,8 @@ class Row(Gtk.ListBoxRow):
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
-        uri = Gtk.Label.new(item.get_property("uri"))
+        uri = Gtk.Label.new("%s@%s" % (item.get_property("username"),
+                                       item.get_property("uri")))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property("halign", Gtk.Align.START)
         uri.set_hexpand(True)
@@ -69,10 +72,11 @@ class Row(Gtk.ListBoxRow):
         """
         self.hide()
         uri = self.__item.get_property("uri")
+        username = self.__item.get_property("username")
         if El().sync_worker is None:
-            self.__helper.clear(uri)
+            self.__helper.clear(username, uri)
         else:
-            El().sync_worker.remove_from_passwords(uri)
+            El().sync_worker.remove_from_passwords(username, uri)
 
     @property
     def item(self):
@@ -128,7 +132,7 @@ class PasswordsPopover(Gtk.Popover):
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
         self.add(builder.get_object('widget'))
-        self.set_size_request(300, 300)
+        self.set_size_request(400, 300)
 
     def populate(self):
         """
@@ -165,17 +169,20 @@ class PasswordsPopover(Gtk.Popover):
         """
         return self.__filter in row.item.get_property("uri")
 
-    def __add_password(self, attributes, password, uri):
+    def __add_password(self, attributes, password, uri, index, count):
         """
             Add password to model
             @param attributes as {}
             @param password as str
             @param uri as None
+            @param index as int
+            @param count as int
         """
         if attributes is None:
             return
         try:
             item = Item()
+            item.set_property("username", attributes["login"])
             item.set_property("uri", attributes["formSubmitURL"])
             child = Row(item, self.__helper)
             child.show()
