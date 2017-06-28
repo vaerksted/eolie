@@ -14,7 +14,6 @@ from gi.repository import Gio, GLib
 
 from hashlib import sha256
 
-from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El
 
 
@@ -23,35 +22,27 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, app, name, uri, page_id):
+    def __init__(self, app, name, page_id):
         """
             Init menu
             @param app as Gio.Application
             @param name as str
-            @param uri as str
             @param page_id as int
         """
         Gio.Menu.__init__(self)
         self.__app = app
         self.__page_id = page_id
-        helper = PasswordsHelper()
-        helper.get(uri, self.__on_password, name)
 
-#######################
-# PRIVATE             #
-#######################
-    def __on_password(self, attributes, password, uri, name):
+    def add_attributes(self, attributes, uri):
         """
-            Set username/password input
+            Add username to model
             @param attributes as {}
-            @param password as str
             @param uri as str
-            @param name as str
         """
         if attributes is None:
             return
-        username = attributes["login"]
-        encoded = "FORM_" + sha256(username.encode("utf-8")).hexdigest()
+        encoded = "FORM_" + sha256(
+                               attributes["login"].encode("utf-8")).hexdigest()
         action = self.__app.lookup_action(encoded)
         if action is not None:
             self.__app.remove_action(encoded)
@@ -59,21 +50,25 @@ class FormMenu(Gio.Menu):
         self.__app.add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
-                       username, attributes)
-        item = Gio.MenuItem.new(username, "app.%s" % encoded)
+                       attributes)
+        item = Gio.MenuItem.new(attributes["login"], "app.%s" % encoded)
         self.append_item(item)
 
-    def __on_action_clicked(self, action, variant, username, attributes):
+#######################
+# PRIVATE             #
+#######################
+    def __on_action_clicked(self, action, variant, attributes):
         """
             Update form
             @param Gio.SimpleAction
             @param GVariant
-            @param username as str
             @param attributes as {}
         """
         forms = (attributes["userform"], attributes["passform"])
         El().helper.call("SetAuthForms",
                          GLib.Variant("(sasi)",
-                                      (username, forms, self.__page_id)),
+                                      (attributes["login"],
+                                       forms,
+                                       self.__page_id)),
                          None, None,
                          self.__page_id)

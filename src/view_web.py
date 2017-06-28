@@ -21,6 +21,7 @@ from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
 from eolie.context import Context
+from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
 from eolie.menu_form import FormMenu
 
@@ -554,6 +555,20 @@ class WebView(WebKit2.WebView):
         page_id = webview.get_page_id()
         El().helper.disconnect(page_id)
 
+    def __on_password(self, attributes, password, uri, popover, model):
+        """
+            Show form popover
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+            @param popover as Gtk.Popover
+            @param model as Gio.MenuModel
+        """
+        self.__last_click_event = {}
+        if attributes is not None:
+            model.add_attributes(attributes, uri)
+            popover.show()
+
     def __on_signal(self, connection, sender, path,
                     interface, signal, params, data):
         """
@@ -575,16 +590,15 @@ class WebView(WebKit2.WebView):
             self.__window.toolbar.title.show_input_warning(self)
         elif signal == "FormFocused":
             if self.__last_click_event:
-                model = FormMenu(El(), params[0],
-                                 self.get_uri(), self.get_page_id())
+                model = FormMenu(El(), params[0], self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
                 rect = Gdk.Rectangle()
                 rect.x = self.__last_click_event["x"]
                 rect.y = self.__last_click_event["y"]
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
-                popover.show()
-                self.__last_click_event = {}
+                helper = PasswordsHelper()
+                helper.get(self.get_uri(), self.__on_password, popover, model)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
