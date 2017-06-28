@@ -95,7 +95,6 @@ class ProxyExtension(Server):
     </method>
     <method name="SetAuthForms">
       <arg type="s" name="username" direction="in" />
-      <arg type="as" name="forms" direction="in" />
       <arg type="i" name="page_id" direction="in" />
     </method>
     <method name="GetImages">
@@ -171,11 +170,10 @@ class ProxyExtension(Server):
             print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")
 
-    def SetAuthForms(self, username, forms, page_id):
+    def SetAuthForms(self, username, page_id):
         """
             Get password forms for page id
             @param username as str
-            @param forms as [str]
             @param page id as int
         """
         try:

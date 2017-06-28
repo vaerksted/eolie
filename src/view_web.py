@@ -555,19 +555,23 @@ class WebView(WebKit2.WebView):
         page_id = webview.get_page_id()
         El().helper.disconnect(page_id)
 
-    def __on_password(self, attributes, password, uri, popover, model):
+    def __on_password(self, attributes, password, uri,
+                      index, count, popover, model):
         """
             Show form popover
             @param attributes as {}
             @param password as str
             @param uri as str
+            @param index as int
+            @param count as int
             @param popover as Gtk.Popover
             @param model as Gio.MenuModel
         """
         self.__last_click_event = {}
         if attributes is not None:
             model.add_attributes(attributes, uri)
-            popover.show()
+            if index == 0:
+                popover.show()
 
     def __on_signal(self, connection, sender, path,
                     interface, signal, params, data):

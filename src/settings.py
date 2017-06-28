@@ -499,12 +499,14 @@ class SettingsDialog:
                               "computer-fail-symbolic",
                               Gtk.IconSize.MENU)
 
-    def __on_get_sync(self, attributes, password, uri):
+    def __on_get_sync(self, attributes, password, uri, index, count):
         """
             Set username and password
             @param attributes as {}
             @param password as str
             @param uri as None
+            @param index as int
+            @param count as int
         """
         if attributes is None:
             return

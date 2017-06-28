@@ -93,25 +93,33 @@ class CredentialsPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
-    def __on_get_password(self, attributes, password, uri):
+    def __on_get_password(self, attributes, password, uri, index, count):
         """
             Set username/password input
             @param attributes as {}
             @param password as str
             @param uri as str
+            @param index as int
+            @param count as int
         """
         try:
-            if attributes is None or attributes["login"] != self.__username:
+            # No saved password
+            if attributes is None:
                 Gtk.Popover.show(self)
+            # Password saved and unchanged
             elif attributes["login"] == self.__username and\
                     self.__password == password and\
                     attributes["userform"] == self.__userform and\
                     attributes["passform"] == self.__passform:
                 self.emit("closed")
-            else:
+            # Password changed
+            elif attributes["login"] == self.__username:
                 Gtk.Popover.show(self)
                 self.__uuid = attributes["uuid"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
+            # Last password, it's a new login/password
+            elif index == count - 1:
+                Gtk.Popover.show(self)
         except Exception as e:
             print("CredentialsPopover::__on_get_password()", e)

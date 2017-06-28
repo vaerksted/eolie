@@ -129,15 +129,20 @@ class FormsExtension:
         return (username_input, password_input)
 
     def set_input_forms(self, attributes, password,
-                        uri, webpage, username=None):
+                        uri, index, count, webpage, username=None):
         """
             Set username/password input
             @param attributes as {}
             @param password as str
             @param uri as str
+            @param index as int
+            @param count as int
             @param webpage as WebKit2WebExtension.WebPage
             @param username as str/None
         """
+        # We only set first available password
+        if index != 0 and username is None:
+            return
         parsed = urlparse(uri)
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and username is None:

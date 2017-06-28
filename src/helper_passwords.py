@@ -304,26 +304,35 @@ class PasswordsHelper:
         if self.__secret in [None, -1]:
             raise Exception("Waiting Secret service")
 
-    def __on_load_secret(self, source, result, uri, callback, *args):
+    def __on_load_secret(self, source, result, uri,
+                         index, count, callback, *args):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param uri as str
+            @param index as int
+            @param count as int
             @param callback as function
             @param args
         """
         secret = source.get_secret()
         if secret is not None:
             attributes = source.get_attributes()
-            if "userform" in attributes.keys():
+            keys = attributes.keys()
+            # We ignore old Eolie passwords
+            if "userform" in keys or\
+                    "sync" in keys:
                 callback(source.get_attributes(),
                          secret.get().decode('utf-8'),
                          uri,
+                         index,
+                         count,
                          *args)
             else:
-                callback(None, None, uri, *args)
+                callback(None, None, uri, 0, 0, *args)
         else:
-            callback(None, None, uri, *args)
+            callback(None, None, uri, 0, 0, *args)
 
     def __on_clear_search(self, source, result):
         """
@@ -351,19 +360,24 @@ class PasswordsHelper:
         try:
             if result is not None:
                 items = self.__secret.search_finish(result)
+                count = len(items)
+                index = 0
                 for item in items:
                     item.load_secret(None,
                                      self.__on_load_secret,
                                      uri,
+                                     index,
+                                     count,
                                      callback,
                                      *args)
+                    index += 1
                 if not items:
-                    callback(None, None, uri, *args)
+                    callback(None, None, uri, 0, 0, *args)
             else:
-                callback(None, None, uri, *args)
+                callback(None, None, uri, 0, 0, *args)
         except Exception as e:
             debug("PasswordsHelper::__on_secret_search(): %s" % e)
-            callback(None, None, uri, *args)
+            callback(None, None, uri, 0, 0, *args)
 
     def __on_get_secret(self, source, result):
         """

@@ -353,12 +353,15 @@ class SyncWorker(GObject.GObject):
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
 
-    def __remove_from_passwords_thread(self, attributes, password, uri):
+    def __remove_from_passwords_thread(self, attributes, password, uri,
+                                       index, count):
         """
             Remove password from passwords collection
             @param attributes as {}
             @param password as str
             @param uri as str
+            @param index as int
+            @param count as int
         """
         thread = Thread(target=self.__remove_from_passwords,
                         args=(attributes, password, uri))
@@ -711,12 +714,14 @@ class SyncWorker(GObject.GObject):
                 El().history.remove(history_id)
             El().history.thread_lock.release()
 
-    def __set_credentials(self, attributes, password, uri):
+    def __set_credentials(self, attributes, password, uri, index, count):
         """
             Set credentials
             @param attributes as {}
             @param password as str
             @param uri as None
+            @param index as int
+            @param count as int
         """
         if attributes is None:
             return
