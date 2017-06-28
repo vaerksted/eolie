@@ -90,14 +90,18 @@ class Context:
             favicon = Gio.File.new_for_path(favicon_path)
             path = El().art.get_path(uri, "start")
             thumbnail = Gio.File.new_for_path(path)
-            if not thumbnail.query_exists() or not favicon.query_exists():
+            if not thumbnail.query_exists():
                 continue
+            if favicon.query_exists():
+                favicon_uri = favicon.get_uri()
+            else:
+                favicon_uri = "internal:/applications-internet"
             html_start += '<a class="child" title="%s" href="%s">\
                            <img src="file://%s"></img>\
                            <div class="caption">%s\
                            <img class="favicon" src="%s"></img>\
                            </div></a>' % (title, uri, path,
-                                          title, favicon.get_uri())
+                                          title, favicon_uri)
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
@@ -196,10 +200,14 @@ class Context:
         icon_name = request.get_uri().replace("internal:/", "")
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
                                             icon_name, Gtk.IconSize.BUTTON,
-                                            Gtk.IconLookupFlags.FORCE_SYMBOLIC)
+                                            Gtk.IconLookupFlags.FORCE_SVG)
         filename = icon_info.get_filename()
+        if filename.endswith(".png"):
+            mime = "image/png"
+        else:
+            mime = "image/svg+xml"
         f = Gio.File.new_for_path(filename)
-        request.finish(f.read(), -1, "image/svg+xml")
+        request.finish(f.read(), -1, mime)
 
     def __on_accept_scheme(self, request):
         """
