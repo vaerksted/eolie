@@ -48,7 +48,7 @@ class FormsExtension:
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMElement]
+            @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
         forms = []
         dom_document = webpage.get_dom_document()
@@ -64,7 +64,7 @@ class FormsExtension:
         """
             Return forms for webpage
             @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMElement]
+            @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
         forms = []
         dom_document = webpage.get_dom_document()
@@ -75,58 +75,47 @@ class FormsExtension:
             i += 1
         return forms
 
-    def get_password_forms(self, webpage):
+    def get_password_forms(self, name, webpage):
         """
             Return forms for webpage
+            @param name as str
             @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMElement]
+            @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
         forms = []
         dom_document = webpage.get_dom_document()
         inputs = dom_document.get_elements_by_tag_name("input")
         i = 0
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "password":
+            if inputs.item(i).get_input_type() == "password" and\
+                    (not name or name == inputs.item(i).get_attribute("name")):
                 forms.append(inputs.item(i))
             i += 1
         return forms
 
-    def get_auth_forms(self, forms, webpage):
+    def get_login_forms(self, name, webpage):
         """
             Return auth forms for webpage
-            @param forms as [str]
+            @param name as str
             @param webpage as WebKit2WebExtension.WebPage
-            @return (WebKit2WebExtension.DOMElement,   => username
-                     WebKit2WebExtension.DOMElement)   => password
+            @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
         dom_document = webpage.get_dom_document()
         inputs = dom_document.get_elements_by_tag_name("input")
         i = 0
-        username_input = None
-        password_input = None
+        forms = []
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "hidden":
-                i += 1
-                continue
-            name = inputs.item(i).get_attribute("name")
-            input_id = inputs.item(i).get_attribute("id")
-            if password_input is None and\
-                    inputs.item(i).get_input_type() == "password" and\
-                    (not forms or name in forms or input_id in forms):
-                password_input = inputs.item(i)
-                i += 1
-                continue
-            if username_input is None and\
-                    (not forms or name in forms or input_id in forms):
-                for search in LOGINS:
-                    if (name is not None and
-                            name.lower().find(search) != -1) or\
-                            (input_id is not None and
-                                input_id.lower().find(search) != -1):
-                        username_input = inputs.item(i)
-                        break
+            if inputs.item(i).get_input_type() == "text":
+                input_name = inputs.item(i).get_attribute("name")
+                input_id = inputs.item(i).get_attribute("id")
+                # We search for wanted name
+                if name and (name == input_name or name == input_id):
+                    forms.append(inputs.item(i))
+                else:
+                    if self.is_login_form(inputs.item(i)):
+                        forms.append(inputs.item(i))
             i += 1
-        return (username_input, password_input)
+        return forms
 
     def set_input_forms(self, attributes, password,
                         uri, index, count, webpage, username=None):
@@ -155,15 +144,31 @@ class FormsExtension:
                 attributes["formSubmitURL"] != submit_uri:
             return
         try:
-            forms = []
-            forms.append(attributes["userform"])
-            forms.append(attributes["passform"])
-            (username_input, password_input) = self.get_auth_forms(forms,
-                                                                   webpage)
-            username_input.set_value(attributes["login"])
-            password_input.set_value(password)
+            usernames = self.get_login_forms(attributes["userform"], webpage)
+            passwords = self.get_password_forms(attributes["passform"],
+                                                webpage)
+            if usernames and passwords:
+                usernames[0].set_value(attributes["login"])
+                passwords[0].set_value(password)
         except Exception as e:
-            print("FormsExtension::set_input()", e)
+            print("FormsExtension::set_input_forms()", e)
+
+    def is_login_form(self, form):
+        """
+            Return True if form is a login form
+            @param form as WebKit2WebExtension.DOMHTMLInputElement
+            @return bool
+        """
+        input_name = form.get_attribute("name")
+        input_id = form.get_attribute("id")
+        # We search for common name
+        for search in LOGINS:
+            if (input_name is not None and
+                    input_name.lower().find(search) != -1) or\
+                    (input_id is not None and
+                        input_id.lower().find(search) != -1):
+                return True
+        return False
 
 #######################
 # PRIVATE             #
