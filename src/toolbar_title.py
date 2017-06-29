@@ -158,7 +158,10 @@ class ToolbarTitle(Gtk.Bin):
         if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
             return
-        self.__placeholder.set_text(title)
+        if title:
+            self.__placeholder.set_text(title)
+        else:
+            self.__placeholder.set_text(self.__uri)
         if not self.__popover.is_visible():
             self.__placeholder.set_opacity(0.8)
             self.__entry.get_style_context().add_class('uribar-title')
