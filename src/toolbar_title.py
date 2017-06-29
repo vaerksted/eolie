@@ -386,21 +386,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__popover.is_visible():
             return
-        self.__completion_model.clear()
-        self.__placeholder.set_opacity(0.8)
-        self.__entry.get_style_context().add_class("uribar-title")
-        self.__entry.get_style_context().remove_class("input")
-        self.set_text_entry("")
-        view = self.__window.container.current
-        uri = view.webview.get_uri()
-        if uri is not None:
-            bookmark_id = El().bookmarks.get_id(uri)
-            if bookmark_id is not None:
-                icon_name = "starred-symbolic"
-            else:
-                icon_name = "non-starred-symbolic"
-            self.__action_image2.set_from_icon_name(icon_name,
-                                                    Gtk.IconSize.MENU)
+        self.__focus_out()
 
     def _on_button_press_event(self, entry, event):
         """
@@ -600,6 +586,26 @@ class ToolbarTitle(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __focus_out(self):
+        """
+            Focus out widget
+        """
+        self.__completion_model.clear()
+        self.__placeholder.set_opacity(0.8)
+        self.__entry.get_style_context().add_class("uribar-title")
+        self.__entry.get_style_context().remove_class("input")
+        self.set_text_entry("")
+        view = self.__window.container.current
+        uri = view.webview.get_uri()
+        if uri is not None:
+            bookmark_id = El().bookmarks.get_id(uri)
+            if bookmark_id is not None:
+                icon_name = "starred-symbolic"
+            else:
+                icon_name = "non-starred-symbolic"
+            self.__action_image2.set_from_icon_name(icon_name,
+                                                    Gtk.IconSize.MENU)
+
     def __set_default_placeholder(self):
         """
             Show search placeholder
@@ -678,6 +684,7 @@ class ToolbarTitle(Gtk.Bin):
         webview = self.__window.container.current.webview
         if popover == self.__popover:
             webview.grab_focus()
+            self.__focus_out()
             self.__update_secure_content_indicator()
             value = self.__entry.get_text().lstrip().rstrip()
             if value:
