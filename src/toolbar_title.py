@@ -677,6 +677,11 @@ class ToolbarTitle(Gtk.Bin):
         self.__keywords_cancellable.reset()
         webview = self.__window.container.current.webview
         if popover == self.__popover:
+            if self.__entry.has_focus():
+                self.__window.set_focus(None)
+            else:
+                self._on_entry_focus_out(self.__entry, None)
+            self.__update_secure_content_indicator()
             value = self.__entry.get_text().lstrip().rstrip()
             if value:
                 webview.add_text_entry(value)
