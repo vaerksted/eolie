@@ -289,6 +289,9 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
+                # Special case to force populars view update
+                if webview.get_uri() == "populars://":
+                    self.__related_uri = uri
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None
