@@ -110,6 +110,12 @@ class WebViewNavigation:
         """
         self.__popups.append(webview)
 
+    def reset_related_uri(self):
+        """
+            Reset related uri
+        """
+        self.__related_uri = None
+
     @property
     def related_uri(self):
         """
@@ -298,7 +304,6 @@ class WebViewNavigation:
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None
-                self.__related_uri = None
                 return False
         else:
             self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
@@ -355,7 +360,6 @@ class WebViewNavigation:
                         self.run_javascript(js, None, None)
                         break
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__related_uri = None
             if El().show_tls:
                 try:
                     from OpenSSL import crypto

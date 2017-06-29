@@ -372,6 +372,7 @@ class SidebarChild(Gtk.ListBoxRow):
             if view.related_uri is not None and\
                     view.related_uri not in uris:
                 uris.append(view.related_uri)
+            view.reset_related_uri()
             surface = None
             for uri in uris:
                 if El().art.exists(uri, "start"):
