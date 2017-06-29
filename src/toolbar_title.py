@@ -434,11 +434,11 @@ class ToolbarTitle(Gtk.Bin):
             if event.keyval == Gdk.KEY_Escape:
                 self.__entry.delete_text(0, -1)
                 webview.clear_text_entry()
-                GLib.idle_add(self.close_popover)
+                GLib.idle_add(self.__window.close_popovers)
             # Close popover, save current entry and load text content
             elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                 webview.clear_text_entry()
-                GLib.idle_add(self.close_popover)
+                GLib.idle_add(self.__window.close_popovers)
                 parsed = urlparse(uri)
                 # Search a missing scheme
                 if uri.find(".") != -1 and not parsed.scheme:
