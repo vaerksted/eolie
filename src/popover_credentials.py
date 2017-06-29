@@ -86,9 +86,9 @@ class CredentialsPopover(Gtk.Popover):
         except Exception as e:
             print("CredentialsPopover::_on_save_clicked()", e)
 
-    def show(self):
+    def popup(self):
         """
-            Overwrite show
+            Overwrite popup
         """
         self.__helper.get(self.__uri,
                           self.__on_get_password)
@@ -108,7 +108,7 @@ class CredentialsPopover(Gtk.Popover):
         try:
             # No saved password
             if attributes is None:
-                Gtk.Popover.show(self)
+                Gtk.Popover.popup(self)
             # Password saved and unchanged
             elif attributes["login"] == self.__username and\
                     self.__password == password and\
@@ -117,12 +117,12 @@ class CredentialsPopover(Gtk.Popover):
                 self.emit("closed")
             # Password changed
             elif attributes["login"] == self.__username:
-                Gtk.Popover.show(self)
+                Gtk.Popover.popup(self)
                 self.__uuid = attributes["uuid"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
             # Last password, it's a new login/password
             elif index == count - 1:
-                Gtk.Popover.show(self)
+                Gtk.Popover.popup(self)
         except Exception as e:
             print("CredentialsPopover::__on_get_password()", e)

@@ -185,7 +185,7 @@ class ToolbarTitle(Gtk.Bin):
         popover = JavaScriptPopover(dialog, self.__window)
         popover.set_relative_to(self.__entry)
         popover.connect("closed", self.__on_popover_closed)
-        popover.show()
+        popover.popup()
 
     def show_message(self, webview, msg):
         """
@@ -239,7 +239,7 @@ class ToolbarTitle(Gtk.Bin):
         popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
         popover.connect("closed", self.__on_popover_closed)
-        popover.show()
+        popover.popup()
 
     def show_popup_indicator(self, b):
         """
@@ -259,7 +259,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
-            self.__popover.show(child)
+            self.__popover.popup(child)
 
     def update_load_indicator(self, view):
         """
@@ -411,7 +411,7 @@ class ToolbarTitle(Gtk.Bin):
         if event.type == Gdk.EventType.BUTTON_PRESS:
             if not self.__popover.is_visible():
                 self._on_entry_focus_in(entry, event)
-                self.__popover.show("bookmarks")
+                self.__popover.popup("bookmarks")
         elif event.type == Gdk.EventType._2BUTTON_PRESS:
             text_len = len(self.__entry.get_text())
             self.__entry.select_region(0, text_len)
@@ -548,7 +548,7 @@ class ToolbarTitle(Gtk.Bin):
                                                        self.__entry, None))
             popover.add(widget)
             popover.set_size_request(self.__window.get_size()[0]/2.5, -1)
-            popover.show()
+            popover.popup()
         return True
 
     def _on_eventbox_enter_notify(self, eventbox, event):
@@ -723,7 +723,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_opacity(0)
             # We are doing a search, show popover
             if not is_uri and not self.__popover.is_visible():
-                self.__popover.show("bookmarks")
+                self.__popover.popup("bookmarks")
         elif parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
         if self.__keywords_timeout is not None:

@@ -432,13 +432,13 @@ class UriPopover(Gtk.Popover):
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
 
-    def show(self, child):
+    def popup(self, child):
         """
-            Show popover and wanted child
+            Popup popover and wanted child
             @param child as str
         """
         self.__stack.set_visible_child_name(child)
-        Gtk.Popover.show(self)
+        Gtk.Popover.popup(self)
 
     def set_search_text(self, search):
         """

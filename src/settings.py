@@ -194,7 +194,7 @@ class SettingsDialog:
         popover = CookiesPopover()
         popover.populate()
         popover.set_relative_to(button)
-        popover.show()
+        popover.popup()
 
     def _on_manage_passwords_clicked(self, button):
         """
@@ -205,7 +205,7 @@ class SettingsDialog:
         popover = PasswordsPopover()
         popover.populate()
         popover.set_relative_to(button)
-        popover.show()
+        popover.popup()
 
     def _on_tracking_toggled(self, button):
         """

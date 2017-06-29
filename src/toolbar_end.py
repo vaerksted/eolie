@@ -143,7 +143,7 @@ class ToolbarEnd(Gtk.Bin):
         popover.add(grid)
         popover.set_modal(False)
         popover.set_relative_to(self.__download_button)
-        popover.show()
+        popover.popup()
         GLib.timeout_add(2000, popover.destroy)
 
     def save_images(self, uri, page_id):
@@ -155,7 +155,7 @@ class ToolbarEnd(Gtk.Bin):
         from eolie.popover_images import ImagesPopover
         popover = ImagesPopover(uri, page_id)
         popover.set_relative_to(self.__download_button)
-        popover.show()
+        popover.popup()
 
     def show_fullscreen_button(self, b):
         """
@@ -181,7 +181,7 @@ class ToolbarEnd(Gtk.Bin):
         popover = DownloadsPopover(self.__window)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
-        popover.show()
+        popover.popup()
 
     def _on_fullscreen_button_clicked(self, button):
         """
@@ -286,7 +286,7 @@ class ToolbarEnd(Gtk.Bin):
                     widget.add(item)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
-        popover.show()
+        popover.popup()
 
     def _on_save_button_clicked(self, button):
         """

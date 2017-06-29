@@ -174,7 +174,7 @@ class ToolbarActions(Gtk.Bin):
         popover.connect("closed",
                         self.__on_pages_popover_closed,
                         button)
-        popover.show()
+        popover.popup()
 
     def _on_filter_button_toggled(self, button):
         """
@@ -231,7 +231,7 @@ class ToolbarActions(Gtk.Bin):
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)
-            popover.show()
+            popover.popup()
 
     def __on_forward_history_timeout(self):
         """
@@ -249,4 +249,4 @@ class ToolbarActions(Gtk.Bin):
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)
-            popover.show()
+            popover.popup()

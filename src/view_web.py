@@ -573,7 +573,7 @@ class WebView(WebKit2.WebView):
                                        parsed.scheme == "http"):
             model.add_attributes(attributes, uri)
             if index == 0:
-                popover.show()
+                popover.popup()
 
     def __on_signal(self, connection, sender, path,
                     interface, signal, params, data):

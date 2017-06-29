@@ -63,11 +63,11 @@ class JavaScriptPopover(Gtk.Popover):
         self.__loop = GLib.MainLoop.new(None, False)
         self.connect("closed", self.__on_closed)
 
-    def show(self):
+    def popup(self):
         """
-            Show widget and run loop
+            Popup widget and run loop
         """
-        Gtk.Popover.show(self)
+        Gtk.Popover.popup(self)
         self.__loop.run()
 
 #######################

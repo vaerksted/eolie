@@ -130,7 +130,7 @@ class Window(Gtk.ApplicationWindow):
             Close all popovers
         """
         for popover in self.__popovers:
-            popover.hide()
+            popover.popdown()
 
     @property
     def container(self):

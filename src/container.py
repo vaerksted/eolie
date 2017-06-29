@@ -155,7 +155,7 @@ class Container(Gtk.Overlay):
                                  self.__window.get_allocated_height() / 1.5)
             self.__popover.set_relative_to(self.__window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
-            self.__popover.show()
+            self.__popover.popup()
 
     def on_view_map(self, webview):
         """
