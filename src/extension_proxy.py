@@ -308,7 +308,7 @@ class ProxyExtension(Server):
            @param form as WebKit2WebExtension.DOMElement
            @param event as WebKit2WebExtension.DOMUIEvent
         """
-        if self.__forms.is_login_form(form):
+        if self.__forms.is_login_form(form) or not form.get_value():
             args = GLib.Variant.new_tuple(GLib.Variant("s", form.get_name()))
             self.__bus.emit_signal(
                               None,
