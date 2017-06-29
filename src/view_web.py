@@ -567,13 +567,13 @@ class WebView(WebKit2.WebView):
             @param popover as Gtk.Popover
             @param model as Gio.MenuModel
         """
+        parsed = urlparse(uri)
         self.__last_click_event = {}
-        if attributes is not None and count > 1:
+        if attributes is not None and (count > 1 or
+                                       parsed.scheme == "http"):
             model.add_attributes(attributes, uri)
             if index == 0:
                 popover.show()
-        else:
-            popover.destroy()
 
     def __on_signal(self, connection, sender, path,
                     interface, signal, params, data):
