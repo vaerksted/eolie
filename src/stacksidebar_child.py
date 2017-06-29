@@ -387,7 +387,8 @@ class SidebarChild(Gtk.ListBoxRow):
                     context.scale(factor, factor)
                     context.set_source_surface(snapshot, 0, 0)
                     context.paint()
-                El().art.save_artwork(uri, surface, "start")
+                if save:
+                    El().art.save_artwork(uri, surface, "start")
             del surface
             del snapshot
         except Exception as e:
