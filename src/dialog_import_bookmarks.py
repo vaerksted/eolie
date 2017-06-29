@@ -28,17 +28,17 @@ class ImportBookmarksDialog:
         CHROME = 2
         OTHERS = 3
 
-    def __init__(self, parent):
+    def __init__(self, window):
         """
             Init widget
-            @param parent as Gtk.Window
+            @param window as Gtk.Window
         """
-        self.__parent = parent
+        self.__window = window
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ImportBookmarks.ui")
         builder.connect_signals(self)
         self.__dialog = builder.get_object("dialog")
-        self.__dialog.set_transient_for(parent)
+        self.__dialog.set_transient_for(window)
         self.__listbox = builder.get_object("listbox")
         items = ["Firefox", "Chromium", "Chrome"]
         try:
@@ -81,14 +81,14 @@ class ImportBookmarksDialog:
             El().bookmarks.import_chromium(False)
         else:
             dialog = Gtk.FileChooserDialog(
-                                   _("Import HTML bookmarks"), self.__parent,
+                                   _("Import HTML bookmarks"), self.__window,
                                    Gtk.FileChooserAction.OPEN,
                                    (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
             dialog.connect("response", self.__on_file_chooser_response)
             dialog.run()
             dialog.destroy()
-        self.__parent.toolbar.title.close_popover()
+        self.__window.close_popovers()
 
 #######################
 # PRIVATE             #

@@ -117,8 +117,6 @@ class ToolbarEnd(Gtk.Bin):
             Notify user about download
             @param download as WebKit2.Download
         """
-        if self.__window.toolbar.title.lock_focus:
-            return
         header = Gtk.Label()
         header.set_markup("<b>" + _("Downloading:") + "</b>")
         header.set_ellipsize(Pango.EllipsizeMode.END)
@@ -179,11 +177,10 @@ class ToolbarEnd(Gtk.Bin):
         """
         if not button.get_active():
             return
-        self.__window.toolbar.title.close_popover()
-        popover = DownloadsPopover()
+        self.__window.close_popovers()
+        popover = DownloadsPopover(self.__window)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
-        self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
     def _on_fullscreen_button_clicked(self, button):
@@ -197,7 +194,7 @@ class ToolbarEnd(Gtk.Bin):
             Go to home page
             @param button as Gtk.Button
         """
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         self.__window.container.current.webview.load_uri(El().start_page)
 
     def _on_menu_button_toggled(self, button):
@@ -209,7 +206,7 @@ class ToolbarEnd(Gtk.Bin):
         from eolie.languages import LanguagesWidget
         if not button.get_active():
             return
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
             return
@@ -289,7 +286,6 @@ class ToolbarEnd(Gtk.Bin):
                     widget.add(item)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
-        self.__window.toolbar.title.set_lock_focus(True)
         popover.show()
 
     def _on_save_button_clicked(self, button):
@@ -492,4 +488,3 @@ class ToolbarEnd(Gtk.Bin):
         button.get_style_context().remove_class("selected")
         button.get_style_context().remove_class("video-in-page")
         button.set_active(False)
-        self.__window.toolbar.title.set_lock_focus(False)

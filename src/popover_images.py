@@ -79,13 +79,16 @@ class ImagesPopover(Gtk.Popover):
         Show Images for page id message
     """
 
-    def __init__(self, uri, page_id):
+    def __init__(self, uri, page_id, window):
         """
             Init popover
             @param uri as str
             @param page_id as int
+            @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.set_modal(False)
+        window.register(self)
         self.__uri = uri
         self.__page_id = page_id
         self.__cancellable = Gio.Cancellable()

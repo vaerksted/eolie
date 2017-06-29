@@ -24,6 +24,8 @@ class WebViewPopover(Gtk.Popover):
             @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.set_modal(False)
+        window.register(self, False)
         self.__window = window
         self.__to_destroy = []
         builder = Gtk.Builder()
@@ -34,7 +36,6 @@ class WebViewPopover(Gtk.Popover):
         self.__prev_button = builder.get_object("prev_button")
         self.__next_button = builder.get_object("next_button")
         self.add(builder.get_object("widget"))
-        self.connect("map", self.__on_map)
         self.connect("closed", self.__on_closed)
 
     def add_view(self, view, destroy):
@@ -144,20 +145,12 @@ class WebViewPopover(Gtk.Popover):
         if destroy:
             webview.destroy()
 
-    def __on_map(self, popover):
-        """
-            Lock title bar
-            @param popover as Gtk.Popover
-        """
-        self.__window.toolbar.title.set_lock_focus(True)
-
     def __on_closed(self, popover):
         """
             Unlock titlebar
             Remove children
             @param popover as Gtk.Popover
         """
-        self.__window.toolbar.title.set_lock_focus(False)
         for view in self.__stack.get_children():
             view.free_webview()
             self.__stack.remove(view)

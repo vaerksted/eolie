@@ -36,6 +36,7 @@ class Window(Gtk.ApplicationWindow):
                                        title="Eolie",
                                        icon_name="org.gnome.Eolie")
         self.__monitor_model = ""
+        self.__popovers = []
         self.__zoom_level = 1.0
         self.__container = None
         self.__window_state = 0
@@ -113,6 +114,23 @@ class Window(Gtk.ApplicationWindow):
         self.disconnect_by_func(self.__on_window_state_event)
         self.disconnect_by_func(self.__on_configure_event)
         Gtk.ApplicationWindow.hide(self)
+
+    def register(self, popover, monitor=True):
+        """
+            Add a popover to window
+            @param popover as Gtk.Popover
+            @param monitor as bool, check if closed
+        """
+        self.__popovers.append(popover)
+        if monitor:
+            popover.connect("closed", self.__on_popover_closed)
+
+    def close_popovers(self):
+        """
+            Close all popovers
+        """
+        for popover in self.__popovers:
+            popover.hide()
 
     @property
     def container(self):
@@ -289,9 +307,7 @@ class Window(Gtk.ApplicationWindow):
             @param: event as Gdk.EventMotion
         """
         revealer = self.__fullscreen_toolbar.get_parent()
-        if self.__fullscreen_toolbar.lock_focus or (
-                revealer.get_reveal_child() and
-                not revealer.get_child_revealed()):
+        if revealer.get_reveal_child() and not revealer.get_child_revealed():
             return
         if event.y < revealer.get_allocated_height():
             revealer.set_reveal_child(True)
@@ -370,3 +386,10 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.focus_entry("history")
         elif string == "search":
             self.toolbar.title.focus_entry("search")
+
+    def __on_popover_closed(self, popover):
+        """
+            Remove popover from registered
+            @param popover as Gtk.Popover
+        """
+        self.__popovers.remove(popover)

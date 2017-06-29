@@ -21,12 +21,15 @@ class JavaScriptPopover(Gtk.Popover):
         @warning: will block current execution
     """
 
-    def __init__(self, dialog):
+    def __init__(self, dialog, window):
         """
             Init popover
             @param dialog as WebKit2.ScriptDialog
+            @param window as window
         """
         Gtk.Popover.__init__(self)
+        self.set_modal(False)
+        window.register(self)
         self.__dialog = dialog
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverJavaScript.ui")

@@ -356,11 +356,14 @@ class DownloadsPopover(Gtk.Popover):
         Show current downloads
     """
 
-    def __init__(self):
+    def __init__(self, window):
         """
             Init popover
+            @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.set_modal(False)
+        window.register(self)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverDownloads.ui")
         builder.connect_signals(self)

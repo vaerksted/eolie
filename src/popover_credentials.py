@@ -25,14 +25,17 @@ class CredentialsPopover(Gtk.Popover):
         Tell user to save form credentials
     """
 
-    def __init__(self, username, userform, password, passform, uri):
+    def __init__(self, username, userform, password, passform, uri, window):
         """
             Init popover
             @param username as str
             @param password as str
             @param netloc as str
+            @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.set_modal(False)
+        window.register(self)
         self.__helper = PasswordsHelper()
         self.__username = username
         self.__userform = userform

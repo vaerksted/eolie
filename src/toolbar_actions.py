@@ -29,7 +29,6 @@ class ToolbarActions(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__timeout_id = None
-        self.__lock_focus = False
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarActions.ui")
         builder.connect_signals(self)
@@ -62,14 +61,6 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.current.webview.go_forward()
 
     @property
-    def lock_focus(self):
-        """
-            Get lock focus
-            @return bool
-        """
-        return self.__lock_focus
-
-    @property
     def closed_button(self):
         """
             Get closed pages button
@@ -97,7 +88,7 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_back_history_timeout)
         if event.button == 3:
@@ -133,7 +124,7 @@ class ToolbarActions(Gtk.Bin):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
         button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         self.__timeout_id = GLib.timeout_add(500,
                                              self.__on_forward_history_timeout)
         if event.button == 3:
@@ -167,7 +158,7 @@ class ToolbarActions(Gtk.Bin):
         """
         self.__window.container.add_webview(El().start_page,
                                             Gdk.WindowType.CHILD)
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
 
     def _on_pages_button_toggled(self, button):
         """
@@ -176,8 +167,9 @@ class ToolbarActions(Gtk.Bin):
         """
         if not button.get_active():
             return
-        self.__lock_focus = True
         popover = Gtk.Popover.new_from_model(button, El().pages_menu)
+        popover.set_modal(False)
+        self.__window.register(popover)
         popover.forall(self.__force_show_image)
         popover.connect("closed",
                         self.__on_pages_popover_closed,
@@ -190,12 +182,8 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         active = button.get_active()
-        if self.__window.is_fullscreen:
-            self.__lock_focus = active
-        else:
-            self.__lock_focus = False
         self.__window.container.sidebar.set_filtered(active)
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
 
 #######################
 # PRIVATE             #
@@ -216,7 +204,6 @@ class ToolbarActions(Gtk.Bin):
             @param popover
             @param button as Gtk.ToggleButton
         """
-        self.__lock_focus = False
         button.set_active(False)
 
     def __on_navigation_popover_closed(self, popover, model):
@@ -225,7 +212,6 @@ class ToolbarActions(Gtk.Bin):
             @param popover
             @param model as HistoryMenu/None
         """
-        self.__lock_focus = False
         # Let model activate actions
         GLib.idle_add(model.remove_actions)
 
@@ -239,8 +225,9 @@ class ToolbarActions(Gtk.Bin):
         if back_list:
             model = HistoryMenu(El(), back_list)
             popover = Gtk.Popover.new_from_model(self.__backward, model)
+            popover.set_modal(False)
+            self.__window.register(popover)
             GLib.idle_add(popover.forall, self.__force_show_image)
-            self.__lock_focus = True
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)
@@ -256,8 +243,9 @@ class ToolbarActions(Gtk.Bin):
         if forward_list:
             model = HistoryMenu(El(), forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward, model)
+            popover.set_modal(False)
+            self.__window.register(popover)
             GLib.idle_add(popover.forall, self.__force_show_image)
-            self.__lock_focus = True
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)

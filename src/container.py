@@ -253,8 +253,7 @@ class Container(Gtk.Overlay):
         """
             Grab focus on current view
         """
-        if not self.__window.toolbar.title.lock_focus:
-            self.current.webview.grab_focus()
+        self.current.webview.grab_focus()
 
     def __on_new_page(self, webview, uri, window_type):
         """
@@ -373,7 +372,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param event as Gdk.Event
         """
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
 
     def __on_estimated_load_progress(self, webview, value):
         """

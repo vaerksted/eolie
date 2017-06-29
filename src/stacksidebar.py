@@ -110,8 +110,7 @@ class StackSidebar(Gtk.EventBox):
             @param b as bool
         """
         if b:
-            if self.__window.toolbar.lock_focus and\
-                    self.__window.is_fullscreen:
+            if self.__window.is_fullscreen:
                 height = self.__window.toolbar.get_allocated_height()
                 self.__search_bar.set_margin_top(height)
             else:
@@ -213,7 +212,7 @@ class StackSidebar(Gtk.EventBox):
             @param view as View
         """
         El().history.set_page_state(view.webview.get_uri())
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
@@ -403,7 +402,7 @@ class StackSidebar(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.EventButton
         """
-        self.__window.toolbar.title.close_popover()
+        self.__window.close_popovers()
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.__window.container.add_webview(El().start_page,
                                                 Gdk.WindowType.CHILD)

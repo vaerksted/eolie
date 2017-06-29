@@ -34,7 +34,6 @@ class ToolbarTitle(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__input_warning_shown = False
-        self.__lock_focus = False
         self.__signal_id = None
         self.__secure_content = True
         self.__keywords_timeout = None
@@ -160,8 +159,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__set_default_placeholder()
             return
         self.__placeholder.set_text(title)
-        if not self.__lock_focus and\
-                not self.__popover.is_visible():
+        if not self.__popover.is_visible():
             self.__placeholder.set_opacity(0.8)
             self.__entry.get_style_context().add_class('uribar-title')
             self.set_text_entry("")
@@ -184,8 +182,7 @@ class ToolbarTitle(Gtk.Bin):
             @param dialog as WebKit2.ScriptDialog
         """
         from eolie.popover_javascript import JavaScriptPopover
-        self.__lock_focus = True
-        popover = JavaScriptPopover(dialog)
+        popover = JavaScriptPopover(dialog, self.__window)
         popover.set_relative_to(self.__entry)
         popover.connect("closed", self.__on_popover_closed)
         popover.show()
@@ -234,10 +231,10 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
         """
         from eolie.popover_credentials import CredentialsPopover
-        self.__lock_focus = True
         popover = CredentialsPopover(username, userform,
                                      password, passform,
-                                     uri)
+                                     uri,
+                                     self.__window)
         popover.set_relative_to(self.__entry)
         popover.set_pointing_to(self.__entry.get_icon_area(
                                                 Gtk.EntryIconPosition.PRIMARY))
@@ -255,21 +252,6 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__popup_indicator.hide()
 
-    def close_popover(self):
-        """
-            Close popover if needed
-        """
-        if self.__popover.is_visible():
-            self.__lock_focus = False
-            self.__popover.hide()
-            self.__keywords_cancellable.cancel()
-            self.__keywords_cancellable.reset()
-            if self.__entry.has_focus():
-                self.__window.set_focus(None)
-            else:
-                self._on_entry_focus_out(self.__entry, None)
-            self.__update_secure_content_indicator()
-
     def focus_entry(self, child="bookmarks"):
         """
             Focus entry
@@ -277,7 +259,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
-            self.__lock_focus = True
             self.__popover.show(child)
 
     def update_load_indicator(self, view):
@@ -300,13 +281,6 @@ class ToolbarTitle(Gtk.Bin):
         if not self.__entry.is_focus():
             self.__entry.grab_focus()
 
-    def set_lock_focus(self, locked):
-        """
-            Set focus to be locked
-            @param locked as bool
-        """
-        self.__lock_focus = locked
-
     @property
     def uri(self):
         """
@@ -314,14 +288,6 @@ class ToolbarTitle(Gtk.Bin):
             @return str
         """
         return self.__uri
-
-    @property
-    def lock_focus(self):
-        """
-            Get lock focus
-            @return bool
-        """
-        return self.__lock_focus
 
     @property
     def progress(self):
@@ -353,8 +319,8 @@ class ToolbarTitle(Gtk.Bin):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        if self.__lock_focus:
-            return True
+        if self.__popover.is_visible():
+            return
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
@@ -372,8 +338,8 @@ class ToolbarTitle(Gtk.Bin):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        if self.__lock_focus:
-            return True
+        if self.__popover.is_visible():
+            return
         allocation = widget.get_allocation()
         if event.x <= 0 or\
            event.x >= allocation.width or\
@@ -395,10 +361,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
-        # Needed here too because we don't want to set uri again when
-        # window get focus. (don't want to clear user input)
-        if self.__lock_focus:
-            return True
+        if self.__popover.is_visible():
+            return
         self.__entry.get_style_context().remove_class("uribar-title")
         self.__entry.get_style_context().add_class("input")
         webview = self.__window.container.current.webview
@@ -420,8 +384,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event (do not use)
         """
-        if self.__lock_focus:
-            return True
+        if self.__popover.is_visible():
+            return
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().add_class("uribar-title")
@@ -447,7 +411,6 @@ class ToolbarTitle(Gtk.Bin):
         if event.type == Gdk.EventType.BUTTON_PRESS:
             if not self.__popover.is_visible():
                 self._on_entry_focus_in(entry, event)
-                self.__lock_focus = True
                 self.__popover.show("bookmarks")
         elif event.type == Gdk.EventType._2BUTTON_PRESS:
             text_len = len(self.__entry.get_text())
@@ -585,7 +548,6 @@ class ToolbarTitle(Gtk.Bin):
                                                        self.__entry, None))
             popover.add(widget)
             popover.set_size_request(self.__window.get_size()[0]/2.5, -1)
-            self.__lock_focus = True
             popover.show()
         return True
 
@@ -711,7 +673,8 @@ class ToolbarTitle(Gtk.Bin):
             Clean titlebar if UriPopover, else update star
             @param popover as Gtk.popover
         """
-        self.__lock_focus = False
+        self.__keywords_cancellable.cancel()
+        self.__keywords_cancellable.reset()
         webview = self.__window.container.current.webview
         if popover == self.__popover:
             value = self.__entry.get_text().lstrip().rstrip()
@@ -755,7 +718,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_opacity(0)
             # We are doing a search, show popover
             if not is_uri and not self.__popover.is_visible():
-                self.__lock_focus = True
                 self.__popover.show("bookmarks")
         elif parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()

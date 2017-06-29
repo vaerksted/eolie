@@ -28,6 +28,7 @@ class Toolbar(Gtk.EventBox):
             @param window as Window
         """
         Gtk.EventBox.__init__(self)
+        self.__window = window
         self.__headerbar = Gtk.HeaderBar()
         self.__headerbar.show()
         self.__headerbar.set_title("Eolie")
@@ -49,15 +50,6 @@ class Toolbar(Gtk.EventBox):
             @param show as bool
         """
         self.__headerbar.set_show_close_button(show)
-
-    @property
-    def lock_focus(self):
-        """
-            Get lock focus
-            @return bool
-        """
-        return self.__toolbar_title.lock_focus or\
-            self.__toolbar_actions.lock_focus
 
     @property
     def title(self):
@@ -92,4 +84,4 @@ class Toolbar(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__toolbar_title.close_popover()
+        self.__window.close_popovers()
