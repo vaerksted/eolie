@@ -53,7 +53,6 @@ class WebViewNavigation:
         self.__js_timeout = None
         self.__title = ""
         self.__popups = []
-        self.__loaded_uri = ""
         self.__js_load = False
         self.__related_uri = None
         self.__insecure_content_detected = False
@@ -79,7 +78,6 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
-            self.__loaded_uri = uri
         # We are not a ftp browser, fall back to env
         elif parsed.scheme == "ftp":
             argv = [get_ftp_cmd(), uri, None]
@@ -99,7 +97,6 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
-            self.__loaded_uri = uri
             self.emit("uri-changed", uri)
             WebKit2.WebView.load_uri(self, uri)
 
@@ -139,14 +136,6 @@ class WebViewNavigation:
             @return [WebView]
         """
         return self.__popups
-
-    @property
-    def loaded_uri(self):
-        """
-            Return loaded uri (This is not current uri!)
-            @return str
-        """
-        return self.__loaded_uri
 
 #######################
 # PRIVATE             #
@@ -285,7 +274,6 @@ class WebViewNavigation:
                 decision.use()
                 return False
         elif mouse_button == 1:
-            self.__loaded_uri = uri
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 self.emit("new-page", uri, Gdk.WindowType.CHILD)
                 decision.ignore()
