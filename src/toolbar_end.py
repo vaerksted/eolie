@@ -175,9 +175,9 @@ class ToolbarEnd(Gtk.Bin):
             Show download popover
             @param button as Gtk.Button
         """
+        self.__window.close_popovers()
         if not button.get_active():
             return
-        self.__window.close_popovers()
         popover = DownloadsPopover(self.__window)
         popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
