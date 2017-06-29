@@ -349,14 +349,7 @@ class ToolbarTitle(Gtk.Bin):
            event.y <= 0 or\
            event.y >= allocation.height or\
            not isinstance(widget, Gtk.EventBox):
-            self.__update_secure_content_indicator()
-            self.__placeholder.set_opacity(0.8)
-            parsed = urlparse(self.__uri)
-            if parsed.scheme in ["http", "https", "file"]:
-                self.__entry.get_style_context().add_class('uribar-title')
-                self.set_text_entry("")
-            else:
-                self.__set_default_placeholder()
+            self.__leave()
 
     def _on_entry_focus_in(self, entry, event):
         """
@@ -438,6 +431,7 @@ class ToolbarTitle(Gtk.Bin):
                 self.__entry.delete_text(0, -1)
                 webview.clear_text_entry()
                 GLib.idle_add(self.__window.close_popovers)
+                return True
             # Close popover, save current entry and load text content
             elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                 webview.clear_text_entry()
@@ -462,6 +456,7 @@ class ToolbarTitle(Gtk.Bin):
                 self.__window.container.load_uri(uri)
                 webview.grab_focus()
                 self.__completion_model.clear()
+                return True
             elif len(uri) > 1 and (event.keyval == Gdk.KEY_slash or
                                    event.keyval == Gdk.KEY_space):
                 webview.add_text_entry(uri)
@@ -595,7 +590,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
-        self.__entry.get_style_context().add_class("uribar-title")
         self.__entry.get_style_context().remove_class("input")
         self.set_text_entry("")
         view = self.__window.container.current
@@ -608,6 +602,19 @@ class ToolbarTitle(Gtk.Bin):
                 icon_name = "non-starred-symbolic"
             self.__action_image2.set_from_icon_name(icon_name,
                                                     Gtk.IconSize.MENU)
+
+    def __leave(self):
+        """
+            Leave widget
+        """
+        self.__update_secure_content_indicator()
+        self.__placeholder.set_opacity(0.8)
+        parsed = urlparse(self.__uri)
+        if parsed.scheme in ["http", "https", "file"]:
+            self.__entry.get_style_context().add_class('uribar-title')
+            self.set_text_entry("")
+        else:
+            self.__set_default_placeholder()
 
     def __set_default_placeholder(self):
         """
@@ -688,7 +695,7 @@ class ToolbarTitle(Gtk.Bin):
         if popover == self.__popover:
             webview.grab_focus()
             self.__focus_out()
-            self.__update_secure_content_indicator()
+            self.__leave()
             value = self.__entry.get_text().lstrip().rstrip()
             if value:
                 webview.add_text_entry(value)
