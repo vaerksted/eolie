@@ -103,7 +103,7 @@ class WebViewErrors:
             @param uri as str
             @param error as GLib.Error
         """
-        self.__error = error
+        self._error = error
         network_available = Gio.NetworkMonitor.get_default(
                                                       ).get_network_available()
         # Ignore HTTP errors
