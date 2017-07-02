@@ -153,7 +153,7 @@ class ToolbarEnd(Gtk.Bin):
             @param page_id as int
         """
         from eolie.popover_images import ImagesPopover
-        popover = ImagesPopover(uri, page_id)
+        popover = ImagesPopover(uri, page_id, self.__window)
         popover.set_relative_to(self.__download_button)
         popover.popup()
 
