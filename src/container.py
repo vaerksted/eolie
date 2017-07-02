@@ -307,10 +307,7 @@ class Container(Gtk.Overlay):
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
-            active_window = El().get_new_window()
-            active_window.container.add_view(webview,
-                                             None,
-                                             Gdk.WindowType.CHILD)
+            self.add_view(webview, None, Gdk.WindowType.CHILD)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
@@ -395,9 +392,6 @@ class Container(Gtk.Overlay):
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
-            else:
-                # Close web page if uri is null
-                self.sidebar.close_view(webview.get_ancestor(View))
 
     def __on_title_changed(self, webview, title):
         """
