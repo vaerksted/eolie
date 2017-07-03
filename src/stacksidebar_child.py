@@ -34,7 +34,6 @@ class SidebarChild(Gtk.ListBoxRow):
             @param window as Window
         """
         Gtk.ListBoxRow.__init__(self)
-        self.__scroll_timeout_id = None
         self.__view = view
         self.__window = window
         builder = Gtk.Builder()
@@ -57,7 +56,6 @@ class SidebarChild(Gtk.ListBoxRow):
         self.add(builder.get_object("widget"))
         view.webview.connect("notify::favicon",
                              lambda x, y: self.__set_favicon())
-        view.webview.connect("scroll-event", self.__on_scroll_event)
         view.webview.connect("uri-changed", self.__on_uri_changed)
         view.webview.connect("title-changed", self.__on_title_changed)
         view.webview.connect("load-changed", self.__on_load_changed)
@@ -255,13 +253,6 @@ class SidebarChild(Gtk.ListBoxRow):
             del resized
             del surface
 
-    def __set_snapshot_timeout(self):
-        """
-            Get snapshot timeout
-        """
-        self.__scroll_timeout_id = None
-        self.set_snapshot(False)
-
     def __on_uri_changed(self, view, uri):
         """
             Update uri
@@ -310,19 +301,6 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__set_favicon()
             self.__spinner.stop()
             GLib.timeout_add(500, self.set_snapshot, True)
-
-    def __on_scroll_event(self, view, event):
-        """
-            Update snapshot
-            @param view as WebView
-            @param event as WebKit2.Event
-        """
-        if self.__scroll_timeout_id is not None:
-            GLib.source_remove(self.__scroll_timeout_id)
-        if not view.is_loading():
-            self.__scroll_timeout_id = GLib.timeout_add(
-                                                1000,
-                                                self.__set_snapshot_timeout)
 
     def __on_snapshot(self, view, result, save):
         """
