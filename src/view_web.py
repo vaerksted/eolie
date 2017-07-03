@@ -163,8 +163,9 @@ class WebView(WebKit2.WebView):
             Add an uri to text entry list
             @param text as str
         """
-        item = LinkedList(text, None, self.__text_entry)
-        self.__text_entry = item
+        if text and text != self.__text_entry.value:
+            item = LinkedList(text, None, self.__text_entry)
+            self.__text_entry = item
 
     def clear_text_entry(self):
         """

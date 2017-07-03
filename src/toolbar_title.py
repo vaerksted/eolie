@@ -588,11 +588,12 @@ class ToolbarTitle(Gtk.Bin):
         """
             Focus out widget
         """
+        view = self.__window.container.current
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.__entry.get_style_context().remove_class("input")
+        view.webview.add_text_entry(self.__entry.get_text())
         self.set_text_entry("")
-        view = self.__window.container.current
         uri = view.webview.get_uri()
         if uri is not None:
             bookmark_id = El().bookmarks.get_id(uri)
