@@ -115,6 +115,7 @@ class CredentialsPopover(Gtk.Popover):
                     attributes["userform"] == self.__userform and\
                     attributes["passform"] == self.__passform:
                 self.emit("closed")
+                self.set_relative_to(None)  # Prevent popover to be displayed
             # Password changed
             elif attributes["login"] == self.__username:
                 Gtk.Popover.popup(self)

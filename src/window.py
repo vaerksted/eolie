@@ -394,3 +394,4 @@ class Window(Gtk.ApplicationWindow):
         """
         if popover in self.__popovers:
             self.__popovers.remove(popover)
+            GLib.timeout_add(1000, popover.destroy)
