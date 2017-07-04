@@ -34,7 +34,7 @@ class CredentialsPopover(Gtk.Popover):
             @param window as Window
         """
         Gtk.Popover.__init__(self)
-        self.set_modal(True)
+        self.set_modal(False)
         window.register(self)
         self.__helper = PasswordsHelper()
         self.__username = username

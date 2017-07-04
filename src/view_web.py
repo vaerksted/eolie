@@ -397,6 +397,7 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
+        self.__window.close_popovers()
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
         fields = request.get_text_fields()
