@@ -599,6 +599,8 @@ class WebView(WebKit2.WebView):
             if self.__last_click_event:
                 model = FormMenu(El(), params[0], self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
+                popover.set_modal(False)
+                self.__window.register(popover)
                 rect = Gdk.Rectangle()
                 rect.x = self.__last_click_event["x"]
                 rect.y = self.__last_click_event["y"]
