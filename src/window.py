@@ -392,4 +392,5 @@ class Window(Gtk.ApplicationWindow):
             Remove popover from registered
             @param popover as Gtk.Popover
         """
-        self.__popovers.remove(popover)
+        if popover in self.__popovers:
+            self.__popovers.remove(popover)
