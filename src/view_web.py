@@ -216,6 +216,21 @@ class WebView(WebKit2.WebView):
                 self.__text_entry = self.__text_entry.next
         return next
 
+    def stop_loading(self):
+        """
+            Keep stop loading state
+        """
+        self._cancelled = True
+        WebKit2.WebView.stop_loading(self)
+
+    @property
+    def cancelled(self):
+        """
+            True if last loading was cancelled
+            @return bool
+        """
+        return self._cancelled
+
     @property
     def delayed_uri(self):
         """
@@ -283,6 +298,7 @@ class WebView(WebKit2.WebView):
         self.__related_view = related_view
         self.__initial_selection = ""
         self.__input_source = Gdk.InputSource.MOUSE
+        self._cancelled = False
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()

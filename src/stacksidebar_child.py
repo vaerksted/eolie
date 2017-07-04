@@ -298,9 +298,10 @@ class SidebarChild(Gtk.ListBoxRow):
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__set_favicon()
             self.__spinner.stop()
-            GLib.timeout_add(500, self.set_snapshot, True)
+            if not view.cancelled:
+                GLib.timeout_add(500, self.set_snapshot, True)
+                self.__set_favicon()
 
     def __on_snapshot(self, view, result, save):
         """
