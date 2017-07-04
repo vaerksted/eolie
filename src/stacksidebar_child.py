@@ -194,8 +194,6 @@ class SidebarChild(Gtk.ListBoxRow):
             Set favicon
         """
         uri = self.__view.webview.get_uri()
-        self.__image_close.get_style_context().remove_class(
-                                                          "sidebar-item-close")
         if uri == "populars://":
             self.__image_close.set_from_icon_name("emote-love-symbolic",
                                                   Gtk.IconSize.INVALID)
