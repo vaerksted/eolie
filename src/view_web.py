@@ -406,7 +406,7 @@ class WebView(WebKit2.WebView):
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
             forms.append(name)
-            self.__get_forms(forms, webview.get_page_id(), request)
+        self.__get_forms(forms, webview.get_page_id(), request)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """
