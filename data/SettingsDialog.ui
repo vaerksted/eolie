@@ -125,7 +125,7 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="margin_left">15</property>
-                <property name="label" translatable="yes">Web engines:</property>
+                <property name="label" translatable="yes">Search engines:</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
