@@ -110,9 +110,10 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__grid.set_property("valign", Gtk.Align.END)
         self.__overlay.set_size_request(-1, height)
 
-    def set_snapshot(self, save):
+    def set_snapshot(self, uri, save):
         """
             Set webpage preview
+            @param uri as str
             @param save as bool
         """
         if self.__view.webview.ephemeral:
@@ -125,6 +126,7 @@ class SidebarChild(Gtk.ListBoxRow):
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self.__on_snapshot,
+                                         uri,
                                          save)
 
     def clear_snapshot(self):
@@ -269,7 +271,7 @@ class SidebarChild(Gtk.ListBoxRow):
             if preview is None:
                 # This is js uri change, do not clear
                 if view.get_estimated_load_progress() == 1.0:
-                    GLib.timeout_add(1000, self.set_snapshot, False)
+                    GLib.timeout_add(1000, self.set_snapshot, uri, False)
                 else:
                     self.__image.clear()
             else:
@@ -284,7 +286,7 @@ class SidebarChild(Gtk.ListBoxRow):
         """
         self.__title.set_text(title)
         if not view.is_loading():
-            GLib.timeout_add(500, self.set_snapshot, False)
+            GLib.timeout_add(500, self.set_snapshot, view.get_uri(), False)
 
     def __on_load_changed(self, view, event):
         """
@@ -303,24 +305,28 @@ class SidebarChild(Gtk.ListBoxRow):
             # is_loading() happen when loading a new uri while
             # previous loading is not finished
             if not view.cancelled and not view.is_loading():
-                GLib.timeout_add(500, self.set_snapshot, True)
+                GLib.timeout_add(500, self.set_snapshot, uri, False)
+                # FIXME Should be better to have way to snapshot when
+                # page is rendered
+                GLib.timeout_add(3000, self.set_snapshot, uri, True)
                 self.__set_favicon()
 
-    def __on_snapshot(self, view, result, save):
+    def __on_snapshot(self, view, result, uri, save):
         """
             Set snapshot on main image
             @param view as WebView
             @param result as Gio.AsyncResult
+            @param uri as str
             @param save as bool
             @warning view here is WebKit2.WebView, not WebView
         """
+        current_uri = view.get_uri()
+        if current_uri is None or current_uri != uri:
+            return
         # Do not cache snapshot on error
         if self.__view.webview.error is not None:
             save = False
         try:
-            current_uri = view.get_uri()
-            if current_uri is None:
-                return
             snapshot = view.get_snapshot_finish(result)
 
             if self.__window.container.sidebar.panel_mode == 0:

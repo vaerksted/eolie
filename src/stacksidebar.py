@@ -272,7 +272,7 @@ class StackSidebar(Gtk.EventBox):
         """
         if self.__panel_mode == 0:
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
-            child.set_snapshot(True)
+            child.set_snapshot(child.view.webview.get_uri(), True)
         else:
             child.set_preview_height(None)
             child.clear_snapshot()
