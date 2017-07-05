@@ -589,9 +589,12 @@ class WebView(WebKit2.WebView):
         self.__last_click_event = {}
         if attributes is not None and (count > 1 or
                                        parsed.scheme == "http"):
-            model.add_attributes(attributes, uri)
-            if index == 0:
-                popover.popup()
+            parsed = urlparse(uri)
+            submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+            if submit_uri == attributes["formSubmitURL"]:
+                model.add_attributes(attributes, uri)
+                if index == 0:
+                    popover.popup()
 
     def __on_signal(self, connection, sender, path,
                     interface, signal, params, data):

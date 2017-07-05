@@ -43,7 +43,7 @@ class FormMenu(Gio.Menu):
             @param attributes as {}
             @param uri as str
         """
-        if attributes is None or attributes["userform"] != self.__userform:
+        if attributes["userform"] != self.__userform:
             return
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()
