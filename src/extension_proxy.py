@@ -130,6 +130,7 @@ class ProxyExtension(Server):
         self.__form_history = {}
         self.__password_forms = []
         self.__listened_forms = []
+        self.__mouse_down_forms = []
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
 
@@ -309,13 +310,18 @@ class ProxyExtension(Server):
            @param event as WebKit2WebExtension.DOMUIEvent
         """
         if self.__forms.is_login_form(form):
-            args = GLib.Variant.new_tuple(GLib.Variant("s", form.get_name()))
-            self.__bus.emit_signal(
-                              None,
-                              PROXY_PATH,
-                              self.__proxy_bus,
-                              "InputMouseDown",
-                              args)
+            name = form.get_name()
+            if name in self.__mouse_down_forms:
+                self.__mouse_down_forms.remove(name)
+            else:
+                self.__mouse_down_forms.append(name)
+                args = GLib.Variant.new_tuple(GLib.Variant("s", name))
+                self.__bus.emit_signal(
+                                  None,
+                                  PROXY_PATH,
+                                  self.__proxy_bus,
+                                  "InputMouseDown",
+                                  args)
 
     def __on_input(self, form, event):
         """
@@ -364,6 +370,7 @@ class ProxyExtension(Server):
         self.__form_history = {}
         self.__listened_forms = []
         self.__password_forms = []
+        self.__mouse_down_forms = []
 
         # Manage forms in page
         parsed = urlparse(webpage.get_uri())
