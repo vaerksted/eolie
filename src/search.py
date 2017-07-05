@@ -10,11 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Soup
+from gi.repository import Soup, Gio
 
 from gettext import gettext as _
+import json
 
-from eolie.define import El
+from eolie.define import El, EOLIE_LOCAL_PATH
 
 
 class Search:
@@ -64,7 +65,7 @@ class Search:
 
         self.__uri = ""
         self.__search = ""
-        self.__keywords = ""
+        self.__keyword = ""
         self.__encoding = ""
         self.update_default_engine()
 
@@ -73,12 +74,12 @@ class Search:
             Update default engine based on user settings
         """
         wanted = El().settings.get_value('search-engine').get_string()
-        for engine in self.__ENGINES:
+        for engine in self.engines:
             if engine == wanted:
-                self.__uri = self.__ENGINES[engine][0]
-                self.__search = self.__ENGINES[engine][1]
-                self.__keywords = self.__ENGINES[engine][2]
-                self.__encoding = self.__ENGINES[engine][3]
+                self.__uri = self.engines[engine][0]
+                self.__search = self.engines[engine][1]
+                self.__keyword = self.engines[engine][2]
+                self.__encoding = self.engines[engine][3]
                 break
 
     def get_search_uri(self, words):
@@ -88,9 +89,9 @@ class Search:
             @return str
         """
         if len(words) > 2 and words[1] == ":":
-            for engine in self.__ENGINES:
-                if words.startswith("%s:" % self.__ENGINES[engine][4]):
-                    return self.__ENGINES[engine][1] % words[2:]
+            for engine in self.engines:
+                if words.startswith("%s:" % self.engines[engine][4]):
+                    return self.engines[engine][1] % words[2:]
         return self.__search % words
 
     def get_keywords(self, words, cancellable):
@@ -101,7 +102,7 @@ class Search:
             @return [str]
         """
         try:
-            uri = self.__keywords % words
+            uri = self.__keyword % words
             session = Soup.Session.new()
             session.set_property('accept-language-auto', True)
             request = session.request(uri)
@@ -131,10 +132,26 @@ class Search:
             (len(string) > 2 and string[1] == ":")
         if not search:
             # String contains dot, is an uri
-            # String contains dot, is an uri
             search = string.find(".") == -1 and\
                 string.find(":") == -1
         return search
+
+    @property
+    def engines(self):
+        """
+            Get engines
+            return {}
+        """
+        engines = self.__ENGINES
+        # Load user engines
+        try:
+            f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/engines.json")
+            if f.query_exists():
+                (status, contents, tag) = f.load_contents(None)
+                engines.update(json.loads(contents.decode("utf-8")))
+        except Exception as e:
+            print("Search::engines():", e)
+        return engines
 
     @property
     def uri(self):

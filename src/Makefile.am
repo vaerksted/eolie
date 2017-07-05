@@ -13,6 +13,7 @@ app_PYTHON = \
     database_settings.py\
     dialog_clear_data.py\
     dialog_import_bookmarks.py\
+    dialog_search_engine.py\
     download_manager.py\
     define.py\
     extension_adblock.py\

@@ -19,7 +19,6 @@ from gettext import gettext as _
 from threading import Thread
 
 from eolie.define import El
-from eolie.dialog_clear_data import ClearDataDialog
 from eolie.utils import get_current_monitor_model
 from eolie.helper_passwords import PasswordsHelper
 
@@ -94,10 +93,6 @@ class SettingsDialog:
             self.__start_page_uri.show()
         else:
             combo_start.set_active_id(start_page)
-
-        combo_engine = builder.get_object("combo_engine")
-        combo_engine.set_active_id(
-                        El().settings.get_value("search-engine").get_string())
 
         remember_session = builder.get_object("remember_sessions_check")
         remember_session.set_active(
@@ -177,11 +172,21 @@ class SettingsDialog:
 #######################
 # PROTECTED           #
 #######################
+    def _on_configure_engines_clicked(self, button):
+        """
+            Show Web engines configurator
+            @param button as Gtk.Button
+        """
+        from eolie.dialog_search_engine import SearchEngineDialog
+        dialog = SearchEngineDialog(self.__settings_dialog)
+        dialog.run()
+
     def _on_clear_personnal_data_clicked(self, button):
         """
             Show clear personnal data dialog
             @param button as Gtk.button
         """
+        from eolie.dialog_clear_data import ClearDataDialog
         dialog = ClearDataDialog(self.__settings_dialog)
         dialog.run()
 

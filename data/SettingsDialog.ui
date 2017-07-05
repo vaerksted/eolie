@@ -125,27 +125,10 @@
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="margin_left">15</property>
-                <property name="label" translatable="yes">Web engine:</property>
+                <property name="label" translatable="yes">Web engines:</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">8</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkComboBoxText" id="combo_engine">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <items>
-                  <item id="Google" translatable="yes">Google</item>
-                  <item id="DuckDuckGo" translatable="yes">DuckDuckGo</item>
-                  <item id="Yahoo" translatable="yes">Yahoo</item>
-                  <item id="Bing" translatable="yes">Bing</item>
-                </items>
-                <signal name="changed" handler="_on_engine_changed" swapped="no"/>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
                 <property name="top_attach">8</property>
               </packing>
             </child>
@@ -257,6 +240,19 @@
                 <property name="left_attach">0</property>
                 <property name="top_attach">3</property>
                 <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Configure engines</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="_on_configure_engines_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">8</property>
               </packing>
             </child>
             <child>

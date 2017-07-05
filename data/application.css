@@ -58,6 +58,12 @@
     background-color: #C71585;
 }
 
+.invalid-entry {
+    color: @theme_fg_color;
+    background-color: alpha(red, 0.1);
+    background-image: none;
+}
+
 .input {
     color: @theme_fg_color;
     background-color: alpha(@theme_selected_bg_color, 0.1);
