@@ -269,7 +269,9 @@ class SidebarChild(Gtk.ListBoxRow):
                                            ArtSize.PREVIEW_HEIGHT)
             if preview is None:
                 # This is js uri change, do not clear
-                if view.get_estimated_load_progress() != 1.0:
+                if view.get_estimated_load_progress() == 1.0:
+                    GLib.timeout_add(1000, self.set_snapshot, False)
+                else:
                     self.__image.clear()
             else:
                 self.__image.set_from_surface(preview)
