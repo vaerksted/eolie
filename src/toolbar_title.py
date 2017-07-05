@@ -675,7 +675,7 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
         """
         match = El().history.get_match(uri)
-        if match is not None:
+        if match is not None and self.__entry.get_text() == uri:
             match_parsed = urlparse(match)
             self.__completion_model.clear()
             netloc = match_parsed.netloc.replace("www.", "")

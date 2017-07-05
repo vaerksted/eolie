@@ -345,7 +345,7 @@ class DatabaseHistory:
             result = sql.execute("SELECT uri\
                                   FROM history\
                                   WHERE uri like ?\
-                                  ORDER BY popularity DESC\
+                                  ORDER BY length(uri) ASC\
                                   LIMIT 1",
                                  ("%" + uri + "%",))
             v = result.fetchone()
