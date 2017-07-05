@@ -235,9 +235,9 @@ class StackSidebar(Gtk.EventBox):
         # First we search a child with same parent as closed
         brother = None
         for child in reversed(self.__listbox.get_children()):
-            if view.parent is not None and\
-                    child.view != view and\
-                    child.view.parent == view.parent:
+            if child.view != view and (
+                    child.view.parent == view.parent or
+                    child.view.parent == view):
                 brother = child
                 break
         # Load brother
