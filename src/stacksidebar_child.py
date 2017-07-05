@@ -301,7 +301,9 @@ class SidebarChild(Gtk.ListBoxRow):
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            if not view.cancelled:
+            # is_loading() happen when loading a new uri while
+            # previous loading is not finished
+            if not view.cancelled and not view.is_loading():
                 GLib.timeout_add(500, self.set_snapshot, True)
                 self.__set_favicon()
 
