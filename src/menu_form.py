@@ -23,15 +23,16 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, app, name, page_id):
+    def __init__(self, app, userform, page_id):
         """
             Init menu
             @param app as Gio.Application
-            @param name as str
+            @param userform as str
             @param page_id as int
         """
         Gio.Menu.__init__(self)
         self.__app = app
+        self.__userform = userform
         self.__page_id = page_id
         self.__section = Gio.Menu()
         self.append_section(_("Saved credentials"), self.__section)
@@ -42,7 +43,7 @@ class FormMenu(Gio.Menu):
             @param attributes as {}
             @param uri as str
         """
-        if attributes is None:
+        if attributes is None or attributes["userform"] != self.__userform:
             return
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()

@@ -147,6 +147,10 @@ class FormsExtension:
             usernames = self.get_login_forms(attributes["userform"], webpage)
             passwords = self.get_password_forms(attributes["passform"],
                                                 webpage)
+            # Passwords form may have changed, take first
+            if not passwords:
+                passwords = self.get_password_forms("",
+                                                    webpage)
             if usernames and passwords:
                 usernames[0].set_value(attributes["login"])
                 passwords[0].set_value(password)
