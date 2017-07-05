@@ -620,7 +620,7 @@ class WebView(WebKit2.WebView):
                 self.__window.register(popover)
                 rect = Gdk.Rectangle()
                 rect.x = self.__last_click_event["x"]
-                rect.y = self.__last_click_event["y"]
+                rect.y = self.__last_click_event["y"] - 10
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
                 helper = PasswordsHelper()
