@@ -15,6 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from gettext import gettext as _
 from urllib.parse import urlparse
 from ctypes import string_at
+from time import time
 
 from eolie.define import El
 from eolie.utils import debug
@@ -489,7 +490,7 @@ class WebView(WebKit2.WebView):
         """
         self.__last_click_event = {"x": event.x,
                                    "y": event.y,
-                                   "time": event.time}
+                                   "time": time()}
         self.__selection = ""
         c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
         self.__initial_selection = c.wait_for_text()
