@@ -493,7 +493,10 @@ class ToolbarTitle(Gtk.Bin):
             @param event as Gdk.Event
         """
         if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
-            self.__window.container.current.webview.reload_bypass_cache()
+            if event.button == 1:
+                self.__window.container.current.webview.reload()
+            else:
+                self.__window.container.current.webview.reload_bypass_cache()
         else:
             self.__window.container.current.webview.stop_loading()
         return True
