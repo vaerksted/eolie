@@ -136,7 +136,7 @@ class Container(Gtk.Overlay):
     def set_visible_view(self, view):
         """
             Set visible view
-            @param view as WebView
+            @param view as View
         """
         # Remove from offscreen window if needed
         # Will kill running get_snapshot :-/
@@ -447,6 +447,7 @@ class Container(Gtk.Overlay):
         """
         if webview == self.current.webview:
             if uri:
+                self.__window.toolbar.actions.set_actions(webview)
                 self.__window.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
