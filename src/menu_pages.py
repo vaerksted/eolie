@@ -106,14 +106,17 @@ class PagesMenu(Gio.Menu):
             title = title[0:40] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
-        # Try to set icon
-        filepath = El().art.get_path(uri, "favicon")
-        f = Gio.File.new_for_path(filepath)
-        if f.query_exists():
-            icon = Gio.FileIcon.new(f)
-            item.set_icon(icon)
+        if uri == "populars://":
+            item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
         else:
-            item.set_icon(Gio.ThemedIcon.new("applications-internet"))
+            # Try to set icon
+            filepath = El().art.get_path(uri, "favicon")
+            f = Gio.File.new_for_path(filepath)
+            if f.query_exists():
+                icon = Gio.FileIcon.new(f)
+                item.set_icon(icon)
+            else:
+                item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
         if self.__closed_section.get_n_items() == 2:
             item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
