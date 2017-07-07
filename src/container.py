@@ -185,6 +185,8 @@ class Container(Gtk.Overlay):
             if search:
                 child.search_grab_focus()
         else:
+            child = self.__grid_stack.get_visible_child()
+            child.set_filtered(search)
             self.__grid_stack.set_visible_child_name("grid")
             self.__window.toolbar.actions.view_button.set_active(False)
 
