@@ -117,12 +117,6 @@ class StackChild:
         if self._image is not None:
             self._image.clear()
 
-    def use_cached_snapshot(self):
-        """
-            Use snapshot from cache
-        """
-        pass
-
     def show_title(self, b):
         pass
 

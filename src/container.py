@@ -208,8 +208,7 @@ class Container(Gtk.Overlay):
             self.__grid.attach(self.__pages_manager, 0, 0, 1, 1)
         self.__pages_manager.show()
         for view in views:
-            child = self.__pages_manager.add_child(view)
-            child.use_cached_snapshot()
+            self.__pages_manager.add_child(view)
         self.__pages_manager.update_visible_child()
 
     def on_view_map(self, webview):

@@ -40,7 +40,7 @@ class StackSidebar(Stack):
     def add_child(self, view):
         """
             Add child to sidebar
-            @param view as WebView
+            @param view as View
             @return child
         """
         child = Stack.add_child(self, view)
@@ -82,8 +82,10 @@ class StackSidebar(Stack):
         """
         panel_mode = El().settings.get_enum("panel-mode")
         if panel_mode == 0:
+            uri = child.view.webview.get_uri()
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
-            child.set_snapshot(child.view.webview.get_uri(), True)
+            if uri:
+                child.set_snapshot(uri, False)
         else:
             child.set_preview_height(None)
             child.clear_snapshot()

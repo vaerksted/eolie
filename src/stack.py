@@ -56,7 +56,7 @@ class Stack(Gtk.EventBox):
     def add_child(self, view):
         """
             Add child to sidebar
-            @param view as WebView
+            @param view as View
             @return child
         """
         child = self._CHILD_CLASS(view, self._window)

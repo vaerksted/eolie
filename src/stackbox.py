@@ -38,6 +38,18 @@ class StackBox(Stack):
         self._viewport.add(self._box)
         self._CHILD_CLASS = StackboxChild
 
+    def add_child(self, view):
+        """
+            Add child to sidebar
+            @param view as View
+            @return child
+        """
+        uri = view.webview.get_uri()
+        child = Stack.add_child(self, view)
+        if uri:
+            child.set_snapshot(uri, False)
+        return child
+
 #######################
 # PROTECTED           #
 #######################
