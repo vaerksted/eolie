@@ -315,7 +315,13 @@ class Window(Gtk.ApplicationWindow):
         if event.y < revealer.get_allocated_height():
             revealer.set_reveal_child(True)
         else:
-            revealer.set_reveal_child(False)
+            lock = False
+            for popover in self.__popovers:
+                if popover.is_visible():
+                    lock = True
+                    break
+            if not lock:
+                revealer.set_reveal_child(False)
 
     def __on_realize(self, widget):
         """
