@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk, GLib, Gdk
 
-from eolie.menu_history import HistoryMenu
 from eolie.define import El
 
 
@@ -248,6 +247,7 @@ class ToolbarActions(Gtk.Bin):
         current = self.__window.container.current.webview
         back_list = current.get_back_forward_list().get_back_list()
         if back_list:
+            from eolie.menu_history import HistoryMenu
             model = HistoryMenu(El(), back_list)
             popover = Gtk.Popover.new_from_model(self.__backward, model)
             popover.set_modal(False)
@@ -266,6 +266,7 @@ class ToolbarActions(Gtk.Bin):
         current = self.__window.container.current.webview
         forward_list = current.get_back_forward_list().get_forward_list()
         if forward_list:
+            from eolie.menu_history import HistoryMenu
             model = HistoryMenu(El(), forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward, model)
             popover.set_modal(False)

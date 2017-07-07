@@ -80,7 +80,7 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to fullscreen and enter fullscreen
             @param force as bool
         """
-        self.container.pages_manager.set_panel_mode(2)
+        self.__container.pages_manager.set_panel_mode(2)
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
         self.__fullscreen_toolbar.show()
@@ -99,7 +99,7 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to unfullscreen and leave fullscreen
             @param force as bool
         """
-        self.container.pages_manager.set_panel_mode()
+        self.__container.pages_manager.set_panel_mode()
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
