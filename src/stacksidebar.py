@@ -37,6 +37,16 @@ class StackSidebar(Stack):
         self._CHILD_CLASS = StackSidebarChild
         self.set_panel_mode()
 
+    def add_child(self, view):
+        """
+            Add child to sidebar
+            @param view as WebView
+            @return child
+        """
+        child = Stack.add_child(self, view)
+        self.__set_child_height(child)
+        return child
+
     def set_panel_mode(self, panel_mode=None):
         """
             Set panel mode

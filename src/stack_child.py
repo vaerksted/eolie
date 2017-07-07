@@ -202,14 +202,11 @@ class StackChild:
             @param uri as str
         """
         # We are not filtered and not in private mode
-        if not self._view.webview.ephemeral and\
+        if not self._view.webview.is_loading() and\
+                not self._view.webview.ephemeral and\
                 self._window.container.pages_manager.panel_mode == 0:
-            # This is js uri change, do not clear
-            if self._view.webview.get_estimated_load_progress() == 1.0:
-                GLib.timeout_add(1000, self.set_snapshot,
-                                 self._view.webview.get_uri(), False)
-            else:
-                self._image.clear()
+            GLib.timeout_add(2000, self.set_snapshot,
+                             self._view.webview.get_uri(), False)
 
 #######################
 # PRIVATE             #
@@ -283,8 +280,6 @@ class StackChild:
             @param title as str
         """
         self._title.set_text(title)
-        if not view.is_loading():
-            GLib.timeout_add(500, self.set_snapshot, view.get_uri(), False)
 
     def __on_load_changed(self, view, event):
         """
