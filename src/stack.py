@@ -113,8 +113,9 @@ class Stack(Gtk.EventBox):
             Show filtering widget
             @param b as bool
         """
+        panel_mode = El().settings.get_enum("panel-mode")
         if b and not self.__search_bar.is_visible():
-            if self._window.is_fullscreen:
+            if self._window.is_fullscreen and panel_mode != 3:
                 height = self._window.toolbar.get_allocated_height()
                 self.__search_bar.set_margin_top(height)
             else:
@@ -130,7 +131,6 @@ class Stack(Gtk.EventBox):
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self._box.set_filter_func(None)
-            panel_mode = El().settings.get_enum("panel-mode")
             for child in self._box.get_children():
                 child.show_title(panel_mode != 2)
         self.__search_bar.set_search_mode(b)
