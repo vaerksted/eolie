@@ -398,6 +398,9 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.focus_entry("history")
         elif string == "search":
             self.toolbar.title.focus_entry("search")
+        elif string == "expose":
+            active = self.toolbar.actions.view_button.get_active()
+            self.toolbar.actions.view_button.set_active(not active)
 
     def __on_popover_closed(self, popover):
         """

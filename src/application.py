@@ -312,6 +312,7 @@ class Application(Gtk.Application):
                                                GLib.VariantType.new('s'))
         shortcut_action.connect('activate', self.__on_shortcut_action)
         self.add_action(shortcut_action)
+        self.set_accels_for_action("win.shortcut::expose", ["<Alt>e"])
         self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
         self.set_accels_for_action("win.shortcut::uri",
                                    ["<Control>l", "<Control>b"])
