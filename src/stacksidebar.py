@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Gio
+from gi.repository import Gtk, Gdk, GLib
 
 from gettext import gettext as _
 
@@ -29,13 +29,6 @@ class StackSidebar(Gtk.EventBox):
             @param window as Window
         """
         Gtk.EventBox.__init__(self)
-        try:
-            system = Gio.Settings.new("org.gnome.desktop.interface")
-            self.__animate = system.get_value("enable-animations")
-        except:
-            self.__animate = False
-        self.__animation_cancel = Gio.Cancellable()
-        self.__leave_timeout_id = None
         self.__window = window
         self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
