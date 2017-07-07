@@ -207,7 +207,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         active = button.get_active()
-        self.__window.container.set_expose(active)
+        self.__window.container.set_expose(active, True)
         self.__window.close_popovers()
 
 #######################
@@ -282,7 +282,6 @@ class ToolbarActions(Gtk.Bin):
             @param settings as Gio.Settings
             @param value as int
         """
-        print(El().settings.get_enum("panel-mode"))
         if El().settings.get_enum("panel-mode") == 3:
             self.__view.show()
             self.__filter.hide()

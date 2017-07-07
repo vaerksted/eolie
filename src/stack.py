@@ -102,12 +102,18 @@ class Stack(Gtk.EventBox):
             child.destroy()
         Gtk.EventBox.destroy(self)
 
+    def search_grab_focus(self):
+        """
+            Grab focus on search entry
+        """
+        self.__search_entry.grab_focus()
+
     def set_filtered(self, b):
         """
             Show filtering widget
             @param b as bool
         """
-        if b:
+        if b and not self.__search_bar.is_visible():
             if self._window.is_fullscreen:
                 height = self._window.toolbar.get_allocated_height()
                 self.__search_bar.set_margin_top(height)
@@ -120,7 +126,7 @@ class Stack(Gtk.EventBox):
             self._box.set_filter_func(self.__filter_func)
             for child in self._box.get_children():
                 child.show_title(True)
-        else:
+        elif self.__search_bar.is_visible():
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self._box.set_filter_func(None)

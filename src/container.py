@@ -172,13 +172,18 @@ class Container(Gtk.Overlay):
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
 
-    def set_expose(self, b):
+    def set_expose(self, expose, search=False):
         """
             Show current views
-            @param b as bool
+            @param expose as bool
+            @param search as bool
         """
-        if b:
+        if expose:
             self.__grid_stack.set_visible_child_name("expose")
+            child = self.__grid_stack.get_visible_child()
+            child.set_filtered(search)
+            if search:
+                child.search_grab_focus()
         else:
             self.__grid_stack.set_visible_child_name("grid")
             self.__window.toolbar.actions.view_button.set_active(False)

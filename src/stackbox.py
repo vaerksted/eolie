@@ -37,7 +37,6 @@ class StackBox(Stack):
         self._viewport.set_property("valign", Gtk.Align.START)
         self._viewport.add(self._box)
         self._CHILD_CLASS = StackboxChild
-        self.set_filtered(True)
 
 #######################
 # PROTECTED           #
