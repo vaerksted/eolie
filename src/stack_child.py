@@ -163,7 +163,7 @@ class StackChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self._window.container.pages_manager.panel_mode != 2:
+        if El().settings.get_enum("panel-mode") != 2:
             self._window.container.pages_manager.close_view(self._view)
 
     def _on_enter_notify_event(self, eventbox, event):
@@ -172,7 +172,7 @@ class StackChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self._window.container.pages_manager.panel_mode == 2:
+        if El().settings.get_enum("panel-mode") == 2:
             return
         self._image_close.set_from_icon_name("window-close-symbolic",
                                              Gtk.IconSize.INVALID)
@@ -184,7 +184,7 @@ class StackChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self._window.container.pages_manager.panel_mode == 2:
+        if El().settings.get_enum("panel-mode") == 2:
             return
         allocation = eventbox.get_allocation()
         if event.x <= 0 or\
@@ -204,7 +204,7 @@ class StackChild:
         # We are not filtered and not in private mode
         if not self._view.webview.is_loading() and\
                 not self._view.webview.ephemeral and\
-                self._window.container.pages_manager.panel_mode == 0:
+                El().settings.get_enum("panel-mode") == 0:
             GLib.timeout_add(2000, self.set_snapshot,
                              self._view.webview.get_uri(), False)
 

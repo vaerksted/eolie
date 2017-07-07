@@ -43,6 +43,8 @@ class ToolbarActions(Gtk.Bin):
         self.__count = builder.get_object("count")
         if El().settings.get_enum("panel-mode") == 3:
             self.__view.show()
+        else:
+            self.__filter.show()
         El().settings.connect("changed::panel-mode",
                               self.__on_panel_mode_changed)
 
@@ -283,5 +285,7 @@ class ToolbarActions(Gtk.Bin):
         print(El().settings.get_enum("panel-mode"))
         if El().settings.get_enum("panel-mode") == 3:
             self.__view.show()
+            self.__filter.hide()
         else:
             self.__view.hide()
+            self.__filter.show()

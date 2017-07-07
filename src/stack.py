@@ -124,8 +124,9 @@ class Stack(Gtk.EventBox):
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self._box.set_filter_func(None)
+            panel_mode = El().settings.get_enum("panel-mode")
             for child in self._box.get_children():
-                child.show_title(self.__panel_mode != 2)
+                child.show_title(panel_mode != 2)
         self.__search_bar.set_search_mode(b)
 
     def next(self):

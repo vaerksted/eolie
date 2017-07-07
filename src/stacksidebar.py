@@ -53,24 +53,14 @@ class StackSidebar(Stack):
             @param panel_mode as int
         """
         if panel_mode is None:
-            self.__panel_mode = El().settings.get_enum("panel-mode")
-        else:
-            self.__panel_mode = panel_mode
-        if self.__panel_mode == 2:
+            panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode == 2:
             self.set_property("width-request", -1)
         else:
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
         for child in self._box.get_children():
-            child.show_title(self.__panel_mode != 2)
+            child.show_title(panel_mode != 2)
             self.__set_child_height(child)
-
-    @property
-    def panel_mode(self):
-        """
-            Get current panel mode
-            @return int
-        """
-        return self.__panel_mode
 
 #######################
 # PROTECTED           #
@@ -90,7 +80,8 @@ class StackSidebar(Stack):
             Set child height
             @param child as SidebarChild
         """
-        if self.__panel_mode == 0:
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode == 0:
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
             child.set_snapshot(child.view.webview.get_uri(), True)
         else:
