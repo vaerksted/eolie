@@ -23,31 +23,29 @@ class PagesMenu(Gio.Menu):
         Menu showing closed page
     """
 
-    def __init__(self, app):
+    def __init__(self):
         """
             Init menu
-            @param app as Gio.Application
         """
         Gio.Menu.__init__(self)
-        self.__app = app
 
         # Setup actions
         action = Gio.SimpleAction(name="new-private")
-        app.add_action(action)
+        El().add_action(action)
         action.connect('activate',
                        self.__on_private_clicked)
         action = Gio.SimpleAction(name="openall")
-        app.add_action(action)
+        El().add_action(action)
         action.connect('activate',
                        self.__on_openall_clicked)
-        panel_mode = app.settings.get_enum("panel-mode")
+        panel_mode = El().settings.get_enum("panel-mode")
         self.__panel_action = Gio.SimpleAction.new_stateful(
                                                  "panel_mode",
                                                  GLib.VariantType.new("i"),
                                                  GLib.Variant("i", panel_mode))
         self.__panel_action.connect("activate",
                                     self.__on_panel_mode_active)
-        app.add_action(self.__panel_action)
+        El().add_action(self.__panel_action)
 
         # Setup submenu
         submenu = Gio.Menu.new()
@@ -56,7 +54,9 @@ class PagesMenu(Gio.Menu):
                  Gio.MenuItem.new(_("Do not show preview"),
                                   "app.panel_mode(1)"),
                  Gio.MenuItem.new(_("Minimal panel"),
-                                  "app.panel_mode(2)")]
+                                  "app.panel_mode(2)"),
+                 Gio.MenuItem.new(_("No panel"),
+                                  "app.panel_mode(3)")]
         for item in items:
             submenu.append_item(item)
         # Setup menu
@@ -79,7 +79,7 @@ class PagesMenu(Gio.Menu):
         if self.__closed_section.get_n_items():
             uri = self.__closed_section.get_item_attribute_value(0, "uri")
             encoded = sha256(uri.get_string().encode("utf-8")).hexdigest()
-            action = self.__app.lookup_action(encoded)
+            action = El().lookup_action(encoded)
             action.activate(None)
 
     def add_action(self, title, uri, private, state):
@@ -98,7 +98,7 @@ class PagesMenu(Gio.Menu):
         self.__clean_actions()
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
-        self.__app.add_action(action)
+        El().add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
                        (uri, private, state))
@@ -125,9 +125,9 @@ class PagesMenu(Gio.Menu):
             Remove action from menu
         """
         encoded = sha256(uri.encode("utf-8")).hexdigest()
-        action = self.__app.lookup_action(encoded)
+        action = El().lookup_action(encoded)
         if action is not None:
-            self.__app.remove_action(encoded)
+            El().remove_action(encoded)
             for i in range(0, self.__closed_section.get_n_items() - 1):
                 attribute = self.__closed_section.get_item_attribute_value(
                                                                          i,
@@ -158,9 +158,9 @@ class PagesMenu(Gio.Menu):
             uri = self.__closed_section.get_item_attribute_value(
                                                          0, "uri").get_string()
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            action = self.__app.lookup_action(encoded)
+            action = El().lookup_action(encoded)
             if action is not None:
-                self.__app.remove_action(encoded)
+                El().remove_action(encoded)
             self.__closed_section.remove(0)
 
     def __on_private_clicked(self, action, variant):
@@ -169,9 +169,9 @@ class PagesMenu(Gio.Menu):
             @param Gio.SimpleAction
             @param GVariant
         """
-        self.__app.active_window.container.add_webview(self.__app.start_page,
-                                                       Gdk.WindowType.CHILD,
-                                                       True)
+        El().active_window.container.add_webview(El().start_page,
+                                                 Gdk.WindowType.CHILD,
+                                                 True)
 
     def __on_openall_clicked(self, action, variant):
         """
@@ -184,7 +184,7 @@ class PagesMenu(Gio.Menu):
                                                                       "uri")
             if uri_attr is None:
                 continue
-            GLib.idle_add(self.__app.active_window.container.add_webview,
+            GLib.idle_add(El().active_window.container.add_webview,
                           uri_attr.get_string(), Gdk.WindowType.OFFSCREEN,
                           False,
                           None, None, False)
@@ -200,7 +200,7 @@ class PagesMenu(Gio.Menu):
         uri = data[0]
         private = data[1]
         state = data[2]
-        GLib.idle_add(self.__app.active_window.container.add_webview,
+        GLib.idle_add(El().active_window.container.add_webview,
                       uri, Gdk.WindowType.CHILD, private, None, state)
         self.remove_action(uri)
 
@@ -211,6 +211,7 @@ class PagesMenu(Gio.Menu):
             @param param as GLib.Variant
         """
         action.set_state(param)
-        self.__app.settings.set_enum('panel-mode', param.get_int32())
-        for window in self.__app.windows:
-            window.container.sidebar.set_panel_mode()
+        panel_mode = param.get_int32()
+        El().settings.set_enum('panel-mode', panel_mode)
+        for window in El().windows:
+            window.container.set_panel_mode(panel_mode)

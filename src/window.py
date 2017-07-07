@@ -43,6 +43,7 @@ class Window(Gtk.ApplicationWindow):
         self.__setup_content()
         self.setup_window()
         self.connect("realize", self.__on_realize)
+        self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
 
@@ -79,7 +80,7 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to fullscreen and enter fullscreen
             @param force as bool
         """
-        self.__container.sidebar.set_panel_mode(2)
+        self._.container.pages_manager.set_panel_mode(2)
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
         self.__fullscreen_toolbar.show()
@@ -98,7 +99,7 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to unfullscreen and leave fullscreen
             @param force as bool
         """
-        self.__container.sidebar.set_panel_mode()
+        self._.container.pages_manager.set_panel_mode()
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
@@ -202,6 +203,8 @@ class Window(Gtk.ApplicationWindow):
         self.__fullscreen_toolbar = None
         self.__toolbar.show()
         self.__container = Container(self)
+        panel_mode = El().settings.get_enum("panel-mode")
+        self.__container.update_pages_manager(panel_mode)
         self.__container.show()
         self.set_titlebar(self.__toolbar)
         self.__toolbar.set_show_close_button(True)
@@ -321,6 +324,15 @@ class Window(Gtk.ApplicationWindow):
         """
         self.update_zoom_level(False)
 
+    def __on_key_release_event(self, window, event):
+        """
+            Disable expose if Ctrl released
+            @param window as Window
+            @param event as Gdk.EventKey
+        """
+        if event.keyval == Gdk.KEY_Control_L:
+            self.__container.set_expose(False)
+
     def __on_shortcut_action(self, action, param):
         """
             Global shortcuts handler
@@ -343,7 +355,7 @@ class Window(Gtk.ApplicationWindow):
             if self.is_fullscreen:
                 self.container.current.webview.emit("leave-fullscreen")
                 Gtk.ApplicationWindow.unfullscreen(self)
-            self.container.sidebar.close_view(self.container.current)
+            self.__container.pages_manager.close_view(self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
         elif string == "source":
@@ -364,9 +376,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "forward":
             self.toolbar.actions.forward()
         elif string == "previous":
-            self.container.sidebar.previous()
+            self.__container.pages_manager.previous()
         elif string == "next":
-            self.container.sidebar.next()
+            self.__container.pages_manager.next()
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":

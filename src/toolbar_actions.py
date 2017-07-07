@@ -39,6 +39,12 @@ class ToolbarActions(Gtk.Bin):
         self.__forward = builder.get_object("forward_button")
         self.__filter = builder.get_object("filter_button")
         self.__pages = builder.get_object("pages_button")
+        self.__view = builder.get_object("view_button")
+        self.__count = builder.get_object("count")
+        if El().settings.get_enum("panel-mode") == 3:
+            self.__view.show()
+        El().settings.connect("changed::panel-mode",
+                              self.__on_panel_mode_changed)
 
     def set_actions(self, view):
         """
@@ -61,12 +67,20 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.current.webview.go_forward()
 
     @property
-    def closed_button(self):
+    def count_label(self):
         """
-            Get closed pages button
+            Get count label
+            @return Gtk.Label
+        """
+        return self.__count
+
+    @property
+    def view_button(self):
+        """
+            Get view pages button
             @return Gtk.MenuButton
         """
-        return self.__closed_button
+        return self.__view
 
     @property
     def filter_button(self):
@@ -182,7 +196,16 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         active = button.get_active()
-        self.__window.container.sidebar.set_filtered(active)
+        self.__window.container.pages_manager.set_filtered(active)
+        self.__window.close_popovers()
+
+    def _on_view_button_toggled(self, button):
+        """
+            Show current views
+            @param button as Gtk.ToggleButton
+        """
+        active = button.get_active()
+        self.__window.container.set_expose(active)
         self.__window.close_popovers()
 
 #######################
@@ -250,3 +273,15 @@ class ToolbarActions(Gtk.Bin):
                             self.__on_navigation_popover_closed,
                             model)
             popover.popup()
+
+    def __on_panel_mode_changed(self, settings, value):
+        """
+            Show hide view button
+            @param settings as Gio.Settings
+            @param value as int
+        """
+        print(El().settings.get_enum("panel-mode"))
+        if El().settings.get_enum("panel-mode") == 3:
+            self.__view.show()
+        else:
+            self.__view.hide()

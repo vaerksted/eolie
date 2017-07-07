@@ -38,6 +38,10 @@ app_PYTHON = \
     popover_webview.py\
     search.py\
     settings.py\
+    stack.py\
+    stackbox.py\
+    stackbox_child.py\
+    stack_child.py\
     stacksidebar.py\
     stacksidebar_child.py\
     sqlcursor.py\

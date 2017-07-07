@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GObject, Pango
+from gi.repository import Gtk, GObject
 
 import cairo
 
@@ -18,9 +18,9 @@ from eolie.define import El, ArtSize
 from eolie.stack_child import StackChild
 
 
-class StackSidebarChild(Gtk.ListBoxRow, StackChild):
+class StackboxChild(Gtk.FlowBoxChild, StackChild):
     """
-        A Sidebar Child
+        A stack box child
     """
 
     __gsignals__ = {
@@ -33,34 +33,16 @@ class StackSidebarChild(Gtk.ListBoxRow, StackChild):
             @param view as View
             @param window as Window
         """
-        Gtk.ListBoxRow.__init__(self)
+        Gtk.FlowBoxChild.__init__(self)
         StackChild.__init__(self, view, window)
-
-    def show_title(self, b):
-        """
-            Show page title
-            @param b as bool
-        """
-        if b:
-            self._title.show()
-            self._image_close.set_hexpand(False)
-        else:
-            self._title.hide()
-            self._image_close.set_hexpand(True)
-
-    def set_preview_height(self, height):
-        """
-            Set child preview height
-            @param height as int
-        """
-        if height is None:
-            ctx = self._title.get_pango_context()
-            layout = Pango.Layout.new(ctx)
-            height = int(layout.get_pixel_size()[1]) + 10
-            self._grid.set_property("valign", Gtk.Align.CENTER)
-        else:
-            self._grid.set_property("valign", Gtk.Align.END)
-        self._overlay.set_size_request(-1, height)
+        self.set_property("halign", Gtk.Align.START)
+        self.set_margin_start(20)
+        self.set_margin_end(20)
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.set_property("width-request", ArtSize.START_WIDTH +
+                          ArtSize.PREVIEW_WIDTH_MARGIN)
+        self.set_property("height-request", ArtSize.START_HEIGHT)
 
 #######################
 # PROTECTED           #
@@ -83,21 +65,6 @@ class StackSidebarChild(Gtk.ListBoxRow, StackChild):
         try:
             snapshot = view.get_snapshot_finish(result)
 
-            if self._window.container.pages_manager.panel_mode == 0:
-                # Set sidebar child image
-                factor = self.get_allocated_width() /\
-                    snapshot.get_width()
-                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                             self.get_allocated_width() -
-                                             ArtSize.PREVIEW_WIDTH_MARGIN,
-                                             ArtSize.PREVIEW_HEIGHT)
-                context = cairo.Context(surface)
-                context.scale(factor, factor)
-                context.set_source_surface(snapshot, 0, 0)
-                context.paint()
-                self._image.set_from_surface(surface)
-                del surface
-
             # Save start image to cache
             # We also cache original URI
             uris = [current_uri]
@@ -114,10 +81,15 @@ class StackSidebarChild(Gtk.ListBoxRow, StackChild):
             context.scale(factor, factor)
             context.set_source_surface(snapshot, 0, 0)
             context.paint()
+            self._image.set_from_surface(surface)
             for uri in uris:
                 if not El().art.exists(uri, "start") and save:
                     El().art.save_artwork(uri, surface, "start")
             del surface
             del snapshot
         except Exception as e:
-            print("StackSidebarChild::__on_snapshot():", e)
+            print("StackboxChild::__on_snapshot():", e)
+
+#######################
+# PRIVATE             #
+#######################

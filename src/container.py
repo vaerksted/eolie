@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.view_web import WebView
-from eolie.stacksidebar import StackSidebar
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.define import El
@@ -29,7 +28,7 @@ class Container(Gtk.Overlay):
 
     def __init__(self, window):
         """
-            Init container
+            Ini.container
             @param window as Window
         """
         Gtk.Overlay.__init__(self)
@@ -45,20 +44,27 @@ class Container(Gtk.Overlay):
         self.__stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
         self.__stack.set_transition_duration(150)
         self.__stack.show()
-        self.__stack_sidebar = StackSidebar(window)
-        self.__stack_sidebar.show()
-        grid = Gtk.Grid()
-        grid.add(self.__stack_sidebar)
-        grid.add(self.__stack)
-        grid.show()
-        self.add(grid)
+
+        self.__grid_stack = Gtk.Stack()
+        self.__grid_stack.set_hexpand(True)
+        self.__grid_stack.set_vexpand(True)
+        self.__grid_stack.set_transition_type(
+                                         Gtk.StackTransitionType.CROSSFADE)
+        self.__grid_stack.set_transition_duration(150)
+        self.__grid_stack.show()
+        self.__grid = Gtk.Grid()
+        # Attach at position 1 to let place to pages_manager
+        self.__grid.attach(self.__stack, 1, 0, 1, 1)
+        self.__grid.show()
+        self.__pages_manager = None
+        self.__grid_stack.add_named(self.__grid, "grid")
+        self.add(self.__grid_stack)
         self.connect("unmap", self.__on_unmap)
-        self.__stack_sidebar.set_property("halign", Gtk.Align.START)
 
     def add_webview(self, uri, window_type, ephemeral=False,
                     parent=None, state=None, load=True):
         """
-            Add a web view to container
+            Add a web view t.container
             @param uri as str
             @param window_type as Gdk.WindowType
             @param parent as View
@@ -85,30 +91,39 @@ class Container(Gtk.Overlay):
 
     def add_view(self, webview, parent, window_type):
         """
-            Add view to container
+            Add view t.container
             @param webview as WebView
             @param parent as WebView
             @param window_type as Gdk.WindowType
         """
         view = self.__get_new_view(webview, parent)
         view.show()
-        self.__stack_sidebar.add_child(view, window_type)
+        self.__pages_manager.add_child(view)
+        # Force window type as current window is not visible
+        if self.__grid_stack.get_visible_child_name() == "expose":
+            window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)
         elif window_type == Gdk.WindowType.OFFSCREEN:
+            panel_mode = El().settings.get_enum("panel-mode")
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
-            width = self.get_allocated_width() -\
-                self.__stack_sidebar.get_allocated_width()
+            if panel_mode == 3:
+                width = self.get_allocated_width()
+            else:
+                width = self.get_allocated_width() -\
+                    self.__pages_manager.get_allocated_width()
             view.set_size_request(width, self.get_allocated_height())
             window.add(view)
             window.show()
             window.remove(view)
             view.set_size_request(-1, -1)
             self.__stack.add(view)
-        self.__stack_sidebar.update_visible_child()
+        self.__pages_manager.update_visible_child()
+        count = str(len(self.__stack.get_children()))
+        self.__window.toolbar.actions.count_label.set_text(count)
 
     def load_uri(self, uri):
         """
@@ -157,6 +172,40 @@ class Container(Gtk.Overlay):
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
 
+    def set_expose(self, b):
+        """
+            Show current views
+            @param b as bool
+        """
+        if b:
+            self.__grid_stack.set_visible_child_name("expose")
+        else:
+            self.__grid_stack.set_visible_child_name("grid")
+            self.__window.toolbar.actions.view_button.set_active(False)
+
+    def update_pages_manager(self, panel_mode):
+        """
+            Switch pages manager
+            @param panel mode as int
+        """
+        views = []
+        if self.__pages_manager is not None:
+            views = self.__pages_manager.views
+            self.__pages_manager.destroy()
+        if panel_mode == 3:
+            from eolie.stackbox import StackBox
+            self.__pages_manager = StackBox(self.__window)
+            self.__grid_stack.add_named(self.__pages_manager, "expose")
+        else:
+            from eolie.stacksidebar import StackSidebar
+            self.__pages_manager = StackSidebar(self.__window)
+            self.__grid.attach(self.__pages_manager, 0, 0, 1, 1)
+        self.__pages_manager.show()
+        for view in views:
+            child = self.__pages_manager.add_child(view)
+            child.use_cached_snapshot()
+        self.__pages_manager.update_visible_child()
+
     def on_view_map(self, webview):
         """
             Update window
@@ -184,13 +233,22 @@ class Container(Gtk.Overlay):
         elif uri:
             self.__window.toolbar.title.set_title(uri)
 
+    def set_panel_mode(self, panel_mode):
+        """
+            Set panel mode
+            @param panel_mode as int
+        """
+        self.update_pages_manager(panel_mode)
+        if panel_mode != 3:
+            self.pages_manager.set_panel_mode(panel_mode)
+
     @property
-    def sidebar(self):
+    def pages_manager(self):
         """
-            Get sidebar
-            @return StackSidebar
+            Get page manager
+            @return StackSidebar or StackBox
         """
-        return self.__stack_sidebar
+        return self.__pages_manager
 
     @property
     def views(self):
@@ -265,9 +323,9 @@ class Container(Gtk.Overlay):
         if uri:
             if window_type == Gdk.WindowType.SUBSURFACE:
                 if webview.ephemeral:
-                    webview = WebView.new_ephemeral()
+                    webview = WebView.new_ephemeral(self.__window)
                 else:
-                    webview = WebView.new()
+                    webview = WebView.new(self.__window)
                 self.popup_webview(webview, True)
                 GLib.idle_add(webview.load_uri, uri)
             else:
@@ -422,14 +480,14 @@ class Container(Gtk.Overlay):
             Hide sidebar (conflict with fs)
             @param webview as WebView
         """
-        self.__stack_sidebar.hide()
+        self.__pages_manager.hide()
 
     def __on_leave_fullscreen(self, webview):
         """
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
-        self.__stack_sidebar.show()
+        self.__pages_manager.show()
 
     def __on_insecure_content_detected(self, webview, event):
         """

@@ -306,7 +306,7 @@ class Application(Gtk.Application):
         self.art = Art()
         self.search = Search()
         self.download_manager = DownloadManager()
-        self.pages_menu = PagesMenu(self)
+        self.pages_menu = PagesMenu()
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))
