@@ -178,11 +178,13 @@ class Container(Gtk.Overlay):
             @param expose as bool
             @param search as bool
         """
+        # Show search bar
         child = self.__grid_stack.get_child_by_name("expose")
         if child is not None:
-            child.set_filtered(search)
-            if search:
+            child.set_filtered(search and expose)
+            if search and expose:
                 child.search_grab_focus()
+        # Show expose mode
         if expose:
             self.__grid_stack.set_visible_child_name("expose")
         else:
