@@ -526,6 +526,7 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__window.toolbar.title.set_title(uri)
+            self.__window.toolbar.actions.set_actions(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             title = webview.get_title()
             if title is not None:
