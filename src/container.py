@@ -181,9 +181,7 @@ class Container(Gtk.Overlay):
         # Show search bar
         child = self.__grid_stack.get_child_by_name("expose")
         if child is not None:
-            child.set_filtered(search and expose)
-            if search and expose:
-                child.search_grab_focus()
+            GLib.timeout_add(500, child.set_filtered, search and expose)
         # Show expose mode
         if expose:
             self.__grid_stack.set_visible_child_name("expose")
