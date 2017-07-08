@@ -216,27 +216,27 @@ class Container(Gtk.Overlay):
             Update window
             @param webview as WebView
         """
-        uri = webview.delayed_uri
-        if uri is None:
-            uri = webview.get_uri()
-        else:
-            webview.load_uri(uri)
-        title = webview.get_title()
-        self.__window.toolbar.title.update_load_indicator(webview)
-        self.__window.toolbar.title.show_popup_indicator(webview.popups)
-        self.__window.toolbar.actions.set_actions(webview)
-        self.__window.toolbar.title.show_readable_button(
-                                            webview.readable_content != "")
-        if uri is not None:
-            self.__window.toolbar.title.set_uri(uri)
-        if webview.is_loading():
-            self.__window.toolbar.title.progress.show()
-        else:
-            self.__window.toolbar.title.progress.hide()
-        if title:
-            self.__window.toolbar.title.set_title(title)
-        elif uri:
-            self.__window.toolbar.title.set_title(uri)
+        if webview == self.__stack.get_visible_child().webview:
+            uri = webview.delayed_uri
+            if uri is None:
+                uri = webview.get_uri()
+            else:
+                webview.load_uri(uri)
+            title = webview.get_title()
+            self.__window.toolbar.title.update_load_indicator(webview)
+            self.__window.toolbar.title.show_popup_indicator(webview.popups)
+            self.__window.toolbar.title.show_readable_button(
+                                                webview.readable_content != "")
+            if uri is not None:
+                self.__window.toolbar.title.set_uri(uri)
+            if webview.is_loading():
+                self.__window.toolbar.title.progress.show()
+            else:
+                self.__window.toolbar.title.progress.hide()
+            if title:
+                self.__window.toolbar.title.set_title(title)
+            elif uri:
+                self.__window.toolbar.title.set_title(uri)
 
     def set_panel_mode(self, panel_mode):
         """
@@ -525,7 +525,6 @@ class Container(Gtk.Overlay):
                 self.current.switch_read_mode()
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__window.toolbar.actions.set_actions(webview)
             self.__window.toolbar.title.set_title(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             title = webview.get_title()
