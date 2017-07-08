@@ -408,7 +408,29 @@ class ProxyExtension(Server):
             Server.__init__(self, self.__bus, PROXY_PATH)
         webpage.connect("document-loaded", self.__on_document_loaded)
         webpage.connect("send-request", self.__on_send_request)
+        webpage.connect("context-menu", self.__on_context_menu)
         self.__extension = extension
+
+    def __on_context_menu(self, webpage, context_menu, hit):
+        """
+            Add selection to context menu user data
+            @param webpage as WebKit2WebExtension.WebPage
+            @param context_menu as WebKit2WebExtension.ContextMenu
+            @param hit as WebKit2.HitTestResult
+        """
+        document = webpage.get_dom_document()
+        if document is None:
+            return
+        window = document.get_default_view()
+        if window is None:
+            return
+        selection = window.get_selection()
+        if selection is None:
+            return
+        dom_range = selection.get_range_at(0)
+        if dom_range is not None:
+            value = dom_range.to_string()
+            context_menu.set_user_data(GLib.Variant("s", value))
 
     def __on_send_request(self, webpage, request, redirect):
         """

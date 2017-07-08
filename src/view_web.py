@@ -24,6 +24,7 @@ from eolie.view_web_navigation import WebViewNavigation
 from eolie.context import Context
 from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
+from eolie.search import Search
 from eolie.menu_form import FormMenu
 
 
@@ -291,7 +292,7 @@ class WebView(WebKit2.WebView):
         WebViewNavigation.__init__(self)
         self.__window = window
         # WebKitGTK doesn't provide an API to get selection, so try to guess
-        # it from clipboard
+        # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readable_content = ""
         self.__last_click_event = {}
@@ -448,23 +449,37 @@ class WebView(WebKit2.WebView):
                            hit.get_link_uri())
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
-
-        # Add an item for open all images
-        if view.is_loading() or parsed.scheme not in ["http", "https"]:
-            return
-        # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-        # Introspection missing, Gtk.Action deprecated
-        action = Gtk.Action.new("save_imgs",
-                                _("Save images"),
-                                None,
-                                None)
-        action.connect("activate", self.__on_save_images_activate,)
-        item = WebKit2.ContextMenuItem.new(action)
-        n_items = context_menu.get_n_items()
-        if El().settings.get_value("developer-extras"):
-            context_menu.insert(item, n_items - 2)
+        elif hit.context_is_selection():
+            search_term = context_menu.get_user_data().get_string()
+            # Add an item for open words in search
+            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+            # Introspection missing, Gtk.Action deprecated
+            action = Gtk.Action.new("search_words",
+                                    _("Search on the Web"),
+                                    None,
+                                    None)
+            action.connect("activate",
+                           self.__on_search_words_activate,
+                           search_term)
+            item = WebKit2.ContextMenuItem.new(action)
+            context_menu.insert(item, 1)
         else:
-            context_menu.insert(item, n_items)
+            # Add an item for open all images
+            if view.is_loading() or parsed.scheme not in ["http", "https"]:
+                return
+            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+            # Introspection missing, Gtk.Action deprecated
+            action = Gtk.Action.new("save_imgs",
+                                    _("Save images"),
+                                    None,
+                                    None)
+            action.connect("activate", self.__on_save_images_activate,)
+            item = WebKit2.ContextMenuItem.new(action)
+            n_items = context_menu.get_n_items()
+            if El().settings.get_value("developer-extras"):
+                context_menu.insert(item, n_items - 2)
+            else:
+                context_menu.insert(item, n_items)
 
     def __on_open_new_page_activate(self, action, uri):
         """
@@ -472,6 +487,16 @@ class WebView(WebKit2.WebView):
             @param action as Gtk.Action
             @param uri as str
         """
+        self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
+
+    def __on_search_words_activate(self, action, search_term):
+        """
+            Open link in a new page
+            @param action as Gtk.Action
+            @param search_term as str
+        """
+        search = Search()
+        uri = search.get_search_uri(search_term)
         self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
 
     def __on_save_images_activate(self, action):
