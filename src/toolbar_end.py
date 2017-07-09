@@ -21,11 +21,10 @@ from eolie.popover_downloads import DownloadsPopover
 
 class ProgressBar(Gtk.ProgressBar):
     """
-        Simple progress bar with width contraint and event pass through
+        Simple progress bar with width contraint
     """
-    def __init__(self, parent):
+    def __init__(self):
         Gtk.ProgressBar.__init__(self)
-        self.__parent = parent
         self.set_property("valign", Gtk.Align.END)
 
     def do_get_preferred_width(self):
@@ -53,7 +52,7 @@ class ToolbarEnd(Gtk.Bin):
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
         self.__fullscreen_button = builder.get_object("fullscreen_button")
-        self.__progress = ProgressBar(builder.get_object("download_button"))
+        self.__progress = ProgressBar()
         if El().download_manager.get():
             self.__progress.show()
         El().download_manager.connect("download-start",
