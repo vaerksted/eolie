@@ -228,7 +228,10 @@ class SettingsDialog:
         El().settings.set_enum("cookie-storage", int(combo.get_active_id()))
         for window in El().windows:
             for view in window.container.views:
-                El().set_cookie_manager(view.webview.get_context())
+                context = view.webview.get_context()
+                cookie_manager = context.get_cookie_manager()
+                cookie_manager.set_accept_policy(
+                                     El().settings.get_enum("cookie-storage"))
 
     def _on_history_changed(self, combo):
         """
