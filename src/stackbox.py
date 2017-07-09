@@ -37,6 +37,8 @@ class StackBox(Stack):
         self._viewport.set_property("valign", Gtk.Align.START)
         self._viewport.add(self._box)
         self._CHILD_CLASS = StackboxChild
+        self._grid.add(self._scrolled)
+        self._grid.add(self._search_bar)
 
     def add_child(self, view):
         """

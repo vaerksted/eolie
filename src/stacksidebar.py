@@ -35,6 +35,8 @@ class StackSidebar(Stack):
         self._box.connect("row_activated", self.__on_row_activated)
         self._viewport.add(self._box)
         self._CHILD_CLASS = StackSidebarChild
+        self._grid.add(self._search_bar)
+        self._grid.add(self._scrolled)
         self.set_panel_mode()
 
     def add_child(self, view):

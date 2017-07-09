@@ -32,26 +32,24 @@ class Stack(Gtk.EventBox):
         self._window = window
         self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
-        grid = Gtk.Grid()
-        grid.set_orientation(Gtk.Orientation.VERTICAL)
-        grid.show()
+        self._grid = Gtk.Grid()
+        self._grid.set_orientation(Gtk.Orientation.VERTICAL)
+        self._grid.show()
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.connect("search-changed", self.__on_search_changed)
 
         self.__search_entry.show()
-        self.__search_bar = Gtk.SearchBar.new()
-        self.__search_bar.add(self.__search_entry)
-        grid.add(self.__search_bar)
-        self.__scrolled = Gtk.ScrolledWindow()
-        self.__scrolled.set_vexpand(True)
-        self.__scrolled.set_hexpand(True)
-        self.__scrolled.show()
+        self._search_bar = Gtk.SearchBar.new()
+        self._search_bar.add(self.__search_entry)
+        self._scrolled = Gtk.ScrolledWindow()
+        self._scrolled.set_vexpand(True)
+        self._scrolled.set_hexpand(True)
+        self._scrolled.show()
         self._viewport = Gtk.Viewport()
         self._viewport.show()
-        self.__scrolled.add(self._viewport)
+        self._scrolled.add(self._viewport)
         self.set_hexpand(False)
-        grid.add(self.__scrolled)
-        self.add(grid)
+        self.add(self._grid)
 
     def add_child(self, view):
         """
@@ -114,26 +112,26 @@ class Stack(Gtk.EventBox):
             @param b as bool
         """
         panel_mode = El().settings.get_enum("panel-mode")
-        if b and not self.__search_bar.is_visible():
+        if b and not self._search_bar.is_visible():
             if self._window.is_fullscreen and panel_mode != 3:
                 height = self._window.toolbar.get_allocated_height()
-                self.__search_bar.set_margin_top(height)
+                self._search_bar.set_margin_top(height)
             else:
-                self.__search_bar.set_margin_top(0)
-            self.__search_bar.show()
+                self._search_bar.set_margin_top(0)
+            self._search_bar.show()
             self.__search_entry.grab_focus()
             self.__search_entry.connect("key-press-event",
                                         self.__on_key_press)
             self._box.set_filter_func(self.__filter_func)
             for child in self._box.get_children():
                 child.show_title(True)
-        elif self.__search_bar.is_visible():
-            self.__search_bar.hide()
+        elif self._search_bar.is_visible():
+            self._search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self._box.set_filter_func(None)
             for child in self._box.get_children():
                 child.show_title(panel_mode != 2)
-        self.__search_bar.set_search_mode(b)
+        self._search_bar.set_search_mode(b)
 
     def next(self):
         """
@@ -274,15 +272,15 @@ class Stack(Gtk.EventBox):
             Scroll to row
             @param row as Row
         """
-        adj = self.__scrolled.get_vadjustment().get_value()
+        adj = self._scrolled.get_vadjustment().get_value()
         coordinates = row.translate_coordinates(self._box, 0, 0)
         if coordinates is None:
             return
         y = coordinates[1]
         if y + row.get_allocated_height() >\
-                self.__scrolled.get_allocated_height() + adj or\
+                self._scrolled.get_allocated_height() + adj or\
                 y - row.get_allocated_height() < 0 + adj:
-            self.__scrolled.get_vadjustment().set_value(y)
+            self._scrolled.get_vadjustment().set_value(y)
 
     def __get_index(self, view):
         """
