@@ -85,6 +85,10 @@ class Container(Gtk.Overlay):
                 if load:
                     # Do not load uri until we are on screen
                     GLib.idle_add(webview.load_uri, uri)
+                    # Notify user about new window
+                    if window_type == Gdk.WindowType.OFFSCREEN:
+                        GLib.idle_add(
+                            self.__window.toolbar.actions.show_opened, webview)
                 else:
                     webview.set_delayed_uri(uri)
                     webview.emit("title-changed", uri)
@@ -132,6 +136,16 @@ class Container(Gtk.Overlay):
         """
         if self.current is not None:
             self.current.webview.load_uri(uri)
+
+    def get_view_for_webview(self, webview):
+        """
+            @param webview as WebView
+            @return view as View
+        """
+        for child in self.__stack.get_children():
+            if child.webview == webview:
+                return child
+        return None
 
     def set_visible_view(self, view):
         """
@@ -302,16 +316,6 @@ class Container(Gtk.Overlay):
         view.show()
         return view
 
-    def __get_view_for_webview(self, webview):
-        """
-            @param webview as WebView
-            @return view as View
-        """
-        for child in self.__stack.get_children():
-            if child.webview == webview:
-                return child
-        return None
-
     def __grab_focus_on_current(self):
         """
             Grab focus on current view
@@ -334,7 +338,7 @@ class Container(Gtk.Overlay):
                 self.popup_webview(webview, True)
                 GLib.idle_add(webview.load_uri, uri)
             else:
-                parent = self.__get_view_for_webview(webview)
+                parent = self.get_view_for_webview(webview)
                 self.add_webview(uri, window_type, webview.ephemeral, parent)
 
     def __on_create(self, related, navigation_action):
@@ -356,7 +360,7 @@ class Container(Gtk.Overlay):
             Close my self
             @param webview as WebView
         """
-        view = self.__get_view_for_webview(webview)
+        view = self.get_view_for_webview(webview)
         if view is not None:
             self.sidebar.close_view(view)
 

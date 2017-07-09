@@ -10,7 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Pango
+
+from gettext import gettext as _
 
 from eolie.define import El
 
@@ -28,6 +30,7 @@ class ToolbarActions(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__timeout_id = None
+        self.__popover = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarActions.ui")
         builder.connect_signals(self)
@@ -66,6 +69,41 @@ class ToolbarActions(Gtk.Bin):
             Click previous
         """
         self.__window.container.current.webview.go_forward()
+
+    def show_opened(self, webview):
+        """
+            Notify user about opened page
+            @param webview as WebView
+        """
+        if El().settings.get_enum("panel-mode") != 3:
+            return
+        label = Gtk.Label()
+        label.set_text(_("Opening %s" % webview.get_uri()))
+        label.set_ellipsize(Pango.EllipsizeMode.END)
+        label.set_max_width_chars(30)
+        label.set_margin_top(15)
+        label.set_margin_bottom(15)
+        label.set_margin_start(5)
+        label.set_margin_end(5)
+        label.show()
+        eventbox = Gtk.EventBox()
+        eventbox.show()
+        eventbox.add(label)
+        if self.__popover is not None:
+            self.__popover.destroy()
+        self.__popover = Gtk.Popover.new()
+        self.__popover.get_style_context().add_class("dark")
+        self.__popover.add(eventbox)
+        self.__popover.set_modal(False)
+        self.__popover.set_relative_to(self.__view)
+        eventbox.connect("button-press-event",
+                         self.__on_opened_popover_button_press_event,
+                         self.__popover,
+                         webview)
+        self.__popover.popup()
+        GLib.timeout_add(5000,
+                         self.__on_opened_popover_timeout,
+                         self.__popover)
 
     @property
     def count_label(self):
@@ -221,6 +259,29 @@ class ToolbarActions(Gtk.Bin):
             GLib.idle_add(widget.show)
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__force_show_image)
+
+    def __on_opened_popover_timeout(self, popover):
+        """
+            Destroy popover
+            @param popover as Gtk.Popover
+        """
+        if self.__popover == popover:
+            self.__popover = None
+        popover.destroy()
+
+    def __on_opened_popover_button_press_event(self, eventbox,
+                                               event, popover, webview):
+        """
+            Destroy popover and show wanted page
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.EventButton
+            @param popover as Gtk.Popover
+            @param webview as WebView
+        """
+        popover.destroy()
+        view = self.__window.container.get_view_for_webview(webview)
+        if view is not None:
+            self.__window.container.set_visible_view(view)
 
     def __on_pages_popover_closed(self, popover, button):
         """
