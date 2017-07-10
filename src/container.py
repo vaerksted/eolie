@@ -202,7 +202,7 @@ class Container(Gtk.Overlay):
         else:
             self.__grid_stack.set_visible_child_name("grid")
             self.__window.toolbar.actions.view_button.set_active(False)
-            self.__pages_manager.move_first(self.current)
+            GLib.idle_add(self.__pages_manager.move_first, self.current)
 
     def update_pages_manager(self, panel_mode):
         """
