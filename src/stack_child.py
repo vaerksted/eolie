@@ -208,7 +208,7 @@ class StackChild:
         # We are not filtered and not in private mode
         if not self._view.webview.is_loading() and\
                 not self._view.webview.ephemeral and\
-                El().settings.get_enum("panel-mode") == 0:
+                El().settings.get_enum("panel-mode") in [0, 3]:
             GLib.timeout_add(2000, self.set_snapshot,
                              self._view.webview.get_uri(), False)
 
