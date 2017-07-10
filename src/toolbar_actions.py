@@ -282,6 +282,7 @@ class ToolbarActions(Gtk.Bin):
         view = self.__window.container.get_view_for_webview(webview)
         if view is not None:
             self.__window.container.set_visible_view(view)
+            self.__window.container.pages_manager.update_visible_child()
 
     def __on_pages_popover_closed(self, popover, button):
         """
