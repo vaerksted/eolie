@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, WebKit2
+from gi.repository import Gtk, GLib, WebKit2
 
 from eolie.define import El, ArtSize
 from eolie.utils import resize_favicon
@@ -49,18 +49,6 @@ class StackChild:
         self.add(builder.get_object("widget"))
 
         self.get_style_context().add_class("sidebar-item")
-
-        self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
-                             Gdk.DragAction.MOVE)
-        self.drag_source_add_text_targets()
-        self.connect("drag-begin", self.__on_drag_begin)
-        self.connect("drag-data-get", self.__on_drag_data_get)
-        self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
-                           [], Gdk.DragAction.MOVE)
-        self.drag_dest_add_text_targets()
-        self.connect("drag-data-received", self.__on_drag_data_received)
-        self.connect("drag-motion", self.__on_drag_motion)
-        self.connect("drag-leave", self.__on_drag_leave)
 
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
@@ -308,84 +296,6 @@ class StackChild:
                 # page is rendered
                 GLib.timeout_add(3000, self.set_snapshot, uri, True)
                 self.__set_favicon()
-
-    def __on_drag_begin(self, widget, context):
-        """
-            Set icon
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-        """
-        surface = self._image.get_property("surface")
-        if surface is None:
-            return
-        pixbuf = Gdk.pixbuf_get_from_surface(surface,
-                                             0, 0,
-                                             surface.get_width(),
-                                             surface.get_height())
-
-        widget.drag_source_set_icon_pixbuf(pixbuf)
-        del pixbuf
-
-    def __on_drag_data_get(self, widget, context, data, info, time):
-        """
-            Send track id
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param data as Gtk.SelectionData
-            @param info as int
-            @param time as int
-        """
-        name = str(self._view)
-        data.set_text(name, len(name))
-
-    def __on_drag_data_received(self, widget, context, x, y, data, info, time):
-        """
-            Move track
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param x as int
-            @param y as int
-            @param data as Gtk.SelectionData
-            @param info as int
-            @param time as int
-        """
-        height = self.get_allocated_height()
-        if y > height/2:
-            up = False
-        else:
-            up = True
-        try:
-            src_widget = data.get_text()
-            self.emit("moved", src_widget, up)
-        except:
-            pass
-
-    def __on_drag_motion(self, widget, context, x, y, time):
-        """
-            Add style
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param x as int
-            @param y as int
-            @param time as int
-        """
-        height = self.get_allocated_height()
-        if y > height/2:
-            self.get_style_context().add_class("drag-up")
-            self.get_style_context().remove_class("drag-down")
-        else:
-            self.get_style_context().remove_class("drag-up")
-            self.get_style_context().add_class("drag-down")
-
-    def __on_drag_leave(self, widget, context, time):
-        """
-            Remove style
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param time as int
-        """
-        self.get_style_context().remove_class("drag-up")
-        self.get_style_context().remove_class("drag-down")
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
