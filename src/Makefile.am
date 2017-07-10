@@ -28,6 +28,12 @@ app_PYTHON = \
     menu_history.py\
     menu_pages.py\
     mozilla_sync.py\
+    pages_manager.py\
+    pages_manager_child.py\
+    pages_manager_flowbox.py\
+    pages_manager_flowbox_child.py\
+    pages_manager_listbox.py\
+    pages_manager_listbox_child.py\
     popover_cookies.py\
     popover_credentials.py\
     popover_downloads.py\
@@ -38,12 +44,6 @@ app_PYTHON = \
     popover_webview.py\
     search.py\
     settings.py\
-    stack.py\
-    stackbox.py\
-    stackbox_child.py\
-    stack_child.py\
-    stacksidebar.py\
-    stacksidebar_child.py\
     sqlcursor.py\
     utils.py\
     toolbar.py\

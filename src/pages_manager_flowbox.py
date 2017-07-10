@@ -12,11 +12,11 @@
 
 from gi.repository import Gtk
 
-from eolie.stackbox_child import StackboxChild
-from eolie.stack import Stack
+from eolie.pages_manager_flowbox_child import PagesManagerFlowBoxChild
+from eolie.pages_manager import PagesManager
 
 
-class StackBox(Stack):
+class PagesManagerFlowBox(PagesManager):
     """
         Flow box linked to a Gtk.Stack
     """
@@ -26,7 +26,7 @@ class StackBox(Stack):
             Init stack
             @param window as Window
         """
-        Stack.__init__(self, window)
+        PagesManager.__init__(self, window)
         self._box = Gtk.FlowBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -36,7 +36,7 @@ class StackBox(Stack):
         self._box.connect("child-activated", self.__on_child_activated)
         self._viewport.set_property("valign", Gtk.Align.START)
         self._viewport.add(self._box)
-        self._CHILD_CLASS = StackboxChild
+        self._CHILD_CLASS = PagesManagerFlowBoxChild
         self._grid.add(self._scrolled)
         self._grid.add(self._search_bar)
 
@@ -47,7 +47,7 @@ class StackBox(Stack):
             @return child
         """
         uri = view.webview.get_uri()
-        child = Stack.add_child(self, view)
+        child = PagesManager.add_child(self, view)
         if uri:
             child.set_snapshot(uri, False)
         return child

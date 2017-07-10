@@ -17,7 +17,7 @@ from gettext import gettext as _
 from eolie.define import El
 
 
-class Stack(Gtk.EventBox):
+class PagesManager(Gtk.EventBox):
     """
         Box linked to a Gtk.Stack
         Should be inherited by a class providing self._CHILD_CLASS

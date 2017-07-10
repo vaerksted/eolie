@@ -15,10 +15,10 @@ from gi.repository import Gtk, GObject, Pango, Gdk
 import cairo
 
 from eolie.define import El, ArtSize
-from eolie.stack_child import StackChild
+from eolie.pages_manager_child import PagesManagerChild
 
 
-class StackSidebarChild(Gtk.ListBoxRow, StackChild):
+class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
     """
         A Sidebar Child
     """
@@ -34,7 +34,7 @@ class StackSidebarChild(Gtk.ListBoxRow, StackChild):
             @param window as Window
         """
         Gtk.ListBoxRow.__init__(self)
-        StackChild.__init__(self, view, window)
+        PagesManagerChild.__init__(self, view, window)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
         self.drag_source_add_text_targets()

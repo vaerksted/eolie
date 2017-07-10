@@ -13,11 +13,11 @@
 from gi.repository import Gtk
 
 from eolie.define import El, ArtSize
-from eolie.stacksidebar_child import StackSidebarChild
-from eolie.stack import Stack
+from eolie.pages_manager_listbox_child import PagesManagerListBoxChild
+from eolie.pages_manager import PagesManager
 
 
-class StackSidebar(Stack):
+class PagesManagerListBox(PagesManager):
     """
         Listbox linked to a Gtk.Stack
     """
@@ -27,14 +27,14 @@ class StackSidebar(Stack):
             Init sidebar
             @param window as Window
         """
-        Stack.__init__(self, window)
+        PagesManager.__init__(self, window)
         self._box = Gtk.ListBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
         self._box.show()
         self._box.connect("row_activated", self.__on_row_activated)
         self._viewport.add(self._box)
-        self._CHILD_CLASS = StackSidebarChild
+        self._CHILD_CLASS = PagesManagerListBoxChild
         self._grid.add(self._search_bar)
         self._grid.add(self._scrolled)
         self.set_panel_mode()
@@ -45,7 +45,7 @@ class StackSidebar(Stack):
             @param view as View
             @return child
         """
-        child = Stack.add_child(self, view)
+        child = PagesManager.add_child(self, view)
         self.__set_child_height(child)
         return child
 

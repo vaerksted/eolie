@@ -15,10 +15,10 @@ from gi.repository import Gtk, GObject
 import cairo
 
 from eolie.define import El, ArtSize
-from eolie.stack_child import StackChild
+from eolie.pages_manager_child import PagesManagerChild
 
 
-class StackboxChild(Gtk.FlowBoxChild, StackChild):
+class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
     """
         A stack box child
     """
@@ -34,7 +34,7 @@ class StackboxChild(Gtk.FlowBoxChild, StackChild):
             @param window as Window
         """
         Gtk.FlowBoxChild.__init__(self)
-        StackChild.__init__(self, view, window)
+        PagesManagerChild.__init__(self, view, window)
         self.set_property("halign", Gtk.Align.START)
         self.set_margin_start(20)
         self.set_margin_end(20)

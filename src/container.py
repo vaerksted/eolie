@@ -214,12 +214,12 @@ class Container(Gtk.Overlay):
             views = self.__pages_manager.views
             self.__pages_manager.destroy()
         if panel_mode == 3:
-            from eolie.stackbox import StackBox
-            self.__pages_manager = StackBox(self.__window)
+            from eolie.pages_manager_flowbox import PagesManagerFlowBox
+            self.__pages_manager = PagesManagerFlowBox(self.__window)
             self.__grid_stack.add_named(self.__pages_manager, "expose")
         else:
-            from eolie.stacksidebar import StackSidebar
-            self.__pages_manager = StackSidebar(self.__window)
+            from eolie.pages_manager_listbox import PagesManagerListBox
+            self.__pages_manager = PagesManagerListBox(self.__window)
             self.__grid.attach(self.__pages_manager, 0, 0, 1, 1)
         self.__pages_manager.show()
         for view in views:

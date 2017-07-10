@@ -16,7 +16,7 @@ from eolie.define import El, ArtSize
 from eolie.utils import resize_favicon
 
 
-class StackChild:
+class PagesManagerChild:
     """
         Generic parent for Stack children
         Need to be inherited by a Gtk.*BoxRow
