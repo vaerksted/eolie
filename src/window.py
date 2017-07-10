@@ -345,7 +345,7 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval == Gdk.KEY_Control_L:
+        if event.keyval in [Gdk.KEY_Control_L, Gdk.KEY_Escape]:
             self.__container.set_expose(False)
             self.__count_page_changes = 0
 
