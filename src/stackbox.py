@@ -52,6 +52,17 @@ class StackBox(Stack):
             child.set_snapshot(uri, False)
         return child
 
+    def move_first(self, view):
+        """
+            Move view at first position
+            @param view as View
+        """
+        for child in self._box.get_children():
+            if child.view == view:
+                self._box.remove(child)
+                self._box.insert(child, 0)
+                break
+
 #######################
 # PROTECTED           #
 #######################

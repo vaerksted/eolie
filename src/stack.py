@@ -148,7 +148,9 @@ class Stack(Gtk.EventBox):
         self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
         if panel_mode == 3:
-            self._window.container.set_expose(True)
+            # If first time, do not show expose
+            if self._window.count_page_changes > 0:
+                self._window.container.set_expose(True)
 
     def previous(self):
         """
@@ -165,7 +167,9 @@ class Stack(Gtk.EventBox):
         self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
         if panel_mode == 3:
-            self._window.container.set_expose(True)
+            # If first time, do not show expose
+            if self._window.count_page_changes > 0:
+                self._window.container.set_expose(True)
 
     def close_view(self, view):
         """
@@ -178,6 +182,13 @@ class Stack(Gtk.EventBox):
                          self.__on_forms_filled, view, page_id)
 
     def set_panel_mode(self, panel_mode=None):
+        pass
+
+    def move_first(self, view):
+        """
+            Move view at first position
+            @param view as View
+        """
         pass
 
     @property

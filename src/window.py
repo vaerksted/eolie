@@ -40,6 +40,7 @@ class Window(Gtk.ApplicationWindow):
         self.__zoom_level = 1.0
         self.__container = None
         self.__window_state = 0
+        self.__count_page_changes = 0
         self.__setup_content()
         self.setup_window()
         self.connect("realize", self.__on_realize)
@@ -174,6 +175,14 @@ class Window(Gtk.ApplicationWindow):
             @return bool
         """
         return self.__window_state & Gdk.WindowState.FULLSCREEN
+
+    @property
+    def count_page_changes(self):
+        """
+            Get how many time user changes pages while in Alt + Tab
+            @return int
+        """
+        return self.__count_page_changes
 
 ############
 # Private  #
@@ -338,6 +347,7 @@ class Window(Gtk.ApplicationWindow):
         """
         if event.keyval == Gdk.KEY_Control_L:
             self.__container.set_expose(False)
+            self.__count_page_changes = 0
 
     def __on_shortcut_action(self, action, param):
         """
@@ -383,8 +393,10 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.actions.forward()
         elif string == "previous":
             self.__container.pages_manager.previous()
+            self.__count_page_changes += 1
         elif string == "next":
             self.__container.pages_manager.next()
+            self.__count_page_changes += 1
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":
