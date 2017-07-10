@@ -293,6 +293,7 @@ class StackChild:
         """
         uri = view.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
+            self._image.clear()
             self.__spinner.start()
             self._title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
