@@ -82,6 +82,16 @@ class StackChild:
                                  "load-changed",
                                  self.__on_load_changed))
 
+    def update(self):
+        """
+            Update child title and favicon
+        """
+        title = self._view.webview.get_title()
+        if title is None:
+            title = self._view.webview.get_uri()
+        self._title.set_text(title)
+        self.__set_favicon()
+
     def disconnect_signals(self):
         """
             Disconnect signals

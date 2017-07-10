@@ -70,6 +70,9 @@ class Stack(Gtk.EventBox):
                 wanted_index = i
             i += 1
         self._box.insert(child, wanted_index)
+        uri = view.webview.get_uri()
+        if uri:
+            child.update()
         return child
 
     def update_visible_child(self):
