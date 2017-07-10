@@ -427,7 +427,10 @@ class ProxyExtension(Server):
         selection = window.get_selection()
         if selection is None:
             return
-        dom_range = selection.get_range_at(0)
+        try:
+            dom_range = selection.get_range_at(0)
+        except:
+            dom_range = None
         if dom_range is not None:
             value = dom_range.to_string()
             context_menu.set_user_data(GLib.Variant("s", value))
