@@ -94,8 +94,8 @@ class PageOverlayChild(Gtk.EventBox):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.EventButton
         """
-        if not self.__moved:
-            self.hide()
+        self.hide()
+        if event.button == 1 and not self.__moved:
             if self.__timeout_id is not None:
                 GLib.source_remove(self.__timeout_id)
                 self.__timeout_id = None
