@@ -126,7 +126,6 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__pages_manager.update_visible_child()
-        print("add")
         count = str(len(self.__pages_manager.views))
         self.__window.toolbar.actions.count_label.set_text(count)
 
