@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.define import El, ADBLOCK_JS, FUA
+from eolie.define import El, ADBLOCK_JS, USER_AGENT
 from eolie.utils import get_ftp_cmd
 
 
@@ -41,7 +41,6 @@ class WebViewNavigation:
         GObject.signal_new(signal, WebKit2.WebView,
                            args[0], args[1], args[2])
 
-    __FUA_FIX = ["outlook.live.com", "login.live.com"]
     __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
                "x-scheme-handler/http", "x-scheme-handler/https",
                "multipart/related", "application/x-mimearchive"]
@@ -67,6 +66,8 @@ class WebViewNavigation:
         # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
+        settings = self.get_settings()
+        settings.set_property("user-agent", USER_AGENT)
 
     def load_uri(self, uri):
         """
@@ -140,19 +141,6 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
-    def __update_user_agent(self, netloc):
-        """
-            Update user agent for some sites
-            @param netloc as str
-        """
-        if netloc:
-            settings = self.get_settings()
-            if netloc in self.__FUA_FIX:
-                settings.set_property("user-agent", FUA)
-            else:
-                settings.set_property("user-agent", None)
-            self.set_settings(settings)
-
     def __on_run_as_modal(self, webview):
         """
         """
@@ -320,7 +308,6 @@ class WebViewNavigation:
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
             self.update_spell_checking()
-            self.__update_user_agent(parsed.netloc)
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
