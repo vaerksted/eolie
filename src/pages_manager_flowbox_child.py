@@ -54,6 +54,24 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
 #######################
 # PROTECTED           #
 #######################
+    def _on_button_press_event(self, eventbox, event):
+        """
+            Hide popover or close view
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        return PagesManagerChild._on_button_press_event(self, eventbox, event)
+
+    def _on_close_button_press_event(self, eventbox, event):
+        """
+            Destroy self
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        return PagesManagerChild._on_close_button_press_event(self,
+                                                              eventbox,
+                                                              event)
+
     def _on_snapshot(self, view, result, uri, save):
         """
             Set snapshot on main image
