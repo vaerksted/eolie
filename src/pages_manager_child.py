@@ -52,23 +52,7 @@ class PagesManagerChild:
 
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
-
-        self.__connected_ids.append(
-                             self._view.webview.connect(
-                                 "notify::favicon",
-                                 lambda x, y: self.__set_favicon()))
-        self.__connected_ids.append(
-                             self._view.webview.connect(
-                                 "uri-changed",
-                                 self._on_uri_changed))
-        self.__connected_ids.append(
-                             self._view.webview.connect(
-                                 "title-changed",
-                                 self.__on_title_changed))
-        self.__connected_ids.append(
-                             self._view.webview.connect(
-                                 "load-changed",
-                                 self.__on_load_changed))
+        self.connect_signals()
 
     def update(self):
         """
@@ -79,6 +63,27 @@ class PagesManagerChild:
             title = self._view.webview.get_uri()
         self._title.set_text(title)
         self.__set_favicon()
+
+    def connect_signals(self):
+        """
+            Connect signals to view
+        """
+        self.__connected_ids.append(
+                             self._view.webview.connect(
+                                 "notify::favicon",
+                                 self._on_notify_favicon))
+        self.__connected_ids.append(
+                             self._view.webview.connect(
+                                 "uri-changed",
+                                 self._on_uri_changed))
+        self.__connected_ids.append(
+                             self._view.webview.connect(
+                                 "title-changed",
+                                 self._on_title_changed))
+        self.__connected_ids.append(
+                             self._view.webview.connect(
+                                 "load-changed",
+                                 self._on_load_changed))
 
     def disconnect_signals(self):
         """
@@ -129,10 +134,20 @@ class PagesManagerChild:
 #######################
 # PROTECTED           #
 #######################
-    def _on_snapshot(self, view, result, uri, save):
+    def _on_notify_favicon(self, webview, favicon):
+        """
+            Set favicon
+            @param webview as WebView
+            @param favicon as Gparam
+        """
+        if self._view.webview == webview:
+            # FIXME use favicon
+            self.__set_favicon()
+
+    def _on_snapshot(self, webview, result, uri, save):
         """
             Set snapshot on main image
-            @param view as WebView
+            @param webview as WebView
             @param result as Gio.AsyncResult
             @param uri as str
             @param save as bool
@@ -187,18 +202,56 @@ class PagesManagerChild:
                                                           "sidebar-item-close")
             self.__set_favicon()
 
-    def _on_uri_changed(self, view, uri):
+    def _on_uri_changed(self, webview, uri):
         """
             Update uri
-            @param view as WebView
+            @param webview as WebView
             @param uri as str
         """
+        if self._view.webview != webview:
+            return
         # We are not filtered and not in private mode
-        if not self._view.webview.is_loading() and\
-                not self._view.webview.ephemeral and\
+        if not webview.is_loading() and\
+                not webview.ephemeral and\
                 El().settings.get_enum("panel-mode") in [0, 3]:
             GLib.timeout_add(2000, self.set_snapshot,
-                             self._view.webview.get_uri(), False)
+                             webview.get_uri(), False)
+
+    def _on_title_changed(self, webview, title):
+        """
+            Update title
+            @param webview as WebView
+            @param title as str
+        """
+        if self._view.webview != webview:
+            return
+        self._title.set_text(title)
+
+    def _on_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if self._view.webview != webview:
+            return
+        uri = webview.get_uri()
+        if event == WebKit2.LoadEvent.STARTED:
+            self._image.clear()
+            self.__spinner.start()
+            self._title.set_text(uri)
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            self._title.set_text(uri)
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.__spinner.stop()
+            # is_loading() happen when loading a new uri while
+            # previous loading is not finished
+            if not webview.cancelled and not webview.is_loading():
+                GLib.timeout_add(500, self.set_snapshot, uri, False)
+                # FIXME Should be better to have way to snapshot when
+                # page is rendered
+                GLib.timeout_add(3000, self.set_snapshot, uri, True)
+                self.__set_favicon()
 
 #######################
 # PRIVATE             #
@@ -264,38 +317,6 @@ class PagesManagerChild:
             self._image_close.set_from_surface(resized)
             del resized
             del surface
-
-    def __on_title_changed(self, view, title):
-        """
-            Update title
-            @param view as WebView
-            @param title as str
-        """
-        self._title.set_text(title)
-
-    def __on_load_changed(self, view, event):
-        """
-            Update snapshot
-            @param view as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        uri = view.get_uri()
-        if event == WebKit2.LoadEvent.STARTED:
-            self._image.clear()
-            self.__spinner.start()
-            self._title.set_text(uri)
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self._title.set_text(uri)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.__spinner.stop()
-            # is_loading() happen when loading a new uri while
-            # previous loading is not finished
-            if not view.cancelled and not view.is_loading():
-                GLib.timeout_add(500, self.set_snapshot, uri, False)
-                # FIXME Should be better to have way to snapshot when
-                # page is rendered
-                GLib.timeout_add(3000, self.set_snapshot, uri, True)
-                self.__set_favicon()
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """

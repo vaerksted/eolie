@@ -28,6 +28,7 @@ app_PYTHON = \
     menu_history.py\
     menu_pages.py\
     mozilla_sync.py\
+    page_overlay_child.py\
     pages_manager.py\
     pages_manager_child.py\
     pages_manager_flowbox.py\

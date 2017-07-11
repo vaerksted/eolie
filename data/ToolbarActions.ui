@@ -52,6 +52,7 @@
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Backward</property>
             <property name="valign">center</property>
             <property name="image">image1</property>
             <property name="always_show_image">True</property>
@@ -71,6 +72,7 @@
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Forward</property>
             <property name="valign">center</property>
             <property name="image">image2</property>
             <property name="always_show_image">True</property>
@@ -102,6 +104,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">New page</property>
             <property name="image">image3</property>
             <signal name="clicked" handler="_on_new_button_clicked" swapped="no"/>
           </object>
@@ -115,6 +118,7 @@
           <object class="GtkToggleButton" id="filter_button">
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Filter pages</property>
             <property name="image">image4</property>
             <signal name="toggled" handler="_on_filter_button_toggled" swapped="no"/>
           </object>
@@ -128,6 +132,7 @@
           <object class="GtkToggleButton" id="view_button">
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">View all pages</property>
             <signal name="toggled" handler="_on_view_button_toggled" swapped="no"/>
             <child>
               <object class="GtkGrid">
@@ -175,6 +180,7 @@
           <object class="GtkButton" id="close_button">
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Close page</property>
             <property name="image">image7</property>
             <signal name="clicked" handler="_on_close_button_clicked" swapped="no"/>
           </object>
@@ -189,6 +195,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <property name="tooltip_text" translatable="yes">Closed pages</property>
             <property name="image">image5</property>
             <signal name="toggled" handler="_on_pages_button_toggled" swapped="no"/>
             <style>

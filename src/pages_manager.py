@@ -58,7 +58,6 @@ class PagesManager(Gtk.EventBox):
             @return child
         """
         child = self._CHILD_CLASS(view, self._window)
-        child.connect("moved", self.__on_moved)
         child.show()
 
         # We want to insert child next to its parent and brothers
@@ -216,6 +215,22 @@ class PagesManager(Gtk.EventBox):
 #######################
 # PROTECTED           #
 #######################
+    def _on_moved(self, child, view_str, up):
+        """
+            Move child row
+            @param child as StackSidebarChild
+            @param view_str as str
+            @param up as bool
+        """
+        view_index = self.__get_index_for_string(view_str)
+        row = self._get_child_at_index(view_index)
+        if row is None:
+            return
+        self._box.remove(row)
+        child_index = self.__get_index(child.view)
+        if not up:
+            child_index += 1
+        self._box.insert(row, child_index)
 
 #######################
 # PRIVATE             #
@@ -386,23 +401,6 @@ class PagesManager(Gtk.EventBox):
         except Exception as e:
             self.__close_view(view)
             print("StackSidebar::__on_forms_filled():", e)
-
-    def __on_moved(self, child, view_str, up):
-        """
-            Move child row
-            @param child as StackSidebarChild
-            @param view_str as str
-            @param up as bool
-        """
-        view_index = self.__get_index_for_string(view_str)
-        row = self._get_child_at_index(view_index)
-        if row is None:
-            return
-        self._box.remove(row)
-        child_index = self.__get_index(child.view)
-        if not up:
-            child_index += 1
-        self._box.insert(row, child_index)
 
     def __on_button_press(self, widget, event):
         """

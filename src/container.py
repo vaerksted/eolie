@@ -34,6 +34,7 @@ class Container(Gtk.Overlay):
         Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
+        self.__overlay_widget = None
         self.__popover = WebViewPopover(window)
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finished",
@@ -88,7 +89,7 @@ class Container(Gtk.Overlay):
                     # Notify user about new window
                     if window_type == Gdk.WindowType.OFFSCREEN:
                         GLib.idle_add(
-                            self.__window.toolbar.actions.show_opened, webview)
+                            self.__add_overlay_view, webview)
                 else:
                     webview.set_delayed_uri(uri)
                     webview.emit("title-changed", uri)
@@ -322,6 +323,19 @@ class Container(Gtk.Overlay):
             Grab focus on current view
         """
         self.current.webview.grab_focus()
+
+    def __add_overlay_view(self, webview):
+        """
+            Add an overlay view
+            @param webview as WebView
+        """
+        from eolie.page_overlay_child import PageOverlayChild
+        view = self.get_view_for_webview(webview)
+        if self.__overlay_widget is None:
+            self.__overlay_widget = PageOverlayChild(view, self.__window)
+            self.add_overlay(self.__overlay_widget)
+        else:
+            self.__overlay_widget.set_view(view)
 
     def __on_new_page(self, webview, uri, window_type):
         """

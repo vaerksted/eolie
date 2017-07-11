@@ -24,6 +24,7 @@
       <object class="GtkButton" id="fullscreen_button">
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
+        <property name="tooltip_text" translatable="yes">Leave fullscreen</property>
         <property name="image">image3</property>
         <signal name="clicked" handler="_on_fullscreen_button_clicked" swapped="no"/>
       </object>
@@ -64,6 +65,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
+        <property name="tooltip_text" translatable="yes">Downloads</property>
         <signal name="toggled" handler="_on_download_button_toggled" swapped="no"/>
         <child>
           <object class="GtkOverlay" id="overlay">
@@ -97,6 +99,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
+        <property name="tooltip_text" translatable="yes">Startup page</property>
         <property name="image">image2</property>
         <signal name="clicked" handler="_on_home_button_clicked" swapped="no"/>
       </object>

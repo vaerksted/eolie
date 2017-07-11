@@ -48,6 +48,7 @@ class PagesManagerListBox(PagesManager):
         """
         child = PagesManager.add_child(self, view)
         self.__set_child_height(child)
+        child.connect("moved", self._on_moved)
         return child
 
     def set_panel_mode(self, panel_mode=None):

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk
 
 import cairo
 
@@ -22,10 +22,6 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
     """
         A stack box child
     """
-
-    __gsignals__ = {
-        'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
-    }
 
     def __init__(self, view, window):
         """
@@ -44,6 +40,16 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                           ArtSize.PREVIEW_WIDTH_MARGIN)
         self.set_property("height-request", ArtSize.START_HEIGHT)
 
+    def set_view(self, view):
+        """
+            Set view
+            @param view as View
+        """
+        self._image.clear()
+        self.disconnect_signals()
+        self._view = view
+        self.connect_signals()
+
 #######################
 # PROTECTED           #
 #######################
@@ -57,7 +63,9 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             @warning view here is WebKit2.WebView, not WebView
         """
         current_uri = view.get_uri()
-        if current_uri is None or current_uri != uri:
+        if current_uri is None or\
+                current_uri != uri or\
+                view != self._view.webview:
             return
         # Do not cache snapshot on error
         if self._view.webview.error is not None:
