@@ -14,7 +14,7 @@ from gi.repository import Gtk, Gdk, GLib
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import El, PanelMode
 
 
 class PagesManager(Gtk.EventBox):
@@ -115,7 +115,7 @@ class PagesManager(Gtk.EventBox):
         """
         panel_mode = El().settings.get_enum("panel-mode")
         if b and not self._search_bar.is_visible():
-            if self._window.is_fullscreen and panel_mode != 3:
+            if self._window.is_fullscreen and panel_mode != PanelMode.NONE:
                 height = self._window.toolbar.get_allocated_height()
                 self._search_bar.set_margin_top(height)
             else:
@@ -132,7 +132,7 @@ class PagesManager(Gtk.EventBox):
             self.__search_entry.disconnect_by_func(self.__on_key_press)
             self._box.set_filter_func(None)
             for child in self._box.get_children():
-                child.show_title(panel_mode != 2)
+                child.show_title(panel_mode != PanelMode.MINIMAL)
         self._search_bar.set_search_mode(b)
 
     def next(self):
@@ -149,7 +149,7 @@ class PagesManager(Gtk.EventBox):
             self._window.container.set_visible_view(next_row.view)
         self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == 3:
+        if panel_mode == PanelMode.NONE:
             # If first time, do not show expose
             if self._window.count_page_changes > 0:
                 self._window.container.set_expose(True)
@@ -168,7 +168,7 @@ class PagesManager(Gtk.EventBox):
             self._window.container.set_visible_view(next_row.view)
         self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == 3:
+        if panel_mode == PanelMode.NONE:
             # If first time, do not show expose
             if self._window.count_page_changes > 0:
                 self._window.container.set_expose(True)

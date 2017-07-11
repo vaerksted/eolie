@@ -32,14 +32,15 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         self.set_property("valign", Gtk.Align.END)
         self.show()
         self.__timeout_id = GLib.timeout_add(15000, self.__hide_timeout)
-        self._view.webview.connect("destroy", self.__on_webview_destroy)
+        view.webview.connect("destroy", self.__on_webview_destroy)
 
     def set_view(self, view):
         """
             Set a new view
             @param view as View
         """
-        self.__view = view
+        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
+        view.webview.connect("destroy", self.__on_webview_destroy)
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
         PagesManagerFlowBoxChild.set_view(self, view)

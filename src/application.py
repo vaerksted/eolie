@@ -357,6 +357,8 @@ class Application(Gtk.Application):
                                    ["<Control><Alt>1", "<Control><Alt>KP_1"])
         self.set_accels_for_action("app.panel_mode(2)",
                                    ["<Control><Alt>2", "<Control><Alt>KP_2"])
+        self.set_accels_for_action("app.panel_mode(3)",
+                                   ["<Control><Alt>3", "<Control><Alt>KP_3"])
 
     def __listen_to_gnome_sm(self):
         """

@@ -15,7 +15,7 @@ from gi.repository import Gtk, GObject, Pango, Gdk, Gio
 import cairo
 from gettext import gettext as _
 
-from eolie.define import El, ArtSize
+from eolie.define import El, ArtSize, PanelMode
 from eolie.pages_manager_child import PagesManagerChild
 
 
@@ -110,7 +110,8 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
         try:
             snapshot = view.get_snapshot_finish(result)
 
-            if self._window.container.pages_manager.panel_mode == 0:
+            if self._window.container.pages_manager.panel_mode ==\
+                    PanelMode.PREVIEW:
                 # Set sidebar child image
                 factor = self.get_allocated_width() /\
                     snapshot.get_width()

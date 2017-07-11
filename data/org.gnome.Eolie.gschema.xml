@@ -14,10 +14,10 @@
       <value nick="never" value="6" />
    </enum>
    <enum id="org.gnome.Eolie.PanelMode">
-      <value nick="preview" value="0" />
-      <value nick="no-preview" value="1" />
-      <value nick="minimal" value="2" />
-      <value nick="none" value="3" />
+      <value nick="none" value="0" />
+      <value nick="preview" value="1" />
+      <value nick="no-preview" value="2" />
+      <value nick="minimal" value="3" />
    </enum>
    <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
       <key type="ai" name="window-size">

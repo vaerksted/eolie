@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk
 
-from eolie.define import El, ArtSize
+from eolie.define import El, ArtSize, PanelMode
 from eolie.pages_manager_listbox_child import PagesManagerListBoxChild
 from eolie.pages_manager import PagesManager
 
@@ -28,7 +28,7 @@ class PagesManagerListBox(PagesManager):
             @param window as Window
         """
         PagesManager.__init__(self, window)
-        self.__panel_mode = 0
+        self.__panel_mode = PanelMode.PREVIEW
         self._box = Gtk.ListBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -58,13 +58,13 @@ class PagesManagerListBox(PagesManager):
         """
         if panel_mode is None:
             panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == 2:
+        if panel_mode == PanelMode.MINIMAL:
             self.set_property("width-request", -1)
         else:
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
         self.__panel_mode = panel_mode
         for child in self._box.get_children():
-            child.show_title(panel_mode != 2)
+            child.show_title(panel_mode != PanelMode.MINIMAL)
             self.__set_child_height(child)
 
     @property
@@ -94,7 +94,7 @@ class PagesManagerListBox(PagesManager):
             @param child as SidebarChild
         """
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == 0:
+        if panel_mode == PanelMode.PREVIEW:
             uri = child.view.webview.get_uri()
             child.set_preview_height(ArtSize.PREVIEW_HEIGHT)
             if uri:
@@ -102,7 +102,7 @@ class PagesManagerListBox(PagesManager):
         else:
             child.set_preview_height(None)
             child.clear_snapshot()
-        child.show_title(panel_mode != 2)
+        child.show_title(panel_mode != PanelMode.MINIMAL)
 
     def __on_row_activated(self, listbox, row):
         """

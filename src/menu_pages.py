@@ -49,13 +49,13 @@ class PagesMenu(Gio.Menu):
 
         # Setup submenu
         submenu = Gio.Menu.new()
-        items = [Gio.MenuItem.new(_("Show preview"),
+        items = [Gio.MenuItem.new(_("No panel"),
                                   "app.panel_mode(0)"),
-                 Gio.MenuItem.new(_("Do not show preview"),
+                 Gio.MenuItem.new(_("Show preview"),
                                   "app.panel_mode(1)"),
-                 Gio.MenuItem.new(_("Minimal panel"),
+                 Gio.MenuItem.new(_("Do not show preview"),
                                   "app.panel_mode(2)"),
-                 Gio.MenuItem.new(_("No panel"),
+                 Gio.MenuItem.new(_("Minimal panel"),
                                   "app.panel_mode(3)")]
         for item in items:
             submenu.append_item(item)

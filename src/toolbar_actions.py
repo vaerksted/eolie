@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gdk
 
-from eolie.define import El
+from eolie.define import El, PanelMode
 
 
 class ToolbarActions(Gtk.Bin):
@@ -42,7 +42,7 @@ class ToolbarActions(Gtk.Bin):
         self.__view_button = builder.get_object("view_button")
         self.__close_button = builder.get_object("close_button")
         self.__count = builder.get_object("count")
-        if El().settings.get_enum("panel-mode") == 3:
+        if El().settings.get_enum("panel-mode") == PanelMode.NONE:
             self.__view_button.show()
             self.__close_button.show()
         else:
@@ -309,7 +309,7 @@ class ToolbarActions(Gtk.Bin):
             @param settings as Gio.Settings
             @param value as int
         """
-        if El().settings.get_enum("panel-mode") == 3:
+        if El().settings.get_enum("panel-mode") == PanelMode.NONE:
             self.__view_button.show()
             self.__close_button.show()
             self.__filter_button.hide()

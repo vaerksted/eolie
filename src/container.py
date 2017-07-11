@@ -18,7 +18,7 @@ from time import time
 from eolie.view_web import WebView
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
-from eolie.define import El
+from eolie.define import El, PanelMode
 
 
 class Container(Gtk.Overlay):
@@ -115,7 +115,7 @@ class Container(Gtk.Overlay):
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
-            if panel_mode == 3:
+            if panel_mode == PanelMode.NONE:
                 width = self.get_allocated_width()
             else:
                 width = self.get_allocated_width() -\
@@ -214,7 +214,7 @@ class Container(Gtk.Overlay):
         if self.__pages_manager is not None:
             views = self.__pages_manager.views
             self.__pages_manager.destroy()
-        if panel_mode == 3:
+        if panel_mode == PanelMode.NONE:
             from eolie.pages_manager_flowbox import PagesManagerFlowBox
             self.__pages_manager = PagesManagerFlowBox(self.__window)
             self.__grid_stack.add_named(self.__pages_manager, "expose")
@@ -260,7 +260,7 @@ class Container(Gtk.Overlay):
             @param panel_mode as int
         """
         self.update_pages_manager(panel_mode)
-        if panel_mode != 3:
+        if panel_mode != PanelMode.NONE:
             self.pages_manager.set_panel_mode(panel_mode)
 
     @property
