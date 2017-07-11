@@ -10,9 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GObject, Pango, Gdk
+from gi.repository import Gtk, GObject, Pango, Gdk, Gio
 
 import cairo
+from gettext import gettext as _
 
 from eolie.define import El, ArtSize
 from eolie.pages_manager_child import PagesManagerChild
@@ -76,6 +77,21 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
 #######################
 # PROTECTED           #
 #######################
+    def _on_button_press_event(self, eventbox, event):
+        """
+            Hide popover or close view
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        PagesManagerChild._on_button_press_event(self, eventbox, event)
+        if event.button == 3:
+            menu = Gio.Menu.new()
+            item = Gio.MenuItem.new(_("Close page"),
+                                    "win.shortcut::close_page")
+            menu.append_item(item)
+            popover = Gtk.Popover.new_from_model(eventbox, menu)
+            popover.show()
+
     def _on_snapshot(self, view, result, uri, save):
         """
             Set snapshot on main image

@@ -140,7 +140,7 @@ class PagesManagerChild:
         """
         pass
 
-    def _on_button_press_event(self, button, event):
+    def _on_button_press_event(self, eventbox, event):
         """
             Hide popover or close view
             @param eventbox as Gtk.EventBox
