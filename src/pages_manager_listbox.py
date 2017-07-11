@@ -28,6 +28,7 @@ class PagesManagerListBox(PagesManager):
             @param window as Window
         """
         PagesManager.__init__(self, window)
+        self.__panel_mode = 0
         self._box = Gtk.ListBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -60,9 +61,18 @@ class PagesManagerListBox(PagesManager):
             self.set_property("width-request", -1)
         else:
             self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
+        self.__panel_mode = panel_mode
         for child in self._box.get_children():
             child.show_title(panel_mode != 2)
             self.__set_child_height(child)
+
+    @property
+    def panel_mode(self):
+        """
+            Get current panel mode
+            @return int
+        """
+        return self.__panel_mode
 
 #######################
 # PROTECTED           #
@@ -91,6 +101,7 @@ class PagesManagerListBox(PagesManager):
         else:
             child.set_preview_height(None)
             child.clear_snapshot()
+        child.show_title(panel_mode != 2)
 
     def __on_row_activated(self, listbox, row):
         """
