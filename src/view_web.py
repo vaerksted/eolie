@@ -353,6 +353,7 @@ class WebView(WebKit2.WebView):
         self.connect("submit-form", self.__on_submit_form)
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
+        self.connect('scroll-event', self.__on_scroll_event)
 
     def __set_system_fonts(self, settings):
         """
@@ -532,14 +533,20 @@ class WebView(WebKit2.WebView):
             self.__selection = selection if selection is not None else ""
         self.__initial_selection = ""
 
-    def __on_scroll_event(self, widget, event):
+    def __on_scroll_event(self, webview, event):
         """
             Adapt scroll speed to device
-            @param widget as WebView
+            @param webview as WebView
             @param event as Gdk.EventScroll
         """
         source = event.get_source_device().get_source()
-        if source == Gdk.InputSource.MOUSE:
+        if event.state & Gdk.ModifierType.CONTROL_MASK:
+            if event.delta_y > 0.5:
+                webview.zoom_in()
+            elif event.delta_y < - 0.5:
+                webview.zoom_out()
+            return True
+        elif source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
         # if self.__input_source != source:
