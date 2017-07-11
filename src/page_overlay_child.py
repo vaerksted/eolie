@@ -20,6 +20,8 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         A movable PagesManagerFlowBoxChild
     """
 
+    __TIMEOUT = 15000
+
     def __init__(self, view, window):
         """
             Init child
@@ -31,7 +33,8 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.END)
         self.show()
-        self.__timeout_id = GLib.timeout_add(15000, self.__hide_timeout)
+        self.__timeout_id = GLib.timeout_add(self.__TIMEOUT,
+                                             self.__hide_timeout)
         view.webview.connect("destroy", self.__on_webview_destroy)
 
     def set_view(self, view):
@@ -45,7 +48,8 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             GLib.source_remove(self.__timeout_id)
         PagesManagerFlowBoxChild.set_view(self, view)
         self.update()
-        self.__timeout_id = GLib.timeout_add(15000, self.__hide_timeout)
+        self.__timeout_id = GLib.timeout_add(self.__TIMEOUT,
+                                             self.__hide_timeout)
         self.show()
 
 #######################
