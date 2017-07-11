@@ -38,7 +38,8 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
         self.set_margin_bottom(20)
         self.set_property("width-request", ArtSize.START_WIDTH +
                           ArtSize.PREVIEW_WIDTH_MARGIN)
-        self.set_property("height-request", ArtSize.START_HEIGHT)
+        # TODO: 12?
+        self.set_property("height-request", ArtSize.START_HEIGHT + 12)
 
     def set_view(self, view):
         """
