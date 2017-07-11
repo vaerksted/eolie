@@ -267,7 +267,7 @@ class Container(Gtk.Overlay):
     def pages_manager(self):
         """
             Get page manager
-            @return StackSidebar or StackBox
+            @return PagesManager
         """
         return self.__pages_manager
 

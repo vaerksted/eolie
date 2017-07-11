@@ -108,7 +108,7 @@ class PagesManagerListBox(PagesManager):
         """
             Show wanted web view
             @param listbox as Gtk.ListBox
-            @param row as StackSidebarChild
+            @param row as PagesManagerChild
         """
         self._window.container.set_visible_view(row.view)
         self.update_visible_child()

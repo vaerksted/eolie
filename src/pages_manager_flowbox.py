@@ -80,7 +80,7 @@ class PagesManagerFlowBox(PagesManager):
         """
             Show wanted web view
             @param listbox as Gtk.ListBox
-            @param row as StackSidebarChild
+            @param row as PagesManagerFlowBoxChild
         """
         self._window.container.set_visible_view(row.view)
         self._window.container.set_expose(False)

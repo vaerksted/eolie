@@ -218,7 +218,7 @@ class PagesManager(Gtk.EventBox):
     def _on_moved(self, child, view_str, up):
         """
             Move child row
-            @param child as StackSidebarChild
+            @param child as PagesManagerChild
             @param view_str as str
             @param up as bool
         """
@@ -400,7 +400,7 @@ class PagesManager(Gtk.EventBox):
                 self.__close_view(view)
         except Exception as e:
             self.__close_view(view)
-            print("StackSidebar::__on_forms_filled():", e)
+            print("PagesManager::__on_forms_filled():", e)
 
     def __on_button_press(self, widget, event):
         """
@@ -429,7 +429,7 @@ class PagesManager(Gtk.EventBox):
         """
             Show wanted web view
             @param listbox as Gtk.ListBox
-            @param row as StackSidebarChild
+            @param row as PagesManagerChild
         """
         self._window.container.set_visible_view(row.view)
         self.update_visible_child()

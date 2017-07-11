@@ -147,7 +147,7 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
             del surface
             del snapshot
         except Exception as e:
-            print("StackSidebarChild::__on_snapshot():", e)
+            print("PagesManagerListBoxChild::__on_snapshot():", e)
 
 #######################
 # PRIVATE             #
