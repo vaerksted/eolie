@@ -170,6 +170,7 @@ class PagesManagerChild:
         """
         if event.button == 2:
             self._window.container.pages_manager.close_view(self._view)
+            return True
 
     def _on_close_button_press_event(self, eventbox, event):
         """
@@ -179,6 +180,7 @@ class PagesManagerChild:
         """
         if El().settings.get_enum("panel-mode") != 2:
             self._window.container.pages_manager.close_view(self._view)
+            return True
 
     def _on_enter_notify_event(self, eventbox, event):
         """
