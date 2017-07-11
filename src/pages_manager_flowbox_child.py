@@ -72,6 +72,14 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                                                               eventbox,
                                                               event)
 
+    def _on_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        PagesManagerChild._on_load_changed(self, webview, event)
+
     def _on_snapshot(self, view, result, uri, save):
         """
             Set snapshot on main image

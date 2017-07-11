@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, WebKit2
 
 from eolie.pages_manager_flowbox_child import PagesManagerFlowBoxChild
 
@@ -33,8 +33,6 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.END)
         self.show()
-        self.__timeout_id = GLib.timeout_add(self.__TIMEOUT,
-                                             self.__hide_timeout)
         view.webview.connect("destroy", self.__on_webview_destroy)
 
     def set_view(self, view):
@@ -42,14 +40,13 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             Set a new view
             @param view as View
         """
-        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
-        view.webview.connect("destroy", self.__on_webview_destroy)
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
+            self.__timeout_id = None
+        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
+        view.webview.connect("destroy", self.__on_webview_destroy)
         PagesManagerFlowBoxChild.set_view(self, view)
         self.update()
-        self.__timeout_id = GLib.timeout_add(self.__TIMEOUT,
-                                             self.__hide_timeout)
         self.show()
 
 #######################
@@ -88,6 +85,17 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
                 GLib.source_remove(self.__timeout_id)
                 self.__timeout_id = None
 
+    def _on_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        PagesManagerFlowBoxChild._on_load_changed(self, webview, event)
+        if event == WebKit2.LoadEvent.FINISHED:
+            self.__timeout_id = GLib.timeout_add(self.__TIMEOUT,
+                                                 self.__hide_timeout)
+
 #######################
 # PRIVATE             #
 #######################
@@ -96,11 +104,8 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             Hide by opacity change
             @param count as int
         """
-        if self._view.webview.is_loading():
-            return True
-        else:
-            self.hide()
-            self.__timeout_id = None
+        self.hide()
+        self.__timeout_id = None
 
     def __on_webview_destroy(self, webview):
         """
