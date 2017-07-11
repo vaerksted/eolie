@@ -104,8 +104,15 @@ class PagesManagerChild:
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
         else:
+            # If width == height or width < height, document visible
+            # region is not sufficent for a snapshot
+            if self._view.get_allocated_width() <=\
+                    self._view.get_allocated_height():
+                region = WebKit2.SnapshotRegion.FULL_DOCUMENT
+            else:
+                region = WebKit2.SnapshotRegion.VISIBLE
             self._view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                                         region,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self._on_snapshot,
