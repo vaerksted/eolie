@@ -260,10 +260,13 @@ class ImagesPopover(Gtk.Popover):
             @param result as Gio.AsyncResult
             @param data
         """
-        uris = source.call_finish(result)
-        thread = Thread(target=self.__populate, args=(uris[0],))
-        thread.daemon = True
-        thread.start()
+        try:
+            uris = source.call_finish(result)
+            thread = Thread(target=self.__populate, args=(uris[0],))
+            thread.daemon = True
+            thread.start()
+        except Exception as e:
+            print("ImagesPopover::__on_get_images():", e)
 
     def __on_closed(self, popover):
         """
