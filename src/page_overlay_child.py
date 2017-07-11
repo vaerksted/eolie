@@ -58,7 +58,10 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         ret = PagesManagerFlowBoxChild._on_button_press_event(self,
                                                               eventbox,
                                                               event)
-        if not ret:
+        if not ret and event.button == 1:
+            self._window.container.set_visible_view(self._view)
+            self._window.container.set_expose(False)
+            self._window.container.pages_manager.update_visible_child()
             self.hide()
             if self.__timeout_id is not None:
                 GLib.source_remove(self.__timeout_id)
