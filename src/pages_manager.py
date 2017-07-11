@@ -226,6 +226,7 @@ class PagesManager(Gtk.EventBox):
             @param view as View
         """
         count = len(self._window.container.views)
+        self._window.toolbar.actions.count_label.set_text(str(count - 1))
         El().history.set_page_state(view.webview.get_uri())
         self._window.close_popovers()
         # Needed to unfocus titlebar
@@ -279,7 +280,6 @@ class PagesManager(Gtk.EventBox):
         if next_row is not None:
             self._window.container.set_visible_view(next_row.view)
         self.update_visible_child()
-        self._window.toolbar.actions.count_label.set_text(str(count - 1))
 
     def __scroll_to_child(self, row):
         """

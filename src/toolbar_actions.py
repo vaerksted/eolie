@@ -37,16 +37,18 @@ class ToolbarActions(Gtk.Bin):
 
         self.add(builder.get_object("actions"))
         self.set_hexpand(True)
-        self.__backward = builder.get_object("back_button")
-        self.__forward = builder.get_object("forward_button")
-        self.__filter = builder.get_object("filter_button")
-        self.__pages = builder.get_object("pages_button")
-        self.__view = builder.get_object("view_button")
+        self.__backward_button = builder.get_object("back_button")
+        self.__forward_button = builder.get_object("forward_button")
+        self.__filter_button = builder.get_object("filter_button")
+        self.__pages_button = builder.get_object("pages_button")
+        self.__view_button = builder.get_object("view_button")
+        self.__close_button = builder.get_object("close_button")
         self.__count = builder.get_object("count")
         if El().settings.get_enum("panel-mode") == 3:
-            self.__view.show()
+            self.__view_button.show()
+            self.__close_button.show()
         else:
-            self.__filter.show()
+            self.__filter_button.show()
         El().settings.connect("changed::panel-mode",
                               self.__on_panel_mode_changed)
 
@@ -55,8 +57,8 @@ class ToolbarActions(Gtk.Bin):
             Set available actions based on view
             @param view as WebView
         """
-        self.__backward.set_sensitive(view.can_go_back())
-        self.__forward.set_sensitive(view.can_go_forward())
+        self.__backward_button.set_sensitive(view.can_go_back())
+        self.__forward_button.set_sensitive(view.can_go_forward())
 
     def backward(self):
         """
@@ -95,7 +97,7 @@ class ToolbarActions(Gtk.Bin):
         self.__popover.get_style_context().add_class("dark")
         self.__popover.add(eventbox)
         self.__popover.set_modal(False)
-        self.__popover.set_relative_to(self.__view)
+        self.__popover.set_relative_to(self.__view_button)
         eventbox.connect("button-press-event",
                          self.__on_opened_popover_button_press_event,
                          self.__popover,
@@ -119,7 +121,7 @@ class ToolbarActions(Gtk.Bin):
             Get view pages button
             @return Gtk.MenuButton
         """
-        return self.__view
+        return self.__view_button
 
     @property
     def filter_button(self):
@@ -127,7 +129,7 @@ class ToolbarActions(Gtk.Bin):
             Get filtering toggle button
             @return Gtk.ToggleButton
         """
-        return self.__filter
+        return self.__filter_button
 
 #######################
 # PROTECTED           #
@@ -247,6 +249,14 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.set_expose(active, True)
         self.__window.close_popovers()
 
+    def _on_close_button_clicked(self, button):
+        """
+            Close current page
+            @param button as button
+        """
+        current = self.__window.container.current
+        self.__window.container.pages_manager.close_view(current)
+
 #######################
 # PRIVATE             #
 #######################
@@ -311,7 +321,7 @@ class ToolbarActions(Gtk.Bin):
         if back_list:
             from eolie.menu_history import HistoryMenu
             model = HistoryMenu(El(), back_list)
-            popover = Gtk.Popover.new_from_model(self.__backward, model)
+            popover = Gtk.Popover.new_from_model(self.__backward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
             GLib.idle_add(popover.forall, self.__force_show_image)
@@ -330,7 +340,7 @@ class ToolbarActions(Gtk.Bin):
         if forward_list:
             from eolie.menu_history import HistoryMenu
             model = HistoryMenu(El(), forward_list)
-            popover = Gtk.Popover.new_from_model(self.__forward, model)
+            popover = Gtk.Popover.new_from_model(self.__forward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
             GLib.idle_add(popover.forall, self.__force_show_image)
@@ -346,8 +356,10 @@ class ToolbarActions(Gtk.Bin):
             @param value as int
         """
         if El().settings.get_enum("panel-mode") == 3:
-            self.__view.show()
-            self.__filter.hide()
+            self.__view_button.show()
+            self.__close_button.show()
+            self.__filter_button.hide()
         else:
-            self.__view.hide()
-            self.__filter.show()
+            self.__view_button.hide()
+            self.__close_button.hide()
+            self.__filter_button.show()

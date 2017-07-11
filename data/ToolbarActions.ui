@@ -30,6 +30,11 @@
       <class name="no-padding"/>
     </style>
   </object>
+  <object class="GtkImage" id="image7">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">user-trash-symbolic</property>
+  </object>
   <object class="GtkBox" id="actions">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -108,7 +113,6 @@
         </child>
         <child>
           <object class="GtkToggleButton" id="filter_button">
-            <property name="visible">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="image">image4</property>
@@ -122,7 +126,6 @@
         </child>
         <child>
           <object class="GtkToggleButton" id="view_button">
-            <property name="visible">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <signal name="toggled" handler="_on_view_button_toggled" swapped="no"/>
@@ -169,6 +172,19 @@
           </packing>
         </child>
         <child>
+          <object class="GtkButton" id="close_button">
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="image">image7</property>
+            <signal name="clicked" handler="_on_close_button_clicked" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkToggleButton" id="pages_button">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -182,7 +198,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
         <style>

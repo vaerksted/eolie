@@ -126,7 +126,8 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__pages_manager.update_visible_child()
-        count = str(len(self.__stack.get_children()))
+        print("add")
+        count = str(len(self.__pages_manager.views))
         self.__window.toolbar.actions.count_label.set_text(count)
 
     def load_uri(self, uri):
@@ -363,7 +364,7 @@ class Container(Gtk.Overlay):
         """
         view = self.get_view_for_webview(webview)
         if view is not None:
-            self.sidebar.close_view(view)
+            self.__pages_manager.close_view(view)
 
     def __on_ready_to_show(self, webview, related, navigation_action):
         """
