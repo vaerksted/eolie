@@ -33,7 +33,7 @@ class PageOverlayChild(Gtk.EventBox):
         self.__moved = False
         self.__x_root = 0
         self.__child = PagesManagerFlowBoxChild(view, window)
-        self.__child.get_style_context().add_class("box-shadow")
+        self.__child.get_style_context().add_class("box-dark-shadow")
         self.__child.show()
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("button-release-event", self.__on_button_release_event)

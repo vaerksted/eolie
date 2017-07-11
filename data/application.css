@@ -193,6 +193,11 @@
     box-shadow: 1px 1px 5px 5px alpha(black, 0.3);
 }
 
+.box-dark-shadow {
+    box-shadow: 1px 1px 5px 5px alpha(black, 0.5);
+}
+
+
 .overlay-button {
 	box-shadow: none;
 	min-height: 24px;
