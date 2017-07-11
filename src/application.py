@@ -215,7 +215,7 @@ class Application(Gtk.Application):
             @return Window
         """
         for window in self.__windows:
-            if window.is_active():
+            if window.get_window().get_state() & Gdk.WindowState.FOCUSED:
                 return window
         # Fallback
         if self.__windows:
