@@ -541,10 +541,16 @@ class WebView(WebKit2.WebView):
         """
         source = event.get_source_device().get_source()
         if event.state & Gdk.ModifierType.CONTROL_MASK:
-            if event.delta_y > 0.5:
-                webview.zoom_in()
-            elif event.delta_y < - 0.5:
-                webview.zoom_out()
+            if source == Gdk.InputSource.MOUSE:
+                if event.delta_y < 0.5:
+                    webview.zoom_in()
+                elif event.delta_y > 0.5:
+                    webview.zoom_out()
+            else:
+                if event.delta_y > 0.5:
+                    webview.zoom_in()
+                elif event.delta_y < - 0.5:
+                    webview.zoom_out()
             return True
         elif source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
