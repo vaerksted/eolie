@@ -64,6 +64,11 @@
     background-image: none;
 }
 
+.image-border {
+    background-color: alpha(@theme_bg_color, 0.5);
+    border-radius: 4px;
+}
+
 .input {
     color: @theme_fg_color;
     background-color: alpha(@theme_selected_bg_color, 0.1);

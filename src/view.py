@@ -113,8 +113,18 @@ class View(Gtk.Overlay):
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
         self.connect("key-press-event", self.__on_key_press_event)
-        self.__webview.connect("mouse-target-changed",
-                               self.__on_mouse_target_changed)
+        webview.connect("mouse-target-changed",
+                        self.__on_mouse_target_changed)
+        if webview.ephemeral:
+            image = Gtk.Image.new_from_icon_name("user-not-tracked-symbolic",
+                                                 Gtk.IconSize.DIALOG)
+            image.set_opacity(0.5)
+            image.set_property("halign", Gtk.Align.END)
+            image.set_property("valign", Gtk.Align.END)
+            image.get_style_context().add_class("image-border")
+            image.show()
+            self.add_overlay(image)
+            self.set_overlay_pass_through(image, True)
 
     def switch_read_mode(self):
         """
