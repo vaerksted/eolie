@@ -190,7 +190,7 @@ class PagesOverlay(Gtk.EventBox):
 
     def __on_button_press_event(self, eventbox, event):
         """
-            Hide popover or close view
+            Show view and hide self
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
@@ -198,7 +198,6 @@ class PagesOverlay(Gtk.EventBox):
         if current is not None and event.button == 1:
             self.__window.container.set_visible_view(current.view)
             self.__window.container.set_expose(False)
-            self.__grid.hide()
 
     def __on_enter_notify_event(self, eventbox, event):
         """
