@@ -29,10 +29,13 @@ class PagesManagerChild:
         self._view = view
         self._window = window
         self.__connected_ids = []
+        self.__scroll_timeout_id = None
+        self.__region = WebKit2.SnapshotRegion.VISIBLE
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
         builder.connect_signals(self)
         self._widget = builder.get_object("widget")
+        self._overlay = builder.get_object("overlay")
         self._grid = builder.get_object("grid")
         self._title = builder.get_object("title")
         self._image = builder.get_object("image")
@@ -82,6 +85,10 @@ class PagesManagerChild:
                                  self._on_title_changed))
         self.__connected_ids.append(
                              self._view.webview.connect(
+                                 "scroll-event",
+                                 self._on_scroll_event))
+        self.__connected_ids.append(
+                             self._view.webview.connect(
                                  "load-changed",
                                  self._on_load_changed))
 
@@ -108,11 +115,11 @@ class PagesManagerChild:
             # region is not sufficent for a snapshot
             if self._view.get_allocated_width() <=\
                     self._view.get_allocated_height():
-                region = WebKit2.SnapshotRegion.FULL_DOCUMENT
+                self.__region = WebKit2.SnapshotRegion.FULL_DOCUMENT
             else:
-                region = WebKit2.SnapshotRegion.VISIBLE
+                self.__region = WebKit2.SnapshotRegion.VISIBLE
             self._view.webview.get_snapshot(
-                                         region,
+                                         self.__region,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self._on_snapshot,
@@ -150,6 +157,19 @@ class PagesManagerChild:
         if self._view.webview == webview:
             # FIXME use favicon
             self.__set_favicon()
+
+    def _on_scroll_event(self, webview, event):
+        """
+            Update snapshot
+            @param webview as WebView
+            @param event as Gdk.EventScroll
+        """
+        if self.__region == WebKit2.SnapshotRegion.FULL_DOCUMENT:
+            return
+        if self.__scroll_timeout_id is not None:
+            GLib.source_remove(self.__scroll_timeout_id)
+        self.__scroll_timeout_id = GLib.timeout_add(250,
+                                                    self.__on_scroll_timeout)
 
     def _on_snapshot(self, webview, result, uri, save):
         """
@@ -333,6 +353,14 @@ class PagesManagerChild:
             self._image_close.set_from_surface(resized)
             del resized
             del surface
+
+    def __on_scroll_timeout(self):
+        """
+            Update snapshot
+        """
+        uri = self._view.webview.get_uri()
+        self.__scroll_timeout_id = None
+        self.set_snapshot(uri, False)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
