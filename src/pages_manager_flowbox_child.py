@@ -62,6 +62,13 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
         """
         return PagesManagerChild._on_button_press_event(self, eventbox, event)
 
+    def _on_button_release_event(self, eventbox, event):
+        """
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        PagesManagerChild._on_button_release_event(self, eventbox, event)
+
     def _on_close_button_press_event(self, eventbox, event):
         """
             Destroy self

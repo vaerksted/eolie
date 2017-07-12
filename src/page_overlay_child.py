@@ -29,6 +29,9 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             @param window as Window
         """
         PagesManagerFlowBoxChild.__init__(self, view, window)
+        self.__x_root = 0
+        self.__timeout_id = None
+        self.__destroyed_id = None
         self.get_style_context().add_class("box-dark-shadow")
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.END)
@@ -43,9 +46,11 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         if self.__timeout_id is not None:
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
-        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
-        view.webview.connect("destroy", self.__on_webview_destroy)
+        if self.__destroyed_id is not None:
+            self._view.webview.disconnect(self.__destroyed_id)
         PagesManagerFlowBoxChild.set_view(self, view)
+        self.__destroyed_id = view.webview.connect("destroy",
+                                                   self.__on_webview_destroy)
         self.update()
         self.show()
 
@@ -58,6 +63,9 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        self._overlay.connect("motion-notify-event",
+                              self.__on_motion_notify_event)
+        self.__x_root = event.x
         ret = PagesManagerFlowBoxChild._on_button_press_event(self,
                                                               eventbox,
                                                               event)
@@ -66,9 +74,22 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             self._window.container.set_expose(False)
             self._window.container.pages_manager.update_visible_child()
             self.hide()
+            if self.__destroyed_id is not None:
+                self._view.webview.disconnect(self.__destroyed_id)
+                self.__destroyed_id = None
             if self.__timeout_id is not None:
                 GLib.source_remove(self.__timeout_id)
                 self.__timeout_id = None
+
+    def _on_button_release_event(self, eventbox, event):
+        """
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        self._overlay.disconnect_by_func(self.__on_motion_notify_event)
+        PagesManagerFlowBoxChild._on_button_release_event(self,
+                                                          eventbox,
+                                                          event)
 
     def _on_close_button_press_event(self, eventbox, event):
         """
@@ -80,7 +101,10 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
                                                                     eventbox,
                                                                     event)
         if ret:
-            self.hide()
+            GLib.idle_add(self.hide)
+            if self.__destroyed_id is not None:
+                self._view.webview.disconnect(self.__destroyed_id)
+                self.__destroyed_id = None
             if self.__timeout_id is not None:
                 GLib.source_remove(self.__timeout_id)
                 self.__timeout_id = None
@@ -104,12 +128,28 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             Hide by opacity change
             @param count as int
         """
-        self.hide()
+        GLib.idle_add(self.hide)
+        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
         self.__timeout_id = None
+
+    def __on_motion_notify_event(self, eventbox, event):
+        """
+            Move widget
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.EventMotion
+        """
+        if event.x_root > self.__x_root:
+            self.set_property("halign", Gtk.Align.END)
+        else:
+            self.set_property("halign", Gtk.Align.START)
+        self.__x_root = event.x_root
 
     def __on_webview_destroy(self, webview):
         """
             Destroy self and disconnect signals
             @param webview as WebView
         """
+        self.__destroyed_id = None
         self.disconnect_signals()
+        if webview == self._view.webview:
+            self.hide()

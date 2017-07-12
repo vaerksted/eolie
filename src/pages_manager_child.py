@@ -172,6 +172,13 @@ class PagesManagerChild:
             self._window.container.pages_manager.close_view(self._view)
             return True
 
+    def _on_button_release_event(self, eventbox, event):
+        """
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        pass
+
     def _on_close_button_press_event(self, eventbox, event):
         """
             Destroy self
