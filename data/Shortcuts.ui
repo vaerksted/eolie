@@ -123,9 +123,9 @@
               </object>
             </child>
             <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Show all pages when panel is hidden</property>
+              <object class="GtkShortcutsShortcut" id="view_all">
+                <property name="visible">False</property>
+                <property name="title" translatable="yes" context="shortcut window">View all pages</property>
                 <property name="accelerator">&lt;Alt&gt;e</property>
               </object>
             </child>

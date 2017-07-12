@@ -38,7 +38,7 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
-from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues
+from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues, PanelMode
 
 
 class Application(Gtk.Application):
@@ -677,16 +677,15 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        try:
-            builder = Gtk.Builder()
-            builder.add_from_resource('/org/gnome/Eolie/Shortcuts.ui')
-            shortcuts = builder.get_object('shortcuts')
-            window = self.active_window
-            if window is not None:
-                shortcuts.set_transient_for(window)
-            shortcuts.show()
-        except:  # GTK < 3.20
-            self.__on_help_activate(action, param)
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/Shortcuts.ui")
+        shortcuts = builder.get_object("shortcuts")
+        if self.settings.get_enum("panel-mode") == PanelMode.NONE:
+            builder.get_object("view_all").show()
+        window = self.active_window
+        if window is not None:
+            shortcuts.set_transient_for(window)
+        shortcuts.show()
 
     def __on_help_activate(self, action, param):
         """
