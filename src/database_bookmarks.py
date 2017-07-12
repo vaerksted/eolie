@@ -903,12 +903,8 @@ class DatabaseBookmarks:
                 filters += ("%" + word + "%", "%" + word + "%")
             filters += (limit,)
             request = "SELECT title, uri\
-                       FROM bookmarks"
-            if words:
-                request += " WHERE"
-            else:
-                request += " ORDER BY length(uri) ASC,\
-                            popularity DESC, mtime DESC"
+                       FROM bookmarks WHERE\
+                       bookmarks.guid != bookmarks.uri AND "
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -916,19 +912,16 @@ class DatabaseBookmarks:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += " LIMIT ?"
+            request += "ORDER BY length(uri) ASC,\
+                        popularity DESC, mtime DESC LIMIT ?"
 
             result = sql.execute(request, filters)
             items += list(result)
 
             # And then search containing one item
             request = "SELECT title, uri\
-                       FROM bookmarks"
-            if words:
-                request += " WHERE"
-            else:
-                request += " ORDER BY length(uri) ASC,\
-                            popularity DESC, mtime DESC"
+                       FROM bookmarks WHERE\
+                       bookmarks.guid != bookmarks.uri AND "
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -936,7 +929,8 @@ class DatabaseBookmarks:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
-            request += " LIMIT ?"
+            request += "ORDER BY length(uri) ASC,\
+                        popularity DESC, mtime DESC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
         # Do some scoring calculation on items
