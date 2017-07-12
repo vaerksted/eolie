@@ -260,6 +260,7 @@ class Container(Gtk.Overlay):
                 self.__window.toolbar.title.set_title(title)
             elif uri:
                 self.__window.toolbar.title.set_title(uri)
+            self.__window.toolbar.actions.set_actions(webview)
 
     def set_panel_mode(self, panel_mode):
         """
