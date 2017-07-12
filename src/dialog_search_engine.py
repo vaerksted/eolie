@@ -148,17 +148,15 @@ class SearchEngineDialog:
             @param switch as Gtk.Switch
             @param state as bool
         """
+        if switch.get_state() and not state:
+            switch.set_active(True)
+            return True
         if state:
             row = self.__listbox.get_selected_row()
             if row is not None:
                 name = row.item.get_property("name")
                 El().settings.set_value("search-engine",
                                         GLib.Variant("s", name))
-        else:
-            row = self.__listbox.get_children()[0]
-            name = row.item.get_property("name")
-            El().settings.set_value("search-engine",
-                                    GLib.Variant("s", name))
 
     def _on_add_button_clicked(self, button):
         """
