@@ -85,22 +85,10 @@ class FindWidget(Gtk.SearchBar):
         """
             Search for current clipboard
         """
-        self.__search_entry.set_text(self.__webview.selection)
-
-    def get_search_mode(self):
-        """
-            Whether search mode is toggled on
-            @return bool
-        """
-        new_search_needed = self.__webview.selection !=\
-            self.__search_entry.get_text()
-        return Gtk.SearchBar.get_search_mode(self) and not new_search_needed
-
-    def grab_focus(self):
-        """
-            Forward to entry
-        """
-        self.__search_entry.grab_focus()
+        page_id = self.__webview.get_page_id()
+        El().helper.call("GetSelection",
+                         GLib.Variant("(i)", (page_id,)),
+                         self.__on_get_selection, None, page_id)
 
 #######################
 # PRIVATE             #
@@ -187,3 +175,20 @@ class FindWidget(Gtk.SearchBar):
                                 text,
                                 WebKit2.FindOptions.CASE_INSENSITIVE,
                                 100)
+
+    def __on_get_selection(self, source, result, data):
+        """
+            Start search with selection
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param data
+        """
+        selection = None
+        try:
+            selection = source.call_finish(result)[0]
+        except:
+            pass
+        if selection is None:
+            selection = ""
+        self.__search_entry.set_text(selection)
+        self.__search_entry.grab_focus()

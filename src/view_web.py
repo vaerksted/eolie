@@ -15,7 +15,6 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from gettext import gettext as _
 from urllib.parse import urlparse
 from ctypes import string_at
-from time import time
 
 from eolie.define import El
 from eolie.utils import debug
@@ -298,7 +297,6 @@ class WebView(WebKit2.WebView):
         self.__last_click_event = {}
         self.__delayed_uri = None
         self.__related_view = related_view
-        self.__initial_selection = ""
         self.__input_source = Gdk.InputSource.MOUSE
         self._cancelled = False
         self.set_hexpand(True)
@@ -345,8 +343,6 @@ class WebView(WebKit2.WebView):
                               True)
         settings.set_property("media-playback-allows-inline", True)
         self.connect("scroll-event", self.__on_scroll_event)
-        self.connect("button-press-event", self.__on_button_press_event)
-        self.connect("button-release-event", self.__on_button_release_event)
         self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("script-dialog", self.__on_script_dialog)
@@ -451,19 +447,22 @@ class WebView(WebKit2.WebView):
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
         elif hit.context_is_selection():
-            search_term = context_menu.get_user_data().get_string()
-            # Add an item for open words in search
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("search_words",
-                                    _("Search on the Web"),
-                                    None,
-                                    None)
-            action.connect("activate",
-                           self.__on_search_words_activate,
-                           search_term)
-            item = WebKit2.ContextMenuItem.new(action)
-            context_menu.insert(item, 1)
+            try:
+                search_term = context_menu.get_user_data().get_string()
+                # Add an item for open words in search
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("search_words",
+                                        _("Search on the Web"),
+                                        None,
+                                        None)
+                action.connect("activate",
+                               self.__on_search_words_activate,
+                               search_term)
+                item = WebKit2.ContextMenuItem.new(action)
+                context_menu.insert(item, 1)
+            except:
+                pass
         else:
             # Add an item for open all images
             if view.is_loading() or parsed.scheme not in ["http", "https"]:
@@ -507,31 +506,6 @@ class WebView(WebKit2.WebView):
         """
         self.__window.toolbar.end.save_images(self.get_uri(),
                                               self.get_page_id())
-
-    def __on_button_press_event(self, widget, event):
-        """
-            Store initial selection
-            @param widget as WebView
-            @param event as Gdk.EventButton
-        """
-        self.__last_click_event = {"x": event.x,
-                                   "y": event.y,
-                                   "time": time()}
-        self.__selection = ""
-        c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
-        self.__initial_selection = c.wait_for_text()
-
-    def __on_button_release_event(self, widget, event):
-        """
-            Set current selection
-            @param widget as WebView
-            @param event as Gdk.EventScroll
-        """
-        c = Gtk.Clipboard.get(Gdk.SELECTION_PRIMARY)
-        selection = c.wait_for_text()
-        if selection != self.__initial_selection:
-            self.__selection = selection if selection is not None else ""
-        self.__initial_selection = ""
 
     def __on_scroll_event(self, webview, event):
         """

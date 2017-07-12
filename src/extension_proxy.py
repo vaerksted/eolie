@@ -105,6 +105,10 @@ class ProxyExtension(Server):
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
+    <method name="GetSelection">
+      <arg type="i" name="page_id" direction="in" />
+      <arg type="s" name="selection" direction="out" />
+    </method>
 
     <signal name='UnsecureFormFocused'>
     </signal>
@@ -234,6 +238,33 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::GetImagesLinks():", e)
         return []
+
+    def GetSelection(self, page_id):
+        """
+            Get selected text for page_id
+            @param page id as int
+            @return str
+        """
+        webpage = self.__extension.get_page(page_id)
+        document = webpage.get_dom_document()
+        if document is None:
+            return ""
+        window = document.get_default_view()
+        if window is None:
+            return ""
+        selection = window.get_selection()
+        if selection is None:
+            return ""
+        try:
+            dom_range = selection.get_range_at(0)
+        except:
+            dom_range = None
+        value = ""
+        if dom_range is not None:
+            value = dom_range.to_string()
+        if value is None:
+            value = ""
+        return value
 
     def SetPreviousForm(self):
         """
@@ -418,22 +449,8 @@ class ProxyExtension(Server):
             @param context_menu as WebKit2WebExtension.ContextMenu
             @param hit as WebKit2.HitTestResult
         """
-        document = webpage.get_dom_document()
-        if document is None:
-            return
-        window = document.get_default_view()
-        if window is None:
-            return
-        selection = window.get_selection()
-        if selection is None:
-            return
-        try:
-            dom_range = selection.get_range_at(0)
-        except:
-            dom_range = None
-        if dom_range is not None:
-            value = dom_range.to_string()
-            context_menu.set_user_data(GLib.Variant("s", value))
+        value = self.GetSelection(webpage.get_id())
+        context_menu.set_user_data(GLib.Variant("s", value))
 
     def __on_send_request(self, webpage, request, redirect):
         """

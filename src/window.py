@@ -382,11 +382,8 @@ class Window(Gtk.ApplicationWindow):
             thread.start()
         elif string == "find":
             find_widget = self.container.current.find_widget
-            search_mode = find_widget.get_search_mode()
-            find_widget.set_search_mode(not search_mode)
-            if not search_mode:
-                find_widget.search()
-                find_widget.grab_focus()
+            find_widget.set_search_mode(True)
+            find_widget.search()
         elif string == "backward":
             self.toolbar.actions.backward()
         elif string == "forward":
