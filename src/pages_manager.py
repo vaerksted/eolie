@@ -255,7 +255,7 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
-        GLib.timeout_add(1000, view.destroy)
+        view.destroy()
         # Nothing to do if was not current page
         if not was_current:
             return False
@@ -279,16 +279,16 @@ class PagesManager(Gtk.EventBox):
             next_row = self._get_child_at_index(parent_index)
         # Find best near page
         else:
-            children = self._box.get_children()
+            children_count = len(self._window.container.views)
             # We are last row, add a new one
-            if len(children) == 0:
+            if children_count == 0:
                 self._window.container.add_webview(El().start_page,
                                                    Gdk.WindowType.CHILD)
             # We have rows before closed
             elif child_index - 1 >= 0:
                 next_row = self._get_child_at_index(child_index - 1)
             # We have rows next to closed, so reload current index
-            elif child_index < len(children):
+            elif child_index < children_count:
                 next_row = self._get_child_at_index(child_index)
         if next_row is not None:
             self._window.container.set_visible_view(next_row.view)

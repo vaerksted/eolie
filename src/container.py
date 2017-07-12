@@ -129,7 +129,7 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__pages_manager.update_visible_child()
-        count = str(len(self.__pages_manager.views))
+        count = str(len(self.views))
         self.__window.toolbar.actions.count_label.set_text(count)
 
     def load_uri(self, uri):
