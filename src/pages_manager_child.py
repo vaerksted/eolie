@@ -30,7 +30,6 @@ class PagesManagerChild:
         self._window = window
         self.__connected_ids = []
         self.__scroll_timeout_id = None
-        self.__region = WebKit2.SnapshotRegion.VISIBLE
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
         builder.connect_signals(self)
@@ -111,15 +110,8 @@ class PagesManagerChild:
                                          "user-not-tracked-symbolic",
                                          Gtk.IconSize.DIALOG)
         else:
-            # If width == height or width < height, document visible
-            # region is not sufficent for a snapshot
-            if self._view.get_allocated_width() <=\
-                    self._view.get_allocated_height():
-                self.__region = WebKit2.SnapshotRegion.FULL_DOCUMENT
-            else:
-                self.__region = WebKit2.SnapshotRegion.VISIBLE
             self._view.webview.get_snapshot(
-                                         self.__region,
+                                         WebKit2.SnapshotRegion.VISIBLE,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
                                          self._on_snapshot,
@@ -164,8 +156,6 @@ class PagesManagerChild:
             @param webview as WebView
             @param event as Gdk.EventScroll
         """
-        if self.__region == WebKit2.SnapshotRegion.FULL_DOCUMENT:
-            return
         if self.__scroll_timeout_id is not None:
             GLib.source_remove(self.__scroll_timeout_id)
         self.__scroll_timeout_id = GLib.timeout_add(250,

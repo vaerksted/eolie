@@ -115,7 +115,10 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                 uris.append(view.related_uri)
             view.reset_related_uri()
             # Set start image scale factor
-            factor = ArtSize.START_WIDTH / snapshot.get_width()
+            if snapshot.get_width() > snapshot.get_height():
+                factor = ArtSize.START_HEIGHT / snapshot.get_height()
+            else:
+                factor = ArtSize.START_WIDTH / snapshot.get_width()
             surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                          ArtSize.START_WIDTH,
                                          ArtSize.START_HEIGHT)
