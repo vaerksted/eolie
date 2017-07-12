@@ -115,7 +115,9 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                 uris.append(view.related_uri)
             view.reset_related_uri()
             # Set start image scale factor
+            margin = 0
             if snapshot.get_width() > snapshot.get_height():
+                margin = (snapshot.get_width() - ArtSize.START_WIDTH) / 2
                 factor = ArtSize.START_HEIGHT / snapshot.get_height()
             else:
                 factor = ArtSize.START_WIDTH / snapshot.get_width()
@@ -124,7 +126,7 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                                          ArtSize.START_HEIGHT)
             context = cairo.Context(surface)
             context.scale(factor, factor)
-            context.set_source_surface(snapshot, 0, 0)
+            context.set_source_surface(snapshot, -margin * factor, 0)
             context.paint()
             self._image.set_from_surface(surface)
             for uri in uris:
