@@ -132,7 +132,9 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             @param count as int
         """
         GLib.idle_add(self.hide)
-        self._view.webview.disconnect_by_func(self.__on_webview_destroy)
+        if self.__destroyed_id is not None:
+            self._view.webview.disconnect(self.__destroyed_id)
+            self.__destroyed_id = None
         self.__timeout_id = None
 
     def __on_motion_notify_event(self, eventbox, event):
