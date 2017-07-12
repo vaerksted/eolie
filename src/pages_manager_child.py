@@ -32,7 +32,7 @@ class PagesManagerChild:
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
         builder.connect_signals(self)
-        self._overlay = builder.get_object("overlay")
+        self._widget = builder.get_object("widget")
         self._grid = builder.get_object("grid")
         self._title = builder.get_object("title")
         self._image = builder.get_object("image")
@@ -46,7 +46,7 @@ class PagesManagerChild:
         self._image_close.set_property("pixel-size", ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
         self._title.set_label("Empty page")
-        self.add(builder.get_object("widget"))
+        self.add(self._widget)
 
         self.get_style_context().add_class("sidebar-item")
 

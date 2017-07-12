@@ -30,6 +30,7 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         """
         PagesManagerFlowBoxChild.__init__(self, view, window)
         self.__x_root = 0
+        self.__moved = False
         self.__timeout_id = None
         self.__destroyed_id = None
         self.get_style_context().add_class("box-dark-shadow")
@@ -61,35 +62,37 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
         """
             Hide popover or close view
             @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
+            @param event as Gdk.EventButton
         """
-        self._overlay.connect("motion-notify-event",
-                              self.__on_motion_notify_event)
+        self.__moved = False
+        self._widget.connect("motion-notify-event",
+                             self.__on_motion_notify_event)
         self.__x_root = event.x
-        ret = PagesManagerFlowBoxChild._on_button_press_event(self,
-                                                              eventbox,
-                                                              event)
-        if not ret and event.button == 1:
-            self._window.container.set_visible_view(self._view)
-            self._window.container.set_expose(False)
-            self._window.container.pages_manager.update_visible_child()
-            self.hide()
-            if self.__destroyed_id is not None:
-                self._view.webview.disconnect(self.__destroyed_id)
-                self.__destroyed_id = None
-            if self.__timeout_id is not None:
-                GLib.source_remove(self.__timeout_id)
-                self.__timeout_id = None
+        PagesManagerFlowBoxChild._on_button_press_event(self,
+                                                        eventbox,
+                                                        event)
 
     def _on_button_release_event(self, eventbox, event):
         """
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self._overlay.disconnect_by_func(self.__on_motion_notify_event)
-        PagesManagerFlowBoxChild._on_button_release_event(self,
-                                                          eventbox,
-                                                          event)
+        self._widget.disconnect_by_func(self.__on_motion_notify_event)
+        ret = PagesManagerFlowBoxChild._on_button_release_event(self,
+                                                                eventbox,
+                                                                event)
+        if not self.__moved and not ret:
+            if event.button == 1:
+                self._window.container.set_visible_view(self._view)
+                self._window.container.set_expose(False)
+                self._window.container.pages_manager.update_visible_child()
+                self.hide()
+                if self.__destroyed_id is not None:
+                    self._view.webview.disconnect(self.__destroyed_id)
+                    self.__destroyed_id = None
+                if self.__timeout_id is not None:
+                    GLib.source_remove(self.__timeout_id)
+                    self.__timeout_id = None
 
     def _on_close_button_press_event(self, eventbox, event):
         """
@@ -138,6 +141,7 @@ class PageOverlayChild(PagesManagerFlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.EventMotion
         """
+        self.__moved = True
         if event.x_root > self.__x_root:
             self.set_property("halign", Gtk.Align.END)
         else:
