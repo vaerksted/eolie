@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, WebKit2
 
-from eolie.define import El, ArtSize
+from eolie.define import El, ArtSize, PanelMode
 from eolie.utils import resize_favicon
 
 
@@ -55,6 +55,8 @@ class PagesManagerChild:
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
         self.connect("destroy", self.__on_destroy)
+        self.__view_destroy_id = view.connect("destroy",
+                                              self.__on_view_destroy)
         self.__connected_ids.append(
                              self._view.webview.connect(
                                  "notify::favicon",
@@ -182,8 +184,9 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") != 2:
+        if El().settings.get_enum("panel-mode") != PanelMode.MINIMAL:
             self._window.container.pages_manager.close_view(self._view)
+            self.hide()
             return True
 
     def _on_enter_notify_event(self, eventbox, event):
@@ -192,7 +195,7 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") == 2:
+        if El().settings.get_enum("panel-mode") == PanelMode.MINIMAL:
             return
         self._image_close.set_from_icon_name("window-close-symbolic",
                                              Gtk.IconSize.INVALID)
@@ -204,7 +207,7 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") == 2:
+        if El().settings.get_enum("panel-mode") == PanelMode.MINIMAL:
             return
         allocation = eventbox.get_allocation()
         if event.x <= 0 or\
@@ -226,7 +229,8 @@ class PagesManagerChild:
         # We are not filtered and not in private mode
         if not webview.is_loading() and\
                 not webview.ephemeral and\
-                El().settings.get_enum("panel-mode") in [0, 3]:
+                El().settings.get_enum("panel-mode") in [PanelMode.MINIMAL,
+                                                         PanelMode.NO_PREVIEW]:
             GLib.timeout_add(2000, self.set_snapshot,
                              webview.get_uri(), False)
 
@@ -367,3 +371,13 @@ class PagesManagerChild:
         while self.__connected_ids:
             connected_id = self.__connected_ids.pop(0)
             self._view.webview.disconnect(connected_id)
+        if self.__view_destroy_id is not None:
+            self._view.disconnect(self.__view_destroy_id)
+
+    def __on_view_destroy(self, widget):
+        """
+            Destroy self
+        """
+        self.__connected_ids = []
+        self.__view_destroy_id = None
+        GLib.idle_add(self.destroy)
