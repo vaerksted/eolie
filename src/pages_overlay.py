@@ -184,6 +184,7 @@ class PagesOverlay(Gtk.EventBox):
         if child is None:
             self.hide()
             self.__fake.hide()
+            self.__pages_manager.hide()
         else:
             child.connect("destroy", self.__on_child_destroy)
             self.__grid.attach(child, 0, 0, 1, 1)
@@ -207,7 +208,6 @@ class PagesOverlay(Gtk.EventBox):
         """
         if self.__image.get_icon_name()[0] == "go-down-symbolic":
             self.__pages_manager.show()
-            self.set_property("halign", Gtk.Align.FILL)
 
     def __on_leave_notify_event(self, eventbox, event):
         """
@@ -222,7 +222,6 @@ class PagesOverlay(Gtk.EventBox):
                event.y <= 0 or\
                event.y >= allocation.height:
                 self.__pages_manager.hide()
-                self.set_property("halign", Gtk.Align.START)
 
     def __on_close_button_press_event(self, eventbox, event):
         """
