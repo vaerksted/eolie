@@ -205,8 +205,9 @@ class PagesOverlay(Gtk.EventBox):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__pages_manager.show()
-        self.set_property("halign", Gtk.Align.FILL)
+        if self.__image.get_icon_name()[0] == "go-down-symbolic":
+            self.__pages_manager.show()
+            self.set_property("halign", Gtk.Align.FILL)
 
     def __on_leave_notify_event(self, eventbox, event):
         """
@@ -214,13 +215,14 @@ class PagesOverlay(Gtk.EventBox):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        allocation = eventbox.get_allocation()
-        if event.x <= 0 or\
-           event.x >= allocation.width or\
-           event.y <= 0 or\
-           event.y >= allocation.height:
-            self.__pages_manager.hide()
-            self.set_property("halign", Gtk.Align.START)
+        if self.__image.get_icon_name()[0] == "go-down-symbolic":
+            allocation = eventbox.get_allocation()
+            if event.x <= 0 or\
+               event.x >= allocation.width or\
+               event.y <= 0 or\
+               event.y >= allocation.height:
+                self.__pages_manager.hide()
+                self.set_property("halign", Gtk.Align.START)
 
     def __on_close_button_press_event(self, eventbox, event):
         """

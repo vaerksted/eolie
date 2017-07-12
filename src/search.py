@@ -92,7 +92,10 @@ class Search:
             for engine in self.engines:
                 if words.startswith("%s:" % self.engines[engine][4]):
                     return self.engines[engine][1] % words[2:]
-        return self.__search % words
+        try:
+            return self.__search % words
+        except:
+            return self.engines["Google"][1] % words
 
     def get_keywords(self, words, cancellable):
         """
