@@ -747,7 +747,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__keywords_timeout is not None:
             GLib.source_remove(self.__keywords_timeout)
             self.__keywords_timeout = None
-        if not is_uri and network:
+        if value and not is_uri and network:
             self.__keywords_timeout = GLib.timeout_add(
                                                  500,
                                                  self.__search_keywords_thread,
