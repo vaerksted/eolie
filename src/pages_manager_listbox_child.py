@@ -114,10 +114,9 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
                     PanelMode.PREVIEW:
                 # Set sidebar child image
                 # Set start image scale factor
-                if snapshot.get_width() < snapshot.get_height():
-                    factor = ArtSize.PREVIEW_HEIGHT / snapshot.get_height()
-                else:
-                    factor = ArtSize.PREVIEW_WIDTH / snapshot.get_width()
+                factor = (ArtSize.PREVIEW_WIDTH -
+                          ArtSize.PREVIEW_WIDTH_MARGIN) /\
+                          snapshot.get_width()
                 surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                              ArtSize.PREVIEW_WIDTH -
                                              ArtSize.PREVIEW_WIDTH_MARGIN,
