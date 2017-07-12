@@ -41,16 +41,6 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
         # TODO: 12?
         self.set_property("height-request", ArtSize.START_HEIGHT + 12)
 
-    def set_view(self, view):
-        """
-            Set view
-            @param view as View
-        """
-        self._image.clear()
-        self.disconnect_signals()
-        self._view = view
-        self.connect_signals()
-
 #######################
 # PROTECTED           #
 #######################

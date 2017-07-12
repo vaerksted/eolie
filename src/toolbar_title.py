@@ -139,7 +139,7 @@ class ToolbarTitle(Gtk.Bin):
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
-        self.__entry.get_style_context().remove_class('uribar-title')
+        self.__entry.get_style_context().remove_class('no-background')
         self.__update_secure_content_indicator()
         bookmark_id = El().bookmarks.get_id(uri)
         if bookmark_id is not None:
@@ -164,7 +164,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__placeholder.set_text(self.__uri)
         if not self.__popover.is_visible():
             self.__placeholder.set_opacity(0.8)
-            self.__entry.get_style_context().add_class('uribar-title')
+            self.__entry.get_style_context().add_class('no-background')
             self.set_text_entry("")
 
     def set_insecure_content(self):
@@ -333,7 +333,7 @@ class ToolbarTitle(Gtk.Bin):
             self.set_text_entry(self.__uri)
         else:
             self.__set_default_placeholder()
-        self.__entry.get_style_context().remove_class("uribar-title")
+        self.__entry.get_style_context().remove_class("no-background")
 
     def _on_leave_notify(self, widget, event):
         """
@@ -359,7 +359,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__popover.is_visible():
             return
-        self.__entry.get_style_context().remove_class("uribar-title")
+        self.__entry.get_style_context().remove_class("no-background")
         self.__entry.get_style_context().add_class("input")
         webview = self.__window.container.current.webview
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
@@ -615,7 +615,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__placeholder.set_opacity(0.8)
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["http", "https", "file"]:
-            self.__entry.get_style_context().add_class('uribar-title')
+            self.__entry.get_style_context().add_class('no-background')
             self.set_text_entry("")
         else:
             self.__set_default_placeholder()

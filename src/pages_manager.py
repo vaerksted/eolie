@@ -98,7 +98,6 @@ class PagesManager(Gtk.EventBox):
         """
         # We force child to disconnect from view
         for child in self._box.get_children():
-            child.disconnect_signals()
             child.destroy()
         Gtk.EventBox.destroy(self)
 

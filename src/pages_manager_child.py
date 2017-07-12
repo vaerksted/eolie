@@ -54,22 +54,7 @@ class PagesManagerChild:
 
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        self.connect_signals()
-
-    def update(self):
-        """
-            Update child title and favicon
-        """
-        title = self._view.webview.get_title()
-        if title is None:
-            title = self._view.webview.get_uri()
-        self._title.set_text(title)
-        self.__set_favicon()
-
-    def connect_signals(self):
-        """
-            Connect signals to view
-        """
+        self.connect("destroy", self.__on_destroy)
         self.__connected_ids.append(
                              self._view.webview.connect(
                                  "notify::favicon",
@@ -91,13 +76,15 @@ class PagesManagerChild:
                                  "load-changed",
                                  self._on_load_changed))
 
-    def disconnect_signals(self):
+    def update(self):
         """
-            Disconnect signals
+            Update child title and favicon
         """
-        while self.__connected_ids:
-            connected_id = self.__connected_ids.pop(0)
-            self._view.webview.disconnect(connected_id)
+        title = self._view.webview.get_title()
+        if title is None:
+            title = self._view.webview.get_uri()
+        self._title.set_text(title)
+        self.__set_favicon()
 
     def set_snapshot(self, uri, save):
         """
@@ -371,3 +358,12 @@ class PagesManagerChild:
             text = "<b>%s</b>\n%s" % (GLib.markup_escape_text(label),
                                       GLib.markup_escape_text(uri))
         widget.set_tooltip_markup(text)
+
+    def __on_destroy(self, widget):
+        """
+            Disconnect signals
+            @param widget as Gtk.Widget
+        """
+        while self.__connected_ids:
+            connected_id = self.__connected_ids.pop(0)
+            self._view.webview.disconnect(connected_id)

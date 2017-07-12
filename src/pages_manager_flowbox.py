@@ -30,10 +30,9 @@ class PagesManagerFlowBox(PagesManager):
         self._box = Gtk.FlowBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
-        self._box.set_homogeneous(True)
         self._box.set_max_children_per_line(1000)
         self._box.show()
-        self._box.connect("child-activated", self.__on_child_activated)
+        self._box.connect("child-activated", self._on_child_activated)
         self._viewport.set_property("valign", Gtk.Align.START)
         self._viewport.add(self._box)
         self._CHILD_CLASS = PagesManagerFlowBoxChild
@@ -42,7 +41,7 @@ class PagesManagerFlowBox(PagesManager):
 
     def add_child(self, view):
         """
-            Add child to sidebar
+            Add child to flowbox
             @param view as View
             @return child
         """
@@ -73,10 +72,7 @@ class PagesManagerFlowBox(PagesManager):
         """
         return self._box.get_child_at_index(index)
 
-#######################
-# PRIVATE             #
-#######################
-    def __on_child_activated(self, listbox, row):
+    def _on_child_activated(self, listbox, row):
         """
             Show wanted web view
             @param listbox as Gtk.ListBox
@@ -85,3 +81,7 @@ class PagesManagerFlowBox(PagesManager):
         self._window.container.set_visible_view(row.view)
         self._window.container.set_expose(False)
         self.update_visible_child()
+
+#######################
+# PRIVATE             #
+#######################

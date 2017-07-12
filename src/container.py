@@ -34,7 +34,7 @@ class Container(Gtk.Overlay):
         Gtk.Overlay.__init__(self)
         self.__window = window
         self.__history_queue = []
-        self.__overlay_widget = None
+        self.__pages_overlay = None
         self.__popover = WebViewPopover(window)
         if El().sync_worker is not None:
             El().sync_worker.connect("sync-finished",
@@ -84,10 +84,12 @@ class Container(Gtk.Overlay):
             self.add_view(webview, parent, window_type)
             if uri is not None:
                 if load:
+                    panel_mode = El().settings.get_enum("panel-mode")
                     # Do not load uri until we are on screen
                     GLib.idle_add(webview.load_uri, uri)
                     # Notify user about new window
-                    if window_type == Gdk.WindowType.OFFSCREEN:
+                    if window_type == Gdk.WindowType.OFFSCREEN and\
+                            panel_mode == PanelMode.NONE:
                         GLib.idle_add(
                             self.__add_overlay_view, webview)
                 else:
@@ -161,6 +163,8 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__stack.set_visible_child(view)
+        if self.__pages_overlay is not None:
+            self.__pages_overlay.destroy_child(view)
 
     def stop(self):
         """
@@ -214,6 +218,9 @@ class Container(Gtk.Overlay):
         if self.__pages_manager is not None:
             views = self.__pages_manager.views
             self.__pages_manager.destroy()
+        if self.__pages_overlay is not None:
+            self.__pages_overlay.destroy()
+            self.__pages_overlay = None
         if panel_mode == PanelMode.NONE:
             from eolie.pages_manager_flowbox import PagesManagerFlowBox
             self.__pages_manager = PagesManagerFlowBox(self.__window)
@@ -329,13 +336,13 @@ class Container(Gtk.Overlay):
             Add an overlay view
             @param webview as WebView
         """
-        from eolie.page_overlay_child import PageOverlayChild
+        from eolie.pages_overlay import PagesOverlay
         view = self.get_view_for_webview(webview)
-        if self.__overlay_widget is None:
-            self.__overlay_widget = PageOverlayChild(view, self.__window)
-            self.add_overlay(self.__overlay_widget)
-        else:
-            self.__overlay_widget.set_view(view)
+        if self.__pages_overlay is None:
+            self.__pages_overlay = PagesOverlay(self.__window)
+            self.add_overlay(self.__pages_overlay)
+        self.__pages_overlay.show()
+        self.__pages_overlay.add_child(view)
 
     def __on_new_page(self, webview, uri, window_type):
         """

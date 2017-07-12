@@ -28,13 +28,13 @@ app_PYTHON = \
     menu_history.py\
     menu_pages.py\
     mozilla_sync.py\
-    page_overlay_child.py\
     pages_manager.py\
     pages_manager_child.py\
     pages_manager_flowbox.py\
     pages_manager_flowbox_child.py\
     pages_manager_listbox.py\
     pages_manager_listbox_child.py\
+    pages_overlay.py\
     popover_cookies.py\
     popover_credentials.py\
     popover_downloads.py\
