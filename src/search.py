@@ -148,7 +148,8 @@ class Search:
         engines = {}
         # Load user engines
         try:
-            f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/engines.json")
+            f = Gio.File.new_for_path(EOLIE_LOCAL_PATH +
+                                      "/search_engines.json")
             if f.query_exists():
                 (status, contents, tag) = f.load_contents(None)
                 engines.update(json.loads(contents.decode("utf-8")))

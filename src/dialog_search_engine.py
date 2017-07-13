@@ -27,6 +27,10 @@ class Item(GObject.GObject):
                            default="")
     search = GObject.Property(type=str,
                               default="")
+    keyword = GObject.Property(type=str,
+                               default="")
+    encoding = GObject.Property(type=str,
+                                default="")
     bang = GObject.Property(type=str,
                             default="")
 
@@ -124,11 +128,13 @@ class SearchEngineDialog:
                 name = child.item.get_property("name")
                 uri = child.item.get_property("uri")
                 search = child.item.get_property("search")
+                keyword = child.item.get_property("keyword")
+                encoding = child.item.get_property("encoding")
                 bang = child.item.get_property("bang")
                 if name and search:
-                    engines[name] = [uri, search, "", "", bang]
+                    engines[name] = [uri, search, keyword, encoding, bang]
         content = json.dumps(engines)
-        f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/engines.json")
+        f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/search_engines.json")
         f.replace_contents(content.encode("utf-8"),
                            None,
                            False,
@@ -307,6 +313,8 @@ class SearchEngineDialog:
                 item.set_property("name", key)
                 item.set_property("uri", engines[key][0])
                 item.set_property("search", engines[key][1])
+                item.set_property("keyword", engines[key][2])
+                item.set_property("encoding", engines[key][3])
                 item.set_property("bang", engines[key][4])
                 child = Row(item)
                 child.show()
