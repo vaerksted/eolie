@@ -83,6 +83,9 @@ class Window(Gtk.ApplicationWindow):
         self.__container.pages_manager.set_panel_mode(2)
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
+        # Do not count container views as destroy may be pending on somes
+        count = str(len(self.__container.pages_manager.views))
+        self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
         self.container.on_view_map(self.container.current.webview)
         revealer = Gtk.Revealer.new()
