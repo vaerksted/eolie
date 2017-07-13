@@ -29,8 +29,6 @@ class Item(GObject.GObject):
                               default="")
     bang = GObject.Property(type=str,
                             default="")
-    editable = GObject.Property(type=bool,
-                                default=False)
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -110,6 +108,7 @@ class SearchEngineDialog:
         self.__default_switch = builder.get_object("default_switch")
         self.__add_button = builder.get_object("add_button")
         self.__remove_button = builder.get_object("remove_button")
+        self.__remove_button.set_sensitive(False)
         builder.connect_signals(self)
 
     def run(self):
@@ -121,7 +120,7 @@ class SearchEngineDialog:
         # Save engines
         engines = {}
         for child in self.__listbox.get_children():
-            if child.item.get_property("editable") and child.is_valid:
+            if child.is_valid:
                 name = child.item.get_property("name")
                 uri = child.item.get_property("uri")
                 search = child.item.get_property("search")
@@ -173,11 +172,11 @@ class SearchEngineDialog:
         item.set_property("uri", "")
         item.set_property("search", "")
         item.set_property("bang", "")
-        item.set_property("editable", True)
         child = Row(item)
         child.show()
         self.__listbox.add(child)
         self.__listbox.select_row(child)
+        self.__remove_button.set_sensitive(True)
 
     def _on_remove_button_clicked(self, button):
         """
@@ -195,17 +194,19 @@ class SearchEngineDialog:
             @param row as Row
         """
         if row is None:
-            listbox.select_row(listbox.get_children()[0])
+            children = listbox.get_children()
+            if children:
+                GLib.idle_add(listbox.select_row, children[0])
+            else:
+                self.__remove_button.set_sensitive(False)
+                self.__edit_box.set_sensitive(False)
             return
+        self.__remove_button.set_sensitive(True)
+        self.__edit_box.set_sensitive(True)
         self.__name_entry.set_text(row.item.get_property("name"))
         self.__uri_entry.set_text(row.item.get_property("uri"))
         self.__search_entry.set_text(row.item.get_property("search"))
         self.__bang_entry.set_text(row.item.get_property("bang"))
-        self.__name_entry.set_sensitive(row.item.get_property("editable"))
-        self.__uri_entry.set_sensitive(row.item.get_property("editable"))
-        self.__search_entry.set_sensitive(row.item.get_property("editable"))
-        self.__bang_entry.set_sensitive(row.item.get_property("editable"))
-        self.__remove_button.set_sensitive(row.item.get_property("editable"))
         default_search_engine = El().settings.get_value(
                                                   "search-engine").get_string()
         self.__default_switch.set_active(default_search_engine ==
@@ -307,8 +308,6 @@ class SearchEngineDialog:
                 item.set_property("uri", engines[key][0])
                 item.set_property("search", engines[key][1])
                 item.set_property("bang", engines[key][4])
-                # If charset is set, it's a static web engine
-                item.set_property("editable", engines[key][3] == "")
                 child = Row(item)
                 child.show()
                 self.__listbox.add(child)

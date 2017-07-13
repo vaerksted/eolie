@@ -145,7 +145,7 @@ class Search:
             Get engines
             return {}
         """
-        engines = self.__ENGINES
+        engines = {}
         # Load user engines
         try:
             f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/engines.json")
@@ -154,6 +154,8 @@ class Search:
                 engines.update(json.loads(contents.decode("utf-8")))
         except Exception as e:
             print("Search::engines():", e)
+        if not engines:
+            engines = self.__ENGINES
         return engines
 
     @property
