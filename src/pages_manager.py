@@ -301,7 +301,7 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
-        view.destroy()
+        child.destroy()
         # Nothing to do if was not current page
         if not was_current:
             return False
@@ -309,7 +309,8 @@ class PagesManager(Gtk.EventBox):
 
         # First we search a child with same parent as closed
         brother = None
-        for child in reversed(self._box.get_children()):
+        children = self._box.get_children()
+        for child in reversed(children):
             if child.view != view and (
                     child.view.parent == view.parent or
                     child.view.parent == view):
@@ -325,7 +326,7 @@ class PagesManager(Gtk.EventBox):
             next_row = self._get_child_at_index(parent_index)
         # Find best near page
         else:
-            children_count = len(self._window.container.views)
+            children_count = len(children)
             # We are last row, add a new one
             if children_count == 0:
                 self._window.container.add_webview(El().start_page,
@@ -339,6 +340,7 @@ class PagesManager(Gtk.EventBox):
         if next_row is not None:
             self._window.container.set_visible_view(next_row.view)
         self.update_visible_child()
+        GLib.timeout_add(1000, view.destroy)
 
     def __scroll_to_child(self, row):
         """
