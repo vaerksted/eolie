@@ -48,6 +48,8 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         """
         for child in self._box.get_children():
             child.show()
+        self._scrolled.set_policy(Gtk.PolicyType.AUTOMATIC,
+                                  Gtk.PolicyType.NEVER)
 
     def hide_next(self):
         """
@@ -59,6 +61,8 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
                 first = False
             else:
                 child.hide()
+        self._scrolled.set_policy(Gtk.PolicyType.NEVER,
+                                  Gtk.PolicyType.NEVER)
 
     @property
     def children(self):
@@ -105,7 +109,7 @@ class PagesOverlay(Gtk.EventBox):
         self.__timeout_id = None
         self.__window = window
         self.get_style_context().add_class("no-background")
-        self.set_property("halign", Gtk.Align.FILL)
+        self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.END)
 
         self.__pages_manager = PagesManagerFlowBoxCustom(window)
@@ -214,6 +218,7 @@ class PagesOverlay(Gtk.EventBox):
         """
         if self.__image.get_icon_name()[0] == "go-down-symbolic":
             self.__pages_manager.show_next()
+            self.set_property("halign", Gtk.Align.FILL)
 
     def __on_leave_notify_event(self, eventbox, event):
         """
@@ -228,6 +233,7 @@ class PagesOverlay(Gtk.EventBox):
                event.y <= 0 or\
                event.y >= allocation.height:
                 self.__pages_manager.hide_next()
+                self.set_property("halign", Gtk.Align.START)
 
     def __on_close_button_press_event(self, eventbox, event):
         """
