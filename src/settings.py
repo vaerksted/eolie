@@ -144,6 +144,12 @@ class SettingsDialog:
         storage = El().settings.get_enum("history-storage")
         history_combo.set_active_id(str(storage))
 
+        self.__populars_count = builder.get_object("populars_count")
+        if start_page == "popular":
+            self.__populars_count.show()
+        max_popular_items = El().settings.get_value(
+                                              "max-popular-items").get_int32()
+        builder.get_object("popular_spin_button").set_value(max_popular_items)
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
                                 El().settings.get_value("remember-passwords"))
@@ -172,6 +178,14 @@ class SettingsDialog:
 #######################
 # PROTECTED           #
 #######################
+    def _on_popular_spin_value_changed(self, button):
+        """
+            Save value
+            @param button as Gtk.SpinButton
+        """
+        value = GLib.Variant("i", button.get_value())
+        El().settings.set_value("max-popular-items", value)
+
     def _on_configure_engines_clicked(self, button):
         """
             Show Web engines configurator
@@ -349,12 +363,15 @@ class SettingsDialog:
             Save startup page
             @param combo as Gtk.ComboBoxText
         """
-        if combo.get_active_id() == 'address':
+        if combo.get_active_id() == "address":
             self.__start_page_uri.show()
+        elif combo.get_active_id() == "popular":
+            self.__populars_count.show()
         else:
             self.__start_page_uri.hide()
-            El().settings.set_value("start-page",
-                                    GLib.Variant("s", combo.get_active_id()))
+            self.__populars_count.hide()
+        El().settings.set_value("start-page",
+                                GLib.Variant("s", combo.get_active_id()))
 
     def _on_engine_changed(self, combo):
         """

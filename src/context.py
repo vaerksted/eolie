@@ -68,16 +68,10 @@ class Context:
             @param request as WebKit2.URISchemeRequest
         """
         items = []
+        wanted = El().settings.get_value("max-popular-items").get_int32()
         # First from bookmarks
-        for (bookmark_id, title, uri) in El().bookmarks.get_populars(20):
+        for (bookmark_id, title, uri) in El().bookmarks.get_populars(wanted):
             items.append((title, uri))
-        # Then from history
-        more = 20 - len(items)
-        if more > 0:
-            uris = [item[1] for item in items]
-            for (title, uri, score) in El().history.search("", more):
-                if uri not in uris:
-                    items.append((title, uri))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
