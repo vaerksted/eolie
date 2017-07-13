@@ -15,6 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from gettext import gettext as _
 from urllib.parse import urlparse
 from ctypes import string_at
+from time import time
 
 from eolie.define import El
 from eolie.utils import debug
@@ -350,6 +351,7 @@ class WebView(WebKit2.WebView):
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
         self.connect('scroll-event', self.__on_scroll_event)
+        self.connect("button-press-event", self.__on_button_press_event)
 
     def __set_system_fonts(self, settings):
         """
@@ -386,6 +388,16 @@ class WebView(WebKit2.WebView):
         El().helper.call("GetAuthForms",
                          GLib.Variant("(asi)", (forms, page_id)),
                          self.__on_get_forms, request, page_id)
+
+    def __on_button_press_event(self, widget, event):
+        """
+            Store last press event
+            @param widget as WebView
+            @param event as Gdk.EventButton
+        """
+        self.__last_click_event = {"x": event.x,
+                                   "y": event.y,
+                                   "time": time()}
 
     def __on_get_forms(self, source, result, request):
         """
