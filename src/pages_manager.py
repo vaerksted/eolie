@@ -306,6 +306,7 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
         child.destroy()
+        GLib.timeout_add(1000, view.destroy)
         # Nothing to do if was not current page
         if not was_current:
             return False

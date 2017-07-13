@@ -31,7 +31,7 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         self._box.set_min_children_per_line(1000)
         self.get_style_context().add_class("no-background")
         self.get_style_context().add_class("no-border")
-        self._scrolled.set_policy(Gtk.PolicyType.NEVER,
+        self._scrolled.set_policy(Gtk.PolicyType.AUTOMATIC,
                                   Gtk.PolicyType.NEVER)
 
     def add_child(self, child):
@@ -41,15 +41,23 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         """
         self._box.insert(child, 0)
 
-    def pop_child(self):
+    def show_next(self):
         """
-            Pop first child
-            @return PagesManagerFlowBoxChild
+            Show next page
         """
-        child = self._box.get_child_at_index(0)
-        if child is not None:
-            self._box.remove(child)
-        return child
+        for child in self._box.get_children():
+            child.show()
+
+    def hide_next(self):
+        """
+            Hide next page
+        """
+        first = True
+        for child in self._box.get_children():
+            if first:
+                first = False
+            else:
+                child.hide()
 
     @property
     def children(self):
@@ -87,10 +95,11 @@ class PagesOverlay(Gtk.EventBox):
         self.__timeout_id = None
         self.__window = window
         self.get_style_context().add_class("no-background")
-        self.set_property("halign", Gtk.Align.START)
+        self.set_property("halign", Gtk.Align.FILL)
         self.set_property("valign", Gtk.Align.END)
 
         self.__pages_manager = PagesManagerFlowBoxCustom(window)
+        self.__pages_manager.set_hexpand(True)
 
         # Allow keeping button while main overlay widget is hidden
         self.__fake = Gtk.Label.new(" ")
@@ -98,9 +107,8 @@ class PagesOverlay(Gtk.EventBox):
         self.__fake.hide()
 
         self.__grid = Gtk.Grid()
-        self.__grid.set_property("halign", Gtk.Align.START)
-        self.__grid.attach(self.__pages_manager, 1, 0, 1, 1)
-        self.__grid.attach(self.__fake, 2, 0, 1, 1)
+        self.__grid.add(self.__pages_manager)
+        self.__grid.add(self.__fake)
         self.__grid.show()
 
         overlay = Gtk.Overlay.new()
@@ -131,7 +139,6 @@ class PagesOverlay(Gtk.EventBox):
 
         self.connect("enter-notify-event", self.__on_enter_notify_event)
         self.connect("leave-notify-event", self.__on_leave_notify_event)
-        self.connect("button-press-event", self.__on_button_press_event)
         self.add(overlay)
 
     def add_child(self, view):
@@ -140,26 +147,20 @@ class PagesOverlay(Gtk.EventBox):
             @param view as View
             @return child
         """
-
-        current = self.__grid.get_child_at(0, 0)
-        if current is not None:
-            current.disconnect_by_func(self.__on_child_destroy)
-            self.__grid.remove(current)
-            self.__pages_manager.add_child(current)
         child = PagesManagerFlowBoxChild(view, self.__window)
         child.get_style_context().add_class("box-dark-shadow")
         child.connect("destroy", self.__on_child_destroy)
         child.show()
-        self.__grid.attach(child, 0, 0, 1, 1)
+        self.__pages_manager.add_child(child)
+        self.__pages_manager.show()
+        self.__pages_manager.hide_next()
 
     def destroy_child(self, view):
         """
             Destroy child associated with view if exists
             @param view as View
         """
-        children = [self.__grid.get_child_at(0, 0)] +\
-            self.__pages_manager.children
-        for child in children:
+        for child in self.__pages_manager.children:
             if child is None:
                 continue
             if child.view == view:
@@ -176,18 +177,13 @@ class PagesOverlay(Gtk.EventBox):
 #######################
     def __on_child_destroy(self, widget):
         """
-            Take another widget from pages manager
+            Hide self if empty
             @param widget as Gtk.Widget
         """
-        self.__grid.remove(widget)
-        child = self.__pages_manager.pop_child()
-        if child is None:
+        if not self.__pages_manager.children:
             self.hide()
             self.__fake.hide()
             self.__pages_manager.hide()
-        else:
-            child.connect("destroy", self.__on_child_destroy)
-            self.__grid.attach(child, 0, 0, 1, 1)
 
     def __on_button_press_event(self, eventbox, event):
         """
@@ -207,7 +203,7 @@ class PagesOverlay(Gtk.EventBox):
             @param event as Gdk.Event
         """
         if self.__image.get_icon_name()[0] == "go-down-symbolic":
-            self.__pages_manager.show()
+            self.__pages_manager.show_next()
 
     def __on_leave_notify_event(self, eventbox, event):
         """
@@ -221,7 +217,7 @@ class PagesOverlay(Gtk.EventBox):
                event.x >= allocation.width or\
                event.y <= 0 or\
                event.y >= allocation.height:
-                self.__pages_manager.hide()
+                self.__pages_manager.hide_next()
 
     def __on_close_button_press_event(self, eventbox, event):
         """
