@@ -290,7 +290,7 @@ class WebView(WebKit2.WebView):
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
-        self.__window = window
+        self._window = window
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
@@ -424,7 +424,7 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        self.__window.close_popovers()
+        self._window.close_popovers()
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
         fields = request.get_text_fields()
@@ -499,7 +499,7 @@ class WebView(WebKit2.WebView):
             @param action as Gtk.Action
             @param uri as str
         """
-        self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
+        self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
 
     def __on_search_words_activate(self, action, search_term):
         """
@@ -509,15 +509,15 @@ class WebView(WebKit2.WebView):
         """
         search = Search()
         uri = search.get_search_uri(search_term)
-        self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
+        self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
 
     def __on_save_images_activate(self, action):
         """
             Show images filtering popover
             @param action as Gtk.Action
         """
-        self.__window.toolbar.end.save_images(self.get_uri(),
-                                              self.get_page_id())
+        self._window.toolbar.end.save_images(self.get_uri(),
+                                             self.get_page_id())
 
     def __on_scroll_event(self, webview, event):
         """
@@ -555,7 +555,7 @@ class WebView(WebKit2.WebView):
         uri = webview.get_uri()
         settings_db = DatabaseSettings()
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
-                                           self.__window,
+                                           self._window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
@@ -639,13 +639,13 @@ class WebView(WebKit2.WebView):
             page_id = params[2]
             El().download_manager.add_video(uri, title, page_id)
         elif signal == "UnsecureFormFocused":
-            self.__window.toolbar.title.show_input_warning(self)
+            self._window.toolbar.title.show_input_warning(self)
         elif signal == "InputMouseDown":
             if self.__last_click_event:
                 model = FormMenu(El(), params[0], self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
-                self.__window.register(popover)
+                self._window.register(popover)
                 rect = Gdk.Rectangle()
                 rect.x = self.__last_click_event["x"]
                 rect.y = self.__last_click_event["y"] - 10
