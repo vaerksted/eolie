@@ -473,12 +473,3 @@ class PagesManager(Gtk.EventBox):
             self.__search_entry.set_text("")
             self._window.toolbar.actions.filter_button.set_active(False)
             return True
-
-    def __on_child_activated(self, listbox, row):
-        """
-            Show wanted web view
-            @param listbox as Gtk.ListBox
-            @param row as PagesManagerChild
-        """
-        self._window.container.set_visible_view(row.view)
-        self.update_visible_child()

@@ -83,6 +83,7 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         """
         self._window.container.set_visible_view(row.view)
         self._window.container.set_expose(False)
+        self._window.container.pages_manager.update_visible_child()
         GLib.idle_add(row.destroy)
 
     def __on_scroll_event(self, scrolled, event):
