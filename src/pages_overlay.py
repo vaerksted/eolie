@@ -33,6 +33,7 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         self.get_style_context().add_class("no-border")
         self._scrolled.set_policy(Gtk.PolicyType.AUTOMATIC,
                                   Gtk.PolicyType.NEVER)
+        self._scrolled.connect("scroll-event", self.__on_scroll_event)
 
     def add_child(self, child):
         """
@@ -79,6 +80,15 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         self._window.container.set_visible_view(row.view)
         self._window.container.set_expose(False)
         GLib.idle_add(row.destroy)
+
+    def __on_scroll_event(self, scrolled, event):
+        """
+            Swap x/y scrolling
+            @param scrolled as Gtk.ScrolledWindow
+            @param event as Gdk.EventScroll
+        """
+        if event.delta_y != 0 and event.delta_x == 0:
+            event.delta_x = event.delta_y
 
 
 class PagesOverlay(Gtk.EventBox):
