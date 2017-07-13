@@ -285,8 +285,12 @@ class PagesManager(Gtk.EventBox):
             close current view
             @param view as View
         """
-        count = len(self._window.container.views)
-        self._window.toolbar.actions.count_label.set_text(str(count - 1))
+        children = self._box.get_children()
+        children_count = len(children) - 1
+        # Don't show 0 as we are going to open a new one
+        if children_count:
+            self._window.toolbar.actions.count_label.set_text(
+                                                       str(children_count))
         El().history.set_page_state(view.webview.get_uri())
         self._window.close_popovers()
         # Needed to unfocus titlebar
@@ -309,7 +313,6 @@ class PagesManager(Gtk.EventBox):
 
         # First we search a child with same parent as closed
         brother = None
-        children = self._box.get_children()
         for child in reversed(children):
             if child.view != view and (
                     child.view.parent == view.parent or
@@ -326,7 +329,6 @@ class PagesManager(Gtk.EventBox):
             next_row = self._get_child_at_index(parent_index)
         # Find best near page
         else:
-            children_count = len(children)
             # We are last row, add a new one
             if children_count == 0:
                 self._window.container.add_webview(El().start_page,
