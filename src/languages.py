@@ -52,7 +52,7 @@ class LanguageRow(Gtk.EventBox):
             codes = []
             locales = GLib.get_language_names()
             if locales:
-                user_code = locales[0].split("_")[0]
+                user_code = locales[0].split(".")[0]
                 codes = [user_code]
         check.set_active(codes is not None and code in codes)
         # Here we force add of default language

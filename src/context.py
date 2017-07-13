@@ -46,7 +46,7 @@ class Context:
                                  El().settings.get_value("enable-spell-check"))
         locales = GLib.get_language_names()
         try:
-            user_locale = locales[0].split("_")[0]
+            user_locale = locales[0].split(".")[0]
             context.set_spell_checking_languages([user_locale])
         except:
             pass
