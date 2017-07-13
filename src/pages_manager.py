@@ -30,6 +30,8 @@ class PagesManager(Gtk.EventBox):
         """
         Gtk.EventBox.__init__(self)
         self._window = window
+        self.__next_timeout_id = None
+        self.__previous_timeout_id = None
         self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
         self._grid = Gtk.Grid()
@@ -138,39 +140,29 @@ class PagesManager(Gtk.EventBox):
         """
             Show next view
         """
-        children = self._box.get_children()
-        index = self.__get_index(self._window.container.current)
-        if index + 1 < len(children):
-            next_row = self._get_child_at_index(index + 1)
-        else:
-            next_row = self._get_child_at_index(0)
-        if next_row is not None:
-            self._window.container.set_visible_view(next_row.view)
-        self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == PanelMode.NONE:
-            # If first time, do not show expose
-            if self._window.count_page_changes > 0:
-                self._window.container.set_expose(True)
+        if panel_mode == PanelMode.NONE and\
+                self.__next_timeout_id is None and\
+                self.__next_timeout_id != -1:
+            self.__next_timeout_id = GLib.timeout_add(100,
+                                                      self.__set_expose,
+                                                      self.__next)
+        else:
+            self.__next()
 
     def previous(self):
         """
             Show next view
         """
-        children = self._box.get_children()
-        index = self.__get_index(self._window.container.current)
-        if index == 0:
-            next_row = self._get_child_at_index(len(children) - 1)
-        else:
-            next_row = self._get_child_at_index(index - 1)
-        if next_row is not None:
-            self._window.container.set_visible_view(next_row.view)
-        self.update_visible_child()
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == PanelMode.NONE:
-            # If first time, do not show expose
-            if self._window.count_page_changes > 0:
-                self._window.container.set_expose(True)
+        if panel_mode == PanelMode.NONE and\
+                self.__previous_timeout_id is None and\
+                self.__previous_timeout_id != -1:
+            self.__previous_timeout_id = GLib.timeout_add(100,
+                                                          self.__set_expose,
+                                                          self.__previous)
+        else:
+            self.__previous()
 
     def close_view(self, view):
         """
@@ -184,6 +176,22 @@ class PagesManager(Gtk.EventBox):
 
     def set_panel_mode(self, panel_mode=None):
         pass
+
+    def ctrl_released(self):
+        """
+            Disable any pending expose
+        """
+        if self.__next_timeout_id is not None:
+            if self.__next_timeout_id != -1:
+                self.__next()
+                GLib.source_remove(self.__next_timeout_id)
+        if self.__previous_timeout_id is not None:
+            if self.__previous_timeout_id != -1:
+                self.__previous()
+                GLib.source_remove(self.__previous_timeout_id)
+
+        self.__next_timeout_id = None
+        self.__previous_timeout_id = None
 
     def move_first(self, view):
         """
@@ -234,6 +242,44 @@ class PagesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __set_expose(self, callback):
+        """
+            Set expose on and call callback
+            @param callback as function
+        """
+        self.__next_timeout_id = -1
+        self.__previous_timeout_id = -1
+        self._window.container.set_expose(True)
+        callback()
+
+    def __next(self):
+        """
+            Show next view
+        """
+        children = self._box.get_children()
+        index = self.__get_index(self._window.container.current)
+        if index + 1 < len(children):
+            next_row = self._get_child_at_index(index + 1)
+        else:
+            next_row = self._get_child_at_index(0)
+        if next_row is not None:
+            self._window.container.set_visible_view(next_row.view)
+        self.update_visible_child()
+
+    def __previous(self):
+        """
+            Show next view
+        """
+        children = self._box.get_children()
+        index = self.__get_index(self._window.container.current)
+        if index == 0:
+            next_row = self._get_child_at_index(len(children) - 1)
+        else:
+            next_row = self._get_child_at_index(index - 1)
+        if next_row is not None:
+            self._window.container.set_visible_view(next_row.view)
+        self.update_visible_child()
+
     def __close_view(self, view):
         """
             close current view
