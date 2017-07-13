@@ -457,7 +457,8 @@ class ToolbarTitle(Gtk.Bin):
                     db_uri = El().history.get_match(uri)
                     if db_uri is not None:
                         db_parsed = urlparse(db_uri)
-                        if db_parsed.netloc.startswith("www."):
+                        if db_parsed.netloc.startswith("www.") and\
+                                not parsed.netloc.startswith("www."):
                             uri = "%s://www.%s" % (db_parsed.scheme, uri)
                         else:
                             uri = "%s://%s" % (db_parsed.scheme, uri)
