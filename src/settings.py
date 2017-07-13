@@ -363,13 +363,12 @@ class SettingsDialog:
             Save startup page
             @param combo as Gtk.ComboBoxText
         """
+        self.__start_page_uri.hide()
+        self.__populars_count.hide()
         if combo.get_active_id() == "address":
             self.__start_page_uri.show()
         elif combo.get_active_id() == "popular":
             self.__populars_count.show()
-        else:
-            self.__start_page_uri.hide()
-            self.__populars_count.hide()
         El().settings.set_value("start-page",
                                 GLib.Variant("s", combo.get_active_id()))
 
