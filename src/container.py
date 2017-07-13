@@ -248,14 +248,14 @@ class Container(Gtk.Overlay):
             title = webview.get_title()
             self.__window.toolbar.title.update_load_indicator(webview)
             self.__window.toolbar.title.show_popup_indicator(webview.popups)
-            self.__window.toolbar.title.show_readable_button(
-                                                webview.readable_content != "")
             if uri is not None:
                 self.__window.toolbar.title.set_uri(uri)
             if webview.is_loading():
                 self.__window.toolbar.title.progress.show()
             else:
                 self.__window.toolbar.title.progress.hide()
+                self.__window.toolbar.title.show_readable_button(
+                                                webview.readable_content != "")
             if title:
                 self.__window.toolbar.title.set_title(title)
             elif uri:
@@ -480,9 +480,10 @@ class Container(Gtk.Overlay):
         if webview == self.current.webview:
             if uri:
                 self.__window.toolbar.actions.set_actions(webview)
-                self.__window.toolbar.title.show_readable_button(
-                                                webview.readable_content != "")
                 self.__window.toolbar.title.set_uri(uri)
+                if not webview.is_loading():
+                    self.__window.toolbar.title.show_readable_button(
+                                                webview.readable_content != "")
 
     def __on_title_changed(self, webview, title):
         """
@@ -542,6 +543,7 @@ class Container(Gtk.Overlay):
         parsed = urlparse(uri)
         focus_in_view = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
+            self.__window.toolbar.title.show_spinner(True)
             self.__window.toolbar.title.set_title(uri)
             # Give focus to url bar
             if not focus_in_view:
@@ -555,6 +557,7 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.set_title(uri)
             self.__window.toolbar.actions.set_actions(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__window.toolbar.title.show_spinner(False)
             title = webview.get_title()
             if title is not None:
                 self.__window.toolbar.title.set_title(title)

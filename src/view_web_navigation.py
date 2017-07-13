@@ -177,8 +177,6 @@ class WebViewNavigation:
         self._readable_content = ""
         self.__title = ""
         uri = webview.get_uri()
-        if uri != "about:blank":
-            self.__js_timeout = None
         self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
@@ -196,11 +194,20 @@ class WebViewNavigation:
             return
         self.__title = title
         self.emit("title-changed", title)
-        if self.__js_timeout is None:
-            self.__js_timeout = GLib.timeout_add(
+        if self.__js_timeout is not None:
+            GLib.source_remove(self.__js_timeout)
+        self.__js_timeout = GLib.timeout_add(
                              2000,
-                             self.run_javascript_from_gresource,
-                             '/org/gnome/Eolie/Readability.js', None, None)
+                             self.__on_js_timeout,
+                             "/org/gnome/Eolie/Readability.js")
+
+    def __on_js_timeout(self, path):
+        """
+            Run js
+            @param path as str
+        """
+        self.__js_timeout = None
+        self.run_javascript_from_gresource(path, None, None)
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """

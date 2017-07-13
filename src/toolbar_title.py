@@ -16,7 +16,7 @@ from threading import Thread
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import El, PanelMode
 from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
 
@@ -63,7 +63,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image1 = builder.get_object("action_image1")
         # Bookmarks/Clear
         self.__action_image2 = builder.get_object("action_image2")
-        self.__readable_image = builder.get_object("readable_image")
         self.add(builder.get_object("widget"))
         # Some on the fly css styling
         context = self.__entry.get_style_context()
@@ -72,7 +71,7 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
-        self.__readable_indicator = builder.get_object("readable_indicator")
+        self.__indicator_stack = builder.get_object("indicator_stack")
         self.__popup_indicator = builder.get_object("popup_indicator")
         self.__placeholder = builder.get_object("placeholder")
         self.__signal_id = self.__entry.connect("changed",
@@ -82,10 +81,26 @@ class ToolbarTitle(Gtk.Bin):
         """
             Mark readable button
         """
+        if self.__indicator_stack.get_visible_child_name() != "image":
+            return
+        child = self.__indicator_stack.get_visible_child()
         if self.__window.container.current.reading:
-            self.__readable_image.get_style_context().add_class("selected")
+            child.get_style_context().add_class("selected")
         else:
-            self.__readable_image.get_style_context().remove_class("selected")
+            child.get_style_context().remove_class("selected")
+
+    def show_spinner(self, b):
+        """
+            Show/hide spinner
+            @param b as bool
+        """
+        if b:
+            panel_mode = El().settings.get_enum("panel-mode")
+            self.__indicator_stack.set_visible_child_name("spinner")
+            if panel_mode == PanelMode.NONE:
+                self.__indicator_stack.get_visible_child().start()
+        elif self.__indicator_stack.get_visible_child_name() == "spinner":
+            self.__indicator_stack.get_visible_child().stop()
 
     def do_get_preferred_width(self):
         """
@@ -219,10 +234,10 @@ class ToolbarTitle(Gtk.Bin):
             @param b as bool
         """
         if b:
-            self.__readable_indicator.show()
+            self.__indicator_stack.set_visible_child_name("image")
             self.set_reading()
         else:
-            self.__readable_indicator.hide()
+            self.__indicator_stack.set_visible_child_name("spinner")
 
     def show_password(self, username, userform, password, passform, uri):
         """
@@ -461,7 +476,7 @@ class ToolbarTitle(Gtk.Bin):
                                    event.keyval == Gdk.KEY_space):
                 webview.add_text_entry(uri)
 
-    def _on_readable_indicator_press(self, eventbox, event):
+    def _on_indicator_press(self, eventbox, event):
         """
             Reload current view/Stop loading
             @param eventbox as Gtk.EventBox

@@ -97,26 +97,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEventBox" id="readable_indicator">
-                    <property name="can_focus">False</property>
-                    <property name="opacity">0.80000000000000004</property>
-                    <signal name="button-press-event" handler="_on_readable_indicator_press" swapped="no"/>
-                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
-                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
-                    <child>
-                      <object class="GtkImage" id="readable_image">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="icon_name">view-dual-symbolic</property>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkEventBox" id="popup_indicator">
                     <property name="can_focus">False</property>
                     <property name="opacity">0.80000000000000004</property>
@@ -133,6 +113,46 @@
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEventBox" id="indicator">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="opacity">0.80000000000000004</property>
+                    <signal name="button-press-event" handler="_on_indicator_press" swapped="no"/>
+                    <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
+                    <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
+                    <child>
+                      <object class="GtkStack" id="indicator_stack">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkImage" id="indicator_image">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="icon_name">view-dual-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="name">image</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinner" id="indicator_spinner">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="name">spinner</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
                     <property name="top_attach">0</property>
                   </packing>
                 </child>
