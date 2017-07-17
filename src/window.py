@@ -351,6 +351,9 @@ class Window(Gtk.ApplicationWindow):
         """
         string = param.get_string()
         if string == "uri":
+            if self.is_fullscreen:
+                revealer = self.__fullscreen_toolbar.get_parent()
+                revealer.set_reveal_child(True)
             self.toolbar.title.focus_entry()
         elif string == "fullscreen":
             if self.is_fullscreen:
