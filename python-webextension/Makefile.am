@@ -3,7 +3,7 @@
 # Adrian Perez, 2015-08-25 11:58
 #
 
-webkitextensiondir = $(datadir)/eolie/webkitextension
+webkitextensiondir = $(libdir)/eolie/webkitextension
 webkitextension_DATA = extension.py
 
 extension.py: extension.py.in Makefile
