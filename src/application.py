@@ -500,6 +500,7 @@ class Application(Gtk.Application):
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
         elif not restored:
+            self.active_window.present_with_time(Gtk.get_current_event_time())
             self.__new_or_load(self.start_page,
                                Gdk.WindowType.CHILD,
                                ephemeral)
