@@ -76,7 +76,6 @@ class Application(Gtk.Application):
                     break
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
-        self.__windows = []
         self.debug = False
         self.show_tls = False
         self.cursors = {}
@@ -140,7 +139,7 @@ class Application(Gtk.Application):
         """
         Gtk.Application.do_startup(self)
 
-        if not self.__windows:
+        if not self.get_windows():
             self.__init()
             self.get_new_window()
 
@@ -152,7 +151,6 @@ class Application(Gtk.Application):
         window = Window(self)
         window.connect('delete-event', self.__on_delete_event)
         window.show()
-        self.__windows.append(window)
         return window
 
     def set_setting(self, key, value):
@@ -161,7 +159,7 @@ class Application(Gtk.Application):
             @param key as str
             @param value as GLib.Variant
         """
-        for window in self.__windows:
+        for window in self.get_windows():
             for view in window.container.views:
                 view.webview.set_setting(key, value)
 
@@ -214,13 +212,7 @@ class Application(Gtk.Application):
             Get active window
             @return Window
         """
-        for window in self.__windows:
-            if window.get_window().get_state() & Gdk.WindowState.FOCUSED:
-                return window
-        # Fallback
-        if self.__windows:
-            return self.__windows[0]
-        return None
+        return self.get_windows()[0]
 
     @property
     def windows(self):
@@ -228,7 +220,7 @@ class Application(Gtk.Application):
             Get windows
             @return [Window]
         """
-        return self.__windows
+        return self.get_windows()
 
     @property
     def cookies_path(self):
@@ -419,7 +411,7 @@ class Application(Gtk.Application):
         try:
             remember_session = self.settings.get_value("remember-session")
             session_states = []
-            for window in self.__windows:
+            for window in self.get_windows():
                 window.container.stop()
                 if not remember_session:
                     continue
@@ -514,8 +506,7 @@ class Application(Gtk.Application):
         """
             Close window
         """
-        if len(self.__windows) > 1:
-            self.__windows.remove(window)
+        if len(self.get_windows()) > 1:
             window.destroy()
         else:
             window.hide()
@@ -711,8 +702,8 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
             Call default handler, raise last window
             @param application as Gio.Application
         """
-        if self.__windows:
-            self.__windows[-1].present_with_time(Gtk.get_current_event_time())
+        if self.get_windows():
+            self.active_window.present_with_time(Gtk.get_current_event_time())
 
     def __on_shortcut_action(self, action, param):
         """
