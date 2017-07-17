@@ -139,7 +139,6 @@ class Application(Gtk.Application):
             Init application
         """
         Gtk.Application.do_startup(self)
-
         if not self.get_windows():
             self.__init()
             self.get_new_window()
@@ -460,7 +459,6 @@ class Application(Gtk.Application):
             @param app as Gio.Application
             @param options as GLib.VariantDict
         """
-        print(options)
         if options.contains("version"):
             print("Eolie %s" % self.__version)
             return 0
