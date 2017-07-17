@@ -80,7 +80,8 @@ class PagesMenu(Gio.Menu):
             uri = self.__closed_section.get_item_attribute_value(0, "uri")
             encoded = sha256(uri.get_string().encode("utf-8")).hexdigest()
             action = El().lookup_action(encoded)
-            action.activate(None)
+            if action is not None:
+                action.activate(None)
 
     def add_action(self, title, uri, private, state):
         """
