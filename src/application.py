@@ -93,6 +93,7 @@ class Application(Gtk.Application):
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
         self.connect('activate', self.__on_activate)
+        self.connect("handle-local-options", self.__on_handle_local_options)
         self.connect('command-line', self.__on_command_line)
         self.register(None)
         if self.get_is_remote():
@@ -452,6 +453,18 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::restore_state()", e)
         return window_type != Gdk.WindowType.CHILD
+
+    def __on_handle_local_options(self, app, options):
+        """
+            Handle local options
+            @param app as Gio.Application
+            @param options as GLib.VariantDict
+        """
+        print(options)
+        if options.contains("version"):
+            print("Eolie %s" % self.__version)
+            return 0
+        return -1
 
     def __on_command_line(self, app, app_cmd_line):
         """
