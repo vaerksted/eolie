@@ -80,6 +80,8 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to fullscreen and enter fullscreen
             @param force as bool
         """
+        if self.__fullscreen_revealer is not None:
+            return
         self.__container.pages_manager.set_panel_mode(2)
         self.__fullscreen_toolbar = Toolbar(self)
         self.__fullscreen_toolbar.end.show_fullscreen_button(True)
@@ -88,11 +90,11 @@ class Window(Gtk.ApplicationWindow):
         self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
         self.container.on_view_map(self.container.current.webview)
-        revealer = Gtk.Revealer.new()
-        revealer.set_property("valign", Gtk.Align.START)
-        revealer.add(self.__fullscreen_toolbar)
-        revealer.show()
-        self.__container.add_overlay(revealer)
+        self.__fullscreen_revealer = Gtk.Revealer.new()
+        self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
+        self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
+        self.__fullscreen_revealer.show()
+        self.__container.add_overlay(self.__fullscreen_revealer)
         if force:
             Gtk.ApplicationWindow.fullscreen(self)
         self.connect("motion-notify-event", self.__on_motion_notify_event)
@@ -102,11 +104,14 @@ class Window(Gtk.ApplicationWindow):
             Prepare window to unfullscreen and leave fullscreen
             @param force as bool
         """
+        if self.__fullscreen_revealer is None:
+            return
         self.__container.pages_manager.set_panel_mode()
         self.disconnect_by_func(self.__on_motion_notify_event)
-        GLib.idle_add(self.__fullscreen_toolbar.get_parent().destroy)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
+        GLib.idle_add(self.__fullscreen_revealer.destroy)
         self.__fullscreen_toolbar = None
+        self.__fullscreen_revealer = None
         self.container.on_view_map(self.container.current.webview)
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
@@ -204,6 +209,7 @@ class Window(Gtk.ApplicationWindow):
         """
         self.__toolbar = Toolbar(self)
         self.__fullscreen_toolbar = None
+        self.__fullscreen_revealer = None
         self.__toolbar.show()
         self.__container = Container(self)
         panel_mode = El().settings.get_enum("panel-mode")
@@ -312,11 +318,11 @@ class Window(Gtk.ApplicationWindow):
             @param: widget as Gtk.Widget
             @param: event as Gdk.EventMotion
         """
-        revealer = self.__fullscreen_toolbar.get_parent()
-        if revealer.get_reveal_child() and not revealer.get_child_revealed():
+        if self.__fullscreen_revealer.get_reveal_child() and\
+                not self.__fullscreen_revealer.get_child_revealed():
             return
-        if event.y < revealer.get_allocated_height():
-            revealer.set_reveal_child(True)
+        if event.y < self.__fullscreen_revealer.get_allocated_height():
+            self.__fullscreen_revealer.set_reveal_child(True)
         else:
             lock = False
             for popover in self.__popovers:
@@ -324,7 +330,7 @@ class Window(Gtk.ApplicationWindow):
                     lock = True
                     break
             if not lock:
-                revealer.set_reveal_child(False)
+                self.__fullscreen_revealer.set_reveal_child(False)
 
     def __on_realize(self, widget):
         """
@@ -352,8 +358,7 @@ class Window(Gtk.ApplicationWindow):
         string = param.get_string()
         if string == "uri":
             if self.is_fullscreen:
-                revealer = self.__fullscreen_toolbar.get_parent()
-                revealer.set_reveal_child(True)
+                self.__fullscreen_revealer.set_reveal_child(True)
             self.toolbar.title.focus_entry()
         elif string == "fullscreen":
             if self.is_fullscreen:
