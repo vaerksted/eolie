@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GObject, Pango, Gdk, Gio
+from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
 
 import cairo
 from gettext import gettext as _
@@ -86,9 +86,15 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
         PagesManagerChild._on_button_press_event(self, eventbox, event)
         if event.button == 3:
             menu = Gio.Menu.new()
+            action = Gio.SimpleAction.new("close_page",
+                                          GLib.VariantType.new("i"))
+            self._window.add_action(action)
+            page_id = self._view.webview.get_page_id()
             item = Gio.MenuItem.new(_("Close page"),
-                                    "win.shortcut::close_page")
+                                    "win.close_page(%s)" % page_id)
             menu.append_item(item)
+            action.connect("activate",
+                           self.__on_close_activate)
             popover = Gtk.Popover.new_from_model(eventbox, menu)
             popover.show()
 
@@ -237,3 +243,15 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
         """
         self.get_style_context().remove_class("drag-up")
         self.get_style_context().remove_class("drag-down")
+
+    def __on_close_activate(self, action, param):
+        """
+            Close wanted page
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        page_id = param.get_int32()
+        for view in self._window.container.views:
+            if view.webview.get_page_id() == page_id:
+                self._window.container.pages_manager.close_view(view)
+                return
