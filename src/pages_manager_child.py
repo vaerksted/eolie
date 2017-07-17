@@ -229,7 +229,8 @@ class PagesManagerChild:
         # We are not filtered and not in private mode
         if not webview.is_loading() and\
                 not webview.ephemeral and\
-                El().settings.get_enum("panel-mode") in [PanelMode.MINIMAL,
+                El().settings.get_enum("panel-mode") not in [
+                                                         PanelMode.MINIMAL,
                                                          PanelMode.NO_PREVIEW]:
             GLib.timeout_add(2000, self.set_snapshot,
                              webview.get_uri(), False)
