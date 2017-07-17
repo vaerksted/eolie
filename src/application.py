@@ -141,7 +141,10 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
         if not self.get_windows():
             self.__init()
-            self.get_new_window()
+            window = self.get_new_window()
+            window.container.add_webview(None,
+                                         Gdk.WindowType.CHILD,
+                                         False)
 
     def get_new_window(self):
         """
@@ -493,25 +496,36 @@ class Application(Gtk.Application):
                 f = Gio.File.new_for_path(uri)
                 if f.query_exists():
                     uri = f.get_uri()
-                active_window.container.add_webview(uri,
-                                                    Gdk.WindowType.CHILD,
-                                                    ephemeral)
+                self.__new_or_load(uri, Gdk.WindowType.CHILD, ephemeral)
             active_window.present_with_time(Gtk.get_current_event_time())
-        # We already have a window, open a new one
-        elif active_window.container.current:
-            window = self.get_new_window()
-            window.container.add_webview(self.start_page,
-                                         Gdk.WindowType.CHILD,
-                                         ephemeral)
         # Add default start page
         elif not restored:
-            active_window.container.add_webview(self.start_page,
-                                                Gdk.WindowType.CHILD,
-                                                ephemeral)
+            self.__new_or_load(self.start_page,
+                               Gdk.WindowType.CHILD,
+                               ephemeral)
         thread = Thread(target=self.__show_plugins)
         thread.daemon = True
         thread.start()
         return 0
+
+    def __new_or_load(self, uri, window_type, ephemeral):
+        """
+            Check current webview, if uri is None, use it, else create
+            a new webview
+        """
+        if self.active_window.container.current.webview.get_uri() is None:
+            if ephemeral:
+                self.active_window.container.pages_manager.close_view(
+                                          self.active_window.container.current)
+                self.active_window.container.add_webview(uri,
+                                                         window_type,
+                                                         ephemeral)
+            else:
+                self.active_window.container.current.webview.load_uri(uri)
+        else:
+            self.active_window.container.add_webview(uri,
+                                                     window_type,
+                                                     ephemeral)
 
     def __close_window(self, window):
         """
