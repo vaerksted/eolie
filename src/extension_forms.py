@@ -105,7 +105,7 @@ class FormsExtension:
         i = 0
         forms = []
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "text":
+            if inputs.item(i).get_input_type() in ["text", "email"]:
                 input_name = inputs.item(i).get_attribute("name")
                 input_id = inputs.item(i).get_attribute("id")
                 # We search for wanted name
