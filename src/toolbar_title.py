@@ -104,11 +104,12 @@ class ToolbarTitle(Gtk.Bin):
 
     def do_get_preferred_width(self):
         """
-            Overwrite do_get_preferred_width => nat_width == self.__width
+            Fixed preferred width
         """
-        (min_width, nat_width) = Gtk.Bin.do_get_preferred_width(self)
-        if self.__width != -1:
-            nat_width = self.__width
+        if self.__width == -1:
+            (min_width, nat_width) = Gtk.Bin.do_get_preferred_width(self)
+        else:
+            (min_width, nat_width) = (self.__width, self.__width)
         return (min_width, nat_width)
 
     def set_width(self, width):
