@@ -21,6 +21,7 @@
     <file compressed="true" preprocess="xml-stripblanks">PopoverCredentials.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">PopoverGeolocation.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverImages.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverPasswords.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>

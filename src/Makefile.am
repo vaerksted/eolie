@@ -38,6 +38,7 @@ app_PYTHON = \
     popover_cookies.py\
     popover_credentials.py\
     popover_downloads.py\
+    popover_geolocation.py\
     popover_images.py\
     popover_javascript.py\
     popover_passwords.py\

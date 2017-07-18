@@ -160,13 +160,14 @@ class WebViewNavigation:
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.__insecure_content_detected or self.ephemeral:
+            if self.ephemeral:
                 request.deny()
             else:
-                request.allow()
+                self._window.toolbar.title.show_geolocation(request)
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
-            # Use can use Gnome Shell notification policy
+            # Can use Gnome Shell notification policy
             request.allow()
+        return True
 
     def __on_uri_changed(self, webview, uri):
         """
