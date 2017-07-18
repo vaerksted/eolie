@@ -209,15 +209,12 @@ class PagesManager(Gtk.EventBox):
         return 0
 
     @property
-    def views(self):
+    def children(self):
         """
             Get views ordered
-            @return [View]
+            @return [PagesManagerChild]
         """
-        views = []
-        for child in self._box.get_children():
-            views.append(child.view)
-        return views
+        return self._box.get_children()
 
 #######################
 # PROTECTED           #

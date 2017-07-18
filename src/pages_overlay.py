@@ -64,14 +64,6 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
         self._scrolled.set_policy(Gtk.PolicyType.NEVER,
                                   Gtk.PolicyType.NEVER)
 
-    @property
-    def children(self):
-        """
-            Get children
-            @return [PagesManagerFlowBoxChild]
-        """
-        return self._box.get_children()
-
 #######################
 # PROTECTED           #
 #######################
@@ -169,18 +161,6 @@ class PagesOverlay(Gtk.EventBox):
         self.__pages_manager.add_child(child)
         self.__pages_manager.show()
         self.__pages_manager.hide_next()
-
-    def destroy_child(self, view):
-        """
-            Destroy child associated with view if exists
-            @param view as View
-        """
-        for child in self.__pages_manager.children:
-            if child is None:
-                continue
-            if child.view == view:
-                GLib.idle_add(child.destroy)
-                return
 
 #######################
 # PROTECTED           #

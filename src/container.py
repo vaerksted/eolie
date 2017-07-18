@@ -130,7 +130,7 @@ class Container(Gtk.Overlay):
             self.__stack.add(view)
         self.__pages_manager.update_visible_child()
         # Do not count container views as destroy may be pending on somes
-        count = str(len(self.__pages_manager.views))
+        count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)
 
     def load_uri(self, uri):
@@ -164,8 +164,6 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__stack.set_visible_child(view)
-        if self.__pages_overlay is not None:
-            self.__pages_overlay.destroy_child(view)
 
     def stop(self):
         """
@@ -205,6 +203,9 @@ class Container(Gtk.Overlay):
         # Show expose mode
         if expose:
             self.__grid_stack.set_visible_child_name("expose")
+            if self.__pages_overlay is not None:
+                self.__pages_overlay.destroy()
+                self.__pages_overlay = None
         else:
             self.__grid_stack.set_visible_child_name("grid")
             self.__window.toolbar.actions.view_button.set_active(False)
@@ -217,7 +218,8 @@ class Container(Gtk.Overlay):
         """
         views = []
         if self.__pages_manager is not None:
-            views = self.__pages_manager.views
+            for child in self.__pages_manager.children:
+                views.append(child.view)
             self.__pages_manager.destroy()
         if self.__pages_overlay is not None:
             self.__pages_overlay.destroy()
