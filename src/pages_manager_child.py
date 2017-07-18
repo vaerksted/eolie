@@ -186,7 +186,6 @@ class PagesManagerChild:
         """
         if El().settings.get_enum("panel-mode") != PanelMode.MINIMAL:
             self._window.container.pages_manager.close_view(self._view)
-            self.hide()
             return True
 
     def _on_enter_notify_event(self, eventbox, event):
