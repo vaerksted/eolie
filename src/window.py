@@ -112,9 +112,13 @@ class Window(Gtk.ApplicationWindow):
         GLib.idle_add(self.__fullscreen_revealer.destroy)
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
-        self.container.on_view_map(self.container.current.webview)
+        self.__container.on_view_map(self.container.current.webview)
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
+        self.__container.current.webview.run_javascript(
+                                        "document.webkitExitFullscreen();",
+                                        None,
+                                        None)
 
     def hide(self):
         """
