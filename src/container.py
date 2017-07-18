@@ -497,20 +497,21 @@ class Container(Gtk.Overlay):
         if webview == self.current.webview:
             self.__window.toolbar.title.set_title(title)
         # Update history
-        uri = webview.get_uri()
-        parsed = urlparse(uri)
-        if parsed.scheme in ["http", "https"] and\
-                not webview.ephemeral:
-            mtime = round(time(), 2)
-            El().history.thread_lock.acquire()
-            history_id = El().history.add(title, uri, mtime)
-            El().history.set_page_state(uri, mtime)
-            El().history.thread_lock.release()
-            if El().sync_worker is not None:
-                if El().sync_worker.syncing:
-                    self.__history_queue.append(history_id)
-                else:
-                    El().sync_worker.push_history([history_id])
+        if webview.error is None:
+            uri = webview.get_uri()
+            parsed = urlparse(uri)
+            if parsed.scheme in ["http", "https"] and\
+                    not webview.ephemeral:
+                mtime = round(time(), 2)
+                El().history.thread_lock.acquire()
+                history_id = El().history.add(title, uri, mtime)
+                El().history.set_page_state(uri, mtime)
+                El().history.thread_lock.release()
+                if El().sync_worker is not None:
+                    if El().sync_worker.syncing:
+                        self.__history_queue.append(history_id)
+                    else:
+                        El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """
