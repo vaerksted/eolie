@@ -129,6 +129,7 @@ class ToolbarTitle(Gtk.Bin):
             return
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
+        self.__completion_model.clear()
         # Do not show this in titlebar
         parsed = urlparse(text)
         if parsed.scheme in ["populars", "about"]:
@@ -146,7 +147,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def set_uri(self, uri):
         """
-            Update entry
+            Update internal uri
             @param text as str
         """
         if uri == self.__uri:

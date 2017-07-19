@@ -652,11 +652,9 @@ class UriPopover(Gtk.Popover):
         if self.__modifier & Gdk.ModifierType.SHIFT_MASK:
             self.__fix_bug_733108(listbox, row)
 
-        if row is None or len(listbox.get_selected_rows()) > 1:
-            if listbox != self.__tags_box:
-                uri = self.__window.container.current.webview.get_uri()
-                self.__window.toolbar.title.set_text_entry(uri)
+        if row is None:
             return
+
         # Update titlebar
         uri = row.item.get_property("uri")
         if not uri:
