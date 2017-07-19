@@ -23,6 +23,9 @@ class DatabaseSettings:
     """
         Store various settings for webpage
     """
+    __UPGRADES = {
+        1: "ALTER TABLE settings ADD geolocation INT"
+    }
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -34,7 +37,8 @@ class DatabaseSettings:
                                                url TEXT NOT NULL,
                                                chooseruri TEXT,
                                                languages TEXT,
-                                               zoom INT
+                                               zoom INT,
+                                               geolocation INT
                                                )'''
 
     def __init__(self):
@@ -42,6 +46,7 @@ class DatabaseSettings:
             Create database tables or manage update if needed
             @param suffix as str
         """
+        new_version = len(self.__UPGRADES)
         self.__DB_PATH = "%s/settings.db" % EOLIE_LOCAL_PATH
         f = Gio.File.new_for_path(self.__DB_PATH)
         if not f.query_exists():
@@ -52,9 +57,25 @@ class DatabaseSettings:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_settings)
+                    sql.execute("PRAGMA user_version=%s" % new_version)
                     sql.commit()
             except Exception as e:
                 print("DatabaseSettings::__init__(): %s" % e)
+        # DB upgrade, TODO Make it generic between class
+        version = 0
+        with SqlCursor(self) as sql:
+            result = sql.execute("PRAGMA user_version")
+            v = result.fetchone()
+            if v is not None:
+                version = v[0]
+            if version < new_version:
+                for i in range(version+1, new_version + 1):
+                    try:
+                        sql.execute(self.__UPGRADES[i])
+                    except:
+                        print("Settings DB upgrade %s failed" % i)
+                sql.execute("PRAGMA user_version=%s" % new_version)
+                sql.commit()
 
     def set_chooser_uri(self, chooseruri, url):
         """
@@ -97,6 +118,46 @@ class DatabaseSettings:
             if v is not None:
                 return v[0]
             return None
+
+    def allow_geolocation(self, url):
+        """
+            Allow geolocation for url
+            @param url as str
+        """
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
+        try:
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT rowid FROM settings\
+                                      WHERE url=?", (parsed.netloc,))
+                v = result.fetchone()
+                if v is not None:
+                    sql.execute("UPDATE settings\
+                                 SET geolocation=1\
+                                 WHERE url=?", (parsed.netloc,))
+                else:
+                    sql.execute("INSERT INTO settings\
+                                          (url, geolocation)\
+                                          VALUES (?, 1)", (parsed.netloc,))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseSettings::allow_geolocation():", e)
+
+    def allowed_geolocation(self, url):
+        """
+            Check if geolocation is allowed
+            @param url as str
+            @return allowed as bool
+        """
+        parsed = urlparse(url)
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT geolocation FROM settings\
+                                  WHERE url=?", (parsed.netloc,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0] == 1
+            return False
 
     def set_zoom(self, zoom, url):
         """

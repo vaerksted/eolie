@@ -72,7 +72,7 @@ class DatabaseHistory:
                     sql.commit()
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
-        # DB upgrade
+        # DB upgrade, TODO Make it generic between class
         version = 0
         with SqlCursor(self) as sql:
             result = sql.execute("PRAGMA user_version")

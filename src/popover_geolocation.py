@@ -21,19 +21,22 @@ class GeolocationPopover(Gtk.Popover):
         @warning: will block current execution
     """
 
-    def __init__(self, request, window):
+    def __init__(self, uri, request, window):
         """
             Init popover
+            @param uri as str
             @param request as WebKit2.PermissionRequest
             @param window as window
         """
         Gtk.Popover.__init__(self)
         self.set_modal(False)
         window.register(self)
+        self.__uri = uri
         self.__request = request
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverGeolocation.ui")
         builder.connect_signals(self)
+        self.__switch = builder.get_object("switch")
         widget = builder.get_object("widget")
         label = builder.get_object("label")
         label.set_text(_("Allow this page to get your location?"))
@@ -49,6 +52,10 @@ class GeolocationPopover(Gtk.Popover):
         """
         self.__request.allow()
         self.hide()
+        if self.__switch.get_active():
+            from eolie.database_settings import DatabaseSettings
+            settings_db = DatabaseSettings()
+            settings_db.allow_geolocation(self.__uri)
 
     def _on_cancel_button_clicked(self, button):
         """

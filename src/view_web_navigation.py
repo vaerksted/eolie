@@ -163,7 +163,16 @@ class WebViewNavigation:
             if self.ephemeral:
                 request.deny()
             else:
-                self._window.toolbar.title.show_geolocation(request)
+                uri = webview.get_uri()
+                from eolie.database_settings import DatabaseSettings
+                settings_db = DatabaseSettings()
+                print(settings_db.allowed_geolocation(uri))
+                if settings_db.allowed_geolocation(uri):
+                    request.allow()
+                else:
+                    self._window.toolbar.title.show_geolocation(
+                                                            uri,
+                                                            request)
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
             # Can use Gnome Shell notification policy
             request.allow()

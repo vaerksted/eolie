@@ -208,13 +208,14 @@ class ToolbarTitle(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed)
         popover.popup()
 
-    def show_geolocation(self, request):
+    def show_geolocation(self, uri, request):
         """
             Show a popover allowing geolocation
+            @param uri as str
             @param request as WebKit2.PermissionRequest
         """
         from eolie.popover_geolocation import GeolocationPopover
-        popover = GeolocationPopover(request, self.__window)
+        popover = GeolocationPopover(uri, request, self.__window)
         popover.set_relative_to(self.__entry)
         popover.connect("closed", self.__on_popover_closed)
         popover.popup()
