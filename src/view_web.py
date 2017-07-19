@@ -21,7 +21,6 @@ from eolie.define import El
 from eolie.utils import debug
 from eolie.view_web_errors import WebViewErrors
 from eolie.view_web_navigation import WebViewNavigation
-from eolie.context import Context
 from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
 from eolie.search import Search
@@ -32,16 +31,13 @@ class WebView(WebKit2.WebView):
     """
         WebKit view
     """
+
     def new(window):
         """
             New webview
             @param window as Window
         """
-        data_manager = WebKit2.WebsiteDataManager()
-        context = WebKit2.WebContext.new_with_website_data_manager(
-                                                                  data_manager)
-        Context(context)
-        view = WebKit2.WebView.new_with_context(context)
+        view = WebKit2.WebView.new()
         view.__class__ = WebViewMeta
         view.__init(None, window)
         return view
@@ -51,10 +47,7 @@ class WebView(WebKit2.WebView):
             New ephemeral webview
             @param window as Window
         """
-        from eolie.context import Context
-        context = WebKit2.WebContext.new_ephemeral()
-        Context(context)
-        view = WebKit2.WebView.new_with_context(context)
+        view = WebKit2.WebView.new_with_context(El().ephemeral_context)
         view.__class__ = WebViewMeta
         view.__init(None, window)
         return view

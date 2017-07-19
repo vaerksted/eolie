@@ -38,6 +38,7 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
+from eolie.context import Context
 from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues, PanelMode
 
 
@@ -195,6 +196,14 @@ class Application(Gtk.Application):
             Gio.Application.quit(self)
 
     @property
+    def ephemeral_context(self):
+        """
+            Get default ephemral context
+            @return WebKit2.WebContext
+        """
+        return self.__ephemeral_context
+
+    @property
     def start_page(self):
         """
             Get start page
@@ -254,10 +263,24 @@ class Application(Gtk.Application):
         """
             Init main application
         """
+        self.settings = Settings.new()
+
+        # Init extensions
         GLib.setenv('PYTHONPATH', self.__extension_dir, True)
+
+        # Create favicon path
         d = Gio.File.new_for_path(self.__FAVICONS_PATH)
         if not d.query_exists():
             d.make_directory_with_parents()
+
+        # Setup default context
+        context = WebKit2.WebContext.get_default()
+        Context(context)
+        # Setup ephemeral context
+        self.__ephemeral_context = WebKit2.WebContext.new_ephemeral()
+        Context(self.__ephemeral_context)
+
+        # Add a global DBus helper
         self.helper = DBusHelper()
         # First init sync worker
         try:
@@ -285,7 +308,6 @@ class Application(Gtk.Application):
         styleContext = Gtk.StyleContext()
         styleContext.add_provider_for_screen(screen, cssProvider,
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
-        self.settings = Settings.new()
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         # We store cursors for main thread
