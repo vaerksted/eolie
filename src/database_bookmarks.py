@@ -483,10 +483,10 @@ class DatabaseBookmarks:
                                    bookmarks.title,\
                                    bookmarks.uri\
                             FROM bookmarks\
-                            WHERE bookmarks.popularity!=0\
-                            AND bookmarks.del=0\
+                            WHERE bookmarks.del=0\
                             AND bookmarks.guid != bookmarks.uri\
-                            ORDER BY bookmarks.popularity DESC\
+                            ORDER BY bookmarks.popularity DESC,\
+                            bookmarks.atime DESC\
                             LIMIT ?", (limit,))
             return list(result)
 
