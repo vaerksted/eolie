@@ -166,7 +166,7 @@ class ProxyExtension(Server):
             if page is None:
                 return ("", "", "", "")
             usernames = self.__forms.get_login_forms(forms[0], page)
-            passwords = self.__forms.get_password_forms(forms[0], page)
+            passwords = self.__forms.get_password_forms(forms[1], page)
             if usernames and passwords:
                 return (usernames[0].get_value(),
                         usernames[0].get_name(),

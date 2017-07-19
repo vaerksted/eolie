@@ -80,16 +80,20 @@ class FormsExtension:
             Return forms for webpage
             @param name as str
             @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMHTMLInputElement]
+            @return [WebKit2WebExtension.DOMHTMLInputElement], best match first
         """
         forms = []
         dom_document = webpage.get_dom_document()
         inputs = dom_document.get_elements_by_tag_name("input")
         i = 0
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "password" and\
-                    (not name or name == inputs.item(i).get_attribute("name")):
-                forms.append(inputs.item(i))
+            if inputs.item(i).get_input_type() == "password":
+                input_name = inputs.item(i).get_attribute("name")
+                input_id = inputs.item(i).get_attribute("id")
+                if not name or name == input_name or name == input_id:
+                    forms.insert(0, inputs.item(i))
+                else:
+                    forms.append(inputs.item(i))
             i += 1
         return forms
 
