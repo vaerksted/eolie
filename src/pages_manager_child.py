@@ -94,20 +94,7 @@ class PagesManagerChild:
             @param uri as str
             @param save as bool
         """
-        if self._view.webview.ephemeral:
-            panel_mode = El().settings.get_enum("panel-mode")
-            if panel_mode != PanelMode.MINIMAL:
-                self._image.set_from_icon_name(
-                                             "user-not-tracked-symbolic",
-                                             Gtk.IconSize.DIALOG)
-        else:
-            self._view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.VISIBLE,
-                                         WebKit2.SnapshotOptions.NONE,
-                                         None,
-                                         self._on_snapshot,
-                                         uri,
-                                         save)
+        pass
 
     def clear_snapshot(self):
         """

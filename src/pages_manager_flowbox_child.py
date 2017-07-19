@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, WebKit2
 
 import cairo
 
@@ -40,6 +40,25 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                           ArtSize.PREVIEW_WIDTH_MARGIN)
         # TODO: 12?
         self.set_property("height-request", ArtSize.START_HEIGHT + 12)
+
+    def set_snapshot(self, uri, save):
+        """
+            Set webpage preview
+            @param uri as str
+            @param save as bool
+        """
+        if self._view.webview.ephemeral:
+            self._image.set_from_icon_name(
+                                         "user-not-tracked-symbolic",
+                                         Gtk.IconSize.DIALOG)
+        else:
+            self._view.webview.get_snapshot(
+                                         WebKit2.SnapshotRegion.VISIBLE,
+                                         WebKit2.SnapshotOptions.NONE,
+                                         None,
+                                         self._on_snapshot,
+                                         uri,
+                                         save)
 
 #######################
 # PROTECTED           #

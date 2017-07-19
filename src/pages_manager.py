@@ -174,9 +174,6 @@ class PagesManager(Gtk.EventBox):
                          GLib.Variant("(i)", (page_id,)),
                          self.__on_forms_filled, view, page_id)
 
-    def set_panel_mode(self, panel_mode=None):
-        pass
-
     def ctrl_released(self):
         """
             Disable any pending expose

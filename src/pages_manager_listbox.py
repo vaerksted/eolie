@@ -38,7 +38,6 @@ class PagesManagerListBox(PagesManager):
         self._CHILD_CLASS = PagesManagerListBoxChild
         self._grid.add(self._search_bar)
         self._grid.add(self._scrolled)
-        self.set_panel_mode()
 
     def add_child(self, view):
         """
@@ -50,30 +49,6 @@ class PagesManagerListBox(PagesManager):
         self.__set_child_height(child)
         child.connect("moved", self._on_moved)
         return child
-
-    def set_panel_mode(self, panel_mode=None):
-        """
-            Set panel mode
-            @param panel_mode as int
-        """
-        if panel_mode is None:
-            panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == PanelMode.MINIMAL:
-            self.set_property("width-request", -1)
-        else:
-            self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
-        self.__panel_mode = panel_mode
-        for child in self._box.get_children():
-            child.show_title(panel_mode != PanelMode.MINIMAL)
-            self.__set_child_height(child)
-
-    @property
-    def panel_mode(self):
-        """
-            Get current panel mode
-            @return int
-        """
-        return self.__panel_mode
 
 #######################
 # PROTECTED           #

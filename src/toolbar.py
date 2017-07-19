@@ -22,21 +22,22 @@ class Toolbar(Gtk.EventBox):
         Eolie toolbar
     """
 
-    def __init__(self, window):
+    def __init__(self, window, fullscreen=False):
         """
             Init toolbar
             @param window as Window
+            @param fullscreen as bool
         """
         Gtk.EventBox.__init__(self)
         self.__window = window
         self.__headerbar = Gtk.HeaderBar()
         self.__headerbar.show()
         self.__headerbar.set_title("Eolie")
-        self.__toolbar_actions = ToolbarActions(window)
+        self.__toolbar_actions = ToolbarActions(window, fullscreen)
         self.__toolbar_actions.show()
         self.__toolbar_title = ToolbarTitle(window)
         self.__toolbar_title.show()
-        self.__toolbar_end = ToolbarEnd(window)
+        self.__toolbar_end = ToolbarEnd(window, fullscreen)
         self.__toolbar_end.show()
         self.__headerbar.pack_start(self.__toolbar_actions)
         self.__headerbar.set_custom_title(self.__toolbar_title)

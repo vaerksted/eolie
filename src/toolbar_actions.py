@@ -20,10 +20,11 @@ class ToolbarActions(Gtk.Bin):
         Actions toolbar
     """
 
-    def __init__(self, window):
+    def __init__(self, window, fullscreen):
         """
             Init toolbar
             @param window as Window
+            @param fullscreen as bool
         """
         Gtk.Bin.__init__(self)
         self.__window = window
@@ -42,13 +43,15 @@ class ToolbarActions(Gtk.Bin):
         self.__view_button = builder.get_object("view_button")
         self.__close_button = builder.get_object("close_button")
         self.__count = builder.get_object("count")
-        if El().settings.get_enum("panel-mode") == PanelMode.NONE:
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode == PanelMode.NONE or fullscreen:
             self.__view_button.show()
             self.__close_button.show()
+            if not fullscreen:
+                El().settings.connect("changed::panel-mode",
+                                      self.__on_panel_mode_changed)
         else:
             self.__filter_button.show()
-        El().settings.connect("changed::panel-mode",
-                              self.__on_panel_mode_changed)
 
     def set_actions(self, view):
         """

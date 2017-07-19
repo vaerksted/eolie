@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib
+from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib, WebKit2
 
 import cairo
 from gettext import gettext as _
@@ -73,6 +73,27 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
         else:
             self._grid.set_property("valign", Gtk.Align.END)
         self._overlay.set_size_request(-1, height)
+
+    def set_snapshot(self, uri, save):
+        """
+            Set webpage preview
+            @param uri as str
+            @param save as bool
+        """
+        if self._view.webview.ephemeral:
+            panel_mode = El().settings.get_enum("panel-mode")
+            if panel_mode != PanelMode.MINIMAL:
+                self._image.set_from_icon_name(
+                                             "user-not-tracked-symbolic",
+                                             Gtk.IconSize.DIALOG)
+        else:
+            self._view.webview.get_snapshot(
+                                         WebKit2.SnapshotRegion.VISIBLE,
+                                         WebKit2.SnapshotOptions.NONE,
+                                         None,
+                                         self._on_snapshot,
+                                         uri,
+                                         save)
 
 #######################
 # PROTECTED           #

@@ -36,10 +36,11 @@ class ToolbarEnd(Gtk.Bin):
         Toolbar end
     """
 
-    def __init__(self, window):
+    def __init__(self, window, fullscreen):
         """
             Init toolbar
             @param window as Window
+            @param fullscreen as bool
         """
         Gtk.Bin.__init__(self)
         self.__window = window
@@ -53,7 +54,8 @@ class ToolbarEnd(Gtk.Bin):
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
-        self.__fullscreen_button = builder.get_object("fullscreen_button")
+        if fullscreen:
+            builder.get_object("fullscreen_button").show()
         self.__progress = ProgressBar()
         if El().download_manager.get():
             self.__progress.show()
@@ -157,16 +159,6 @@ class ToolbarEnd(Gtk.Bin):
         popover = ImagesPopover(uri, page_id, self.__window)
         popover.set_relative_to(self.__download_button)
         popover.popup()
-
-    def show_fullscreen_button(self, b):
-        """
-            Show button to leave fullscreen mode
-            @param b as bool
-        """
-        if b:
-            self.__fullscreen_button.show()
-        else:
-            self.__fullscreen_button.hide()
 
     def move_control_in_menu(self, b):
         """
