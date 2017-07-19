@@ -458,9 +458,9 @@ class WebView(WebKit2.WebView):
                            hit.get_link_uri())
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
-        elif hit.context_is_selection():
+        if hit.context_is_selection() or hit.context_is_link():
             try:
-                search_term = context_menu.get_user_data().get_string()
+                selection = context_menu.get_user_data().get_string()
                 # Add an item for open words in search
                 # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
                 # Introspection missing, Gtk.Action deprecated
@@ -470,9 +470,21 @@ class WebView(WebKit2.WebView):
                                         None)
                 action.connect("activate",
                                self.__on_search_words_activate,
-                               search_term)
+                               selection)
                 item = WebKit2.ContextMenuItem.new(action)
                 context_menu.insert(item, 1)
+                # Add an item for open words in search
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("copy_text",
+                                        _("Copy"),
+                                        None,
+                                        None)
+                action.connect("activate",
+                               self.__on_copy_text_activate,
+                               selection)
+                item = WebKit2.ContextMenuItem.new(action)
+                context_menu.insert(item, 2)
             except:
                 pass
         else:
@@ -501,15 +513,23 @@ class WebView(WebKit2.WebView):
         """
         self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
 
-    def __on_search_words_activate(self, action, search_term):
+    def __on_search_words_activate(self, action, selection):
         """
             Open link in a new page
             @param action as Gtk.Action
-            @param search_term as str
+            @param selection as str
         """
         search = Search()
-        uri = search.get_search_uri(search_term)
+        uri = search.get_search_uri(selection)
         self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
+
+    def __on_copy_text_activate(self, action, selection):
+        """
+            Open link in a new page
+            @param action as Gtk.Action
+            @param selection as str
+        """
+        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(selection, -1)
 
     def __on_save_images_activate(self, action):
         """
