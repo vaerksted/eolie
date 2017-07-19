@@ -97,14 +97,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEventBox" id="popup_indicator">
+                  <object class="GtkEventBox" id="indicator2">
                     <property name="can_focus">False</property>
                     <property name="opacity">0.80000000000000004</property>
-                    <signal name="button-press-event" handler="_on_popup_indicator_press" swapped="no"/>
+                    <signal name="button-press-event" handler="_on_indicator2_press" swapped="no"/>
                     <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
                     <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
                     <child>
-                      <object class="GtkImage" id="popup_image">
+                      <object class="GtkImage" id="indicator2_image">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="icon_name">focus-windows-symbolic</property>
@@ -117,11 +117,11 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEventBox" id="indicator">
+                  <object class="GtkEventBox" id="indicator1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="opacity">0.80000000000000004</property>
-                    <signal name="button-press-event" handler="_on_indicator_press" swapped="no"/>
+                    <signal name="button-press-event" handler="_on_indicator1_press" swapped="no"/>
                     <signal name="enter-notify-event" handler="_on_eventbox_enter_notify" swapped="no"/>
                     <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
                     <child>

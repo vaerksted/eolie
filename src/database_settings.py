@@ -119,10 +119,11 @@ class DatabaseSettings:
                 return v[0]
             return None
 
-    def allow_geolocation(self, url):
+    def allow_geolocation(self, url, b):
         """
             Allow geolocation for url
             @param url as str
+            @param b as bool
         """
         parsed = urlparse(url)
         if parsed.scheme not in ["http", "https"]:
@@ -134,12 +135,12 @@ class DatabaseSettings:
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE settings\
-                                 SET geolocation=1\
-                                 WHERE url=?", (parsed.netloc,))
+                                 SET geolocation=?\
+                                 WHERE url=?", (b, parsed.netloc))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (url, geolocation)\
-                                          VALUES (?, 1)", (parsed.netloc,))
+                                          VALUES (?, ?)", (b, parsed.netloc))
                 sql.commit()
         except Exception as e:
             print("DatabaseSettings::allow_geolocation():", e)

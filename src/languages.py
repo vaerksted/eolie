@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk, GLib, GtkSpell
 
-from eolie.database_settings import DatabaseSettings
 from eolie.define import El
 
 
@@ -29,7 +28,6 @@ class LanguageRow(Gtk.EventBox):
             @param code as str
         """
         Gtk.EventBox.__init__(self)
-        settings_db = DatabaseSettings()
         self.__uri = uri
         self.__code = code
         grid = Gtk.Grid()
@@ -40,14 +38,14 @@ class LanguageRow(Gtk.EventBox):
         label.set_property("halign", Gtk.Align.START)
         label.show()
         check = Gtk.CheckButton()
-        check.connect("toggled", self.__on_check_toggled, settings_db)
+        check.connect("toggled", self.__on_check_toggled)
         check.show()
         grid.add(check)
         grid.add(label)
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
         user_code = ""
-        codes = settings_db.get_languages(uri)
+        codes = El().websettings.get_languages(uri)
         if codes is None:
             codes = []
             locales = GLib.get_language_names()
@@ -72,17 +70,16 @@ class LanguageRow(Gtk.EventBox):
         check.set_active(not check.get_active())
         check.toggled()
 
-    def __on_check_toggled(self, check, settings_db):
+    def __on_check_toggled(self, check):
         """
             Save state
             @param check as Gtk.CheckButton
-            @param settings_db as DatabaseSettings
         """
         active = check.get_active()
         if active:
-            settings_db.add_language(self.__code, self.__uri)
+            El().websettings.add_language(self.__code, self.__uri)
         else:
-            settings_db.remove_language(self.__code, self.__uri)
+            El().websettings.remove_language(self.__code, self.__uri)
         El().active_window.container.current.webview.update_spell_checking()
 
 

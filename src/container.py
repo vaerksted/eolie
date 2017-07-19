@@ -18,7 +18,7 @@ from time import time
 from eolie.view_web import WebView
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
-from eolie.define import El, PanelMode
+from eolie.define import El, PanelMode, Indicator
 
 
 class Container(Gtk.Overlay):
@@ -250,7 +250,10 @@ class Container(Gtk.Overlay):
                 webview.load_uri(uri)
             title = webview.get_title()
             self.__window.toolbar.title.update_load_indicator(webview)
-            self.__window.toolbar.title.show_popup_indicator(webview.popups)
+            if webview.popups:
+                self.__window.toolbar.title.show_indicator(Indicator.POPUPS)
+            else:
+                self.__window.toolbar.title.show_indicator(Indicator.NONE)
             if uri is not None:
                 self.__window.toolbar.title.set_uri(uri)
             if webview.is_loading():
@@ -419,7 +422,8 @@ class Container(Gtk.Overlay):
                                    WebKit2.NavigationType.BACK_FORWARD]:
                 related.add_popup(webview)
                 if related == self.current.webview:
-                    self.__window.toolbar.title.show_popup_indicator(True)
+                    self.__window.toolbar.title.show_indicator(
+                                                            Indicator.POPUPS)
                 return
             self.popup_webview(webview, True)
 
@@ -552,7 +556,7 @@ class Container(Gtk.Overlay):
             # Give focus to url bar
             if not focus_in_view:
                 self.__window.toolbar.title.start_search()
-            self.__window.toolbar.title.show_popup_indicator(False)
+            self.__window.toolbar.title.show_indicator(Indicator.NONE)
             # Turn off reading mode if needed
             if self.current.reading:
                 self.current.switch_read_mode()

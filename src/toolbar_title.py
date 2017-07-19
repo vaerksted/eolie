@@ -16,7 +16,7 @@ from threading import Thread
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El, PanelMode
+from eolie.define import El, PanelMode, Indicator
 from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
 
@@ -71,8 +71,12 @@ class ToolbarTitle(Gtk.Bin):
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = builder.get_object("progress")
+        # Used for spinner and reader
         self.__indicator_stack = builder.get_object("indicator_stack")
-        self.__popup_indicator = builder.get_object("popup_indicator")
+        # Used for popups and geolocation
+        self.__indicator2 = builder.get_object("indicator2")
+        self.__indicator2_image = builder.get_object("indicator2_image")
+
         self.__placeholder = builder.get_object("placeholder")
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
@@ -214,11 +218,15 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
             @param request as WebKit2.PermissionRequest
         """
-        from eolie.popover_geolocation import GeolocationPopover
-        popover = GeolocationPopover(uri, request, self.__window)
-        popover.set_relative_to(self.__entry)
-        popover.connect("closed", self.__on_popover_closed)
-        popover.popup()
+        if El().websettings.allowed_geolocation(uri):
+            request.allow()
+            self.show_indicator(Indicator.GEOLOCATION)
+        else:
+            from eolie.popover_geolocation import GeolocationPopover
+            popover = GeolocationPopover(uri, request, self.__window)
+            popover.set_relative_to(self.__entry)
+            popover.connect("closed", self.__on_popover_closed)
+            popover.popup()
 
     def show_message(self, webview, msg):
         """
@@ -274,16 +282,25 @@ class ToolbarTitle(Gtk.Bin):
         popover.connect("closed", self.__on_popover_closed)
         popover.popup()
 
-    def show_popup_indicator(self, b):
+    def show_indicator(self, indicator):
         """
-            Show popups indicator
-            @param b as bool
+            Show indicator
+            @param indicator as Indicator
         """
-        if b:
-            self.__popup_indicator.show()
-            self.__popup_indicator.set_tooltip_text(_("Blocked popups"))
+        if indicator == Indicator.GEOLOCATION:
+            self.__indicator2.show()
+            self.__indicator2.set_tooltip_text(_("Disallow geolocation"))
+            self.__indicator2_image.set_from_icon_name(
+                                                    "mark-location-symbolic",
+                                                    Gtk.IconSize.MENU)
+        elif indicator == Indicator.POPUPS:
+            self.__indicator2.show()
+            self.__indicator2.set_tooltip_text(_("Blocked popups"))
+            self.__indicator2_image.set_from_icon_name(
+                                                    "focus-windows-symbolic",
+                                                    Gtk.IconSize.MENU)
         else:
-            self.__popup_indicator.hide()
+            self.__indicator2.hide()
 
     def focus_entry(self, child="bookmarks"):
         """
@@ -492,9 +509,9 @@ class ToolbarTitle(Gtk.Bin):
                                    event.keyval == Gdk.KEY_space):
                 webview.add_text_entry(uri)
 
-    def _on_indicator_press(self, eventbox, event):
+    def _on_indicator1_press(self, eventbox, event):
         """
-            Reload current view/Stop loading
+            Switch reading mode
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
@@ -502,19 +519,28 @@ class ToolbarTitle(Gtk.Bin):
         self.set_reading()
         return True
 
-    def _on_popup_indicator_press(self, eventbox, event):
+    def _on_indicator2_press(self, eventbox, event):
         """
-            Reload current view/Stop loading
+            Disable geolocation for current or show popups
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        for popup in self.__window.container.current.webview.popups:
-            self.__window.container.popup_webview(popup, False)
-        if self.__entry.has_focus():
-            self.__window.set_focus(None)
+        if self.__indicator2_image.get_icon_name()[0] ==\
+                "mark-location-symbolic":
+            uri = self.__window.container.current.webview.get_uri()
+            El().websettings.allow_geolocation(uri, False)
+            if self.__window.container.current.webview.popups:
+                self.show_indicator(Indicator.POPUPS)
+            else:
+                self.show_indicator(Indicator.NONE)
         else:
-            self._on_entry_focus_out(self.__entry, None)
-        self.__update_secure_content_indicator()
+            for popup in self.__window.container.current.webview.popups:
+                self.__window.container.popup_webview(popup, False)
+            if self.__entry.has_focus():
+                self.__window.set_focus(None)
+            else:
+                self._on_entry_focus_out(self.__entry, None)
+            self.__update_secure_content_indicator()
         return True
 
     def _on_action1_press(self, eventbox, event):

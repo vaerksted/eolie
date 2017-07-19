@@ -32,6 +32,7 @@ from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_adblock import DatabaseAdblock
 from eolie.database_exceptions import DatabaseExceptions
+from eolie.database_settings import DatabaseSettings
 from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
 from eolie.search import Search
@@ -313,6 +314,7 @@ class Application(Gtk.Application):
         # We store cursors for main thread
         SqlCursor.add(self.history)
         SqlCursor.add(self.bookmarks)
+        self.websettings = DatabaseSettings()
         self.adblock = DatabaseAdblock()
         self.adblock.update()
         self.phishing = DatabasePhishing()

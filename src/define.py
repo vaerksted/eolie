@@ -78,6 +78,12 @@ class ArtSize:
     START_HEIGHT = 200
 
 
+class Indicator:
+    NONE = 0
+    GEOLOCATION = 1
+    POPUPS = 2
+
+
 class Type:
     NONE = -1
     POPULARS = -2

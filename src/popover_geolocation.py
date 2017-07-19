@@ -14,6 +14,8 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 
+from eolie.define import El, Indicator
+
 
 class GeolocationPopover(Gtk.Popover):
     """
@@ -33,6 +35,7 @@ class GeolocationPopover(Gtk.Popover):
         window.register(self)
         self.__uri = uri
         self.__request = request
+        self.__window = window
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PopoverGeolocation.ui")
         builder.connect_signals(self)
@@ -53,9 +56,8 @@ class GeolocationPopover(Gtk.Popover):
         self.__request.allow()
         self.hide()
         if self.__switch.get_active():
-            from eolie.database_settings import DatabaseSettings
-            settings_db = DatabaseSettings()
-            settings_db.allow_geolocation(self.__uri)
+            El().websettings.allow_geolocation(self.__uri, True)
+            self.__window.toolbar.title.show_indicator(Indicator.GEOLOCATION)
 
     def _on_cancel_button_clicked(self, button):
         """

@@ -80,10 +80,8 @@ class WebView(WebKit2.WebView):
         """
             Update zoom level
         """
-        from eolie.database_settings import DatabaseSettings
         try:
-            settings_db = DatabaseSettings()
-            zoom_level = settings_db.get_zoom(self.get_uri())
+            zoom_level = El().websettings.get_zoom(self.get_uri())
             if zoom_level is None:
                 zoom_level = 100
             if self.__related_view is None:
@@ -108,13 +106,11 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        from eolie.database_settings import DatabaseSettings
-        settings_db = DatabaseSettings()
-        current = settings_db.get_zoom(self.get_uri())
+        current = El().websettings.get_zoom(self.get_uri())
         if current is None:
             current = 100
         current += 10
-        settings_db.set_zoom(current, self.get_uri())
+        El().websettings.set_zoom(current, self.get_uri())
         self.update_zoom_level()
         return current
 
@@ -123,15 +119,13 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom out
         """
-        from eolie.database_settings import DatabaseSettings
-        settings_db = DatabaseSettings()
-        current = settings_db.get_zoom(self.get_uri())
+        current = El().websettings.get_zoom(self.get_uri())
         if current is None:
             current = 100
         current -= 10
         if current == 0:
             return 10
-        settings_db.set_zoom(current, self.get_uri())
+        El().websettings.set_zoom(current, self.get_uri())
         self.update_zoom_level()
         return current
 
@@ -146,9 +140,7 @@ class WebView(WebKit2.WebView):
         """
             Update spell checking
         """
-        from eolie.database_settings import DatabaseSettings
-        settings_db = DatabaseSettings()
-        codes = settings_db.get_languages(self.get_uri())
+        codes = El().websettings.get_languages(self.get_uri())
         # If None, default user language
         if codes is not None:
             self.get_context().set_spell_checking_languages(codes)
@@ -564,15 +556,13 @@ class WebView(WebKit2.WebView):
             @param webview as WebView
             @param request as WebKit2.FileChooserRequest
         """
-        from eolie.database_settings import DatabaseSettings
         uri = webview.get_uri()
-        settings_db = DatabaseSettings()
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
                                            self._window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
-        chooser_uri = settings_db.get_chooser_uri(uri)
+        chooser_uri = El().websettings.get_chooser_uri(uri)
         if chooser_uri is not None:
             dialog.set_current_folder_uri(chooser_uri)
         response = dialog.run()
@@ -581,7 +571,8 @@ class WebView(WebKit2.WebView):
             request.cancel()
         else:
             request.select_files(dialog.get_filenames())
-            settings_db.set_chooser_uri(dialog.get_current_folder_uri(), uri)
+            El().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
+                                             uri)
         return True
 
     def __on_script_dialog(self, webview, dialog):
