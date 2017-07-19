@@ -354,6 +354,9 @@ class Window(Gtk.ApplicationWindow):
         if event.keyval in [Gdk.KEY_Control_L, Gdk.KEY_Escape]:
             self.__container.pages_manager.ctrl_released()
             self.__container.set_expose(False)
+        if self.__container.current.reading and event.keyval == Gdk.KEY_Escape:
+            self.__container.current.switch_read_mode()
+            self.__toolbar.title.set_reading()
 
     def __on_shortcut_action(self, action, param):
         """
