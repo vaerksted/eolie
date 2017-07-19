@@ -221,7 +221,7 @@ class PasswordsHelper:
             @param uri as str
         """
         try:
-            self.__wait_for_secret(self.clear, uri)
+            self.__wait_for_secret(self.clear, username, uri)
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
@@ -234,6 +234,32 @@ class PasswordsHelper:
                 "formSubmitURL": "%s://%s%s" % (parsed.scheme,
                                                 parsed.netloc,
                                                 parsed.path)
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema,
+                                 SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_clear_search)
+        except Exception as e:
+            debug("PasswordsHelper::clear(): %s" % e)
+
+    def clear_by_uuid(self, uuid):
+        """
+            Clear password
+            @param uuid as str
+        """
+        try:
+            self.__wait_for_secret(self.clear_by_uuid, uuid)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+                "uuid": Secret.SchemaAttributeType.STRING
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+                "uuid": uuid
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,

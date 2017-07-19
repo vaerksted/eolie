@@ -354,7 +354,7 @@ class SyncWorker(GObject.GObject):
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
-            self.__helper.clear(username, uri)
+            self.__helper.clear_by_uuid(attributes["uuid"])
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
 
@@ -665,8 +665,7 @@ class SyncWorker(GObject.GObject):
             debug("pulling %s" % record)
             password = record["payload"]
             if "formSubmitURL" in password.keys():
-                self.__helper.clear(password["username"],
-                                    password["formSubmitURL"])
+                self.__helper.clear_by_uuid(password["id"])
                 self.__helper.store(password["username"],
                                     password["password"],
                                     password["formSubmitURL"],
@@ -675,8 +674,7 @@ class SyncWorker(GObject.GObject):
                                     password["passwordField"],
                                     None)
             elif "deleted" in password.keys():  # We assume True
-                self.__helper.clear(password["username"],
-                                    password["formSubmitURL"])
+                self.__helper.clear_by_uuid(password["id"])
 
     def __pull_history(self, bulk_keys):
         """
