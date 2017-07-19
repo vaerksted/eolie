@@ -63,7 +63,6 @@ class FindWidget(Gtk.SearchBar):
 
         self.__label = Gtk.Label()
         self.__label.set_property("halign", Gtk.Align.START)
-        self.__label.set_width_chars(len(_("100 of 100 matches")))
         self.__label.show()
 
         linked = Gtk.Grid()

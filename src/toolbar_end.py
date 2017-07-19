@@ -48,6 +48,8 @@ class ToolbarEnd(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarEnd.ui")
         builder.connect_signals(self)
+        self.__home_button = builder.get_object("home_button")
+        self.__menu_button = builder.get_object("menu_button")
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
@@ -166,6 +168,20 @@ class ToolbarEnd(Gtk.Bin):
         else:
             self.__fullscreen_button.hide()
 
+    def move_control_in_menu(self, b):
+        """
+            Move home and download buttons in menu
+            @param b as bool
+        """
+        if b:
+            self.__download_button.hide()
+            self.__home_button.hide()
+            self.set_hexpand(False)
+        else:
+            self.__download_button.show()
+            self.__home_button.show()
+            self.set_hexpand(True)
+
 #######################
 # PROTECTED           #
 #######################
@@ -178,8 +194,11 @@ class ToolbarEnd(Gtk.Bin):
         if not button.get_active():
             return
         popover = DownloadsPopover(self.__window)
-        popover.set_relative_to(button)
+        # We are relative to toolbar button, button can be in menu
+        popover.set_relative_to(self.__menu_button)
         popover.connect("closed", self.__on_popover_closed, button)
+        popover.set_modal(False)
+        self.__window.register(popover)
         popover.popup()
 
     def _on_fullscreen_button_clicked(self, button):
@@ -284,6 +303,8 @@ class ToolbarEnd(Gtk.Bin):
                     item.show()
                     widget.add(item)
         popover.set_relative_to(button)
+        popover.set_modal(False)
+        self.__window.register(popover)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.popup()
 
