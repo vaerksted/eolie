@@ -148,9 +148,7 @@ class ProxyExtension(Server):
 
         # Check for unsecure content
         for form in forms:
-            value = form.get_value()
-            default = form.get_default_value()
-            if value is not None and value != default and len(value) > 30:
+            if form.is_edited():
                 return True
         return False
 
