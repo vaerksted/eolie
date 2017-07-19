@@ -153,9 +153,6 @@ class SearchEngineDialog:
             @param switch as Gtk.Switch
             @param state as bool
         """
-        if switch.get_state() and not state:
-            switch.set_active(True)
-            return True
         if state:
             row = self.__listbox.get_selected_row()
             if row is not None:
