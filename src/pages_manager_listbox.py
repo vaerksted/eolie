@@ -28,7 +28,6 @@ class PagesManagerListBox(PagesManager):
             @param window as Window
         """
         PagesManager.__init__(self, window)
-        self.__panel_mode = PanelMode.PREVIEW
         self._box = Gtk.ListBox.new()
         self._box.set_activate_on_single_click(True)
         self._box.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -38,6 +37,7 @@ class PagesManagerListBox(PagesManager):
         self._CHILD_CLASS = PagesManagerListBoxChild
         self._grid.add(self._search_bar)
         self._grid.add(self._scrolled)
+        self.set_panel_mode()
 
     def add_child(self, view):
         """
@@ -49,6 +49,19 @@ class PagesManagerListBox(PagesManager):
         self.__set_child_height(child)
         child.connect("moved", self._on_moved)
         return child
+
+    def set_panel_mode(self):
+        """
+            Set panel mode
+        """
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode == PanelMode.MINIMAL:
+            self.set_property("width-request", -1)
+        else:
+            self.set_property("width-request", ArtSize.PREVIEW_WIDTH)
+        for child in self._box.get_children():
+            child.show_title(panel_mode != PanelMode.MINIMAL)
+            self.__set_child_height(child)
 
 #######################
 # PROTECTED           #

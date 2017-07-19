@@ -197,13 +197,11 @@ class PagesManager(Gtk.EventBox):
         """
         pass
 
-    @property
-    def panel_mode(self):
+    def set_panel_mode(self):
         """
-            Get current panel mode
-            @return int
+            Set panel mode
         """
-        return 0
+        pass
 
     @property
     def children(self):

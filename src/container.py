@@ -274,8 +274,7 @@ class Container(Gtk.Overlay):
             @param panel_mode as int
         """
         self.update_pages_manager(panel_mode)
-        if panel_mode != PanelMode.NONE:
-            self.pages_manager.set_panel_mode(panel_mode)
+        self.pages_manager.set_panel_mode()
 
     @property
     def pages_manager(self):

@@ -136,9 +136,8 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
             save = False
         try:
             snapshot = view.get_snapshot_finish(result)
-
-            if self._window.container.pages_manager.panel_mode ==\
-                    PanelMode.PREVIEW:
+            panel_mode = El().settings.get_enum("panel-mode")
+            if panel_mode == PanelMode.PREVIEW:
                 # Set sidebar child image
                 # Set start image scale factor
                 factor = (ArtSize.PREVIEW_WIDTH -
