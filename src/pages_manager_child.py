@@ -95,9 +95,11 @@ class PagesManagerChild:
             @param save as bool
         """
         if self._view.webview.ephemeral:
-            self._image.set_from_icon_name(
-                                         "user-not-tracked-symbolic",
-                                         Gtk.IconSize.DIALOG)
+            panel_mode = El().settings.get_enum("panel-mode")
+            if panel_mode != PanelMode.MINIMAL:
+                self._image.set_from_icon_name(
+                                             "user-not-tracked-symbolic",
+                                             Gtk.IconSize.DIALOG)
         else:
             self._view.webview.get_snapshot(
                                          WebKit2.SnapshotRegion.VISIBLE,
@@ -278,11 +280,11 @@ class PagesManagerChild:
             Set favicon
         """
         uri = self._view.webview.get_uri()
-        if uri == "populars://":
-            self._image_close.set_from_icon_name("emote-love-symbolic",
-                                                 Gtk.IconSize.INVALID)
-        elif self._view.webview.ephemeral:
+        if self._view.webview.ephemeral:
             self._image_close.set_from_icon_name("user-not-tracked-symbolic",
+                                                 Gtk.IconSize.INVALID)
+        elif uri == "populars://":
+            self._image_close.set_from_icon_name("emote-love-symbolic",
                                                  Gtk.IconSize.INVALID)
         elif uri:
             context = self._view.webview.get_context()
