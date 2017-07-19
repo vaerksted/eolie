@@ -562,6 +562,7 @@ class WebView(WebKit2.WebView):
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
+        dialog.set_select_multiple(request.get_select_multiple())
         chooser_uri = El().websettings.get_chooser_uri(uri)
         if chooser_uri is not None:
             dialog.set_current_folder_uri(chooser_uri)
