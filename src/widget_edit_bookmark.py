@@ -14,7 +14,6 @@ from gi.repository import Gtk, GLib
 
 from locale import strcoll
 from time import time
-from gettext import gettext as _
 
 from eolie.define import El
 
@@ -318,14 +317,16 @@ class EditBookmarkWidget(Gtk.Bin):
             @param button as Gtk.Button
         """
         El().bookmarks.thread_lock.acquire()
-        if button.get_label() == _("Apply"):
+        if button.get_image().get_icon_name()[0] == "emblem-ok-symbolic":
             editable = False
-            button.set_label(_("Rename"))
+            button.get_image().set_from_icon_name("document-edit-symbolic",
+                                                  Gtk.IconSize.BUTTON)
             self.__remove_tag_button.show()
             button.get_style_context().remove_class("suggested-action")
         else:
             editable = True
-            button.set_label(_("Apply"))
+            button.get_image().set_from_icon_name("emblem-ok-symbolic",
+                                                  Gtk.IconSize.BUTTON)
             self.__remove_tag_button.hide()
             button.get_style_context().add_class("suggested-action")
         for child in self.__flowbox.get_children():
@@ -340,14 +341,16 @@ class EditBookmarkWidget(Gtk.Bin):
             @param button as Gtk.Button
         """
         El().bookmarks.thread_lock.acquire()
-        if button.get_label() == _("Finished"):
+        if button.get_image().get_icon_name()[0] == "emblem-ok-symbolic":
             removable = False
-            button.set_label(_("Remove"))
+            button.get_image().set_from_icon_name("list-remove-symbolic",
+                                                  Gtk.IconSize.BUTTON)
             self.__rename_tag_button.show()
             button.get_style_context().remove_class("suggested-action")
         else:
             removable = True
-            button.set_label(_("Finished"))
+            button.get_image().set_from_icon_name("emblem-ok-symbolic",
+                                                  Gtk.IconSize.BUTTON)
             self.__rename_tag_button.hide()
             button.get_style_context().add_class("suggested-action")
         for child in self.__flowbox.get_children():
