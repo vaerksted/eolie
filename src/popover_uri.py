@@ -710,9 +710,9 @@ class UriPopover(Gtk.Popover):
         for child in self.__tags_box.get_children():
             self.__tags_box.remove(child)
         static = [(Type.POPULARS,
-                   _("Populars")),
+                   _("Popular")),
                   (Type.RECENTS,
-                   _("Recents")),
+                   _("Recent")),
                   (Type.UNCLASSIFIED,
                    _("Unclassified"))]
         self.__add_tags(static + El().bookmarks.get_all_tags(), current)
