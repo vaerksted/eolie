@@ -253,6 +253,7 @@ class Container(Gtk.Overlay):
             if uri is not None:
                 self.__window.toolbar.title.set_uri(uri)
             if webview.is_loading():
+                self.__window.toolbar.title.show_spinner(True)
                 self.__window.toolbar.title.progress.show()
             else:
                 self.__window.toolbar.title.progress.hide()
@@ -544,12 +545,13 @@ class Container(Gtk.Overlay):
         self.__window.toolbar.title.update_load_indicator(webview)
         uri = webview.get_uri()
         parsed = urlparse(uri)
-        focus_in_view = parsed.scheme in ["http", "https", "file"]
+        wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            self.__window.toolbar.title.show_spinner(True)
             self.__window.toolbar.title.set_title(uri)
-            # Give focus to url bar
-            if not focus_in_view:
+            if wanted_scheme:
+                self.__window.toolbar.title.show_spinner(True)
+            else:
+                # Give focus to url bar
                 self.__window.toolbar.title.start_search()
             self.__window.toolbar.title.show_indicator(Indicator.NONE)
             # Turn off reading mode if needed
@@ -565,7 +567,7 @@ class Container(Gtk.Overlay):
             if title is not None:
                 self.__window.toolbar.title.set_title(title)
             # Give focus to webview
-            if focus_in_view:
+            if wanted_scheme:
                 GLib.idle_add(self.__grab_focus_on_current)
             # Hide progress
             GLib.timeout_add(500, self.__window.toolbar.title.progress.hide)

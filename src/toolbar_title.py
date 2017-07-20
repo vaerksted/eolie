@@ -100,11 +100,13 @@ class ToolbarTitle(Gtk.Bin):
         """
         if b:
             panel_mode = El().settings.get_enum("panel-mode")
-            self.__indicator_stack.set_visible_child_name("spinner")
             if panel_mode == PanelMode.NONE:
+                self.__indicator_stack.show()
+                self.__indicator_stack.set_visible_child_name("spinner")
                 self.__indicator_stack.get_visible_child().start()
         elif self.__indicator_stack.get_visible_child_name() == "spinner":
             self.__indicator_stack.get_visible_child().stop()
+            self.__indicator_stack.hide()
 
     def do_get_preferred_width(self):
         """
@@ -257,10 +259,11 @@ class ToolbarTitle(Gtk.Bin):
             @param b as bool
         """
         if b:
+            self.__indicator_stack.show()
             self.__indicator_stack.set_visible_child_name("image")
             self.set_reading()
         else:
-            self.__indicator_stack.set_visible_child_name("spinner")
+            self.__indicator_stack.hide()
 
     def show_password(self, username, userform, password, passform, uri):
         """
