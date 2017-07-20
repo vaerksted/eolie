@@ -335,7 +335,6 @@ class PagesManager(Gtk.EventBox):
         if next_row is not None:
             self._window.container.set_visible_view(next_row.view)
         self.update_visible_child()
-        GLib.timeout_add(1000, view.destroy)
 
     def __scroll_to_child(self, row):
         """

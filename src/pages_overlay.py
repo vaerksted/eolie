@@ -73,9 +73,7 @@ class PagesManagerFlowBoxCustom(PagesManagerFlowBox):
             @param listbox as Gtk.ListBox
             @param row as PagesManagerFlowBoxChild
         """
-        self._window.container.set_visible_view(row.view)
-        self._window.container.set_expose(False)
-        self._window.container.pages_manager.update_visible_child()
+        PagesManagerFlowBox._on_child_activated(self, listbox, row)
         GLib.idle_add(row.destroy)
 
     def __on_scroll_event(self, scrolled, event):
@@ -162,6 +160,15 @@ class PagesOverlay(Gtk.EventBox):
         self.__pages_manager.show()
         self.__pages_manager.hide_next()
 
+    def destroy_child(self, view):
+        """
+            Destroy child related to view
+            @param view as View
+        """
+        for child in self.__pages_manager.children:
+            if child.view == view:
+                child.destroy()
+                break
 #######################
 # PROTECTED           #
 #######################
@@ -170,12 +177,16 @@ class PagesOverlay(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __on_child_destroy(self, widget):
+    def __on_child_destroy(self, child):
         """
             Hide self if empty
-            @param widget as Gtk.Widget
+            @param child as PagesManagerFlowBoxChild
         """
-        if not self.__pages_manager.children:
+        if self.__pages_manager.children:
+            first = self.__pages_manager.children[0]
+            if not first.is_visible():
+                first.show()
+        else:
             self.hide()
             self.__fake.hide()
             self.__pages_manager.hide()

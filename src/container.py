@@ -158,6 +158,8 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         self.__stack.set_visible_child(view)
+        if self.__pages_overlay is not None:
+            self.__pages_overlay.destroy_child(view)
 
     def stop(self):
         """

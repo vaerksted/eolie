@@ -384,9 +384,10 @@ class PagesManagerChild:
         if self.__view_destroy_id is not None:
             self._view.disconnect(self.__view_destroy_id)
 
-    def __on_view_destroy(self, widget):
+    def __on_view_destroy(self, view):
         """
             Destroy self
+            @param view as View
         """
         self.__connected_ids = []
         self.__view_destroy_id = None
