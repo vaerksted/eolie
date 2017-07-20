@@ -50,6 +50,11 @@
          <summary>Block images on pages</summary>
          <description />
       </key>
+      <key type="b" name="jsblock">
+         <default>false</default>
+         <summary>Block Javascript on pages</summary>
+         <description />
+      </key>
       <key type="s" name="download-uri">
          <default>""</default>
          <summary>Download folder URI</summary>

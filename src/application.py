@@ -321,6 +321,10 @@ class Application(Gtk.Application):
         self.adblock_exceptions = DatabaseExceptions("adblock")
         self.popup_exceptions = DatabaseExceptions("popup")
         self.image_exceptions = DatabaseExceptions("image")
+        if self.settings.get_user_value("jsblock") is not None:
+            self.js_exceptions = DatabaseExceptions("js")
+        else:
+            self.js_exceptions = None
         self.phishing.update()
         self.art = Art()
         self.search = Search()

@@ -316,37 +316,51 @@ class WebViewNavigation:
             El().download_manager.remove_videos_for_page(webview.get_page_id())
             self.__title = ""
         if event == WebKit2.LoadEvent.COMMITTED:
-            self.update_spell_checking()
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
-                exception = El().image_exceptions.find(
-                                        parsed.netloc) or\
-                    El().image_exceptions.find(
-                                        parsed.netloc + parsed.path)
-                imgblock = El().settings.get_value("imgblock")
-                self.set_setting("auto-load-images",
-                                 not imgblock or exception)
+                self.update_spell_checking()
                 self.update_zoom_level()
-            # Js adblocker
-            if El().settings.get_value("adblock"):
-                exception = El().adblock_exceptions.find(
-                                        parsed.netloc) or\
-                            El().adblock_exceptions.find(
-                                        parsed.netloc + parsed.path)
-                if exception:
-                    return
-                unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
-                javascripts = ["adblock_%s.js" % parsed.netloc,
-                               "adblock_%s.js" % unlocated_netloc]
-                for javascript in javascripts:
-                    f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
-                                                         javascript))
-                    if f.query_exists():
-                        (status, content, tag) = f.load_contents(None)
-                        js = content.decode("utf-8")
-                        self.run_javascript(js, None, None)
-                        break
+
+                # Setup image blocker
+                if El().settings.get_value("imgblock"):
+                    exception = El().image_exceptions.find(
+                                            parsed.netloc) or\
+                        El().image_exceptions.find(
+                                            parsed.netloc + parsed.path)
+                    self.set_setting("auto-load-images", exception)
+                elif not self.get_settings().get_auto_load_images():
+                    self.set_setting("auto-load-images", True)
+
+                # Setup js blocker
+                if El().settings.get_value("jsblock"):
+                    exception = El().js_exceptions.find(
+                                            parsed.netloc) or\
+                        El().js_exceptions.find(
+                                            parsed.netloc + parsed.path)
+                    self.set_setting("enable_javascript", exception)
+                elif not self.get_settings().get_enable_javascript():
+                    self.set_setting("enable_javascript", True)
+
+                # Setup ads blocker
+                if El().settings.get_value("adblock"):
+                    exception = El().adblock_exceptions.find(
+                                            parsed.netloc) or\
+                                El().adblock_exceptions.find(
+                                            parsed.netloc + parsed.path)
+                    if exception:
+                        return
+                    unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
+                    javascripts = ["adblock_%s.js" % parsed.netloc,
+                                   "adblock_%s.js" % unlocated_netloc]
+                    for javascript in javascripts:
+                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                             javascript))
+                        if f.query_exists():
+                            (status, content, tag) = f.load_contents(None)
+                            js = content.decode("utf-8")
+                            self.run_javascript(js, None, None)
+                            break
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().show_tls:
                 try:

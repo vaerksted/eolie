@@ -92,6 +92,14 @@ class ToolbarEnd(Gtk.Bin):
                              self.__on_image_change_state)
         self.__window.add_action(image_action)
 
+        if El().js_exceptions is not None:
+            js_action = Gio.SimpleAction.new_stateful(
+                  "jsblock",
+                  None,
+                  GLib.Variant.new_boolean(El().settings.get_value("jsblock")))
+            js_action.connect("change-state", self.__on_js_change_state)
+            self.__window.add_action(js_action)
+
         # Setup exceptions actions
         self.__adblock_exceptions = Gio.SimpleAction.new_stateful(
                                                    "adblock_exceptions",
@@ -114,6 +122,14 @@ class ToolbarEnd(Gtk.Bin):
         self.__popup_exceptions.connect("activate",
                                         self.__on_exceptions_activate)
         self.__window.add_action(self.__popup_exceptions)
+        if El().js_exceptions is not None:
+            self.__js_exceptions = Gio.SimpleAction.new_stateful(
+                                                   "js_exceptions",
+                                                   GLib.VariantType.new("s"),
+                                                   GLib.Variant("s", "none"))
+            self.__js_exceptions.connect("activate",
+                                         self.__on_exceptions_activate)
+            self.__window.add_action(self.__js_exceptions)
 
     def show_download(self, download):
         """
@@ -215,6 +231,8 @@ class ToolbarEnd(Gtk.Bin):
         from eolie.languages import LanguagesWidget
         if not button.get_active():
             return
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         self.__window.close_popovers()
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
@@ -250,9 +268,22 @@ class ToolbarEnd(Gtk.Bin):
             self.__popup_exceptions.change_state(GLib.Variant("s", "site"))
         else:
             self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
+
+        # JS exceptions
+        if El().js_exceptions is not None:
+            builder.get_object("js_block").show()
+            builder.get_object("js_exceptions").show()
+            page_ex = El().js_exceptions.find(parsed.netloc +
+                                              parsed.path)
+            site_ex = El().js_exceptions.find(parsed.netloc)
+            if not page_ex and not site_ex:
+                self.__js_exceptions.change_state(GLib.Variant("s", "none"))
+            elif site_ex:
+                self.__js_exceptions.change_state(GLib.Variant("s", "site"))
+            else:
+                self.__js_exceptions.change_state(GLib.Variant("s", "page"))
+
         popover = Gtk.PopoverMenu.new()
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         fullscreen_button = builder.get_object("fullscreen_button")
         if self.__window.is_fullscreen:
             fullscreen_button.set_active(True)
@@ -410,6 +441,8 @@ class ToolbarEnd(Gtk.Bin):
             database = El().adblock_exceptions
         elif action == self.__image_exceptions:
             database = El().image_exceptions
+        elif action == self.__js_exceptions:
+            database = El().js_exceptions
         else:
             database = El().popup_exceptions
         action.set_state(param)
@@ -458,6 +491,15 @@ class ToolbarEnd(Gtk.Bin):
         action.set_state(param)
         El().settings.set_value("imgblock", param)
         self.__window.container.current.webview.reload()
+
+    def __on_js_change_state(self, action, param):
+        """
+            Update javascript block state
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        El().settings.set_value("jsblock", param)
 
     def __on_download(self, download_manager, name=""):
         """
