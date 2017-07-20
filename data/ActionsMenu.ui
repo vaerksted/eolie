@@ -306,7 +306,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Do not block javascript</property>
+                <property name="label" translatable="yes">Do not block JavaScript</property>
                 <style>
                   <class name="dim-label"/>
                 </style>
@@ -349,7 +349,7 @@
             <property name="receives_default">True</property>
             <property name="action_name">win.js_exceptions</property>
             <property name="action_target">"none"</property>
-            <property name="text" translatable="yes" context="Javascript exception">None</property>
+            <property name="text" translatable="yes" context="JavasSript exception">None</property>
           </object>
           <packing>
             <property name="left_attach">0</property>
@@ -655,7 +655,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.jsblock</property>
-        <property name="text" translatable="yes">Block Javascript</property>
+        <property name="text" translatable="yes">Block JavaScript</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
