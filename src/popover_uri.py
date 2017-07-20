@@ -1012,7 +1012,7 @@ class UriPopover(Gtk.Popover):
             items = El().bookmarks.get_unclassified()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
-        self.__bookmarks_count.set_text("%s bookmarks" % len(items))
+        self.__bookmarks_count.set_text(_("%s bookmarks" % len(items)))
         self.__add_bookmarks(items)
 
     def __on_tag_entry_changed(self, entry):
