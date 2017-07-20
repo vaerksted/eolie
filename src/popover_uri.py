@@ -72,13 +72,70 @@ class Row(Gtk.ListBoxRow):
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
+            self.get_style_context().add_class("bigrow")
             favicon = Gtk.Image()
+            favicon.set_margin_start(2)
             self.__set_favicon(favicon)
         elif item_type == Type.KEYWORDS:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
+            favicon.set_margin_start(2)
             favicon.show()
-        else:
+
+        self.__title = Gtk.Label.new(title)
+        self.__title.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__title.set_property("halign", Gtk.Align.START)
+        self.__title.set_hexpand(True)
+        self.__title.set_property('has-tooltip', True)
+        self.__title.connect('query-tooltip', self.__on_query_tooltip)
+        self.__title.show()
+
+        uri = Gtk.Label.new(item.get_property("uri"))
+        uri.set_ellipsize(Pango.EllipsizeMode.END)
+        uri.set_property("halign", Gtk.Align.START)
+        uri.get_style_context().add_class("dim-label")
+        uri.set_property('has-tooltip', True)
+        uri.connect('query-tooltip', self.__on_query_tooltip)
+        uri.show()
+
+        if item_type == Type.HISTORY:
+            dt = datetime.fromtimestamp(item.get_property("atime"))
+            hour = str(dt.hour).rjust(2, "0")
+            minute = str(dt.minute).rjust(2, "0")
+            atime = Gtk.Label.new("%s:%s" % (hour, minute))
+            atime.set_property("valign", Gtk.Align.CENTER)
+            atime.get_style_context().add_class("dim-label")
+            atime.set_margin_end(2)
+            atime.show()
+            delete_button = Gtk.Button.new_from_icon_name(
+                                                     "user-trash-symbolic",
+                                                     Gtk.IconSize.MENU)
+            delete_button.get_image().set_opacity(0.5)
+            delete_button.set_property("valign", Gtk.Align.CENTER)
+            delete_button.connect("clicked", self.__on_delete_clicked)
+            delete_button.get_style_context().add_class("overlay-button")
+            delete_button.set_tooltip_text(_("Delete page from history"))
+            delete_button.show()
+            grid.attach(favicon, 0, 0, 1, 2)
+            grid.attach(self.__title, 1, 0, 1, 1)
+            grid.attach(uri, 1, 1, 1, 1)
+            grid.attach(atime, 2, 0, 1, 2)
+            grid.attach(delete_button, 3, 0, 1, 2)
+        elif item_type == Type.BOOKMARK:
+            edit_button = Gtk.Button.new_from_icon_name(
+                                                     "document-edit-symbolic",
+                                                     Gtk.IconSize.MENU)
+            edit_button.get_image().set_opacity(0.5)
+            edit_button.connect("clicked", self.__on_edit_clicked)
+            edit_button.get_style_context().add_class("overlay-button")
+            edit_button.set_property("valign", Gtk.Align.CENTER)
+            edit_button.set_tooltip_text(_("Edit bookmark"))
+            edit_button.show()
+            grid.attach(favicon, 0, 0, 1, 2)
+            grid.attach(self.__title, 1, 0, 1, 1)
+            grid.attach(uri, 1, 1, 1, 1)
+            grid.attach(edit_button, 2, 0, 1, 2)
+        elif item_type == Type.TAG:
             if item_id == Type.NONE:
                 icon_name = "folder-visiting-symbolic"
             elif item_id == Type.POPULARS:
@@ -87,68 +144,19 @@ class Row(Gtk.ListBoxRow):
                 icon_name = "document-open-recent-symbolic"
             else:
                 icon_name = "folder-symbolic"
-            favicon = Gtk.Image.new_from_icon_name(icon_name,
-                                                   Gtk.IconSize.MENU)
-            favicon.show()
-        self.__title = Gtk.Label.new(title)
-        self.__title.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__title.set_property("halign", Gtk.Align.START)
-        self.__title.set_hexpand(True)
-        self.__title.set_property('has-tooltip', True)
-        self.__title.connect('query-tooltip', self.__on_query_tooltip)
-        self.__title.show()
-        uri = Gtk.Label.new(item.get_property("uri"))
-        uri.set_ellipsize(Pango.EllipsizeMode.END)
-        uri.set_property("halign", Gtk.Align.END)
-        uri.get_style_context().add_class("dim-label")
-        uri.set_property('has-tooltip', True)
-        uri.connect('query-tooltip', self.__on_query_tooltip)
-        uri.set_max_width_chars(40)
-        uri.show()
-        if item_type == Type.HISTORY:
-            dt = datetime.fromtimestamp(item.get_property("atime"))
-            hour = str(dt.hour).rjust(2, "0")
-            minute = str(dt.minute).rjust(2, "0")
-            atime = Gtk.Label.new("%s:%s" % (hour, minute))
-            atime.get_style_context().add_class("dim-label")
-            atime.set_margin_end(2)
-            atime.show()
-        if favicon is not None:
-            favicon.set_margin_start(2)
-            grid.add(favicon)
-        grid.add(self.__title)
-        grid.add(uri)
-        if item_type == Type.HISTORY:
-            grid.add(atime)
-            delete_button = Gtk.Button.new_from_icon_name(
-                                                     "user-trash-symbolic",
-                                                     Gtk.IconSize.MENU)
-            delete_button.get_image().set_opacity(0.5)
-            delete_button.connect("clicked", self.__on_delete_clicked)
-            delete_button.get_style_context().add_class("overlay-button")
-            delete_button.set_tooltip_text(_("Delete page from history"))
-            delete_button.show()
-            grid.add(delete_button)
-        if item_type == Type.BOOKMARK:
-            edit_button = Gtk.Button.new_from_icon_name(
-                                                     "document-edit-symbolic",
-                                                     Gtk.IconSize.MENU)
-            edit_button.get_image().set_opacity(0.5)
-            edit_button.connect("clicked", self.__on_edit_clicked)
-            edit_button.get_style_context().add_class("overlay-button")
-            edit_button.set_tooltip_text(_("Edit bookmark"))
-            edit_button.show()
-            grid.add(edit_button)
-        elif item_type == Type.TAG:
             open_button = Gtk.Button.new_from_icon_name(
-                                                     "web-browser-symbolic",
+                                                     icon_name,
                                                      Gtk.IconSize.MENU)
-            open_button.get_image().set_opacity(0.5)
             open_button.connect("clicked", self.__on_open_clicked)
-            open_button.get_style_context().add_class("overlay-button")
+            open_button.get_style_context().add_class("overlay-button2")
             open_button.set_tooltip_text(_("Open all pages for this tag"))
             open_button.show()
-            grid.add(open_button)
+            grid.attach(open_button, 0, 0, 1, 1)
+            grid.attach(self.__title, 1, 0, 1, 1)
+        else:
+            grid.attach(favicon, 0, 0, 1, 2)
+            grid.attach(self.__title, 1, 0, 1, 1)
+            grid.attach(uri, 1, 1, 1, 1)
         grid.show()
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
@@ -1030,11 +1038,9 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box.get_style_context().remove_class("input")
         self.__tags_box.get_style_context().remove_class("input")
         size = self.__window.get_size()
-        width = size[0] * 0.5
-        if width < 700:
-            width = size[0] * 0.8
+        width = min(800, size[0])
         self.set_size_request(width, size[1] * 0.8)
-        self.__scrolled_bookmarks.set_size_request(width * 0.5, -1)
+        self.__scrolled_bookmarks.set_size_request(width * 0.4, -1)
 
     def __on_unmap(self, widget):
         """
