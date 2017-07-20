@@ -141,9 +141,14 @@ class Window(Gtk.ApplicationWindow):
     def close_popovers(self):
         """
             Close all popovers
+            @return closed as bool
         """
+        closed = False
         for popover in self.__popovers:
+            if popover.is_visible():
+                closed = True
             popover.popdown()
+        return closed
 
     @property
     def container(self):

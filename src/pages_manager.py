@@ -449,10 +449,10 @@ class PagesManager(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.EventButton
         """
-        self._window.close_popovers()
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self._window.container.add_webview(El().start_page,
                                                Gdk.WindowType.CHILD)
+        return self._window.close_popovers()
 
     def __on_key_press(self, widget, event):
         """

@@ -465,7 +465,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param event as Gdk.Event
         """
-        self.__window.close_popovers()
+        return self.__window.close_popovers()
 
     def __on_estimated_load_progress(self, webview, value):
         """
