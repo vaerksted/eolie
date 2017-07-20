@@ -487,7 +487,7 @@ class DownloadsPopover(Gtk.Popover):
 
     def __on_map(self, widget):
         """
-            Resize
+            Setup widget
             @param widget as Gtk.Widget
         """
         El().download_manager.connect("download-start",
@@ -498,7 +498,7 @@ class DownloadsPopover(Gtk.Popover):
 
     def __on_unmap(self, widget):
         """
-            Resize
+            Clean up widget
             @param widget as Gtk.Widget
         """
         for child in self.__listbox.get_children():
