@@ -47,11 +47,11 @@ class ToolbarActions(Gtk.Bin):
         if panel_mode == PanelMode.NONE or fullscreen:
             self.__view_button.show()
             self.__close_button.show()
-            if not fullscreen:
-                El().settings.connect("changed::panel-mode",
-                                      self.__on_panel_mode_changed)
         else:
             self.__filter_button.show()
+        if not fullscreen:
+            El().settings.connect("changed::panel-mode",
+                                  self.__on_panel_mode_changed)
 
     def set_actions(self, view):
         """
