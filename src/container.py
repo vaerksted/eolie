@@ -72,29 +72,23 @@ class Container(Gtk.Overlay):
             @param ephemeral as bool
             @param state as WebViewSessionState
         """
-        # Use current page if possible
-        if parent is None and state is None and\
-                self.current is not None and\
-                self.current.webview.get_uri() == "about:blank":
-            self.current.webview.load_uri(uri)
-        else:
-            webview = View.get_new_webview(ephemeral, self.__window)
-            if state is not None:
-                webview.restore_session_state(state)
-            self.add_view(webview, parent, window_type)
-            if uri is not None:
-                if load:
-                    panel_mode = El().settings.get_enum("panel-mode")
-                    # Do not load uri until we are on screen
-                    GLib.idle_add(webview.load_uri, uri)
-                    # Notify user about new window
-                    if window_type == Gdk.WindowType.OFFSCREEN and\
-                            panel_mode == PanelMode.NONE:
-                        GLib.idle_add(
-                            self.__add_overlay_view, webview)
-                else:
-                    webview.set_delayed_uri(uri)
-                    webview.emit("title-changed", uri)
+        webview = View.get_new_webview(ephemeral, self.__window)
+        if state is not None:
+            webview.restore_session_state(state)
+        self.add_view(webview, parent, window_type)
+        if uri is not None:
+            if load:
+                panel_mode = El().settings.get_enum("panel-mode")
+                # Do not load uri until we are on screen
+                GLib.idle_add(webview.load_uri, uri)
+                # Notify user about new window
+                if window_type == Gdk.WindowType.OFFSCREEN and\
+                        panel_mode == PanelMode.NONE:
+                    GLib.idle_add(
+                        self.__add_overlay_view, webview)
+            else:
+                webview.set_delayed_uri(uri)
+                webview.emit("title-changed", uri)
 
     def add_view(self, webview, parent, window_type):
         """
