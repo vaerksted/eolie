@@ -39,6 +39,9 @@ class PagesManagerChild:
         self._title = builder.get_object("title")
         self._image = builder.get_object("image")
         self._image_close = builder.get_object("image_close")
+        self.__audio_indicator = builder.get_object("audio_indicator")
+        if view.webview.is_playing_audio():
+            self.__audio_indicator.show()
         if view.webview.ephemeral:
             self._image_close.set_from_icon_name("window-close-symbolic",
                                                  Gtk.IconSize.INVALID)
@@ -61,6 +64,10 @@ class PagesManagerChild:
                              self._view.webview.connect(
                                  "notify::favicon",
                                  self._on_notify_favicon))
+        self.__connected_ids.append(
+                             self._view.webview.connect(
+                                 "notify::is-playing-audio",
+                                 self._on_notify_is_playing_audio))
         self.__connected_ids.append(
                              self._view.webview.connect(
                                  "uri-changed",
@@ -127,6 +134,17 @@ class PagesManagerChild:
         if self._view.webview == webview:
             # FIXME use favicon
             self.__set_favicon()
+
+    def _on_notify_is_playing_audio(self, webview, playing):
+        """
+            Update status
+            @param webview as WebView
+            @param playing as bool
+        """
+        if not webview.is_loading() and webview.is_playing_audio():
+            self.__audio_indicator.show()
+        else:
+            self.__audio_indicator.hide()
 
     def _on_scroll_event(self, webview, event):
         """
@@ -244,12 +262,15 @@ class PagesManagerChild:
         uri = webview.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
             self._image.clear()
+            self.__audio_indicator.hide()
             self.__spinner.start()
             self._title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self._title.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
+            if webview.is_playing_audio():
+                self.__audio_indicator.show()
             # is_loading() happen when loading a new uri while
             # previous loading is not finished
             if not webview.cancelled and not webview.is_loading():
