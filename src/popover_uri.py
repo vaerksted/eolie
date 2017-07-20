@@ -1039,7 +1039,8 @@ class UriPopover(Gtk.Popover):
         self.__tags_box.get_style_context().remove_class("input")
         size = self.__window.get_size()
         width = min(800, size[0])
-        self.set_size_request(width, size[1] * 0.8)
+        height = min(700, size[1] * 0.9)
+        self.set_size_request(width, height)
         self.__scrolled_bookmarks.set_size_request(width * 0.4, -1)
 
     def __on_unmap(self, widget):
