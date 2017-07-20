@@ -64,6 +64,8 @@
       <object class="GtkEntry" id="title_entry">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
+        <property name="has_focus">True</property>
+        <property name="is_focus">True</property>
         <property name="hexpand">True</property>
       </object>
       <packing>
