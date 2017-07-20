@@ -203,7 +203,7 @@ class ToolbarEnd(Gtk.Bin):
             return
         popover = DownloadsPopover(self.__window)
         # We are relative to toolbar button, button can be in menu
-        popover.set_relative_to(self.__menu_button)
+        popover.set_relative_to(self.__download_button)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.set_modal(False)
         self.__window.register(popover)
@@ -228,12 +228,14 @@ class ToolbarEnd(Gtk.Bin):
             Show settings menu
             @param button as Gtk.ToogleButton
         """
-        from eolie.languages import LanguagesWidget
+        self.__window.close_popovers()
         if not button.get_active():
             return
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
-        self.__window.close_popovers()
+        if not self.__download_button.is_visible():
+            builder.get_object("toolbar_items").show()
+
         uri = self.__window.container.current.webview.get_uri()
         if not uri:
             return
@@ -301,6 +303,7 @@ class ToolbarEnd(Gtk.Bin):
                                                         "{} %".format(current))
         popover.add(widget)
         exceptions = builder.get_object("exceptions")
+        from eolie.languages import LanguagesWidget
         languages = LanguagesWidget(uri)
         languages.show()
         popover.add(exceptions)

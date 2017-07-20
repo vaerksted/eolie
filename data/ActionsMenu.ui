@@ -504,8 +504,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox">
-        <property name="visible">True</property>
+      <object class="GtkBox" id="toolbar_items">
+        <property name="visible">False</property>
         <property name="can_focus">False</property>
         <child>
           <object class="GtkButton" id="home_button">

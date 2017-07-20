@@ -317,6 +317,7 @@ class Window(Gtk.ApplicationWindow):
         """
         if event.changed_mask & Gdk.WindowState.MAXIMIZED:
             size = widget.get_size()
+            self.toolbar.end.move_control_in_menu(size[0] < 700)
             self.toolbar.title.set_width(size[0]/3)
             El().settings.set_boolean("window-maximized",
                                       event.new_window_state &
