@@ -710,11 +710,13 @@ class UriPopover(Gtk.Popover):
         for child in self.__tags_box.get_children():
             self.__tags_box.remove(child)
         static = [(Type.POPULARS,
+                   # Translators: Plural
                    _("Popular")),
                   (Type.RECENTS,
+                   # Translators: Plural
                    _("Recent")),
                   (Type.UNCLASSIFIED,
-                   _("Unclassified"))]
+                  _("Unclassified"))]
         self.__add_tags(static + El().bookmarks.get_all_tags(), current)
 
     def _on_day_selected(self, calendar):

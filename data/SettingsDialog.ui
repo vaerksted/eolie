@@ -270,7 +270,7 @@
                     <property name="can_focus">False</property>
                     <property name="halign">end</property>
                     <property name="hexpand">True</property>
-                    <property name="label" translatable="yes">Popular items shown</property>
+                    <property name="label" translatable="yes">Bookmarks shown</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
