@@ -154,6 +154,9 @@ class SettingsDialog:
         remember_passwords.set_active(
                                 El().settings.get_value("remember-passwords"))
 
+        dns_prediction_check = builder.get_object("dns_prediction_check")
+        dns_prediction_check.set_active(
+                                El().settings.get_value("dns-prediction"))
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
                                 El().settings.get_value("do-not-track"))
@@ -225,6 +228,14 @@ class SettingsDialog:
         popover.populate()
         popover.set_relative_to(button)
         popover.popup()
+
+    def _on_dns_prediction_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        El().settings.set_value("dns-prediction",
+                                GLib.Variant("b", button.get_active()))
 
     def _on_tracking_toggled(self, button):
         """

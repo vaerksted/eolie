@@ -150,6 +150,11 @@
          <summary>Tell websites I do not want to be tracked</summary>
          <description />
       </key>
+      <key type="b" name="dns-prediction">
+         <default>true</default>
+         <summary>DNS prediction</summary>
+         <description />
+      </key>
       <key type="b" name="enable-spell-check">
          <default>true</default>
          <summary>Enable spell checking</summary>
