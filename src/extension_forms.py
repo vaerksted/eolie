@@ -114,7 +114,7 @@ class FormsExtension:
                 input_id = inputs.item(i).get_attribute("id")
                 # We search for wanted name
                 if name and (name == input_name or name == input_id):
-                    forms.append(inputs.item(i))
+                    forms.insert(0, inputs.item(i))
                 else:
                     if self.is_login_form(inputs.item(i)):
                         forms.append(inputs.item(i))
