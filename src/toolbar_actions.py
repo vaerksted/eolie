@@ -186,6 +186,7 @@ class ToolbarActions(Gtk.Bin):
             Show pages popover
             @param button as Gtk.ToggleButton
         """
+        self.__window.close_popovers()
         if not button.get_active():
             return
         popover = Gtk.Popover.new_from_model(button, El().pages_menu)
