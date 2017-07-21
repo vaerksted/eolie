@@ -59,8 +59,7 @@ class AdblockExtension:
                 self.__adblock.is_blocked(uri):
             return True
         return False
-        # This code is not working, get_http_headers() kills page loading
-        # if self.__settings.get_value("do-not-track"):
-        #    headers = request.get_http_headers()
-        #    if headers is not None:
-        #        headers.append("DNT", "1")
+        if self.__settings.get_value("do-not-track"):
+            headers = request.get_http_headers()
+            if headers is not None:
+                headers.append("DNT", "1")

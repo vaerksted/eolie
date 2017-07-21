@@ -36,11 +36,11 @@ class ToolbarTitle(Gtk.Bin):
         self.__input_warning_shown = False
         self.__signal_id = None
         self.__secure_content = True
-        self.__keywords_timeout = None
+        self.__entry_changed_timeout = None
         self.__icon_grid_width = None
         self.__width = -1
         self.__uri = ""
-        self.__keywords_cancellable = Gio.Cancellable.new()
+        self.__cancellable = Gio.Cancellable.new()
 
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
@@ -710,23 +710,12 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "system-search-symbolic")
 
-    def __search_keywords_thread(self, value):
-        """
-            Run __search_keywords() in a thread
-            @param value a str
-        """
-        self.__keywords_timeout = None
-        thread = Thread(target=self.__search_keywords, args=(value,))
-        thread.daemon = True
-        thread.start()
-
     def __search_keywords(self, value):
         """
             Search for keywords for value
             @param value as str
         """
-        self.__keywords_cancellable.reset()
-        keywords = El().search.get_keywords(value, self.__keywords_cancellable)
+        keywords = El().search.get_keywords(value, self.__cancellable)
         for words in keywords:
             if words:
                 GLib.idle_add(self.__popover.add_keywords,
@@ -735,25 +724,51 @@ class ToolbarTitle(Gtk.Bin):
     def __populate_completion(self, uri):
         """
             @param uri as str
+            @thread safe
         """
-        match = El().history.get_match(uri)
-        if match is not None and self.__entry.get_text() == uri:
-            match_parsed = urlparse(match)
+        if self.__entry.get_text() == uri:
             self.__completion_model.clear()
-            netloc = match_parsed.netloc.replace("www.", "")
-            if match_parsed.path.find(uri.split("/")[-1]) != -1:
-                self.__completion_model.append([netloc +
-                                                match_parsed.path])
-            else:
-                self.__completion_model.append([netloc])
+            # Look for a match in history
+            match = El().history.get_match(uri)
+            if match is not None:
+                if self.__cancellable.is_cancelled():
+                    return
+                match_parsed = urlparse(match)
+                netloc = match_parsed.netloc.replace("www.", "")
+                if netloc.find(uri) == 0:
+                    if match_parsed.path.find(uri.split("/")[-1]) != -1:
+                        self.__completion_model.append([netloc +
+                                                        match_parsed.path])
+                    else:
+                        self.__completion_model.append([netloc])
+
+            if El().settings.get_value("do-not-track"):
+                return
+            # Try some DNS request, FIXME Better list?
+            from socket import gethostbyname
+            parsed = urlparse(uri)
+            if parsed.netloc:
+                uri = parsed.netloc
+            for suffix in ["com", "org", "fr", "pt", "uk"]:
+                for prefix in ["www.", ""]:
+                    try:
+                        lookup = "%s%s.%s" % (prefix, uri, suffix)
+                        gethostbyname(lookup)
+                        self.__completion_model.append(
+                                          [lookup.replace("www.", "")])
+                        return
+                    except Exception as e:
+                        print(e)
+                        if self.__cancellable.is_cancelled():
+                            return
 
     def __on_popover_closed(self, popover):
         """
             Clean titlebar if UriPopover, else update star
             @param popover as Gtk.popover
         """
-        self.__keywords_cancellable.cancel()
-        self.__keywords_cancellable.reset()
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
         webview = self.__window.container.current.webview
         if popover == self.__popover:
             webview.grab_focus()
@@ -771,7 +786,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def __on_entry_changed(self, entry):
         """
-            Update popover search if needed
+            Delayed entry changed
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
@@ -781,12 +796,39 @@ class ToolbarTitle(Gtk.Bin):
             if completion[0] == value:
                 return
 
+        parsed = urlparse(value)
+        is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
+        parsed = urlparse(self.__uri)
+        if value:
+            self.__placeholder.set_opacity(0)
+            # We are doing a search, show popover
+            if not is_uri and not self.__popover.is_visible():
+                self.__popover.popup("bookmarks")
+        elif parsed.scheme in ["populars", "about"]:
+            self.__set_default_placeholder()
+        if self.__entry_changed_timeout is not None:
+            GLib.source_remove(self.__entry_changed_timeout)
+        self.__entry_changed_timeout = GLib.timeout_add(
+                                               100,
+                                               self.__on_entry_changed_timeout,
+                                               entry)
+
+    def __on_entry_changed_timeout(self, entry):
+        """
+            Update popover search if needed
+            @param entry as Gtk.Entry
+        """
+        self.__entry_changed_timeout = None
+
+        value = entry.get_text()
+
         # Populate completion model
         thread = Thread(target=self.__populate_completion, args=(value,))
         thread.daemon = True
         thread.start()
 
-        self.__keywords_cancellable.cancel()
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
         parsed = urlparse(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
@@ -796,21 +838,10 @@ class ToolbarTitle(Gtk.Bin):
             self.__popover.set_search_text(value)
 
         parsed = urlparse(self.__uri)
-        if value:
-            self.__placeholder.set_opacity(0)
-            # We are doing a search, show popover
-            if not is_uri and not self.__popover.is_visible():
-                self.__popover.popup("bookmarks")
-        elif parsed.scheme in ["populars", "about"]:
-            self.__set_default_placeholder()
-        if self.__keywords_timeout is not None:
-            GLib.source_remove(self.__keywords_timeout)
-            self.__keywords_timeout = None
         if value and not is_uri and network:
-            self.__keywords_timeout = GLib.timeout_add(
-                                                 500,
-                                                 self.__search_keywords_thread,
-                                                 value)
+            thread = Thread(target=self.__search_keywords, args=(value,))
+            thread.daemon = True
+            thread.start()
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,

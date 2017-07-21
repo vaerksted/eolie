@@ -564,6 +564,7 @@
             </child>
             <child>
               <object class="GtkLabel">
+                <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
                 <property name="margin_left">5</property>
@@ -580,7 +581,8 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="tracking_check">
-                <property name="label" translatable="yes">Tell websites I do not want to be tracked</property>
+                <property name="label" translatable="yes">I do not want to be tracked</property>
+                <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="halign">start</property>
