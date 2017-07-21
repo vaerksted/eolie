@@ -42,6 +42,12 @@ class ToolbarTitle(Gtk.Bin):
         self.__uri = ""
         self.__cancellable = Gio.Cancellable.new()
 
+        self.__dns_suffixes = ["com", "org"]
+        for string in reversed(GLib.get_language_names()):
+            if len(string) == 2:
+                self.__dns_suffixes.insert(0, string)
+                break
+
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
         builder.connect_signals(self)
@@ -742,14 +748,14 @@ class ToolbarTitle(Gtk.Bin):
                     else:
                         self.__completion_model.append([netloc])
 
-            if El().settings.get_value("do-not-track"):
+            if not El().settings.get_value("dns-prediction"):
                 return
             # Try some DNS request, FIXME Better list?
             from socket import gethostbyname
             parsed = urlparse(uri)
             if parsed.netloc:
                 uri = parsed.netloc
-            for suffix in ["com", "org", "fr", "pt", "uk"]:
+            for suffix in self.__dns_suffixes:
                 for prefix in ["www.", ""]:
                     try:
                         lookup = "%s%s.%s" % (prefix, uri, suffix)
