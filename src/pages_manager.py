@@ -341,14 +341,17 @@ class PagesManager(Gtk.EventBox):
             Scroll to row
             @param row as Row
         """
-        adj = self._scrolled.get_vadjustment().get_value()
+        adj = self._scrolled.get_vadjustment()
+        if adj is None:
+            return
+        value = adj.get_value()
         coordinates = row.translate_coordinates(self._box, 0, 0)
         if coordinates is None:
             return
         y = coordinates[1]
         if y + row.get_allocated_height() >\
-                self._scrolled.get_allocated_height() + adj or\
-                y - row.get_allocated_height() < 0 + adj:
+                self._scrolled.get_allocated_height() + value or\
+                y - row.get_allocated_height() < 0 + value:
             self._scrolled.get_vadjustment().set_value(y)
 
     def __get_index(self, view):
