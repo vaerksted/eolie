@@ -132,12 +132,21 @@ class SyncWorker(GObject.GObject):
 
     def remove_from_history(self, guid):
         """
-            Remove history id from remote history
-            A first call to sync() is needed to populate secrets
+            Remove history guid from remote history
             @param guid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             thread = Thread(target=self.__remove_from_history, args=(guid,))
+            thread.daemon = True
+            thread.start()
+
+    def remove_from_bookmarks(self, guid):
+        """
+            Remove bookmark guid from remote bookmarks
+            @param guid as str
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available():
+            thread = Thread(target=self.__remove_from_bookmarks, args=(guid,))
             thread.daemon = True
             thread.start()
 
@@ -336,6 +345,24 @@ class SyncWorker(GObject.GObject):
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
+    def __remove_from_bookmarks(self, guid):
+        """
+            Remove from history
+            @param guid as str
+        """
+        if not self.__username or not self.__password:
+            return
+        try:
+            bulk_keys = self.__get_session_bulk_keys()
+            record = {}
+            record["id"] = guid
+            record["type"] = "bookmark"
+            record["deleted"] = True
+            debug("deleting %s" % record)
+            self.__mozilla_sync.add(record, "bookmark", bulk_keys)
+        except Exception as e:
+            print("SyncWorker::__remove_from_bookmarks():", e)
+
     def __remove_from_passwords(self, attributes, password, uri, username):
         """
             Remove password from passwords collection
@@ -497,7 +524,7 @@ class SyncWorker(GObject.GObject):
                 parents.append(parent_id)
             record = {}
             record["id"] = El().bookmarks.get_guid(bookmark_id)
-            record["type"] = "item"
+            record["type"] = "bookmark"
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)

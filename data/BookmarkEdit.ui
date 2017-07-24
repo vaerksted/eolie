@@ -12,21 +12,6 @@
     <property name="can_focus">False</property>
     <property name="icon_name">user-trash-symbolic</property>
   </object>
-  <object class="GtkImage" id="image3">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">document-edit-symbolic</property>
-  </object>
-  <object class="GtkImage" id="image4">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-add-symbolic</property>
-  </object>
-  <object class="GtkImage" id="image5">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
   <object class="GtkGrid" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -83,7 +68,7 @@
       <packing>
         <property name="left_attach">2</property>
         <property name="top_attach">1</property>
-        <property name="width">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -104,10 +89,12 @@
     </child>
     <child>
       <object class="GtkButton">
+        <property name="width_request">48</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="tooltip_text" translatable="yes">Remove bookmark</property>
+        <property name="halign">end</property>
         <property name="image">image2</property>
         <signal name="clicked" handler="_on_del_clicked" swapped="no"/>
         <style>
@@ -128,7 +115,6 @@
           <object class="GtkAlignment">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="left_padding">12</property>
             <child>
               <object class="GtkGrid">
                 <property name="visible">True</property>
@@ -138,18 +124,6 @@
                 <property name="margin_bottom">5</property>
                 <property name="row_spacing">5</property>
                 <property name="column_spacing">5</property>
-                <child>
-                  <object class="GtkEntry" id="new_tag_entry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="placeholder_text" translatable="yes">New tag</property>
-                    <signal name="changed" handler="_on_new_tag_changed" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
                 <child>
                   <object class="GtkScrolledWindow" id="scrolled">
                     <property name="visible">True</property>
@@ -175,71 +149,8 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                    <property name="width">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkButton" id="add_tag_button">
-                        <property name="visible">True</property>
-                        <property name="sensitive">False</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Add</property>
-                        <property name="halign">start</property>
-                        <property name="hexpand">False</property>
-                        <property name="image">image4</property>
-                        <signal name="clicked" handler="_on_add_tag_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="remove_tag_button">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Remove</property>
-                        <property name="halign">start</property>
-                        <property name="image">image5</property>
-                        <signal name="clicked" handler="_on_remove_tags_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="rename_tag_button">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Rename</property>
-                        <property name="halign">start</property>
-                        <property name="image">image3</property>
-                        <signal name="clicked" handler="_on_rename_tags_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <style>
-                      <class name="linked"/>
-                    </style>
-                  </object>
-                  <packing>
-                    <property name="left_attach">1</property>
                     <property name="top_attach">0</property>
+                    <property name="width">2</property>
                   </packing>
                 </child>
               </object>
@@ -247,24 +158,26 @@
           </object>
         </child>
         <child type="label">
-          <object class="GtkLabel">
+          <object class="GtkEntry" id="new_tag_entry">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Set the tags you want to associate this bookmark with</property>
+            <property name="can_focus">True</property>
+            <property name="has_frame">False</property>
+            <property name="primary_icon_name">bookmark-new-symbolic</property>
+            <property name="placeholder_text" translatable="yes">Add new tag</property>
+            <signal name="activate" handler="_on_new_tag_entry_activate" swapped="no"/>
+            <signal name="icon-press" handler="_on_new_tag_entry_activate" swapped="no"/>
+            <style>
+              <class name="tag-base"/>
+              <class name="tag-add"/>
+            </style>
           </object>
         </child>
       </object>
       <packing>
         <property name="left_attach">1</property>
         <property name="top_attach">2</property>
-        <property name="width">3</property>
+        <property name="width">4</property>
       </packing>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
     </child>
     <child>
       <placeholder/>

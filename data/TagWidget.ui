@@ -5,42 +5,28 @@
   <object class="GtkEventBox" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <signal name="enter-notify-event" handler="_on_enter_notify" swapped="no"/>
-    <signal name="leave-notify-event" handler="_on_leave_notify" swapped="no"/>
+    <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
+    <signal name="enter-notify-event" handler="_on_enter_notify_event" swapped="no"/>
+    <signal name="leave-notify-event" handler="_on_leave_notify_event" swapped="no"/>
     <child>
-      <object class="GtkOverlay">
+      <object class="GtkOverlay" id="overlay">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <child>
           <object class="GtkStack" id="stack">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_right">16</property>
             <child>
               <object class="GtkLabel" id="label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="margin_right">10</property>
-                <property name="margin_top">10</property>
-                <property name="ellipsize">end</property>
-                <signal name="enter-notify-event" handler="_on_enter_notify" swapped="no"/>
-                <signal name="leave-notify-event" handler="_on_leave_notify" swapped="no"/>
                 <style>
-                  <class name="tag"/>
+                  <class name="tag-content"/>
                 </style>
               </object>
               <packing>
-                <property name="name">label</property>
-                <property name="title" translatable="yes"></property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="entry">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-              </object>
-              <packing>
-                <property name="name">entry</property>
-                <property name="position">1</property>
+                <property name="name">page0</property>
               </packing>
             </child>
           </object>
@@ -50,26 +36,26 @@
         </child>
         <child type="overlay">
           <object class="GtkEventBox" id="close_button">
+            <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="opacity">0.69999999999999996</property>
+            <property name="opacity">0.20000000000000001</property>
             <property name="halign">end</property>
-            <property name="valign">start</property>
+            <property name="valign">center</property>
             <signal name="button-press-event" handler="_on_close_button_press" swapped="no"/>
-            <signal name="enter-notify-event" handler="_on_close_enter_notify" swapped="no"/>
-            <signal name="leave-notify-event" handler="_on_close_leave_notify" swapped="no"/>
             <child>
-              <object class="GtkImage">
+              <object class="GtkImage" id="image">
+                <property name="width_request">16</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="icon_name">window-close-symbolic</property>
-                <style>
-                  <class name="close-button"/>
-                </style>
               </object>
             </child>
           </object>
         </child>
       </object>
     </child>
+    <style>
+      <class name="tag-base"/>
+    </style>
   </object>
 </interface>

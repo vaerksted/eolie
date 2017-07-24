@@ -18,46 +18,121 @@ from time import time
 from eolie.define import El
 
 
+class MyEntry(Gtk.Entry):
+    """
+        Limited width Gtk Entry
+    """
+    def __init__(self):
+        """
+            Init entry
+        """
+        Gtk.Entry.__init__(self)
+        self.get_style_context().add_class("tag-content")
+
+    def do_get_preferred_width(self):
+        """
+            Max width to 100
+        """
+        return (75, 75)
+
+
 class TagWidget(Gtk.FlowBoxChild):
     """
         Tag widget with some visual effects
     """
 
-    def __init__(self):
+    def __init__(self, title, bookmark_id):
         """
             Init widget
+            @param title as str
+            @param bookmark_id as int
         """
         Gtk.FlowBoxChild.__init__(self)
-        self.__active = False
+        self.__bookmark_id = bookmark_id
+        self.get_style_context().add_class("tag")
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/TagWidget.ui")
         builder.connect_signals(self)
         self.__label = builder.get_object("label")
-        self.__entry = builder.get_object("entry")
+        self.__entry = MyEntry()
+        self.__entry.set_has_frame(False)
+        self.__entry.connect("activate", self.__on_entry_activate)
+        self.__entry.show()
         self.__stack = builder.get_object("stack")
+        self.__stack.add(self.__entry)
         self.__close_button = builder.get_object("close_button")
         self.set_property("halign", Gtk.Align.START)
         self.set_property("valign", Gtk.Align.START)
-        self.add(builder.get_object("widget"))
+        self.__widget = builder.get_object("widget")
+        self.add(self.__widget)
+        self.__label.set_text(title)
+        self.__entry.set_text(title)
 
-    def do_get_preferred_width(self):
+    @property
+    def label(self):
         """
-            Max width to 200
+            Get label
+            @return str
         """
-        return (200, 200)
+        return self.__label.get_text()
 
-    def set_label(self, label):
+#######################
+# PROTECTED           #
+#######################
+    def _on_close_button_press(self, eventbox, event):
         """
-            Set label
-            @param label as str
+            Remove tag
+            @param eventbox as Gtk.EventBox
+            @param event as Gtk.Event
         """
-        self.__label.set_text(label)
-        self.__label.set_tooltip_text(label)
-        self.__entry.set_text(label)
+        El().bookmarks.thread_lock.acquire()
+        tag_title = self.__entry.get_text()
+        tag_id = El().bookmarks.get_tag_id(tag_title)
+        if tag_id is not None:
+            El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
+        El().bookmarks.thread_lock.release()
+        self.destroy()
+        return True
 
-    def save_entry(self):
+    def _on_button_press_event(self, eventbox, event):
+        """
+            Show entry
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.event
+        """
+        self.__stack.set_visible_child(self.__entry)
+
+    def _on_enter_notify_event(self, eventbox, event):
+        """
+            Show buttons
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.event
+        """
+        self.__close_button.set_opacity(0.9)
+        eventbox.get_style_context().add_class("tag-hover")
+
+    def _on_leave_notify_event(self, eventbox, event):
+        """
+            Hide buttons
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.event
+        """
+        allocation = eventbox.get_allocation()
+        if event.x <= 0 or\
+           event.x >= allocation.width or\
+           event.y <= 0 or\
+           event.y >= allocation.height:
+            eventbox.get_style_context().remove_class("tag-hover")
+            self.__close_button.set_opacity(0.2)
+
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_entry_activate(self, entry):
         """
             Save tag name based on entry content
+            @param entry as Gtk.Entry
         """
         title = self.__entry.get_text()
         previous = self.__label.get_text()
@@ -82,115 +157,7 @@ class TagWidget(Gtk.FlowBoxChild):
                 El().bookmarks.set_mtime(bookmark_id, mtime + 1)
         El().bookmarks.rename_tag(previous, title)
         self.__label.set_text(title)
-
-    @property
-    def label(self):
-        """
-            Get label
-            @return str
-        """
-        return self.__label.get_text()
-
-    @property
-    def removable(self):
-        """
-            True if removable
-            @return bool
-        """
-        return self.__close_button.is_visible()
-
-    @property
-    def editable(self):
-        """
-            True if removable
-            @return bool
-        """
-        return self.__stack.get_visible_child_name() == "entry"
-
-    def set_removable(self, removable):
-        """
-            Make tag removable
-            @param removable as bool
-        """
-        if removable:
-            self.__close_button.show()
-        else:
-            self.__close_button.hide()
-
-    def set_editable(self, editable):
-        """
-            Make tag editable
-            @param editable as bool
-        """
-        if editable:
-            self.__stack.set_visible_child_name("entry")
-        else:
-            self.__stack.set_visible_child_name("label")
-
-    def set_active(self, active):
-        """
-            Mark tag as active
-            @param active as bool
-        """
-        self.__active = active
-        if active:
-            self.__label.get_style_context().add_class("tag-set")
-        else:
-            self.__label.get_style_context().remove_class("tag-set")
-        self.__label.get_style_context().remove_class("tag-hover")
-
-#######################
-# PROTECTED           #
-#######################
-    def _on_close_button_press(self, eventbox, event):
-        """
-            Remove tag
-            @param eventbox as Gtk.EventBox
-            @param event as Gtk.Event
-        """
-        tag_title = self.__label.get_text()
-        El().bookmarks.del_tag(tag_title, True)
-        self.destroy()
-
-    def _on_enter_notify(self, eventbox, event):
-        """
-            Update style
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__close_button.is_visible():
-            return
-        if self.__active:
-            self.__label.get_style_context().remove_class("tag-set")
-        self.__label.get_style_context().add_class("tag-hover")
-
-    def _on_leave_notify(self, eventbox, event):
-        """
-            Update style
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__close_button.is_visible():
-            return
-        if self.__active:
-            self.__label.get_style_context().add_class("tag-set")
-        self.__label.get_style_context().remove_class("tag-hover")
-
-    def _on_close_enter_notify(self, eventbox, event):
-        """
-            Update style
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        eventbox.set_opacity(1)
-
-    def _on_close_leave_notify(self, eventbox, event):
-        """
-            Update style
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        eventbox.set_opacity(0.7)
+        self.__stack.set_visible_child(self.__label)
 
 
 class EditBookmarkWidget(Gtk.Bin):
@@ -211,28 +178,32 @@ class EditBookmarkWidget(Gtk.Bin):
         builder.connect_signals(self)
         self.__flowbox = builder.get_object("flowbox")
         self.__flowbox.set_sort_func(self.__sort_tags)
-        self.__flowbox.connect("child-activated", self.__on_tag_activated)
         self.__add_tag_button = builder.get_object("add_tag_button")
         self.__rename_tag_button = builder.get_object("rename_tag_button")
         self.__remove_tag_button = builder.get_object("remove_tag_button")
-        self.__new_tag_entry = builder.get_object("new_tag_entry")
         self.__title_entry = builder.get_object("title_entry")
         self.__uri_entry = builder.get_object("uri_entry")
         self.__title_entry.set_text(El().bookmarks.get_title(bookmark_id))
         self.__uri_entry.set_text(El().bookmarks.get_uri(bookmark_id))
+
+        self.__new_tag_entry = builder.get_object("new_tag_entry")
+        # Init new tag completion model
+        self.__completion_model = Gtk.ListStore(str)
+        self.__completion = Gtk.EntryCompletion.new()
+        self.__completion.set_model(self.__completion_model)
+        self.__completion.set_text_column(0)
+        self.__completion.set_inline_completion(False)
+        self.__completion.set_popup_completion(True)
+        self.__new_tag_entry.set_completion(self.__completion)
         for (tag_id, title) in El().bookmarks.get_all_tags():
-            tag = TagWidget()
-            tag.set_label(title)
-            if El().bookmarks.has_tag(bookmark_id, title):
-                tag.set_active(True)
+            self.__completion_model.append([title])
+
+        for title in El().bookmarks.get_tags(bookmark_id):
+            tag = TagWidget(title, bookmark_id)
             tag.show()
             self.__flowbox.add(tag)
-        # Just change opacity, hidding button will move widget on the left
-        # May need a better tweak later
         if not back_enabled:
-            builder.get_object("back_button").set_opacity(0)
-            builder.get_object("back_button").set_sensitive(False)
-            self.set_margin_top(20)
+            builder.get_object("back_button").hide()
         self.add(builder.get_object("widget"))
         self.connect("unmap", self.__on_unmap)
 
@@ -274,6 +245,9 @@ class EditBookmarkWidget(Gtk.Bin):
         """
         El().bookmarks.thread_lock.acquire()
         self.disconnect_by_func(self.__on_unmap)
+        if El().sync_worker is not None:
+            guid = El().bookmarks.get_guid(self.__bookmark_id)
+            El().sync_worker.remove_from_bookmarks(guid)
         El().bookmarks.delete(self.__bookmark_id)
         if isinstance(self.get_parent(), Gtk.Popover):
             self.get_parent().hide()
@@ -281,80 +255,22 @@ class EditBookmarkWidget(Gtk.Bin):
             self.get_parent().set_visible_child_name("bookmarks")
         El().bookmarks.thread_lock.release()
 
-    def _on_new_tag_changed(self, entry):
-        """
-            Update button states
-            @param entry as Gtk.Entry
-        """
-        text = entry.get_text()
-        sensitive = text != ""
-        for child in self.__flowbox.get_children():
-            if child.label == text:
-                sensitive = False
-                break
-        self.__add_tag_button.set_sensitive(sensitive)
-
-    def _on_add_tag_clicked(self, button):
+    def _on_new_tag_entry_activate(self, entry, ignore1=None, ignore2=None):
         """
             Add new tag
-            @param button as Gtk.Button
+            @param entry as Gtk.Entry
         """
         El().bookmarks.thread_lock.acquire()
         tag_title = self.__new_tag_entry.get_text()
-        El().bookmarks.add_tag(tag_title, True)
-        tag_id = El().bookmarks.get_tag_id(tag_title)
-        El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
-        tag = TagWidget()
-        tag.set_label(tag_title)
-        tag.show()
-        self.__flowbox.add(tag)
-        button.set_sensitive(False)
-        El().bookmarks.thread_lock.release()
-
-    def _on_rename_tags_clicked(self, button):
-        """
-            Rename tags
-            @param button as Gtk.Button
-        """
-        El().bookmarks.thread_lock.acquire()
-        if button.get_image().get_icon_name()[0] == "emblem-ok-symbolic":
-            editable = False
-            button.get_image().set_from_icon_name("document-edit-symbolic",
-                                                  Gtk.IconSize.BUTTON)
-            self.__remove_tag_button.show()
-            button.get_style_context().remove_class("suggested-action")
-        else:
-            editable = True
-            button.get_image().set_from_icon_name("emblem-ok-symbolic",
-                                                  Gtk.IconSize.BUTTON)
-            self.__remove_tag_button.hide()
-            button.get_style_context().add_class("suggested-action")
-        for child in self.__flowbox.get_children():
-            child.set_editable(editable)
-            if not editable:
-                child.save_entry()
-        El().bookmarks.thread_lock.release()
-
-    def _on_remove_tags_clicked(self, button):
-        """
-            Remove tag
-            @param button as Gtk.Button
-        """
-        El().bookmarks.thread_lock.acquire()
-        if button.get_image().get_icon_name()[0] == "emblem-ok-symbolic":
-            removable = False
-            button.get_image().set_from_icon_name("list-remove-symbolic",
-                                                  Gtk.IconSize.BUTTON)
-            self.__rename_tag_button.show()
-            button.get_style_context().remove_class("suggested-action")
-        else:
-            removable = True
-            button.get_image().set_from_icon_name("emblem-ok-symbolic",
-                                                  Gtk.IconSize.BUTTON)
-            self.__rename_tag_button.hide()
-            button.get_style_context().add_class("suggested-action")
-        for child in self.__flowbox.get_children():
-            child.set_removable(removable)
+        if not El().bookmarks.has_tag(self.__bookmark_id, tag_title):
+            tag_id = El().bookmarks.get_tag_id(tag_title)
+            if tag_id is None:
+                tag_id = El().bookmarks.add_tag(tag_title, True)
+            El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
+            tag = TagWidget(tag_title, self.__bookmark_id)
+            tag.show()
+            self.__flowbox.add(tag)
+        entry.set_text("")
         El().bookmarks.thread_lock.release()
 
     def _on_flowbox_size_allocate(self, scrolled, allocation):
@@ -402,24 +318,4 @@ class EditBookmarkWidget(Gtk.Bin):
                 El().sync_worker.stop()
                 # To be sure stop is done
                 GLib.timeout_add(1000, El().sync_worker.sync)
-        El().bookmarks.thread_lock.release()
-
-    def __on_tag_activated(self, flowbox, child):
-        """
-            Add or remove tag
-            @param flowbox as Gtk.FlowBox
-            @param child as TagWidget
-        """
-        El().bookmarks.thread_lock.acquire()
-        if child.removable or child.editable:
-            return
-        tag_id = El().bookmarks.get_tag_id(child.label)
-        if tag_id is None:
-            return  # Sync may have deleted tag
-        active = not El().bookmarks.has_tag(self.__bookmark_id, child.label)
-        if active:
-            El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
-        else:
-            El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
-        child.set_active(active)
         El().bookmarks.thread_lock.release()

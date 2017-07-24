@@ -216,7 +216,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT tags.rowid\
                                   FROM tags, bookmarks_tags\
-                                  WHERE tags.title=?\
+                                  WHERE tags.title=? COLLATE NOCASE\
                                   AND bookmarks_tags.bookmark_id=?\
                                   AND bookmarks_tags.tag_id=tags.rowid",
                                  (tag, bookmark_id))
@@ -420,7 +420,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM tags\
-                                  WHERE title=?", (title,))
+                                  WHERE title=? COLLATE NOCASE", (title,))
             v = result.fetchone()
             if v is not None:
                 return v[0]
