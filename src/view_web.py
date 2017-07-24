@@ -443,7 +443,7 @@ class WebView(WebKit2.WebView):
                            hit.get_link_uri())
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
-        elif hit.context_is_selection():
+        if hit.context_is_selection() or hit.context_is_link():
             try:
                 selection = context_menu.get_user_data().get_string()
                 # Add an item for open words in search
@@ -458,6 +458,18 @@ class WebView(WebKit2.WebView):
                                selection)
                 item = WebKit2.ContextMenuItem.new(action)
                 context_menu.insert(item, 1)
+                # Add an item for open words in search
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("copy_text",
+                                        _("Copy"),
+                                        None,
+                                        None)
+                action.connect("activate",
+                               self.__on_copy_text_activate,
+                               selection)
+                item = WebKit2.ContextMenuItem.new(action)
+                context_menu.insert(item, 2)
             except:
                 pass
         else:
