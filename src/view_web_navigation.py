@@ -75,6 +75,15 @@ class WebViewNavigation:
             @param uri as str
         """
         self._error = None
+        # If not an URI, start a search
+        parsed = urlparse(uri)
+        is_uri = parsed.scheme in ["about", "http",
+                                   "https", "file", "populars"]
+        if not is_uri and\
+                not uri.startswith("/") and\
+                El().search.is_search(uri):
+            uri = El().search.get_search_uri(uri)
+
         self.__related_uri = uri
         parsed = urlparse(uri)
         if uri == "about:blank":

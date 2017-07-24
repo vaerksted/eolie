@@ -440,6 +440,20 @@ class ToolbarTitle(Gtk.Bin):
             return
         self.__focus_out()
 
+    def _on_populate_popup(self, entry, menu):
+        """
+            @param entry as Gtk.Entry
+            @param menu as Gtk.Menu
+        """
+        def on_item_activate(item, clipboard):
+            self.__window.container.current.webview.load_uri(clipboard)
+        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).wait_for_text()
+        if clipboard is not None:
+            item = Gtk.MenuItem.new_with_label(_("Paste and load"))
+            item.connect("activate", on_item_activate, clipboard)
+            item.show()
+            menu.attach(item, 0, 1, 3, 4)
+
     def _on_button_press_event(self, entry, event):
         """
             Show popover if hidden
@@ -505,13 +519,6 @@ class ToolbarTitle(Gtk.Bin):
                             uri = "%s://www.%s" % (db_parsed.scheme, uri)
                         else:
                             uri = "%s://%s" % (db_parsed.scheme, uri)
-
-                is_uri = parsed.scheme in ["about", "http",
-                                           "https", "file", "populars"]
-                if not is_uri and\
-                        not uri.startswith("/") and\
-                        El().search.is_search(uri):
-                    uri = El().search.get_search_uri(uri)
                 self.__window.container.load_uri(uri)
                 webview.grab_focus()
                 self.__completion_model.clear()
