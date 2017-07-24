@@ -446,6 +446,8 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.Event
         """
+        if event.button != 1:
+            return
         if event.type == Gdk.EventType.BUTTON_PRESS:
             if not self.__popover.is_visible():
                 self._on_entry_focus_in(entry, event)
