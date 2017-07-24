@@ -443,9 +443,10 @@ class WebView(WebKit2.WebView):
                            hit.get_link_uri())
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
-        if hit.context_is_selection() or hit.context_is_link():
-            try:
-                selection = context_menu.get_user_data().get_string()
+
+        selection = context_menu.get_user_data().get_string()
+        if selection:
+            if hit.context_is_selection():
                 # Add an item for open words in search
                 # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
                 # Introspection missing, Gtk.Action deprecated
@@ -458,6 +459,7 @@ class WebView(WebKit2.WebView):
                                selection)
                 item = WebKit2.ContextMenuItem.new(action)
                 context_menu.insert(item, 1)
+            if hit.context_is_link():
                 # Add an item for open words in search
                 # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
                 # Introspection missing, Gtk.Action deprecated
@@ -470,8 +472,6 @@ class WebView(WebKit2.WebView):
                                selection)
                 item = WebKit2.ContextMenuItem.new(action)
                 context_menu.insert(item, 2)
-            except:
-                pass
         else:
             # Add an item for open all images
             if view.is_loading() or parsed.scheme not in ["http", "https"]:
