@@ -78,7 +78,7 @@ class TaskHelper:
     def __on_read_bytes_async(self, stream, result, content,
                               cancellable, callback, uri, *args):
         """
-            Get data and pass them to callback
+            Read data from stream, when finished, pass to callback
             @param stream as Gio.InputStream
             @param result as Gio.AsyncResult
             @param cancellable as Gio.Cancellable
@@ -105,7 +105,7 @@ class TaskHelper:
     def __on_request_send_async(self, source, result, callback,
                                 cancellable, uri, *args):
         """
-            Read result and execute callback
+            Get stream and start reading from it
             @param source as Soup.Session
             @param result as Gio.AsyncResult
             @param cancellable as Gio.Cancellable
