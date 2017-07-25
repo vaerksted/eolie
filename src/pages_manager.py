@@ -289,7 +289,6 @@ class PagesManager(Gtk.EventBox):
         self._window.set_focus(None)
         was_current = view == self._window.container.current
         child_index = self.__get_index(view)
-        # Delay view destroy to allow stack animation
         child = self._get_child_at_index(child_index)
         if child is None:
             return
@@ -298,6 +297,7 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
         child.destroy()
+        # Delay view destroy to allow stack animation
         GLib.timeout_add(1000, view.destroy)
         # Nothing to do if was not current page
         if not was_current:
