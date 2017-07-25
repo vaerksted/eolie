@@ -306,12 +306,11 @@ class PagesManager(Gtk.EventBox):
 
         # First we search a child with same parent as closed
         brother = None
-        for child in reversed(children):
-            if child.view != view and (
-                    child.view.parent == view.parent or
-                    child.view.parent == view):
-                brother = child
-                break
+        if view.parent is not None:
+            for child in reversed(children):
+                if child.view != view and child.view.parent == view.parent:
+                    brother = child
+                    break
         # Load brother
         if brother is not None:
             brother_index = self.__get_index(brother.view)
