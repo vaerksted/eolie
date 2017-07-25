@@ -17,7 +17,7 @@ from threading import Thread
 
 class TaskHelper:
     """
-        Simple helper for running task in background
+        Simple helper for running a task in background
     """
 
     def __init__(self):
