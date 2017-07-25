@@ -272,7 +272,9 @@ class WebViewNavigation:
                 print("WebViewNavigation::__on_decide_policy()", e)
             decision.ignore()
         elif mouse_button == 0:
-            if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+            # Prevent opening empty pages
+            if uri != "about:blank" and decision_type ==\
+                                  WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 self.emit("new-page", uri, Gdk.WindowType.CHILD)
                 decision.ignore()
                 return True
@@ -295,7 +297,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                # Special case to force populars view update
+                # Special case to force populars view to update related_uri
                 if webview.get_uri() == "populars://":
                     self.__related_uri = uri
                 El().history.set_page_state(webview.get_uri())
