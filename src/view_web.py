@@ -116,7 +116,7 @@ class WebView(WebKit2.WebView):
 
     def zoom_out(self):
         """
-            Zoom in view
+            Zoom out view
             @return current zoom after zoom out
         """
         current = El().websettings.get_zoom(self.get_uri())
@@ -128,6 +128,14 @@ class WebView(WebKit2.WebView):
         El().websettings.set_zoom(current, self.get_uri())
         self.update_zoom_level()
         return current
+
+    def zoom_default(self):
+        """
+            Reset zoom level
+            @return current zoom after zoom out
+        """
+        El().websettings.unset_zoom(self.get_uri())
+        self.update_zoom_level()
 
     def set_delayed_uri(self, uri):
         """

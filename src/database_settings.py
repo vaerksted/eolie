@@ -187,6 +187,22 @@ class DatabaseSettings:
         except Exception as e:
             print("DatabaseSettings::set_zoom():", e)
 
+    def unset_zoom(self, url):
+        """
+            Unset zoom for url
+            @param url as str
+        """
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
+        try:
+            with SqlCursor(self) as sql:
+                sql.execute("DELETE FROM settings\
+                             WHERE url=?", (parsed.netloc,))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseSettings::unset_zoom():", e)
+
     def get_zoom(self, url):
         """
             Get zoom for url

@@ -374,6 +374,8 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Add", "<Control>plus"])
         self.set_accels_for_action("win.shortcut::zoom_out",
                                    ["<Control>KP_Subtract", "<Control>minus"])
+        self.set_accels_for_action("win.shortcut::zoom_default",
+                                   ["<Control>KP_0", "<Control>0"])
         self.set_accels_for_action("app.panel_mode(0)",
                                    ["<Control><Alt>0", "<Control><Alt>KP_0"])
         self.set_accels_for_action("app.panel_mode(1)",

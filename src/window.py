@@ -421,6 +421,8 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.zoom_in()
         elif string == "zoom_out":
             self.container.current.webview.zoom_out()
+        elif string == "zoom_default":
+            self.container.current.webview.zoom_default()
         elif string == "filter":
             button = self.toolbar.actions.filter_button
             button.set_active(not button.get_active())
