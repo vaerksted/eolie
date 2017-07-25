@@ -277,8 +277,7 @@ class PagesManager(Gtk.EventBox):
             close current view
             @param view as View
         """
-        children = self._box.get_children()
-        children_count = len(children) - 1
+        children_count = len(self._box.get_children()) - 1
         # Don't show 0 as we are going to open a new one
         if children_count:
             self._window.toolbar.actions.count_label.set_text(
@@ -302,37 +301,38 @@ class PagesManager(Gtk.EventBox):
         # Nothing to do if was not current page
         if not was_current:
             return False
-        next_row = None
 
         # First we search a child with same parent as closed
         brother = None
         if view.parent is not None:
-            for child in reversed(children):
+            for child in reversed(self._box.get_children()):
                 if child.view != view and child.view.parent == view.parent:
                     brother = child
                     break
+        next_view = None
         # Load brother
         if brother is not None:
             brother_index = self.__get_index(brother.view)
-            next_row = self._get_child_at_index(brother_index)
+            next_view = self._get_child_at_index(brother_index).view
         # Go back to parent page
         elif view.parent is not None:
             parent_index = self.__get_index(view.parent)
-            next_row = self._get_child_at_index(parent_index)
-        # Find best near page
+            next_view = self._get_child_at_index(parent_index).view
         else:
             # We are last row, add a new one
             if children_count == 0:
                 self._window.container.add_webview(El().start_page,
                                                    Gdk.WindowType.CHILD)
-            # We have rows before closed
-            elif child_index - 1 >= 0:
-                next_row = self._get_child_at_index(child_index - 1)
-            # We have rows next to closed, so reload current index
-            elif child_index < children_count:
-                next_row = self._get_child_at_index(child_index)
-        if next_row is not None:
-            self._window.container.set_visible_view(next_row.view)
+            # Find last activated page
+            else:
+                atime = 0
+                for child in self._box.get_children():
+                    if child.view != view and\
+                            child.view.webview.access_time >= atime:
+                        next_view = child.view
+                        atime = next_view.webview.access_time
+        if next_view is not None:
+            self._window.container.set_visible_view(next_view)
         self.update_visible_child()
 
     def __scroll_to_child(self, row):

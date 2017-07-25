@@ -244,6 +244,7 @@ class Container(Gtk.Overlay):
                 uri = webview.get_uri()
             else:
                 webview.load_uri(uri)
+            webview.update_access_time()
             title = webview.get_title()
             self.__window.toolbar.title.update_load_indicator(webview)
             if webview.popups:

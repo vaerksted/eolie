@@ -218,6 +218,20 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
+    def update_access_time(self):
+        """
+            Update access time
+        """
+        self.__atime = int(time())
+
+    @property
+    def access_time(self):
+        """
+            Get access time
+            @return int
+        """
+        return self.__atime
+
     @property
     def cancelled(self):
         """
@@ -284,6 +298,7 @@ class WebView(WebKit2.WebView):
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         self._window = window
+        self.__atime = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
