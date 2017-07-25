@@ -53,13 +53,13 @@ class ToolbarActions(Gtk.Bin):
             El().settings.connect("changed::panel-mode",
                                   self.__on_panel_mode_changed)
 
-    def set_actions(self, view):
+    def set_actions(self, webview):
         """
             Set available actions based on view
-            @param view as WebView
+            @param webview as WebView
         """
-        self.__backward_button.set_sensitive(view.can_go_back())
-        self.__forward_button.set_sensitive(view.can_go_forward())
+        self.__backward_button.set_sensitive(webview.can_go_back())
+        self.__forward_button.set_sensitive(webview.can_go_forward())
 
     def backward(self):
         """

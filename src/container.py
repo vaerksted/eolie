@@ -326,6 +326,10 @@ class Container(Gtk.Overlay):
         view.webview.connect("script-dialog", self.__on_script_dialog)
         view.webview.connect("insecure-content-detected",
                              self.__on_insecure_content_detected)
+        view.webview.get_back_forward_list().connect(
+                             "changed",
+                             self.__on_back_forward_list_changed,
+                             view.webview)
         view.show()
         return view
 
@@ -483,7 +487,6 @@ class Container(Gtk.Overlay):
         """
         if webview == self.current.webview:
             if uri:
-                self.__window.toolbar.actions.set_actions(webview)
                 self.__window.toolbar.title.set_uri(uri)
                 if not webview.is_loading():
                     self.__window.toolbar.title.show_readable_button(
@@ -561,7 +564,6 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__window.toolbar.title.set_title(uri)
-            self.__window.toolbar.actions.set_actions(webview)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__window.toolbar.title.show_spinner(False)
             title = webview.get_title()
@@ -580,6 +582,17 @@ class Container(Gtk.Overlay):
         """
         if El().sync_worker is not None:
             El().sync_worker.disconnect_by_func(self.__on_sync_finished)
+
+    def __on_back_forward_list_changed(self, bf_list, added, removed, webview):
+        """
+            Update actions
+            @param bf_list as WebKit2.BackForwardList
+            @param added as WebKit2.BackForwardListItem
+            @param removed as WebKit2.BackForwardListItem
+            @param webview as WebView
+        """
+        if webview == self.current.webview:
+            self.__window.toolbar.actions.set_actions(webview)
 
     def __on_sync_finished(self, worker):
         """
