@@ -89,7 +89,7 @@ class Type:
     POPULARS = -2
     RECENTS = -3
     BOOKMARK = -4
-    KEYWORDS = -5
+    SUGGESTION = -5
     HISTORY = -6
     SEARCH = -7
     TAG = -8

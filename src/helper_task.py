@@ -47,6 +47,7 @@ class TaskHelper:
         """
         try:
             session = Soup.Session.new()
+            session.set_property('accept-language-auto', True)
             request = session.request(uri)
             request.send_async(cancellable,
                                self.__on_request_send_async,

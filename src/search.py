@@ -10,11 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Soup, Gio
+from gi.repository import Gio
 
 from gettext import gettext as _
 import json
 
+from eolie.helper_task import TaskHelper
 from eolie.define import El, EOLIE_LOCAL_PATH
 
 
@@ -97,32 +98,20 @@ class Search:
         except:
             return self.engines["Google"][1] % words
 
-    def get_keywords(self, words, cancellable):
+    def search_suggestions(self, value, cancellable, callback):
         """
-            Get keywords for words
-            @param words as str
+            Search keywords for value
+            @param value as str
             @param cancellable as Gio.Cancellable
-            @return [str]
+            @param callback as str
         """
         try:
-            uri = self.__keyword % words
-            session = Soup.Session.new()
-            session.set_property('accept-language-auto', True)
-            request = session.request(uri)
-            stream = request.send(cancellable)
-            bytes = bytearray(0)
-            buf = stream.read_bytes(1024, cancellable).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(1024, cancellable).get_data()
-            stream.close()
-            string = bytes.decode(self.__encoding)
-            # format: '["{"words"}",["result1","result2"]]'
-            keywords = string.replace('[', '').replace(']', '').split(',')[1:]
-            return keywords
+            uri = self.__keyword % value
+            task_helper = TaskHelper()
+            task_helper.load_uri_content(uri, cancellable,
+                                         callback, self.__encoding, value)
         except Exception as e:
-            print("Search::get_keywords():", e)
-            return []
+            print("Search::search_suggestions():", e)
 
     def is_search(self, string):
         """

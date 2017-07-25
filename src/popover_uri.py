@@ -76,7 +76,7 @@ class Row(Gtk.ListBoxRow):
             favicon = Gtk.Image()
             favicon.set_margin_start(2)
             self.__set_favicon(favicon)
-        elif item_type == Type.KEYWORDS:
+        elif item_type == Type.SUGGESTION:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
             favicon.set_margin_start(2)
@@ -320,7 +320,7 @@ class Row(Gtk.ListBoxRow):
             return True
         uri = self.__item.get_property("uri")
         item_id = self.__item.get_property("type")
-        if item_id in [Type.HISTORY, Type.KEYWORDS,
+        if item_id in [Type.HISTORY, Type.SUGGESTION,
                        Type.SEARCH, Type.BOOKMARK]:
             if event.button == 1:
                 self.__window.container.current.webview.load_uri(uri)
@@ -456,17 +456,17 @@ class UriPopover(Gtk.Popover):
         self.__set_search_text(search)
         self.__stack.set_visible_child_name("search")
 
-    def add_keywords(self, words):
+    def add_suggestion(self, suggestion):
         """
-            Add keywords to search
-            @param words as str
+            Add suggestion to search
+            @param suggestion as str
         """
         if self.__stack.get_visible_child_name() != "search":
             return
         item = Item()
-        item.set_property("type", Type.KEYWORDS)
-        item.set_property("title", words)
-        item.set_property("uri", El().search.get_search_uri(words))
+        item.set_property("type", Type.SUGGESTION)
+        item.set_property("title", suggestion)
+        item.set_property("uri", El().search.get_search_uri(suggestion))
         item.set_property("search", self.__search)
         item.set_property("score", -1)
         child = Row(item, self.__window)

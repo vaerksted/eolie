@@ -725,13 +725,6 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "system-search-symbolic")
 
-    def __search_keywords(self, value):
-        """
-            Search for keywords for value
-            @param value as str
-        """
-        return El().search.get_keywords(value, self.__cancellable)
-
     def __populate_completion(self, uri):
         """
             @param uri as str
@@ -849,19 +842,28 @@ class ToolbarTitle(Gtk.Bin):
 
         parsed = urlparse(self.__uri)
         if value and not is_uri and network:
-            task_helper.run(self.__search_keywords, (value,),
-                            self.__on_search_keywords)
+            El().search.search_suggestions(value,
+                                           self.__cancellable,
+                                           self.__search_suggestion)
 
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
 
-    def __on_search_keywords(self, keywords):
+    def __search_suggestion(self, uri, status, content, encoding, value):
         """
-            Add keywords
-            @param keywords as [str]
+            Add suggestions
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param encoding as str
+            @param value as str
         """
-        for words in keywords:
-            if words:
-                self.__popover.add_keywords(words.replace('"', ''))
+        if status and value == self.__entry.get_text():
+            string = content.decode(encoding)
+            # format: '["{"words"}",["result1","result2"]]'
+            sgs = string.replace('[', '').replace(']', '').split(',')[1:]
+            for suggestion in sgs:
+                if suggestion:
+                    self.__popover.add_suggestion(suggestion.replace('"', ''))
