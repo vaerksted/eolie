@@ -117,12 +117,6 @@ class WebViewNavigation:
         """
         self.__popups.append(webview)
 
-    def reset_related_uri(self):
-        """
-            Reset related uri
-        """
-        self.__related_uri = None
-
     @property
     def related_uri(self):
         """

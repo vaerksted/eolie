@@ -276,7 +276,8 @@ class PagesManagerChild:
             if not webview.cancelled and not webview.is_loading():
                 GLib.timeout_add(500, self.set_snapshot, uri, False)
                 # FIXME Should be better to have way to snapshot when
-                # page is rendered
+                # page is rendered. One more, webview.related_uri is not
+                # resetted so only use it after WebKit2.LoadEvent.FINISHED
                 GLib.timeout_add(3000, self.set_snapshot, uri, True)
                 self.__set_favicon()
 

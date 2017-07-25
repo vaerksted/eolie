@@ -119,10 +119,10 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             # Save start image to cache
             # We also cache original URI
             uris = [current_uri]
-            if view.related_uri is not None and\
-                    view.related_uri not in uris:
-                uris.append(view.related_uri)
-            view.reset_related_uri()
+            if save:
+                if view.related_uri is not None and\
+                        view.related_uri not in uris:
+                    uris.append(view.related_uri)
             # Set start image scale factor
             margin = 0
             if snapshot.get_width() > snapshot.get_height():
