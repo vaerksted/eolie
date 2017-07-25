@@ -16,8 +16,8 @@ from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
 from locale import strcoll
-from threading import Thread
 
+from eolie.helper_task import TaskHelper
 from eolie.define import El, Type, TimeSpan, TimeSpanValues, ArtSize
 
 
@@ -774,10 +774,8 @@ class UriPopover(Gtk.Popover):
                            datetime.strptime(date, "%d/%m/%Y").timetuple())
             else:
                 atime = int(time() - TimeSpanValues[active_id]/1000000)
-            thread = Thread(target=self.__clear_history,
-                            args=(atime,))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__clear_history, (atime,))
         infobar.hide()
 
 #######################

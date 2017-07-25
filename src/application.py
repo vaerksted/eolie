@@ -20,7 +20,6 @@ from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 
 from gettext import gettext as _
 from pickle import dump, load
-from threading import Thread
 from urllib.parse import urlparse
 from getpass import getuser
 from time import time
@@ -39,6 +38,7 @@ from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
+from eolie.helper_task import TaskHelper
 from eolie.context import Context
 from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues, PanelMode
 
@@ -190,9 +190,10 @@ class Application(Gtk.Application):
             self.sync_worker.stop()
             Gio.Application.quit(self)
         elif vacuum:
-            thread = Thread(target=self.__vacuum)
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__vacuum,
+                            (),
+                            lambda x: Gio.Application.quit(self))
         else:
             Gio.Application.quit(self)
 
@@ -426,16 +427,6 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::__vacuum(): ", e)
         self.art.vacuum()
-        GLib.idle_add(Gio.Application.quit, self)
-
-    def __show_plugins(self):
-        """
-            Show available plugins on stdout
-        """
-        if self.debug:
-            WebKit2.WebContext.get_default().get_plugins(None,
-                                                         self.__on_get_plugins,
-                                                         None)
 
     def __save_state(self):
         """
@@ -534,9 +525,10 @@ class Application(Gtk.Application):
             self.__new_or_load(self.start_page,
                                Gdk.WindowType.CHILD,
                                ephemeral)
-        thread = Thread(target=self.__show_plugins)
-        thread.daemon = True
-        thread.start()
+        if self.debug:
+            WebKit2.WebContext.get_default().get_plugins(None,
+                                                         self.__on_get_plugins,
+                                                         None)
         return 0
 
     def __new_or_load(self, uri, window_type, ephemeral):

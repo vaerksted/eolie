@@ -10,13 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Soup, Gio
+from gi.repository import Gio
 
 import sqlite3
 from time import time
-from threading import Thread
 import json
 
+from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_LOCAL_PATH
 
@@ -43,6 +43,7 @@ class DatabasePhishing:
             Create database tables or manage update if needed
         """
         self.__cancellable = Gio.Cancellable.new()
+        self.__task_helper = TaskHelper()
         f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
         if not f.query_exists():
@@ -61,6 +62,8 @@ class DatabasePhishing:
         """
             Update database
         """
+        if not Gio.NetworkMonitor.get_default().get_network_available():
+            return
         # Get in db mtime
         # Only update if filters older than one day
         mtime = 0
@@ -72,10 +75,9 @@ class DatabasePhishing:
         self.__mtime = int(time())
         if self.__mtime - mtime < 86400:
             return
-        if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__update)
-            thread.daemon = True
-            thread.start()
+        # Update phishing db
+        self.__cancellable.reset()
+        self.__on_load_uri_content(None, False, b"", [self.__URI])
 
     def is_phishing(self, uri):
         """
@@ -115,43 +117,50 @@ class DatabasePhishing:
 #######################
 # PRIVATE             #
 #######################
-    def __update(self):
+    def __save_rules(self, rules, uris):
         """
-            Update database
+            Save rules to db
+            @param rules as bytes
+            @param uris as [str]
         """
-        self.__cancellable.reset()
-        try:
-            SqlCursor.add(self)
-            session = Soup.Session.new()
-            request = session.request(self.__URI)
-            stream = request.send(self.__cancellable)
-            bytes = bytearray(0)
-            buf = stream.read_bytes(1024, self.__cancellable).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(
-                                       1024, self.__cancellable).get_data()
-            stream.close()
-            data = bytes.decode('utf-8')
-            j = json.loads(data)
-            with SqlCursor(self) as sql:
-                count = 0
-                for item in j:
-                    if self.__cancellable.is_cancelled():
-                        raise IOError("Cancelled")
-                    sql.execute("INSERT INTO phishing\
-                                 (uri, mtime) VALUES (?, ?)",
-                                (item["url"].rstrip("/"), self.__mtime))
-                    count += 1
-                    if count == 1000:
-                        sql.commit()
-                        count = 0
-                sql.commit()
-            # Delete removed entries
+        SqlCursor.add(self)
+        result = rules.decode('utf-8')
+        j = json.loads(result)
+        with SqlCursor(self) as sql:
+            count = 0
+            for item in j:
+                if self.__cancellable.is_cancelled():
+                    raise IOError("Cancelled")
+                sql.execute("INSERT INTO phishing\
+                             (uri, mtime) VALUES (?, ?)",
+                            (item["url"].rstrip("/"), self.__mtime))
+                count += 1
+                if count == 1000:
+                    sql.commit()
+                    count = 0
+            sql.commit()
+        # We are the last call to save_rules()?
+        # Delete removed entries and commit
+        if not uris:
             with SqlCursor(self) as sql:
                 sql.execute("DELETE FROM phishing\
                              WHERE mtime!=?", (self.__mtime,))
-            sql.commit()
-            SqlCursor.remove(self)
-        except Exception as e:
-            print("DatabasePhishing::__update()", e)
+                sql.commit()
+        SqlCursor.remove(self)
+
+    def __on_load_uri_content(self, uri, status, content, uris):
+        """
+            Load pending uris
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param uris as [str]
+        """
+        if status:
+            self.__task_helper.run(self.__save_rules, (content, uris))
+        if uris:
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_content,
+                                                uris)

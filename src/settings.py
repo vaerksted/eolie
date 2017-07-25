@@ -16,10 +16,10 @@ gi.require_version('WebKit2', '4.0')
 from gi.repository import Gio, Gdk, Gtk, GLib
 
 from gettext import gettext as _
-from threading import Thread
 
 from eolie.define import El
 from eolie.utils import get_current_monitor_model
+from eolie.helper_task import TaskHelper
 from eolie.helper_passwords import PasswordsHelper
 
 
@@ -168,9 +168,8 @@ class SettingsDialog:
         builder.connect_signals(self)
         self.__helper.get_sync(self.__on_get_sync)
 
-        thread = Thread(target=self.__get_sync_status)
-        thread.daemon = True
-        thread.start()
+        task_helper = TaskHelper()
+        task_helper.run(self.__get_sync_status)
 
     def show(self):
         """
@@ -435,11 +434,10 @@ class SettingsDialog:
             button.set_sensitive(False)
             self.__result_image.set_from_icon_name("content-loading-symbolic",
                                                    Gtk.IconSize.MENU)
-            thread = Thread(target=self.__connect_mozilla_sync,
-                            args=(self.__login_entry.get_text(),
-                                  self.__password_entry.get_text()))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__connect_mozilla_sync,
+                            (self.__login_entry.get_text(),
+                             self.__password_entry.get_text()))
 
 #######################
 # PRIVATE             #

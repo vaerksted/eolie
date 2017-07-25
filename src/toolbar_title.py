@@ -12,10 +12,10 @@
 
 from gi.repository import Gtk, Gdk, GLib, Gio
 
-from threading import Thread
 from gettext import gettext as _
 from urllib.parse import urlparse
 
+from eolie.helper_task import TaskHelper
 from eolie.define import El, PanelMode, Indicator
 from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
@@ -730,11 +730,7 @@ class ToolbarTitle(Gtk.Bin):
             Search for keywords for value
             @param value as str
         """
-        keywords = El().search.get_keywords(value, self.__cancellable)
-        for words in keywords:
-            if words:
-                GLib.idle_add(self.__popover.add_keywords,
-                              words.replace('"', ''))
+        return El().search.get_keywords(value, self.__cancellable)
 
     def __populate_completion(self, uri):
         """
@@ -833,14 +829,13 @@ class ToolbarTitle(Gtk.Bin):
             Update popover search if needed
             @param entry as Gtk.Entry
         """
+        task_helper = TaskHelper()
         self.__entry_changed_timeout = None
 
         value = entry.get_text()
 
         # Populate completion model
-        thread = Thread(target=self.__populate_completion, args=(value,))
-        thread.daemon = True
-        thread.start()
+        task_helper.run(self.__populate_completion, (value,))
 
         self.__cancellable.cancel()
         self.__cancellable.reset()
@@ -854,10 +849,19 @@ class ToolbarTitle(Gtk.Bin):
 
         parsed = urlparse(self.__uri)
         if value and not is_uri and network:
-            thread = Thread(target=self.__search_keywords, args=(value,))
-            thread.daemon = True
-            thread.start()
+            task_helper.run(self.__search_keywords, (value,),
+                            self.__on_search_keywords)
+
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
+
+    def __on_search_keywords(self, keywords):
+        """
+            Add keywords
+            @param keywords as [str]
+        """
+        for words in keywords:
+            if words:
+                self.__popover.add_keywords(words.replace('"', ''))

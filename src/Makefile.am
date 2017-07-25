@@ -21,6 +21,7 @@ app_PYTHON = \
     extension_proxy.py\
     helper_dbus.py\
     helper_passwords.py\
+    helper_task.py\
     languages.py\
     list.py\
     localized.py\

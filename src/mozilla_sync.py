@@ -17,8 +17,8 @@ from pickle import dump, load
 from hashlib import sha256
 import json
 from time import time, sleep
-from threading import Thread
 
+from eolie.helper_task import TaskHelper
 from eolie.define import El, EOLIE_LOCAL_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
@@ -95,9 +95,8 @@ class SyncWorker(GObject.GObject):
                 not Gio.NetworkMonitor.get_default().get_network_available():
             return
         self.__stop = False
-        thread = Thread(target=self.__sync, args=(first_sync,))
-        thread.daemon = True
-        thread.start()
+        task_helper = TaskHelper()
+        task_helper.run(self.__sync, (first_sync,))
         return loop
 
     def push_history(self, history_ids):
@@ -106,10 +105,8 @@ class SyncWorker(GObject.GObject):
             @param history_ids as [int]
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__push_history,
-                            args=(history_ids,))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__push_history, (history_ids,))
 
     def push_password(self, username, userform,
                       password, passform, uri, uuid):
@@ -123,12 +120,10 @@ class SyncWorker(GObject.GObject):
             @param uuid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__push_password,
-                            args=(username, userform,
-                                  password, passform,
-                                  uri, uuid))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__push_password,
+                            (username, userform, password,
+                             passform, uri, uuid))
 
     def remove_from_history(self, guid):
         """
@@ -136,9 +131,8 @@ class SyncWorker(GObject.GObject):
             @param guid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__remove_from_history, args=(guid,))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__remove_from_history, (guid,))
 
     def remove_from_bookmarks(self, guid):
         """
@@ -146,9 +140,8 @@ class SyncWorker(GObject.GObject):
             @param guid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            thread = Thread(target=self.__remove_from_bookmarks, args=(guid,))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__remove_from_bookmarks, (guid,))
 
     def remove_from_passwords(self, username, uri):
         """
@@ -396,10 +389,9 @@ class SyncWorker(GObject.GObject):
             @param count as int
             @param username as str
         """
-        thread = Thread(target=self.__remove_from_passwords,
-                        args=(attributes, password, uri, username))
-        thread.daemon = True
-        thread.start()
+        task_helper = TaskHelper()
+        task_helper.run(self.__remove_from_passwords,
+                        (attributes, password, uri, username))
 
     def __sync(self, first_sync):
         """

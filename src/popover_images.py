@@ -10,12 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gdk, Gio, Soup, GdkPixbuf, Pango
+from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf, Pango
 
 from hashlib import sha256
-from threading import Thread
 from urllib.parse import urlparse
 
+from eolie.helper_task import TaskHelper
 from eolie.define import CACHE_PATH, ArtSize, El
 
 
@@ -110,6 +110,7 @@ class ImagesPopover(Gtk.Popover):
         (width, height) = El().active_window.get_size()
         self.set_size_request(width / 2, height / 1.5)
         self.connect("closed", self.__on_closed)
+        self.__task_helper = TaskHelper()
 
 #######################
 # PROTECTED           #
@@ -127,9 +128,8 @@ class ImagesPopover(Gtk.Popover):
             Save visible images
             @param button as Gtk.Button
         """
-        thread = Thread(target=self.__move_images)
-        thread.daemon = True
-        thread.start()
+        task_helper = TaskHelper()
+        task_helper.run(self.__move_images)
         self.__spinner.start()
 
     def _on_button_toggled(self, button):
@@ -163,42 +163,6 @@ class ImagesPopover(Gtk.Popover):
         """
         if child.uri.find(self.__filter) != -1:
             return True
-
-    def __populate(self, uris):
-        """
-            Download images to cache and display them
-            @param uris as [str]
-        """
-        added = False
-        # First download images to cache
-        for uri in uris:
-            try:
-                session = Soup.Session.new()
-                request = session.request(uri)
-                stream = request.send(self.__cancellable)
-                bytes = bytearray(0)
-                buf = stream.read_bytes(1024,
-                                        self.__cancellable).get_data()
-                while buf:
-                    bytes += buf
-                    buf = stream.read_bytes(1024,
-                                            self.__cancellable).get_data()
-                stream.close()
-                encoded = sha256(uri.encode("utf-8")).hexdigest()
-                filepath = "%s/%s" % (CACHE_PATH, encoded)
-                f = Gio.File.new_for_path(filepath)
-                stream = f.append_to(Gio.FileCreateFlags.REPLACE_DESTINATION,
-                                     self.__cancellable)
-                stream.write_all(bytes, self.__cancellable)
-                stream.close()
-                added = True
-                GLib.idle_add(self.__add_image, uri)
-            except Exception as e:
-                print("ImagesPopover::__populate()", e)
-        # Then allow user to save images
-        GLib.idle_add(self.__spinner.stop)
-        if added:
-            GLib.idle_add(self.__button.set_sensitive, True)
 
     def __add_image(self, uri):
         """
@@ -253,20 +217,59 @@ class ImagesPopover(Gtk.Popover):
             except Exception as e:
                 print("ImagesPopover::__clean_cache():", e)
 
+    def __on_write_all_async(self, stream, result, uri):
+        """
+            Add image
+            @param stream as Gio.OutputStream
+            @param result as Gio.AsyncResult
+            @param uri as str
+        """
+        try:
+            stream.write_all_finish(result)
+            self.__add_image(uri)
+        except Exception as e:
+            print("ImagesPopover::__on_write_all_async()", e)
+
+    def __on_load_uri_content(self, uri, status, content, uris):
+        """
+            Load pending uris
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param uris as [str]
+        """
+        if status:
+            encoded = sha256(uri.encode("utf-8")).hexdigest()
+            filepath = "%s/%s" % (CACHE_PATH, encoded)
+            f = Gio.File.new_for_path(filepath)
+            stream = f.append_to(Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                 self.__cancellable)
+            stream.write_all_async(content, GLib.PRIORITY_DEFAULT,
+                                   self.__cancellable,
+                                   self.__on_write_all_async, uri)
+        if uris:
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_content,
+                                                uris)
+        else:
+            self.__spinner.stop()
+            self.__button.set_sensitive(True)
+
     def __on_get_images(self, source, result, data):
         """
-            Add images to flowbox
+            Get result and load pending uris
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param data
         """
+        uris = []
         try:
-            uris = source.call_finish(result)
-            thread = Thread(target=self.__populate, args=(uris[0],))
-            thread.daemon = True
-            thread.start()
+            uris = source.call_finish(result)[0]
         except Exception as e:
-            print("ImagesPopover::__on_get_images():", e)
+            print("ImagesPopover::__on_get_images()", e)
+        self.__on_load_uri_content(None, False, b"", uris)
 
     def __on_closed(self, popover):
         """
@@ -274,6 +277,4 @@ class ImagesPopover(Gtk.Popover):
         """
         self.__spinner.stop()
         self.__cancellable.cancel()
-        thread = Thread(target=self.__clean_cache)
-        thread.daemon = True
-        thread.start()
+        self.__task_helper.run(self.__clean_cache)

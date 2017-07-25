@@ -12,12 +12,11 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk, Soup
 
-from threading import Thread
-
 from eolie.define import El, PanelMode
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model
+from eolie.helper_task import TaskHelper
 
 
 class Window(Gtk.ApplicationWindow):
@@ -234,6 +233,7 @@ class Window(Gtk.ApplicationWindow):
             @param uri as str
             @thread safe
         """
+        # FIXME make this code async using TaskHelper
         try:
             (tmp, tmp_stream) = Gio.File.new_tmp("XXXXXX.html")
             session = Soup.Session.new()
@@ -247,17 +247,10 @@ class Window(Gtk.ApplicationWindow):
             tmp_stream.get_output_stream().write_all(bytes)
             stream.close()
             tmp_stream.close()
-            GLib.idle_add(self.__launch_editor, tmp)
+            return tmp
         except Exception as e:
             print("Window::__show_source_code():", e)
-
-    def __launch_editor(self, f):
-        """
-            Launch text editor
-            @param f as Gio.File
-        """
-        appinfo = Gio.app_info_get_default_for_type("text/plain", False)
-        appinfo.launch([f], None)
+            return None
 
     def __setup_pos(self):
         """
@@ -351,6 +344,15 @@ class Window(Gtk.ApplicationWindow):
         """
         self.update_zoom_level(False)
 
+    def __on_show_source_code(self, f):
+        """
+            Launch text editor
+            @param f as Gio.File
+        """
+        if f is not None:
+            appinfo = Gio.app_info_get_default_for_type("text/plain", False)
+            appinfo.launch([f], None)
+
     def __on_key_release_event(self, window, event):
         """
             Disable expose if Ctrl released
@@ -393,10 +395,10 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.reload()
         elif string == "source":
             uri = self.container.current.webview.get_uri()
-            thread = Thread(target=self.__show_source_code,
-                            args=(uri,))
-            thread.daemon = True
-            thread.start()
+            task_helper = TaskHelper()
+            task_helper.run(self.__show_source_code,
+                            (uri,),
+                            self.__on_show_source_code)
         elif string == "find":
             find_widget = self.container.current.find_widget
             find_widget.set_search_mode(True)
