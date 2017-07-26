@@ -143,13 +143,6 @@ class Container(Gtk.Overlay):
         if self.__pages_overlay is not None:
             self.__pages_overlay.destroy_child(view)
 
-    def stop(self):
-        """
-            Stop pending tasks
-        """
-        if El().sync_worker is not None:
-            self.__on_sync_finished(El().sync_worker)
-
     def popup_webview(self, webview, destroy):
         """
             Show webview in popopver

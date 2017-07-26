@@ -188,6 +188,7 @@ class Application(Gtk.Application):
         # If sync is running, to avoid db lock, we do not vacuum
         if self.sync_worker is not None and self.sync_worker.syncing:
             self.sync_worker.stop()
+            self.sync_worker.push_history_queue()
             Gio.Application.quit(self)
         elif vacuum:
             task_helper = TaskHelper()
@@ -438,7 +439,6 @@ class Application(Gtk.Application):
             remember_session = self.settings.get_value("remember-session")
             session_states = []
             for window in self.get_windows():
-                window.container.stop()
                 if not remember_session:
                     continue
                 for view in window.container.views:
@@ -453,7 +453,7 @@ class Application(Gtk.Application):
                 dump(session_states,
                      open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
         except Exception as e:
-            print("Application::save_state()", e)
+            print("Application::__save_state()", e)
 
     def __restore_state(self):
         """

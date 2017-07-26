@@ -106,8 +106,18 @@ class SyncWorker(GObject.GObject):
             @param history_ids as [int]
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
+            self.__stop = False
             task_helper = TaskHelper()
             task_helper.run(self.__push_history, (history_ids,))
+
+    def push_history_queue(self):
+        """
+            Push pending history
+        """
+        # Push pending history queue
+        while self.__history_queue:
+            history_id = self.__history_queue.pop(0)
+            self.__push_history([history_id])
 
     def push_password(self, username, userform,
                       password, passform, uri, uuid):
@@ -476,11 +486,7 @@ class SyncWorker(GObject.GObject):
             dump(self.__mtimes,
                  open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
-
-            # Push pending history queue
-            while self.__history_queue:
-                history_id = self.__history_queue.pop(0)
-                self.push_history([history_id])
+            self.push_history_queue()
         except Exception as e:
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
