@@ -29,12 +29,8 @@ class Container(Gtk.Overlay):
         """
         Gtk.Overlay.__init__(self)
         self.__window = window
-        self.__history_queue = []
         self.__pages_overlay = None
         self.__popover = WebViewPopover(window)
-        if El().sync_worker is not None:
-            El().sync_worker.connect("sync-finished",
-                                     self.__on_sync_finished)
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -56,7 +52,6 @@ class Container(Gtk.Overlay):
         self.__pages_manager = None
         self.__grid_stack.add_named(self.__grid, "grid")
         self.add(self.__grid_stack)
-        self.connect("unmap", self.__on_unmap)
 
     def add_webview(self, uri, window_type, ephemeral=False,
                     parent=None, state=None, load=True):
@@ -277,21 +272,3 @@ class Container(Gtk.Overlay):
             self.add_overlay(self.__pages_overlay)
         self.__pages_overlay.show()
         self.__pages_overlay.add_child(view)
-
-    def __on_unmap(self, widget):
-        """
-            Disconnect sync signal
-            @param widget as Gtk.Widget
-        """
-        if El().sync_worker is not None:
-            El().sync_worker.disconnect_by_func(self.__on_sync_finished)
-
-    def __on_sync_finished(self, worker):
-        """
-            Commit queue to sync
-            @param worker as SyncWorker
-        """
-        if self.__history_queue:
-            history_id = self.__history_queue.pop(0)
-            worker.push_history([history_id])
-            GLib.idle_add(self.__on_sync_finished, worker)

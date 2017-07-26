@@ -253,7 +253,7 @@ class WebViewSignalsHandler:
                 El().history.thread_lock.release()
                 if El().sync_worker is not None:
                     if El().sync_worker.syncing:
-                        self.__history_queue.append(history_id)
+                        El().sync_worker.add_to_history_queue(history_id)
                     else:
                         El().sync_worker.push_history([history_id])
 

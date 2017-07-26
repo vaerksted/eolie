@@ -47,6 +47,7 @@ class SyncWorker(GObject.GObject):
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__mozilla_sync = None
+        self.__history_queue = []
         self.__session = None
         self.__helper = PasswordsHelper()
         self.__helper.get_sync(self.__set_credentials)
@@ -172,6 +173,13 @@ class SyncWorker(GObject.GObject):
         self.__stop = True
         if force:
             self.__session = None
+
+    def add_to_history_queue(self, history_id):
+        """
+            Add item to history queue
+            @param history_id as int
+        """
+        self.__history_queue.append(history_id)
 
     def on_password_stored(self, secret, result, sync):
         """
@@ -468,7 +476,11 @@ class SyncWorker(GObject.GObject):
             dump(self.__mtimes,
                  open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
             debug("Stop syncing")
-            GLib.idle_add(self.emit, "sync-finished")
+
+            # Push pending history queue
+            while self.__history_queue:
+                history_id = self.__history_queue.pop(0)
+                self.push_history([history_id])
         except Exception as e:
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
