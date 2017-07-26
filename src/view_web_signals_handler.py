@@ -351,6 +351,7 @@ class WebViewSignalsHandler:
             Connect all signals
             @param webview as WebView
         """
+        self._window.update(webview)
         webview.connect("mouse-target-changed",
                         self.__on_mouse_target_changed)
         webview.connect("notify::estimated-load-progress",

@@ -132,25 +132,25 @@ class Window(Gtk.ApplicationWindow):
                 webview.load_uri(uri)
             webview.update_access_time()
             title = webview.get_title()
-            self.__window.toolbar.title.update_load_indicator(webview)
+            self.toolbar.title.update_load_indicator(webview)
             if webview.popups:
-                self.__window.toolbar.title.show_indicator(Indicator.POPUPS)
+                self.toolbar.title.show_indicator(Indicator.POPUPS)
             else:
-                self.__window.toolbar.title.show_indicator(Indicator.NONE)
+                self.toolbar.title.show_indicator(Indicator.NONE)
             if uri is not None:
-                self.__window.toolbar.title.set_uri(uri)
+                self.toolbar.title.set_uri(uri)
             if webview.is_loading():
-                self.__window.toolbar.title.show_spinner(True)
-                self.__window.toolbar.title.progress.show()
+                self.toolbar.title.show_spinner(True)
+                self.toolbar.title.progress.show()
             else:
-                self.__window.toolbar.title.progress.hide()
-                self.__window.toolbar.title.show_readable_button(
+                self.toolbar.title.progress.hide()
+                self.toolbar.title.show_readable_button(
                                                 webview.readable_content != "")
             if title:
-                self.__window.toolbar.title.set_title(title)
+                self.toolbar.title.set_title(title)
             elif uri:
-                self.__window.toolbar.title.set_title(uri)
-            self.__window.toolbar.actions.set_actions(webview)
+                self.toolbar.title.set_title(uri)
+            self.toolbar.actions.set_actions(webview)
 
     def hide(self):
         """
