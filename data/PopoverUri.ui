@@ -252,6 +252,7 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="row_spacing">5</property>
+            <property name="column_spacing">2</property>
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
@@ -278,19 +279,6 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">1</property>
-                <property name="height">2</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkCalendar" id="calendar">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="show_details">False</property>
-                <signal name="day-selected" handler="_on_day_selected" swapped="no"/>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
                 <property name="top_attach">1</property>
               </packing>
             </child>
@@ -345,22 +333,44 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Clear history</property>
+              <object class="GtkGrid">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="valign">start</property>
-                <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
-                <signal name="clicked" handler="_on_clear_history_clicked" swapped="no"/>
-                <style>
-                  <class name="linked"/>
-                </style>
+                <property name="can_focus">False</property>
+                <property name="row_spacing">2</property>
+                <child>
+                  <object class="GtkCalendar" id="calendar">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="valign">start</property>
+                    <property name="show_details">False</property>
+                    <signal name="day-selected" handler="_on_day_selected" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="label" translatable="yes">Clear history</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="halign">center</property>
+                    <property name="valign">start</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <signal name="clicked" handler="_on_clear_history_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">1</property>
               </packing>
             </child>
           </object>
