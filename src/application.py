@@ -372,7 +372,9 @@ class Application(Gtk.Application):
                                    ["<Control><Shift>Tab",
                                     "<Control>Page_Up"])
         self.set_accels_for_action("win.shortcut::zoom_in",
-                                   ["<Control>KP_Add", "<Control>plus"])
+                                   ["<Control>KP_Add",
+                                    "<Control>plus",
+                                    "<Control>equal"])
         self.set_accels_for_action("win.shortcut::zoom_out",
                                    ["<Control>KP_Subtract", "<Control>minus"])
         self.set_accels_for_action("win.shortcut::zoom_default",
