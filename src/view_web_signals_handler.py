@@ -252,10 +252,7 @@ class WebViewSignalsHandler:
                 El().history.set_page_state(uri, mtime)
                 El().history.thread_lock.release()
                 if El().sync_worker is not None:
-                    if El().sync_worker.syncing:
-                        El().sync_worker.add_to_history_queue(history_id)
-                    else:
-                        El().sync_worker.push_history([history_id])
+                    El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """

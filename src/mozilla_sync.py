@@ -11,11 +11,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GObject, GLib
+from gi.repository import Gio, GLib
 
 from pickle import dump, load
 from hashlib import sha256
 import json
+from fcntl import flock, LOCK_EX, LOCK_NB, LOCK_UN
 from time import time, sleep
 
 from eolie.helper_task import TaskHelper
@@ -29,25 +30,22 @@ TOKENSERVER_URL = "https://token.services.mozilla.com/"
 FXA_SERVER_URL = "https://api.accounts.firefox.com"
 
 
-class SyncWorker(GObject.GObject):
+class SyncWorker:
     """
        Manage sync with mozilla server, will start syncing on init
     """
-    __gsignals__ = {
-        "sync-finished": (GObject.SignalFlags.RUN_FIRST, None, ())
-    }
 
     def __init__(self):
         """
             Init worker
         """
-        GObject.GObject.__init__(self)
-        self.__stop = True
+        self.__syncing = False
+        self.__sync_cancellable = Gio.Cancellable()
         self.__username = ""
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__mozilla_sync = None
-        self.__history_queue = []
+        self.__state_lock = True
         self.__session = None
         self.__helper = PasswordsHelper()
         self.__helper.get_sync(self.__set_credentials)
@@ -95,7 +93,6 @@ class SyncWorker(GObject.GObject):
         if self.syncing or\
                 not Gio.NetworkMonitor.get_default().get_network_available():
             return
-        self.__stop = False
         task_helper = TaskHelper()
         task_helper.run(self.__sync, (first_sync,))
         return loop
@@ -106,18 +103,8 @@ class SyncWorker(GObject.GObject):
             @param history_ids as [int]
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__stop = False
             task_helper = TaskHelper()
             task_helper.run(self.__push_history, (history_ids,))
-
-    def push_history_queue(self):
-        """
-            Push pending history
-        """
-        # Push pending history queue
-        while self.__history_queue:
-            history_id = self.__history_queue.pop(0)
-            self.__push_history([history_id])
 
     def push_password(self, username, userform,
                       password, passform, uri, uuid):
@@ -172,7 +159,7 @@ class SyncWorker(GObject.GObject):
         self.__username = ""
         self.__password = ""
         self.__session = None
-        self.__stop = True
+        self.__sync_cancellable.reset()
         self.__helper.clear_sync()
 
     def stop(self, force=False):
@@ -180,16 +167,9 @@ class SyncWorker(GObject.GObject):
             Stop update, if force, kill session too
             @param force as bool
         """
-        self.__stop = True
+        self.__sync_cancellable.cancel()
         if force:
             self.__session = None
-
-    def add_to_history_queue(self, history_id):
-        """
-            Add item to history queue
-            @param history_id as int
-        """
-        self.__history_queue.append(history_id)
 
     def on_password_stored(self, secret, result, sync):
         """
@@ -218,7 +198,7 @@ class SyncWorker(GObject.GObject):
             True if sync is running
             @return bool
         """
-        return not self.__stop
+        return self.__syncing
 
     @property
     def status(self):
@@ -270,16 +250,32 @@ class SyncWorker(GObject.GObject):
         bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
         return bulk_keys
 
+    def __update_state(self):
+        """
+            Update state file
+        """
+        try:
+            # If syncing, state will be written by self.__sync()
+            if not self.__syncing:
+                f = open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb")
+                # Lock file
+                flock(f, LOCK_EX | LOCK_NB)
+                self.__mtimes = self.__mozilla_sync.client.info_collections()
+                dump(self.__mtimes, f)
+                # Unlock file
+                flock(f, LOCK_UN)
+        except Exception as e:
+            print("SyncWorker::__update_state():", e)
+
     def __push_history(self, history_ids):
         """
             Push history ids if atime is available, else, ask to remove
             @param history ids as [int]
         """
-        if not self.__username or not self.__password:
-            return
         try:
             bulk_keys = self.__get_session_bulk_keys()
             for history_id in history_ids:
+                self.__check_worker()
                 sleep(0.01)
                 record = {}
                 atimes = El().history.get_atimes(history_id)
@@ -300,9 +296,7 @@ class SyncWorker(GObject.GObject):
                     record["deleted"] = True
                     debug("deleting %s" % record)
                     self.__mozilla_sync.add(record, "history", bulk_keys)
-                self.__mtimes = self.__mozilla_sync.client.info_collections()
-                dump(self.__mtimes,
-                     open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+                self.__update_state()
         except Exception as e:
             print("SyncWorker::__push_history():", e)
 
@@ -317,9 +311,8 @@ class SyncWorker(GObject.GObject):
             @param uri as str
             @param uuid as str
         """
-        if not self.__username or not self.__password:
-            return
         try:
+            self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = "{%s}" % uuid
@@ -335,6 +328,7 @@ class SyncWorker(GObject.GObject):
             record["timePasswordChanged"] = mtime
             debug("pushing %s" % record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
+            self.__update_state()
         except Exception as e:
             print("SyncWorker::__push_password():", e)
 
@@ -343,9 +337,8 @@ class SyncWorker(GObject.GObject):
             Remove from history
             @param guid as str
         """
-        if not self.__username or not self.__password:
-            return
         try:
+            self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = guid
@@ -353,6 +346,7 @@ class SyncWorker(GObject.GObject):
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "history", bulk_keys)
+            self.__update_state()
         except Exception as e:
             print("SyncWorker::__remove_from_history():", e)
 
@@ -361,9 +355,8 @@ class SyncWorker(GObject.GObject):
             Remove from history
             @param guid as str
         """
-        if not self.__username or not self.__password:
-            return
         try:
+            self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = guid
@@ -371,6 +364,7 @@ class SyncWorker(GObject.GObject):
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "bookmark", bulk_keys)
+            self.__update_state()
         except Exception as e:
             print("SyncWorker::__remove_from_bookmarks():", e)
 
@@ -382,10 +376,10 @@ class SyncWorker(GObject.GObject):
             @param uri as str
             @param username as str
         """
-        if not self.__username or not self.__password or\
-                attributes is None or username != attributes["login"]:
+        if attributes is None or username != attributes["login"]:
             return
         try:
+            self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = attributes["uuid"]
@@ -393,6 +387,7 @@ class SyncWorker(GObject.GObject):
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
             self.__helper.clear_by_uuid(attributes["uuid"])
+            self.__update_state()
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
 
@@ -417,9 +412,8 @@ class SyncWorker(GObject.GObject):
             @param first_sync as bool
         """
         debug("Start syncing")
-        if not self.__username or not self.__password or not self.__token:
-            self.__stop = True
-            return
+        self.__syncing = True
+        self.__sync_cancellable.reset()
         try:
             self.__mtimes = load(open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin",
                                  "rb"))
@@ -428,11 +422,12 @@ class SyncWorker(GObject.GObject):
                              "history": 0.1,
                              "passwords": 0.1}
         try:
+            self.__check_worker()
+
             bulk_keys = self.__get_session_bulk_keys()
             new_mtimes = self.__mozilla_sync.client.info_collections()
-            if self.__stop:
-                return
 
+            self.__check_worker()
             ########################
             # Passwords Management #
             ########################
@@ -446,8 +441,7 @@ class SyncWorker(GObject.GObject):
             except:
                 pass  # No passwords in sync
 
-            if self.__stop:
-                return
+            self.__check_worker()
             ######################
             # History Management #
             ######################
@@ -461,8 +455,7 @@ class SyncWorker(GObject.GObject):
             except:
                 pass  # No history in sync
 
-            if self.__stop:
-                return
+            self.__check_worker()
             ########################
             # Bookmarks Management #
             ########################
@@ -474,24 +467,19 @@ class SyncWorker(GObject.GObject):
                 self.__push_bookmarks(bulk_keys)
             except:
                 pass  # No bookmarks in sync
-
-            if self.__stop:
-                return
-
+            self.__check_worker()
             # Only pull if something new available
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
             # Update last sync mtime
-            self.__mtimes = self.__mozilla_sync.client.info_collections()
-            dump(self.__mtimes,
-                 open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb"))
+            self.__syncing = False
+            self.__update_state()
             debug("Stop syncing")
-            self.push_history_queue()
         except Exception as e:
             print("SyncWorker::__sync():", e)
             if str(e) == "The authentication token could not be found":
                 self.__helper.get_sync(self.login)
-        self.__stop = True
+            self.__syncing = False
 
     def __push_bookmarks(self, bulk_keys):
         """
@@ -504,8 +492,7 @@ class SyncWorker(GObject.GObject):
         parents = []
         for bookmark_id in El().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
-            if self.__stop:
-                raise StopIteration("Cancelled")
+            self.__check_worker()
             sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
@@ -525,8 +512,7 @@ class SyncWorker(GObject.GObject):
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         # Del old bookmarks
         for bookmark_id in El().bookmarks.get_deleted_ids():
-            if self.__stop:
-                raise StopIteration("Cancelled")
+            self.__check_worker()
             sleep(0.01)
             parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
             parent_id = El().bookmarks.get_id_by_guid(parent_guid)
@@ -586,8 +572,7 @@ class SyncWorker(GObject.GObject):
         records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
         children_array = []
         for record in records:
-            if self.__stop:
-                raise StopIteration("Cancelled")
+            self.__check_worker()
             if record["modified"] < self.__mtimes["bookmarks"]:
                 continue
             sleep(0.01)
@@ -694,8 +679,7 @@ class SyncWorker(GObject.GObject):
         debug("pull passwords")
         records = self.__mozilla_sync.get_records("passwords", bulk_keys)
         for record in records:
-            if self.__stop:
-                raise StopIteration("Cancelled")
+            self.__check_worker()
             if record["modified"] < self.__mtimes["passwords"]:
                 continue
             sleep(0.01)
@@ -722,8 +706,7 @@ class SyncWorker(GObject.GObject):
         debug("pull history")
         records = self.__mozilla_sync.get_records("history", bulk_keys)
         for record in records:
-            if self.__stop:
-                raise StopIteration("Cancelled")
+            self.__check_worker()
             if record["modified"] < self.__mtimes["history"]:
                 continue
             sleep(0.01)
@@ -780,6 +763,19 @@ class SyncWorker(GObject.GObject):
                 self.login(attributes, password)
         except Exception as e:
             print("SyncWorker::__set_credentials()", e)
+
+    def __check_worker(self):
+        """
+            Raise an exception if worker should not be syncing: error&cancel
+        """
+        if self.__sync_cancellable.is_cancelled():
+            raise StopIteration("SyncWorker: cancelled")
+        elif not self.__username:
+            raise StopIteration("SyncWorker: missing username")
+        elif not self.__password:
+            raise StopIteration("SyncWorker: missing password")
+        elif not self.__token:
+            raise StopIteration("SyncWorker: missing token")
 
 
 class MozillaSync(object):
