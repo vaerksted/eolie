@@ -124,7 +124,7 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
-        if webview == self.__stack.get_visible_child().webview:
+        if webview == self.__container.current.webview:
             uri = webview.delayed_uri
             if uri is None:
                 uri = webview.get_uri()
