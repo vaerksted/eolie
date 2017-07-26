@@ -237,21 +237,6 @@ class ToolbarActions(Gtk.Bin):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__force_show_image)
 
-    def __on_opened_popover_button_press_event(self, eventbox,
-                                               event, popover, webview):
-        """
-            Destroy popover and show wanted page
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.EventButton
-            @param popover as Gtk.Popover
-            @param webview as WebView
-        """
-        popover.destroy()
-        view = self.__window.container.get_view_for_webview(webview)
-        if view is not None:
-            self.__window.container.set_visible_view(view)
-            self.__window.container.pages_manager.update_visible_child()
-
     def __on_pages_popover_closed(self, popover, button):
         """
             Clear menu actions

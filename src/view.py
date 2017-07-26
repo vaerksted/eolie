@@ -10,70 +10,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+from gi.repository import Gtk, Gdk, GLib, Gio
 
 from eolie.widget_find import FindWidget
+from eolie.view_web_signals_handler import WebViewSignalsHandler
 from eolie.view_web import WebView
 from eolie.define import El
 
 
-class UriLabel(Gtk.EventBox):
+class View(Gtk.Overlay, WebViewSignalsHandler):
     """
-        Small label trying to not be under mouse pointer
-    """
-
-    def __init__(self):
-        """
-            Init label
-        """
-        Gtk.EventBox.__init__(self)
-        self.__label = Gtk.Label()
-        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__label.get_style_context().add_class("urilabel")
-        self.__label.show()
-        self.add(self.__label)
-        self.connect("enter-notify-event", self.__on_enter_notify)
-
-    def set_text(self, text):
-        """
-            Set label text
-            @param text as str
-        """
-        if text == self.__label.get_text():
-            return
-        self.set_property("halign", Gtk.Align.START)
-        self.set_property("valign", Gtk.Align.END)
-        self.__label.get_style_context().remove_class("bottom-right")
-        self.__label.get_style_context().add_class("bottom-left")
-        self.__label.set_text(text)
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_enter_notify(self, widget, event):
-        """
-            Try to go away from mouse cursor
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        GLib.idle_add(self.hide)
-        # Move label at the right
-        if self.get_property("halign") == Gtk.Align.START:
-            self.set_property("halign", Gtk.Align.END)
-            self.__label.get_style_context().remove_class("bottom-left")
-            self.__label.get_style_context().add_class("bottom-right")
-        # Move label at top
-        else:
-            self.set_property("halign", Gtk.Align.START)
-            self.set_property("valign", Gtk.Align.START)
-            self.__label.get_style_context().add_class("top-left")
-            self.__label.get_style_context().remove_class("bottom-right")
-        GLib.idle_add(self.show)
-
-
-class View(Gtk.Overlay):
-    """
-        A webview with a find widget
+        An overlay with a webview and a find widget
     """
 
     def get_new_webview(ephemeral, window):
@@ -95,11 +42,10 @@ class View(Gtk.Overlay):
             @param window as window
         """
         Gtk.Overlay.__init__(self)
+        WebViewSignalsHandler.__init__(self, webview)
         self.__reading_view = None
         self.__parent = parent
-        self.__window = window
-        if parent is not None:
-            parent.connect("destroy", self.__on_parent_destroy)
+        self._window = window
         self.__webview = webview
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
@@ -110,11 +56,6 @@ class View(Gtk.Overlay):
         self.__grid.add(self.__webview)
         self.__grid.show()
         self.add(self.__grid)
-        self.__uri_label = UriLabel()
-        self.add_overlay(self.__uri_label)
-        self.connect("key-press-event", self.__on_key_press_event)
-        webview.connect("mouse-target-changed",
-                        self.__on_mouse_target_changed)
         if webview.ephemeral:
             image = Gtk.Image.new_from_icon_name("user-not-tracked-symbolic",
                                                  Gtk.IconSize.DIALOG)
@@ -125,6 +66,10 @@ class View(Gtk.Overlay):
             image.show()
             self.add_overlay(image)
             self.set_overlay_pass_through(image, True)
+        # Connect signals
+        self.connect("key-press-event", self.__on_key_press_event)
+        if parent is not None:
+            parent.connect("destroy", self.__on_parent_destroy)
 
     def switch_read_mode(self):
         """
@@ -138,7 +83,7 @@ class View(Gtk.Overlay):
                                                                               )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
         if self.__reading_view is None:
-            self.__reading_view = WebView.new(self.__window)
+            self.__reading_view = WebView.new(self._window)
             self.__reading_view.show()
             self.add_overlay(self.__reading_view)
             if self.__webview.readable_content:
@@ -221,19 +166,6 @@ class View(Gtk.Overlay):
                 El().helper.call("SetPreviousForm", None, None, None, page_id)
             elif event.keyval == Gdk.KEY_Z:
                 El().helper.call("SetNextForm", None, None, None, page_id)
-
-    def __on_mouse_target_changed(self, view, hit, modifiers):
-        """
-            Show uri in title bar
-            @param view as WebView
-            @param hit as WebKit2.HitTestResult
-            @param modifier as Gdk.ModifierType
-        """
-        if hit.context_is_link():
-            self.__uri_label.set_text(hit.get_link_uri())
-            self.__uri_label.show()
-        else:
-            self.__uri_label.hide()
 
     def __on_parent_destroy(self, view):
         """

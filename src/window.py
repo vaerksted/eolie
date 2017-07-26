@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk, Soup
 
-from eolie.define import El, PanelMode
+from eolie.define import El, PanelMode, Indicator
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model
@@ -87,7 +87,7 @@ class Window(Gtk.ApplicationWindow):
         count = str(len(self.__container.pages_manager.children))
         self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
-        self.container.on_view_map(self.container.current.webview)
+        self.update(self.container.current.webview)
         self.__fullscreen_revealer = Gtk.Revealer.new()
         self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
@@ -111,13 +111,46 @@ class Window(Gtk.ApplicationWindow):
         GLib.idle_add(self.__fullscreen_revealer.destroy)
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
-        self.__container.on_view_map(self.container.current.webview)
+        self.update(self.container.current.webview)
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
         self.__container.current.webview.run_javascript(
                                         "document.webkitExitFullscreen();",
                                         None,
                                         None)
+
+    def update(self, webview):
+        """
+            Update window
+            @param webview as WebView
+        """
+        if webview == self.__stack.get_visible_child().webview:
+            uri = webview.delayed_uri
+            if uri is None:
+                uri = webview.get_uri()
+            else:
+                webview.load_uri(uri)
+            webview.update_access_time()
+            title = webview.get_title()
+            self.__window.toolbar.title.update_load_indicator(webview)
+            if webview.popups:
+                self.__window.toolbar.title.show_indicator(Indicator.POPUPS)
+            else:
+                self.__window.toolbar.title.show_indicator(Indicator.NONE)
+            if uri is not None:
+                self.__window.toolbar.title.set_uri(uri)
+            if webview.is_loading():
+                self.__window.toolbar.title.show_spinner(True)
+                self.__window.toolbar.title.progress.show()
+            else:
+                self.__window.toolbar.title.progress.hide()
+                self.__window.toolbar.title.show_readable_button(
+                                                webview.readable_content != "")
+            if title:
+                self.__window.toolbar.title.set_title(title)
+            elif uri:
+                self.__window.toolbar.title.set_title(uri)
+            self.__window.toolbar.actions.set_actions(webview)
 
     def hide(self):
         """

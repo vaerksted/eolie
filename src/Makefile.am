@@ -57,6 +57,7 @@ app_PYTHON = \
     view_web.py\
     view_web_navigation.py\
     view_web_errors.py\
+    view_web_signals_handler.py\
     widget_edit_bookmark.py\
     widget_find.py\
     window.py
