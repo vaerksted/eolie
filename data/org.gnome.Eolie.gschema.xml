@@ -141,7 +141,7 @@
          <description />
       </key>
       <key enum="org.gnome.Eolie.PanelMode" name="panel-mode">
-         <default>"preview"</default>
+         <default>"none"</default>
          <summary>Panel mode</summary>
          <description />
       </key>
