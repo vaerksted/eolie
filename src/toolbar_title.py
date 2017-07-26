@@ -761,8 +761,7 @@ class ToolbarTitle(Gtk.Bin):
                         self.__completion_model.append(
                                           [lookup.replace("www.", "")])
                         return
-                    except Exception as e:
-                        print(e)
+                    except:
                         if self.__cancellable.is_cancelled():
                             return
 
