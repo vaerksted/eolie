@@ -402,8 +402,8 @@ class DownloadsPopover(Gtk.Popover):
         self.__clear_button.set_sensitive(False)
         for child in self.__listbox.get_children():
             if isinstance(child, DownloadRow):
-                El().download_manager.remove(child.download)
                 if child.finished:
+                    El().download_manager.remove(child.download)
                     child.destroy()
 
 #######################
