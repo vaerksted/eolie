@@ -188,7 +188,6 @@ class Application(Gtk.Application):
         # If sync is running, to avoid db lock, we do not vacuum
         if self.sync_worker is not None and self.sync_worker.syncing:
             self.sync_worker.stop()
-            self.sync_worker.push_history_queue()
             Gio.Application.quit(self)
         elif vacuum:
             task_helper = TaskHelper()
