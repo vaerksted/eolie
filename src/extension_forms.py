@@ -140,21 +140,24 @@ class FormsExtension:
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and username is None:
             return
-        submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+        print(attributes)
+        # No way to get submituri from here, so ignore it
+        # submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         # Do not set anything if no attributes or
-        # If we have already text in input and we are not a perfect completion
+        # If we have already text in input
         if attributes is None or\
-                (username is not None and attributes["login"] != username) or\
-                attributes["formSubmitURL"] != submit_uri:
+                (username is not None and attributes["login"] != username):
+            # attributes["formSubmitURL"] != submit_uri:
             return
         try:
             usernames = self.get_login_forms(attributes["userform"], webpage)
             passwords = self.get_password_forms(attributes["passform"],
                                                 webpage)
-            # Passwords form may have changed, take first
+            # Username and passwords form may have changed, take first
+            if not usernames:
+                usernames = self.get_login_forms("", webpage)
             if not passwords:
-                passwords = self.get_password_forms("",
-                                                    webpage)
+                passwords = self.get_password_forms("", webpage)
             if usernames and passwords:
                 usernames[0].set_value(attributes["login"])
                 passwords[0].set_value(password)
@@ -197,6 +200,13 @@ class FormsExtension:
         if not self.__settings.get_value("remember-passwords"):
             return
         if self.has_password(webpage):
+            collection = webpage.get_dom_document().get_forms()
+            i = 0
+            while i < collection.get_length():
+                form = collection.item(i)
+                print(form.get_action(), form.get_method())
+                i += 1
+
             self.__helper.get(webpage.get_uri(),
                               self.set_input_forms,
                               webpage)
