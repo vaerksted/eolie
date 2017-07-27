@@ -115,7 +115,8 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::get_sync(): %s" % e)
 
-    def store(self, login, password, uri, uuid, userform, passform, callback):
+    def store(self, login, password, uri, uuid,
+              userform, passform, callback, *args):
         """
             Store password
             @param login as str
@@ -167,7 +168,7 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::store(): %s" % e)
 
-    def store_sync(self, login, password, uid, token, keyB, callback, data):
+    def store_sync(self, login, password, uid, token, keyB, callback, *args):
         """
             Store Mozilla Sync password
             @param login as str
@@ -210,14 +211,15 @@ class PasswordsHelper:
                                   password,
                                   None,
                                   callback,
-                                  data)
+                                  *args)
         except Exception as e:
             debug("PasswordsHelper::store_sync(): %s" % e)
 
-    def clear(self, uuid):
+    def clear(self, uuid, callback=None, *args):
         """
             Clear password
             @param uuid as str
+            @param callback as function
         """
         try:
             self.__wait_for_secret(self.clear, uuid)
@@ -236,7 +238,9 @@ class PasswordsHelper:
                                  SecretAttributes,
                                  Secret.SearchFlags.ALL,
                                  None,
-                                 self.__on_clear_search)
+                                 self.__on_clear_search,
+                                 callback,
+                                 *args)
         except Exception as e:
             debug("PasswordsHelper::clear(): %s" % e)
 
@@ -331,7 +335,7 @@ class PasswordsHelper:
         else:
             callback(None, None, uri, 0, 0, *args)
 
-    def __on_clear_search(self, source, result):
+    def __on_clear_search(self, source, result, callback=None, *args):
         """
             Clear passwords
             @param source as GObject.Object
@@ -342,6 +346,8 @@ class PasswordsHelper:
                 items = source.search_finish(result)
                 for item in items:
                     item.delete(None, None)
+            if callback is not None:
+                callback(*args)
         except Exception as e:
             debug("SettingsDialog::__on_clear_search(): %s" % e)
 

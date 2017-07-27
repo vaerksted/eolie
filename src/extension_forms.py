@@ -10,6 +10,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from gi.repository import WebKit2WebExtension
+
 from urllib.parse import urlparse
 
 from eolie.define import LOGINS
@@ -29,20 +31,9 @@ class FormsExtension:
         """
         self.__helper = PasswordsHelper()
         self.__settings = settings
+        self.__input_logins = []
+        self.__input_passwords = []
         extension.connect("page-created", self.__on_page_created)
-
-    def has_password(self, webpage):
-        """
-            True if webpage has a password input
-        """
-        dom_document = webpage.get_dom_document()
-        inputs = dom_document.get_elements_by_tag_name("input")
-        i = 0
-        while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "password":
-                return True
-            i += 1
-        return False
 
     def get_input_forms(self, webpage):
         """
@@ -75,92 +66,111 @@ class FormsExtension:
             i += 1
         return forms
 
-    def get_password_forms(self, name, webpage):
+    def get_password_inputs(self, webpage):
         """
-            Return forms for webpage
-            @param name as str
-            @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMHTMLInputElement], best match first
-        """
-        forms = []
-        dom_document = webpage.get_dom_document()
-        inputs = dom_document.get_elements_by_tag_name("input")
-        i = 0
-        while i < inputs.get_length():
-            if inputs.item(i).get_input_type() == "password":
-                input_name = inputs.item(i).get_attribute("name")
-                input_id = inputs.item(i).get_attribute("id")
-                if not name or name == input_name or name == input_id:
-                    forms.insert(0, inputs.item(i))
-                else:
-                    forms.append(inputs.item(i))
-            i += 1
-        return forms
-
-    def get_login_forms(self, name, webpage):
-        """
-            Return auth forms for webpage
-            @param name as str
+            Return password inputs
             @param webpage as WebKit2WebExtension.WebPage
             @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
-        dom_document = webpage.get_dom_document()
-        inputs = dom_document.get_elements_by_tag_name("input")
-        i = 0
-        forms = []
-        while i < inputs.get_length():
-            if inputs.item(i).get_input_type() in ["text", "email"]:
-                input_name = inputs.item(i).get_attribute("name")
-                input_id = inputs.item(i).get_attribute("id")
-                # We search for wanted name
-                if name and (name == input_name or name == input_id):
-                    forms.insert(0, inputs.item(i))
-                else:
-                    if self.is_login_form(inputs.item(i)):
-                        forms.append(inputs.item(i))
-            i += 1
-        return forms
+        return self.__input_passwords
+
+    def get_password_input(self, name, webpage):
+        """
+            Return password input with name
+            @param name as str
+            @param webpage as WebKit2WebExtension.WebPage
+            @return WebKit2WebExtension.DOMHTMLInputElement/None
+        """
+        wanted_input_password = None
+        unwanted_input_password = None
+        for input_password in self.__input_passwords:
+            input_name = input_password.get_attribute("name")
+            input_id = input_password.get_attribute("id")
+            # We search for wanted name
+            if name and (name == input_name or name == input_id):
+                wanted_input_password = input_password
+                break
+            elif unwanted_input_password is None:
+                unwanted_input_password = input_password
+        if wanted_input_password is not None:
+            return wanted_input_password
+        else:
+            return unwanted_input_password
+
+    def get_login_input(self, name, webpage):
+        """
+            Return login input with name
+            @param name as str
+            @param webpage as WebKit2WebExtension.WebPage
+            @return WebKit2WebExtension.DOMHTMLInputElement/None
+        """
+        wanted_input_login = None
+        unwanted_input_login = None
+        for input_login in self.__input_logins:
+            input_name = input_login.get_attribute("name")
+            input_id = input_login.get_attribute("id")
+            # We search for wanted name
+            if name and (name == input_name or name == input_id):
+                wanted_input_login = input_login
+                break
+            elif unwanted_input_login is None:
+                unwanted_input_login = input_login
+        if wanted_input_login is not None:
+            return wanted_input_login
+        else:
+            return unwanted_input_login
 
     def set_input_forms(self, attributes, password,
-                        uri, index, count, webpage, username=None):
+                        uri, index, count, webpage, login=None):
         """
-            Set username/password input
+            Set login/password input
             @param attributes as {}
             @param password as str
             @param uri as str
             @param index as int
             @param count as int
             @param webpage as WebKit2WebExtension.WebPage
-            @param username as str/None
+            @param login as str/None
         """
         # We only set first available password
-        if (index != 0 or count > 1) and username is None:
+        if (index != 0 or count > 1) and login is None:
             return
         parsed = urlparse(uri)
         # Allow unsecure completion if wanted by user
-        if parsed.scheme != "https" and username is None:
+        if parsed.scheme != "https" and login is None:
             return
-        print(attributes)
-        # No way to get submituri from here, so ignore it
-        # submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+
+        submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         # Do not set anything if no attributes or
         # If we have already text in input
         if attributes is None or\
-                (username is not None and attributes["login"] != username):
-            # attributes["formSubmitURL"] != submit_uri:
+                (login is not None and attributes["login"] != login) or\
+                attributes["formSubmitURL"] != submit_uri:
             return
         try:
-            usernames = self.get_login_forms(attributes["userform"], webpage)
-            passwords = self.get_password_forms(attributes["passform"],
-                                                webpage)
-            # Username and passwords form may have changed, take first
-            if not usernames:
-                usernames = self.get_login_forms("", webpage)
-            if not passwords:
-                passwords = self.get_password_forms("", webpage)
-            if usernames and passwords:
-                usernames[0].set_value(attributes["login"])
-                passwords[0].set_value(password)
+            wanted_input_login = None
+            name = attributes["userform"]
+            for input_login in self.__input_logins:
+                input_name = input_login.get_attribute("name")
+                input_id = input_login.get_attribute("id")
+                # We search for wanted name
+                if name and (name == input_name or name == input_id):
+                    wanted_input_login = input_login
+                    break
+            if wanted_input_login is None:
+                return
+            wanted_input_password = None
+            name = attributes["passform"]
+            for input_password in self.__input_passwords:
+                input_name = input_password.get_attribute("name")
+                input_id = input_password.get_attribute("id")
+                if not name or name == input_name or name == input_id:
+                    wanted_input_password = input_password
+                    break
+            if wanted_input_password is None:
+                return
+            wanted_input_login.set_value(attributes["login"])
+            wanted_input_password.set_value(password)
         except Exception as e:
             print("FormsExtension::set_input_forms()", e)
 
@@ -199,14 +209,32 @@ class FormsExtension:
         """
         if not self.__settings.get_value("remember-passwords"):
             return
-        if self.has_password(webpage):
-            collection = webpage.get_dom_document().get_forms()
-            i = 0
-            while i < collection.get_length():
-                form = collection.item(i)
-                print(form.get_action(), form.get_method())
-                i += 1
-
-            self.__helper.get(webpage.get_uri(),
-                              self.set_input_forms,
-                              webpage)
+        self.__input_logins = []
+        self.__input_passwords = []
+        collection = webpage.get_dom_document().get_forms()
+        i = 0
+        while i < collection.get_length():
+            input_password_found = False
+            form = collection.item(i)
+            if form.get_method() == "post":
+                elements_collection = form.get_elements()
+                h = 0
+                while h < elements_collection.get_length():
+                    element = elements_collection.item(h)
+                    if not isinstance(element,
+                                      WebKit2WebExtension.DOMHTMLInputElement):
+                        h += 1
+                        continue
+                    if element.get_input_type() == "password":
+                        self.__input_passwords.append(element)
+                        input_password_found = True
+                    elif element.get_input_type() in ["text",
+                                                      "email",
+                                                      "search"]:
+                        self.__input_logins.append(element)
+                    h += 1
+            i += 1
+            if input_password_found:
+                self.__helper.get(form.get_action(),
+                                  self.set_input_forms,
+                                  webpage)

@@ -66,15 +66,24 @@ class CredentialsPopover(Gtk.Popover):
             uri = "%s://%s" % (parsed.scheme, parsed.netloc)
             if self.__uuid is None:
                 self.__uuid = str(uuid3(NAMESPACE_DNS, parsed.netloc))
+                self.__helper.store(self.__username,
+                                    self.__password,
+                                    uri,
+                                    self.__uuid,
+                                    self.__userform,
+                                    self.__passform,
+                                    None)
             else:
-                self.__helper.clear(self.__uuid)
-            self.__helper.store(self.__username,
-                                self.__password,
-                                uri,
-                                self.__uuid,
-                                self.__userform,
-                                self.__passform,
-                                None)
+                self.__helper.clear(self.__uuid,
+                                    self.__helper.store,
+                                    self.__username,
+                                    self.__password,
+                                    uri,
+                                    self.__uuid,
+                                    self.__userform,
+                                    self.__passform,
+                                    None)
+
             if El().sync_worker is not None:
                 El().sync_worker.push_password(self.__username,
                                                self.__userform,

@@ -163,13 +163,13 @@ class ProxyExtension(Server):
             page = self.__extension.get_page(page_id)
             if page is None:
                 return ("", "", "", "")
-            usernames = self.__forms.get_login_forms(forms[0], page)
-            passwords = self.__forms.get_password_forms(forms[1], page)
-            if usernames and passwords:
-                return (usernames[0].get_value(),
-                        usernames[0].get_name(),
-                        passwords[0].get_value(),
-                        passwords[0].get_name())
+            username = self.__forms.get_login_input(forms[0], page)
+            password = self.__forms.get_password_input(forms[1], page)
+            if username is not None and password is not None:
+                return (username.get_value(),
+                        username.get_name(),
+                        password.get_value(),
+                        password.get_name())
         except Exception as e:
             print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")
@@ -405,7 +405,7 @@ class ProxyExtension(Server):
         parsed = urlparse(webpage.get_uri())
 
         # Check for unsecure content
-        for form in self.__forms.get_password_forms("", webpage):
+        for form in self.__forms.get_password_inputs(webpage):
             if parsed.scheme == "http":
                 self.__password_forms.append(form)
                 form.add_event_listener("focus",

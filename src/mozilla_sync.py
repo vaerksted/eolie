@@ -263,7 +263,7 @@ class SyncWorker:
                 # Unlock file
                 flock(f, LOCK_UN)
         except Exception as e:
-            print("SyncWorker::__update_state():", e)
+            debug("SyncWorker::__update_state(): %s" % e)
 
     def __push_history(self, history_ids):
         """
@@ -296,7 +296,7 @@ class SyncWorker:
                     self.__mozilla_sync.add(record, "history", bulk_keys)
                 self.__update_state()
         except Exception as e:
-            print("SyncWorker::__push_history():", e)
+            debug("SyncWorker::__push_history(): %s" % e)
 
     def __push_password(self, username, userform,
                         password, passform, uri, uuid):
@@ -346,7 +346,7 @@ class SyncWorker:
             self.__mozilla_sync.add(record, "history", bulk_keys)
             self.__update_state()
         except Exception as e:
-            print("SyncWorker::__remove_from_history():", e)
+            debug("SyncWorker::__remove_from_history(): %s" % e)
 
     def __remove_from_bookmarks(self, guid):
         """
@@ -364,7 +364,7 @@ class SyncWorker:
             self.__mozilla_sync.add(record, "bookmark", bulk_keys)
             self.__update_state()
         except Exception as e:
-            print("SyncWorker::__remove_from_bookmarks():", e)
+            debug("SyncWorker::__remove_from_bookmarks(): %s" % e)
 
     def __remove_from_passwords(self, uuid):
         """
@@ -381,7 +381,7 @@ class SyncWorker:
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
             self.__update_state()
         except Exception as e:
-            print("SyncWorker::__remove_from_passwords():", e)
+            debug("SyncWorker::__remove_from_passwords(): %s" % e)
 
     def __sync(self, first_sync):
         """
@@ -453,7 +453,7 @@ class SyncWorker:
             self.__update_state()
             debug("Stop syncing")
         except Exception as e:
-            print("SyncWorker::__sync():", e)
+            debug("SyncWorker::__sync(): %s" % e)
             if str(e) == "The authentication token could not be found":
                 self.__helper.get_sync(self.login)
             self.__syncing = False
@@ -662,17 +662,19 @@ class SyncWorker:
             sleep(0.01)
             debug("pulling %s" % record)
             password = record["payload"]
+            password_id = password["id"].strip("{}")
             if "formSubmitURL" in password.keys():
-                self.__helper.clear(password["id"])
-                self.__helper.store(password["username"],
+                self.__helper.clear(password_id,
+                                    self.__helper.store,
+                                    password["username"],
                                     password["password"],
                                     password["formSubmitURL"],
-                                    password["id"],
+                                    password_id,
                                     password["usernameField"],
                                     password["passwordField"],
                                     None)
             elif "deleted" in password.keys():  # We assume True
-                self.__helper.clear(password["id"])
+                self.__helper.clear(password_id)
 
     def __pull_history(self, bulk_keys):
         """
@@ -739,7 +741,7 @@ class SyncWorker:
             if not self.__token:
                 self.login(attributes, password)
         except Exception as e:
-            print("SyncWorker::__set_credentials()", e)
+            debug("SyncWorker::__set_credentials(): %s" % e)
 
     def __check_worker(self):
         """
