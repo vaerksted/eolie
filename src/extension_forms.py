@@ -55,7 +55,7 @@ class FormsExtension:
         inputs = dom_document.get_elements_by_tag_name("input")
         i = 0
         while i < inputs.get_length():
-            if inputs.item(i).get_input_type() in ["text", "search"]:
+            if inputs.item(i).get_input_type() in ["text", "email", "search"]:
                 forms.append(inputs.item(i))
             i += 1
         return forms
