@@ -23,13 +23,12 @@ class DBusHelper:
     def __init__(self):
         self.__signals = {}
 
-    def call(self, call, args, callback, data, page_id):
+    def call(self, call, dbus_args, callback, page_id, *args):
         """
             Call function
             @param call as str
-            @param args as GLib.Variant()/None
+            @param dbus_args as GLib.Variant()/None
             @param callback as function
-            @param data
             @param page_id as int
         """
         try:
@@ -39,7 +38,8 @@ class DBusHelper:
                               proxy_bus,
                               PROXY_PATH,
                               PROXY_INTERFACE, None,
-                              self.__on_get_proxy, call, args, callback, data)
+                              self.__on_get_proxy,
+                              call, dbus_args, callback, *args)
         except Exception as e:
             print("DBusHelper::call():", e)
 
@@ -74,19 +74,18 @@ class DBusHelper:
 #######################
 # PRIVATE             #
 #######################
-    def __on_get_proxy(self, source, result, call, args, callback, data):
+    def __on_get_proxy(self, source, result, call, dbus_args, callback, *args):
         """
             Launch call and connect it to callback
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param call as str
-            @param args as GLib.Variant()/None
+            @param dbus_args as GLib.Variant()/None
             @param callback as function
-            @param data
         """
         try:
             proxy = source.new_finish(result)
-            proxy.call(call, args, Gio.DBusCallFlags.NO_AUTO_START,
-                       500, None, callback, data)
+            proxy.call(call, dbus_args, Gio.DBusCallFlags.NO_AUTO_START,
+                       500, None, callback, *args)
         except Exception as e:
             print("DBusHelper::__on_get_proxy():", e)

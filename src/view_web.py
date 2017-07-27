@@ -305,6 +305,7 @@ class WebView(WebKit2.WebView):
         self._readable_content = ""
         self.__last_click_event = {}
         self.__delayed_uri = None
+        self._navigation_uri = None
         self.__related_view = related_view
         self.__input_source = Gdk.InputSource.MOUSE
         self._cancelled = False
@@ -386,16 +387,17 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
 
-    def __get_forms(self, forms, page_id, request):
+    def __get_forms(self, forms, page_id, request, uri):
         """
             Read request for authentification
             @param forms as [str]
             @param page_id as int
             @param request as WebKit2.FormSubmissionRequest
+            @param uri as str
         """
         El().helper.call("GetAuthForms",
                          GLib.Variant("(asi)", (forms, page_id)),
-                         self.__on_get_forms, request, page_id)
+                         self.__on_get_forms, page_id, request, uri)
 
     def __on_button_press_event(self, widget, event):
         """
@@ -407,12 +409,13 @@ class WebView(WebKit2.WebView):
                                    "y": event.y,
                                    "time": time()}
 
-    def __on_get_forms(self, source, result, request):
+    def __on_get_forms(self, source, result, request, uri):
         """
             Set forms value
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param request as WebKit2.FormSubmissionRequest
+            @param uri as str
         """
         try:
             (username, userform,
@@ -421,7 +424,7 @@ class WebView(WebKit2.WebView):
                 self.emit("save-password",
                           username, userform,
                           password, passform,
-                          self.get_uri())
+                          uri)
             request.submit()
         except Exception as e:
             print("WebView::__on_get_forms():", e)
@@ -432,6 +435,7 @@ class WebView(WebKit2.WebView):
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
+        uri = self._navigation_uri
         self._window.close_popovers()
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
@@ -442,7 +446,7 @@ class WebView(WebKit2.WebView):
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
             forms.append(name)
-        self.__get_forms(forms, webview.get_page_id(), request)
+        self.__get_forms(forms, webview.get_page_id(), request, uri)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """

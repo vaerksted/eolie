@@ -570,21 +570,20 @@ class Application(Gtk.Application):
             page_id = view.webview.get_page_id()
             self.helper.call("FormsFilled",
                              GLib.Variant("(i)", (page_id,)),
-                             self.__on_forms_filled, (window, views), page_id)
+                             self.__on_forms_filled, page_id, window, views)
         else:
             self.__close_window(window)
 
-    def __on_forms_filled(self, source, result, data):
+    def __on_forms_filled(self, source, result, window, views):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param data as (Window, [View])
+            @param window as Window
+            @param views as [View]
         """
-        def on_response_id(dialog, response_id, data, self):
+        def on_response_id(dialog, response_id, window, views, self):
             if response_id == Gtk.ResponseType.CLOSE:
-                window = data[0]
-                views = data[1]
                 if views:
                     self.__try_closing(window, views)
                 else:
@@ -598,8 +597,6 @@ class Application(Gtk.Application):
             dialog.response(Gtk.ResponseType.CANCEL)
 
         try:
-            window = data[0]
-            views = data[1]
             result = source.call_finish(result)[0]
             if result:
                 builder = Gtk.Builder()
@@ -610,7 +607,7 @@ class Application(Gtk.Application):
                 cancel = builder.get_object("cancel")
                 label.set_text(_("Do you really want to quit Eolie?"))
                 dialog.set_transient_for(window)
-                dialog.connect("response", on_response_id, data, self)
+                dialog.connect("response", on_response_id, window, views, self)
                 close.connect("clicked", on_close, dialog)
                 cancel.connect("clicked", on_cancel, dialog)
                 dialog.run()

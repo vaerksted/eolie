@@ -252,9 +252,9 @@ class WebViewNavigation:
             return False
 
         navigation_action = decision.get_navigation_action()
-        uri = navigation_action.get_request().get_uri()
+        self._navigation_uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
-        parsed = urlparse(uri)
+        parsed = urlparse(self._navigation_uri)
         self.clear_text_entry()
         if parsed.scheme not in ["http", "https", "file", "about",
                                  "populars", "accept"]:
@@ -267,9 +267,11 @@ class WebViewNavigation:
             decision.ignore()
         elif mouse_button == 0:
             # Prevent opening empty pages
-            if uri != "about:blank" and decision_type ==\
+            if self._navigation_uri != "about:blank" and decision_type ==\
                                   WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, Gdk.WindowType.CHILD)
+                self.emit("new-page",
+                          self._navigation_uri,
+                          Gdk.WindowType.CHILD)
                 decision.ignore()
                 return True
             else:
@@ -277,29 +279,37 @@ class WebViewNavigation:
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page", uri, Gdk.WindowType.CHILD)
+                self.emit("new-page",
+                          self._navigation_uri,
+                          Gdk.WindowType.CHILD)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
-                self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
+                self.emit("new-page",
+                          self._navigation_uri,
+                          Gdk.WindowType.OFFSCREEN)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.SHIFT_MASK:
-                self.emit("new-page", uri, Gdk.WindowType.SUBSURFACE)
+                self.emit("new-page",
+                          self._navigation_uri,
+                          Gdk.WindowType.SUBSURFACE)
                 decision.ignore()
                 return True
             else:
                 # Special case to force populars view to update related_uri
                 if webview.get_uri() == "populars://":
-                    self.__related_uri = uri
+                    self.__related_uri = self._navigation_uri
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None
                 return False
         else:
-            self.emit("new-page", uri, Gdk.WindowType.OFFSCREEN)
+            self.emit("new-page",
+                      self._navigation_uri,
+                      Gdk.WindowType.OFFSCREEN)
             decision.ignore()
             return True
 

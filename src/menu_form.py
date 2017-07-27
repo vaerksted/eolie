@@ -73,5 +73,5 @@ class FormMenu(Gio.Menu):
                          GLib.Variant("(si)",
                                       (attributes["login"],
                                        self.__page_id)),
-                         None, None,
+                         None,
                          self.__page_id)

@@ -87,7 +87,7 @@ class FindWidget(Gtk.SearchBar):
         page_id = self.__webview.get_page_id()
         El().helper.call("GetSelection",
                          GLib.Variant("(i)", (page_id,)),
-                         self.__on_get_selection, None, page_id)
+                         self.__on_get_selection, page_id)
 
 #######################
 # PRIVATE             #

@@ -172,7 +172,7 @@ class PagesManager(Gtk.EventBox):
         page_id = view.webview.get_page_id()
         El().helper.call("FormsFilled",
                          GLib.Variant("(i)", (page_id,)),
-                         self.__on_forms_filled, view, page_id)
+                         self.__on_forms_filled, page_id, view)
 
     def ctrl_released(self):
         """
