@@ -134,7 +134,7 @@ class FormsExtension:
             @param username as str/None
         """
         # We only set first available password
-        if index != 0 and username is None:
+        if (index != 0 or count > 1) and username is None:
             return
         parsed = urlparse(uri)
         # Allow unsecure completion if wanted by user
