@@ -64,9 +64,10 @@ class CredentialsPopover(Gtk.Popover):
         try:
             parsed = urlparse(self.__uri)
             uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            self.__helper.clear(self.__username, uri)
             if self.__uuid is None:
                 self.__uuid = str(uuid3(NAMESPACE_DNS, parsed.netloc))
+            else:
+                self.__helper.clear(self.__uuid)
             self.__helper.store(self.__username,
                                 self.__password,
                                 uri,

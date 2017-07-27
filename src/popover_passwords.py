@@ -21,6 +21,8 @@ class Item(GObject.GObject):
                                 default="")
     uri = GObject.Property(type=str,
                            default="")
+    uuid = GObject.Property(type=str,
+                            default="")
 
     def __init__(self):
         GObject.GObject.__init__(self)
@@ -71,12 +73,10 @@ class Row(Gtk.ListBoxRow):
             Delete password
         """
         self.hide()
-        uri = self.__item.get_property("uri")
-        username = self.__item.get_property("username")
-        if El().sync_worker is None:
-            self.__helper.clear(username, uri)
-        else:
-            El().sync_worker.remove_from_passwords(username, uri)
+        uuid = self.__item.get_property("uuid")
+        self.__helper.clear(uuid)
+        if El().sync_worker is not None:
+            El().sync_worker.remove_from_passwords(uuid)
 
     @property
     def item(self):
@@ -194,6 +194,7 @@ class PasswordsPopover(Gtk.Popover):
             item = Item()
             item.set_property("username", attributes["login"])
             item.set_property("uri", attributes["formSubmitURL"])
+            item.set_property("uuid", attributes["uuid"])
             child = Row(item, self.__helper)
             child.show()
             self.__listbox.add(child)

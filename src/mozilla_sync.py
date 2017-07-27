@@ -141,16 +141,14 @@ class SyncWorker:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_bookmarks, (guid,))
 
-    def remove_from_passwords(self, username, uri):
+    def remove_from_passwords(self, uuid):
         """
             Remove password from passwords collection
-            @param username as str
-            @param uri as str
+            @param uuid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
-            self.__helper.get(uri,
-                              self.__remove_from_passwords_thread,
-                              username)
+            task_helper = TaskHelper()
+            task_helper.run(self.__remove_from_passwords, (uuid,))
 
     def delete_secret(self):
         """
@@ -368,43 +366,22 @@ class SyncWorker:
         except Exception as e:
             print("SyncWorker::__remove_from_bookmarks():", e)
 
-    def __remove_from_passwords(self, attributes, password, uri, username):
+    def __remove_from_passwords(self, uuid):
         """
             Remove password from passwords collection
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param username as str
+            @param uuid as str
         """
-        if attributes is None or username != attributes["login"]:
-            return
         try:
             self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
             record = {}
-            record["id"] = attributes["uuid"]
+            record["id"] = uuid
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
-            self.__helper.clear_by_uuid(attributes["uuid"])
             self.__update_state()
         except Exception as e:
             print("SyncWorker::__remove_from_passwords():", e)
-
-    def __remove_from_passwords_thread(self, attributes, password, uri,
-                                       index, count, username):
-        """
-            Remove password from passwords collection
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param index as int
-            @param count as int
-            @param username as str
-        """
-        task_helper = TaskHelper()
-        task_helper.run(self.__remove_from_passwords,
-                        (attributes, password, uri, username))
 
     def __sync(self, first_sync):
         """
@@ -686,7 +663,7 @@ class SyncWorker:
             debug("pulling %s" % record)
             password = record["payload"]
             if "formSubmitURL" in password.keys():
-                self.__helper.clear_by_uuid(password["id"])
+                self.__helper.clear(password["id"])
                 self.__helper.store(password["username"],
                                     password["password"],
                                     password["formSubmitURL"],
@@ -695,7 +672,7 @@ class SyncWorker:
                                     password["passwordField"],
                                     None)
             elif "deleted" in password.keys():  # We assume True
-                self.__helper.clear_by_uuid(password["id"])
+                self.__helper.clear(password["id"])
 
     def __pull_history(self, bulk_keys):
         """
