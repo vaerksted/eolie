@@ -175,12 +175,11 @@ class FindWidget(Gtk.SearchBar):
                                 WebKit2.FindOptions.CASE_INSENSITIVE,
                                 100)
 
-    def __on_get_selection(self, source, result, data):
+    def __on_get_selection(self, source, result):
         """
             Start search with selection
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param data
         """
         selection = None
         try:
