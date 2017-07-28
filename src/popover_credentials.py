@@ -44,7 +44,7 @@ class CredentialsPopover(Gtk.Popover):
         self.__password = password
         self.__passform = passform
         self.__uri = uri
-        self.__form_uri = uri
+        self.__form_uri = form_uri
         self.__uuid = None
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverCredentials.ui')
@@ -66,13 +66,15 @@ class CredentialsPopover(Gtk.Popover):
         """
         try:
             parsed = urlparse(self.__uri)
-            uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+            parsed_form_uri = urlparse(self.__form_uri)
+            uri = "%s://%s" % (parsed_form_uri.scheme, parsed_form_uri.netloc)
+            form_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
             if self.__uuid is None:
-                self.__uuid = str(uuid3(NAMESPACE_DNS, parsed.netloc))
+                self.__uuid = str(uuid3(NAMESPACE_DNS, parsed_form_uri.netloc))
                 self.__helper.store(self.__username,
                                     self.__password,
                                     uri,
-                                    self.__form_uri,
+                                    form_uri,
                                     self.__uuid,
                                     self.__userform,
                                     self.__passform,
@@ -83,7 +85,7 @@ class CredentialsPopover(Gtk.Popover):
                                     self.__username,
                                     self.__password,
                                     uri,
-                                    self.__form_uri,
+                                    form_uri,
                                     self.__uuid,
                                     self.__userform,
                                     self.__passform,
@@ -95,6 +97,7 @@ class CredentialsPopover(Gtk.Popover):
                                                self.__password,
                                                self.__passform,
                                                uri,
+                                               form_uri,
                                                self.__uuid)
             self.destroy()
         except Exception as e:

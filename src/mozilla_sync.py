@@ -107,7 +107,7 @@ class SyncWorker:
             task_helper.run(self.__push_history, (history_ids,))
 
     def push_password(self, username, userform,
-                      password, passform, uri, uuid):
+                      password, passform, uri, form_uri, uuid):
         """
             Push password
             @param username as str
@@ -115,13 +115,14 @@ class SyncWorker:
             @param password as str
             @param passform as str
             @param uri as str
+            @param form_uri as str
             @param uuid as str
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
                             (username, userform, password,
-                             passform, uri, uuid))
+                             passform, uri, form_uri, uuid))
 
     def remove_from_history(self, guid):
         """
@@ -299,7 +300,7 @@ class SyncWorker:
             debug("SyncWorker::__push_history(): %s" % e)
 
     def __push_password(self, username, userform,
-                        password, passform, uri, uuid):
+                        password, passform, uri, form_uri, uuid):
         """
             Push password
             @param username as str
@@ -315,7 +316,7 @@ class SyncWorker:
             record = {}
             record["id"] = "{%s}" % uuid
             record["hostname"] = uri
-            record["formSubmitURL"] = uri
+            record["formSubmitURL"] = form_uri
             record["httpRealm"] = None
             record["username"] = username
             record["password"] = password
