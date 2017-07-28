@@ -35,6 +35,17 @@ class FormsExtension:
         self.__input_passwords = []
         extension.connect("page-created", self.__on_page_created)
 
+    def set_credentials(self, webpage):
+        """
+            Set credentials on page
+            @param webpage as WebKit2WebExtension.WebPage
+        """
+        forms = self.update_inputs_list(webpage)
+        for form in forms:
+            self.__helper.get(form.get_action(),
+                              self.set_input_forms,
+                              webpage)
+
     def get_input_forms(self, webpage):
         """
             Return forms for webpage
@@ -242,8 +253,4 @@ class FormsExtension:
         """
         if not self.__settings.get_value("remember-passwords"):
             return
-        forms = self.update_inputs_list(webpage)
-        for form in forms:
-            self.__helper.get(form.get_action(),
-                              self.set_input_forms,
-                              webpage)
+        self.set_credentials(webpage)

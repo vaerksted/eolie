@@ -85,6 +85,7 @@ class WebViewSignalsHandler:
         """
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
+        self.__js_timeout_id = None
         webview.connect("map", self.__on_webview_map)
         webview.connect("unmap", self.__on_webview_unmap)
         webview.connect("new-page", self.__on_new_page)
@@ -323,10 +324,10 @@ class WebViewSignalsHandler:
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_mouse_target_changed(self, view, hit, modifiers):
+    def __on_mouse_target_changed(self, webview, hit, modifiers):
         """
             Show uri in title bar
-            @param view as WebView
+            @param webview as WebView
             @param hit as WebKit2.HitTestResult
             @param modifier as Gdk.ModifierType
         """
@@ -335,6 +336,33 @@ class WebViewSignalsHandler:
             self.__uri_label.show()
         else:
             self.__uri_label.hide()
+
+    def __on_resource_load_started(self, webview, resource, request):
+        """
+            Listen to off loading events
+            @param webview as WebView
+            @param resource WebKit2.WebResource
+            @param request as WebKit2.URIRequest
+        """
+        # Javascript execution happened
+        if not webview.is_loading():
+            if self.__js_timeout_id is not None:
+                GLib.source_remove(self.__js_timeout_id)
+            self.__js_timeout_id = GLib.timeout_add(500,
+                                                    self.__on_js_timeout,
+                                                    webview)
+
+    def __on_js_timeout(self, webview):
+        """
+            Tell webpage to update credentials
+            @param webview as WebView
+        """
+        self.__js_timeout_id = None
+        page_id = webview.get_page_id()
+        El().helper.call("SetCredentials",
+                         GLib.Variant("(i)", (page_id,)),
+                         None,
+                         page_id)
 
     def __on_webview_map(self, webview):
         """
@@ -346,6 +374,8 @@ class WebViewSignalsHandler:
                         self.__on_mouse_target_changed)
         webview.connect("notify::estimated-load-progress",
                         self.__on_estimated_load_progress)
+        webview.connect("resource-load-started",
+                        self.__on_resource_load_started)
         webview.connect("load-changed", self.__on_load_changed)
         webview.connect("button-press-event", self.__on_button_press)
         webview.connect("uri-changed", self.__on_uri_changed)
@@ -368,6 +398,7 @@ class WebViewSignalsHandler:
         """
         webview.disconnect_by_func(self.__on_mouse_target_changed)
         webview.disconnect_by_func(self.__on_estimated_load_progress)
+        webview.disconnect_by_func(self.__on_resource_load_started)
         webview.disconnect_by_func(self.__on_load_changed)
         webview.disconnect_by_func(self.__on_button_press)
         webview.disconnect_by_func(self.__on_uri_changed)

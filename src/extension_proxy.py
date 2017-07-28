@@ -84,6 +84,9 @@ class ProxyExtension(Server):
         <arg type="i" name="page_id" direction="in" />
         <arg type="b" name="results" direction="out" />
     </method>
+    <method name="SetCredentials">
+        <arg type="i" name="page_id" direction="in" />
+    </method>
     <method name="SetPreviousForm">
     </method>
     <method name="SetNextForm">
@@ -264,6 +267,17 @@ class ProxyExtension(Server):
         if value is None:
             value = ""
         return value
+
+    def SetCredentials(self, page_id):
+        """
+            Set focused form to previous value
+            @param page_id as int
+        """
+        try:
+            webpage = self.__extension.get_page(page_id)
+            self.__forms.set_credentials(webpage)
+        except Exception as e:
+            print("ProxyExtension::SetCredentials():", e)
 
     def SetPreviousForm(self):
         """
