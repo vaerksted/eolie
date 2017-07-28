@@ -70,11 +70,11 @@ class PasswordsHelper:
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "hostname": Secret.SchemaAttributeType.STRING
+                "formSubmitURL": Secret.SchemaAttributeType.STRING
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "hostname": "%s://%s" % (parsed.scheme, parsed.netloc)
+                "formSubmitURL": "%s://%s" % (parsed.scheme, parsed.netloc)
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
