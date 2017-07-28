@@ -139,7 +139,6 @@ class FormsExtension:
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and login is None:
             return
-
         submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         # Do not set anything if no attributes or
         # If we have already text in input

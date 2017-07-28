@@ -74,7 +74,7 @@ class PasswordsHelper:
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "hostname": parsed.netloc
+                "hostname": "%s://%s" % (parsed.scheme, parsed.netloc)
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
@@ -156,8 +156,8 @@ class PasswordsHelper:
                 "type": "eolie web login",
                 "uuid": uuid,
                 "login": login,
-                "hostname": "%s/%s" % (parsed_form_uri.scheme,
-                                       parsed_form_uri.netloc),
+                "hostname": "%s://%s" % (parsed_form_uri.scheme,
+                                         parsed_form_uri.netloc),
                 "formSubmitURL": "%s://%s%s" % (parsed.scheme,
                                                 parsed.netloc,
                                                 parsed.path),
