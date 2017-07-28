@@ -108,7 +108,7 @@ class WebViewSignalsHandler:
                     webview = WebView.new_ephemeral(self._window)
                 else:
                     webview = WebView.new(self._window)
-                self.popup_webview(webview, True)
+                self._window.container.popup_webview(webview, True)
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 self._window.container.add_webview(uri,
@@ -169,7 +169,7 @@ class WebViewSignalsHandler:
                     self._window.toolbar.title.show_indicator(
                                                             Indicator.POPUPS)
                 return
-            self.popup_webview(webview, True)
+        self._window.container.popup_webview(webview, True)
 
     def __on_readable(self, webview):
         """
