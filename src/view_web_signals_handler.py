@@ -147,7 +147,9 @@ class WebViewSignalsHandler:
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
-            self.add_view(webview, None, Gdk.WindowType.CHILD)
+            self._window.container.add_view(webview,
+                                            None,
+                                            Gdk.WindowType.CHILD)
         else:
             elapsed = time() - related.last_click_time
             # Block popups, see WebView::set_popup_exception() for details
