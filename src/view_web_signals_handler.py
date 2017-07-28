@@ -179,7 +179,7 @@ class WebViewSignalsHandler:
         self._window.toolbar.title.show_readable_button(True)
 
     def __on_save_password(self, webview, username, userform,
-                           password, passform, uri):
+                           password, passform, uri, form_uri):
         """
             Ask user to save password
             @param webview as WebView
@@ -191,7 +191,8 @@ class WebViewSignalsHandler:
         """
         self._window.toolbar.title.show_password(username, userform,
                                                  password, passform,
-                                                 uri)
+                                                 uri,
+                                                 form_uri)
 
     def __on_script_dialog(self, webview, dialog):
         """

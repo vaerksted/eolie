@@ -191,6 +191,40 @@ class FormsExtension:
                 return True
         return False
 
+    def update_inputs_list(self, webpage):
+        """
+            Update login and password inputs
+            @param webpage as WebKit2WebExtension.WebPage
+            @return forms with a password input
+        """
+        self.__input_logins = []
+        self.__input_passwords = []
+        forms = []
+        collection = webpage.get_dom_document().get_forms()
+        i = 0
+        while i < collection.get_length():
+            form = collection.item(i)
+            if form.get_method() == "post":
+                elements_collection = form.get_elements()
+                h = 0
+                while h < elements_collection.get_length():
+                    element = elements_collection.item(h)
+                    if not isinstance(element,
+                                      WebKit2WebExtension.DOMHTMLInputElement):
+                        h += 1
+                        continue
+                    if element.get_input_type() == "password":
+                        self.__input_passwords.append(element)
+                        if form not in forms:
+                            forms.append(form)
+                    elif element.get_input_type() in ["text",
+                                                      "email",
+                                                      "search"]:
+                        self.__input_logins.append(element)
+                    h += 1
+            i += 1
+        return forms
+
 #######################
 # PRIVATE             #
 #######################
@@ -209,32 +243,8 @@ class FormsExtension:
         """
         if not self.__settings.get_value("remember-passwords"):
             return
-        self.__input_logins = []
-        self.__input_passwords = []
-        collection = webpage.get_dom_document().get_forms()
-        i = 0
-        while i < collection.get_length():
-            input_password_found = False
-            form = collection.item(i)
-            if form.get_method() == "post":
-                elements_collection = form.get_elements()
-                h = 0
-                while h < elements_collection.get_length():
-                    element = elements_collection.item(h)
-                    if not isinstance(element,
-                                      WebKit2WebExtension.DOMHTMLInputElement):
-                        h += 1
-                        continue
-                    if element.get_input_type() == "password":
-                        self.__input_passwords.append(element)
-                        input_password_found = True
-                    elif element.get_input_type() in ["text",
-                                                      "email",
-                                                      "search"]:
-                        self.__input_logins.append(element)
-                    h += 1
-            i += 1
-            if input_password_found:
-                self.__helper.get(form.get_action(),
-                                  self.set_input_forms,
-                                  webpage)
+        forms = self.update_inputs_list(webpage)
+        for form in forms:
+            self.__helper.get(form.get_action(),
+                              self.set_input_forms,
+                              webpage)

@@ -424,6 +424,7 @@ class WebView(WebKit2.WebView):
                 self.emit("save-password",
                           username, userform,
                           password, passform,
+                          self.get_uri(),
                           uri)
             request.submit()
         except Exception as e:
@@ -446,6 +447,7 @@ class WebView(WebKit2.WebView):
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
             forms.append(name)
+        print("MAIN", forms)
         self.__get_forms(forms, webview.get_page_id(), request, uri)
 
     def __on_context_menu(self, view, context_menu, event, hit):

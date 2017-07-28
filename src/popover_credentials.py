@@ -25,12 +25,14 @@ class CredentialsPopover(Gtk.Popover):
         Tell user to save form credentials
     """
 
-    def __init__(self, username, userform, password, passform, uri, window):
+    def __init__(self, username, userform,
+                 password, passform, uri, form_uri, window):
         """
             Init popover
             @param username as str
             @param password as str
-            @param netloc as str
+            @param uri as str
+            @param form_uri as str
             @param window as Window
         """
         Gtk.Popover.__init__(self)
@@ -42,6 +44,7 @@ class CredentialsPopover(Gtk.Popover):
         self.__password = password
         self.__passform = passform
         self.__uri = uri
+        self.__form_uri = uri
         self.__uuid = None
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverCredentials.ui')
@@ -69,6 +72,7 @@ class CredentialsPopover(Gtk.Popover):
                 self.__helper.store(self.__username,
                                     self.__password,
                                     uri,
+                                    self.__form_uri,
                                     self.__uuid,
                                     self.__userform,
                                     self.__passform,
@@ -79,6 +83,7 @@ class CredentialsPopover(Gtk.Popover):
                                     self.__username,
                                     self.__password,
                                     uri,
+                                    self.__form_uri,
                                     self.__uuid,
                                     self.__userform,
                                     self.__passform,

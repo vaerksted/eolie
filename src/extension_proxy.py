@@ -134,7 +134,6 @@ class ProxyExtension(Server):
         self.__form_history = {}
         self.__password_forms = []
         self.__listened_forms = []
-        self.__mouse_down_forms = []
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
 
@@ -161,6 +160,8 @@ class ProxyExtension(Server):
         """
         try:
             page = self.__extension.get_page(page_id)
+            # Needed as DOM may have changed since last load
+            self.__forms.update_inputs_list(page)
             if page is None:
                 return ("", "", "", "")
             username = self.__forms.get_login_input(forms[0], page)

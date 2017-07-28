@@ -668,6 +668,7 @@ class SyncWorker:
                                     self.__helper.store,
                                     password["username"],
                                     password["password"],
+                                    password["hostname"],
                                     password["formSubmitURL"],
                                     password_id,
                                     password["usernameField"],

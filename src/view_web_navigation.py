@@ -33,6 +33,7 @@ class WebViewNavigation:
                                                                 str,
                                                                 str,
                                                                 str,
+                                                                str,
                                                                 str)),
     }
 
