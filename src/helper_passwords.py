@@ -156,11 +156,10 @@ class PasswordsHelper:
                 "type": "eolie web login",
                 "uuid": uuid,
                 "login": login,
-                "hostname": "%s://%s" % (parsed_form_uri.scheme,
-                                         parsed_form_uri.netloc),
-                "formSubmitURL": "%s://%s%s" % (parsed.scheme,
-                                                parsed.netloc,
-                                                parsed.path),
+                "hostname": "%s://%s" % (parsed.scheme,
+                                         parsed.netloc),
+                "formSubmitURL": "%s://%s" % (parsed_form_uri.scheme,
+                                              parsed_form_uri.netloc),
                 "userform": userform,
                 "passform": passform
             }
