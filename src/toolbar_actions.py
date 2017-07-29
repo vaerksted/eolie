@@ -263,7 +263,7 @@ class ToolbarActions(Gtk.Bin):
         back_list = current.get_back_forward_list().get_back_list()
         if back_list:
             from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(El(), back_list)
+            model = HistoryMenu(back_list)
             popover = Gtk.Popover.new_from_model(self.__backward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
@@ -282,7 +282,7 @@ class ToolbarActions(Gtk.Bin):
         forward_list = current.get_back_forward_list().get_forward_list()
         if forward_list:
             from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(El(), forward_list)
+            model = HistoryMenu(forward_list)
             popover = Gtk.Popover.new_from_model(self.__forward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)

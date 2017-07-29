@@ -23,15 +23,13 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, app, userform, page_id):
+    def __init__(self, userform, page_id):
         """
             Init menu
-            @param app as Gio.Application
             @param userform as str
             @param page_id as int
         """
         Gio.Menu.__init__(self)
-        self.__app = app
         self.__userform = userform
         self.__page_id = page_id
         self.__section = Gio.Menu()
@@ -47,11 +45,11 @@ class FormMenu(Gio.Menu):
             return
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()
-        action = self.__app.lookup_action(encoded)
+        action = El().lookup_action(encoded)
         if action is not None:
-            self.__app.remove_action(encoded)
+            El().remove_action(encoded)
         action = Gio.SimpleAction(name=encoded)
-        self.__app.add_action(action)
+        El().add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
                        attributes)

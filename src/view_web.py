@@ -675,7 +675,7 @@ class WebView(WebKit2.WebView):
             self._window.toolbar.title.show_input_warning(self)
         elif signal == "InputMouseDown":
             if self.__last_click_event:
-                model = FormMenu(El(), params[0], self.get_page_id())
+                model = FormMenu(params[0], self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
                 self._window.register(popover)

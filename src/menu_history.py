@@ -22,14 +22,12 @@ class HistoryMenu(Gio.Menu):
         Menu showing closed page
     """
 
-    def __init__(self, app, items):
+    def __init__(self, items):
         """
             Init menu
-            @param app as Gio.Application
             @param items as [WebKit2.BackForwardListItem]
         """
         Gio.Menu.__init__(self)
-        self.__app = app
         for item in items[:10]:
             uri = item.get_uri()
             if uri is None:
@@ -38,11 +36,11 @@ class HistoryMenu(Gio.Menu):
             if not title:
                 title = uri
             encoded = "HISTORY_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = self.__app.lookup_action(encoded)
+            action = El().lookup_action(encoded)
             if action is not None:
-                self.__app.remove_action(encoded)
+                El().remove_action(encoded)
             action = Gio.SimpleAction(name=encoded)
-            self.__app.add_action(action)
+            El().add_action(action)
             action.connect('activate',
                            self.__on_action_clicked,
                            item)
@@ -70,9 +68,9 @@ class HistoryMenu(Gio.Menu):
         for i in range(0, self.get_n_items()):
             uri = self.get_item_attribute_value(i, "uri").get_string()
             encoded = "HISTORY_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = self.__app.lookup_action(encoded)
+            action = El().lookup_action(encoded)
             if action is not None:
-                self.__app.remove_action(encoded)
+                El().remove_action(encoded)
 
 #######################
 # PRIVATE             #
@@ -84,5 +82,5 @@ class HistoryMenu(Gio.Menu):
             @param GVariant
             @param item as WebKit2.BackForwardListItem
         """
-        self.__app.active_window.\
+        El().active_window.\
             container.current.webview.go_to_back_forward_list_item(item)
