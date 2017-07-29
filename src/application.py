@@ -212,12 +212,12 @@ class Application(Gtk.Application):
             @return uri as str
         """
         value = self.settings.get_value("start-page").get_string()
-        if value == "search":
-            value = self.search.uri
-        elif value == "popular":
+        if value in ["popular_hist", "popular_book"]:
             value = "populars://"
         elif value == "blank":
             value = "about:blank"
+        else:
+            value = self.search.uri
         return value
 
     @property

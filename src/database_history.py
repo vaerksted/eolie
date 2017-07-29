@@ -368,6 +368,23 @@ class DatabaseHistory:
             if commit:
                 sql.commit()
 
+    def get_populars(self, limit):
+        """
+            Get popular bookmarks
+            @param limit as bool
+            @return [(id, title, uri)]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("\
+                            SELECT history.rowid,\
+                                   history.title,\
+                                   history.uri\
+                            FROM history\
+                            ORDER BY history.popularity DESC,\
+                            history.mtime DESC\
+                            LIMIT ?", (limit,))
+            return list(result)
+
     def get_opened_pages(self):
         """
             Get page with opened state

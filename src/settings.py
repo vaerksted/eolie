@@ -145,7 +145,7 @@ class SettingsDialog:
         history_combo.set_active_id(str(storage))
 
         self.__populars_count = builder.get_object("populars_count")
-        if start_page == "popular":
+        if start_page in ["popular_book", "popular_hist"]:
             self.__populars_count.show()
         max_popular_items = El().settings.get_value(
                                               "max-popular-items").get_int32()
@@ -377,7 +377,7 @@ class SettingsDialog:
         self.__populars_count.hide()
         if combo.get_active_id() == "address":
             self.__start_page_uri.show()
-        elif combo.get_active_id() == "popular":
+        elif combo.get_active_id() in ["popular_hist", "popular_book"]:
             self.__populars_count.show()
         El().settings.set_value("start-page",
                                 GLib.Variant("s", combo.get_active_id()))
