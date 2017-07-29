@@ -655,7 +655,7 @@ class WebView(WebKit2.WebView):
                     popover.popup()
 
     def __on_signal(self, connection, sender, path,
-                    interface, signal, params, data):
+                    interface, signal, params):
         """
             Add video to download manager
             @param connection as Gio.DBusConnection
@@ -664,7 +664,6 @@ class WebView(WebKit2.WebView):
             @param interface as str
             @param signal as str
             @param parameters as GLib.Variant
-            @param data
         """
         if signal == "VideoInPage":
             uri = params[0]

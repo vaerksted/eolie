@@ -56,7 +56,7 @@ class DBusHelper:
             subscribe_id = bus.signal_subscribe(None, proxy_bus, signal,
                                                 PROXY_PATH, None,
                                                 Gio.DBusSignalFlags.NONE,
-                                                callback, None)
+                                                callback)
             self.__signals[page_id] = (bus, subscribe_id)
         except Exception as e:
             print("DBusHelper::connect():", e)
