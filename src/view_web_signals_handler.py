@@ -136,7 +136,8 @@ class WebViewSignalsHandler:
             Close my self
             @param webview as WebView
         """
-        self._window.container.pages_manager.close_view(self)
+        if webview.get_ancestor(Gtk.Popover) is None:
+            self._window.container.pages_manager.close_view(self)
 
     def __on_ready_to_show(self, webview, related, navigation_action):
         """
@@ -213,7 +214,8 @@ class WebViewSignalsHandler:
             @param webview as WebView
             @param event as Gdk.Event
         """
-        return self._window.close_popovers()
+        if webview.get_ancestor(Gtk.Popover) is None:
+            return self._window.close_popovers()
 
     def __on_estimated_load_progress(self, webview, value):
         """
