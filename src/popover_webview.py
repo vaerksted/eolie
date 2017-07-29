@@ -40,7 +40,7 @@ class WebViewPopover(Gtk.Popover):
 
     def add_view(self, view, destroy):
         """
-            Add webview to popover
+            Add view to popover
             @param view as View
             @param destroy webview as bool
         """
