@@ -86,6 +86,7 @@ class WebViewSignalsHandler:
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
         self.__js_timeout_id = None
+        self.__signals_connected = False
         webview.connect("map", self.__on_webview_map)
         webview.connect("unmap", self.__on_webview_unmap)
         webview.connect("new-page", self.__on_new_page)
@@ -371,6 +372,9 @@ class WebViewSignalsHandler:
             Connect all signals
             @param webview as WebView
         """
+        if self.__signals_connected:
+            return
+        self.__signals_connected = True
         self._window.update(webview)
         webview.connect("mouse-target-changed",
                         self.__on_mouse_target_changed)
@@ -398,6 +402,9 @@ class WebViewSignalsHandler:
             Disconnect all signals
             @param webview as WebView
         """
+        if not self.__signals_connected:
+            return
+        self.__signals_connected = False
         webview.disconnect_by_func(self.__on_mouse_target_changed)
         webview.disconnect_by_func(self.__on_estimated_load_progress)
         webview.disconnect_by_func(self.__on_resource_load_started)
