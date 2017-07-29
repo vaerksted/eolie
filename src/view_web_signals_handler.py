@@ -174,7 +174,7 @@ class WebViewSignalsHandler:
                     self._window.toolbar.title.show_indicator(
                                                             Indicator.POPUPS)
                 return
-        self._window.container.popup_webview(webview, True)
+            self._window.container.popup_webview(webview, True)
 
     def __on_readable(self, webview):
         """
