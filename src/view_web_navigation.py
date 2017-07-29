@@ -337,7 +337,6 @@ class WebViewNavigation:
                                         parsed.netloc) or\
                     El().js_exceptions.find(
                                         parsed.netloc + parsed.path)
-                print(exception)
                 self.set_setting("enable_javascript", exception)
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
