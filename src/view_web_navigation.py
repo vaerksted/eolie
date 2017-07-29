@@ -331,6 +331,16 @@ class WebViewNavigation:
             self.__popups = []
             El().download_manager.remove_videos_for_page(webview.get_page_id())
             self.__title = ""
+            # Setup js blocker
+            if El().settings.get_value("jsblock"):
+                exception = El().js_exceptions.find(
+                                        parsed.netloc) or\
+                    El().js_exceptions.find(
+                                        parsed.netloc + parsed.path)
+                print(exception)
+                self.set_setting("enable_javascript", exception)
+            elif not self.get_settings().get_enable_javascript():
+                self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
@@ -347,16 +357,6 @@ class WebViewNavigation:
                     self.set_setting("auto-load-images", exception)
                 elif not self.get_settings().get_auto_load_images():
                     self.set_setting("auto-load-images", True)
-
-                # Setup js blocker
-                if El().settings.get_value("jsblock"):
-                    exception = El().js_exceptions.find(
-                                            parsed.netloc) or\
-                        El().js_exceptions.find(
-                                            parsed.netloc + parsed.path)
-                    self.set_setting("enable_javascript", exception)
-                elif not self.get_settings().get_enable_javascript():
-                    self.set_setting("enable_javascript", True)
 
                 # Setup ads blocker
                 if El().settings.get_value("adblock"):
