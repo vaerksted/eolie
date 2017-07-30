@@ -674,6 +674,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.get_style_context().remove_class("input")
         view.webview.add_text_entry(self.__entry.get_text())
         self.set_text_entry("")
+        self.__update_secure_content_indicator()
         uri = view.webview.get_uri()
         if uri is not None:
             bookmark_id = El().bookmarks.get_id(uri)
