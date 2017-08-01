@@ -96,33 +96,31 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
         """
         PagesManagerChild._on_load_changed(self, webview, event)
 
-    def _on_snapshot(self, view, result, uri, save):
+    def _on_snapshot(self, webview, result, uri, save):
         """
             Set snapshot on main image
-            @param view as WebView
+            @param webview as WebView
             @param result as Gio.AsyncResult
             @param uri as str
             @param save as bool
-            @warning view here is WebKit2.WebView, not WebView
         """
-        current_uri = view.get_uri()
+        current_uri = webview.get_uri()
         if current_uri is None or\
                 current_uri != uri or\
-                view != self._view.webview:
+                webview != self._view.webview:
             return
         # Do not cache snapshot on error
-        if self._view.webview.error is not None:
+        if webview.error is not None:
             save = False
         try:
-            snapshot = view.get_snapshot_finish(result)
-
+            snapshot = webview.get_snapshot_finish(result)
             # Save start image to cache
             # We also cache original URI
             uris = [current_uri]
             if save:
-                if view.related_uri is not None and\
-                        view.related_uri not in uris:
-                    uris.append(view.related_uri)
+                if webview.related_uri is not None and\
+                        webview.related_uri not in uris:
+                    uris.append(webview.related_uri)
             # Set start image scale factor
             margin = 0
             if snapshot.get_width() > snapshot.get_height():
