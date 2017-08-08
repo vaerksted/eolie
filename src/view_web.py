@@ -524,7 +524,9 @@ class WebView(WebKit2.WebView):
             @param action as Gtk.Action
             @param uri as str
         """
-        self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
+        self._window.container.add_webview(uri,
+                                           Gdk.WindowType.CHILD,
+                                           self.ephemeral)
 
     def __on_search_words_activate(self, action, selection):
         """
