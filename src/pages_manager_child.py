@@ -107,7 +107,8 @@ class PagesManagerChild:
             @param uri as str
             @param save as bool
         """
-        pass
+        if save:
+            self.__snapshot_timeout_id = None
 
     def clear_snapshot(self):
         """

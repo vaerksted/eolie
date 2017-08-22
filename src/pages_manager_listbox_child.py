@@ -80,6 +80,7 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
             @param uri as str
             @param save as bool
         """
+        PagesManagerChild.set_snapshot(self)
         if self._view.webview.ephemeral:
             panel_mode = El().settings.get_enum("panel-mode")
             if panel_mode != PanelMode.MINIMAL:

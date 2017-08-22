@@ -55,6 +55,7 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             @param uri as str
             @param save as bool
         """
+        PagesManagerChild.set_snapshot(self)
         if self._view.webview.ephemeral:
             self._image.set_from_icon_name(
                                          "user-not-tracked-symbolic",
