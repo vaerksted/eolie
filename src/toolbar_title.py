@@ -797,12 +797,10 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
-
         # Text change comes from completion validation ie Enter
         for completion in self.__completion_model:
             if completion[0] == value:
                 return
-
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         parsed = urlparse(self.__uri)
@@ -818,17 +816,17 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry_changed_timeout = GLib.timeout_add(
                                                100,
                                                self.__on_entry_changed_timeout,
-                                               entry)
+                                               entry,
+                                               value)
 
-    def __on_entry_changed_timeout(self, entry):
+    def __on_entry_changed_timeout(self, entry, value):
         """
             Update popover search if needed
             @param entry as Gtk.Entry
+            @param value as str
         """
         task_helper = TaskHelper()
         self.__entry_changed_timeout = None
-
-        value = entry.get_text()
 
         # Populate completion model
         task_helper.run(self.__populate_completion, (value,))
