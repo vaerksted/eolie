@@ -28,14 +28,14 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
         'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
     }
 
-    def __init__(self, view, window):
+    def __init__(self, view, window, static=False):
         """
             Init child
             @param view as View
             @param window as Window
         """
         Gtk.ListBoxRow.__init__(self)
-        PagesManagerChild.__init__(self, view, window, False)
+        PagesManagerChild.__init__(self, view, window, static)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
         self.drag_source_add_text_targets()
