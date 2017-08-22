@@ -34,6 +34,7 @@ class PagesManagerChild:
         self._window = window
         self.__static = static
         self.__connected_ids = []
+        self.__snapshot_timeout_id = None
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
@@ -272,6 +273,10 @@ class PagesManagerChild:
         """
         if self._view.webview != webview:
             return
+        # Kill any running snapshot
+        if self.__snapshot_timeout_id is not None:
+            GLib.source_remove(self.__snapshot_timeout_id)
+            self.__snapshot_timeout_id = None
         uri = webview.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
             self._image.clear()
@@ -291,7 +296,11 @@ class PagesManagerChild:
                 # FIXME Should be better to have way to snapshot when
                 # page is rendered. One more, webview.related_uri is not
                 # resetted so only use it after WebKit2.LoadEvent.FINISHED
-                GLib.timeout_add(3000, self.set_snapshot, uri, True)
+                self.__snapshot_timeout_id = GLib.timeout_add(
+                                                             3000,
+                                                             self.set_snapshot,
+                                                             uri,
+                                                             True)
                 self.__set_favicon()
 
 #######################
