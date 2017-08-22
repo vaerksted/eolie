@@ -373,13 +373,7 @@ class ProxyExtension(Server):
             @param form as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
-        # Clear history if nothing and return
         new_value = form.get_value()
-        if not new_value:
-            if form in self.__form_history.keys():
-                del self.__form_history[form]
-            return
-
         previous_value = ""
         item = LinkedList("", None, None)
         if form in self.__form_history.keys():
