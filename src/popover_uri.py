@@ -468,7 +468,7 @@ class UriPopover(Gtk.Popover):
         item.set_property("title", suggestion)
         item.set_property("uri", El().search.get_search_uri(suggestion))
         item.set_property("search", self.__search)
-        item.set_property("score", -1)
+        item.set_property("score", 100)
         child = Row(item, self.__window)
         child.connect("edited", self.__on_row_edited)
         child.show()

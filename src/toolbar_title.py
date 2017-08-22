@@ -883,6 +883,10 @@ class ToolbarTitle(Gtk.Bin):
             string = content.decode(encoding)
             # format: '["{"words"}",["result1","result2"]]'
             sgs = string.replace('[', '').replace(']', '').split(',')[1:]
+            added = 0
             for suggestion in sgs:
                 if suggestion:
                     self.__popover.add_suggestion(suggestion.replace('"', ''))
+                    added += 1
+                    if added > 2:
+                        return
