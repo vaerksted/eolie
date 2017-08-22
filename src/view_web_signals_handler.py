@@ -147,6 +147,29 @@ class WebViewSignalsHandler:
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
+        elapsed = time() - related.last_click_time
+        # Block popups, see WebView::set_popup_exception() for details
+        popup_block = El().settings.get_value("popupblock")
+        parsed_related = urlparse(related.get_uri())
+        exception = \
+            related.js_load or\
+            El().popup_exceptions.find(parsed_related.netloc) or\
+            El().popup_exceptions.find(parsed_related.netloc +
+                                       parsed_related.path) or\
+            (not related.is_loading() and elapsed < 0.5)
+        if not exception and popup_block and\
+                navigation_action.get_navigation_type() in [
+                               WebKit2.NavigationType.OTHER,
+                               WebKit2.NavigationType.RELOAD,
+                               WebKit2.NavigationType.BACK_FORWARD]:
+            related.add_popup(webview)
+            if related == self._window.container.current.webview:
+                self._window.toolbar.title.show_indicator(
+                                                        Indicator.POPUPS)
+            return
+        # Should not be an issue to not show page with None URI
+        if webview.get_uri() is None:
+            return
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
@@ -154,26 +177,6 @@ class WebViewSignalsHandler:
                                             None,
                                             Gdk.WindowType.CHILD)
         else:
-            elapsed = time() - related.last_click_time
-            # Block popups, see WebView::set_popup_exception() for details
-            popup_block = El().settings.get_value("popupblock")
-            parsed_related = urlparse(related.get_uri())
-            exception = \
-                related.js_load or\
-                El().popup_exceptions.find(parsed_related.netloc) or\
-                El().popup_exceptions.find(parsed_related.netloc +
-                                           parsed_related.path) or\
-                (not related.is_loading() and elapsed < 0.5)
-            if not exception and popup_block and\
-                    navigation_action.get_navigation_type() in [
-                                   WebKit2.NavigationType.OTHER,
-                                   WebKit2.NavigationType.RELOAD,
-                                   WebKit2.NavigationType.BACK_FORWARD]:
-                related.add_popup(webview)
-                if related == self._window.container.current.webview:
-                    self._window.toolbar.title.show_indicator(
-                                                            Indicator.POPUPS)
-                return
             self._window.container.popup_webview(webview, True)
 
     def __on_readable(self, webview):

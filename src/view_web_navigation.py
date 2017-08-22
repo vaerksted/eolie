@@ -261,7 +261,7 @@ class WebViewNavigation:
                                  "populars", "accept"]:
             try:
                 Gtk.show_uri_on_window(self._window,
-                                       uri,
+                                       self._navigation_uri,
                                        Gtk.get_current_event_time())
             except Exception as e:
                 print("WebViewNavigation::__on_decide_policy()", e)
