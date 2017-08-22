@@ -862,7 +862,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__window.container.remove_overlay_views()
             return
         panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode != PanelMode.NONE:
+        if panel_mode != PanelMode.NONE or len(value) < 3:
             return
         for view in self.__window.container.views:
             view_parsed = urlparse(view.webview.get_uri())
