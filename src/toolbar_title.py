@@ -492,6 +492,7 @@ class ToolbarTitle(Gtk.Bin):
                 value = webview.get_next_text_entry()
             if value is not None:
                 self.set_text_entry(value)
+                self.__entry.emit("changed")
             return
 
         # Forward event to popover, if not used, handle input
@@ -526,9 +527,6 @@ class ToolbarTitle(Gtk.Bin):
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
-            elif len(uri) > 1 and (event.keyval == Gdk.KEY_slash or
-                                   event.keyval == Gdk.KEY_space):
-                webview.add_text_entry(uri)
 
     def _on_indicator1_press(self, eventbox, event):
         """
@@ -827,6 +825,8 @@ class ToolbarTitle(Gtk.Bin):
         """
         task_helper = TaskHelper()
         self.__entry_changed_timeout = None
+
+        self.__window.container.current.webview.add_text_entry(value)
 
         # Populate completion model
         task_helper.run(self.__populate_completion, (value,))
