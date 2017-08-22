@@ -59,7 +59,7 @@ class PagesManager(Gtk.EventBox):
             @param view as View
             @return child
         """
-        child = self._CHILD_CLASS(view, self._window)
+        child = self._CHILD_CLASS(view, self._window, False)
         child.show()
 
         # We want to insert child next to its parent and brothers

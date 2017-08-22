@@ -834,6 +834,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__cancellable.cancel()
         self.__cancellable.reset()
         parsed = urlparse(value)
+        self.__show_related_view(value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
@@ -851,6 +852,23 @@ class ToolbarTitle(Gtk.Bin):
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
+
+    def __show_related_view(self, value):
+        """
+            Walk all available views and show it if related to current uri
+            @param value as str
+        """
+        if not value:
+            self.__window.container.remove_overlay_views()
+            return
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode != PanelMode.NONE:
+            return
+        for view in self.__window.container.views:
+            view_parsed = urlparse(view.webview.get_uri())
+            if view_parsed.netloc.find(value) != -1:
+                self.__window.container.add_overlay_view(view, False)
+                return
 
     def __search_suggestion(self, uri, status, content, encoding, value):
         """

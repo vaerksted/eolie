@@ -146,16 +146,19 @@ class PagesOverlay(Gtk.EventBox):
         self.connect("leave-notify-event", self.__on_leave_notify_event)
         self.add(overlay)
 
-    def add_child(self, view):
+    def add_child(self, view, static):
         """
             Add child to sidebar
             @param view as View
+            @param static as bool
             @return child
         """
-        child = PagesManagerFlowBoxChild(view, self.__window)
+        child = PagesManagerFlowBoxChild(view, self.__window, static)
         child.get_style_context().add_class("box-dark-shadow")
         child.connect("destroy", self.__on_child_destroy)
         child.show()
+        if not static:
+            child.update()
         self.__pages_manager.add_child(child)
         self.__pages_manager.show()
         self.__pages_manager.hide_next()
@@ -169,6 +172,15 @@ class PagesOverlay(Gtk.EventBox):
             if child.view == view:
                 child.destroy()
                 break
+
+    @property
+    def children(self):
+        """
+            Get views ordered
+            @return [PagesManagerChild]
+        """
+        return self.__pages_manager.children
+
 #######################
 # PROTECTED           #
 #######################

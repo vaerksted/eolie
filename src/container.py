@@ -75,7 +75,7 @@ class Container(Gtk.Overlay):
                 # Notify user about new window
                 if window_type == Gdk.WindowType.OFFSCREEN and\
                         panel_mode == PanelMode.NONE:
-                    GLib.idle_add(self.__add_overlay_view, view)
+                    GLib.idle_add(self.add_overlay_view, view)
             else:
                 webview.set_delayed_uri(uri)
                 webview.emit("title-changed", uri)
@@ -118,6 +118,38 @@ class Container(Gtk.Overlay):
         count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)
         return view
+
+    def add_overlay_view(self, view, static=True):
+        """
+            Add an overlay view
+            @param view as View
+            @param static as bool
+        """
+        from eolie.pages_overlay import PagesOverlay
+        if self.__pages_overlay is None:
+            self.__pages_overlay = PagesOverlay(self.__window)
+            self.add_overlay(self.__pages_overlay)
+        # Destroy previous non static views
+        already_exists = False
+        for child in self.__pages_overlay.children:
+            if view == child.view:
+                already_exists = True
+            elif not child.static:
+                self.__pages_overlay.destroy_child(child.view)
+        if not already_exists:
+            self.__pages_overlay.show()
+            self.__pages_overlay.add_child(view, static)
+
+    def remove_overlay_views(self):
+        """
+            Remove all overlay views (only static ones)
+            @param static as bool
+        """
+        if self.__pages_overlay is None:
+            return
+        for child in self.__pages_overlay.children:
+            if not child.static:
+                self.__pages_overlay.destroy_child(child.view)
 
     def load_uri(self, uri):
         """
@@ -252,15 +284,3 @@ class Container(Gtk.Overlay):
         view = View(webview, parent, self.__window)
         view.show()
         return view
-
-    def __add_overlay_view(self, view):
-        """
-            Add an overlay view
-            @param view as View
-        """
-        from eolie.pages_overlay import PagesOverlay
-        if self.__pages_overlay is None:
-            self.__pages_overlay = PagesOverlay(self.__window)
-            self.add_overlay(self.__pages_overlay)
-        self.__pages_overlay.show()
-        self.__pages_overlay.add_child(view)

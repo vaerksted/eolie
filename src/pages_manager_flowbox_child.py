@@ -23,14 +23,15 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
         A stack box child
     """
 
-    def __init__(self, view, window):
+    def __init__(self, view, window, static):
         """
             Init child
             @param view as View
             @param window as Window
+            @param static as bool
         """
         Gtk.FlowBoxChild.__init__(self)
-        PagesManagerChild.__init__(self, view, window)
+        PagesManagerChild.__init__(self, view, window, static)
         self.set_property("halign", Gtk.Align.START)
         self.set_margin_start(20)
         self.set_margin_end(20)
@@ -40,6 +41,13 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                           ArtSize.PREVIEW_WIDTH_MARGIN)
         # TODO: 12?
         self.set_property("height-request", ArtSize.START_HEIGHT + 12)
+
+    def update(self):
+        """
+            Update child title, favicon and snapshot
+        """
+        PagesManagerChild.update(self)
+        self.set_snapshot(self._view.webview.get_uri(), False)
 
     def set_snapshot(self, uri, save):
         """

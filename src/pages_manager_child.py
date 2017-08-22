@@ -22,12 +22,17 @@ class PagesManagerChild:
         Need to be inherited by a Gtk.*BoxRow
     """
 
-    def __init__(self, view, window):
+    def __init__(self, view, window, static):
         """
             Init child
+            @param view as View
+            @param window as Window
+            @param static as bool,
+             if view is static, will not be auto destroyed
         """
         self._view = view
         self._window = window
+        self.__static = static
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
@@ -121,6 +126,14 @@ class PagesManagerChild:
             @return View
         """
         return self._view
+
+    @property
+    def static(self):
+        """
+            True if view is static
+            @return bool
+        """
+        return self.__static
 
 #######################
 # PROTECTED           #
