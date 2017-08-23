@@ -43,10 +43,11 @@ class UriLabel(Gtk.EventBox):
         """
         if text == self.__label.get_text():
             return
-        self.set_property("halign", Gtk.Align.START)
+        self.set_property("halign", Gtk.Align.END)
         self.set_property("valign", Gtk.Align.END)
-        self.__label.get_style_context().remove_class("bottom-right")
-        self.__label.get_style_context().add_class("bottom-left")
+        self.__label.get_style_context().add_class("bottom-right")
+        self.__label.get_style_context().remove_class("bottom-left")
+        self.__label.get_style_context().remove_class("top-left")
         self.__label.set_text(text)
 
 #######################
@@ -60,15 +61,17 @@ class UriLabel(Gtk.EventBox):
         """
         GLib.idle_add(self.hide)
         # Move label at the right
-        if self.get_property("halign") == Gtk.Align.START:
-            self.set_property("halign", Gtk.Align.END)
-            self.__label.get_style_context().remove_class("bottom-left")
-            self.__label.get_style_context().add_class("bottom-right")
+        if self.get_property("halign") == Gtk.Align.END:
+            self.set_property("halign", Gtk.Align.START)
+            self.__label.get_style_context().add_class("bottom-left")
+            self.__label.get_style_context().remove_class("bottom-right")
+            self.__label.get_style_context().remove_class("top-left")
         # Move label at top
         else:
-            self.set_property("halign", Gtk.Align.START)
-            self.set_property("valign", Gtk.Align.START)
+            self.set_property("halign", Gtk.Align.END)
+            self.set_property("valign", Gtk.Align.END)
             self.__label.get_style_context().add_class("top-left")
+            self.__label.get_style_context().remove_class("bottom-left")
             self.__label.get_style_context().remove_class("bottom-right")
         GLib.idle_add(self.show)
 
