@@ -257,12 +257,11 @@ class ImagesPopover(Gtk.Popover):
             self.__spinner.stop()
             self.__button.set_sensitive(True)
 
-    def __on_get_images(self, source, result, data):
+    def __on_get_images(self, source, result):
         """
             Get result and load pending uris
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param data
         """
         uris = []
         try:
