@@ -299,6 +299,7 @@ class WebViewSignalsHandler:
         parsed = urlparse(uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
+            self._window.container.current.find_widget.set_search_mode(False)
             self._window.container.remove_overlay_views()
             self._window.toolbar.title.set_title(uri)
             if wanted_scheme:
