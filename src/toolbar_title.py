@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, PanelMode, Indicator
+from eolie.define import El, PanelMode, Indicator, Type
 from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
 
@@ -37,7 +37,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = None
         self.__secure_content = True
         self.__entry_changed_timeout = None
-        self.__size_allocation_timeout = None
+        self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
         self.__uri = ""
         self.__cancellable = Gio.Cancellable.new()
@@ -635,12 +635,16 @@ class ToolbarTitle(Gtk.Bin):
             @param grid as Gtk.Grid
             @param allocation as Gtk.Allocation
         """
-        if self.__size_allocation_timeout is not None:
+        if self.__size_allocation_timeout not in [None, Type.NONE]:
             GLib.source_remove(self.__size_allocation_timeout)
-        self.__size_allocation_timeout = GLib.timeout_add(
-                                          250,
-                                          self.__on_size_allocation_timeout,
-                                          allocation)
+        # If Type.NONE, we need to create initial css content
+        if self.__size_allocation_timeout == Type.NONE:
+            self.__on_size_allocation_timeout(allocation)
+        else:
+            self.__size_allocation_timeout = GLib.timeout_add(
+                                             250,
+                                             self.__on_size_allocation_timeout,
+                                             allocation)
 
 #######################
 # PRIVATE             #
