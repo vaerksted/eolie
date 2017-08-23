@@ -105,8 +105,8 @@ class Context:
                 favicon_uri = "internal:/applications-internet"
             html_start += '<a class="child" title="%s" href="%s">\
                            <img src="file://%s"></img>\
-                           <div class="caption">%s</div>\
-                           <img class="favicon" src="%s"></img></a>' % (
+                           <div class="caption">%s\
+                           <img class="favicon" src="%s"></img></div></a>' % (
                                           title, uri, path,
                                           title, favicon_uri)
         html = html_start.encode("utf-8") + end_content
