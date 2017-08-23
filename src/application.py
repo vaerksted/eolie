@@ -82,7 +82,7 @@ class Application(Gtk.Application):
         self.show_tls = False
         self.cursors = {}
         GLib.set_application_name('Eolie')
-        GLib.set_prgname('eolie')
+        GLib.set_prgname('org.gnome.Eolie')
         self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Debug Eolie", None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
