@@ -83,6 +83,15 @@ class Context:
         # Update start
         html_start = start_content.decode("utf-8")
         html_start = html_start.replace("@TITLE@", _("Popular pages"))
+        fake = Gtk.Entry.new()
+        style_context = fake.get_style_context()
+        (found, color) = style_context.lookup_color("theme_selected_bg_color")
+        if found:
+            html_start = html_start.replace("@BACKGROUND_COLOR@",
+                                            color.to_string())
+        else:
+            html_start = html_start.replace("@BACKGROUND_COLOR@",
+                                            "#9dd7f5")
         for (title, uri) in items:
             favicon_path = El().art.get_path(uri, "favicon")
             favicon = Gio.File.new_for_path(favicon_path)
