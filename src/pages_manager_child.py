@@ -167,6 +167,10 @@ class PagesManagerChild:
             @param webview as WebView
             @param event as Gdk.EventScroll
         """
+        # Kill any running snapshot
+        if self.__snapshot_timeout_id is not None:
+            GLib.source_remove(self.__snapshot_timeout_id)
+            self.__snapshot_timeout_id = None
         if self.__scroll_timeout_id is not None:
             GLib.source_remove(self.__scroll_timeout_id)
         self.__scroll_timeout_id = GLib.timeout_add(250,
@@ -247,6 +251,10 @@ class PagesManagerChild:
         """
         if self._view.webview != webview:
             return
+        # Kill any running save snapshot
+        if self.__snapshot_timeout_id is not None:
+            GLib.source_remove(self.__snapshot_timeout_id)
+            self.__snapshot_timeout_id = None
         # We are not filtered and not in private mode
         if not webview.is_loading() and\
                 not webview.ephemeral and\
@@ -274,7 +282,7 @@ class PagesManagerChild:
         """
         if self._view.webview != webview:
             return
-        # Kill any running snapshot
+        # Kill any running save snapshot
         if self.__snapshot_timeout_id is not None:
             GLib.source_remove(self.__snapshot_timeout_id)
             self.__snapshot_timeout_id = None
