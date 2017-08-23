@@ -37,7 +37,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = None
         self.__secure_content = True
         self.__entry_changed_timeout = None
-        self.__icon_grid_width = None
+        self.__size_allocation_timeout = None
         self.__width = -1
         self.__uri = ""
         self.__cancellable = Gio.Cancellable.new()
@@ -631,33 +631,16 @@ class ToolbarTitle(Gtk.Bin):
 
     def _on_icon_grid_size_allocate(self, grid, allocation):
         """
-            Update margins
+            Delayed css update
             @param grid as Gtk.Grid
             @param allocation as Gtk.Allocation
         """
-        # Injecting css on size allocation may make GTK3 segfaults
-        # We prevent only update css if width change
-        if allocation.width == self.__icon_grid_width:
-            return
-        self.__icon_grid_width = allocation.width
-        style = self.__entry.get_style_context()
-        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
-        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
-        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
-        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
-        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
-        css = ".progressbar { margin-bottom: %spx;\
-               margin-left: %spx;\
-               margin-right: %spx; }" % (margin_bottom,
-                                         margin_start + border,
-                                         margin_end + border)
-        # 5 is grid margin (see ui file)
-        css += ".uribar { padding-right: %spx; }" % (allocation.width + 5)
-        # 22 is Gtk.EntryIconPosition.PRIMARY
-        placeholder_margin_start = padding_start + 22 + border
-        css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
-        # Let GTK finish current resizing before injecting css
-        self.__css_provider.load_from_data(css.encode("utf-8"))
+        if self.__size_allocation_timeout is not None:
+            GLib.source_remove(self.__size_allocation_timeout)
+        self.__size_allocation_timeout = GLib.timeout_add(
+                                          250,
+                                          self.__on_size_allocation_timeout,
+                                          allocation)
 
 #######################
 # PRIVATE             #
@@ -726,6 +709,44 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.set_icon_from_icon_name(
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "system-search-symbolic")
+
+    def __show_related_view(self, value):
+        """
+            Walk all available views and show it if related to current uri
+            @param value as str
+        """
+        if not value:
+            self.__window.container.remove_overlay_views()
+            return
+        panel_mode = El().settings.get_enum("panel-mode")
+        if panel_mode != PanelMode.NONE or len(value) < 3:
+            return
+        for view in self.__window.container.views:
+            view_parsed = urlparse(view.webview.get_uri())
+            if view_parsed.netloc.find(value) != -1:
+                self.__window.container.add_overlay_view(view, False)
+                return
+
+    def __search_suggestion(self, uri, status, content, encoding, value):
+        """
+            Add suggestions
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param encoding as str
+            @param value as str
+        """
+        if status and value == self.__entry.get_text():
+            string = content.decode(encoding)
+            # format: '["{"words"}",["result1","result2"]]'
+            sgs = string.replace('[', '').replace(']', '').split(',')[1:]
+            added = 0
+            for suggestion in sgs:
+                if suggestion:
+                    self.__popover.add_suggestion(suggestion.replace('"', ''))
+                    added += 1
+                    if added > 2:
+                        return
 
     def __populate_completion(self, uri):
         """
@@ -853,40 +874,27 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
 
-    def __show_related_view(self, value):
+    def __on_size_allocation_timeout(self, allocation):
         """
-            Walk all available views and show it if related to current uri
-            @param value as str
+            Update css to match new allocation
+            @param allocation as Gtk.Allocation
         """
-        if not value:
-            self.__window.container.remove_overlay_views()
-            return
-        panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode != PanelMode.NONE or len(value) < 3:
-            return
-        for view in self.__window.container.views:
-            view_parsed = urlparse(view.webview.get_uri())
-            if view_parsed.netloc.find(value) != -1:
-                self.__window.container.add_overlay_view(view, False)
-                return
-
-    def __search_suggestion(self, uri, status, content, encoding, value):
-        """
-            Add suggestions
-            @param uri as str
-            @param status as bool
-            @param content as bytes
-            @param encoding as str
-            @param value as str
-        """
-        if status and value == self.__entry.get_text():
-            string = content.decode(encoding)
-            # format: '["{"words"}",["result1","result2"]]'
-            sgs = string.replace('[', '').replace(']', '').split(',')[1:]
-            added = 0
-            for suggestion in sgs:
-                if suggestion:
-                    self.__popover.add_suggestion(suggestion.replace('"', ''))
-                    added += 1
-                    if added > 2:
-                        return
+        self.__size_allocation_timeout = None
+        style = self.__entry.get_style_context()
+        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
+        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
+        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
+        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
+        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
+        css = ".progressbar { margin-bottom: %spx;\
+               margin-left: %spx;\
+               margin-right: %spx; }" % (margin_bottom,
+                                         margin_start + border,
+                                         margin_end + border)
+        # 5 is grid margin (see ui file)
+        css += ".uribar { padding-right: %spx; }" % (allocation.width + 5)
+        # 22 is Gtk.EntryIconPosition.PRIMARY
+        placeholder_margin_start = padding_start + 22 + border
+        css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
+        # Let GTK finish current resizing before injecting css
+        self.__css_provider.load_from_data(css.encode("utf-8"))
