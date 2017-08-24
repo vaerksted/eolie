@@ -69,6 +69,12 @@
     border-radius: 4px;
 }
 
+.kbd-input {
+    color: @theme_fg_color;
+    background-color: alpha(@theme_selected_bg_color, 0.1);
+    background-image: none;
+}
+
 .uribar {
     background-color: transparent;
     background-image: none;

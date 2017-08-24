@@ -486,14 +486,14 @@ class UriPopover(Gtk.Popover):
             return False
         elif event.keyval == Gdk.KEY_Left and self.__input == Input.BOOKMARKS:
             self.__input = Input.TAGS
-            self.__tags_box.get_style_context().add_class("input")
-            self.__bookmarks_box.get_style_context().remove_class("input")
+            self.__tags_box.get_style_context().add_class("kbd-input")
+            self.__bookmarks_box.get_style_context().remove_class("kbd-input")
             self.__window.toolbar.title.set_text_entry("")
             return True
         elif event.keyval == Gdk.KEY_Right and self.__input == Input.TAGS:
             self.__input = Input.BOOKMARKS
-            self.__bookmarks_box.get_style_context().add_class("input")
-            self.__tags_box.get_style_context().remove_class("input")
+            self.__bookmarks_box.get_style_context().add_class("kbd-input")
+            self.__tags_box.get_style_context().remove_class("kbd-input")
             return True
         elif event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
                 self.__input == Input.SEARCH:
@@ -507,7 +507,7 @@ class UriPopover(Gtk.Popover):
                 if self.__stack.get_visible_child_name() == "search":
                     self.__input = Input.SEARCH
                 elif self.__stack.get_visible_child_name() == "bookmarks":
-                    self.__tags_box.get_style_context().add_class("input")
+                    self.__tags_box.get_style_context().add_class("kbd-input")
                     self.__input = Input.TAGS
                 else:
                     self.__input = Input.NONE
@@ -551,7 +551,7 @@ class UriPopover(Gtk.Popover):
                     else:
                         box.select_row(None)
                         self.__input = Input.NONE
-                        box.get_style_context().remove_class("input")
+                        box.get_style_context().remove_class("kbd-input")
                 else:
                     box.select_row(rows[idx])
                     if self.__input == Input.TAGS:
@@ -1032,9 +1032,9 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
         """
         self.__input = Input.NONE
-        self.__search_box.get_style_context().remove_class("input")
-        self.__bookmarks_box.get_style_context().remove_class("input")
-        self.__tags_box.get_style_context().remove_class("input")
+        self.__search_box.get_style_context().remove_class("kbd-input")
+        self.__bookmarks_box.get_style_context().remove_class("kbd-input")
+        self.__tags_box.get_style_context().remove_class("kbd-input")
         size = self.__window.get_size()
         width = min(800, size[0])
         height = min(700, size[1] * 0.9)
