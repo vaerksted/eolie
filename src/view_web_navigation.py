@@ -54,7 +54,7 @@ class WebViewNavigation:
         self.__title = ""
         self.__popups = []
         self.__js_load = False
-        self.__related_uri = None
+        self.__initial_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -85,7 +85,7 @@ class WebViewNavigation:
                 El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
 
-        self.__related_uri = uri
+        self.__initial_uri = uri
         parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
@@ -119,12 +119,13 @@ class WebViewNavigation:
         self.__popups.append(webview)
 
     @property
-    def related_uri(self):
+    def initial_uri(self):
         """
-            Related uri
+            Initialy loaded uri, an uri loaded by a user action in UI,
+            not in webview (exception for populars://)
             @return str
         """
-        return self.__related_uri
+        return self.__initial_uri
 
     @property
     def js_load(self):
@@ -302,7 +303,7 @@ class WebViewNavigation:
             else:
                 # Special case to force populars view to update related_uri
                 if webview.get_uri() == "populars://":
-                    self.__related_uri = self._navigation_uri
+                    self.__initial_uri = self._navigation_uri
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None

@@ -14,6 +14,7 @@ from gi.repository import Gtk, WebKit2
 
 from eolie.define import ArtSize
 from eolie.pages_manager_child import PagesManagerChild
+from eolie.utils import debug
 
 
 class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
@@ -54,12 +55,12 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             @param save as bool
         """
         try:
-            PagesManagerChild.set_snapshot(self, uri, save)
             if self._view.webview.ephemeral:
                 self._image.set_from_icon_name(
                                              "user-not-tracked-symbolic",
                                              Gtk.IconSize.DIALOG)
             else:
+                PagesManagerChild.set_snapshot(self, uri, save)
                 if save:
                     region = WebKit2.SnapshotRegion.FULL_DOCUMENT
                 else:
@@ -72,7 +73,7 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
                                              uri,
                                              save)
         except Exception as e:
-            print("PagesManagerFlowBoxChild::set_snapshot():", e)
+            debug("PagesManagerFlowBoxChild::set_snapshot(): %s" % e)
 
 #######################
 # PROTECTED           #

@@ -13,9 +13,10 @@
 from gi.repository import Gtk, GLib, WebKit2
 
 import cairo
+from urllib.parse import urlparse
 
 from eolie.define import El, ArtSize, PanelMode
-from eolie.utils import resize_favicon, debug
+from eolie.utils import resize_favicon
 
 
 class PagesManagerChild:
@@ -109,6 +110,7 @@ class PagesManagerChild:
             @param save as bool
         """
         if uri != self._view.webview.get_uri():
+            print(uri, self._view.webview.get_uri(), save)
             raise Exception("Cancel snapshot, uri changed.")
 
     def clear_snapshot(self):
@@ -190,9 +192,11 @@ class PagesManagerChild:
             if save:
                 # We also cache original URI
                 uris = [webview.get_uri()]
-                if webview.related_uri is not None and\
-                        webview.related_uri not in uris:
-                    uris.append(webview.related_uri)
+                parsed = urlparse(uri)
+                initial_parsed = urlparse(webview.initial_uri)
+                if parsed.netloc == initial_parsed.netloc and\
+                        webview.initial_uri not in uris:
+                    uris.append(webview.initial_uri)
                 # Set start image scale factor
                 factor = ArtSize.START_WIDTH / snapshot.get_width()
                 surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
@@ -231,7 +235,7 @@ class PagesManagerChild:
                     del surface
             del snapshot
         except Exception as e:
-            debug("PagesManagerChild::__on_snapshot(): %s" % e)
+            print("PagesManagerChild::__on_snapshot():", e)
 
     def _on_button_press_event(self, eventbox, event):
         """
@@ -340,8 +344,7 @@ class PagesManagerChild:
             if not webview.cancelled and not webview.is_loading():
                 GLib.timeout_add(500, self.set_snapshot, uri, False)
                 # FIXME Should be better to have way to snapshot when
-                # page is rendered. One more, webview.related_uri is not
-                # resetted so only use it after WebKit2.LoadEvent.FINISHED
+                # page is rendered.
                 GLib.timeout_add(3000, self.set_snapshot, uri, True)
                 self.__set_favicon()
 
@@ -367,17 +370,19 @@ class PagesManagerChild:
             self._image_close.set_from_icon_name("applications-internet",
                                                  Gtk.IconSize.INVALID)
 
-    def __set_favicon_related(self, surface, uri, related_uri):
+    def __set_favicon_related(self, surface, uri, initial_uri):
         """
-            Set favicon for related uri
+            Set favicon for initial uri
             @param surface as cairo.surface
             @param uri as str
-            @param related_uri as str
+            @param initial_uri as str
         """
-        if related_uri is not None and\
-                related_uri != uri and\
-                not El().art.exists(related_uri, "favicon"):
-            El().art.save_artwork(related_uri, surface, "favicon")
+        parsed = urlparse(uri)
+        initial_parsed = urlparse(initial_uri)
+        if parsed.netloc == initial_parsed.netloc and\
+                initial_uri != uri and\
+                not El().art.exists(initial_uri, "favicon"):
+            El().art.save_artwork(initial_uri, surface, "favicon")
 
     def __set_favicon_result(self, db, result, uri):
         """
@@ -405,7 +410,7 @@ class PagesManagerChild:
                 El().art.save_artwork(uri, resized, "favicon")
                 self.__set_favicon_related(resized,
                                            uri,
-                                           self._view.webview.related_uri)
+                                           self._view.webview.initial_uri)
             self._image_close.set_from_surface(resized)
             del resized
             del surface

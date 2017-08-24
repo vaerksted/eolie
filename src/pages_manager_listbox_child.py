@@ -15,6 +15,7 @@ from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib, WebKit2
 from gettext import gettext as _
 
 from eolie.define import El, PanelMode
+from eolie.utils import debug
 from eolie.pages_manager_child import PagesManagerChild
 
 
@@ -80,7 +81,6 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
             @param save as bool
         """
         try:
-            PagesManagerChild.set_snapshot(self, uri, save)
             if self._view.webview.ephemeral:
                 panel_mode = El().settings.get_enum("panel-mode")
                 if panel_mode != PanelMode.MINIMAL:
@@ -88,6 +88,7 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
                                                  "user-not-tracked-symbolic",
                                                  Gtk.IconSize.DIALOG)
             else:
+                PagesManagerChild.set_snapshot(self, uri, save)
                 if save:
                     region = WebKit2.SnapshotRegion.FULL_DOCUMENT
                 else:
@@ -100,7 +101,7 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
                                              uri,
                                              save)
         except Exception as e:
-            print("PagesManagerListBoxChild::set_snapshot():", e)
+            debug("PagesManagerFlowBoxChild::set_snapshot(): %s" % e)
 
 #######################
 # PROTECTED           #
