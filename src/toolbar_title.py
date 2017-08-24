@@ -813,6 +813,9 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
+        if not value:
+            webview = self.__window.container.current.webview
+            webview.clear_text_entry()
         # Text change comes from completion validation ie Enter
         for completion in self.__completion_model:
             if completion[0] == value:
