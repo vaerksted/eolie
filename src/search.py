@@ -100,12 +100,14 @@ class Search:
 
     def search_suggestions(self, value, cancellable, callback):
         """
-            Search keywords for value
+            Search suggestions for value
             @param value as str
             @param cancellable as Gio.Cancellable
             @param callback as str
         """
         try:
+            if not value.strip(" "):
+                return
             uri = self.__keyword % value
             task_helper = TaskHelper()
             task_helper.load_uri_content(uri, cancellable,
