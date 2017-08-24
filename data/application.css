@@ -1,7 +1,9 @@
 .progressbar progress {
+    border-radius: 0px;
     background-color: @theme_selected_bg_color;
     background-image: none;
     border: none;
+    min-height: 2px;
 }
 
 .progressbar trough {
