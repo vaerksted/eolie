@@ -200,5 +200,8 @@
         </child>
       </object>
     </child>
+    <style>
+      <class name="input"/>
+    </style>
   </object>
 </interface>
