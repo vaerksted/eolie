@@ -12,8 +12,10 @@
 
 from gi.repository import Gtk, GLib, WebKit2
 
+import cairo
+
 from eolie.define import El, ArtSize, PanelMode
-from eolie.utils import resize_favicon
+from eolie.utils import resize_favicon, debug
 
 
 class PagesManagerChild:
@@ -34,7 +36,6 @@ class PagesManagerChild:
         self._window = window
         self.__static = static
         self.__connected_ids = []
-        self.__snapshot_timeout_id = None
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
@@ -107,8 +108,8 @@ class PagesManagerChild:
             @param uri as str
             @param save as bool
         """
-        if save:
-            self.__snapshot_timeout_id = None
+        if uri != self._view.webview.get_uri():
+            raise Exception("Cancel snapshot, uri changed.")
 
     def clear_snapshot(self):
         """
@@ -167,10 +168,6 @@ class PagesManagerChild:
             @param webview as WebView
             @param event as Gdk.EventScroll
         """
-        # Kill any running snapshot
-        if self.__snapshot_timeout_id is not None:
-            GLib.source_remove(self.__snapshot_timeout_id)
-            self.__snapshot_timeout_id = None
         if self.__scroll_timeout_id is not None:
             GLib.source_remove(self.__scroll_timeout_id)
         self.__scroll_timeout_id = GLib.timeout_add(250,
@@ -183,9 +180,58 @@ class PagesManagerChild:
             @param result as Gio.AsyncResult
             @param uri as str
             @param save as bool
-            @warning view here is WebKit2.WebView, not WebView
         """
-        pass
+        # Do not cache snapshot on error
+        if webview.error is not None and save:
+            return
+        try:
+            snapshot = webview.get_snapshot_finish(result)
+            # Save snapshot to cache
+            if save:
+                # We also cache original URI
+                uris = [webview.get_uri()]
+                if webview.related_uri is not None and\
+                        webview.related_uri not in uris:
+                    uris.append(webview.related_uri)
+                # Set start image scale factor
+                factor = ArtSize.START_WIDTH / snapshot.get_width()
+                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                             ArtSize.START_WIDTH,
+                                             ArtSize.START_HEIGHT)
+                context = cairo.Context(surface)
+                context.scale(factor, factor)
+                context.set_source_surface(snapshot, factor, 0)
+                context.paint()
+                for uri in uris:
+                    if not El().art.exists(uri, "start") and save:
+                        El().art.save_artwork(uri, surface, "start")
+                del surface
+            else:
+                surface = None
+                panel_mode = El().settings.get_enum("panel-mode")
+                if panel_mode == PanelMode.PREVIEW:
+                    factor = (ArtSize.PREVIEW_WIDTH -
+                              ArtSize.PREVIEW_WIDTH_MARGIN) /\
+                              snapshot.get_width()
+                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                 ArtSize.PREVIEW_WIDTH -
+                                                 ArtSize.PREVIEW_WIDTH_MARGIN,
+                                                 ArtSize.PREVIEW_HEIGHT)
+                elif panel_mode == PanelMode.NONE:
+                    factor = ArtSize.START_WIDTH / snapshot.get_width()
+                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                 ArtSize.START_WIDTH,
+                                                 ArtSize.START_HEIGHT)
+                if surface is not None:
+                    context = cairo.Context(surface)
+                    context.scale(factor, factor)
+                    context.set_source_surface(snapshot, 0, 0)
+                    context.paint()
+                    self._image.set_from_surface(surface)
+                    del surface
+            del snapshot
+        except Exception as e:
+            debug("PagesManagerChild::__on_snapshot(): %s" % e)
 
     def _on_button_press_event(self, eventbox, event):
         """
@@ -251,18 +297,13 @@ class PagesManagerChild:
         """
         if self._view.webview != webview:
             return
-        # Kill any running save snapshot
-        if self.__snapshot_timeout_id is not None:
-            GLib.source_remove(self.__snapshot_timeout_id)
-            self.__snapshot_timeout_id = None
         # We are not filtered and not in private mode
         if not webview.is_loading() and\
                 not webview.ephemeral and\
                 El().settings.get_enum("panel-mode") not in [
                                                          PanelMode.MINIMAL,
                                                          PanelMode.NO_PREVIEW]:
-            GLib.timeout_add(2000, self.set_snapshot,
-                             webview.get_uri(), False)
+            GLib.timeout_add(2000, self.set_snapshot, uri, False)
 
     def _on_title_changed(self, webview, title):
         """
@@ -282,10 +323,6 @@ class PagesManagerChild:
         """
         if self._view.webview != webview:
             return
-        # Kill any running save snapshot
-        if self.__snapshot_timeout_id is not None:
-            GLib.source_remove(self.__snapshot_timeout_id)
-            self.__snapshot_timeout_id = None
         uri = webview.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
             self._image.clear()
@@ -305,11 +342,7 @@ class PagesManagerChild:
                 # FIXME Should be better to have way to snapshot when
                 # page is rendered. One more, webview.related_uri is not
                 # resetted so only use it after WebKit2.LoadEvent.FINISHED
-                self.__snapshot_timeout_id = GLib.timeout_add(
-                                                             3000,
-                                                             self.set_snapshot,
-                                                             uri,
-                                                             True)
+                GLib.timeout_add(3000, self.set_snapshot, uri, True)
                 self.__set_favicon()
 
 #######################

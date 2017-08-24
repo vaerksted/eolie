@@ -12,10 +12,9 @@
 
 from gi.repository import Gtk, GObject, Pango, Gdk, Gio, GLib, WebKit2
 
-import cairo
 from gettext import gettext as _
 
-from eolie.define import El, ArtSize, PanelMode
+from eolie.define import El, PanelMode
 from eolie.pages_manager_child import PagesManagerChild
 
 
@@ -80,21 +79,28 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
             @param uri as str
             @param save as bool
         """
-        PagesManagerChild.set_snapshot(self, uri, save)
-        if self._view.webview.ephemeral:
-            panel_mode = El().settings.get_enum("panel-mode")
-            if panel_mode != PanelMode.MINIMAL:
-                self._image.set_from_icon_name(
-                                             "user-not-tracked-symbolic",
-                                             Gtk.IconSize.DIALOG)
-        else:
-            self._view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.VISIBLE,
-                                         WebKit2.SnapshotOptions.NONE,
-                                         None,
-                                         self._on_snapshot,
-                                         uri,
-                                         save)
+        try:
+            PagesManagerChild.set_snapshot(self, uri, save)
+            if self._view.webview.ephemeral:
+                panel_mode = El().settings.get_enum("panel-mode")
+                if panel_mode != PanelMode.MINIMAL:
+                    self._image.set_from_icon_name(
+                                                 "user-not-tracked-symbolic",
+                                                 Gtk.IconSize.DIALOG)
+            else:
+                if save:
+                    region = WebKit2.SnapshotRegion.FULL_DOCUMENT
+                else:
+                    region = WebKit2.SnapshotRegion.VISIBLE
+                self._view.webview.get_snapshot(
+                                             region,
+                                             WebKit2.SnapshotOptions.NONE,
+                                             None,
+                                             self._on_snapshot,
+                                             uri,
+                                             save)
+        except Exception as e:
+            print("PagesManagerListBoxChild::set_snapshot():", e)
 
 #######################
 # PROTECTED           #
@@ -119,70 +125,6 @@ class PagesManagerListBoxChild(Gtk.ListBoxRow, PagesManagerChild):
                            self.__on_close_activate)
             popover = Gtk.Popover.new_from_model(eventbox, menu)
             popover.show()
-
-    def _on_snapshot(self, view, result, uri, save):
-        """
-            Set snapshot on main image
-            @param view as WebView
-            @param result as Gio.AsyncResult
-            @param uri as str
-            @param save as bool
-            @warning view here is WebKit2.WebView, not WebView
-        """
-        current_uri = view.get_uri()
-        if current_uri is None or current_uri != uri:
-            return
-        # Do not cache snapshot on error
-        if self._view.webview.error is not None:
-            save = False
-        try:
-            snapshot = view.get_snapshot_finish(result)
-            panel_mode = El().settings.get_enum("panel-mode")
-            if panel_mode == PanelMode.PREVIEW:
-                # Set sidebar child image
-                # Set start image scale factor
-                factor = (ArtSize.PREVIEW_WIDTH -
-                          ArtSize.PREVIEW_WIDTH_MARGIN) /\
-                          snapshot.get_width()
-                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                             ArtSize.PREVIEW_WIDTH -
-                                             ArtSize.PREVIEW_WIDTH_MARGIN,
-                                             ArtSize.PREVIEW_HEIGHT)
-                context = cairo.Context(surface)
-                context.scale(factor, factor)
-                context.set_source_surface(snapshot, 0, 0)
-                context.paint()
-                self._image.set_from_surface(surface)
-                del surface
-
-            # Save start image to cache
-            # We also cache original URI
-            uris = [current_uri]
-            if save:
-                if view.related_uri is not None and\
-                        view.related_uri not in uris:
-                    uris.append(view.related_uri)
-            # Set start image scale factor
-            margin = 0
-            if snapshot.get_width() > snapshot.get_height():
-                margin = (snapshot.get_width() - ArtSize.START_WIDTH) / 2
-                factor = ArtSize.START_HEIGHT / snapshot.get_height()
-            else:
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         ArtSize.START_WIDTH,
-                                         ArtSize.START_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, -margin * factor, 0)
-            context.paint()
-            for uri in uris:
-                if not El().art.exists(uri, "start") and save:
-                    El().art.save_artwork(uri, surface, "start")
-            del surface
-            del snapshot
-        except Exception as e:
-            print("PagesManagerListBoxChild::__on_snapshot():", e)
 
 #######################
 # PRIVATE             #

@@ -12,9 +12,7 @@
 
 from gi.repository import Gtk, WebKit2
 
-import cairo
-
-from eolie.define import El, ArtSize
+from eolie.define import ArtSize
 from eolie.pages_manager_child import PagesManagerChild
 
 
@@ -55,19 +53,26 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             @param uri as str
             @param save as bool
         """
-        PagesManagerChild.set_snapshot(self, uri, save)
-        if self._view.webview.ephemeral:
-            self._image.set_from_icon_name(
-                                         "user-not-tracked-symbolic",
-                                         Gtk.IconSize.DIALOG)
-        else:
-            self._view.webview.get_snapshot(
-                                         WebKit2.SnapshotRegion.VISIBLE,
-                                         WebKit2.SnapshotOptions.NONE,
-                                         None,
-                                         self._on_snapshot,
-                                         uri,
-                                         save)
+        try:
+            PagesManagerChild.set_snapshot(self, uri, save)
+            if self._view.webview.ephemeral:
+                self._image.set_from_icon_name(
+                                             "user-not-tracked-symbolic",
+                                             Gtk.IconSize.DIALOG)
+            else:
+                if save:
+                    region = WebKit2.SnapshotRegion.FULL_DOCUMENT
+                else:
+                    region = WebKit2.SnapshotRegion.VISIBLE
+                self._view.webview.get_snapshot(
+                                             region,
+                                             WebKit2.SnapshotOptions.NONE,
+                                             None,
+                                             self._on_snapshot,
+                                             uri,
+                                             save)
+        except Exception as e:
+            print("PagesManagerFlowBoxChild::set_snapshot():", e)
 
 #######################
 # PROTECTED           #
@@ -104,54 +109,6 @@ class PagesManagerFlowBoxChild(Gtk.FlowBoxChild, PagesManagerChild):
             @param event as WebKit2.LoadEvent
         """
         PagesManagerChild._on_load_changed(self, webview, event)
-
-    def _on_snapshot(self, webview, result, uri, save):
-        """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
-            @param uri as str
-            @param save as bool
-        """
-        current_uri = webview.get_uri()
-        if current_uri is None or\
-                current_uri != uri or\
-                webview != self._view.webview:
-            return
-        # Do not cache snapshot on error
-        if webview.error is not None or current_uri == "populars://":
-            save = False
-        try:
-            snapshot = webview.get_snapshot_finish(result)
-            # Save start image to cache
-            # We also cache original URI
-            uris = [current_uri]
-            if save:
-                if webview.related_uri is not None and\
-                        webview.related_uri not in uris:
-                    uris.append(webview.related_uri)
-            # Set start image scale factor
-            margin = 0
-            if snapshot.get_width() > snapshot.get_height():
-                margin = (snapshot.get_width() - ArtSize.START_WIDTH) / 2
-                factor = ArtSize.START_HEIGHT / snapshot.get_height()
-            else:
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         ArtSize.START_WIDTH,
-                                         ArtSize.START_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, -margin * factor, 0)
-            context.paint()
-            self._image.set_from_surface(surface)
-            for uri in uris:
-                if not El().art.exists(uri, "start") and save:
-                    El().art.save_artwork(uri, surface, "start")
-            del surface
-            del snapshot
-        except Exception as e:
-            print("StackboxChild::__on_snapshot():", e)
 
 #######################
 # PRIVATE             #
