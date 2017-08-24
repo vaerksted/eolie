@@ -149,7 +149,6 @@ class PagesManagerChild:
             @param favicon as Gparam
         """
         if self._view.webview == webview:
-            # FIXME use favicon
             self.__set_favicon()
 
     def _on_notify_is_playing_audio(self, webview, playing):
@@ -301,12 +300,14 @@ class PagesManagerChild:
         if self._view.webview != webview:
             return
         # We are not filtered and not in private mode
+        # Update snapshot and favicon to be sure
         if not webview.is_loading() and\
                 not webview.ephemeral and\
                 El().settings.get_enum("panel-mode") not in [
                                                          PanelMode.MINIMAL,
                                                          PanelMode.NO_PREVIEW]:
             GLib.timeout_add(2000, self.set_snapshot, uri, False)
+            self.__set_favicon()
 
     def _on_title_changed(self, webview, title):
         """
@@ -345,7 +346,6 @@ class PagesManagerChild:
                 # FIXME Should be better to have way to snapshot when
                 # page is rendered.
                 GLib.timeout_add(3000, self.set_snapshot, uri, True)
-                self.__set_favicon()
 
 #######################
 # PRIVATE             #
@@ -362,9 +362,19 @@ class PagesManagerChild:
             self._image_close.set_from_icon_name("emote-love-symbolic",
                                                  Gtk.IconSize.INVALID)
         elif uri:
-            context = self._view.webview.get_context()
-            favicon_db = context.get_favicon_database()
-            favicon_db.get_favicon(uri, None, self.__set_favicon_result, uri)
+            surface = self._view.webview.get_favicon()
+            if surface is None:
+                self._image_close.set_from_icon_name("applications-internet",
+                                                     Gtk.IconSize.INVALID)
+            else:
+                resized = resize_favicon(surface)
+                El().art.save_artwork(uri, resized, "favicon")
+                self.__set_favicon_related(resized,
+                                           uri,
+                                           self._view.webview.initial_uri)
+                self._image_close.set_from_surface(resized)
+                del resized
+                del surface
         else:
             self._image_close.set_from_icon_name("applications-internet",
                                                  Gtk.IconSize.INVALID)
@@ -382,37 +392,6 @@ class PagesManagerChild:
                 initial_uri != uri and\
                 not El().art.exists(initial_uri, "favicon"):
             El().art.save_artwork(initial_uri, surface, "favicon")
-
-    def __set_favicon_result(self, db, result, uri):
-        """
-            Set favicon db result
-            @param db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param uri as str
-        """
-        try:
-            surface = db.get_favicon_finish(result)
-            save = True
-        except:
-            surface = self._view.webview.get_favicon()
-            # Getting favicon is not accurate
-            # We don't know if it really is for current uri
-            # So don't save
-            save = False
-
-        if surface is None:
-            self._image_close.set_from_icon_name("applications-internet",
-                                                 Gtk.IconSize.INVALID)
-        else:
-            resized = resize_favicon(surface)
-            if save:
-                El().art.save_artwork(uri, resized, "favicon")
-                self.__set_favicon_related(resized,
-                                           uri,
-                                           self._view.webview.initial_uri)
-            self._image_close.set_from_surface(resized)
-            del resized
-            del surface
 
     def __on_scroll_timeout(self):
         """
