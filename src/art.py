@@ -88,7 +88,7 @@ class Art:
 
     def exists(self, uri, suffix):
         """
-            True if exists in cache and not older than one day
+            True if exists in cache and not older than 12 hours
             @return bool
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
@@ -98,7 +98,7 @@ class Art:
                                 Gio.FileQueryInfoFlags.NONE,
                                 None)
             mtime = int(info.get_attribute_as_string('time::modified'))
-            if time() - mtime > 86400:
+            if time() - mtime > 43200:
                 exists = False
         return exists
 
