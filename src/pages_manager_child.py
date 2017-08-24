@@ -110,7 +110,6 @@ class PagesManagerChild:
             @param save as bool
         """
         if uri != self._view.webview.get_uri():
-            print(uri, self._view.webview.get_uri(), save)
             raise Exception("Cancel snapshot, uri changed.")
 
     def clear_snapshot(self):
