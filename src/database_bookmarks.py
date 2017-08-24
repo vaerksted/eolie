@@ -894,6 +894,8 @@ class DatabaseBookmarks:
         # Remove empty items
         words = [value.strip() for value in words]
         words = list(filter(lambda x: x != '', words))
+        if not words:
+            return []
         items = []
         with SqlCursor(self) as sql:
             filters = ()
@@ -902,6 +904,8 @@ class DatabaseBookmarks:
                     continue
                 filters += ("%" + word + "%", "%" + word + "%")
             filters += (limit,)
+
+            # Search items matching all words
             request = "SELECT title, uri\
                        FROM bookmarks WHERE\
                        bookmarks.guid != bookmarks.uri AND "
@@ -918,7 +922,7 @@ class DatabaseBookmarks:
             result = sql.execute(request, filters)
             items += list(result)
 
-            # And then search containing one item
+            # Search items matching any word
             request = "SELECT title, uri\
                        FROM bookmarks WHERE\
                        bookmarks.guid != bookmarks.uri AND "
