@@ -260,8 +260,10 @@ class EditBookmarkWidget(Gtk.Bin):
             Add new tag
             @param entry as Gtk.Entry
         """
-        El().bookmarks.thread_lock.acquire()
         tag_title = self.__new_tag_entry.get_text()
+        if not tag_title:
+            return
+        El().bookmarks.thread_lock.acquire()
         if not El().bookmarks.has_tag(self.__bookmark_id, tag_title):
             tag_id = El().bookmarks.get_tag_id(tag_title)
             if tag_id is None:
