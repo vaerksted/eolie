@@ -893,5 +893,10 @@ class ToolbarTitle(Gtk.Bin):
         # 22 is Gtk.EntryIconPosition.PRIMARY
         placeholder_margin_start = padding_start + 22 + border
         css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
-        # Let GTK finish current resizing before injecting css
+        # Get value from headerbar as not possible in pure CSS
+        style_context = self.__window.toolbar.get_style_context()
+        color = style_context.get_color(Gtk.StateFlags.NORMAL)
+        css += ".input * { color: %s; }" % color.to_string()
+        css += ".uribar { color: %s; }" % color.to_string()
+        # Let GTK finish current resizing before injecting CSS
         self.__css_provider.load_from_data(css.encode("utf-8"))
