@@ -204,6 +204,14 @@ class PagesManager(Gtk.EventBox):
                 break
 
     @property
+    def filter(self):
+        """
+            Get filter
+            return str
+        """
+        return self.__search_entry.get_text()
+
+    @property
     def children(self):
         """
             Get views ordered

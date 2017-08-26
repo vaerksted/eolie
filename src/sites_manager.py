@@ -170,8 +170,12 @@ class SitesManager(Gtk.EventBox):
             @param listbox as Gtk.ListBox
             @param child as SitesManagerChild
         """
-        self.__window.container.pages_manager.set_filter(child.netloc)
-        self.__window.toolbar.actions.view_button.set_active(True)
+        if self.__window.toolbar.actions.view_button.get_active() and\
+                self.__window.container.pages_manager.filter == child.netloc:
+            self.__window.toolbar.actions.view_button.set_active(False)
+        else:
+            self.__window.container.pages_manager.set_filter(child.netloc)
+            self.__window.toolbar.actions.view_button.set_active(True)
 
     def __on_button_press(self, widget, event):
         """
