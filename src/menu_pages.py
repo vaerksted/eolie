@@ -38,32 +38,10 @@ class PagesMenu(Gio.Menu):
         El().add_action(action)
         action.connect('activate',
                        self.__on_openall_clicked)
-        panel_mode = El().settings.get_enum("panel-mode")
-        self.__panel_action = Gio.SimpleAction.new_stateful(
-                                                 "panel_mode",
-                                                 GLib.VariantType.new("i"),
-                                                 GLib.Variant("i", panel_mode))
-        self.__panel_action.connect("activate",
-                                    self.__on_panel_mode_active)
-        El().add_action(self.__panel_action)
-
-        # Setup submenu
-        submenu = Gio.Menu.new()
-        items = [Gio.MenuItem.new(_("No panel"),
-                                  "app.panel_mode(0)"),
-                 Gio.MenuItem.new(_("Show preview"),
-                                  "app.panel_mode(1)"),
-                 Gio.MenuItem.new(_("Do not show preview"),
-                                  "app.panel_mode(2)"),
-                 Gio.MenuItem.new(_("Minimal panel"),
-                                  "app.panel_mode(3)")]
-        for item in items:
-            submenu.append_item(item)
         # Setup menu
         item = Gio.MenuItem.new(_("New private page"), "app.new-private")
         item.set_icon(Gio.ThemedIcon.new("user-not-tracked-symbolic"))
         self.append_item(item)
-        self.append_submenu(_("View"), submenu)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
         remember_session = El().settings.get_value("remember-session")
@@ -207,15 +185,3 @@ class PagesMenu(Gio.Menu):
         GLib.idle_add(El().active_window.container.add_webview,
                       uri, Gdk.WindowType.CHILD, private, None, state)
         self.remove_action(uri)
-
-    def __on_panel_mode_active(self, action, param):
-        """
-            Update panel mode
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        panel_mode = param.get_int32()
-        El().settings.set_enum('panel-mode', panel_mode)
-        for window in El().windows:
-            window.container.set_panel_mode(panel_mode)

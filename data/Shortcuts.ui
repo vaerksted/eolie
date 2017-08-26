@@ -116,15 +116,8 @@
               </object>
             </child>
             <child>
-              <object class="GtkShortcutsShortcut">
-                <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Filter pages</property>
-                <property name="accelerator">&lt;Primary&gt;i</property>
-              </object>
-            </child>
-            <child>
               <object class="GtkShortcutsShortcut" id="view_all">
-                <property name="visible">False</property>
+                <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">View all pages</property>
                 <property name="accelerator">&lt;Alt&gt;e</property>
               </object>

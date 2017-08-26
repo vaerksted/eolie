@@ -14,9 +14,10 @@ from gi.repository import Gtk, Gdk, GLib, Pango, WebKit2
 
 from urllib.parse import urlparse
 from time import time
+import cairo
 
 from eolie.view_web import WebView
-from eolie.define import El, Indicator
+from eolie.define import El, Indicator, ArtSize
 
 
 class UriLabel(Gtk.EventBox):
@@ -100,6 +101,18 @@ class WebViewSignalsHandler:
 #######################
 # PRIVATE             #
 #######################
+    def __set_snapshot(self, uri):
+        """
+            Set webpage preview
+            @param uri as str
+        """
+        if uri == self.webview.get_uri() and not self.webview.ephemeral:
+            self.webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                                      WebKit2.SnapshotOptions.NONE,
+                                      None,
+                                      self.__on_snapshot,
+                                      uri)
+
     def __on_new_page(self, webview, uri, window_type):
         """
             Open a new page, switch to view if show is True
@@ -300,7 +313,6 @@ class WebViewSignalsHandler:
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
-            self._window.container.remove_overlay_views()
             self._window.toolbar.title.set_title(uri)
             if wanted_scheme:
                 self._window.toolbar.title.show_spinner(True)
@@ -321,6 +333,7 @@ class WebViewSignalsHandler:
                 GLib.idle_add(webview.grab_focus)
             # Hide progress
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
+            GLib.timeout_add(3000, self.__set_snapshot, uri)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed, webview):
         """
@@ -371,6 +384,42 @@ class WebViewSignalsHandler:
                          GLib.Variant("(i)", (page_id,)),
                          None,
                          page_id)
+
+    def __on_snapshot(self, webview, result, uri):
+        """
+            Set snapshot on main image
+            @param webview as WebView
+            @param result as Gio.AsyncResult
+            @param uri as str
+        """
+        # Do not cache snapshot on error
+        if webview.error is not None:
+            return
+        try:
+            snapshot = webview.get_snapshot_finish(result)
+            # We also cache original URI
+            uris = [webview.get_uri()]
+            parsed = urlparse(uri)
+            initial_parsed = urlparse(webview.initial_uri)
+            if parsed.netloc == initial_parsed.netloc and\
+                    webview.initial_uri not in uris:
+                uris.append(webview.initial_uri)
+            # Set start image scale factor
+            factor = ArtSize.START_WIDTH / snapshot.get_width()
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                         ArtSize.START_WIDTH,
+                                         ArtSize.START_HEIGHT)
+            context = cairo.Context(surface)
+            context.scale(factor, factor)
+            context.set_source_surface(snapshot, factor, 0)
+            context.paint()
+            for uri in uris:
+                if not El().art.exists(uri, "start"):
+                    El().art.save_artwork(uri, surface, "start")
+            del surface
+            del snapshot
+        except Exception as e:
+            print("WebViewSignalsHandler::__on_snapshot():", e)
 
     def __on_webview_map(self, webview):
         """

@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gdk
 
-from eolie.define import El, PanelMode
+from eolie.define import El
 
 
 class ToolbarActions(Gtk.Bin):
@@ -38,20 +38,10 @@ class ToolbarActions(Gtk.Bin):
         self.set_hexpand(True)
         self.__backward_button = builder.get_object("back_button")
         self.__forward_button = builder.get_object("forward_button")
-        self.__filter_button = builder.get_object("filter_button")
         self.__pages_button = builder.get_object("pages_button")
         self.__view_button = builder.get_object("view_button")
         self.__close_button = builder.get_object("close_button")
         self.__count = builder.get_object("count")
-        panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode == PanelMode.NONE or fullscreen:
-            self.__view_button.show()
-            self.__close_button.show()
-        else:
-            self.__filter_button.show()
-        if not fullscreen:
-            El().settings.connect("changed::panel-mode",
-                                  self.__on_panel_mode_changed)
 
     def set_actions(self, webview):
         """
@@ -88,14 +78,6 @@ class ToolbarActions(Gtk.Bin):
             @return Gtk.MenuButton
         """
         return self.__view_button
-
-    @property
-    def filter_button(self):
-        """
-            Get filtering toggle button
-            @return Gtk.ToggleButton
-        """
-        return self.__filter_button
 
 #######################
 # PROTECTED           #
@@ -198,15 +180,6 @@ class ToolbarActions(Gtk.Bin):
                         button)
         popover.popup()
 
-    def _on_filter_button_toggled(self, button):
-        """
-            Add a new web view
-            @param button as Gtk.ToggleButton
-        """
-        active = button.get_active()
-        self.__window.container.pages_manager.set_filtered(active)
-        self.__window.close_popovers()
-
     def _on_view_button_toggled(self, button):
         """
             Show current views
@@ -291,18 +264,3 @@ class ToolbarActions(Gtk.Bin):
                             self.__on_navigation_popover_closed,
                             model)
             popover.popup()
-
-    def __on_panel_mode_changed(self, settings, value):
-        """
-            Show hide view button
-            @param settings as Gio.Settings
-            @param value as int
-        """
-        if El().settings.get_enum("panel-mode") == PanelMode.NONE:
-            self.__view_button.show()
-            self.__close_button.show()
-            self.__filter_button.hide()
-        else:
-            self.__view_button.hide()
-            self.__close_button.hide()
-            self.__filter_button.show()

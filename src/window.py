@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk, Soup
 
-from eolie.define import El, PanelMode, Indicator
+from eolie.define import El, Indicator
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model
@@ -81,7 +81,6 @@ class Window(Gtk.ApplicationWindow):
         """
         if self.__fullscreen_revealer is not None:
             return
-        self.__container.update_pages_manager(PanelMode.NONE)
         self.__fullscreen_toolbar = Toolbar(self, True)
         # Do not count container views as destroy may be pending on somes
         count = str(len(self.__container.pages_manager.children))
@@ -104,8 +103,6 @@ class Window(Gtk.ApplicationWindow):
         """
         if self.__fullscreen_revealer is None:
             return
-        panel_mode = El().settings.get_enum("panel-mode")
-        self.__container.update_pages_manager(panel_mode)
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
         GLib.idle_add(self.__fullscreen_revealer.destroy)
@@ -253,8 +250,6 @@ class Window(Gtk.ApplicationWindow):
         self.__fullscreen_revealer = None
         self.__toolbar.show()
         self.__container = Container(self)
-        panel_mode = El().settings.get_enum("panel-mode")
-        self.__container.update_pages_manager(panel_mode)
         self.__container.show()
         self.set_titlebar(self.__toolbar)
         self.__toolbar.set_show_close_button(True)
@@ -458,9 +453,6 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.zoom_out()
         elif string == "zoom_default":
             self.container.current.webview.zoom_default()
-        elif string == "filter":
-            button = self.toolbar.actions.filter_button
-            button.set_active(not button.get_active())
         elif string == "history":
             self.toolbar.title.focus_entry("history")
         elif string == "search":

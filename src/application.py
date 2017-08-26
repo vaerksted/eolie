@@ -40,7 +40,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.context import Context
-from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues, PanelMode
+from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues
 
 
 class Application(Gtk.Application):
@@ -379,14 +379,6 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Subtract", "<Control>minus"])
         self.set_accels_for_action("win.shortcut::zoom_default",
                                    ["<Control>KP_0", "<Control>0"])
-        self.set_accels_for_action("app.panel_mode(0)",
-                                   ["<Control><Alt>0", "<Control><Alt>KP_0"])
-        self.set_accels_for_action("app.panel_mode(1)",
-                                   ["<Control><Alt>1", "<Control><Alt>KP_1"])
-        self.set_accels_for_action("app.panel_mode(2)",
-                                   ["<Control><Alt>2", "<Control><Alt>KP_2"])
-        self.set_accels_for_action("app.panel_mode(3)",
-                                   ["<Control><Alt>3", "<Control><Alt>KP_3"])
 
     def __listen_to_gnome_sm(self):
         """
@@ -717,8 +709,6 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/Shortcuts.ui")
         shortcuts = builder.get_object("shortcuts")
-        if self.settings.get_enum("panel-mode") == PanelMode.NONE:
-            builder.get_object("view_all").show()
         window = self.active_window
         if window is not None:
             shortcuts.set_transient_for(window)

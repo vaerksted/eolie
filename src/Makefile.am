@@ -31,11 +31,6 @@ app_PYTHON = \
     mozilla_sync.py\
     pages_manager.py\
     pages_manager_child.py\
-    pages_manager_flowbox.py\
-    pages_manager_flowbox_child.py\
-    pages_manager_listbox.py\
-    pages_manager_listbox_child.py\
-    pages_overlay.py\
     popover_cookies.py\
     popover_credentials.py\
     popover_downloads.py\
@@ -47,6 +42,8 @@ app_PYTHON = \
     popover_webview.py\
     search.py\
     settings.py\
+    sites_manager.py\
+    sites_manager_child.py\
     sqlcursor.py\
     utils.py\
     toolbar.py\

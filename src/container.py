@@ -14,10 +14,11 @@ from gi.repository import Gtk, GLib, Gdk
 
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
-from eolie.define import El, PanelMode
+from eolie.pages_manager import PagesManager
+from eolie.sites_manager import SitesManager
 
 
-class Container(Gtk.Overlay):
+class Container(Gtk.Bin):
     """
         Main Eolie view
     """
@@ -27,10 +28,11 @@ class Container(Gtk.Overlay):
             Ini.container
             @param window as Window
         """
-        Gtk.Overlay.__init__(self)
+        Gtk.Bin.__init__(self)
         self.__window = window
         self.__pages_overlay = None
         self.__popover = WebViewPopover(window)
+
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
@@ -38,20 +40,24 @@ class Container(Gtk.Overlay):
         self.__stack.set_transition_duration(150)
         self.__stack.show()
 
-        self.__grid_stack = Gtk.Stack()
-        self.__grid_stack.set_hexpand(True)
-        self.__grid_stack.set_vexpand(True)
-        self.__grid_stack.set_transition_type(
-                                         Gtk.StackTransitionType.CROSSFADE)
-        self.__grid_stack.set_transition_duration(150)
-        self.__grid_stack.show()
-        self.__grid = Gtk.Grid()
-        # Attach at position 1 to let place to pages_manager
-        self.__grid.attach(self.__stack, 1, 0, 1, 1)
-        self.__grid.show()
-        self.__pages_manager = None
-        self.__grid_stack.add_named(self.__grid, "grid")
-        self.add(self.__grid_stack)
+        self.__expose_stack = Gtk.Stack()
+        self.__expose_stack.set_hexpand(True)
+        self.__expose_stack.set_vexpand(True)
+        self.__expose_stack.set_transition_type(
+                                       Gtk.StackTransitionType.OVER_RIGHT_LEFT)
+        self.__expose_stack.set_transition_duration(150)
+        self.__expose_stack.show()
+        self.__pages_manager = PagesManager(self.__window)
+        self.__pages_manager.show()
+        self.__sites_manager = SitesManager(self.__window)
+        self.__sites_manager.show()
+        grid = Gtk.Grid()
+        grid.add(self.__sites_manager)
+        grid.add(self.__expose_stack)
+        grid.show()
+        self.__expose_stack.add_named(self.__stack, "stack")
+        self.__expose_stack.add_named(self.__pages_manager, "expose")
+        self.add(grid)
 
     def add_webview(self, uri, window_type, ephemeral=False,
                     parent=None, state=None, load=True):
@@ -66,16 +72,11 @@ class Container(Gtk.Overlay):
         webview = View.get_new_webview(ephemeral, self.__window)
         if state is not None:
             webview.restore_session_state(state)
-        view = self.add_view(webview, parent, window_type)
+        self.add_view(webview, parent, window_type)
         if uri is not None:
             if load:
-                panel_mode = El().settings.get_enum("panel-mode")
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
-                # Notify user about new window
-                if window_type == Gdk.WindowType.OFFSCREEN and\
-                        panel_mode == PanelMode.NONE:
-                    GLib.idle_add(self.add_overlay_view, view)
             else:
                 webview.set_delayed_uri(uri)
                 webview.emit("title-changed", uri)
@@ -86,27 +87,21 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param parent as WebView
             @param window_type as Gdk.WindowType
-            @return view
         """
         view = self.__get_new_view(webview, parent)
         view.show()
         self.__pages_manager.add_child(view)
         # Force window type as current window is not visible
-        if self.__grid_stack.get_visible_child_name() == "expose":
+        if self.__expose_stack.get_visible_child_name() == "expose":
             window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
             self.__stack.set_visible_child(view)
         elif window_type == Gdk.WindowType.OFFSCREEN:
-            panel_mode = El().settings.get_enum("panel-mode")
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
-            if panel_mode == PanelMode.NONE:
-                width = self.get_allocated_width()
-            else:
-                width = self.get_allocated_width() -\
-                    self.__pages_manager.get_allocated_width()
+            width = self.get_allocated_width()
             view.set_size_request(width, self.get_allocated_height())
             window.add(view)
             window.show()
@@ -117,39 +112,6 @@ class Container(Gtk.Overlay):
         # Do not count container views as destroy may be pending on somes
         count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)
-        return view
-
-    def add_overlay_view(self, view, static=True):
-        """
-            Add an overlay view
-            @param view as View
-            @param static as bool
-        """
-        from eolie.pages_overlay import PagesOverlay
-        if self.__pages_overlay is None:
-            self.__pages_overlay = PagesOverlay(self.__window)
-            self.add_overlay(self.__pages_overlay)
-        # Destroy previous non static views
-        already_exists = False
-        for child in self.__pages_overlay.children:
-            if view == child.view:
-                already_exists = True
-            elif not child.static:
-                self.__pages_overlay.destroy_child(child.view)
-        if not already_exists:
-            self.__pages_overlay.show()
-            self.__pages_overlay.add_child(view, static)
-
-    def remove_overlay_views(self):
-        """
-            Remove all overlay views (only static ones)
-            @param static as bool
-        """
-        if self.__pages_overlay is None:
-            return
-        for child in self.__pages_overlay.children:
-            if not child.static:
-                self.__pages_overlay.destroy_child(child.view)
 
     def load_uri(self, uri):
         """
@@ -199,61 +161,31 @@ class Container(Gtk.Overlay):
             @param search as bool
         """
         # Show search bar
-        child = self.__grid_stack.get_child_by_name("expose")
-        if child is not None:
-            GLib.timeout_add(500, child.set_filtered, search and expose)
+        child = self.__expose_stack.get_child_by_name("expose")
+        GLib.timeout_add(500, child.set_filtered, search and expose)
         # Show expose mode
         if expose:
-            self.__grid_stack.set_visible_child_name("expose")
-            if self.__pages_overlay is not None:
-                self.__pages_overlay.destroy()
-                self.__pages_overlay = None
+            self.__expose_stack.set_visible_child_name("expose")
         else:
-            self.__grid_stack.set_visible_child_name("grid")
+            self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
             GLib.idle_add(self.__pages_manager.move_first, self.current)
-
-    def update_pages_manager(self, panel_mode):
-        """
-            Switch pages manager
-            @param panel mode as int
-        """
-        views = []
-        if self.__pages_manager is not None:
-            for child in self.__pages_manager.children:
-                views.append(child.view)
-            self.__pages_manager.destroy()
-        if self.__pages_overlay is not None:
-            self.__pages_overlay.destroy()
-            self.__pages_overlay = None
-        if panel_mode == PanelMode.NONE:
-            from eolie.pages_manager_flowbox import PagesManagerFlowBox
-            self.__pages_manager = PagesManagerFlowBox(self.__window)
-            self.__grid_stack.add_named(self.__pages_manager, "expose")
-        else:
-            from eolie.pages_manager_listbox import PagesManagerListBox
-            self.__pages_manager = PagesManagerListBox(self.__window)
-            self.__grid.attach(self.__pages_manager, 0, 0, 1, 1)
-        self.__pages_manager.show()
-        for view in views:
-            self.__pages_manager.add_child(view)
-        self.__pages_manager.update_visible_child()
-
-    def set_panel_mode(self, panel_mode):
-        """
-            Set panel mode
-            @param panel_mode as int
-        """
-        self.update_pages_manager(panel_mode)
-        self.pages_manager.set_panel_mode()
 
     @property
     def pages_manager(self):
         """
-            Get page manager
+            Get pages manager
             @return PagesManager
         """
         return self.__pages_manager
+
+    @property
+    def sites_manager(self):
+        """
+            Get sites manager
+            @return SitesManager
+        """
+        return self.__sites_manager
 
     @property
     def views(self):

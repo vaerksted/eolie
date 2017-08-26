@@ -41,13 +41,6 @@ else:
     CACHE_PATH = GLib.getenv("XDG_CACHE_HOME") + "/eolie"
 
 
-class PanelMode:
-    NONE = 0
-    PREVIEW = 1
-    NO_PREVIEW = 2
-    MINIMAL = 3
-
-
 class TimeSpan:
     HOUR = "0"
     DAY = "1"

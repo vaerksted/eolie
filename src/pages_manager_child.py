@@ -15,14 +15,13 @@ from gi.repository import Gtk, GLib, WebKit2
 import cairo
 from urllib.parse import urlparse
 
-from eolie.define import El, ArtSize, PanelMode
+from eolie.define import El, ArtSize
 from eolie.utils import resize_favicon
 
 
-class PagesManagerChild:
+class PagesManagerChild(Gtk.FlowBoxChild):
     """
-        Generic parent for Stack children
-        Need to be inherited by a Gtk.*BoxRow
+        Child showing snapshot, title and favicon
     """
 
     def __init__(self, view, window, static):
@@ -33,92 +32,97 @@ class PagesManagerChild:
             @param static as bool,
              if view is static, will not be auto destroyed
         """
-        self._view = view
-        self._window = window
+        Gtk.FlowBoxChild.__init__(self)
+        self.__view = view
+        self.__window = window
         self.__static = static
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/StackChild.ui")
+        builder.add_from_resource("/org/gnome/Eolie/PagesManagerChild.ui")
         builder.connect_signals(self)
         self._widget = builder.get_object("widget")
-        self._overlay = builder.get_object("overlay")
-        self._grid = builder.get_object("grid")
-        self._title = builder.get_object("title")
-        self._image = builder.get_object("image")
-        self._image_close = builder.get_object("image_close")
+        self.__title = builder.get_object("title")
+        self.__image = builder.get_object("image")
+        self.__image_close = builder.get_object("image_close")
         self.__audio_indicator = builder.get_object("audio_indicator")
         if view.webview.is_playing_audio():
             self.__audio_indicator.show()
         if view.webview.ephemeral:
-            self._image_close.set_from_icon_name("window-close-symbolic",
-                                                 Gtk.IconSize.INVALID)
+            self.__image_close.set_from_icon_name("window-close-symbolic",
+                                                  Gtk.IconSize.INVALID)
         else:
-            self._image_close.set_from_icon_name("applications-internet",
-                                                 Gtk.IconSize.INVALID)
-        self._image_close.set_property("pixel-size", ArtSize.FAVICON)
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
+        self.__image_close.set_property("pixel-size", ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
-        self._title.set_label("Empty page")
+        self.__title.set_label("Empty page")
         self.add(self._widget)
 
         self.get_style_context().add_class("sidebar-item")
 
         self.set_property("has-tooltip", True)
+        self.set_property("halign", Gtk.Align.START)
+        self.set_margin_start(20)
+        self.set_margin_end(20)
+        self.set_margin_top(20)
+        self.set_margin_bottom(20)
+        self.set_property("width-request", ArtSize.START_WIDTH +
+                          ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
         self.connect("destroy", self.__on_destroy)
         self.__view_destroy_id = view.connect("destroy",
                                               self.__on_view_destroy)
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "notify::favicon",
-                                 self._on_notify_favicon))
+                                 self.__on_notify_favicon))
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "notify::is-playing-audio",
-                                 self._on_notify_is_playing_audio))
+                                 self.__on_notify_is_playing_audio))
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "uri-changed",
-                                 self._on_uri_changed))
+                                 self.__on_uri_changed))
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "title-changed",
-                                 self._on_title_changed))
+                                 self.__on_title_changed))
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "scroll-event",
-                                 self._on_scroll_event))
+                                 self.__on_scroll_event))
         self.__connected_ids.append(
-                             self._view.webview.connect(
+                             self.__view.webview.connect(
                                  "load-changed",
-                                 self._on_load_changed))
+                                 self.__on_load_changed))
 
-    def update(self):
-        """
-            Update child title and favicon
-        """
-        title = self._view.webview.get_title()
-        if title is None:
-            title = self._view.webview.get_uri()
-        self._title.set_text(title)
-        self.__set_favicon()
-
-    def set_snapshot(self, uri, save):
+    def set_snapshot(self, uri):
         """
             Set webpage preview
             @param uri as str
-            @param save as bool
         """
-        if uri != self._view.webview.get_uri():
-            raise Exception("Cancel snapshot, uri changed.")
+        if uri == self.__view.webview.get_uri():
+            if self.__view.webview.ephemeral:
+                self.__image.set_from_icon_name(
+                                             "user-not-tracked-symbolic",
+                                             Gtk.IconSize.DIALOG)
+            else:
+                self.__view.webview.get_snapshot(
+                                             WebKit2.SnapshotRegion.VISIBLE,
+                                             WebKit2.SnapshotOptions.NONE,
+                                             None,
+                                             self.__on_snapshot,
+                                             uri)
 
     def clear_snapshot(self):
         """
             Get snapshot
             @return Gtk.Image
         """
-        if self._image is not None:
-            self._image.clear()
+        if self.__image is not None:
+            self.__image.clear()
 
     def show_title(self, b):
         pass
@@ -129,7 +133,7 @@ class PagesManagerChild:
             Get linked view
             @return View
         """
-        return self._view
+        return self.__view
 
     @property
     def static(self):
@@ -142,99 +146,6 @@ class PagesManagerChild:
 #######################
 # PROTECTED           #
 #######################
-    def _on_notify_favicon(self, webview, favicon):
-        """
-            Set favicon
-            @param webview as WebView
-            @param favicon as Gparam
-        """
-        if self._view.webview == webview:
-            self.__set_favicon()
-
-    def _on_notify_is_playing_audio(self, webview, playing):
-        """
-            Update status
-            @param webview as WebView
-            @param playing as bool
-        """
-        if not webview.is_loading() and webview.is_playing_audio():
-            self.__audio_indicator.show()
-        else:
-            self.__audio_indicator.hide()
-
-    def _on_scroll_event(self, webview, event):
-        """
-            Update snapshot
-            @param webview as WebView
-            @param event as Gdk.EventScroll
-        """
-        if self.__scroll_timeout_id is not None:
-            GLib.source_remove(self.__scroll_timeout_id)
-        self.__scroll_timeout_id = GLib.timeout_add(250,
-                                                    self.__on_scroll_timeout)
-
-    def _on_snapshot(self, webview, result, uri, save):
-        """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
-            @param uri as str
-            @param save as bool
-        """
-        # Do not cache snapshot on error
-        if webview.error is not None and save:
-            return
-        try:
-            snapshot = webview.get_snapshot_finish(result)
-            # Save snapshot to cache
-            if save:
-                # We also cache original URI
-                uris = [webview.get_uri()]
-                parsed = urlparse(uri)
-                initial_parsed = urlparse(webview.initial_uri)
-                if parsed.netloc == initial_parsed.netloc and\
-                        webview.initial_uri not in uris:
-                    uris.append(webview.initial_uri)
-                # Set start image scale factor
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-                surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                             ArtSize.START_WIDTH,
-                                             ArtSize.START_HEIGHT)
-                context = cairo.Context(surface)
-                context.scale(factor, factor)
-                context.set_source_surface(snapshot, factor, 0)
-                context.paint()
-                for uri in uris:
-                    if not El().art.exists(uri, "start") and save:
-                        El().art.save_artwork(uri, surface, "start")
-                del surface
-            else:
-                surface = None
-                panel_mode = El().settings.get_enum("panel-mode")
-                if panel_mode == PanelMode.PREVIEW:
-                    factor = (ArtSize.PREVIEW_WIDTH -
-                              ArtSize.PREVIEW_WIDTH_MARGIN) /\
-                              snapshot.get_width()
-                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                                 ArtSize.PREVIEW_WIDTH -
-                                                 ArtSize.PREVIEW_WIDTH_MARGIN,
-                                                 ArtSize.PREVIEW_HEIGHT)
-                elif panel_mode == PanelMode.NONE:
-                    factor = ArtSize.START_WIDTH / snapshot.get_width()
-                    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                                 ArtSize.START_WIDTH,
-                                                 ArtSize.START_HEIGHT)
-                if surface is not None:
-                    context = cairo.Context(surface)
-                    context.scale(factor, factor)
-                    context.set_source_surface(snapshot, 0, 0)
-                    context.paint()
-                    self._image.set_from_surface(surface)
-                    del surface
-            del snapshot
-        except Exception as e:
-            print("PagesManagerChild::__on_snapshot():", e)
-
     def _on_button_press_event(self, eventbox, event):
         """
             Hide popover or close view
@@ -242,7 +153,7 @@ class PagesManagerChild:
             @param event as Gdk.Event
         """
         if event.button == 2:
-            self._window.container.pages_manager.close_view(self._view)
+            self.__window.container.pages_manager.close_view(self.__view)
             return True
 
     def _on_button_release_event(self, eventbox, event):
@@ -258,9 +169,8 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") != PanelMode.MINIMAL:
-            self._window.container.pages_manager.close_view(self._view)
-            return True
+        self.__window.container.pages_manager.close_view(self.__view)
+        return True
 
     def _on_enter_notify_event(self, eventbox, event):
         """
@@ -268,11 +178,9 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") == PanelMode.MINIMAL:
-            return
-        self._image_close.set_from_icon_name("window-close-symbolic",
-                                             Gtk.IconSize.INVALID)
-        self._image_close.get_style_context().add_class("sidebar-item-close")
+        self.__image_close.set_from_icon_name("window-close-symbolic",
+                                              Gtk.IconSize.INVALID)
+        self.__image_close.get_style_context().add_class("sidebar-item-close")
 
     def _on_leave_notify_event(self, eventbox, event):
         """
@@ -280,72 +188,14 @@ class PagesManagerChild:
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if El().settings.get_enum("panel-mode") == PanelMode.MINIMAL:
-            return
         allocation = eventbox.get_allocation()
         if event.x <= 0 or\
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            self._image_close.get_style_context().remove_class(
+            self.__image_close.get_style_context().remove_class(
                                                           "sidebar-item-close")
             self.__set_favicon()
-
-    def _on_uri_changed(self, webview, uri):
-        """
-            Update uri
-            @param webview as WebView
-            @param uri as str
-        """
-        if self._view.webview != webview:
-            return
-        # We are not filtered and not in private mode
-        # Update snapshot and favicon to be sure
-        if not webview.is_loading() and\
-                not webview.ephemeral and\
-                El().settings.get_enum("panel-mode") not in [
-                                                         PanelMode.MINIMAL,
-                                                         PanelMode.NO_PREVIEW]:
-            GLib.timeout_add(2000, self.set_snapshot, uri, False)
-            self.__set_favicon()
-
-    def _on_title_changed(self, webview, title):
-        """
-            Update title
-            @param webview as WebView
-            @param title as str
-        """
-        if self._view.webview != webview:
-            return
-        self._title.set_text(title)
-
-    def _on_load_changed(self, webview, event):
-        """
-            Update widget content
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        if self._view.webview != webview:
-            return
-        uri = webview.get_uri()
-        if event == WebKit2.LoadEvent.STARTED:
-            self._image.clear()
-            self.__audio_indicator.hide()
-            self.__spinner.start()
-            self._title.set_text(uri)
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self._title.set_text(uri)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.__spinner.stop()
-            if webview.is_playing_audio():
-                self.__audio_indicator.show()
-            # is_loading() happen when loading a new uri while
-            # previous loading is not finished
-            if not webview.cancelled and not webview.is_loading():
-                GLib.timeout_add(500, self.set_snapshot, uri, False)
-                # FIXME Should be better to have way to snapshot when
-                # page is rendered.
-                GLib.timeout_add(3000, self.set_snapshot, uri, True)
 
 #######################
 # PRIVATE             #
@@ -354,30 +204,31 @@ class PagesManagerChild:
         """
             Set favicon
         """
-        uri = self._view.webview.get_uri()
-        if self._view.webview.ephemeral:
-            self._image_close.set_from_icon_name("user-not-tracked-symbolic",
-                                                 Gtk.IconSize.INVALID)
-        elif uri == "populars://":
-            self._image_close.set_from_icon_name("emote-love-symbolic",
-                                                 Gtk.IconSize.INVALID)
-        elif uri:
-            surface = self._view.webview.get_favicon()
-            if surface is None:
-                self._image_close.set_from_icon_name("applications-internet",
-                                                     Gtk.IconSize.INVALID)
-            else:
-                resized = resize_favicon(surface)
-                El().art.save_artwork(uri, resized, "favicon")
-                self.__set_favicon_related(resized,
-                                           uri,
-                                           self._view.webview.initial_uri)
-                self._image_close.set_from_surface(resized)
-                del resized
-                del surface
+        resized = None
+        uri = self.__view.webview.get_uri()
+        surface = self.__view.webview.get_favicon()
+        artwork = El().art.get_icon_theme_artwork(
+                                                 uri,
+                                                 self.__view.webview.ephemeral)
+        if artwork is not None:
+            self.__image_close.set_from_icon_name(artwork,
+                                                  Gtk.IconSize.INVALID)
+        elif surface is not None:
+            resized = resize_favicon(surface)
+            El().art.save_artwork(uri, resized, "favicon")
+            self.__set_favicon_related(resized,
+                                       uri,
+                                       self.__view.webview.initial_uri)
+            self.__image_close.set_from_surface(resized)
+            del surface
         else:
-            self._image_close.set_from_icon_name("applications-internet",
-                                                 Gtk.IconSize.INVALID)
+            self.__image_close.set_from_icon_name("applications-internet",
+                                                  Gtk.IconSize.INVALID)
+        self.__window.container.sites_manager.add_webview(self.__view.webview,
+                                                          uri,
+                                                          resized)
+        if resized is not None:
+            del resized
 
     def __set_favicon_related(self, surface, uri, initial_uri):
         """
@@ -397,9 +248,9 @@ class PagesManagerChild:
         """
             Update snapshot
         """
-        uri = self._view.webview.get_uri()
+        uri = self.__view.webview.get_uri()
         self.__scroll_timeout_id = None
-        self.set_snapshot(uri, False)
+        self.set_snapshot(uri)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -411,8 +262,8 @@ class PagesManagerChild:
             @param tooltip as Gtk.Tooltip
         """
         text = ""
-        label = self._title.get_text()
-        uri = self._view.webview.get_uri()
+        label = self.__title.get_text()
+        uri = self.__view.webview.get_uri()
         # GLib.markup_escape_text
         if uri is None:
             text = "<b>%s</b>" % GLib.markup_escape_text(label)
@@ -428,9 +279,9 @@ class PagesManagerChild:
         """
         while self.__connected_ids:
             connected_id = self.__connected_ids.pop(0)
-            self._view.webview.disconnect(connected_id)
+            self.__view.webview.disconnect(connected_id)
         if self.__view_destroy_id is not None:
-            self._view.disconnect(self.__view_destroy_id)
+            self.__view.disconnect(self.__view_destroy_id)
 
     def __on_view_destroy(self, view):
         """
@@ -440,3 +291,110 @@ class PagesManagerChild:
         self.__connected_ids = []
         self.__view_destroy_id = None
         GLib.idle_add(self.destroy)
+
+    def __on_notify_favicon(self, webview, favicon):
+        """
+            Set favicon
+            @param webview as WebView
+            @param favicon as Gparam
+        """
+        if self.__view.webview == webview:
+            self.__set_favicon()
+
+    def __on_notify_is_playing_audio(self, webview, playing):
+        """
+            Update status
+            @param webview as WebView
+            @param playing as bool
+        """
+        if not webview.is_loading() and webview.is_playing_audio():
+            self.__audio_indicator.show()
+        else:
+            self.__audio_indicator.hide()
+
+    def __on_scroll_event(self, webview, event):
+        """
+            Update snapshot
+            @param webview as WebView
+            @param event as Gdk.EventScroll
+        """
+        if self.__scroll_timeout_id is not None:
+            GLib.source_remove(self.__scroll_timeout_id)
+        self.__scroll_timeout_id = GLib.timeout_add(250,
+                                                    self.__on_scroll_timeout)
+
+    def __on_snapshot(self, webview, result, uri):
+        """
+            Set snapshot on main image
+            @param webview as WebView
+            @param result as Gio.AsyncResult
+            @param uri as str
+        """
+        try:
+            snapshot = webview.get_snapshot_finish(result)
+            # Set start image scale factor
+            margin = 0
+            if snapshot.get_width() > snapshot.get_height():
+                margin = (snapshot.get_width() - ArtSize.START_WIDTH) / 2
+                factor = ArtSize.START_HEIGHT / snapshot.get_height()
+            else:
+                factor = ArtSize.START_WIDTH / snapshot.get_width()
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                         ArtSize.START_WIDTH,
+                                         ArtSize.START_HEIGHT)
+            context = cairo.Context(surface)
+            context.scale(factor, factor)
+            context.set_source_surface(snapshot, -margin * factor, 0)
+            context.paint()
+            self.__image.set_from_surface(surface)
+            del surface
+            del snapshot
+        except Exception as e:
+            print("PagesManagerChild::__on_snapshot():", e)
+
+    def __on_uri_changed(self, webview, uri):
+        """
+            Update uri
+            @param webview as WebView
+            @param uri as str
+        """
+        # We are not filtered and not in private mode
+        # Update snapshot and favicon to be sure
+        if not webview.is_loading() and\
+                not webview.ephemeral:
+            GLib.timeout_add(2000, self.set_snapshot, uri)
+            # Needed as uri is not set yet
+            GLib.idle_add(self.__set_favicon)
+        else:
+            self.__window.container.sites_manager.add_webview(
+                                                          self.__view.webview,
+                                                          uri,
+                                                          None)
+
+    def __on_title_changed(self, webview, title):
+        """
+            Update title
+            @param webview as WebView
+            @param title as str
+        """
+        self.__title.set_text(title)
+
+    def __on_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        uri = webview.get_uri()
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__image.clear()
+            self.__audio_indicator.hide()
+            self.__spinner.start()
+            self.__title.set_text(uri)
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            self.__title.set_text(uri)
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.__spinner.stop()
+            if webview.is_playing_audio():
+                self.__audio_indicator.show()
+            GLib.timeout_add(500, self.set_snapshot, uri)

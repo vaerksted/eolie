@@ -68,6 +68,20 @@ class Art:
             return surface
         return None
 
+    def get_icon_theme_artwork(self, uri, ephemeral):
+        """
+            Get artwork from icon theme
+            @param uri as str
+            @param ephemeral as bool
+            @return artwork as str/None
+        """
+        if ephemeral:
+            return "user-not-tracked-symbolic"
+        elif uri == "populars://":
+            return "emote-love-symbolic"
+        else:
+            return None
+
     def get_path(self, uri, suffix):
         """
             Return cache image path

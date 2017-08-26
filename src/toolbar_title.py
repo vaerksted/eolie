@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, PanelMode, Indicator, Type
+from eolie.define import El, Indicator, Type
 from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
 
@@ -105,11 +105,8 @@ class ToolbarTitle(Gtk.Bin):
             @param b as bool
         """
         if b:
-            panel_mode = El().settings.get_enum("panel-mode")
-            if panel_mode == PanelMode.NONE:
-                self.__indicator_stack.show()
-                self.__indicator_stack.set_visible_child_name("spinner")
-                self.__indicator_stack.get_visible_child().start()
+            self.__indicator_stack.set_visible_child_name("spinner")
+            self.__indicator_stack.get_visible_child().start()
         elif self.__indicator_stack.get_visible_child_name() == "spinner":
             self.__indicator_stack.get_visible_child().stop()
             self.__indicator_stack.hide()
@@ -519,6 +516,7 @@ class ToolbarTitle(Gtk.Bin):
                         else:
                             uri = "%s://%s" % (db_parsed.scheme, uri)
                 self.__window.container.load_uri(uri)
+                self.__window.container.set_expose(False)
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
@@ -713,16 +711,17 @@ class ToolbarTitle(Gtk.Bin):
             @param value as str
         """
         if not value:
-            self.__window.container.remove_overlay_views()
+            self.__window.container.set_expose(False)
             return
-        panel_mode = El().settings.get_enum("panel-mode")
-        if panel_mode != PanelMode.NONE or len(value) < 3:
+        elif len(value) < 3:
             return
         for view in self.__window.container.views:
             view_parsed = urlparse(view.webview.get_uri())
             if view_parsed.netloc.find(value) != -1:
-                self.__window.container.add_overlay_view(view, False)
+                self.__window.container.pages_manager.set_filter(value)
+                self.__window.container.set_expose(True)
                 return
+        self.__window.container.set_expose(False)
 
     def __search_suggestion(self, uri, status, content, encoding, value):
         """
