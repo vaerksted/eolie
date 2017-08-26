@@ -24,24 +24,20 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         Child showing snapshot, title and favicon
     """
 
-    def __init__(self, view, window, static):
+    def __init__(self, view, window):
         """
             Init child
             @param view as View
             @param window as Window
-            @param static as bool,
-             if view is static, will not be auto destroyed
         """
         Gtk.FlowBoxChild.__init__(self)
         self.__view = view
         self.__window = window
-        self.__static = static
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PagesManagerChild.ui")
         builder.connect_signals(self)
-        self._widget = builder.get_object("widget")
         self.__title = builder.get_object("title")
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
@@ -56,8 +52,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                   Gtk.IconSize.INVALID)
         self.__image_close.set_property("pixel-size", ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
-        self.__title.set_label("Empty page")
-        self.add(self._widget)
+        self.add(builder.get_object("widget"))
 
         self.get_style_context().add_class("sidebar-item")
 
@@ -116,17 +111,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                              self.__on_snapshot,
                                              uri)
 
-    def clear_snapshot(self):
-        """
-            Get snapshot
-            @return Gtk.Image
-        """
-        if self.__image is not None:
-            self.__image.clear()
-
-    def show_title(self, b):
-        pass
-
     @property
     def view(self):
         """
@@ -134,14 +118,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @return View
         """
         return self.__view
-
-    @property
-    def static(self):
-        """
-            True if view is static
-            @return bool
-        """
-        return self.__static
 
 #######################
 # PROTECTED           #

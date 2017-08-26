@@ -29,7 +29,6 @@ class ToolbarActions(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__timeout_id = None
-        self.__popover = None
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarActions.ui")
         builder.connect_signals(self)

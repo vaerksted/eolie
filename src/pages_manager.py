@@ -71,7 +71,7 @@ class PagesManager(Gtk.EventBox):
             @param view as View
             @return child
         """
-        child = PagesManagerChild(view, self.__window, False)
+        child = PagesManagerChild(view, self.__window)
         child.show()
 
         # We want to insert child next to its parent and brothers
@@ -135,8 +135,6 @@ class PagesManager(Gtk.EventBox):
             self.__search_entry.grab_focus()
             self.__search_entry.connect("key-press-event",
                                         self.__on_key_press)
-            for child in self.__box.get_children():
-                child.show_title(True)
         elif self.__search_bar.is_visible():
             self.__search_bar.hide()
             self.__search_entry.disconnect_by_func(self.__on_key_press)
