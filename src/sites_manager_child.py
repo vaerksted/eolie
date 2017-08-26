@@ -62,6 +62,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                                 Gtk.IconSize.INVALID)
         elif surface is not None:
             self.__image.set_from_surface(surface)
+        else:
+            self.__image.set_from_icon_name("applications-internet",
+                                            Gtk.IconSize.INVALID)
         self.__label.set_text(str(len_webviews))
 
     def remove_webview(self, webview):
