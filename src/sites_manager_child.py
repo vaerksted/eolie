@@ -89,6 +89,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
         return len(self.__webviews) == 0
 
     @property
+    def webviews(self):
+        """
+            Webviews
+            @return [WebView]
+        """
+        return self.__webviews
+
+    @property
     def netloc(self):
         """
             Get netloc

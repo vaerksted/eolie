@@ -121,6 +121,18 @@ class Container(Gtk.Overlay):
         if self.current is not None:
             self.current.webview.load_uri(uri)
 
+    def set_visible_webview(self, webview):
+        """
+            Set visible webview
+            @param webview as WebView
+        """
+        wanted = False
+        for view in self.__stack.get_children():
+            if view.webview == webview:
+                wanted = view
+        if wanted is not None:
+            self.set_visible_view(wanted)
+
     def set_visible_view(self, view):
         """
             Set visible view
@@ -191,7 +203,7 @@ class Container(Gtk.Overlay):
     def views(self):
         """
             Get views
-            @return views as [WebView]
+            @return views as [View]
         """
         return self.__stack.get_children()
 
