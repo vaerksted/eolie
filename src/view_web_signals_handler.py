@@ -393,7 +393,7 @@ class WebViewSignalsHandler:
             @param uri as str
         """
         # Do not cache snapshot on error
-        if webview.error is not None:
+        if webview.error is not None or uri != self.webview.get_uri():
             return
         try:
             snapshot = webview.get_snapshot_finish(result)
