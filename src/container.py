@@ -16,6 +16,7 @@ from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
+from eolie.define import El
 
 
 class Container(Gtk.Overlay):
@@ -50,7 +51,10 @@ class Container(Gtk.Overlay):
         self.__pages_manager = PagesManager(self.__window)
         self.__pages_manager.show()
         self.__sites_manager = SitesManager(self.__window)
-        self.__sites_manager.show()
+        if El().settings.get_value("show-left-panel"):
+            self.__sites_manager.show()
+        El().settings.connect("changed::show-left-panel",
+                              self.__on_show_left_panel_changed)
         grid = Gtk.Grid()
         grid.add(self.__sites_manager)
         grid.add(self.__expose_stack)
@@ -228,3 +232,14 @@ class Container(Gtk.Overlay):
         view = View(webview, parent, self.__window)
         view.show()
         return view
+
+    def __on_show_left_panel_changed(self, settings, value):
+        """
+            Show/hide panel
+            @param settings as Gio.Settings
+            @param value as bool
+        """
+        if El().settings.get_value("show-left-panel"):
+            self.__sites_manager.show()
+        else:
+            self.__sites_manager.hide()

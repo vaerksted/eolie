@@ -462,6 +462,10 @@ class Window(Gtk.ApplicationWindow):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
+        elif string == "show_left_panel":
+            value = El().settings.get_value("show-left-panel")
+            El().settings.set_value("show-left-panel",
+                                    GLib.Variant("b", not value))
 
     def __on_popover_closed(self, popover):
         """
