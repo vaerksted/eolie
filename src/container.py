@@ -18,7 +18,7 @@ from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
 
 
-class Container(Gtk.Bin):
+class Container(Gtk.Overlay):
     """
         Main Eolie view
     """
@@ -28,7 +28,7 @@ class Container(Gtk.Bin):
             Ini.container
             @param window as Window
         """
-        Gtk.Bin.__init__(self)
+        Gtk.Overlay.__init__(self)
         self.__window = window
         self.__pages_overlay = None
         self.__popover = WebViewPopover(window)

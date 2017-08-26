@@ -92,6 +92,7 @@ class Window(Gtk.ApplicationWindow):
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
         self.__fullscreen_revealer.show()
         self.__container.add_overlay(self.__fullscreen_revealer)
+        self.__container.sites_manager.hide()
         if force:
             Gtk.ApplicationWindow.fullscreen(self)
         self.connect("motion-notify-event", self.__on_motion_notify_event)
@@ -106,6 +107,7 @@ class Window(Gtk.ApplicationWindow):
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
         GLib.idle_add(self.__fullscreen_revealer.destroy)
+        self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
         self.update(self.container.current.webview)
