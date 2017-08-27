@@ -341,8 +341,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         if not webview.is_loading() and\
                 not webview.ephemeral:
             GLib.timeout_add(2000, self.set_snapshot, uri)
-            # Needed as uri is not set yet
-            GLib.idle_add(self.__set_favicon)
         else:
             self.__window.container.sites_manager.add_webview_for_uri(
                                                           self.__view.webview,
