@@ -53,8 +53,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__set_initial_artwork(self.__netloc, webview.ephemeral)
         if webview not in self.__webviews:
             self.__webviews.append(webview)
-        len_webviews = len(self.__webviews)
-        self.__label.set_text(str(len_webviews))
+        self.update_indicator(webview)
 
     def remove_webview(self, webview):
         """
@@ -63,7 +62,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if webview in self.__webviews:
             self.__webviews.remove(webview)
-        self.__label.set_text(str(len(self.__webviews)))
+        self.update_indicator(webview)
 
     def set_favicon(self, surface):
         """
@@ -71,6 +70,22 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param surface as cairo.Surface
         """
         self.__image.set_from_surface(surface)
+
+    def update_indicator(self, webview):
+        """
+            Update indicator (count and color)
+            @param webview as WebView
+        """
+        i = 0
+        unread = False
+        for webview in self.__webviews:
+            if webview.access_time == 0:
+                unread = True
+            i += 1
+        if unread:
+            self.__label.set_markup("<span color='red'><b>%s</b></span>" % i)
+        else:
+            self.__label.set_text(str(i))
 
     def reset(self, netloc):
         """

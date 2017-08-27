@@ -105,6 +105,14 @@ class SitesManager(Gtk.EventBox):
             if webview in child.webviews:
                 child.set_favicon(surface)
 
+    def update_indicator(self, webview):
+        """
+            Update indicator state for webview
+        """
+        for child in self.__box.get_children():
+            if webview in child.webviews:
+                child.update_indicator(webview)
+
     def remove_webview(self, webview):
         """
             Remove webview
@@ -153,8 +161,7 @@ class SitesManager(Gtk.EventBox):
         elif row2.netloc == "populars://":
             return True
         else:
-            return strcoll(row1.netloc.lstrip("www."),
-                           row2.netloc.lstrip("www."))
+            return strcoll(row1.netloc, row2.netloc)
 
     def __scroll_to_child(self, child):
         """

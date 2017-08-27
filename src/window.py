@@ -130,6 +130,7 @@ class Window(Gtk.ApplicationWindow):
             else:
                 webview.load_uri(uri)
             webview.update_access_time()
+            self.container.sites_manager.update_indicator(webview)
             title = webview.get_title()
             self.toolbar.title.update_load_indicator(webview)
             if webview.popups:
