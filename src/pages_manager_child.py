@@ -200,10 +200,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         else:
             self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.INVALID)
-        self.__window.container.sites_manager.add_webview(self.__view.webview,
-                                                          uri,
-                                                          resized)
         if resized is not None:
+            self.__window.container.sites_manager.set_favicon(
+                                                          self.__view.webview,
+                                                          resized)
             del resized
 
     def __set_favicon_related(self, surface, uri, initial_uri):
@@ -342,10 +342,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             # Needed as uri is not set yet
             GLib.idle_add(self.__set_favicon)
         else:
-            self.__window.container.sites_manager.add_webview(
+            self.__window.container.sites_manager.add_webview_for_uri(
                                                           self.__view.webview,
-                                                          uri,
-                                                          None)
+                                                          uri)
 
     def __on_title_changed(self, webview, title):
         """

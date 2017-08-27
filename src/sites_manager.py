@@ -59,7 +59,7 @@ class SitesManager(Gtk.EventBox):
 
         self.add(self.__scrolled)
 
-    def add_webview(self, webview, uri, surface):
+    def add_webview_for_uri(self, webview, uri):
         """
             Add webview
             @param webview as WebView
@@ -90,10 +90,20 @@ class SitesManager(Gtk.EventBox):
                 self.__box.add(child)
             else:
                 child = empty_child
-                child.update_netloc(netloc)
+                child.reset(netloc)
                 self.__box.invalidate_sort()
-        child.add_webview(webview, uri, surface)
+        child.add_webview(webview)
         self.update_visible_child()
+
+    def set_favicon(self, webview, surface):
+        """
+            Set favicon for webview
+            @param webview as WebView
+            @param surface as cairo.Surface
+        """
+        for child in self.__box.get_children():
+            if webview in child.webviews:
+                child.set_favicon(surface)
 
     def remove_webview(self, webview):
         """

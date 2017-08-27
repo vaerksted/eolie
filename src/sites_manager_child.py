@@ -43,28 +43,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
 
-    def add_webview(self, webview, uri, surface):
+    def add_webview(self, webview):
         """
             Add webview
             @param webview as WebView
             @param uri as str
-            @param surface as cairo.Surface
         """
+        if not self.__webviews:
+            self.__set_initial_artwork(self.__netloc, webview.ephemeral)
         if webview not in self.__webviews:
             self.__webviews.append(webview)
         len_webviews = len(self.__webviews)
-        artwork = El().art.get_icon_theme_artwork(
-                                                 uri,
-                                                 webview.ephemeral)
-        if artwork is not None:
-            if not webview.ephemeral or len_webviews == 1:
-                self.__image.set_from_icon_name(artwork,
-                                                Gtk.IconSize.INVALID)
-        elif surface is not None:
-            self.__image.set_from_surface(surface)
-        elif len_webviews == 1:
-            self.__image.set_from_icon_name("applications-internet",
-                                            Gtk.IconSize.INVALID)
         self.__label.set_text(str(len_webviews))
 
     def remove_webview(self, webview):
@@ -76,12 +65,20 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__webviews.remove(webview)
         self.__label.set_text(str(len(self.__webviews)))
 
-    def update_netloc(self, netloc):
+    def set_favicon(self, surface):
         """
-            Update netloc
+            Set favicon
+            @param surface as cairo.Surface
+        """
+        self.__image.set_from_surface(surface)
+
+    def reset(self, netloc):
+        """
+            Reset widget to new netloc
             @param netloc as str
         """
         self.__netloc = netloc
+        self.__set_initial_artwork(netloc)
 
     @property
     def empty(self):
@@ -114,6 +111,22 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __set_initial_artwork(self, uri, ephemeral=False):
+        """
+            Set initial artwork on widget
+            @param uri as str
+            @param ephemeral as bool
+        """
+        artwork = El().art.get_icon_theme_artwork(
+                                                 uri,
+                                                 ephemeral)
+        if artwork is not None:
+            self.__image.set_from_icon_name(artwork,
+                                            Gtk.IconSize.INVALID)
+        else:
+            self.__image.set_from_icon_name("applications-internet",
+                                            Gtk.IconSize.INVALID)
+
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
             Show tooltip if needed
