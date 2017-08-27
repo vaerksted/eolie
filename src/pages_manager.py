@@ -451,7 +451,7 @@ class PagesManager(Gtk.EventBox):
 
     def __on_key_press(self, widget, event):
         """
-            If Esc, hide widget, why GTK doesn't do that?
+            If Esc, reset search
             Otherwise, we get an ugly frame
             @param widget as Gtk.SearchEntry
             @param event as Gdk.Event
