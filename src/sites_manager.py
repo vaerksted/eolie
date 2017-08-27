@@ -174,6 +174,7 @@ class SitesManager(Gtk.EventBox):
                 self.__window.container.pages_manager.filter == child.netloc:
             self.__window.toolbar.actions.view_button.set_active(False)
         elif len(child.webviews) == 1:
+            self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.set_visible_webview(child.webviews[0])
             self.__window.container.pages_manager.update_visible_child()
             self.__window.container.sites_manager.update_visible_child()
