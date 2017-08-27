@@ -92,14 +92,18 @@ class PagesManager(Gtk.EventBox):
         """
         visible = self.__window.container.current
         for child in self.__box.get_children():
+            style_context = child.get_style_context()
             if child.view.webview.ephemeral:
                 class_name = "sidebar-item-selected-private"
             else:
                 class_name = "sidebar-item-selected"
             if child.view == visible:
-                child.get_style_context().add_class(class_name)
+                style_context.add_class(class_name)
+                style_context.remove_class("sidebar-item-unread")
             else:
-                child.get_style_context().remove_class(class_name)
+                style_context.remove_class(class_name)
+                if child.view.webview.access_time == 0:
+                    style_context.add_class("sidebar-item-unread")
         self.__window.container.sites_manager.update_visible_child()
 
     def destroy(self):
