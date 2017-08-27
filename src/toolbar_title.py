@@ -716,11 +716,13 @@ class ToolbarTitle(Gtk.Bin):
         elif len(value) < 3:
             return
         for view in self.__window.container.views:
-            view_parsed = urlparse(view.webview.get_uri())
-            if view_parsed.netloc.find(value) != -1:
-                self.__window.container.pages_manager.set_filter(value)
-                self.__window.container.set_expose(True)
-                return
+            uri = view.webview.get_uri()
+            if uri is not None:
+                view_parsed = urlparse(uri)
+                if view_parsed.netloc.find(value) != -1:
+                    self.__window.container.pages_manager.set_filter(value)
+                    self.__window.container.set_expose(True)
+                    return
         self.__window.container.set_expose(False)
 
     def __search_suggestion(self, uri, status, content, encoding, value):
