@@ -285,14 +285,14 @@ class WebViewSignalsHandler:
             Hide sidebar (conflict with fs)
             @param webview as WebView
         """
-        self._window.container.pages_manager.hide()
+        self._window.container.sites_manager.hide()
 
     def __on_leave_fullscreen(self, webview):
         """
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
-        self._window.container.pages_manager.show()
+        self._window.container.sites_manager.show()
 
     def __on_insecure_content_detected(self, webview, event):
         """

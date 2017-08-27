@@ -359,7 +359,6 @@ class WebView(WebKit2.WebView):
         self.connect("submit-form", self.__on_submit_form)
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
-        self.connect('scroll-event', self.__on_scroll_event)
         self.connect("button-press-event", self.__on_button_press_event)
 
     def __set_system_fonts(self, settings):
