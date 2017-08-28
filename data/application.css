@@ -52,10 +52,6 @@
     outline-width: 0px;
 }
 
-.sidebar-item-unread {
-    border-color: red;
-}
-
 .sidebar-item-selected {
     border-color: @theme_selected_bg_color;
     background-color: @theme_selected_bg_color;

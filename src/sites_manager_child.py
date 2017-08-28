@@ -12,6 +12,7 @@
 
 from gi.repository import Gtk
 
+from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
 
 
@@ -38,7 +39,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
-        self.__label = builder.get_object("label")
+        self.__label = LabelIndicator()
+        self.__label.show()
+        builder.get_object("grid").add(self.__label)
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
@@ -83,9 +86,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 unread = True
             i += 1
         if unread:
-            self.__label.set_markup("<span color='red'><b>%s</b></span>" % i)
+            self.__label.show_indicator(True)
         else:
-            self.__label.set_text(str(i))
+            self.__label.show_indicator(False)
+        self.__label.set_text(str(i))
 
     def reset(self, netloc):
         """

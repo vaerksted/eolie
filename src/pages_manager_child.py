@@ -15,6 +15,7 @@ from gi.repository import Gtk, GLib, WebKit2
 import cairo
 from urllib.parse import urlparse
 
+from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
 from eolie.utils import resize_favicon
 
@@ -38,7 +39,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PagesManagerChild.ui")
         builder.connect_signals(self)
-        self.__title = builder.get_object("title")
+        self.__title = LabelIndicator()
+        self.__title.set_hexpand(True)
+        self.__title.set_property("halign", Gtk.Align.CENTER)
+        self.__title.show()
+        builder.get_object("grid").attach(self.__title, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
         self.__image_close = builder.get_object("image_close")
         self.__audio_indicator = builder.get_object("audio_indicator")
@@ -112,6 +117,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                              None,
                                              self.__on_snapshot,
                                              uri)
+
+    @property
+    def label_indicator(self):
+        """
+            Get label indicator
+            @return LabelIndicator
+        """
+        return self.__title
 
     @property
     def view(self):

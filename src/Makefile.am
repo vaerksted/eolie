@@ -22,6 +22,7 @@ app_PYTHON = \
     helper_dbus.py\
     helper_passwords.py\
     helper_task.py\
+    label_indicator.py\
     languages.py\
     list.py\
     localized.py\

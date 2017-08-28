@@ -99,11 +99,11 @@ class PagesManager(Gtk.EventBox):
                 class_name = "sidebar-item-selected"
             if child.view == visible:
                 style_context.add_class(class_name)
-                style_context.remove_class("sidebar-item-unread")
+                child.label_indicator.show_indicator(False)
             else:
                 style_context.remove_class(class_name)
                 if child.view.webview.access_time == 0:
-                    style_context.add_class("sidebar-item-unread")
+                    child.label_indicator.show_indicator(True)
         self.__window.container.sites_manager.update_visible_child()
 
     def destroy(self):
