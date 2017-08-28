@@ -85,51 +85,20 @@ class FormsExtension:
         """
         return self.__input_passwords
 
-    def get_password_input(self, name, webpage):
+    def is_password_input(self, name, webpage):
         """
-            Return password input with name
+            Return True if a password input
             @param name as str
             @param webpage as WebKit2WebExtension.WebPage
             @return WebKit2WebExtension.DOMHTMLInputElement/None
         """
-        wanted_input_password = None
-        unwanted_input_password = None
         for input_password in self.__input_passwords:
             input_name = input_password.get_attribute("name")
             input_id = input_password.get_attribute("id")
             # We search for wanted name
             if name and (name == input_name or name == input_id):
-                wanted_input_password = input_password
-                break
-            elif unwanted_input_password is None:
-                unwanted_input_password = input_password
-        if wanted_input_password is not None:
-            return wanted_input_password
-        else:
-            return unwanted_input_password
-
-    def get_login_input(self, name, webpage):
-        """
-            Return login input with name
-            @param name as str
-            @param webpage as WebKit2WebExtension.WebPage
-            @return WebKit2WebExtension.DOMHTMLInputElement/None
-        """
-        wanted_input_login = None
-        unwanted_input_login = None
-        for input_login in self.__input_logins:
-            input_name = input_login.get_attribute("name")
-            input_id = input_login.get_attribute("id")
-            # We search for wanted name
-            if name and (name == input_name or name == input_id):
-                wanted_input_login = input_login
-                break
-            elif unwanted_input_login is None:
-                unwanted_input_login = input_login
-        if wanted_input_login is not None:
-            return wanted_input_login
-        else:
-            return unwanted_input_login
+                return True
+        return False
 
     def set_input_forms(self, attributes, password,
                         uri, index, count, webpage, login=None):

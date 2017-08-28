@@ -386,18 +386,6 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
 
-    def __get_forms(self, forms, page_id, request, uri):
-        """
-            Read request for authentification
-            @param forms as [str]
-            @param page_id as int
-            @param request as WebKit2.FormSubmissionRequest
-            @param uri as str
-        """
-        El().helper.call("GetAuthForms",
-                         GLib.Variant("(asi)", (forms, page_id)),
-                         self.__on_get_forms, page_id, request, uri)
-
     def __on_button_press_event(self, widget, event):
         """
             Store last press event
@@ -417,12 +405,14 @@ class WebView(WebKit2.WebView):
             @param uri as str
         """
         try:
-            (username, userform,
-             password, passform) = source.call_finish(result)[0]
-            if username and password:
+            (user_form_name,
+             user_form_value,
+             pass_form_name,
+             pass_form_value) = source.call_finish(result)[0]
+            if user_form_name and pass_form_name:
                 self.emit("save-password",
-                          username, userform,
-                          password, passform,
+                          user_form_name, user_form_value,
+                          pass_form_name, pass_form_value,
                           self.get_uri(),
                           uri)
             request.submit()
@@ -445,8 +435,12 @@ class WebView(WebKit2.WebView):
         forms = []
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
-            forms.append(name)
-        self.__get_forms(forms, webview.get_page_id(), request, uri)
+            value = string_at(v).decode("utf-8")
+            forms.append((name, value))
+        page_id = webview.get_page_id()
+        El().helper.call("GetAuthForms",
+                         GLib.Variant("(aasi)", (forms, page_id)),
+                         self.__on_get_forms, page_id, request, uri)
 
     def __on_context_menu(self, view, context_menu, event, hit):
         """

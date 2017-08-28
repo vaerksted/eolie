@@ -106,14 +106,14 @@ class SyncWorker:
             task_helper = TaskHelper()
             task_helper.run(self.__push_history, (history_ids,))
 
-    def push_password(self, username, userform,
-                      password, passform, uri, form_uri, uuid):
+    def push_password(self, user_form_name, user_form_value, pass_form_name,
+                      pass_form_value, uri, form_uri, uuid):
         """
             Push password
-            @param username as str
-            @param userform as str
-            @param password as str
-            @param passform as str
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
             @param uri as str
             @param form_uri as str
             @param uuid as str
@@ -121,8 +121,8 @@ class SyncWorker:
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
-                            (username, userform, password,
-                             passform, uri, form_uri, uuid))
+                            (user_form_name, user_form_value, pass_form_name,
+                             pass_form_value, uri, form_uri, uuid))
 
     def remove_from_history(self, guid):
         """
@@ -299,14 +299,14 @@ class SyncWorker:
         except Exception as e:
             debug("SyncWorker::__push_history(): %s" % e)
 
-    def __push_password(self, username, userform,
-                        password, passform, uri, form_uri, uuid):
+    def __push_password(self, user_form_name, user_form_value, pass_form_name,
+                        pass_form_value, uri, form_uri, uuid):
         """
             Push password
-            @param username as str
-            @param userform as str
-            @param password as str
-            @param passform as str
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
             @param uri as str
             @param uuid as str
         """
@@ -318,10 +318,10 @@ class SyncWorker:
             record["hostname"] = uri
             record["formSubmitURL"] = form_uri
             record["httpRealm"] = None
-            record["username"] = username
-            record["password"] = password
-            record["usernameField"] = userform
-            record["passwordField"] = passform
+            record["username"] = user_form_value
+            record["password"] = pass_form_value
+            record["usernameField"] = user_form_name
+            record["passwordField"] = pass_form_name
             mtime = int(time()*1000)
             record["timeCreated"] = mtime
             record["timePasswordChanged"] = mtime
@@ -667,13 +667,13 @@ class SyncWorker:
             if "formSubmitURL" in password.keys():
                 self.__helper.clear(password_id,
                                     self.__helper.store,
+                                    password["usernameField"],
                                     password["username"],
+                                    password["passwordField"],
                                     password["password"],
                                     password["hostname"],
                                     password["formSubmitURL"],
                                     password_id,
-                                    password["usernameField"],
-                                    password["passwordField"],
                                     None)
             elif "deleted" in password.keys():  # We assume True
                 self.__helper.clear(password_id)

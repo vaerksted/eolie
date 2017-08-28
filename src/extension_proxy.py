@@ -92,7 +92,7 @@ class ProxyExtension(Server):
     <method name="SetNextForm">
     </method>
     <method name="GetAuthForms">
-      <arg type="as" name="forms" direction="in" />
+      <arg type="aas" name="forms" direction="in" />
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
@@ -157,7 +157,7 @@ class ProxyExtension(Server):
     def GetAuthForms(self, forms, page_id):
         """
             Get password forms for page id
-            @param forms as [str]
+            @param forms as [(str, str)]
             @param page id as int
             @return (username_form, password_form) as (str, str)
         """
@@ -167,13 +167,21 @@ class ProxyExtension(Server):
             self.__forms.update_inputs_list(page)
             if page is None:
                 return ("", "", "", "")
-            username = self.__forms.get_login_input(forms[0], page)
-            password = self.__forms.get_password_input(forms[1], page)
-            if username is not None and password is not None:
-                return (username.get_value(),
-                        username.get_name(),
-                        password.get_value(),
-                        password.get_name())
+            user_form_name = ""
+            user_form_value = ""
+            pass_form_name = ""
+            pass_form_value = ""
+            for (name, value) in forms:
+                if self.__forms.is_password_input(name, page):
+                    pass_form_name = name
+                    pass_form_value = value
+                else:
+                    user_form_name = name
+                    user_form_value = value
+            return (user_form_name,
+                    user_form_value,
+                    pass_form_name,
+                    pass_form_value)
         except Exception as e:
             print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")

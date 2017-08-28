@@ -266,20 +266,20 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__indicator_stack.hide()
 
-    def show_password(self, username, userform,
-                      password, passform, uri, form_uri):
+    def show_password(self, user_form_name, user_form_value, pass_form_name,
+                      pass_form_value, uri, form_uri):
         """
             Show a popover allowing user to save password
-            @param username as str
-            @param userform as str
-            @param password as str
-            @param passform as str
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
             @param uri as str
             @param form_uri as str
         """
         from eolie.popover_credentials import CredentialsPopover
-        popover = CredentialsPopover(username, userform,
-                                     password, passform,
+        popover = CredentialsPopover(user_form_name, user_form_value,
+                                     pass_form_name, pass_form_value,
                                      uri,
                                      form_uri,
                                      self.__window)

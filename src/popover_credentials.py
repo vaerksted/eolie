@@ -25,12 +25,14 @@ class CredentialsPopover(Gtk.Popover):
         Tell user to save form credentials
     """
 
-    def __init__(self, username, userform,
-                 password, passform, uri, form_uri, window):
+    def __init__(self, user_form_name, user_form_value, pass_form_name,
+                 pass_form_value, uri, form_uri, window):
         """
             Init popover
-            @param username as str
-            @param password as str
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
             @param uri as str
             @param form_uri as str
             @param window as Window
@@ -39,10 +41,10 @@ class CredentialsPopover(Gtk.Popover):
         self.set_modal(False)
         window.register(self)
         self.__helper = PasswordsHelper()
-        self.__username = username
-        self.__userform = userform
-        self.__password = password
-        self.__passform = passform
+        self.__user_form_name = user_form_name
+        self.__user_form_value = user_form_value
+        self.__pass_form_name = pass_form_name
+        self.__pass_form_value = pass_form_value
         self.__uri = uri
         self.__form_uri = form_uri
         self.__uuid = None
@@ -52,8 +54,8 @@ class CredentialsPopover(Gtk.Popover):
         self.__label = builder.get_object('label')
         parsed = urlparse(uri)
         builder.get_object('uri').set_text(parsed.netloc)
-        builder.get_object('username').set_text(username)
-        builder.get_object('password').set_text(password)
+        builder.get_object('username').set_text(user_form_value)
+        builder.get_object('password').set_text(pass_form_value)
         self.add(builder.get_object('widget'))
 
 #######################
@@ -61,7 +63,7 @@ class CredentialsPopover(Gtk.Popover):
 #######################
     def _on_save_clicked(self, button):
         """
-            Save username and password
+            Save user_form_name and pass_form_name
             @param button as Gtk.Button
         """
         try:
@@ -72,31 +74,30 @@ class CredentialsPopover(Gtk.Popover):
                                     parsed_form_uri.netloc)
             if self.__uuid is None:
                 self.__uuid = str(uuid3(NAMESPACE_DNS, parsed_form_uri.netloc))
-                self.__helper.store(self.__username,
-                                    self.__password,
+                self.__helper.store(self.__user_form_name,
+                                    self.__user_form_value,
+                                    self.__pass_form_name,
+                                    self.__pass_form_value,
                                     uri,
                                     form_uri,
                                     self.__uuid,
-                                    self.__userform,
-                                    self.__passform,
                                     None)
             else:
                 self.__helper.clear(self.__uuid,
                                     self.__helper.store,
-                                    self.__username,
-                                    self.__password,
+                                    self.__user_form_name,
+                                    self.__user_form_value,
+                                    self.__pass_form_name,
+                                    self.__pass_form_value,
                                     uri,
                                     form_uri,
                                     self.__uuid,
-                                    self.__userform,
-                                    self.__passform,
                                     None)
-
             if El().sync_worker is not None:
-                El().sync_worker.push_password(self.__username,
-                                               self.__userform,
-                                               self.__password,
-                                               self.__passform,
+                El().sync_worker.push_password(self.__user_form_name,
+                                               self.__user_form_value,
+                                               self.__pass_form_name,
+                                               self.__pass_form_value,
                                                uri,
                                                form_uri,
                                                self.__uuid)
@@ -116,7 +117,7 @@ class CredentialsPopover(Gtk.Popover):
 #######################
     def __on_get_password(self, attributes, password, uri, index, count):
         """
-            Set username/password input
+            Set user_form_name/pass_form_name input
             @param attributes as {}
             @param password as str
             @param uri as str
@@ -124,23 +125,23 @@ class CredentialsPopover(Gtk.Popover):
             @param count as int
         """
         try:
-            # No saved password
+            # No saved pass_form_name
             if attributes is None:
                 Gtk.Popover.popup(self)
-            # Password saved and unchanged
-            elif attributes["login"] == self.__username and\
-                    self.__password == password and\
-                    attributes["userform"] == self.__userform and\
-                    attributes["passform"] == self.__passform:
+            # pass_form_name saved and unchanged
+            elif attributes["login"] == self.__user_form_value and\
+                    password == self.__pass_form_value and\
+                    attributes["userform"] == self.__user_form_name and\
+                    attributes["passworm"] == self.__pass_form_name:
                 self.emit("closed")
                 self.set_relative_to(None)  # Prevent popover to be displayed
-            # Password changed
-            elif attributes["login"] == self.__username:
+            # pass_form_name changed
+            elif attributes["login"] == self.__user_form_value:
                 Gtk.Popover.popup(self)
                 self.__uuid = attributes["uuid"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
-            # Last password, it's a new login/password
+            # Last pass_form_name, it's a new login/pass_form_name
             elif index == count - 1:
                 Gtk.Popover.popup(self)
         except Exception as e:
