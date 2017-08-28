@@ -255,6 +255,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Disconnect signals
             @param widget as Gtk.Widget
         """
+        self.__window.container.sites_manager.remove_webview(
+                                                           self.__view.webview)
         while self.__connected_ids:
             connected_id = self.__connected_ids.pop(0)
             self.__view.webview.disconnect(connected_id)
@@ -268,6 +270,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__connected_ids = []
         self.__view_destroy_id = None
+        self.__window.container.sites_manager.remove_webview(
+                                                           self.__view.webview)
         GLib.idle_add(self.destroy)
 
     def __on_notify_favicon(self, webview, favicon):

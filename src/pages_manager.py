@@ -338,7 +338,6 @@ class PagesManager(Gtk.EventBox):
         if next_view is not None:
             self.__window.container.set_visible_view(next_view)
         self.update_visible_child()
-        self.__window.container.sites_manager.remove_webview(view.webview)
 
     def __get_index(self, view):
         """
