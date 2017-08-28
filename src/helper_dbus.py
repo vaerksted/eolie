@@ -86,6 +86,6 @@ class DBusHelper:
         try:
             proxy = source.new_finish(result)
             proxy.call(call, dbus_args, Gio.DBusCallFlags.NO_AUTO_START,
-                       500, None, callback, *args)
+                       1000, None, callback, *args)
         except Exception as e:
             print("DBusHelper::__on_get_proxy():", e)

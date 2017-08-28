@@ -183,9 +183,6 @@ class WebViewSignalsHandler:
                 self._window.toolbar.title.show_indicator(
                                                         Indicator.POPUPS)
             return
-        # Should not be an issue to not show page with None URI
-        if webview.get_uri() is None:
-            return
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible():
