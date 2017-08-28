@@ -132,7 +132,7 @@ class CredentialsPopover(Gtk.Popover):
             elif attributes["login"] == self.__user_form_value and\
                     password == self.__pass_form_value and\
                     attributes["userform"] == self.__user_form_name and\
-                    attributes["passworm"] == self.__pass_form_name:
+                    attributes["passform"] == self.__pass_form_name:
                 self.emit("closed")
                 self.set_relative_to(None)  # Prevent popover to be displayed
             # pass_form_name changed
