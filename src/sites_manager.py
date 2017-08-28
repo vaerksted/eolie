@@ -59,10 +59,10 @@ class SitesManager(Gtk.EventBox):
 
         self.add(self.__scrolled)
 
-    def add_webview_for_uri(self, webview, uri):
+    def add_view_for_uri(self, view, uri):
         """
-            Add webview
-            @param webview as WebView
+            Add view for uri
+            @param view as View
             @param uri as str
             @param surface as cairo.SurfaceImage
         """
@@ -79,7 +79,7 @@ class SitesManager(Gtk.EventBox):
             if site.netloc == netloc:
                 child = site
             else:
-                site.remove_webview(webview)
+                site.remove_view(view)
                 if site.empty:
                     empty_child = site
 
@@ -92,34 +92,34 @@ class SitesManager(Gtk.EventBox):
                 child = empty_child
                 child.reset(netloc)
                 self.__box.invalidate_sort()
-        child.add_webview(webview)
+        child.add_view(view)
         self.update_visible_child()
 
-    def set_favicon(self, webview, surface):
+    def set_favicon(self, view, surface):
         """
             Set favicon for webview
             @param webview as WebView
             @param surface as cairo.Surface
         """
         for child in self.__box.get_children():
-            if webview in child.webviews:
+            if view in child.views:
                 child.set_favicon(surface)
 
-    def update_indicator(self, webview):
+    def update_indicator(self, view):
         """
-            Update indicator state for webview
+            Update indicator state for view
         """
         for child in self.__box.get_children():
-            if webview in child.webviews:
-                child.update_indicator(webview)
+            if view in child.views:
+                child.update_indicator(view)
 
-    def remove_webview(self, webview):
+    def remove_view(self, view):
         """
-            Remove webview
-            @param webview as WebView
+            Remove view
+            @param view as View
         """
         for site in self.__box.get_children():
-            site.remove_webview(webview)
+            site.remove_view(view)
             if site.empty:
                 site.destroy()
 
@@ -190,9 +190,9 @@ class SitesManager(Gtk.EventBox):
         if self.__window.toolbar.actions.view_button.get_active() and\
                 self.__window.container.pages_manager.filter == child.netloc:
             self.__window.toolbar.actions.view_button.set_active(False)
-        elif len(child.webviews) == 1:
+        elif len(child.views) == 1:
             self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.set_visible_webview(child.webviews[0])
+            self.__window.container.set_visible_webview(child.views[0].webview)
             self.__window.container.pages_manager.update_visible_child()
             self.__window.container.sites_manager.update_visible_child()
         else:

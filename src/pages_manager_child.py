@@ -217,7 +217,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                   Gtk.IconSize.INVALID)
         if resized is not None:
             self.__window.container.sites_manager.set_favicon(
-                                                          self.__view.webview,
+                                                          self.__view,
                                                           resized)
             del resized
 
@@ -268,8 +268,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Disconnect signals
             @param widget as Gtk.Widget
         """
-        self.__window.container.sites_manager.remove_webview(
-                                                           self.__view.webview)
+        self.__window.container.sites_manager.remove_view(self.__view)
         while self.__connected_ids:
             connected_id = self.__connected_ids.pop(0)
             self.__view.webview.disconnect(connected_id)
@@ -283,8 +282,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__connected_ids = []
         self.__view_destroy_id = None
-        self.__window.container.sites_manager.remove_webview(
-                                                           self.__view.webview)
+        self.__window.container.sites_manager.remove_view(self.__view)
         GLib.idle_add(self.destroy)
 
     def __on_notify_favicon(self, webview, favicon):
@@ -359,8 +357,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                 not webview.ephemeral:
             GLib.timeout_add(2000, self.set_snapshot, uri)
         else:
-            self.__window.container.sites_manager.add_webview_for_uri(
-                                                          self.__view.webview,
+            self.__window.container.sites_manager.add_view_for_uri(
+                                                          self.__view,
                                                           uri)
 
     def __on_title_changed(self, webview, title):

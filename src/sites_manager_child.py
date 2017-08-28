@@ -10,10 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
+from gettext import gettext as _
 
 
 class SitesManagerChild(Gtk.ListBoxRow):
@@ -30,7 +31,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         Gtk.ListBoxRow.__init__(self)
         self.__window = window
         self.__netloc = netloc
-        self.__webviews = []
+        self.__views = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         self.set_property("has-tooltip", True)
@@ -46,26 +47,26 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
 
-    def add_webview(self, webview):
+    def add_view(self, view):
         """
-            Add webview
-            @param webview as WebView
+            Add view
+            @param view as View
             @param uri as str
         """
-        if not self.__webviews:
-            self.__set_initial_artwork(self.__netloc, webview.ephemeral)
-        if webview not in self.__webviews:
-            self.__webviews.append(webview)
-        self.update_indicator(webview)
+        if not self.__views:
+            self.__set_initial_artwork(self.__netloc, view.webview.ephemeral)
+        if view not in self.__views:
+            self.__views.append(view)
+        self.update_indicator(view)
 
-    def remove_webview(self, webview):
+    def remove_view(self, view):
         """
-            Remove webview and destroy self if no more webview
-            @param webview as WebView
+            Remove view and destroy self if no more view
+            @param view as View
         """
-        if webview in self.__webviews:
-            self.__webviews.remove(webview)
-        self.update_indicator(webview)
+        if view in self.__views:
+            self.__views.remove(view)
+        self.update_indicator(view)
 
     def set_favicon(self, surface):
         """
@@ -74,15 +75,15 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         self.__image.set_from_surface(surface)
 
-    def update_indicator(self, webview):
+    def update_indicator(self, view):
         """
             Update indicator (count and color)
-            @param webview as WebView
+            @param view as View
         """
         i = 0
         unread = False
-        for webview in self.__webviews:
-            if webview.access_time == 0:
+        for view in self.__views:
+            if view.webview.access_time == 0:
                 unread = True
             i += 1
         if unread:
@@ -102,18 +103,18 @@ class SitesManagerChild(Gtk.ListBoxRow):
     @property
     def empty(self):
         """
-            True if no webview associated
+            True if no view associated
             @return bool
         """
-        return len(self.__webviews) == 0
+        return len(self.__views) == 0
 
     @property
-    def webviews(self):
+    def views(self):
         """
-            Webviews
-            @return [WebView]
+            Get views
+            @return [view]
         """
-        return self.__webviews
+        return self.__views
 
     @property
     def netloc(self):
@@ -126,6 +127,33 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
+    def _on_button_press_event(self, eventbox, event):
+        """
+            Hide popover or close view
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if event.button == 2:
+            for view in self.__views:
+                self.__window.container.pages_manager.close_view(view)
+            return True
+        elif event.button == 3:
+            menu = Gio.Menu.new()
+            action = Gio.SimpleAction.new("close_site")
+            self.__window.add_action(action)
+            page_ids = []
+            for view in self.__views:
+                page_ids.append(view.webview.get_page_id())
+            item = Gio.MenuItem.new(_("Close site"),
+                                    "win.close_site")
+            menu.append_item(item)
+            action.connect("activate",
+                           self.__on_close_activate,
+                           page_ids)
+            popover = Gtk.Popover.new_from_model(eventbox, menu)
+            popover.set_position(Gtk.PositionType.RIGHT)
+            popover.show()
+            return True
 
 #######################
 # PRIVATE             #
@@ -146,6 +174,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__image.set_from_icon_name("applications-internet",
                                             Gtk.IconSize.INVALID)
 
+    def __on_close_activate(self, action, param, page_ids):
+        """
+            Close wanted page
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param pages_ids as [int]
+        """
+        for view in self.__window.container.views:
+            if view.webview.get_page_id() in page_ids:
+                self.__window.container.pages_manager.close_view(view)
+
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
             Show tooltip if needed
@@ -156,10 +195,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param tooltip as Gtk.Tooltip
         """
         tooltip = ""
-        for webview in self.__webviews:
-            title = webview.get_title()
+        for view in self.__views:
+            title = view.webview.get_title()
             if not title:
-                title = webview.get_uri()
+                title = view.webview.get_uri()
             if tooltip:
                 tooltip += "\n" + title
             else:
