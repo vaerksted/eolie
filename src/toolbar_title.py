@@ -107,6 +107,7 @@ class ToolbarTitle(Gtk.Bin):
         if b:
             self.__indicator_stack.set_visible_child_name("spinner")
             self.__indicator_stack.get_visible_child().start()
+            self.__indicator_stack.show()
         elif self.__indicator_stack.get_visible_child_name() == "spinner":
             self.__indicator_stack.get_visible_child().stop()
             self.__indicator_stack.hide()
