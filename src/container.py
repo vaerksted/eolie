@@ -105,8 +105,8 @@ class Container(Gtk.Overlay):
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
-            width = self.get_allocated_width()
-            view.set_size_request(width, self.get_allocated_height())
+            view.set_size_request(self.get_allocated_width(),
+                                  self.get_allocated_height())
             window.add(view)
             window.show()
             window.remove(view)

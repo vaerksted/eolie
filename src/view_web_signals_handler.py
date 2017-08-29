@@ -404,9 +404,7 @@ class WebViewSignalsHandler:
                     webview.initial_uri not in uris:
                 uris.append(webview.initial_uri)
             # Set start image scale factor
-            margin = 0
             if snapshot.get_width() > snapshot.get_height():
-                margin = (snapshot.get_width() - ArtSize.START_WIDTH) / 2
                 factor = ArtSize.START_HEIGHT / snapshot.get_height()
             else:
                 factor = ArtSize.START_WIDTH / snapshot.get_width()
@@ -415,7 +413,7 @@ class WebViewSignalsHandler:
                                          ArtSize.START_HEIGHT)
             context = cairo.Context(surface)
             context.scale(factor, factor)
-            context.set_source_surface(snapshot, -margin * factor, 0)
+            context.set_source_surface(snapshot, factor, 0)
             context.paint()
             for uri in uris:
                 if not El().art.exists(uri, "start"):
