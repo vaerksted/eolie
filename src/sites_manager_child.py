@@ -43,7 +43,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__indicator_label.show()
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__netloc_label = builder.get_object("netloc")
-        self.__netloc_label.set_text(self.__netloc.capitalize())
+        self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
@@ -102,7 +102,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param netloc as str
         """
         self.__netloc = netloc
-        self.__netloc_label.set_text(self.__netloc.capitalize())
+        self.__netloc_label.set_text(self.__netloc)
         self.__set_initial_artwork(self.__netloc)
 
     @property
@@ -191,7 +191,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        tooltip = "<b>%s</b>" % self.__netloc.capitalize()
+        tooltip = "<b>%s</b>" % self.__netloc
         for view in self.__views:
             title = view.webview.get_title()
             if not title:
