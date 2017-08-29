@@ -118,9 +118,10 @@ class SitesManager(Gtk.EventBox):
             Remove view
             @param view as View
         """
+        count = len(self.__box.get_children())
         for site in self.__box.get_children():
             site.remove_view(view)
-            if site.empty:
+            if site.empty and count > 1:
                 site.destroy()
 
     def update_visible_child(self):

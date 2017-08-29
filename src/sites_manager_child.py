@@ -90,6 +90,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__label.show_indicator(True)
         else:
             self.__label.show_indicator(False)
+        # We force value to 1, Eolie is going to add a new view
+        if i == 0:
+            i = 1
         self.__label.set_text(str(i))
 
     def reset(self, netloc):
