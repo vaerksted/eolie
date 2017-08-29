@@ -191,10 +191,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        tooltip = "<b>%s</b>" % self.__netloc
+        tooltip = "<b>%s</b>" % GLib.markup_escape_text(self.__netloc)
         for view in self.__views:
             title = view.webview.get_title()
             if not title:
                 title = view.webview.get_uri()
-            tooltip += "\n%s" % title
+            tooltip += "\n%s" % GLib.markup_escape_text(title)
         widget.set_tooltip_markup(tooltip)
