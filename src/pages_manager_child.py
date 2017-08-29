@@ -41,6 +41,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         builder.connect_signals(self)
         self.__title = LabelIndicator()
         self.__title.set_hexpand(True)
+        self.__title.set_margin_right(4)
         self.__title.set_property("halign", Gtk.Align.CENTER)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.show()
