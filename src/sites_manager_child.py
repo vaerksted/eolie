@@ -39,9 +39,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
-        self.__label = LabelIndicator()
-        self.__label.show()
-        builder.get_object("grid").add(self.__label)
+        self.__indicator_label = LabelIndicator()
+        self.__indicator_label.show()
+        builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
+        self.__netloc_label = builder.get_object("netloc")
+        self.__netloc_label.set_text(self.__netloc.capitalize())
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
@@ -86,13 +88,13 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 unread = True
             i += 1
         if unread:
-            self.__label.show_indicator(True)
+            self.__indicator_label.show_indicator(True)
         else:
-            self.__label.show_indicator(False)
+            self.__indicator_label.show_indicator(False)
         # We force value to 1, Eolie is going to add a new view
         if i == 0:
             i = 1
-        self.__label.set_text(str(i))
+        self.__indicator_label.set_text(str(i))
 
     def reset(self, netloc):
         """
@@ -100,7 +102,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param netloc as str
         """
         self.__netloc = netloc
-        self.__set_initial_artwork(netloc)
+        self.__netloc_label.set_text(self.__netloc.capitalize())
+        self.__set_initial_artwork(self.__netloc)
 
     @property
     def empty(self):
@@ -188,13 +191,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        tooltip = ""
+        tooltip = "<b>%s</b>" % self.__netloc.capitalize()
         for view in self.__views:
             title = view.webview.get_title()
             if not title:
                 title = view.webview.get_uri()
-            if tooltip:
-                tooltip += "\n" + title
-            else:
-                tooltip += title
+            tooltip += "\n%s" % title
         widget.set_tooltip_markup(tooltip)

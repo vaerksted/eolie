@@ -68,7 +68,7 @@ class SitesManager(Gtk.EventBox):
         """
         if uri is None:
             return
-        netloc = urlparse(uri).netloc
+        netloc = urlparse(uri).netloc.lstrip("www.")
         if not netloc:
             netloc = "%s://" % urlparse(uri).scheme
 
