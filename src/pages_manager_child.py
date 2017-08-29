@@ -207,7 +207,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                   Gtk.IconSize.INVALID)
         elif surface is not None:
             resized = resize_favicon(surface)
-            El().art.save_artwork(uri, resized, "favicon")
+            if not El().art.exists(uri, "favicon"):
+                El().art.save_artwork(uri, resized, "favicon")
             self.__set_favicon_related(resized,
                                        uri,
                                        self.__view.webview.initial_uri)

@@ -132,11 +132,7 @@ class Art:
                                             None)
             for child in children:
                 f = children.get_child(child)
-                basename = f.get_basename()
                 if child.get_file_type() == Gio.FileType.REGULAR:
-                    # We never clear favicons
-                    if basename.endswith("_favicon.png"):
-                        continue
                     info = f.query_info("time::modified",
                                         Gio.FileQueryInfoFlags.NONE,
                                         None)
