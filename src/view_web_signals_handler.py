@@ -420,8 +420,6 @@ class WebViewSignalsHandler:
             for uri in uris:
                 if not El().art.exists(uri, "start"):
                     El().art.save_artwork(uri, surface, "start")
-            del surface
-            del snapshot
         except Exception as e:
             print("WebViewSignalsHandler::__on_snapshot():", e)
 

@@ -216,7 +216,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                        uri,
                                        self.__view.webview.initial_uri)
             self.__image_close.set_from_surface(resized)
-            del surface
         else:
             self.__image_close.set_from_icon_name("applications-internet",
                                                   Gtk.IconSize.INVALID)
@@ -345,8 +344,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             context.set_source_surface(snapshot, factor, 0)
             context.paint()
             self.__image.set_from_surface(surface)
-            del surface
-            del snapshot
         except Exception as e:
             print("PagesManagerChild::__on_snapshot():", e)
 

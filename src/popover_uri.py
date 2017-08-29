@@ -211,7 +211,6 @@ class Row(Gtk.ListBoxRow):
                                        ArtSize.FAVICON)
         if surface is not None:
             favicon.set_from_surface(surface)
-            del surface
         else:
             favicon.set_from_icon_name("applications-internet",
                                        Gtk.IconSize.LARGE_TOOLBAR)

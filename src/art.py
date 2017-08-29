@@ -49,7 +49,6 @@ class Art:
                                              surface.get_width(),
                                              surface.get_height())
         pixbuf.savev(filepath, "png", [None], [None])
-        del pixbuf
 
     def get_artwork(self, uri, suffix, scale_factor, width, heigth):
         """
@@ -73,7 +72,6 @@ class Art:
                 surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
                                                                scale_factor,
                                                                None)
-                del pixbuf
                 return surface
         except:
             pass

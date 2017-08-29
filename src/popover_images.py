@@ -41,7 +41,6 @@ class Image(Gtk.FlowBoxChild):
                                                        pixbuf,
                                                        self.get_scale_factor(),
                                                        None)
-            del pixbuf
             image = Gtk.Image.new_from_surface(surface)
             image.set_size_request(ArtSize.START_HEIGHT, ArtSize.START_HEIGHT)
             image.show()
