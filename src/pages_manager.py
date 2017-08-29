@@ -331,7 +331,6 @@ class PagesManager(Gtk.EventBox):
             else:
                 next_view = None
         if next_view is None:
-            print(children_count)
             # Find last activated page
             if children_count > 0:
                 atime = 0
