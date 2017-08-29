@@ -156,8 +156,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Little hack to force Gtk.ModelButton to show image
             @param widget as Gtk.Widget
         """
-        if isinstance(widget, Gtk.Image):
-            widget.show()
         if isinstance(widget, Gtk.Label):
             widget.set_ellipsize(Pango.EllipsizeMode.END)
             widget.set_max_width_chars(40)

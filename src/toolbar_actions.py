@@ -206,7 +206,7 @@ class ToolbarActions(Gtk.Bin):
         """
         if isinstance(widget, Gtk.Image):
             widget.show()
-        if isinstance(widget, Gtk.Label):
+        elif isinstance(widget, Gtk.Label):
             widget.set_ellipsize(Pango.EllipsizeMode.END)
             widget.set_max_width_chars(40)
             widget.set_tooltip_text(widget.get_text())

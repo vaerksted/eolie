@@ -49,17 +49,6 @@ class SitesMenu(Gio.Menu):
                            view)
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
-            if uri == "populars://":
-                item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
-            else:
-                # Try to set icon
-                filepath = El().art.get_path(uri, "favicon")
-                f = Gio.File.new_for_path(filepath)
-                if f.query_exists():
-                    icon = Gio.FileIcon.new(f)
-                    item.set_icon(icon)
-                else:
-                    item.set_icon(Gio.ThemedIcon.new("applications-internet"))
             self.append_item(item)
         close_section = Gio.Menu()
         self.append_section(None, close_section)
