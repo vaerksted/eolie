@@ -132,7 +132,9 @@ class SitesManager(Gtk.EventBox):
         visible = self.__window.container.current
         uri = visible.webview.get_uri()
         netloc = urlparse(uri).netloc
-        if not netloc:
+        if netloc:
+            netloc = netloc.lstrip("www.")
+        else:
             netloc = "%s://" % urlparse(uri).scheme
         for child in self.__box.get_children():
             class_name = "sidebar-item-selected"
