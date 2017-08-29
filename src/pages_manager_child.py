@@ -69,8 +69,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.set_margin_end(20)
         self.set_margin_top(20)
         self.set_margin_bottom(20)
-        self.set_property("width-request", ArtSize.START_WIDTH +
-                          ArtSize.PREVIEW_WIDTH_MARGIN)
+        self.set_size_request(ArtSize.START_WIDTH +
+                              ArtSize.PREVIEW_WIDTH_MARGIN,
+                              ArtSize.START_HEIGHT +
+                              ArtSize.PREVIEW_WIDTH_MARGIN)
         if view.webview.access_time == 0:
             self.get_style_context().add_class("sidebar-item-unread")
         self.connect("query-tooltip", self.__on_query_tooltip)
