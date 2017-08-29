@@ -120,6 +120,7 @@ class FindWidget(Gtk.SearchBar):
             Set shortcuts
             @param entry as Gtk.Entry
         """
+        self.__label.set_width_chars(len(_("1000 of 1000 matches")))
         self.__action = Gio.SimpleAction.new("find_shortcut",
                                              GLib.VariantType.new('s'))
         self.__action.connect("activate", self.__on_shortcut_action)
@@ -132,6 +133,7 @@ class FindWidget(Gtk.SearchBar):
             Unset shortcuts
             @param entry as Gtk.Entry
         """
+        self.__label.set_width_chars(-1)
         El().remove_action("find_shortcut")
         self.__find_controller.search_finish()
 
