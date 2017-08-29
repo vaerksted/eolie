@@ -10,11 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gio
+from gi.repository import Gtk, GLib
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
-from gettext import gettext as _
 
 
 class SitesManagerChild(Gtk.ListBoxRow):
@@ -141,26 +140,27 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__window.container.pages_manager.close_view(view)
             return True
         elif event.button == 3:
-            menu = Gio.Menu.new()
-            action = Gio.SimpleAction.new("close_site")
-            self.__window.add_action(action)
-            page_ids = []
-            for view in self.__views:
-                page_ids.append(view.webview.get_page_id())
-            item = Gio.MenuItem.new(_("Close site"),
-                                    "win.close_site")
-            menu.append_item(item)
-            action.connect("activate",
-                           self.__on_close_activate,
-                           page_ids)
+            from eolie.menu_sites import SitesMenu
+            menu = SitesMenu(self.__views, self.__window)
             popover = Gtk.Popover.new_from_model(eventbox, menu)
             popover.set_position(Gtk.PositionType.RIGHT)
+            popover.forall(self.__force_show_image)
             popover.show()
             return True
 
 #######################
 # PRIVATE             #
 #######################
+    def __force_show_image(self, widget):
+        """
+            Little hack to force Gtk.ModelButton to show image
+            @param widget as Gtk.Widget
+        """
+        if isinstance(widget, Gtk.Image):
+            GLib.idle_add(widget.show)
+        elif hasattr(widget, "forall"):
+            GLib.idle_add(widget.forall, self.__force_show_image)
+
     def __set_initial_artwork(self, uri, ephemeral=False):
         """
             Set initial artwork on widget
@@ -176,17 +176,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         else:
             self.__image.set_from_icon_name("applications-internet",
                                             Gtk.IconSize.INVALID)
-
-    def __on_close_activate(self, action, param, page_ids):
-        """
-            Close wanted page
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-            @param pages_ids as [int]
-        """
-        for view in self.__window.container.views:
-            if view.webview.get_page_id() in page_ids:
-                self.__window.container.pages_manager.close_view(view)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """

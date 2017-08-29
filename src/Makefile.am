@@ -29,6 +29,7 @@ app_PYTHON = \
     menu_form.py\
     menu_history.py\
     menu_pages.py\
+    menu_sites.py\
     mozilla_sync.py\
     pages_manager.py\
     pages_manager_child.py\
