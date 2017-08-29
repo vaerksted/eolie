@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2
+from gi.repository import Gtk, GLib, WebKit2, Pango
 
 import cairo
 from urllib.parse import urlparse
@@ -42,6 +42,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__title = LabelIndicator()
         self.__title.set_hexpand(True)
         self.__title.set_property("halign", Gtk.Align.CENTER)
+        self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.show()
         builder.get_object("grid").attach(self.__title, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
