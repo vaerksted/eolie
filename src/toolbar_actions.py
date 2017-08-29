@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Pango
 
 from eolie.define import El
 
@@ -173,7 +173,7 @@ class ToolbarActions(Gtk.Bin):
         popover = Gtk.Popover.new_from_model(button, El().pages_menu)
         popover.set_modal(False)
         self.__window.register(popover)
-        popover.forall(self.__force_show_image)
+        popover.forall(self.__update_popover_internals)
         popover.connect("closed",
                         self.__on_pages_popover_closed,
                         button)
@@ -199,15 +199,19 @@ class ToolbarActions(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
-    def __force_show_image(self, widget):
+    def __update_popover_internals(self, widget):
         """
             Little hack to force Gtk.ModelButton to show image
             @param widget as Gtk.Widget
         """
         if isinstance(widget, Gtk.Image):
-            GLib.idle_add(widget.show)
+            widget.show()
+        if isinstance(widget, Gtk.Label):
+            widget.set_ellipsize(Pango.EllipsizeMode.END)
+            widget.set_max_width_chars(40)
+            widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
-            GLib.idle_add(widget.forall, self.__force_show_image)
+            GLib.idle_add(widget.forall, self.__update_popover_internals)
 
     def __on_pages_popover_closed(self, popover, button):
         """
@@ -239,7 +243,7 @@ class ToolbarActions(Gtk.Bin):
             popover = Gtk.Popover.new_from_model(self.__backward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
-            GLib.idle_add(popover.forall, self.__force_show_image)
+            GLib.idle_add(popover.forall, self.__update_popover_internals)
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)
@@ -258,7 +262,7 @@ class ToolbarActions(Gtk.Bin):
             popover = Gtk.Popover.new_from_model(self.__forward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
-            GLib.idle_add(popover.forall, self.__force_show_image)
+            GLib.idle_add(popover.forall, self.__update_popover_internals)
             popover.connect("closed",
                             self.__on_navigation_popover_closed,
                             model)

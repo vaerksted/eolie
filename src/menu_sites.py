@@ -47,8 +47,6 @@ class SitesMenu(Gio.Menu):
             action.connect('activate',
                            self.__on_action_clicked,
                            view)
-            if len(title) > 40:
-                title = title[0:40] + "…"
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             if uri == "populars://":

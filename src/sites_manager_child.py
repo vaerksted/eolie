@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Pango
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -144,22 +144,26 @@ class SitesManagerChild(Gtk.ListBoxRow):
             menu = SitesMenu(self.__views, self.__window)
             popover = Gtk.Popover.new_from_model(eventbox, menu)
             popover.set_position(Gtk.PositionType.RIGHT)
-            popover.forall(self.__force_show_image)
+            popover.forall(self.__update_popover_internals)
             popover.show()
             return True
 
 #######################
 # PRIVATE             #
 #######################
-    def __force_show_image(self, widget):
+    def __update_popover_internals(self, widget):
         """
             Little hack to force Gtk.ModelButton to show image
             @param widget as Gtk.Widget
         """
         if isinstance(widget, Gtk.Image):
-            GLib.idle_add(widget.show)
+            widget.show()
+        if isinstance(widget, Gtk.Label):
+            widget.set_ellipsize(Pango.EllipsizeMode.END)
+            widget.set_max_width_chars(40)
+            widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
-            GLib.idle_add(widget.forall, self.__force_show_image)
+            GLib.idle_add(widget.forall, self.__update_popover_internals)
 
     def __set_initial_artwork(self, uri, ephemeral=False):
         """
