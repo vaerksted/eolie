@@ -391,6 +391,7 @@ class WebViewSignalsHandler:
             @param result as Gio.AsyncResult
             @param uri as str
         """
+        ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
         # Do not cache snapshot on error
         if webview.error is not None or uri != self.webview.get_uri():
             return
@@ -404,7 +405,8 @@ class WebViewSignalsHandler:
                     webview.initial_uri not in uris:
                 uris.append(webview.initial_uri)
             # Set start image scale factor
-            if snapshot.get_width() > snapshot.get_height():
+            ratio = snapshot.get_width() / snapshot.get_height()
+            if ratio > ART_RATIO:
                 factor = ArtSize.START_HEIGHT / snapshot.get_height()
             else:
                 factor = ArtSize.START_WIDTH / snapshot.get_width()

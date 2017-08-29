@@ -325,10 +325,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param result as Gio.AsyncResult
             @param uri as str
         """
+        ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
         try:
             snapshot = webview.get_snapshot_finish(result)
             # Set start image scale factor
-            if snapshot.get_width() > snapshot.get_height():
+            ratio = snapshot.get_width() / snapshot.get_height()
+            if ratio > ART_RATIO:
                 factor = ArtSize.START_HEIGHT / snapshot.get_height()
             else:
                 factor = ArtSize.START_WIDTH / snapshot.get_width()
