@@ -70,8 +70,8 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Show left panel</property>
-                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;p</property>
+                <property name="title" translatable="yes" context="shortcut window">Show sidebar</property>
+                <property name="accelerator">&lt;Alt&gt;s</property>
               </object>
             </child>
           </object>

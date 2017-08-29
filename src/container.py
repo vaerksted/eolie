@@ -51,10 +51,10 @@ class Container(Gtk.Overlay):
         self.__pages_manager = PagesManager(self.__window)
         self.__pages_manager.show()
         self.__sites_manager = SitesManager(self.__window)
-        if El().settings.get_value("show-left-panel"):
+        if El().settings.get_value("show-sidebar"):
             self.__sites_manager.show()
-        El().settings.connect("changed::show-left-panel",
-                              self.__on_show_left_panel_changed)
+        El().settings.connect("changed::show-sidebar",
+                              self.__on_show_sidebar_changed)
         grid = Gtk.Grid()
         grid.add(self.__sites_manager)
         grid.add(self.__expose_stack)
@@ -233,13 +233,13 @@ class Container(Gtk.Overlay):
         view.show()
         return view
 
-    def __on_show_left_panel_changed(self, settings, value):
+    def __on_show_sidebar_changed(self, settings, value):
         """
             Show/hide panel
             @param settings as Gio.Settings
             @param value as bool
         """
-        if El().settings.get_value("show-left-panel"):
+        if El().settings.get_value("show-sidebar"):
             self.__sites_manager.show()
         else:
             self.__sites_manager.hide()

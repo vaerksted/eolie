@@ -29,9 +29,9 @@
          <summary>Window maximized</summary>
          <description>Window maximized state</description>
       </key>
-      <key type="b" name="show-left-panel">
+      <key type="b" name="show-sidebar">
          <default>true</default>
-         <summary>Show panel on the left (sites manager)</summary>
+         <summary>Show sidebar(sites manager)</summary>
          <description />
       </key>
       <key type="b" name="adblock">
