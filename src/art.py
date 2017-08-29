@@ -28,7 +28,14 @@ class Art:
         """
             Init base art
         """
+        self.__use_cache = True
         self.__create_cache()
+
+    def disable_cache(self):
+        """
+            Disable cache
+        """
+        self.__use_cache = False
 
     def save_artwork(self, uri, surface, suffix):
         """
@@ -118,7 +125,7 @@ class Art:
             mtime = int(info.get_attribute_as_string('time::modified'))
             if time() - mtime > 43200:
                 exists = False
-        return exists
+        return self.__use_cache and exists
 
     def vacuum(self):
         """

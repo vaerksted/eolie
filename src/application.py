@@ -91,6 +91,10 @@ class Application(Gtk.Application):
         self.add_main_option("new", b'n', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a new window",
                              None)
+        self.add_main_option("disable-artwork-cache", b'a',
+                             GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Do not use cache for art",
+                             None)
         self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
@@ -497,6 +501,8 @@ class Application(Gtk.Application):
             self.debug = True
         if options.contains("show-tls"):
             self.show_tls = True
+        if options.contains("disable-artwork-cache"):
+            self.art.disable_cache()
         ephemeral = options.contains("private")
         restored = False
         if self.settings.get_value("remember-session"):
