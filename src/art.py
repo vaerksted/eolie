@@ -57,15 +57,19 @@ class Art:
             return None
         filepath = self.get_path(uri, suffix)
         f = Gio.File.new_for_path(filepath)
-        if f.query_exists():
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filepath,
-                                                             width,
-                                                             heigth,
-                                                             True)
-            surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
-                                                           scale_factor, None)
-            del pixbuf
-            return surface
+        try:
+            if f.query_exists():
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filepath,
+                                                                 width,
+                                                                 heigth,
+                                                                 True)
+                surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
+                                                               scale_factor,
+                                                               None)
+                del pixbuf
+                return surface
+        except:
+            pass
         return None
 
     def get_icon_theme_artwork(self, uri, ephemeral):
