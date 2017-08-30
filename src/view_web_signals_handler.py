@@ -330,7 +330,7 @@ class WebViewSignalsHandler:
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(webview.grab_focus)
-            # Hide progress
+            # Hide progress delayed to show result to user
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
             GLib.timeout_add(3000, self.__set_snapshot, uri)
 
