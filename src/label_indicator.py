@@ -25,7 +25,7 @@ class LabelIndicator(Gtk.Label):
             Init label
         """
         Gtk.Label.__init__(self)
-        self.set_xalign(0.20)
+        self.set_xalign(0.0)
         self.set_yalign(0.80)
         self.__show = False
 
