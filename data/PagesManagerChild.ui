@@ -81,7 +81,7 @@
             <property name="icon_name">audio-speakers-symbolic</property>
             <property name="icon_size">3</property>
             <style>
-              <class name="sidebar-item-rounded"/>
+              <class name="indicator-button"/>
             </style>
           </object>
           <packing>
