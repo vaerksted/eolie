@@ -127,6 +127,14 @@ class Application(Gtk.Application):
         about_action.connect("activate", self.__on_about_activate)
         self.add_action(about_action)
 
+        show_sidebar = self.settings.get_value("show-sidebar")
+        sidebar_action = Gio.SimpleAction.new_stateful(
+                                       "sidebar",
+                                       None,
+                                       GLib.Variant.new_boolean(show_sidebar))
+        sidebar_action.connect("change-state", self.__on_sidebar_change_state)
+        self.add_action(sidebar_action)
+
         shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
         shortcuts_action.connect("activate", self.__on_shortcuts_activate)
         self.add_action(shortcuts_action)
@@ -739,6 +747,15 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
             @param response id as int
         """
         dialog.destroy()
+
+    def __on_sidebar_change_state(self, action, value):
+        """
+            Show/hide sidebar
+            @param action as Gio.SimpleAction
+            @param value as bool
+        """
+        action.set_state(value)
+        self.settings.set_value("show-sidebar", GLib.Variant("b", value))
 
     def __on_activate(self, application):
         """
