@@ -62,9 +62,6 @@ class WebViewNavigation:
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
         self.connect("load-changed", self.__on_load_changed)
-        # We launch Readability.js at page loading finished
-        # As Webkit2GTK doesn't allow us to get content from python
-        # It sets title with content for one shot, so try to get it here
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
         settings = self.get_settings()
