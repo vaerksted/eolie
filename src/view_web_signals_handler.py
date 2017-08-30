@@ -397,7 +397,7 @@ class WebViewSignalsHandler:
             return
         try:
             snapshot = webview.get_snapshot_finish(result)
-            # We also cache original URI
+            # We also cache initial URI
             uris = [webview.get_uri()]
             parsed = urlparse(uri)
             initial_parsed = urlparse(webview.initial_uri)

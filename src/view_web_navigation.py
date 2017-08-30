@@ -81,8 +81,6 @@ class WebViewNavigation:
                 not uri.startswith("/") and\
                 El().search.is_search(uri):
             uri = El().search.get_search_uri(uri)
-
-        self.__initial_uri = uri
         parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
@@ -105,7 +103,6 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
-            self.emit("uri-changed", uri)
             WebKit2.WebView.load_uri(self, uri)
 
     def add_popup(self, webview):
@@ -118,8 +115,9 @@ class WebViewNavigation:
     @property
     def initial_uri(self):
         """
-            Initialy loaded uri, an uri loaded by a user action in UI,
-            not in webview (exception for populars://)
+            Initialy loaded URI
+            When loading an URI, webkit may be redirected and we will
+            be unable to set snapshot/favicon in cache.
             @return str
         """
         return self.__initial_uri
@@ -181,13 +179,13 @@ class WebViewNavigation:
         self._readable_content = ""
         self.__title = ""
         uri = webview.get_uri()
+        if not self.is_loading():
+            self.__initial_uri = None
         self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
         """
             We launch Readability.js at page loading finished.
-            As Webkit2GTK doesn't allow us to get content from python,
-            it sets title with content for one shot, so try to get it here
             @param webview as WebKit2.WebView
             @param event as GParamSpec
         """
@@ -298,9 +296,6 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                # Special case to force populars view to update related_uri
-                if webview.get_uri() == "populars://":
-                    self.__initial_uri = self._navigation_uri
                 El().history.set_page_state(webview.get_uri())
                 decision.use()
                 self._error = None
@@ -322,6 +317,7 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self.__initial_uri = uri
             self._cancelled = False
             # Destroy current popups
             for popup in self.__popups:
