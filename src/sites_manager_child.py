@@ -40,6 +40,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         self.__indicator_label = LabelIndicator()
+        self.__indicator_label.set_property("halign", Gtk.Align.END)
         self.__indicator_label.show()
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__netloc_label = builder.get_object("netloc")
