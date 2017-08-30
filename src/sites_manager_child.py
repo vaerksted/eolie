@@ -40,7 +40,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         self.__indicator_label = LabelIndicator()
-        self.__indicator_label.set_property("halign", Gtk.Align.END)
+        self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_label.show()
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__netloc_label = builder.get_object("netloc")
@@ -133,6 +133,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
+    def _on_close_button_clicked(self, button):
+        """
+            Close site
+            @param button as Gtk.Button
+        """
+        for view in self.__views:
+            self.__window.container.pages_manager.close_view(view)
+
     def _on_button_press_event(self, eventbox, event):
         """
             Hide popover or close view
