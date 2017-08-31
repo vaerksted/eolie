@@ -650,7 +650,6 @@ class ToolbarTitle(Gtk.Bin):
         view = self.__window.container.current
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
-        view.webview.add_text_entry(self.__entry.get_text())
         self.set_text_entry("")
         self.__update_secure_content_indicator()
         uri = view.webview.get_uri()
