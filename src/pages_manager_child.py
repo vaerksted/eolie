@@ -43,21 +43,25 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__title.set_hexpand(True)
         self.__title.set_margin_right(4)
         self.__title.set_property("halign", Gtk.Align.CENTER)
+        self.__title.set_property("valign", Gtk.Align.CENTER)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.show()
         builder.get_object("grid").attach(self.__title, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
-        self.__image_close = builder.get_object("image_close")
+        self.__close_button = builder.get_object("close_button")
         self.__audio_indicator = builder.get_object("audio_indicator")
         if view.webview.is_playing_audio():
             self.__audio_indicator.show()
         if view.webview.ephemeral:
-            self.__image_close.set_from_icon_name("window-close-symbolic",
+            self.__close_button.get_image().set_from_icon_name(
+                                                  "window-close-symbolic",
                                                   Gtk.IconSize.INVALID)
         else:
-            self.__image_close.set_from_icon_name("applications-internet",
+            self.__close_button.get_image().set_from_icon_name(
+                                                  "applications-internet",
                                                   Gtk.IconSize.INVALID)
-        self.__image_close.set_property("pixel-size", ArtSize.FAVICON)
+        self.__close_button.get_image().set_property("pixel-size",
+                                                     ArtSize.FAVICON)
         self.__spinner = builder.get_object("spinner")
         self.add(builder.get_object("widget"))
 
@@ -158,11 +162,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         pass
 
-    def _on_close_button_press_event(self, eventbox, event):
+    def _on_close_button_clicked(self, button):
         """
             Destroy self
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
+            @param button as Gtk.Button
         """
         self.__window.container.pages_manager.close_view(self.__view)
         return True
@@ -173,9 +176,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__image_close.set_from_icon_name("window-close-symbolic",
+        self.__close_button.get_image().set_from_icon_name(
+                                              "window-close-symbolic",
                                               Gtk.IconSize.INVALID)
-        self.__image_close.get_style_context().add_class("sidebar-item-close")
 
     def _on_leave_notify_event(self, eventbox, event):
         """
@@ -188,8 +191,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            self.__image_close.get_style_context().remove_class(
-                                                          "sidebar-item-close")
             self.__set_favicon()
 
 #######################
@@ -206,7 +207,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                  uri,
                                                  self.__view.webview.ephemeral)
         if artwork is not None:
-            self.__image_close.set_from_icon_name(artwork,
+            self.__close_button.get_image().set_from_icon_name(
+                                                  artwork,
                                                   Gtk.IconSize.INVALID)
         elif surface is not None:
             resized = resize_favicon(surface)
@@ -215,9 +217,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__set_favicon_related(resized,
                                        uri,
                                        self.__view.webview.initial_uri)
-            self.__image_close.set_from_surface(resized)
+            self.__close_button.get_image().set_from_surface(resized)
         else:
-            self.__image_close.set_from_icon_name("applications-internet",
+            self.__close_button.get_image().set_from_icon_name(
+                                                  "applications-internet",
                                                   Gtk.IconSize.INVALID)
         if resized is not None:
             self.__window.container.sites_manager.set_favicon(
