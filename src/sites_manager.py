@@ -87,12 +87,16 @@ class SitesManager(Gtk.EventBox):
             if empty_child is None:
                 child = SitesManagerChild(netloc, self.__window)
                 child.show()
+                child.add_view(view)
                 self.__box.add(child)
             else:
                 child = empty_child
                 child.reset(netloc)
+                child.add_view(view)
                 self.__box.invalidate_sort()
-        child.add_view(view)
+        else:
+            child.add_view(view)
+            self.__box.invalidate_sort()
         self.update_visible_child()
 
     def set_favicon(self, view, surface):
@@ -163,8 +167,10 @@ class SitesManager(Gtk.EventBox):
             return False
         elif row2.netloc == "populars://":
             return True
-        else:
+        elif len(row1.views) == len(row2.views):
             return strcoll(row1.netloc, row2.netloc)
+        else:
+            return len(row1.views) < len(row2.views)
 
     def __scroll_to_child(self, child):
         """
