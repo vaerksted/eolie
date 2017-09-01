@@ -157,9 +157,6 @@ class Window(Gtk.ApplicationWindow):
         """
             Hide window, save sidebar width and clean up
         """
-        # Child => Gtk.Paned
-        width = self.container.get_child().get_position()
-        El().settings.set_value("sidebar-position", GLib.Variant("i", width))
         self.disconnect_by_func(self.__on_window_state_event)
         self.disconnect_by_func(self.__on_configure_event)
         Gtk.ApplicationWindow.hide(self)

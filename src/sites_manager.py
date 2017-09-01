@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from locale import strcoll
 
 from eolie.sites_manager_child import SitesManagerChild
+from eolie.define import El
 
 
 class SitesManager(Gtk.EventBox):
@@ -87,6 +88,9 @@ class SitesManager(Gtk.EventBox):
         if child is None:
             if empty_child is None:
                 child = SitesManagerChild(netloc, self.__window)
+                position = El().settings.get_value(
+                                                "sidebar-position").get_int32()
+                child.set_minimal(position < 80)
                 child.show()
                 child.add_view(view)
                 self.__box.add(child)
@@ -109,6 +113,14 @@ class SitesManager(Gtk.EventBox):
         for child in self.__box.get_children():
             if view in child.views:
                 child.set_favicon(surface)
+
+    def set_minimal(self, minimal):
+        """
+            Set all children as minimal
+            @param minimal as bool
+        """
+        for child in self.__box.get_children():
+            child.set_minimal(minimal)
 
     def update_label(self, view):
         """

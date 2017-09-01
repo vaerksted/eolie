@@ -60,6 +60,7 @@ class Container(Gtk.Overlay):
         paned.add2(self.__expose_stack)
         position = El().settings.get_value("sidebar-position").get_int32()
         paned.set_position(position)
+        paned.connect("notify::position", self.__on_paned_notify_position)
         paned.show()
         self.__expose_stack.add_named(self.__stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
@@ -234,6 +235,17 @@ class Container(Gtk.Overlay):
         view = View(webview, parent, self.__window)
         view.show()
         return view
+
+    def __on_paned_notify_position(self, paned, ignore):
+        """
+            Update SitesManager width based on current position
+            @param paned as Gtk.Paned
+            @param ignore as GParamInt
+        """
+        position = paned.get_position()
+        El().settings.set_value("sidebar-position",
+                                GLib.Variant("i", position))
+        self.__sites_manager.set_minimal(position < 80)
 
     def __on_show_sidebar_changed(self, settings, value):
         """

@@ -39,6 +39,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
+        self.__close_button = builder.get_object("close_button")
         self.__indicator_label = LabelIndicator()
         self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_label.show()
@@ -78,6 +79,20 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param surface as cairo.Surface
         """
         self.__image.set_from_surface(surface)
+
+    def set_minimal(self, minimal):
+        """
+            Make widget minimal
+            @param minimal as bool
+        """
+        if minimal:
+            self.__netloc_label.hide()
+            self.__close_button.hide()
+            self.__image.set_property("halign", Gtk.Align.CENTER)
+        else:
+            self.__netloc_label.show()
+            self.__close_button.show()
+            self.__image.set_property("halign", Gtk.Align.START)
 
     def reset(self, netloc):
         """
