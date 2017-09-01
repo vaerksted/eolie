@@ -55,13 +55,15 @@ class Container(Gtk.Overlay):
             self.__sites_manager.show()
         El().settings.connect("changed::show-sidebar",
                               self.__on_show_sidebar_changed)
-        grid = Gtk.Grid()
-        grid.add(self.__sites_manager)
-        grid.add(self.__expose_stack)
-        grid.show()
+        paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
+        paned.pack1(self.__sites_manager, False, False)
+        paned.add2(self.__expose_stack)
+        position = El().settings.get_value("sidebar-position").get_int32()
+        paned.set_position(position)
+        paned.show()
         self.__expose_stack.add_named(self.__stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
-        self.add(grid)
+        self.add(paned)
 
     def add_webview(self, uri, window_type, ephemeral=False,
                     parent=None, state=None, load=True):

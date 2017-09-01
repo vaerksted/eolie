@@ -8,7 +8,6 @@
     <property name="icon_name">window-close-symbolic</property>
   </object>
   <object class="GtkEventBox" id="widget">
-    <property name="width_request">100</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>

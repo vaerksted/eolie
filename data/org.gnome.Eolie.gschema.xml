@@ -114,6 +114,11 @@
          <summary>Open this page on startup</summary>
          <description />
       </key>
+      <key type="i" name="sidebar-position">
+         <default>100</default>
+         <summary>Minimum sidebar position</summary>
+         <description />
+      </key>
       <key type="i" name="min-font-size">
          <default>5</default>
          <summary>Minimum font size</summary>
