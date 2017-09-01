@@ -60,7 +60,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view not in self.__views:
             self.__views.append(view)
         self.update_indicator(view)
-        self.update_label(view)
+        self.update_label()
 
     def remove_view(self, view):
         """
@@ -70,7 +70,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view in self.__views:
             self.__views.remove(view)
         self.update_indicator(view)
-        self.update_label(view)
+        self.update_label()
 
     def set_favicon(self, surface):
         """
@@ -89,13 +89,13 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__netloc_label.set_text(self.__netloc)
             self.__set_initial_artwork(self.__netloc)
 
-    def update_label(self, view):
+    def update_label(self):
         """
             Update label: if one view, use title else use netloc
             @param view as View
         """
         if len(self.__views) == 1:
-            title = view.webview.get_title()
+            title = self.__views[0].webview.get_title()
             if title is None:
                 self.__netloc_label.set_text(self.__netloc)
             else:

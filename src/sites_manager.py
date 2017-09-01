@@ -102,10 +102,11 @@ class SitesManager(Gtk.EventBox):
     def update_label(self, view):
         """
             Update label for view
+            @param view as View
         """
         for child in self.__box.get_children():
             if view in child.views:
-                child.update_label(view)
+                child.update_label()
                 break
 
     def update_indicator(self, view):
