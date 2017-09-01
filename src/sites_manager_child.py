@@ -89,9 +89,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__netloc_label.hide()
             self.__close_button.hide()
             self.__image.set_property("halign", Gtk.Align.CENTER)
+            self.__image.set_hexpand(True)
         else:
             self.__netloc_label.show()
             self.__close_button.show()
+            self.__image.set_hexpand(False)
             self.__image.set_property("halign", Gtk.Align.START)
 
     def reset(self, netloc):
