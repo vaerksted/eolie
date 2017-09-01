@@ -73,29 +73,19 @@ class SitesManager(Gtk.EventBox):
             netloc = "%s://" % urlparse(uri).scheme
 
         child = None
-        empty_child = None
-        # Get child for given netloc, clean any child matching webview
+        # Get child for given netloc/view
         for site in self.__box.get_children():
-            if site.netloc == netloc:
+            if site.netloc == netloc or view in site.views:
                 child = site
-            else:
-                site.remove_view(view)
-                if site.empty:
-                    empty_child = site
-
+                break
         if child is None:
-            if empty_child is None:
-                child = SitesManagerChild(netloc, self.__window)
-                child.show()
-                child.add_view(view)
-                self.__box.add(child)
-            else:
-                child = empty_child
-                child.reset(netloc)
-                child.add_view(view)
-                self.__box.invalidate_sort()
+            child = SitesManagerChild(netloc, self.__window)
+            child.show()
+            child.add_view(view)
+            self.__box.add(child)
         else:
             child.add_view(view)
+            child.reset(netloc)
             self.__box.invalidate_sort()
         self.update_visible_child()
 
@@ -109,13 +99,23 @@ class SitesManager(Gtk.EventBox):
             if view in child.views:
                 child.set_favicon(surface)
 
+    def update_label(self, view):
+        """
+            Update label for view
+        """
+        for child in self.__box.get_children():
+            if view in child.views:
+                child.update_label(view)
+                break
+
     def update_indicator(self, view):
         """
-            Update indicator state for view
+            Update indicator for view
         """
         for child in self.__box.get_children():
             if view in child.views:
                 child.update_indicator(view)
+                break
 
     def remove_view(self, view):
         """

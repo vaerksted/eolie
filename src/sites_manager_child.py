@@ -60,6 +60,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view not in self.__views:
             self.__views.append(view)
         self.update_indicator(view)
+        self.update_label(view)
 
     def remove_view(self, view):
         """
@@ -69,6 +70,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view in self.__views:
             self.__views.remove(view)
         self.update_indicator(view)
+        self.update_label(view)
 
     def set_favicon(self, surface):
         """
@@ -76,6 +78,30 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param surface as cairo.Surface
         """
         self.__image.set_from_surface(surface)
+
+    def reset(self, netloc):
+        """
+            Reset widget to new netloc
+            @param netloc as str
+        """
+        if netloc != self.__netloc:
+            self.__netloc = netloc
+            self.__netloc_label.set_text(self.__netloc)
+            self.__set_initial_artwork(self.__netloc)
+
+    def update_label(self, view):
+        """
+            Update label: if one view, use title else use netloc
+            @param view as View
+        """
+        if len(self.__views) == 1:
+            title = view.webview.get_title()
+            if title is None:
+                self.__netloc_label.set_text(self.__netloc)
+            else:
+                self.__netloc_label.set_text(title)
+        else:
+            self.__netloc_label.set_text(self.__netloc)
 
     def update_indicator(self, view):
         """
@@ -96,15 +122,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if i == 0:
             i = 1
         self.__indicator_label.set_text(str(i))
-
-    def reset(self, netloc):
-        """
-            Reset widget to new netloc
-            @param netloc as str
-        """
-        self.__netloc = netloc
-        self.__netloc_label.set_text(self.__netloc)
-        self.__set_initial_artwork(self.__netloc)
 
     @property
     def empty(self):
@@ -165,7 +182,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
     def __update_popover_internals(self, widget):
         """
-            Little hack to force Gtk.ModelButton to show image
+            Little hack to manage Gtk.ModelButton text
             @param widget as Gtk.Widget
         """
         if isinstance(widget, Gtk.Label):

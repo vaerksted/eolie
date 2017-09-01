@@ -96,6 +96,7 @@ class WebViewSignalsHandler:
         webview.connect("new-page", self.__on_new_page)
         webview.connect("create", self.__on_create)
         webview.connect("close", self.__on_close)
+        # Always connected as we need on_title_changed() update history
         webview.connect("title-changed", self.__on_title_changed)
 
 #######################
@@ -265,6 +266,8 @@ class WebViewSignalsHandler:
         """
         if webview == self._window.container.current.webview:
             self._window.toolbar.title.set_title(title)
+            self._window.container.sites_manager.update_label(
+                                                self._window.container.current)
         # We only update history on title changed, should be enough
         if webview.error is None:
             uri = webview.get_uri()
