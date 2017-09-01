@@ -73,19 +73,30 @@ class SitesManager(Gtk.EventBox):
             netloc = "%s://" % urlparse(uri).scheme
 
         child = None
-        # Get child for given netloc/view
+        empty_child = None
+        # Search for a child for wanted netloc
+        # Clean up any child matching view, allowing us to reuse it
         for site in self.__box.get_children():
-            if site.netloc == netloc or view in site.views:
+            if site.netloc == netloc:
                 child = site
-                break
+            else:
+                site.remove_view(view)
+                if site.empty:
+                    empty_child = site
+
         if child is None:
-            child = SitesManagerChild(netloc, self.__window)
-            child.show()
-            child.add_view(view)
-            self.__box.add(child)
+            if empty_child is None:
+                child = SitesManagerChild(netloc, self.__window)
+                child.show()
+                child.add_view(view)
+                self.__box.add(child)
+            else:
+                child = empty_child
+                child.reset(netloc)
+                child.add_view(view)
+                self.__box.invalidate_sort()
         else:
             child.add_view(view)
-            child.reset(netloc)
             self.__box.invalidate_sort()
         self.update_visible_child()
 
