@@ -18,9 +18,6 @@ PROXY_BUS = 'org.gnome.Eolie.Proxy.Page%s'
 PROXY_PATH = '/org/gnome/EolieProxy'
 PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 
-USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/601.7.7" +\
-             " (KHTML, like Gecko) Version/9.1.2 Safari/601.7.7"
-
 # Setup common paths
 if GLib.getenv("XDG_DATA_HOME") is None:
     LOCAL_PATH = GLib.get_home_dir() + "/.local/share"
