@@ -10,7 +10,9 @@
   <object class="GtkEventBox" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="events">GDK_STRUCTURE_MASK | GDK_SCROLL_MASK</property>
     <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
+    <signal name="scroll-event" handler="_on_scroll_event" swapped="no"/>
     <child>
       <object class="GtkGrid" id="grid">
         <property name="visible">True</property>
@@ -40,7 +42,6 @@
         </child>
         <child>
           <object class="GtkLabel" id="netloc">
-            <property name="visible">False</property>
             <property name="can_focus">False</property>
             <property name="halign">start</property>
             <property name="hexpand">True</property>
@@ -60,7 +61,6 @@
         </child>
         <child>
           <object class="GtkButton" id="close_button">
-            <property name="visible">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="tooltip_text" translatable="yes">Close site</property>

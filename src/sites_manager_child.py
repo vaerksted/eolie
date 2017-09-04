@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -174,6 +174,19 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         for view in self.__views:
             self.__window.container.pages_manager.close_view(view)
+
+    def _on_scroll_event(self, eventbox, event):
+        """
+            Switch between children
+            @param eventbox as Gtk.EventBox
+            @param event as Gdk.Event
+        """
+        if event.direction == Gdk.ScrollDirection.UP:
+            self.__window.container.pages_manager.previous()
+            self.__window.container.pages_manager.ctrl_released()
+        elif event.direction == Gdk.ScrollDirection.DOWN:
+            self.__window.container.pages_manager.next()
+            self.__window.container.pages_manager.ctrl_released()
 
     def _on_button_press_event(self, eventbox, event):
         """
