@@ -98,6 +98,10 @@ class SettingsDialog:
         remember_session.set_active(
                                 El().settings.get_value("remember-session"))
 
+        enable_dev_tools = builder.get_object("dev_tools_check")
+        enable_dev_tools.set_active(
+                                El().settings.get_value("developer-extras"))
+
         enable_plugins = builder.get_object("plugins_check")
         enable_plugins.set_active(
                                 El().settings.get_value("enable-plugins"))
@@ -343,6 +347,14 @@ class SettingsDialog:
         value = GLib.Variant("b", button.get_active())
         El().settings.set_value("enable-plugins", value)
         El().set_setting("enable-plugins", button.get_active())
+
+    def _on_dev_tools_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        value = GLib.Variant("b", button.get_active())
+        El().settings.set_value("developer-extras", value)
 
     def _on_remember_passwords_toggled(self, button):
         """
