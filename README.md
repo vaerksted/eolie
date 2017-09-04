@@ -46,10 +46,8 @@ Full deps here: https://github.com/flathub/org.gnome.Eolie
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-$ ./autogen.sh
-$ make
-# make install
-# update-desktop-database
+$ meson build
+$ sudo ninja -C build install
 ```
 
 ### On Ubuntu
@@ -58,10 +56,8 @@ $ make
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
 $ sudo apt-get install autoconf libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0
-$ ./autogen.sh
-$ make
-$ sudo make install
-$ sudo update-desktop-database
+$ meson build
+$ sudo ninja -C build install
 ```
 
 Instead of `make install` you might want to use `checkinstall`
@@ -78,10 +74,7 @@ This will allow you to uninstall eolie as a package, for example with `apt-get u
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-# sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel
-$ ./autogen.sh
-$ make
-# make install
-# update-desktop-database
+$ sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel
+$ meson build
+$ sudo ninja -C build install
 ```
-
