@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application>
- <id type="desktop">org.gnome.Eolie.desktop</id>
+<component type="desktop">
+ <id>org.gnome.Eolie.desktop</id>
  <licence>CC0</licence>
  <_name>Eolie</_name>
  <_summary>Web browser</_summary>
@@ -14,4 +14,4 @@
  </screenshots>
  <url type="homepage">https://github.com/gnumdk/eolie</url>
  <updatecontact>cedric.bellegarde@adishatz.org</updatecontact>
-</application>
+</component>

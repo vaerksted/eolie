@@ -10,16 +10,16 @@ if 'EOLIE_TRACE' in os.environ:
     from pycallgraph import PyCallGraph
     from pycallgraph.output import GraphvizOutput
 # Make sure we'll find the pygobject module, even in JHBuild
-sys.path.insert(1, '@pyexecdir@')
+sys.path.insert(1, '@PYTHON_EXEC_DIR@')
 # Make sure we'll find the eolie modules, even in JHBuild
-sys.path.insert(1, '@pythondir@')
+sys.path.insert(1, '@PYTHON_DIR@')
 os.environ["MOZ_PLUGIN_PATH"]="/usr/lib/epiphany/plugins"
 
 from gi.repository import Gio
 
-localedir = '@localedir@'
-pkgdatadir = '@pkgdatadir@'
-pkglibdir = '@pkglibdir@'
+localedir = '@LOCALE_DIR@'
+pkgdatadir = '@DATA_DIR@'
+extensiondir = '@EXTENSION_DIR@'
 
 from eolie.application import Application
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     resource = Gio.resource_load(os.path.join(pkgdatadir, 'eolie.gresource'))
     Gio.Resource._register(resource)
 
-    app = Application("@VERSION@", os.path.join(pkglibdir, 'webkitextension'))
+    app = Application("@VERSION@", os.path.join(extensiondir, 'webkitextension'))
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if 'EOLIE_TRACE' in os.environ:
         graphviz = GraphvizOutput()

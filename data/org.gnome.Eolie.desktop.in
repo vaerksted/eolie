@@ -1,7 +1,7 @@
 [Desktop Entry]
-_Name=Eolie
-_GenericName=Web browser
-_Comment=Web browser
+Name=Eolie
+GenericName=Web browser
+Comment=Web browser
 Icon=org.gnome.Eolie
 Exec=eolie %U
 Terminal=false
@@ -12,5 +12,5 @@ StartupNotify=true
 Actions=Private
 
 [Desktop Action Private]
-_Name=New private page
+Name=New private page
 Exec=eolie -p
