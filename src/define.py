@@ -18,8 +18,8 @@ PROXY_BUS = 'org.gnome.Eolie.Proxy.Page%s'
 PROXY_PATH = '/org/gnome/EolieProxy'
 PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 
-# USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36" +\
-#             " (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36 Eolie"
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36" +\
+             " (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36 Eolie"
 
 # Setup common paths
 if GLib.getenv("XDG_DATA_HOME") is None:

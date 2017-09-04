@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.define import El, ADBLOCK_JS  # , USER_AGENT
+from eolie.define import El, ADBLOCK_JS, USER_AGENT
 from eolie.utils import get_ftp_cmd
 
 
@@ -64,8 +64,8 @@ class WebViewNavigation:
         self.connect("load-changed", self.__on_load_changed)
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
-        # settings = self.get_settings()
-        # settings.set_property("user-agent", USER_AGENT)
+        settings = self.get_settings()
+        settings.set_property("user-agent", USER_AGENT)
 
     def load_uri(self, uri):
         """
