@@ -13,12 +13,12 @@
 from gi.repository import Gtk, Gdk, GLib, Gio
 
 from eolie.widget_find import FindWidget
-from eolie.view_web_signals_handler import WebViewSignalsHandler
+from eolie.view_signals_handler import ViewSignalsHandler
 from eolie.view_web import WebView
 from eolie.define import El
 
 
-class View(Gtk.Overlay, WebViewSignalsHandler):
+class View(Gtk.Overlay, ViewSignalsHandler):
     """
         An overlay with a webview and a find widget
     """
@@ -42,7 +42,7 @@ class View(Gtk.Overlay, WebViewSignalsHandler):
             @param window as window
         """
         Gtk.Overlay.__init__(self)
-        WebViewSignalsHandler.__init__(self, webview)
+        ViewSignalsHandler.__init__(self, webview)
         self.__reading_view = None
         self.__parent = parent
         self._window = window

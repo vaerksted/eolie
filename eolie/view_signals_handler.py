@@ -78,7 +78,7 @@ class UriLabel(Gtk.EventBox):
         GLib.idle_add(self.show)
 
 
-class WebViewSignalsHandler:
+class ViewSignalsHandler:
     """
         Webview signals handler, should be herited by a View
     """
