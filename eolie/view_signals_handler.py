@@ -265,7 +265,7 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param uri as GParamString (Do not use)
         """
-        if uri:
+        if webview == self._window.container.current.webview and uri:
             self._window.toolbar.title.set_uri(uri)
             if not webview.is_loading():
                 self._window.toolbar.title.show_readable_button(

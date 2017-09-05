@@ -47,6 +47,7 @@ class WebViewPopover(Gtk.Popover):
         self.__stack.add(view)
         self.__stack.set_visible_child(view)
         view.webview.connect("close", self.__on_webview_close, destroy)
+        view.webview.connect("title-changed", self.__on_webview_title_changed)
         self.__set_title()
         self.__set_button_state()
         if destroy:
@@ -128,12 +129,23 @@ class WebViewPopover(Gtk.Popover):
             if title:
                 self.__title.set_text(title)
 
+    def __on_webview_title_changed(self, webview, title):
+        """
+            Update title if webview is current
+            @param webview as WebView
+            @param title as str
+        """
+        view = self.__stack.get_visible_child()
+        if view.webview == webview:
+            self.__title.set_text(title)
+
     def __on_webview_close(self, webview, destroy):
         """
             Remove view from stack, destroy it if wanted
             @param webview as WebView
             @param destroy as bool
         """
+        webview.disconnect_by_func(self.__on_webview_title_changed)
         for view in self.__stack.get_children():
             if view.webview == webview:
                 self.__stack.remove(view)
@@ -152,6 +164,7 @@ class WebViewPopover(Gtk.Popover):
             @param popover as Gtk.Popover
         """
         for view in self.__stack.get_children():
+            view.webview.disconnect_by_func(self.__on_webview_title_changed)
             view.free_webview()
             self.__stack.remove(view)
         for webview in self.__to_destroy:
