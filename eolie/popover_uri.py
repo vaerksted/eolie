@@ -72,7 +72,6 @@ class Row(Gtk.ListBoxRow):
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
-            self.get_style_context().add_class("bigrow")
             favicon = Gtk.Image()
             favicon.set_margin_start(2)
             self.__set_favicon(favicon)
@@ -163,6 +162,8 @@ class Row(Gtk.ListBoxRow):
         eventbox.set_size_request(-1, 30)
         eventbox.connect("button-release-event", self.__on_button_release)
         eventbox.show()
+        if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
+            eventbox.get_style_context().add_class("bigrow")
         self.add(eventbox)
         if item_type == Type.BOOKMARK:
             self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
