@@ -53,6 +53,13 @@ class WebViewPopover(Gtk.Popover):
         if destroy:
             self.__to_destroy.append(view.webview)
 
+    def do_get_preferred_width(self):
+        """
+            Only accept min width to ellipsize label
+        """
+        (min, nat) = Gtk.Popover.do_get_preferred_width(self)
+        return (min, min)
+
 #######################
 # PROTECTED           #
 #######################
@@ -128,6 +135,7 @@ class WebViewPopover(Gtk.Popover):
                 title = view.webview.get_uri()
             if title:
                 self.__title.set_text(title)
+                self.__title.set_tooltip_text(title)
 
     def __on_webview_title_changed(self, webview, title):
         """
@@ -138,6 +146,7 @@ class WebViewPopover(Gtk.Popover):
         view = self.__stack.get_visible_child()
         if view.webview == webview:
             self.__title.set_text(title)
+            self.__title.set_tooltip_text(title)
 
     def __on_webview_close(self, webview, destroy):
         """
