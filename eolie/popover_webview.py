@@ -130,7 +130,7 @@ class WebViewPopover(Gtk.Popover):
 
     def __on_webview_close(self, webview, destroy):
         """
-            Remove view from stack
+            Remove view from stack, destroy it if wanted
             @param webview as WebView
             @param destroy as bool
         """
@@ -147,7 +147,7 @@ class WebViewPopover(Gtk.Popover):
 
     def __on_closed(self, popover):
         """
-            Unlock titlebar
+            Clean up popover
             Remove children
             @param popover as Gtk.Popover
         """
