@@ -1,41 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/org/gnome/Eolie">
-    <file compressed="true">application.css</file>
-    <file compressed="true">start.html</file>
-    <file compressed="true">end.html</file>
-    <file compressed="true">start_file.html</file>
     <file compressed="true">end_file.html</file>
+    <file compressed="true">end.html</file>
     <file compressed="true">error.html</file>
+    <file compressed="true">start_file.html</file>
+    <file compressed="true">start.html</file>
+    <file compressed="true">application.css</file>
     <file compressed="true">error.css</file>
     <file compressed="true">Readability.js</file>
-    <file preprocess="xml-stripblanks">AboutDialog.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ClearData.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ImportBookmarks.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">Languages.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ModifyUA.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PagesManagerChild.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">SitesManagerChild.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverCredentials.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverGeolocation.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverImages.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverPasswords.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">QuitDialog.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">RowDownload.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">SettingsDialog.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">Shortcuts.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">TagWidget.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ToolbarActions.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ToolbarEnd.ui</file>
-    <file compressed="true" preprocess="xml-stripblanks">ToolbarTitle.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogImportBookmarks.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogModifyUA.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">Languages.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PagesManagerChild.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverCredentials.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverGeolocation.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverImages.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverPasswords.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">QuitDialog.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">RowDownload.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">SettingsDialog.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">Shortcuts.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">SitesManagerChild.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">TagWidget.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">ToolbarActions.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">ToolbarEnd.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">ToolbarTitle.ui</file>
   </gresource>
 </gresources>
