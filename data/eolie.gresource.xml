@@ -17,6 +17,7 @@
     <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ImportBookmarks.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">Languages.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ModifyUA.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PagesManagerChild.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">SitesManagerChild.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>

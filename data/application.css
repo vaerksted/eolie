@@ -18,7 +18,9 @@
     color: white;
 }
 
-.sidebar {
+.border {
+    border: 1px solid alpha(@theme_fg_color, 0.5);
+    border-radius: 2px;
 }
 
 .sidebar-item-title {

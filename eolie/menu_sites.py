@@ -50,13 +50,21 @@ class SitesMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             self.append_item(item)
-        close_section = Gio.Menu()
-        self.append_section(None, close_section)
+        bottom_section = Gio.Menu()
+        self.append_section(None, bottom_section)
+        action = Gio.SimpleAction.new("user_agent")
+        self.__window.add_action(action)
+        # Modify UA
+        item = Gio.MenuItem.new(_("Modify user agent"),
+                                "win.user_agent")
+        bottom_section.append_item(item)
+        action.connect("activate", self.__on_modify_ua_activate, views)
+        # Close site
         action = Gio.SimpleAction.new("close_site")
         self.__window.add_action(action)
         item = Gio.MenuItem.new(_("Close site"),
                                 "win.close_site")
-        close_section.append_item(item)
+        bottom_section.append_item(item)
         action.connect("activate", self.__on_close_activate, views)
 
 #######################
@@ -72,6 +80,18 @@ class SitesMenu(Gio.Menu):
         for view in self.__window.container.views:
             if view in views:
                 self.__window.container.pages_manager.close_view(view)
+
+    def __on_modify_ua_activate(self, action, param, views):
+        """
+            Show a dialog allowing user to update User Agent
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param views as [View]
+        """
+        if views:
+            from eolie.dialog_modify_ua import ModifyUADialog
+            dialog = ModifyUADialog(views[0].webview.get_uri(), self.__window)
+            dialog.run()
 
     def __on_action_clicked(self, action, variant, view):
         """

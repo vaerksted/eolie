@@ -134,7 +134,7 @@ class WebView(WebKit2.WebView):
             Reset zoom level
             @return current zoom after zoom out
         """
-        El().websettings.unset_zoom(self.get_uri())
+        El().websettings.set_zoom(100, self.get_uri())
         self.update_zoom_level()
 
     def set_delayed_uri(self, uri):

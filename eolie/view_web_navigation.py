@@ -338,7 +338,13 @@ class WebViewNavigation:
             else:
                 self.update_spell_checking()
                 self.update_zoom_level()
-
+                user_agent = El().websettings.get_user_agent(uri)
+                settings = self.get_settings()
+                if user_agent:
+                    settings.set_user_agent(user_agent)
+                else:
+                    settings.set_user_agent_with_application_details("Eolie",
+                                                                     None)
                 # Setup image blocker
                 if El().settings.get_value("imgblock"):
                     exception = El().image_exceptions.find(

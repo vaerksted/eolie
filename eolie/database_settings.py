@@ -24,7 +24,8 @@ class DatabaseSettings:
         Store various settings for webpage
     """
     __UPGRADES = {
-        1: "ALTER TABLE settings ADD geolocation INT"
+        1: "ALTER TABLE settings ADD geolocation INT",
+        2: "ALTER TABLE settings ADD user_agent TEXT"
     }
 
     # SQLite documentation:
@@ -38,7 +39,8 @@ class DatabaseSettings:
                                                chooseruri TEXT,
                                                languages TEXT,
                                                zoom INT,
-                                               geolocation INT
+                                               geolocation INT,
+                                               user_agent TEXT
                                                )'''
 
     def __init__(self):
@@ -187,22 +189,6 @@ class DatabaseSettings:
         except Exception as e:
             print("DatabaseSettings::set_zoom():", e)
 
-    def unset_zoom(self, url):
-        """
-            Unset zoom for url
-            @param url as str
-        """
-        parsed = urlparse(url)
-        if parsed.scheme not in ["http", "https"]:
-            return
-        try:
-            with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM settings\
-                             WHERE url=?", (parsed.netloc,))
-                sql.commit()
-        except Exception as e:
-            print("DatabaseSettings::unset_zoom():", e)
-
     def get_zoom(self, url):
         """
             Get zoom for url
@@ -217,6 +203,48 @@ class DatabaseSettings:
             if v is not None:
                 return v[0]
             return None
+
+    def set_user_agent(self, user_agent, url):
+        """
+            Set user agent for url
+            @param user_agent as str
+            @param url as str
+        """
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            return
+        try:
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT rowid FROM settings\
+                                      WHERE url=?", (parsed.netloc,))
+                v = result.fetchone()
+                if v is not None:
+                    sql.execute("UPDATE settings\
+                                 SET user_agent=?\
+                                 WHERE url=?", (user_agent, parsed.netloc))
+                else:
+                    sql.execute("INSERT INTO settings\
+                                          (url, user_agent)\
+                                          VALUES (?, ?)", (parsed.netloc,
+                                                           user_agent))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseSettings::set_user_agent():", e)
+
+    def get_user_agent(self, url):
+        """
+            Get user agent for url
+            @param url as str
+            @return user_agent as str
+        """
+        parsed = urlparse(url)
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT user_agent FROM settings\
+                                  WHERE url=?", (parsed.netloc,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0] or ""
+            return ""
 
     def get_languages(self, url):
         """
