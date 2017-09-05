@@ -322,6 +322,9 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        # Needed by WebViewPopover!
+        if webview != self._window.container.current.webview:
+            return
         self._window.toolbar.title.update_load_indicator(webview)
         uri = webview.get_uri()
         parsed = urlparse(uri)
