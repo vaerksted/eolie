@@ -100,6 +100,8 @@ class SitesManager(Gtk.EventBox):
                 child.add_view(view)
                 self.__box.invalidate_sort()
         else:
+            if empty_child is not None:
+                empty_child.destroy()
             child.add_view(view)
             self.__box.invalidate_sort()
         self.update_visible_child()
