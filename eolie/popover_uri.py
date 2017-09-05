@@ -157,13 +157,13 @@ class Row(Gtk.ListBoxRow):
             grid.attach(self.__title, 1, 0, 1, 1)
             grid.attach(uri, 1, 1, 1, 1)
         grid.show()
+        if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
+            grid.get_style_context().add_class("bigrow")
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
         eventbox.set_size_request(-1, 30)
         eventbox.connect("button-release-event", self.__on_button_release)
         eventbox.show()
-        if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
-            eventbox.get_style_context().add_class("bigrow")
         self.add(eventbox)
         if item_type == Type.BOOKMARK:
             self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
