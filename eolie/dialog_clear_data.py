@@ -39,7 +39,7 @@ class ClearDataDialog:
         self.__parent_iters = {}
         self.__timespan_value = 0
         builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/ClearData.ui")
+        builder.add_from_resource("/org/gnome/Eolie/DialogClearData.ui")
         builder.connect_signals(self)
         self.__dialog = builder.get_object("dialog")
         self.__dialog.set_transient_for(parent)

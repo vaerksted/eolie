@@ -35,7 +35,7 @@ class ImportBookmarksDialog:
         """
         self.__window = window
         builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/ImportBookmarks.ui")
+        builder.add_from_resource("/org/gnome/Eolie/DialogImportBookmarks.ui")
         builder.connect_signals(self)
         self.__dialog = builder.get_object("dialog")
         self.__dialog.set_transient_for(window)
