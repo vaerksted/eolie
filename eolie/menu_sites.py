@@ -55,10 +55,11 @@ class SitesMenu(Gio.Menu):
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         # Modify UA
-        item = Gio.MenuItem.new(_("Modify user agent"),
-                                "win.user_agent")
-        bottom_section.append_item(item)
-        action.connect("activate", self.__on_modify_ua_activate, views)
+        if El().settings.get_value("developer-extras"):
+            item = Gio.MenuItem.new(_("Modify user agent"),
+                                    "win.user_agent")
+            bottom_section.append_item(item)
+            action.connect("activate", self.__on_modify_ua_activate, views)
         # Close site
         action = Gio.SimpleAction.new("close_site")
         self.__window.add_action(action)
