@@ -362,10 +362,10 @@ class WebViewSignalsHandler:
 
     def __on_mouse_target_changed(self, webview, hit, modifiers):
         """
-            Show uri in title bar
+            Show uri label
             @param webview as WebView
             @param hit as WebKit2.HitTestResult
-            @param modifier as Gdk.ModifierType
+            @param modifiers as Gdk.ModifierType
         """
         if hit.context_is_link():
             self.__uri_label.set_text(hit.get_link_uri())
