@@ -410,6 +410,7 @@ class WebView(WebKit2.WebView):
              pass_form_name,
              pass_form_value) = source.call_finish(result)[0]
             if user_form_name and pass_form_name:
+                self._window.close_popovers()
                 self.emit("save-password",
                           user_form_name, user_form_value,
                           pass_form_name, pass_form_value,
@@ -426,7 +427,6 @@ class WebView(WebKit2.WebView):
             @param request as WebKit2.FormSubmissionRequest
         """
         uri = self._navigation_uri
-        self._window.close_popovers()
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
         fields = request.get_text_fields()

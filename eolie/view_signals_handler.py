@@ -201,7 +201,8 @@ class ViewSignalsHandler:
             Show readable button in titlebar
             @param webview as WebView
         """
-        self._window.toolbar.title.show_readable_button(True)
+        if webview == self._window.container.current.webview:
+            self._window.toolbar.title.show_readable_button(True)
 
     def __on_save_password(self, webview, user_form_name, user_form_value,
                            pass_form_name, pass_form_value, uri, form_uri):
@@ -256,8 +257,9 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param value GparamFloat
         """
-        value = webview.get_estimated_load_progress()
-        self._window.toolbar.title.progress.set_fraction(value)
+        if webview == self._window.container.current.webview:
+            value = webview.get_estimated_load_progress()
+            self._window.toolbar.title.progress.set_fraction(value)
 
     def __on_uri_changed(self, webview, uri):
         """
@@ -265,6 +267,7 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param uri as GParamString (Do not use)
         """
+        # Check needed by WebViewPopover!
         if webview == self._window.container.current.webview and uri:
             self._window.toolbar.title.set_uri(uri)
             if not webview.is_loading():
@@ -277,6 +280,7 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param title as str
         """
+        # Check needed by WebViewPopover!
         if webview == self._window.container.current.webview:
             self._window.toolbar.title.set_title(title)
             self._window.container.sites_manager.update_label(
@@ -322,7 +326,7 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        # Needed by WebViewPopover!
+        # Check needed by WebViewPopover!
         if webview != self._window.container.current.webview:
             return
         self._window.toolbar.title.update_load_indicator(webview)
