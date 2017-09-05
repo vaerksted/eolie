@@ -12,6 +12,7 @@
 
 from gi.repository import Gtk, Gdk, GLib, Pango, WebKit2
 
+from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 import cairo
@@ -90,6 +91,8 @@ class WebViewSignalsHandler:
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
         self.__js_timeout_id = None
+        self.__js_dialog_type = None
+        self.__js_dialog_message = None
         self.__signals_connected = False
         webview.connect("map", self.__on_webview_map)
         webview.connect("unmap", self.__on_webview_unmap)
@@ -155,7 +158,7 @@ class WebViewSignalsHandler:
             @param webview as WebView
         """
         if webview.get_ancestor(Gtk.Popover) is None:
-            self._window.container.pages_manager.close_view(self)
+            self._window.container.pages_manager.try_close_view(self)
 
     def __on_ready_to_show(self, webview, related, navigation_action):
         """
@@ -224,7 +227,17 @@ class WebViewSignalsHandler:
             @param webview as WebView
             @param dialog as WebKit2.ScriptDialog
         """
+        # Here we handle JS flood
+        if dialog.get_message() == self.__js_dialog_message and\
+                dialog.get_dialog_type() == self.__js_dialog_type:
+            self._window.toolbar.title.show_message(
+                   _("Eolie is going to close this page because it is broken"))
+            self._window.container.pages_manager.close_view(self, False)
+            return True
+
         if not dialog.get_message().startswith("@&$%ù²"):
+            self.__js_dialog_type = dialog.get_dialog_type()
+            self.__js_dialog_message = dialog.get_message()
             self._window.toolbar.title.show_javascript(dialog)
             return True
 

@@ -168,7 +168,7 @@ class PagesManager(Gtk.EventBox):
         else:
             self.__previous()
 
-    def close_view(self, view):
+    def try_close_view(self, view):
         """
             Ask user before closing view if forms filled
             @param view as View
@@ -177,6 +177,81 @@ class PagesManager(Gtk.EventBox):
         El().helper.call("FormsFilled",
                          GLib.Variant("(i)", (page_id,)),
                          self.__on_forms_filled, page_id, view)
+
+    def close_view(self, view, animate=True):
+        """
+            close current view
+            @param view as View
+            @param animate as bool
+        """
+        children_count = len(self.__box.get_children()) - 1
+        # Don't show 0 as we are going to open a new one
+        if children_count:
+            self.__window.toolbar.actions.count_label.set_text(
+                                                       str(children_count))
+        El().history.set_page_state(view.webview.get_uri())
+        self.__window.close_popovers()
+        # Needed to unfocus titlebar
+        self.__window.set_focus(None)
+        was_current = view == self.__window.container.current
+        child_index = self.__get_index(view)
+        child = self.__box.get_child_at_index(child_index)
+        if child is None:
+            return
+        El().pages_menu.add_action(view.webview.get_title(),
+                                   view.webview.get_uri(),
+                                   view.webview.ephemeral,
+                                   view.webview.get_session_state())
+        child.destroy()
+        # Delay view destroy to allow stack animation
+        if animate:
+            GLib.timeout_add(1000, view.destroy)
+        else:
+            view.destroy()
+        # Nothing to do if was not current page
+        if not was_current:
+            return False
+
+        # First we search a child with same parent as closed
+        brother = None
+        if view.parent is not None:
+            for child in reversed(self.__box.get_children()):
+                if child.view != view and child.view.parent == view.parent:
+                    brother = child
+                    break
+        next_view = None
+        # Load brother
+        if brother is not None:
+            brother_index = self.__get_index(brother.view)
+            brother = self.__box.get_child_at_index(brother_index)
+            if brother is not None:
+                next_view = brother.view
+            else:
+                next_view = None
+        # Go back to parent page
+        elif view.parent is not None:
+            parent_index = self.__get_index(view.parent)
+            parent = self.__box.get_child_at_index(parent_index)
+            if parent is not None:
+                next_view = parent.view
+            else:
+                next_view = None
+        if next_view is None:
+            # Find last activated page
+            if children_count > 0:
+                atime = 0
+                for child in self.__box.get_children():
+                    if child.view != view and\
+                            child.view.webview.access_time >= atime:
+                        next_view = child.view
+                        atime = next_view.webview.access_time
+        if next_view is not None:
+            self.__window.container.set_visible_view(next_view)
+        else:
+            # We are last row, add a new one
+            self.__window.container.add_webview(El().start_page,
+                                                Gdk.WindowType.CHILD)
+        self.update_visible_child()
 
     def ctrl_released(self):
         """
@@ -276,77 +351,6 @@ class PagesManager(Gtk.EventBox):
             self.__window.container.set_visible_view(next_row.view)
         self.update_visible_child()
 
-    def __close_view(self, view):
-        """
-            close current view
-            @param view as View
-        """
-        children_count = len(self.__box.get_children()) - 1
-        # Don't show 0 as we are going to open a new one
-        if children_count:
-            self.__window.toolbar.actions.count_label.set_text(
-                                                       str(children_count))
-        El().history.set_page_state(view.webview.get_uri())
-        self.__window.close_popovers()
-        # Needed to unfocus titlebar
-        self.__window.set_focus(None)
-        was_current = view == self.__window.container.current
-        child_index = self.__get_index(view)
-        child = self.__box.get_child_at_index(child_index)
-        if child is None:
-            return
-        El().pages_menu.add_action(view.webview.get_title(),
-                                   view.webview.get_uri(),
-                                   view.webview.ephemeral,
-                                   view.webview.get_session_state())
-        child.destroy()
-        # Delay view destroy to allow stack animation
-        GLib.timeout_add(1000, view.destroy)
-        # Nothing to do if was not current page
-        if not was_current:
-            return False
-
-        # First we search a child with same parent as closed
-        brother = None
-        if view.parent is not None:
-            for child in reversed(self.__box.get_children()):
-                if child.view != view and child.view.parent == view.parent:
-                    brother = child
-                    break
-        next_view = None
-        # Load brother
-        if brother is not None:
-            brother_index = self.__get_index(brother.view)
-            brother = self.__box.get_child_at_index(brother_index)
-            if brother is not None:
-                next_view = brother.view
-            else:
-                next_view = None
-        # Go back to parent page
-        elif view.parent is not None:
-            parent_index = self.__get_index(view.parent)
-            parent = self.__box.get_child_at_index(parent_index)
-            if parent is not None:
-                next_view = parent.view
-            else:
-                next_view = None
-        if next_view is None:
-            # Find last activated page
-            if children_count > 0:
-                atime = 0
-                for child in self.__box.get_children():
-                    if child.view != view and\
-                            child.view.webview.access_time >= atime:
-                        next_view = child.view
-                        atime = next_view.webview.access_time
-        if next_view is not None:
-            self.__window.container.set_visible_view(next_view)
-        else:
-            # We are last row, add a new one
-            self.__window.container.add_webview(El().start_page,
-                                                Gdk.WindowType.CHILD)
-        self.update_visible_child()
-
     def __get_index(self, view):
         """
             Get view index
@@ -408,7 +412,7 @@ class PagesManager(Gtk.EventBox):
         """
         def on_response_id(dialog, response_id, view, self):
             if response_id == Gtk.ResponseType.CLOSE:
-                self.__close_view(view)
+                self.close_view(view)
             dialog.destroy()
 
         def on_close(widget, dialog):
@@ -421,7 +425,7 @@ class PagesManager(Gtk.EventBox):
             result = source.call_finish(result)[0]
         except Exception as e:
             result = None
-            self.__close_view(view)
+            self.close_view(view)
             print("PagesManager::__on_forms_filled():", e)
         if result:
             builder = Gtk.Builder()
@@ -437,7 +441,7 @@ class PagesManager(Gtk.EventBox):
             cancel.connect("clicked", on_cancel, dialog)
             dialog.run()
         else:
-            self.__close_view(view)
+            self.close_view(view)
 
     def __on_button_press(self, widget, event):
         """

@@ -173,7 +173,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         for view in self.__views:
-            self.__window.container.pages_manager.close_view(view)
+            self.__window.container.pages_manager.try_close_view(view)
 
     def _on_scroll_event(self, eventbox, event):
         """
@@ -196,7 +196,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if event.button == 2:
             for view in self.__views:
-                self.__window.container.pages_manager.close_view(view)
+                self.__window.container.pages_manager.try_close_view(view)
             return True
         elif event.button == 3:
             from eolie.menu_sites import SitesMenu

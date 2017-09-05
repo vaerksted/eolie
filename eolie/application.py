@@ -546,7 +546,7 @@ class Application(Gtk.Application):
         """
         if self.active_window.container.current.webview.get_uri() is None:
             if ephemeral:
-                self.active_window.container.pages_manager.close_view(
+                self.active_window.container.pages_manager.try_close_view(
                                           self.active_window.container.current)
                 self.active_window.container.add_webview(uri,
                                                          window_type,

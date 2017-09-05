@@ -232,14 +232,17 @@ class ToolbarTitle(Gtk.Bin):
             popover.connect("closed", self.__on_popover_closed)
             popover.popup()
 
-    def show_message(self, webview, msg):
+    def show_message(self, message):
         """
             Show a message to user
             @param webview as WebView
             @param msg as str
         """
-        js = 'alert("%s");' % msg
-        webview.run_javascript(js, None, None)
+        from eolie.popover_message import MessagePopover
+        popover = MessagePopover(message, self.__window)
+        popover.set_relative_to(self.__entry)
+        popover.connect("closed", self.__on_popover_closed)
+        popover.popup()
 
     def show_input_warning(self, webview):
         """

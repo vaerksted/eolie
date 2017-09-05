@@ -152,7 +152,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param event as Gdk.Event
         """
         if event.button == 2:
-            self.__window.container.pages_manager.close_view(self.__view)
+            self.__window.container.pages_manager.try_close_view(self.__view)
             return True
 
     def _on_button_release_event(self, eventbox, event):
@@ -167,7 +167,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param button as Gtk.Button
         """
-        self.__window.container.pages_manager.close_view(self.__view)
+        self.__window.container.pages_manager.try_close_view(self.__view)
         return True
 
     def _on_enter_notify_event(self, eventbox, event):

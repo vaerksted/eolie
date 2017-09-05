@@ -528,7 +528,6 @@ class SettingsDialog:
                               Gdk.WindowType.CHILD)
                 GLib.idle_add(
                     El().active_window.toolbar.title.show_message,
-                    El().active_window.container.current.webview,
                     _("You've received an email"
                       " to validate synchronization"))
                 self.__helper.store_sync(username,

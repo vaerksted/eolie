@@ -81,7 +81,6 @@ data/Makefile
 data/Makefile.in
 flatpak/metadata
 *.pyc
-eolie
 *.valid
 /src/Makefile.in
 /data/AboutDialog.ui

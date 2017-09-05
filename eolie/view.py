@@ -119,6 +119,13 @@ class View(Gtk.Overlay, WebViewSignalsHandler):
         """
         self.__grid.remove(self.__webview)
 
+    def destroy(self):
+        """
+            Destroy view and webview
+        """
+        Gtk.Overlay.destroy(self)
+        self.__webview.destroy()
+
     @property
     def reading(self):
         """
