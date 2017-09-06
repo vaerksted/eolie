@@ -189,7 +189,9 @@ class ViewSignalsHandler:
             return
         properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
-                properties.get_toolbar_visible():
+                properties.get_toolbar_visible() and\
+                not navigation_action.get_modifiers() &\
+                Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_view(webview,
                                             None,
                                             Gdk.WindowType.CHILD)
