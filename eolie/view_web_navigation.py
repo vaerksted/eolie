@@ -274,9 +274,14 @@ class WebViewNavigation:
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
+                if navigation_action.get_modifiers() &\
+                        Gdk.ModifierType.SHIFT_MASK:
+                    window_type = Gdk.WindowType.SUBSURFACE
+                else:
+                    window_type = Gdk.WindowType.CHILD
                 self.emit("new-page",
                           self._navigation_uri,
-                          Gdk.WindowType.CHILD)
+                          window_type)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
