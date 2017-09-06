@@ -331,7 +331,7 @@ class PasswordsHelper:
             # We ignore old Eolie passwords
             if "userform" in keys or\
                     "sync" in keys:
-                callback(source.get_attributes(),
+                callback(attributes,
                          secret.get().decode('utf-8'),
                          uri,
                          index,
@@ -356,7 +356,7 @@ class PasswordsHelper:
             if callback is not None:
                 callback(*args)
         except Exception as e:
-            debug("SettingsDialog::__on_clear_search(): %s" % e)
+            debug("PasswordsHelper::__on_clear_search(): %s" % e)
 
     def __on_secret_search(self, source, result, uri, callback, *args):
         """

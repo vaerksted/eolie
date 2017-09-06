@@ -26,11 +26,11 @@ class TaskHelper:
         """
         self.__signals = {}
 
-    def run(self, command, args=(), callback=None):
+    def run(self, command, params=(), callback=None, *args):
         """
             run command with args and return to callback
             @param command as function
-            @param args as ()
+            @param params as ()
             @param callback as function
         """
         thread = Thread(target=self.__run, args=(command, args, callback))
@@ -62,17 +62,17 @@ class TaskHelper:
 #######################
 # PRIVATE             #
 #######################
-    def __run(self, command, args, callback):
+    def __run(self, command, params, callback, *args):
         """
             Pass command result to callback
             @param command as function
-            @param args as ()
+            @param params as ()
             @param callback as function
         """
         try:
-            result = command(*args)
+            result = command(params)
             if callback:
-                GLib.idle_add(callback, result)
+                GLib.idle_add(callback, result, args)
         except Exception as e:
             print("TaskHelper::__run():", command, e)
 
