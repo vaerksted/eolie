@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, WebKit2
 
 
 class WebViewPopover(Gtk.Popover):
@@ -35,6 +35,7 @@ class WebViewPopover(Gtk.Popover):
         self.__title = builder.get_object("title")
         self.__prev_button = builder.get_object("prev_button")
         self.__next_button = builder.get_object("next_button")
+        self.__spinner = builder.get_object("spinner")
         self.add(builder.get_object("widget"))
         self.connect("closed", self.__on_closed)
 
@@ -48,6 +49,7 @@ class WebViewPopover(Gtk.Popover):
         self.__stack.set_visible_child(view)
         view.webview.connect("close", self.__on_webview_close, destroy)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
+        view.webview.connect("load-changed", self.__on_webview_load_changed)
         self.__set_title()
         self.__set_button_state()
         if destroy:
@@ -148,6 +150,17 @@ class WebViewPopover(Gtk.Popover):
             self.__title.set_text(title)
             self.__title.set_tooltip_text(title)
 
+    def __on_webview_load_changed(self, webview, event):
+        """
+            Update spinner
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__spinner.start()
+        elif event == event == WebKit2.LoadEvent.FINISHED:
+            self.__spinner.stop()
+
     def __on_webview_close(self, webview, destroy):
         """
             Remove view from stack, destroy it if wanted
@@ -155,6 +168,7 @@ class WebViewPopover(Gtk.Popover):
             @param destroy as bool
         """
         webview.disconnect_by_func(self.__on_webview_title_changed)
+        webview.disconnect_by_func(self.__on_webview_load_changed)
         for view in self.__stack.get_children():
             if view.webview == webview:
                 self.__stack.remove(view)
@@ -174,6 +188,7 @@ class WebViewPopover(Gtk.Popover):
         """
         for view in self.__stack.get_children():
             view.webview.disconnect_by_func(self.__on_webview_title_changed)
+            view.webview.disconnect_by_func(self.__on_webview_load_changed)
             view.free_webview()
             self.__stack.remove(view)
         for webview in self.__to_destroy:
