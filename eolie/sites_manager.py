@@ -13,7 +13,6 @@
 from gi.repository import Gtk, GLib
 
 from urllib.parse import urlparse
-from locale import strcoll
 
 from eolie.sites_manager_child import SitesManagerChild
 from eolie.define import El
@@ -189,12 +188,8 @@ class SitesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
-        if row1.netloc == "populars://":
+        if len(row1.views) == len(row2.views):
             return False
-        elif row2.netloc == "populars://":
-            return True
-        elif len(row1.views) == len(row2.views):
-            return strcoll(row1.netloc, row2.netloc)
         else:
             return len(row1.views) < len(row2.views)
 
