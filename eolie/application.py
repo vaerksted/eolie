@@ -409,9 +409,10 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::__listen_to_gnome_sm():", e)
 
-    def __vacuum(self):
+    def __vacuum(self, params):
         """
             VACUUM DB
+            @param params as ()
             @thread safe
         """
         try:
