@@ -14,25 +14,28 @@ from gi.repository import Gio, GLib
 
 from urllib.parse import urlparse
 import sqlite3
+import itertools
 from gettext import gettext as _
 from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS
+from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS, El
 
 
 class DatabaseAdblock:
     """
         Eolie adblock db
     """
-    DB_PATH = "%s/adblock.db" % EOLIE_LOCAL_PATH
+    DB_PATH = "%s/adblock2.db" % EOLIE_LOCAL_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
               "http://winhelp2002.mvps.org/hosts.txt",
               "http://hosts-file.net/ad_servers.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?"
               "hostformat=hosts&showintro=0&mimetype=plaintext"]
+
+    __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt"]
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -44,6 +47,13 @@ class DatabaseAdblock:
                                                dns TEXT NOT NULL,
                                                mtime INT NOT NULL
                                                )'''
+    __create_adblock_css = '''CREATE TABLE adblock_css (
+                                               id INTEGER PRIMARY KEY,
+                                               name TEXT NOT NULL,
+                                               whitelist TEXT DEFAULT "",
+                                               blacklist TEXT DEFAULT "",
+                                               mtime INT NOT NULL
+                                               )'''
 
     def __init__(self):
         """
@@ -51,6 +61,8 @@ class DatabaseAdblock:
         """
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
+        self.__adblock_mtime = 0
+
         f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
         if not f.query_exists():
@@ -61,6 +73,7 @@ class DatabaseAdblock:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
+                    sql.execute(self.__create_adblock_css)
                     sql.commit()
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
@@ -92,7 +105,7 @@ class DatabaseAdblock:
                                     flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
             GLib.spawn_close_pid(pid)
 
-        # Get in db mtime
+        # Get in db mtime, only use main table values
         # Only update if filters older than one week
         mtime = 0
         with SqlCursor(self) as sql:
@@ -100,18 +113,39 @@ class DatabaseAdblock:
             v = result.fetchone()
             if v is not None:
                 mtime = v[0]
-        self.__mtime = int(time())
-        if self.__mtime - mtime < 604800:
+        self.__adblock_mtime = int(time())
+        # We ignore update value from rules file
+        if self.__adblock_mtime - mtime < 604800:
             return
-        # Update adblock db
+        # Update adblock db rules
         self.__cancellable.reset()
-        self.__on_load_uri_content(None, False, b"", self.__URIS)
+        self.__on_load_uri_content(None, False, b"", self.__URIS, False)
+        self.__on_load_uri_content(None, False, b"", self.__CSS_URIS, True)
 
     def stop(self):
         """
             Stop update
         """
         self.__cancellable.cancel()
+
+    def get_css_rules(self, uri):
+        """
+            Return css rules
+            @return str
+        """
+        rules = ""
+        parsed = urlparse(uri)
+        if parsed.scheme not in ["http", "https"]:
+            return ""
+        netloc = parsed.netloc.lstrip("www.")
+        with SqlCursor(self) as sql:
+            request = "SELECT name FROM adblock_css WHERE\
+                       (blacklist='' AND whitelist='') OR\
+                       (blacklist!=? AND whitelist=?)"
+            result = sql.execute(request, (netloc, netloc))
+            for name in list(itertools.chain(*result)):
+                rules += "%s,\n" % name
+        return rules[:-2] + "{display: none !important;}"
 
     def is_blocked(self, uri):
         """
@@ -144,12 +178,13 @@ class DatabaseAdblock:
 #######################
 # PRIVATE             #
 #######################
-    def __save_rules(self, rules, uris):
+    def __save_rules(self, params):
         """
             Save rules to db
-            @param rules as bytes
+            @param params as (bytes, str)
             @param uris as [str]
         """
+        (rules, uris) = params
         SqlCursor.add(self)
         result = rules.decode('utf-8')
         count = 0
@@ -169,7 +204,7 @@ class DatabaseAdblock:
                 sql.execute("INSERT INTO adblock\
                                   (dns, mtime)\
                                   VALUES (?, ?)",
-                            (dns, self.__mtime))
+                            (dns, self.__adblock_mtime))
                 count += 1
                 if count == 1000:
                     sql.commit()
@@ -179,23 +214,93 @@ class DatabaseAdblock:
         if not uris:
             with SqlCursor(self) as sql:
                 sql.execute("DELETE FROM adblock\
-                             WHERE mtime!=?", (self.__mtime,))
+                             WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.commit()
         SqlCursor.remove(self)
 
-    def __on_load_uri_content(self, uri, status, content, uris):
+    def __save_css_default_rule(self, line):
+        """
+            Save default (without blacklist, whitelist) rule to db
+            @param line as str
+        """
+        name = line[2:]
+        # Update entry if exists, create else
+        with SqlCursor(self) as sql:
+            sql.execute("INSERT INTO adblock_css\
+                              (name, mtime)\
+                              VALUES (?, ?)",
+                        (name, self.__adblock_mtime))
+
+    def __save_css_domain_rule(self, line):
+        """
+            Save domain rule to db
+            @param line as str
+        """
+        whitelist = ""
+        blacklist = ""
+        (domains, name) = line.split("##")
+        for domain in domains.split(","):
+            if domain.startswith("~"):
+                blacklist += "@%s@" % domain[1:]
+            else:
+                whitelist += domain
+        with SqlCursor(self) as sql:
+            sql.execute("INSERT INTO adblock_css\
+                         (name, whitelist, blacklist, mtime)\
+                         VALUES (?, ?, ?, ?)",
+                        (name, whitelist, blacklist, self.__adblock_mtime))
+
+    def __save_css_rules(self, params):
+        """
+            Save rules to db
+            @param params as (bytes, str)
+            @param uris as [str]
+        """
+        (rules, uris) = params
+        SqlCursor.add(self)
+        result = rules.decode("utf-8")
+        count = 0
+        for line in result.split('\n'):
+            if self.__cancellable.is_cancelled():
+                raise IOError("Cancelled")
+            if line.find("-abp-") != -1:
+                continue
+            elif line.startswith("##"):
+                self.__save_css_default_rule(line)
+            elif line.find("##") != -1:
+                self.__save_css_domain_rule(line)
+            count += 1
+            if count == 1000:
+                with SqlCursor(self) as sql:
+                    sql.commit()
+                count = 0
+        # We are the last rule
+        # Delete old entries
+        if not uris:
+            with SqlCursor(self) as sql:
+                sql.execute("DELETE FROM adblock_css\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.commit()
+        SqlCursor.remove(self)
+
+    def __on_load_uri_content(self, uri, status, content, uris, is_css):
         """
             Load pending uris
             @param uri as str
             @param status as bool
             @param content as bytes
             @param uris as [str]
+            @param is_css as bool
         """
         if status:
-            self.__task_helper.run(self.__save_rules, (content, uris))
+            if is_css:
+                self.__task_helper.run(self.__save_css_rules, (content, uris))
+            else:
+                self.__task_helper.run(self.__save_rules, (content, uris))
         if uris:
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
                                                 self.__on_load_uri_content,
-                                                uris)
+                                                uris,
+                                                is_css)

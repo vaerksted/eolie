@@ -33,7 +33,8 @@ class TaskHelper:
             @param params as ()
             @param callback as function
         """
-        thread = Thread(target=self.__run, args=(command, args, callback))
+        thread = Thread(target=self.__run,
+                        args=(command, params, callback, *args))
         thread.daemon = True
         thread.start()
 

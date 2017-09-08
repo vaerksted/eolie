@@ -117,12 +117,12 @@ class DatabasePhishing:
 #######################
 # PRIVATE             #
 #######################
-    def __save_rules(self, rules, uris):
+    def __save_rules(self, params):
         """
             Save rules to db
-            @param rules as bytes
-            @param uris as [str]
+            @param params as (bytes, [str])
         """
+        (rules, uris) = params
         SqlCursor.add(self)
         result = rules.decode('utf-8')
         j = json.loads(result)

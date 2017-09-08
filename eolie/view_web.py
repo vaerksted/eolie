@@ -37,9 +37,10 @@ class WebView(WebKit2.WebView):
             New webview
             @param window as Window
         """
-        view = WebKit2.WebView.new()
+        content_manager = WebKit2.UserContentManager.new()
+        view = WebKit2.WebView.new_with_user_content_manager(content_manager)
         view.__class__ = WebViewMeta
-        view.__init(None, window)
+        view.__init(None, content_manager, window)
         return view
 
     def new_ephemeral(window):
@@ -49,7 +50,7 @@ class WebView(WebKit2.WebView):
         """
         view = WebKit2.WebView.new_with_context(El().ephemeral_context)
         view.__class__ = WebViewMeta
-        view.__init(None, window)
+        view.__init(None, None, window)
         return view
 
     def new_with_related_view(related, window):
@@ -289,15 +290,17 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, window):
+    def __init(self, related_view, content_manager, window):
         """
             Init WebView
             @param related_view as WebView
+            @param content_manager as WebKit2.UserContentManager
             @param window as Window
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         self._window = window
+        self._content_manager = content_manager
         self.__atime = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions

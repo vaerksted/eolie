@@ -205,7 +205,7 @@ class Application(Gtk.Application):
             task_helper = TaskHelper()
             task_helper.run(self.__vacuum,
                             (),
-                            lambda x: Gio.Application.quit(self))
+                            lambda x, y: Gio.Application.quit(self))
         else:
             Gio.Application.quit(self)
 
