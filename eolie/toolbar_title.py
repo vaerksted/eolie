@@ -749,11 +749,12 @@ class ToolbarTitle(Gtk.Bin):
                     if added > 2:
                         return
 
-    def __populate_completion(self, uri):
+    def __populate_completion(self, params):
         """
-            @param uri as str
+            @param params as (str,)
             @thread safe
         """
+        uri = params[0]
         if self.__entry.get_text() == uri:
             self.__completion_model.clear()
             # Look for a match in history

@@ -20,7 +20,7 @@ from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS, El
+from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS
 
 
 class DatabaseAdblock:

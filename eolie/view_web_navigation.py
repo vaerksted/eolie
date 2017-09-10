@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.define import El, ADBLOCK_JS
+from eolie.define import El
 from eolie.utils import get_ftp_cmd
 
 
@@ -342,11 +342,11 @@ class WebViewNavigation:
             if El().settings.get_value("adblock") and not self.ephemeral:
                 rules = El().adblock.get_css_rules(uri)
                 css = WebKit2.UserStyleSheet(
-                                     rules,
-                                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                                     WebKit2.UserStyleLevel.USER,
-                                     None,
-                                     None)
+                                 rules,
+                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                                 WebKit2.UserStyleLevel.USER,
+                                 None,
+                                 None)
                 self._content_manager.add_style_sheet(css)
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
