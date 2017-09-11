@@ -255,7 +255,7 @@ class SyncWorker:
         """
         try:
             # If syncing, state will be written by self.__sync()
-            if not self.__syncing:
+            if not self.syncing:
                 f = open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb")
                 # Lock file
                 flock(f, LOCK_EX | LOCK_NB)
