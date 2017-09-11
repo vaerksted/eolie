@@ -30,6 +30,9 @@ class DatabaseAdblock:
     DB_PATH = "%s/adblock2.db" % EOLIE_LOCAL_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
+              """https://pgl.yoyo.org/adservers/serverlist.php?
+                 hostformat=hosts&showintro=0&startdate%5Bday%5D=
+                 &startdate%5Bmonth%5D=&startdate%5Byear%5D=""",
               "http://winhelp2002.mvps.org/hosts.txt",
               "http://hosts-file.net/ad_servers.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?"
@@ -109,7 +112,8 @@ class DatabaseAdblock:
         # Only update if filters older than one week
         mtime = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM adblock LIMIT 1")
+            result = sql.execute("SELECT mtime FROM adblock\
+                                  LIMIT 1 ORDER BY mtime")
             v = result.fetchone()
             if v is not None:
                 mtime = v[0]
