@@ -468,8 +468,9 @@ class WebView(WebKit2.WebView):
             item = WebKit2.ContextMenuItem.new(action)
             context_menu.insert(item, 1)
 
-        selection = context_menu.get_user_data().get_string()
-        if selection:
+        user_data = context_menu.get_user_data()
+        if user_data is not None and user_data.get_string():
+            selection = user_data.get_string()
             if hit.context_is_selection():
                 # Add an item for open words in search
                 # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
