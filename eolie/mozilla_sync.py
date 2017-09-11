@@ -39,8 +39,8 @@ class SyncWorker:
         """
             Init worker
         """
-        self.__syncing = False
         self.__sync_cancellable = Gio.Cancellable()
+        self.__sync_cancellable.cancel()  # Start cancelled (it not syncing)
         self.__username = ""
         self.__password = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
@@ -158,7 +158,7 @@ class SyncWorker:
         self.__username = ""
         self.__password = ""
         self.__session = None
-        self.__sync_cancellable.reset()
+        self.__sync_cancellable.cancel()
         self.__helper.clear_sync()
 
     def stop(self, force=False):
@@ -197,7 +197,7 @@ class SyncWorker:
             True if sync is running
             @return bool
         """
-        return self.__syncing
+        return not self.__sync_cancellable.is_cancelled()
 
     @property
     def status(self):
@@ -390,7 +390,6 @@ class SyncWorker:
             @param first_sync as bool
         """
         debug("Start syncing")
-        self.__syncing = True
         self.__sync_cancellable.reset()
         try:
             self.__mtimes = load(open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin",
@@ -450,14 +449,14 @@ class SyncWorker:
             if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
                 self.__pull_bookmarks(bulk_keys, first_sync)
             # Update last sync mtime
-            self.__syncing = False
+            self.__sync_cancellable.cancel()
             self.__update_state()
             debug("Stop syncing")
         except Exception as e:
             debug("SyncWorker::__sync(): %s" % e)
             if str(e) == "The authentication token could not be found":
                 self.__helper.get_sync(self.__set_credentials)
-            self.__syncing = False
+            self.__sync_cancellable.cancel()
 
     def __push_bookmarks(self, bulk_keys):
         """
