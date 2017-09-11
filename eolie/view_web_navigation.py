@@ -14,7 +14,7 @@ from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import El, ADBLOCK_JS
 from eolie.utils import get_ftp_cmd
 
 
@@ -338,20 +338,20 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
-            # Can't find a way to block content for ephemeral views
-            if El().settings.get_value("adblock") and\
-                    self._content_manager is not None:
-                rules = El().adblock.get_css_rules(uri)
-                css = WebKit2.UserStyleSheet(
+            if El().phishing.is_phishing(uri):
+                self._show_phishing_error(uri)
+            else:
+                # Can't find a way to block content for ephemeral views
+                if El().settings.get_value("adblock") and\
+                        self._content_manager is not None:
+                    rules = El().adblock.get_css_rules(uri)
+                    css = WebKit2.UserStyleSheet(
                                  rules,
                                  WebKit2.UserContentInjectedFrames.ALL_FRAMES,
                                  WebKit2.UserStyleLevel.USER,
                                  None,
                                  None)
-                self._content_manager.add_style_sheet(css)
-            if El().phishing.is_phishing(uri):
-                self._show_phishing_error(uri)
-            else:
+                    self._content_manager.add_style_sheet(css)
                 self.update_spell_checking()
                 self.update_zoom_level()
                 user_agent = El().websettings.get_user_agent(uri)
@@ -370,6 +370,25 @@ class WebViewNavigation:
                     self.set_setting("auto-load-images", exception)
                 elif not self.get_settings().get_auto_load_images():
                     self.set_setting("auto-load-images", True)
+                # Setup eolie internal adblocker
+                if El().settings.get_value("adblock"):
+                    exception = El().adblock_exceptions.find(
+                                            parsed.netloc) or\
+                                El().adblock_exceptions.find(
+                                            parsed.netloc + parsed.path)
+                    if exception:
+                        return
+                    unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
+                    javascripts = ["adblock_%s.js" % parsed.netloc,
+                                   "adblock_%s.js" % unlocated_netloc]
+                    for javascript in javascripts:
+                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                             javascript))
+                        if f.query_exists():
+                            (status, content, tag) = f.load_contents(None)
+                            js = content.decode("utf-8")
+                            self.run_javascript(js, None, None)
+                            break
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().show_tls:
                 try:
