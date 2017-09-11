@@ -39,9 +39,7 @@ class DatabaseAdblock:
               "https://pgl.yoyo.org/adservers/serverlist.php?"
               "hostformat=hosts&showintro=0&mimetype=plaintext"]
 
-    __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt",
-                  "https://raw.githubusercontent.com/" +
-                  "uBlockOrigin/uAssets/master/filters/filters.txt"]
+    __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt"]
 
     __UPDATE = 172800
 
