@@ -73,7 +73,7 @@ class TaskHelper:
         try:
             result = command(params)
             if callback:
-                GLib.idle_add(callback, result, args)
+                GLib.idle_add(callback, result, *args)
         except Exception as e:
             print("TaskHelper::__run():", command, e)
 

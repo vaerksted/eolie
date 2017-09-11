@@ -21,6 +21,7 @@ from time import time
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS
+from eolie.utils import debug
 
 
 class DatabaseAdblock:
@@ -39,6 +40,8 @@ class DatabaseAdblock:
               "hostformat=hosts&showintro=0&mimetype=plaintext"]
 
     __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt"]
+
+    __UPDATE = 172800
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -64,7 +67,7 @@ class DatabaseAdblock:
         """
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
-        self.__adblock_mtime = 0
+        self.__adblock_mtime = int(time())
 
         f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
@@ -108,23 +111,25 @@ class DatabaseAdblock:
                                     flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
             GLib.spawn_close_pid(pid)
 
-        # Get in db mtime, only use main table values
-        # Only update if filters older than one week
+        # Check entries in DB, do we need to update?
         mtime = 0
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT mtime FROM adblock\
-                                  LIMIT 1 ORDER BY mtime")
+                                  ORDER BY mtime LIMIT 1")
             v = result.fetchone()
             if v is not None:
                 mtime = v[0]
-        self.__adblock_mtime = int(time())
-        # We ignore update value from rules file
-        if self.__adblock_mtime - mtime < 604800:
-            return
-        # Update adblock db rules
         self.__cancellable.reset()
-        self.__on_load_uri_content(None, False, b"", self.__URIS, False)
-        self.__on_load_uri_content(None, False, b"", self.__CSS_URIS, True)
+        if self.__adblock_mtime - mtime > self.__UPDATE:
+            # Update host rules
+            uris = list(self.__URIS)
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_content,
+                                                uris)
+        else:
+            self.__on_save_rules()
 
     def stop(self):
         """
@@ -205,9 +210,9 @@ class DatabaseAdblock:
                                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
             with SqlCursor(self) as sql:
+                debug("Add filter: %s" % dns)
                 sql.execute("INSERT INTO adblock\
-                                  (dns, mtime)\
-                                  VALUES (?, ?)",
+                            (dns, mtime) VALUES (?, ?)",
                             (dns, self.__adblock_mtime))
                 count += 1
                 if count == 1000:
@@ -230,9 +235,9 @@ class DatabaseAdblock:
         name = line[2:]
         # Update entry if exists, create else
         with SqlCursor(self) as sql:
+            debug("Add filter: %s" % name)
             sql.execute("INSERT INTO adblock_css\
-                              (name, mtime)\
-                              VALUES (?, ?)",
+                        (name, mtime) VALUES (?, ?)",
                         (name, self.__adblock_mtime))
 
     def __save_css_domain_rule(self, line):
@@ -249,6 +254,7 @@ class DatabaseAdblock:
             else:
                 whitelist += domain
         with SqlCursor(self) as sql:
+            debug("Add filter: %s" % name)
             sql.execute("INSERT INTO adblock_css\
                          (name, whitelist, blacklist, mtime)\
                          VALUES (?, ?, ?, ?)",
@@ -287,24 +293,72 @@ class DatabaseAdblock:
                 sql.commit()
         SqlCursor.remove(self)
 
-    def __on_load_uri_content(self, uri, status, content, uris, is_css):
+    def __on_save_css_rules(self, result, uris):
+        """
+            Load next uri
+            @param result as ??
+            @param uris as [str]
+        """
+        if uris:
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_css_content,
+                                                uris)
+
+    def __on_load_uri_css_content(self, uri, status, content, uris):
         """
             Load pending uris
             @param uri as str
             @param status as bool
             @param content as bytes
             @param uris as [str]
-            @param is_css as bool
         """
         if status:
-            if is_css:
-                self.__task_helper.run(self.__save_css_rules, (content, uris))
-            else:
-                self.__task_helper.run(self.__save_rules, (content, uris))
+            self.__task_helper.run(self.__save_css_rules, (content, uris),
+                                   self.__on_save_css_rules,
+                                   uris)
+
+    def __on_save_rules(self, result=None, uris=[]):
+        """
+            Load next uri, if finished, load CSS rules
+            @param result as None
+            @param uris as [str]
+        """
         if uris:
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
                                                 self.__on_load_uri_content,
-                                                uris,
-                                                is_css)
+                                                uris)
+        else:
+            # Check entries in DB, do we need to update?
+            mtime = 0
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT mtime FROM adblock_css\
+                                      ORDER BY mtime LIMIT 1")
+                v = result.fetchone()
+                if v is not None:
+                    mtime = v[0]
+            # We ignore update value from rules file
+            if self.__adblock_mtime - mtime < self.__UPDATE:
+                return
+            uris = list(self.__CSS_URIS)
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_css_content,
+                                                uris)
+
+    def __on_load_uri_content(self, uri, status, content, uris):
+        """
+            Save loaded values
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param uris as [str]
+        """
+        if status:
+            self.__task_helper.run(self.__save_rules, (content, uris),
+                                   self.__on_save_rules,
+                                   uris)
