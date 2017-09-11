@@ -560,8 +560,11 @@ class SyncWorker:
             if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
             debug("pulling %s" % record)
+            # Deleted bookmark
+            if "deleted" in bookmark.keys():
+                El().bookmarks.remove(bookmark_id)
             # Keep folder only for firefox compatiblity
-            if "type" in bookmark.keys() and bookmark["type"] == "folder"\
+            elif "type" in bookmark.keys() and bookmark["type"] == "folder"\
                     and bookmark["id"] is not None\
                     and bookmark["title"]:
                 if bookmark_id is None:
@@ -624,9 +627,6 @@ class SyncWorker:
                     El().bookmarks.set_mtime(bookmark_id,
                                              record["modified"],
                                              False)
-            # Deleted bookmark
-            elif "deleted" in bookmark.keys():
-                El().bookmarks.remove(bookmark_id)
             # Update parent name if available
             if bookmark_id is not None and "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
