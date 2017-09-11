@@ -31,15 +31,17 @@ class DatabaseAdblock:
     DB_PATH = "%s/adblock2.db" % EOLIE_LOCAL_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
-              """https://pgl.yoyo.org/adservers/serverlist.php?
-                 hostformat=hosts&showintro=0&startdate%5Bday%5D=
-                 &startdate%5Bmonth%5D=&startdate%5Byear%5D=""",
+              "https://pgl.yoyo.org/adservers/serverlist.php?" +
+              "hostformat=hosts&showintro=0&startdate%5Bday%5D=" +
+              "&startdate%5Bmonth%5D=&startdate%5Byear%5D=",
               "http://winhelp2002.mvps.org/hosts.txt",
               "http://hosts-file.net/ad_servers.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?"
               "hostformat=hosts&showintro=0&mimetype=plaintext"]
 
-    __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt"]
+    __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt",
+                  "https://raw.githubusercontent.com/" +
+                  "uBlockOrigin/uAssets/master/filters/filters.txt"]
 
     __UPDATE = 172800
 
