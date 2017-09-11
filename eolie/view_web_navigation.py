@@ -339,7 +339,8 @@ class WebViewNavigation:
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
             # Can't find a way to block content for ephemeral views
-            if El().settings.get_value("adblock") and not self.ephemeral:
+            if El().settings.get_value("adblock") and\
+                    self._content_manager is not None:
                 rules = El().adblock.get_css_rules(uri)
                 css = WebKit2.UserStyleSheet(
                                  rules,
