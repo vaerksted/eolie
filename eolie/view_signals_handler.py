@@ -91,9 +91,8 @@ class ViewSignalsHandler:
         self.__uri_label = UriLabel()
         self.add_overlay(self.__uri_label)
         self.__js_timeout_id = None
-        self.__js_dialog_type = None
-        self.__js_dialog_message = None
         self.__signals_connected = False
+        self.__reset_js_blocker()
         webview.connect("map", self.__on_webview_map)
         webview.connect("unmap", self.__on_webview_unmap)
         webview.connect("new-page", self.__on_new_page)
@@ -116,6 +115,13 @@ class ViewSignalsHandler:
                                       None,
                                       self.__on_snapshot,
                                       uri)
+
+    def __reset_js_blocker(self):
+        """
+            Reset js blocker
+        """
+        self.__js_dialog_type = None
+        self.__js_dialog_message = None
 
     def __on_new_page(self, webview, uri, window_type):
         """
@@ -242,6 +248,7 @@ class ViewSignalsHandler:
             self.__js_dialog_type = dialog.get_dialog_type()
             self.__js_dialog_message = dialog.get_message()
             self._window.toolbar.title.show_javascript(dialog)
+            GLib.timeout_add(1000, self.__reset_js_blocker)
             return True
 
     def __on_button_press(self, webview, event):
