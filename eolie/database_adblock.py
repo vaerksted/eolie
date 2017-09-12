@@ -41,6 +41,33 @@ class DatabaseAdblock:
 
     __CSS_URIS = ["https://easylist-downloads.adblockplus.org/easylist.txt"]
 
+    __CSS_LOCALIZED_URIS = {
+        "bg": "http://stanev.org/abp/adblock_bg.txt",
+        "zh": "https://easylist-downloads.adblockplus.org/easylistchina.txt",
+        "sk": "https://raw.github.com/tomasko126/" +
+              "easylistczechandslovak/master/filters.txt",
+        "cs": "https://raw.github.com/tomasko126/" +
+              "easylistczechandslovak/master/filters.txt",
+        "nl": "https://easylist-downloads.adblockplus.org/easylistdutch.txt",
+        "de": "https://easylist-downloads.adblockplus.org/easylistgermany.txt",
+        "he": "https://raw.githubusercontent.com/easylist/" +
+              "EasyListHebrew/master/EasyListHebrew.txt",
+        "it": "https://easylist-downloads.adblockplus.org/easylistitaly.txt",
+        "lt": "http://margevicius.lt/easylistlithuania.txt",
+        "es": "https://easylist-downloads.adblockplus.org/easylistspanish.txt",
+        "lv": "https://notabug.org/latvian-list/" +
+              "adblock-latvian/raw/master/lists/latvian-list.txt",
+        "ar": "https://easylist-downloads.adblockplus.org/Liste_AR.txt",
+        "fr": "https://easylist-downloads.adblockplus.org/liste_fr.txt",
+        "ro": "http://www.zoso.ro/pages/rolist.txt",
+        "ru": "https://easylist-downloads.adblockplus.org/advblock.txt",
+        "ja": "http://bit.ly/11QrCfx",
+        "fi": "https://adb.juvander.net/Finland_adb.txt",
+        "cz": "http://adblock.dajbych.net/adblock.txt",
+        "et": "http://gurud.ee/ab.txt",
+        "hu": "https://raw.githubusercontent.com/szpeter80/" +
+              "hufilter/master/hufilter.txt"}
+
     __UPDATE = 172800
 
     # SQLite documentation:
@@ -343,7 +370,13 @@ class DatabaseAdblock:
             # We ignore update value from rules file
             if self.__adblock_mtime - mtime < self.__UPDATE:
                 return
-            uris = list(self.__CSS_URIS)
+            locales = GLib.get_language_names()
+            user_locale = locales[0].split("_")[0]
+            try:
+                uris = [self.__CSS_LOCALIZED_URIS[user_locale]]
+            except:
+                uris = []
+            uris += list(self.__CSS_URIS)
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
