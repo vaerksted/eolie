@@ -51,7 +51,6 @@ class SitesManager(Gtk.EventBox):
         self.__box.set_margin_end(2)
         self.__box.set_margin_top(2)
         self.__box.set_margin_bottom(2)
-        self.__box.set_sort_func(self.__sort_func)
         self.__box.show()
         self.__box.connect("row-activated", self.__on_row_activated)
         viewport.set_property("valign", Gtk.Align.START)
@@ -97,12 +96,10 @@ class SitesManager(Gtk.EventBox):
                 child = empty_child
                 child.reset(netloc)
                 child.add_view(view)
-                self.__box.invalidate_sort()
         else:
             if empty_child is not None:
                 empty_child.destroy()
             child.add_view(view)
-            self.__box.invalidate_sort()
         self.update_visible_child()
 
     def set_favicon(self, view, surface):
@@ -182,17 +179,6 @@ class SitesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __sort_func(self, row1, row2):
-        """
-            Sort listbox
-            @param row1 as Row
-            @param row2 as Row
-        """
-        if len(row1.views) == len(row2.views):
-            return False
-        else:
-            return len(row1.views) < len(row2.views)
-
     def __scroll_to_child(self, child):
         """
             Scroll to child
