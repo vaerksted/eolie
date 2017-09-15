@@ -254,8 +254,8 @@ class ToolbarTitle(Gtk.Bin):
             return
         self.__input_warning_shown = True
         self.show_message(_(
-                "Heads-up: this page is not secure.\\n"
-                "If you type your password,\\n it will be "
+                "Heads-up: this page is not secure.\n"
+                "If you type your password,\n it will be "
                 "visible to cybercriminals!"))
 
     def show_readable_button(self, b):
