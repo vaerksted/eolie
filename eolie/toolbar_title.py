@@ -253,7 +253,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__input_warning_shown:
             return
         self.__input_warning_shown = True
-        self.show_message(webview, _(
+        self.show_message(_(
                 "Heads-up: this page is not secure.\\n"
                 "If you type your password,\\n it will be "
                 "visible to cybercriminals!"))
