@@ -343,6 +343,7 @@ class WebViewNavigation:
             else:
                 # Can't find a way to block content for ephemeral views
                 if El().settings.get_value("adblock") and\
+                        parsed.scheme in ["http", "https"] and\
                         self._content_manager is not None:
                     rules = El().adblock.get_css_rules(uri)
                     css = WebKit2.UserStyleSheet(
@@ -371,7 +372,8 @@ class WebViewNavigation:
                 elif not self.get_settings().get_auto_load_images():
                     self.set_setting("auto-load-images", True)
                 # Setup eolie internal adblocker
-                if El().settings.get_value("adblock"):
+                if El().settings.get_value("adblock") and\
+                        parsed.scheme in ["http", "https"]:
                     exception = El().adblock_exceptions.find(
                                             parsed.netloc) or\
                                 El().adblock_exceptions.find(

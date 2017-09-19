@@ -190,10 +190,12 @@ class DatabaseAdblock:
             @return bool
         """
         try:
-            parse = urlparse(uri)
+            parsed = urlparse(uri)
+            if parsed.scheme not in ["http", "https"]:
+                return
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT mtime FROM adblock\
-                                      WHERE dns=?", (parse.netloc,))
+                                      WHERE dns=?", (parsed.netloc,))
                 v = result.fetchone()
                 return v is not None
         except Exception as e:
