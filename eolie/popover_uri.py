@@ -324,6 +324,7 @@ class Row(Gtk.ListBoxRow):
                        Type.SEARCH, Type.BOOKMARK]:
             if event.button == 1:
                 self.__window.container.current.webview.load_uri(uri)
+                self.__window.container.set_expose(False)
                 self.__window.close_popovers()
             else:
                 self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
@@ -570,6 +571,7 @@ class UriPopover(Gtk.Popover):
                     if uri:
                         self.__window.close_popovers()
                         self.__window.container.current.webview.load_uri(uri)
+                        self.__window.container.set_expose(False)
                         return True
             else:
                 self.__input = Input.NONE
