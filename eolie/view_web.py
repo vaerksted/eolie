@@ -514,6 +514,20 @@ class WebView(WebKit2.WebView):
                 context_menu.insert(item, n_items - 2)
             else:
                 context_menu.insert(item, n_items)
+            # Add an item for page capture
+            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+            # Introspection missing, Gtk.Action deprecated
+            action = Gtk.Action.new("save_as_image",
+                                    _("Save page as image"),
+                                    None,
+                                    None)
+            action.connect("activate", self.__on_save_as_image_activate,)
+            item = WebKit2.ContextMenuItem.new(action)
+            n_items = context_menu.get_n_items()
+            if El().settings.get_value("developer-extras"):
+                context_menu.insert(item, n_items - 2)
+            else:
+                context_menu.insert(item, n_items)
 
     def __on_open_new_page_activate(self, action, uri):
         """
@@ -550,6 +564,34 @@ class WebView(WebKit2.WebView):
         """
         self._window.toolbar.end.save_images(self.get_uri(),
                                              self.get_page_id())
+
+    def __on_save_as_image_activate(self, action):
+        """
+            Save image in /tmp and show it to user
+            @param action as Gtk.Action
+        """
+        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                          WebKit2.SnapshotOptions.NONE,
+                          None,
+                          self.__on_snapshot)
+
+    def __on_snapshot(self, webview, result):
+        """
+            Set snapshot on main image
+            @param webview as WebView
+            @param result as Gio.AsyncResult
+        """
+        try:
+            snapshot = webview.get_snapshot_finish(result)
+            pixbuf = Gdk.pixbuf_get_from_surface(snapshot, 0, 0,
+                                                 snapshot.get_width(),
+                                                 snapshot.get_height())
+            pixbuf.savev("/tmp/eolie_snapshot.png", "png", [None], [None])
+            Gtk.show_uri_on_window(self._window,
+                                   "file:///tmp/eolie_snapshot.png",
+                                   Gtk.get_current_event_time())
+        except Exception as e:
+            print("WebView::__on_snapshot():", e)
 
     def __on_scroll_event(self, webview, event):
         """
