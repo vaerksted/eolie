@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango, GObject
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -20,6 +20,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
     """
         Child showing snapshot, title and favicon
     """
+
+    __gsignals__ = {
+        'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
+    }
 
     def __init__(self, netloc, window):
         """
@@ -49,6 +53,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
+        self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
+                             Gdk.DragAction.MOVE)
+        self.drag_source_add_text_targets()
+        self.connect("drag-begin", self.__on_drag_begin)
+        self.connect("drag-data-get", self.__on_drag_data_get)
+        self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
+                           [], Gdk.DragAction.MOVE)
+        self.drag_dest_add_text_targets()
+        self.connect("drag-data-received", self.__on_drag_data_received)
+        self.connect("drag-motion", self.__on_drag_motion)
+        self.connect("drag-leave", self.__on_drag_leave)
 
     def add_view(self, view):
         """
@@ -254,3 +269,80 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 title = view.webview.get_uri()
             tooltip += "\n%s" % GLib.markup_escape_text(title)
         widget.set_tooltip_markup(tooltip)
+
+    def __on_drag_begin(self, widget, context):
+        """
+            Set icon
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+        """
+        surface = self.__image.get_property("surface")
+        if surface is None:
+            return
+        pixbuf = Gdk.pixbuf_get_from_surface(surface,
+                                             0, 0,
+                                             surface.get_width(),
+                                             surface.get_height())
+
+        widget.drag_source_set_icon_pixbuf(pixbuf)
+        del pixbuf
+
+    def __on_drag_data_get(self, widget, context, data, info, time):
+        """
+            Send netloc
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        data.set_text(self.__netloc, len(self.__netloc))
+
+    def __on_drag_data_received(self, widget, context, x, y, data, info, time):
+        """
+            Move track
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param data as Gtk.SelectionData
+            @param info as int
+            @param time as int
+        """
+        height = self.get_allocated_height()
+        if y > height/2:
+            up = False
+        else:
+            up = True
+        try:
+            netloc = data.get_text()
+            self.emit("moved", netloc, up)
+        except:
+            pass
+
+    def __on_drag_motion(self, widget, context, x, y, time):
+        """
+            Add style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param x as int
+            @param y as int
+            @param time as int
+        """
+        height = self.get_allocated_height()
+        if y > height/2:
+            self.get_style_context().add_class("drag-up")
+            self.get_style_context().remove_class("drag-down")
+        else:
+            self.get_style_context().remove_class("drag-up")
+            self.get_style_context().add_class("drag-down")
+
+    def __on_drag_leave(self, widget, context, time):
+        """
+            Remove style
+            @param widget as Gtk.Widget
+            @param context as Gdk.DragContext
+            @param time as int
+        """
+        self.get_style_context().remove_class("drag-up")
+        self.get_style_context().remove_class("drag-down")

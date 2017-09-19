@@ -86,6 +86,7 @@ class SitesManager(Gtk.EventBox):
         if child is None:
             if empty_child is None:
                 child = SitesManagerChild(netloc, self.__window)
+                child.connect("moved", self.__on_moved)
                 position = El().settings.get_value(
                                                 "sidebar-position").get_int32()
                 child.set_minimal(position < 80)
@@ -179,6 +180,21 @@ class SitesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __get_index(self, netloc):
+        """
+            Get child index
+            @param netloc as str
+            @return int
+        """
+        # Search current index
+        children = self.__box.get_children()
+        index = 0
+        for child in children:
+            if child.netloc == netloc:
+                break
+            index += 1
+        return index
+
     def __scroll_to_child(self, child):
         """
             Scroll to child
@@ -222,3 +238,20 @@ class SitesManager(Gtk.EventBox):
             @param event as Gdk.EventButton
         """
         return self.__window.close_popovers()
+
+    def __on_moved(self, child, netloc, up):
+        """
+            Move child row
+            @param child as SidebarChild
+            @param netloc as str
+            @param up as bool
+        """
+        index = self.__get_index(netloc)
+        row = self.__box.get_row_at_index(index)
+        if row is None:
+            return
+        self.__box.remove(row)
+        child_index = self.__get_index(child.netloc)
+        if not up:
+            child_index += 1
+        self.__box.insert(row, child_index)
