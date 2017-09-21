@@ -11,7 +11,7 @@ function generate_resource()
         echo -n $(basename $file)
         echo '</file>'
     done
-    for file in data/*.ui
+    for file in data/*.ui AboutDialog.ui
     do
         echo -n '     <file compressed="true" preprocess="xml-stripblanks">'
         echo -n $(basename $file)
@@ -28,7 +28,7 @@ function generate_pot()
     do
         echo  $file
     done
-    for file in data/*.ui
+    for file in data/*.ui AboutDialog.ui
     do
         echo -n '[type: gettext/glade]'
         echo $file
