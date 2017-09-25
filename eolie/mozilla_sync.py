@@ -94,7 +94,7 @@ class SyncWorker:
                 not Gio.NetworkMonitor.get_default().get_network_available():
             return
         task_helper = TaskHelper()
-        task_helper.run(self.__sync, (first_sync,))
+        task_helper.run(self.__sync, first_sync)
         return loop
 
     def push_history(self, history_ids):
@@ -104,7 +104,7 @@ class SyncWorker:
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
-            task_helper.run(self.__push_history, (history_ids,))
+            task_helper.run(self.__push_history, history_ids)
 
     def push_password(self, user_form_name, user_form_value, pass_form_name,
                       pass_form_value, uri, form_uri, uuid):
@@ -121,8 +121,8 @@ class SyncWorker:
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
-                            (user_form_name, user_form_value, pass_form_name,
-                             pass_form_value, uri, form_uri, uuid))
+                            user_form_name, user_form_value, pass_form_name,
+                            pass_form_value, uri, form_uri, uuid)
 
     def remove_from_history(self, guid):
         """
@@ -131,7 +131,7 @@ class SyncWorker:
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
-            task_helper.run(self.__remove_from_history, (guid,))
+            task_helper.run(self.__remove_from_history, guid)
 
     def remove_from_bookmarks(self, guid):
         """
@@ -140,7 +140,7 @@ class SyncWorker:
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
-            task_helper.run(self.__remove_from_bookmarks, (guid,))
+            task_helper.run(self.__remove_from_bookmarks, guid)
 
     def remove_from_passwords(self, uuid):
         """
@@ -149,7 +149,7 @@ class SyncWorker:
         """
         if Gio.NetworkMonitor.get_default().get_network_available():
             task_helper = TaskHelper()
-            task_helper.run(self.__remove_from_passwords, (uuid,))
+            task_helper.run(self.__remove_from_passwords, uuid)
 
     def delete_secret(self):
         """

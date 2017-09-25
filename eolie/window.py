@@ -429,9 +429,8 @@ class Window(Gtk.ApplicationWindow):
         elif string == "source":
             uri = self.container.current.webview.get_uri()
             task_helper = TaskHelper()
-            task_helper.run(self.__show_source_code,
-                            (uri,),
-                            self.__on_show_source_code)
+            task_helper.run(self.__show_source_code, uri,
+                            callback=(self.__on_show_source_code,))
         elif string == "find":
             find_widget = self.container.current.find_widget
             find_widget.set_search_mode(True)

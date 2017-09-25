@@ -204,8 +204,7 @@ class Application(Gtk.Application):
         elif vacuum:
             task_helper = TaskHelper()
             task_helper.run(self.__vacuum,
-                            (),
-                            lambda x: Gio.Application.quit(self))
+                            callback=(lambda x: Gio.Application.quit(self),))
         else:
             Gio.Application.quit(self)
 
@@ -409,10 +408,9 @@ class Application(Gtk.Application):
         except Exception as e:
             print("Application::__listen_to_gnome_sm():", e)
 
-    def __vacuum(self, params):
+    def __vacuum(self):
         """
             VACUUM DB
-            @param params as ()
             @thread safe
         """
         try:

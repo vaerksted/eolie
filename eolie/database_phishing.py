@@ -117,12 +117,12 @@ class DatabasePhishing:
 #######################
 # PRIVATE             #
 #######################
-    def __save_rules(self, params):
+    def __save_rules(self, rules, uris):
         """
             Save rules to db
-            @param params as (bytes, [str])
+            @param rules as bytes
+            @param uris as [str]
         """
-        (rules, uris) = params
         SqlCursor.add(self)
         result = rules.decode('utf-8')
         j = json.loads(result)
@@ -157,7 +157,7 @@ class DatabasePhishing:
             @param uris as [str]
         """
         if status:
-            self.__task_helper.run(self.__save_rules, (content, uris))
+            self.__task_helper.run(self.__save_rules, content, uris)
         if uris:
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,

@@ -749,12 +749,11 @@ class ToolbarTitle(Gtk.Bin):
                     if added > 2:
                         return
 
-    def __populate_completion(self, params):
+    def __populate_completion(self, uri):
         """
-            @param params as (str,)
+            @param uri as str
             @thread safe
         """
-        uri = params[0]
         if self.__entry.get_text() == uri:
             self.__completion_model.clear()
             # Look for a match in history
@@ -855,7 +854,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__window.container.current.webview.add_text_entry(value)
 
         # Populate completion model
-        task_helper.run(self.__populate_completion, (value,))
+        task_helper.run(self.__populate_completion, value)
 
         self.__cancellable.cancel()
         self.__cancellable.reset()

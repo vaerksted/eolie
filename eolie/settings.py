@@ -448,16 +448,15 @@ class SettingsDialog:
                                                    Gtk.IconSize.MENU)
             task_helper = TaskHelper()
             task_helper.run(self.__connect_mozilla_sync,
-                            (self.__login_entry.get_text(),
-                             self.__password_entry.get_text()))
+                            self.__login_entry.get_text(),
+                            self.__password_entry.get_text())
 
 #######################
 # PRIVATE             #
 #######################
-    def __get_sync_status(self, params):
+    def __get_sync_status(self):
         """
             Get sync status
-            @param params as ()
             @thread safe
         """
         if El().sync_worker is not None:

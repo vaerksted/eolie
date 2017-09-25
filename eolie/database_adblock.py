@@ -216,13 +216,12 @@ class DatabaseAdblock:
 #######################
 # PRIVATE             #
 #######################
-    def __save_rules(self, params):
+    def __save_rules(self, rules, uris):
         """
             Save rules to db
-            @param params as (bytes, str)
+            @param rules bytes
             @param uris as [str]
         """
-        (rules, uris) = params
         SqlCursor.add(self)
         result = rules.decode('utf-8')
         count = 0
@@ -289,13 +288,12 @@ class DatabaseAdblock:
                          VALUES (?, ?, ?, ?)",
                         (name, whitelist, blacklist, self.__adblock_mtime))
 
-    def __save_css_rules(self, params):
+    def __save_css_rules(self, rules, uris):
         """
             Save rules to db
-            @param params as (bytes, str)
+            @param rules as bytes
             @param uris as [str]
         """
-        (rules, uris) = params
         SqlCursor.add(self)
         result = rules.decode("utf-8")
         count = 0
@@ -344,9 +342,8 @@ class DatabaseAdblock:
             @param uris as [str]
         """
         if status:
-            self.__task_helper.run(self.__save_css_rules, (content, uris),
-                                   self.__on_save_css_rules,
-                                   uris)
+            self.__task_helper.run(self.__save_css_rules, content, uris,
+                                   callback=(self.__on_save_css_rules, uris))
 
     def __on_save_rules(self, result=None, uris=[]):
         """
@@ -394,6 +391,5 @@ class DatabaseAdblock:
             @param uris as [str]
         """
         if status:
-            self.__task_helper.run(self.__save_rules, (content, uris),
-                                   self.__on_save_rules,
-                                   uris)
+            self.__task_helper.run(self.__save_rules, content, uris,
+                                   callback=(self.__on_save_rules, uris))

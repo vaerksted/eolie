@@ -780,7 +780,7 @@ class UriPopover(Gtk.Popover):
             else:
                 atime = int(time() - TimeSpanValues[active_id]/1000000)
             task_helper = TaskHelper()
-            task_helper.run(self.__clear_history, (atime,))
+            task_helper.run(self.__clear_history, atime)
         infobar.hide()
 
 #######################
@@ -819,6 +819,7 @@ class UriPopover(Gtk.Popover):
     def __clear_history(self, atime):
         """
             Clear history for wanted atime
+            @param atime as double
             @thread safe
         """
         history_ids = El().history.get_from_atime(atime)
