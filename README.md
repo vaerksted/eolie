@@ -57,7 +57,7 @@ $ sudo ninja -C build install
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-$ sudo apt-get install autoconf libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0
+$ sudo apt-get install gir1.2-gtkspell3-3.0 libglib2.0-dev intltool yelp-tools libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0
 $ meson build
 $ sudo ninja -C build install
 ```

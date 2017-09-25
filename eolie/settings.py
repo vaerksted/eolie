@@ -454,9 +454,10 @@ class SettingsDialog:
 #######################
 # PRIVATE             #
 #######################
-    def __get_sync_status(self):
+    def __get_sync_status(self, params):
         """
             Get sync status
+            @param params as ()
             @thread safe
         """
         if El().sync_worker is not None:
