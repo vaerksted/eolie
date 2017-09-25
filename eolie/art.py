@@ -102,7 +102,7 @@ class Art:
         # Remove scheme
         strip = uri.replace("%s://" % parsed.scheme, "")
         # Remove www
-        strip = strip.replace("www.", "")
+        strip = strip.lstrip("www.")
         # Remove last /
         strip = strip.rstrip("/")
         encoded = sha256(strip.encode("utf-8")).hexdigest()

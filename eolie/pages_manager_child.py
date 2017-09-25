@@ -237,8 +237,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         parsed = urlparse(uri)
         initial_parsed = urlparse(initial_uri)
-        if parsed.netloc == initial_parsed.netloc and\
-                initial_uri != uri and\
+        if initial_uri != uri and\
+                parsed.netloc.lstrip("www.") ==\
+                initial_parsed.netloc.lstrip("www.") and\
                 not El().art.exists(initial_uri, "favicon"):
             El().art.save_artwork(initial_uri, surface, "favicon")
 
