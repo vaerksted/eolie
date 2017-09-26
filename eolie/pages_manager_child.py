@@ -108,24 +108,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                  "load-changed",
                                  self.__on_load_changed))
 
-    def set_snapshot(self, uri):
-        """
-            Set webpage preview
-            @param uri as str
-        """
-        if uri == self.__view.webview.get_uri():
-            if self.__view.webview.ephemeral:
-                self.__image.set_from_icon_name(
-                                             "user-not-tracked-symbolic",
-                                             Gtk.IconSize.DIALOG)
-            else:
-                self.__view.webview.get_snapshot(
-                                             WebKit2.SnapshotRegion.VISIBLE,
-                                             WebKit2.SnapshotOptions.NONE,
-                                             None,
-                                             self.__on_snapshot,
-                                             uri)
-
     @property
     def label_indicator(self):
         """
@@ -196,6 +178,21 @@ class PagesManagerChild(Gtk.FlowBoxChild):
 #######################
 # PRIVATE             #
 #######################
+    def __set_snapshot(self):
+        """
+            Set webpage preview
+        """
+        if self.__view.webview.ephemeral:
+            self.__image.set_from_icon_name(
+                                         "user-not-tracked-symbolic",
+                                         Gtk.IconSize.DIALOG)
+        else:
+            self.__view.webview.get_snapshot(
+                                         WebKit2.SnapshotRegion.VISIBLE,
+                                         WebKit2.SnapshotOptions.NONE,
+                                         None,
+                                         self.__on_snapshot)
+
     def __set_favicon(self):
         """
             Set favicon
@@ -247,9 +244,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
             Update snapshot
         """
-        uri = self.__view.webview.get_uri()
         self.__scroll_timeout_id = None
-        self.set_snapshot(uri)
+        self.__set_snapshot()
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -324,12 +320,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__scroll_timeout_id = GLib.timeout_add(250,
                                                     self.__on_scroll_timeout)
 
-    def __on_snapshot(self, webview, result, uri):
+    def __on_snapshot(self, webview, result):
         """
             Set snapshot on main image
             @param webview as WebView
             @param result as Gio.AsyncResult
-            @param uri as str
         """
         ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
         try:
@@ -360,7 +355,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         # Js change, update snapshot
         if not webview.is_loading() and\
                 not webview.ephemeral:
-            GLib.timeout_add(500, self.set_snapshot, uri)
+            GLib.timeout_add(500, self.__set_snapshot)
         else:
             self.__window.container.sites_manager.add_view_for_uri(
                                                           self.__view,
@@ -392,4 +387,4 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__spinner.stop()
             if webview.is_playing_audio():
                 self.__audio_indicator.show()
-            GLib.timeout_add(500, self.set_snapshot, uri)
+            GLib.timeout_add(500, self.__set_snapshot)
