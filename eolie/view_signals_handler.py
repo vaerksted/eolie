@@ -166,6 +166,17 @@ class ViewSignalsHandler:
         if webview.get_ancestor(Gtk.Popover) is None:
             self._window.container.pages_manager.try_close_view(self)
 
+    def __on_popup_webview_close(self, webview, related):
+        """
+            Remove webview from popups
+            @param webview as WebView
+            @param related as WebView
+        """
+        related.remove_popup(webview)
+        if self._window.container.current.webview == related and\
+                not related.popups:
+            self._window.toolbar.title.show_indicator(Indicator.NONE)
+
     def __on_ready_to_show(self, webview, related, navigation_action):
         """
             Add a new webview with related
@@ -173,8 +184,8 @@ class ViewSignalsHandler:
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
+        # Do not block if we get a click on view
         elapsed = time() - related.last_click_time
-        # Block popups, see WebView::set_popup_exception() for details
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
         exception = \
@@ -189,6 +200,7 @@ class ViewSignalsHandler:
                                WebKit2.NavigationType.RELOAD,
                                WebKit2.NavigationType.BACK_FORWARD]:
             related.add_popup(webview)
+            webview.connect("close", self.__on_popup_webview_close, related)
             if related == self._window.container.current.webview:
                 self._window.toolbar.title.show_indicator(
                                                         Indicator.POPUPS)

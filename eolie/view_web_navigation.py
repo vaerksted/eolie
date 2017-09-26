@@ -110,6 +110,14 @@ class WebViewNavigation:
         """
         self.__popups.append(webview)
 
+    def remove_popup(self, webview):
+        """
+            Remove webview to popups
+            @webview as WebView
+        """
+        if webview in self.__popups:
+            self.__popups.remove(webview)
+
     @property
     def initial_uri(self):
         """
