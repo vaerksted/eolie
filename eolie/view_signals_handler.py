@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango, WebKit2
+from gi.repository import Gtk, Gdk, Gio, GLib, Pango, WebKit2
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -92,6 +92,7 @@ class ViewSignalsHandler:
         self.add_overlay(self.__uri_label)
         self.__js_timeout_id = None
         self.__signals_connected = False
+        self.__cancellable = Gio.Cancellable()
         self.__reset_js_blocker()
         webview.connect("map", self.__on_webview_map)
         webview.connect("unmap", self.__on_webview_unmap)
@@ -112,7 +113,7 @@ class ViewSignalsHandler:
         if uri == self.webview.get_uri() and not self.webview.ephemeral:
             self.webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                                       WebKit2.SnapshotOptions.NONE,
-                                      None,
+                                      self.__cancellable,
                                       self.__on_snapshot,
                                       uri)
 
@@ -284,10 +285,12 @@ class ViewSignalsHandler:
 
     def __on_uri_changed(self, webview, uri):
         """
-            Update uri
+            Update UI and cancel current snapshot
             @param webview as WebView
             @param uri as GParamString (Do not use)
         """
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
         # Check needed by WebViewPopover!
         if webview == self._window.container.current.webview and uri:
             self._window.toolbar.title.set_uri(uri)
