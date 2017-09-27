@@ -383,12 +383,14 @@ class DatabaseHistory:
         """
         with SqlCursor(self) as sql:
             if netloc:
+                # Hack: we return history.mtime as count because we know
+                # it will not be used
                 result = sql.execute("\
                                 SELECT history.rowid,\
                                        history.uri,\
                                        history.uri,\
                                        history.title,\
-                                       COUNT(uri)\
+                                       history.mtime\
                                 FROM history\
                                 WHERE netloc=?\
                                 ORDER BY history.popularity DESC,\
