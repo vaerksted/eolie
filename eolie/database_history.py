@@ -386,27 +386,27 @@ class DatabaseHistory:
                 # Hack: we return history.mtime as count because we know
                 # it will not be used
                 result = sql.execute("\
-                                SELECT history.rowid,\
-                                       history.uri,\
-                                       history.uri,\
-                                       history.title,\
-                                       history.mtime\
+                                SELECT rowid,\
+                                       uri,\
+                                       uri,\
+                                       title,\
+                                       mtime\
                                 FROM history\
                                 WHERE netloc=?\
-                                ORDER BY history.popularity DESC,\
-                                history.mtime DESC\
+                                ORDER BY popularity DESC,\
+                                mtime DESC\
                                 LIMIT ?", (netloc, limit))
             else:
                 result = sql.execute("\
-                                SELECT history.rowid,\
-                                       history.uri,\
-                                       history.netloc,\
-                                       history.netloc,\
+                                SELECT rowid,\
+                                       uri,\
+                                       netloc,\
+                                       netloc,\
                                        COUNT(uri)\
                                 FROM history\
-                                GROUP BY history.netloc\
-                                ORDER BY history.popularity DESC,\
-                                history.mtime DESC\
+                                GROUP BY netloc\
+                                ORDER BY MAX(popularity) DESC,\
+                                mtime DESC\
                                 LIMIT ?", (limit,))
             return list(result)
 
