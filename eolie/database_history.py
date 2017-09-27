@@ -30,7 +30,8 @@ class DatabaseHistory:
     DB_PATH = "%s/history.db" % EOLIE_LOCAL_PATH
 
     __UPGRADES = {
-        1: "ALTER TABLE history ADD opened INT NOT NULL DEFAULT 0"
+        1: "ALTER TABLE history ADD opened INT NOT NULL DEFAULT 0",
+        2: "ALTER TABLE history ADD netloc TEXT NOT NULL DEFAULT ''"
     }
 
     # SQLite documentation:
@@ -42,6 +43,7 @@ class DatabaseHistory:
                                                id INTEGER PRIMARY KEY,
                                                title TEXT NOT NULL,
                                                uri TEXT NOT NULL,
+                                               netloc TEXT NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
                                                opened INT NOT NULL DEFAULT 0,
@@ -102,6 +104,7 @@ class DatabaseHistory:
         if not uri:
             return
         uri = uri.rstrip('/')
+        parsed = urlparse(uri)
         if title is None:
             title = ""
         # No guid provided, first search in bookmarks
@@ -126,14 +129,17 @@ class DatabaseHistory:
             if v is not None:
                 history_id = v[0]
                 sql.execute("UPDATE history\
-                             SET uri=?, mtime=?, title=?, popularity=?\
-                             WHERE rowid=?", (uri, mtime, title,
+                             SET uri=?, netloc=?, mtime=?,\
+                                 title=?, popularity=?\
+                             WHERE rowid=?", (uri, parsed.netloc, mtime, title,
                                               v[1]+1, history_id))
             else:
                 result = sql.execute("INSERT INTO history\
-                                      (title, uri, mtime, popularity, guid)\
-                                      VALUES (?, ?, ?, ?, ?)",
-                                     (title, uri, mtime, 0, guid))
+                                      (title, uri, netloc,\
+                                       mtime, popularity, guid)\
+                                      VALUES (?, ?, ?, ?, ?, ?)",
+                                     (title, uri, parsed.netloc,
+                                      mtime, 0, guid))
                 history_id = result.lastrowid
             # Only add new atimes to db
             if not atimes:
@@ -368,21 +374,36 @@ class DatabaseHistory:
             if commit:
                 sql.commit()
 
-    def get_populars(self, limit):
+    def get_populars(self, netloc, limit):
         """
             Get popular bookmarks
+            @param netloc as str
             @param limit as bool
             @return [(id, title, uri)]
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("\
-                            SELECT history.rowid,\
-                                   history.title,\
-                                   history.uri\
-                            FROM history\
-                            ORDER BY history.popularity DESC,\
-                            history.mtime DESC\
-                            LIMIT ?", (limit,))
+            if netloc:
+                result = sql.execute("\
+                                SELECT history.rowid,\
+                                       history.uri,\
+                                       history.uri,\
+                                       history.title\
+                                FROM history\
+                                WHERE netloc=?\
+                                ORDER BY history.popularity DESC,\
+                                history.mtime DESC\
+                                LIMIT ?", (netloc, limit))
+            else:
+                result = sql.execute("\
+                                SELECT history.rowid,\
+                                       history.uri,\
+                                       history.netloc,\
+                                       history.netloc\
+                                FROM history\
+                                GROUP BY history.netloc\
+                                ORDER BY history.popularity DESC,\
+                                history.mtime DESC\
+                                LIMIT ?", (limit,))
             return list(result)
 
     def get_opened_pages(self):

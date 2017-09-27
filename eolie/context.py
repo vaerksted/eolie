@@ -67,15 +67,20 @@ class Context:
             Show populars web pages
             @param request as WebKit2.URISchemeRequest
         """
+        uri = request.get_uri()
+        parsed = urlparse(uri)
         items = []
         start_page = El().settings.get_value("start-page").get_string()
         wanted = El().settings.get_value("max-popular-items").get_int32()
         if start_page == "popular_book":
-            getter = El().bookmarks.get_populars
+            for (item_id, uri,
+                 netloc, title) in El().bookmarks.get_populars(wanted):
+                items.append((title, uri, netloc))
         else:
-            getter = El().history.get_populars
-        for (item_id, title, uri) in getter(wanted):
-            items.append((title, uri))
+            for (item_id, uri, netloc, title) in El().history.get_populars(
+                                                                parsed.netloc,
+                                                                wanted):
+                items.append((title, uri, netloc))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
@@ -92,7 +97,7 @@ class Context:
         else:
             html_start = html_start.replace("@BACKGROUND_COLOR@",
                                             "#9dd7f5")
-        for (title, uri) in items:
+        for (title, uri, netloc) in items:
             favicon_path = El().art.get_path(uri, "favicon")
             favicon = Gio.File.new_for_path(favicon_path)
             path = El().art.get_path(uri, "start")
@@ -107,7 +112,7 @@ class Context:
                            <img src="file://%s"></img>\
                            <div class="caption">%s\
                            <img class="favicon" src="%s"></img></div></a>' % (
-                                          title, uri, path,
+                                          title, netloc, path,
                                           title, favicon_uri)
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
