@@ -199,6 +199,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         resized = None
         uri = self.__view.webview.get_uri()
+        parsed = urlparse(uri)
         surface = self.__view.webview.get_favicon()
         artwork = El().art.get_icon_theme_artwork(
                                                  uri,
@@ -211,6 +212,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             resized = resize_favicon(surface)
             if not El().art.exists(uri, "favicon"):
                 El().art.save_artwork(uri, resized, "favicon")
+            if not El().art.exists(parsed.netloc, "favicon"):
+                # Update site manager favicon (missing or obsolete)
+                self.__window.container.sites_manager.set_favicon(
+                                                          self.__view,
+                                                          resized)
+                El().art.save_artwork(parsed.netloc, resized, "favicon")
             self.__set_favicon_related(resized,
                                        uri,
                                        self.__view.webview.initial_uri)
@@ -219,11 +226,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__close_button.get_image().set_from_icon_name(
                                                   "applications-internet",
                                                   Gtk.IconSize.INVALID)
-        if resized is not None:
-            self.__window.container.sites_manager.set_favicon(
-                                                          self.__view,
-                                                          resized)
-            del resized
 
     def __set_favicon_related(self, surface, uri, initial_uri):
         """

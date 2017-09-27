@@ -52,6 +52,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
+        favicon_path = El().art.get_path(netloc, "favicon")
+        if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+            self.__image.set_from_file(favicon_path)
+        else:
+            self.__set_initial_artwork(self.__netloc)
         self.add(widget)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
@@ -71,8 +76,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param view as View
             @param uri as str
         """
-        if not self.__views:
-            self.__set_initial_artwork(self.__netloc, view.webview.ephemeral)
         if view not in self.__views:
             self.__views.append(view)
         self.update_indicator(view)
@@ -87,13 +90,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__views.remove(view)
         self.update_indicator(view)
         self.update_label()
-
-    def set_favicon(self, surface):
-        """
-            Set favicon
-            @param surface as cairo.Surface
-        """
-        self.__image.set_from_surface(surface)
 
     def set_minimal(self, minimal):
         """
@@ -118,8 +114,12 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
+            favicon_path = El().art.get_path(netloc, "favicon")
+            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+                self.__image.set_from_file(favicon_path)
+            else:
+                self.__set_initial_artwork(self.__netloc)
             self.__netloc_label.set_text(self.__netloc)
-            self.__set_initial_artwork(self.__netloc)
 
     def update_label(self):
         """
@@ -154,6 +154,13 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if i == 0:
             i = 1
         self.__indicator_label.set_text(str(i))
+
+    def set_favicon(self, surface):
+        """
+            Set favicon
+            @param surface as cairo.Surface
+        """
+        self.__image.set_from_surface(surface)
 
     @property
     def empty(self):
