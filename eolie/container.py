@@ -67,19 +67,18 @@ class Container(Gtk.Overlay):
         self.add(paned)
 
     def add_webview(self, uri, window_type, ephemeral=False,
-                    parent=None, state=None, load=True):
+                    state=None, load=True):
         """
             Add a web view t.container
             @param uri as str
             @param window_type as Gdk.WindowType
-            @param parent as View
             @param ephemeral as bool
             @param state as WebViewSessionState
         """
         webview = View.get_new_webview(ephemeral, self.__window)
         if state is not None:
             webview.restore_session_state(state)
-        self.add_view(webview, parent, window_type)
+        self.add_view(webview, window_type)
         if uri is not None:
             if load:
                 # Do not load uri until we are on screen
@@ -88,14 +87,13 @@ class Container(Gtk.Overlay):
                 webview.set_delayed_uri(uri)
                 webview.emit("title-changed", uri)
 
-    def add_view(self, webview, parent, window_type):
+    def add_view(self, webview, window_type):
         """
             Add view t.container
             @param webview as WebView
-            @param parent as WebView
             @param window_type as Gdk.WindowType
         """
-        view = self.__get_new_view(webview, parent)
+        view = self.__get_new_view(webview)
         view.show()
         self.__pages_manager.add_child(view)
         # Force window type as current window is not visible
@@ -162,7 +160,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param destroy webview when popover hidden
         """
-        view = View(webview, None, self.__window)
+        view = View(webview, self.__window)
         view.show()
         self.__popover.add_view(view, destroy)
         if not self.__popover.is_visible():
@@ -225,14 +223,13 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __get_new_view(self, webview, parent):
+    def __get_new_view(self, webview):
         """
             Get a new view
-            @param parent as webview
             @param webview as WebView
             @return View
         """
-        view = View(webview, parent, self.__window)
+        view = View(webview, self.__window)
         view.show()
         return view
 

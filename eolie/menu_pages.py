@@ -168,8 +168,7 @@ class PagesMenu(Gio.Menu):
                 continue
             GLib.idle_add(El().active_window.container.add_webview,
                           uri_attr.get_string(), Gdk.WindowType.OFFSCREEN,
-                          False,
-                          None, None, False)
+                          False, None, False)
             self.__closed_section.remove(i)
 
     def __on_action_clicked(self, action, variant, data):
@@ -183,5 +182,5 @@ class PagesMenu(Gio.Menu):
         private = data[1]
         state = data[2]
         GLib.idle_add(El().active_window.container.add_webview,
-                      uri, Gdk.WindowType.CHILD, private, None, state)
+                      uri, Gdk.WindowType.CHILD, private, state)
         self.remove_action(uri)

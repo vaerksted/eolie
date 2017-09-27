@@ -34,17 +34,15 @@ class View(Gtk.Overlay, ViewSignalsHandler):
         else:
             return WebView.new(window)
 
-    def __init__(self, webview, parent, window):
+    def __init__(self, webview, window):
         """
             Init view
             @param webview as WebView
-            @param as parent as View
             @param window as window
         """
         Gtk.Overlay.__init__(self)
         ViewSignalsHandler.__init__(self, webview)
         self.__reading_view = None
-        self.__parent = parent
         self._window = window
         self.__webview = webview
         self.__webview.show()
@@ -68,8 +66,6 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             self.set_overlay_pass_through(image, True)
         # Connect signals
         self.connect("key-press-event", self.__on_key_press_event)
-        if parent is not None:
-            parent.connect("destroy", self.__on_parent_destroy)
 
     def switch_read_mode(self):
         """
@@ -106,13 +102,6 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             self.__reading_view.destroy()
             self.__reading_view = None
 
-    def set_parent(self, view):
-        """
-            Set parent
-            @param view as View
-        """
-        self.__parent = view
-
     def free_webview(self):
         """
             Free the webview associated with view
@@ -133,14 +122,6 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             @return bool
         """
         return self.__reading_view is not None
-
-    @property
-    def parent(self):
-        """
-            Get parent web view
-            @return View/None
-        """
-        return self.__parent
 
     @property
     def webview(self):
@@ -173,10 +154,3 @@ class View(Gtk.Overlay, ViewSignalsHandler):
                 El().helper.call("SetPreviousForm", None, None, page_id)
             elif event.keyval == Gdk.KEY_Z:
                 El().helper.call("SetNextForm", None, None, page_id)
-
-    def __on_parent_destroy(self, view):
-        """
-            Remove parent
-            @param view as WebView
-        """
-        self.__parent = None

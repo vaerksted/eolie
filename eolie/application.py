@@ -472,8 +472,7 @@ class Application(Gtk.Application):
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                 GLib.idle_add(self.active_window.container.add_webview,
-                              uri, window_type, ephemeral,
-                              None, webkit_state,
+                              uri, window_type, ephemeral, webkit_state,
                               window_type == Gdk.WindowType.CHILD)
                 window_type = Gdk.WindowType.OFFSCREEN
             dump([],

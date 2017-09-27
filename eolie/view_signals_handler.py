@@ -142,8 +142,7 @@ class ViewSignalsHandler:
             else:
                 self._window.container.add_webview(uri,
                                                    window_type,
-                                                   webview.ephemeral,
-                                                   self)
+                                                   webview.ephemeral)
 
     def __on_create(self, related, navigation_action):
         """
@@ -212,7 +211,6 @@ class ViewSignalsHandler:
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_view(webview,
-                                            None,
                                             Gdk.WindowType.CHILD)
         else:
             self._window.container.popup_webview(webview, True)

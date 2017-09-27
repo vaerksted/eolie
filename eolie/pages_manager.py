@@ -199,6 +199,7 @@ class PagesManager(Gtk.EventBox):
         child = self.__box.get_child_at_index(child_index)
         if child is None:
             return
+        access_time = child.view.webview.access_time
         El().pages_menu.add_action(view.webview.get_title(),
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
@@ -213,39 +214,24 @@ class PagesManager(Gtk.EventBox):
         if not was_current:
             return False
 
-        # First we search a child with same parent as closed
-        brother = None
-        if view.parent is not None:
-            for child in reversed(self.__box.get_children()):
-                if child.view != view and child.view.parent == view.parent:
-                    brother = child
-                    break
         next_view = None
-        # Load brother
-        if brother is not None:
-            brother_index = self.__get_index(brother.view)
-            brother = self.__box.get_child_at_index(brother_index)
-            if brother is not None:
-                next_view = brother.view
-            else:
-                next_view = None
-        # Go back to parent page
-        elif view.parent is not None:
-            parent_index = self.__get_index(view.parent)
-            parent = self.__box.get_child_at_index(parent_index)
-            if parent is not None:
-                next_view = parent.view
-            else:
-                next_view = None
+        # First we search a child with same access time
+        for child in reversed(self.__box.get_children()):
+            if child.view.webview.access_time == access_time:
+                next_view = child.view
+                break
+        # Get view with access_time + 1 (parent)
         if next_view is None:
-            # Find last activated page
-            if children_count > 0:
-                atime = 0
-                for child in self.__box.get_children():
-                    if child.view != view and\
-                            child.view.webview.access_time >= atime:
-                        next_view = child.view
-                        atime = next_view.webview.access_time
+            for child in reversed(self.__box.get_children()):
+                if child.view.webview.access_time == access_time + 1:
+                    next_view = child.view
+                    break
+        # Get view with higher access time
+        if next_view is None:
+            access_time = 0
+            for child in self.__box.get_children():
+                if child.view.webview.access_time > access_time:
+                    next_view = child.view
         if next_view is not None:
             self.__window.container.set_visible_view(next_view)
         else:
