@@ -74,13 +74,14 @@ class Context:
         wanted = El().settings.get_value("max-popular-items").get_int32()
         if start_page == "popular_book":
             for (item_id, uri,
-                 netloc, title) in El().bookmarks.get_populars(wanted):
-                items.append((title, uri, netloc))
+                 netloc, title, count) in El().bookmarks.get_populars(wanted):
+                items.append((title, uri, netloc, count))
         else:
-            for (item_id, uri, netloc, title) in El().history.get_populars(
+            for (item_id, uri,
+                 netloc, title, count) in El().history.get_populars(
                                                                 parsed.netloc,
                                                                 wanted):
-                items.append((title, uri, netloc))
+                items.append((title, uri, netloc, count))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
         (status, start_content, tag) = start.load_contents(None)
@@ -97,8 +98,10 @@ class Context:
         else:
             html_start = html_start.replace("@BACKGROUND_COLOR@",
                                             "#9dd7f5")
-        for (title, uri, netloc) in items:
-            favicon_path = El().art.get_path(uri, "favicon")
+        for (title, uri, netloc, count) in items:
+            favicon_path = El().art.get_path(netloc, "favicon")
+            if count == 1:  # No navigation for one page
+                netloc = uri
             favicon = Gio.File.new_for_path(favicon_path)
             path = El().art.get_path(uri, "start")
             thumbnail = Gio.File.new_for_path(path)

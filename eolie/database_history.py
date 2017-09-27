@@ -387,7 +387,8 @@ class DatabaseHistory:
                                 SELECT history.rowid,\
                                        history.uri,\
                                        history.uri,\
-                                       history.title\
+                                       history.title,\
+                                       COUNT(uri)\
                                 FROM history\
                                 WHERE netloc=?\
                                 ORDER BY history.popularity DESC,\
@@ -398,7 +399,8 @@ class DatabaseHistory:
                                 SELECT history.rowid,\
                                        history.uri,\
                                        history.netloc,\
-                                       history.netloc\
+                                       history.netloc,\
+                                       COUNT(uri)\
                                 FROM history\
                                 GROUP BY history.netloc\
                                 ORDER BY history.popularity DESC,\
