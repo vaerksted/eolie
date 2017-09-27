@@ -56,6 +56,7 @@ class PagesManager(Gtk.EventBox):
         self.__box.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__box.set_max_children_per_line(1000)
         self.__box.set_filter_func(self.__filter_func)
+        self.__box.set_sort_func(self.__sort_func)
         self.__box.show()
         self.__box.connect("child-activated", self._on_child_activated)
         viewport.set_property("valign", Gtk.Align.START)
@@ -71,18 +72,12 @@ class PagesManager(Gtk.EventBox):
             @param view as View
             @return child
         """
+        if self.__window.container.current is not None:
+            access_time = self.__window.container.current.webview.access_time
+            view.webview.set_access_time(access_time - 1)
         child = PagesManagerChild(view, self.__window)
         child.show()
-
-        # We want to insert child next to its parent and brothers
-        wanted_index = -1
-        i = 1
-        for row in self.__box.get_children():
-            if row.view == view.parent or (view.parent is not None and
-                                           row.view.parent == view.parent):
-                wanted_index = i
-            i += 1
-        self.__box.insert(child, wanted_index)
+        self.__box.add(child)
         return child
 
     def update_visible_child(self):
@@ -102,7 +97,7 @@ class PagesManager(Gtk.EventBox):
                 child.label_indicator.show_indicator(False)
             else:
                 style_context.remove_class(class_name)
-                if child.view.webview.access_time == 0:
+                if not child.view.webview.shown:
                     child.label_indicator.show_indicator(True)
         self.__window.container.sites_manager.update_visible_child()
 
@@ -120,6 +115,12 @@ class PagesManager(Gtk.EventBox):
             Grab focus on search entry
         """
         self.__search_entry.grab_focus()
+
+    def update_sort(self):
+        """
+            Reset sort
+        """
+        self.__box.invalidate_sort()
 
     def set_filter(self, search):
         """
@@ -269,17 +270,6 @@ class PagesManager(Gtk.EventBox):
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
 
-    def move_first(self, view):
-        """
-            Move view at first position
-            @param view as View
-        """
-        for child in self.__box.get_children():
-            if child.view == view:
-                self.__box.remove(child)
-                self.__box.insert(child, 0)
-                break
-
     @property
     def filter(self):
         """
@@ -380,6 +370,14 @@ class PagesManager(Gtk.EventBox):
                 break
             index += 1
         return index
+
+    def __sort_func(self, row1, row2):
+        """
+            Sort listbox
+            @param row1 as Row
+            @param row2 as Row
+        """
+        return row2.view.webview.access_time > row1.view.webview.access_time
 
     def __filter_func(self, row):
         """

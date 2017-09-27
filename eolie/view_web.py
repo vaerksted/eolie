@@ -219,11 +219,20 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def update_access_time(self):
+    def set_access_time(self, atime=None):
         """
             Update access time
         """
-        self.__atime = int(time())
+        if atime is None:
+            self.__atime = int(time())
+        else:
+            self.__atime = atime
+
+    def mark_shown(self):
+        """
+            Mark view as shown
+        """
+        self.__shown = True
 
     @property
     def access_time(self):
@@ -232,6 +241,13 @@ class WebView(WebKit2.WebView):
             @return int
         """
         return self.__atime
+
+    @property
+    def shown(self):
+        """
+            True if page already shown on screen (one time)
+        """
+        return self.__shown
 
     @property
     def cancelled(self):
@@ -312,6 +328,7 @@ class WebView(WebKit2.WebView):
         self.__related_view = related_view
         self.__input_source = Gdk.InputSource.MOUSE
         self._cancelled = False
+        self.__shown = False
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()

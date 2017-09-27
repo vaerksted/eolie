@@ -143,7 +143,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         i = 0
         unread = False
         for view in self.__views:
-            if view.webview.access_time == 0:
+            if not view.webview.shown:
                 unread = True
             i += 1
         if unread:

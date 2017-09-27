@@ -184,11 +184,11 @@ class Container(Gtk.Overlay):
         GLib.timeout_add(500, child.set_filtered, search and expose)
         # Show expose mode
         if expose:
+            self.__pages_manager.update_sort()
             self.__expose_stack.set_visible_child_name("expose")
         else:
             self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
-            GLib.idle_add(self.__pages_manager.move_first, self.current)
 
     @property
     def pages_manager(self):
