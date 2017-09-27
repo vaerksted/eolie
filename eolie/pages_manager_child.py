@@ -353,8 +353,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param uri as str
         """
         # Js change, update snapshot
-        if not webview.is_loading() and\
-                not webview.ephemeral:
+        if not webview.is_loading() and not webview.ephemeral:
             GLib.timeout_add(500, self.__set_snapshot)
         else:
             self.__window.container.sites_manager.add_view_for_uri(
