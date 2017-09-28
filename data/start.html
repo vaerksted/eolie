@@ -8,16 +8,14 @@ function reset_bookmark(event, uri, id) {
     alert("@EOLIE_HIDE_BOOKMARK_POPULARS@" + uri);
     event.stopPropagation();
     event.preventDefault();
-    var element = document.getElementById(id);
-    element.parentNode.removeChild(element);
+    location.reload();
 }
 
 function reset_history(event, uri, id) {
     alert("@EOLIE_HIDE_HISTORY_POPULARS@" + uri);
     event.stopPropagation();
     event.preventDefault();
-    var element = document.getElementById(id);
-    element.parentNode.removeChild(element);
+    location.reload();
 }
 </script>
 <style type='text/css'>
