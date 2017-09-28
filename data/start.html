@@ -66,7 +66,7 @@ body {
     height: 22px;
     line-height: 22px;
     text-align: center;
-    margin-right: 22px;
+    padding-right: 22px;
 }
 
 .child:hover .favicon {
@@ -78,9 +78,12 @@ body {
     content:url(internal://window-close-symbolic);
 }
 
+.caption:hover .close_button {
+    filter: contrast(0%);
+}
+
 .close_button {
     display: none;
-    background-color: white;
     max-width: 22px;
     max-height: 22px;
     min-width: 22px;
@@ -90,8 +93,11 @@ body {
     right: 0;
 }
 
+.close_button:hover {
+    color: black;
+}
+
 .favicon {
-    background-color: white;
     max-width: 22px;
     max-height: 22px;
     min-width: 22px;
