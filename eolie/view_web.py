@@ -224,7 +224,7 @@ class WebView(WebKit2.WebView):
             Update related time
             @param time as int
         """
-        self.__rtime = time
+        self._rtime = time
 
     def set_atime(self):
         """
@@ -244,7 +244,7 @@ class WebView(WebKit2.WebView):
             Get creation time
             @return int
         """
-        return self.__rtime
+        return self._rtime
 
     @property
     def atime(self):
@@ -330,7 +330,7 @@ class WebView(WebKit2.WebView):
         self._window = window
         self._content_manager = content_manager
         self.__atime = 0
-        self.__rtime = 0
+        self._rtime = int(time())
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""

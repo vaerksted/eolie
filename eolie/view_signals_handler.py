@@ -124,12 +124,13 @@ class ViewSignalsHandler:
         self.__js_dialog_type = None
         self.__js_dialog_message = None
 
-    def __on_new_page(self, webview, uri, window_type):
+    def __on_new_page(self, webview, uri, window_type, rtime):
         """
             Open a new page, switch to view if show is True
             @param webview as WebView
             @param uri as str
             @param window_type as Gdk.WindowType
+            @param rtime as int
         """
         if uri:
             if window_type == Gdk.WindowType.SUBSURFACE:
@@ -140,9 +141,12 @@ class ViewSignalsHandler:
                 self._window.container.popup_webview(webview, True)
                 GLib.idle_add(webview.load_uri, uri)
             else:
-                self._window.container.add_webview(uri,
-                                                   window_type,
-                                                   webview.ephemeral)
+                new = self._window.container.add_webview(uri,
+                                                         window_type,
+                                                         webview.ephemeral)
+                # parent.rtime = child.rtime + 1
+                # Used to search for best matching webview
+                new.set_rtime(webview.rtime - 1)
 
     def __on_create(self, related, navigation_action):
         """
@@ -152,6 +156,7 @@ class ViewSignalsHandler:
             @param force as bool
         """
         webview = WebView.new_with_related_view(related, self._window)
+        webview.set_rtime(related.rtime - 1)
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,

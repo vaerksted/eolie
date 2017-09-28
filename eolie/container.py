@@ -74,6 +74,7 @@ class Container(Gtk.Overlay):
             @param window_type as Gdk.WindowType
             @param ephemeral as bool
             @param state as WebViewSessionState
+            @return WebView
         """
         webview = View.get_new_webview(ephemeral, self.__window)
         if state is not None:
@@ -86,6 +87,7 @@ class Container(Gtk.Overlay):
             else:
                 webview.set_delayed_uri(uri)
                 webview.emit("title-changed", uri)
+        return webview
 
     def add_view(self, webview, window_type):
         """

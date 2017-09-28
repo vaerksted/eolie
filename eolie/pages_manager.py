@@ -72,10 +72,6 @@ class PagesManager(Gtk.EventBox):
             @param view as View
             @return child
         """
-        if self.__window.container.current is not None:
-            # We match parents as rtime - 1
-            rtime = self.__window.container.current.webview.rtime
-            view.webview.set_rtime(rtime - 1)
         child = PagesManagerChild(view, self.__window)
         child.show()
         self.__box.add(child)
@@ -216,15 +212,16 @@ class PagesManager(Gtk.EventBox):
             return False
 
         next_view = None
-        # First we search a child with same access time
+        # First we search a brother ie a paged opened from the same parent page
         for child in self.__box.get_children():
             if child.view.webview.rtime == rtime:
                 next_view = child.view
                 break
-        # Get view with rtime + 1 (parent)
+        # Get view with rtime -+ 1 (child/parent)
         if next_view is None:
             for child in self.__box.get_children():
-                if child.view.webview.rtime == rtime + 1:
+                if child.view.webview.rtime == rtime + 1 or\
+                        child.view.webview.rtime == rtime - 1:
                     next_view = child.view
                     break
         # Get view with higher access time

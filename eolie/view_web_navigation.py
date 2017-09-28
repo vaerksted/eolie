@@ -28,7 +28,7 @@ class WebViewNavigation:
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int)),
+        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int, int)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
                                                                 str,
@@ -274,7 +274,8 @@ class WebViewNavigation:
                                   WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 self.emit("new-page",
                           self._navigation_uri,
-                          Gdk.WindowType.CHILD)
+                          Gdk.WindowType.CHILD,
+                          self._rtime)
                 decision.ignore()
                 return True
             else:
@@ -289,21 +290,24 @@ class WebViewNavigation:
                     window_type = Gdk.WindowType.CHILD
                 self.emit("new-page",
                           self._navigation_uri,
-                          window_type)
+                          window_type,
+                          self._rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
                 self.emit("new-page",
                           self._navigation_uri,
-                          Gdk.WindowType.OFFSCREEN)
+                          Gdk.WindowType.OFFSCREEN,
+                          self._rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.SHIFT_MASK:
                 self.emit("new-page",
                           self._navigation_uri,
-                          Gdk.WindowType.SUBSURFACE)
+                          Gdk.WindowType.SUBSURFACE,
+                          self._rtime)
                 decision.ignore()
                 return True
             else:
@@ -314,7 +318,8 @@ class WebViewNavigation:
         else:
             self.emit("new-page",
                       self._navigation_uri,
-                      Gdk.WindowType.OFFSCREEN)
+                      Gdk.WindowType.OFFSCREEN,
+                      self._rtime)
             decision.ignore()
             return True
 
