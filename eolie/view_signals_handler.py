@@ -442,13 +442,6 @@ class ViewSignalsHandler:
             return
         try:
             snapshot = webview.get_snapshot_finish(result)
-            # We also cache initial URI
-            uris = [webview.get_uri()]
-            parsed = urlparse(uri)
-            initial_parsed = urlparse(webview.initial_uri)
-            if parsed.netloc == initial_parsed.netloc and\
-                    webview.initial_uri not in uris:
-                uris.append(webview.initial_uri)
             # Set start image scale factor
             ratio = snapshot.get_width() / snapshot.get_height()
             if ratio > ART_RATIO:
@@ -462,6 +455,18 @@ class ViewSignalsHandler:
             context.scale(factor, factor)
             context.set_source_surface(snapshot, factor, 0)
             context.paint()
+            # Cache result
+            # We also cache initial URI
+            uris = [webview.get_uri()]
+            parsed = urlparse(uri)
+            # Caching this will break populars navigation
+            # as we are looking for subpage snapshots
+            if parsed.scheme == "populars":
+                return
+            initial_parsed = urlparse(webview.initial_uri)
+            if parsed.netloc == initial_parsed.netloc and\
+                    webview.initial_uri not in uris:
+                uris.append(webview.initial_uri)
             for uri in uris:
                 if not El().art.exists(uri, "start"):
                     El().art.save_artwork(uri, surface, "start")
