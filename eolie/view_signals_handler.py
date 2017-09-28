@@ -297,9 +297,6 @@ class ViewSignalsHandler:
         # Check needed by WebViewPopover!
         if webview == self._window.container.current.webview and uri:
             self._window.toolbar.title.set_uri(uri)
-            if not webview.is_loading():
-                self._window.toolbar.title.show_readable_button(
-                                            webview.readable_content != "")
 
     def __on_title_changed(self, webview, title):
         """

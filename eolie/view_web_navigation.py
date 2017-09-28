@@ -182,7 +182,6 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param uri as GParamSpec
         """
-        self._readable_content = ""
         self.__title = ""
         uri = webview.get_uri()
         if not self.is_loading():
@@ -333,6 +332,7 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self._window.toolbar.title.show_readable_button(False)
             self.__initial_uri = uri
             self._cancelled = False
             # Destroy current popups
