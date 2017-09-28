@@ -103,7 +103,7 @@ class Container(Gtk.Overlay):
             window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
-            self.__stack.set_visible_child(view)
+            self.set_visible_view(view)
         elif window_type == Gdk.WindowType.OFFSCREEN:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
@@ -115,9 +115,6 @@ class Container(Gtk.Overlay):
             window.remove(view)
             view.set_size_request(-1, -1)
             self.__stack.add(view)
-        # The view was just added, so we need to wait
-        GLib.idle_add(self.__pages_manager.update_visible_child)
-        GLib.idle_add(self.__sites_manager.update_visible_child)
         # Do not count container views as destroy may be pending on somes
         count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)

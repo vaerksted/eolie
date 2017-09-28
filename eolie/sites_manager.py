@@ -102,6 +102,7 @@ class SitesManager(Gtk.EventBox):
                 child.show()
                 child.add_view(view)
                 self.__box.add(child)
+                self.update_visible_child()
             else:
                 child = empty_child
                 child.reset(netloc)
@@ -159,16 +160,16 @@ class SitesManager(Gtk.EventBox):
             if site.empty and count > 1:
                 site.destroy()
 
-    def update_visible_child(self, visible=None):
+    def update_visible_child(self):
         """
             Mark current child as visible
             Unmark all others
-            @param visible as View/None
         """
-        if visible is None:
-            visible = self.__window.container.current
-        ephemeral = visible.webview.ephemeral
+        visible = self.__window.container.current
         uri = visible.webview.get_uri()
+        if uri is None:
+            return
+        ephemeral = visible.webview.ephemeral
         netloc = urlparse(uri).netloc
         if netloc:
             netloc = netloc.lstrip("www.")
