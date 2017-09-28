@@ -77,8 +77,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.PREVIEW_WIDTH_MARGIN,
                               ArtSize.START_HEIGHT +
                               ArtSize.PREVIEW_WIDTH_MARGIN)
-        if view.webview.access_time == 0:
-            self.get_style_context().add_class("sidebar-item-unread")
         self.connect("query-tooltip", self.__on_query_tooltip)
         self.connect("destroy", self.__on_destroy)
         self.__view_destroy_id = view.connect("destroy",

@@ -73,8 +73,9 @@ class PagesManager(Gtk.EventBox):
             @return child
         """
         if self.__window.container.current is not None:
-            access_time = self.__window.container.current.webview.access_time
-            view.webview.set_access_time(access_time - 1)
+            # We match parents as rtime - 1
+            rtime = self.__window.container.current.webview.rtime
+            view.webview.set_rtime(rtime - 1)
         child = PagesManagerChild(view, self.__window)
         child.show()
         self.__box.add(child)
@@ -199,7 +200,7 @@ class PagesManager(Gtk.EventBox):
         child = self.__box.get_child_at_index(child_index)
         if child is None:
             return
-        access_time = child.view.webview.access_time
+        rtime = child.view.webview.rtime
         El().pages_menu.add_action(view.webview.get_title(),
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
@@ -216,21 +217,21 @@ class PagesManager(Gtk.EventBox):
 
         next_view = None
         # First we search a child with same access time
-        for child in reversed(self.__box.get_children()):
-            if child.view.webview.access_time == access_time:
+        for child in self.__box.get_children():
+            if child.view.webview.rtime == rtime:
                 next_view = child.view
                 break
-        # Get view with access_time + 1 (parent)
+        # Get view with rtime + 1 (parent)
         if next_view is None:
-            for child in reversed(self.__box.get_children()):
-                if child.view.webview.access_time == access_time + 1:
+            for child in self.__box.get_children():
+                if child.view.webview.rtime == rtime + 1:
                     next_view = child.view
                     break
         # Get view with higher access time
         if next_view is None:
-            access_time = 0
+            rtime = 0
             for child in self.__box.get_children():
-                if child.view.webview.access_time > access_time:
+                if child.view.webview.rtime > rtime:
                     next_view = child.view
         if next_view is not None:
             self.__window.container.set_visible_view(next_view)
@@ -363,7 +364,7 @@ class PagesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
-        return row2.view.webview.access_time > row1.view.webview.access_time
+        return row2.view.webview.atime > row1.view.webview.atime
 
     def __filter_func(self, row):
         """

@@ -219,14 +219,18 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def set_access_time(self, atime=None):
+    def set_rtime(self, time):
+        """
+            Update related time
+            @param time as int
+        """
+        self.__rtime = time
+
+    def set_atime(self):
         """
             Update access time
         """
-        if atime is None:
-            self.__atime = int(time())
-        else:
-            self.__atime = atime
+        self.__atime = int(time())
 
     def mark_shown(self):
         """
@@ -235,7 +239,15 @@ class WebView(WebKit2.WebView):
         self.__shown = True
 
     @property
-    def access_time(self):
+    def rtime(self):
+        """
+            Get creation time
+            @return int
+        """
+        return self.__rtime
+
+    @property
+    def atime(self):
         """
             Get access time
             @return int
@@ -318,6 +330,7 @@ class WebView(WebKit2.WebView):
         self._window = window
         self._content_manager = content_manager
         self.__atime = 0
+        self.__rtime = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""

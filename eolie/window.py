@@ -130,7 +130,7 @@ class Window(Gtk.ApplicationWindow):
                 uri = webview.get_uri()
             else:
                 webview.load_uri(uri)
-            webview.set_access_time()
+            webview.set_atime()
             self.container.sites_manager.update_indicator(
                                                       self.__container.current)
             title = webview.get_title()
