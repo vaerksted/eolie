@@ -152,7 +152,7 @@ class TagWidget(Gtk.FlowBoxChild):
             tag_id = El().bookmarks.get_tag_id(previous)
             if tag_id is None:
                 return
-            for (bookmark_id, bookmark_title, uri) in\
+            for (bookmark_id, bookmark_uri, bookmark_title) in\
                     El().bookmarks.get_bookmarks(tag_id):
                 El().bookmarks.set_mtime(bookmark_id, mtime + 1)
         El().bookmarks.rename_tag(previous, title)

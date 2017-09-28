@@ -365,7 +365,7 @@ class Row(Gtk.ListBoxRow):
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
         i = 0
-        for (bid, title, uri) in items:
+        for (bid, uri, title) in items:
             GLib.idle_add(self.__window.container.add_webview,
                           uri, Gdk.WindowType.OFFSCREEN, False,
                           None, None, i < 15)
@@ -902,7 +902,7 @@ class UriPopover(Gtk.Popover):
             @param [(bookmark_id, title, uri)] as [(int, str, str)]
         """
         if bookmarks:
-            (bookmark_id, title, uri) = bookmarks.pop(0)
+            (bookmark_id, uri, title) = bookmarks.pop(0)
             item = Item()
             item.set_property("id", bookmark_id)
             item.set_property("type", Type.BOOKMARK)

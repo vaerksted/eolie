@@ -461,8 +461,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("\
                             SELECT bookmarks.rowid,\
-                                   bookmarks.title,\
-                                   bookmarks.uri\
+                                   bookmarks.uri,\
+                                   bookmarks.title\
                             FROM bookmarks, bookmarks_tags\
                             WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
                             AND bookmarks_tags.tag_id=?\
@@ -499,8 +499,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("\
                             SELECT bookmarks.rowid,\
-                                   bookmarks.title,\
-                                   bookmarks.uri\
+                                   bookmarks.uri,\
+                                   bookmarks.title\
                             FROM bookmarks\
                             WHERE NOT EXISTS (\
                                 SELECT bookmark_id FROM bookmarks_tags\
@@ -517,8 +517,8 @@ class DatabaseBookmarks:
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT bookmarks.rowid,\
-                                  bookmarks.title,\
-                                  bookmarks.uri\
+                                  bookmarks.uri,\
+                                  bookmarks.title\
                                   FROM bookmarks\
                                   WHERE bookmarks.atime != 0\
                                   AND bookmarks.del=0\
