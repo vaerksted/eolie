@@ -58,7 +58,6 @@ class AdblockExtension:
                 not exception and\
                 self.__adblock.is_blocked(uri):
             return True
-        return False
         if self.__settings.get_value("do-not-track"):
             headers = request.get_http_headers()
             if headers is not None:
