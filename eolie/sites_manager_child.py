@@ -25,15 +25,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
         'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
     }
 
-    def __init__(self, netloc, window):
+    def __init__(self, netloc, window, ephemeral):
         """
             Init child
             @param netloc as str
             @param window as Window
+            @param ephemeral as bool
         """
         Gtk.ListBoxRow.__init__(self)
         self.__window = window
         self.__netloc = netloc
+        self.__ephemeral = ephemeral
         self.__views = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
@@ -179,6 +181,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
         return self.__views
 
     @property
+    def ephemeral(self):
+        """
+            Get ephemeral
+            @return bool
+        """
+        return self.__ephemeral
+
+    @property
     def netloc(self):
         """
             Get netloc
@@ -244,7 +254,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __set_initial_artwork(self, uri, ephemeral=False):
+    def __set_initial_artwork(self, uri):
         """
             Set initial artwork on widget
             @param uri as str
@@ -252,7 +262,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         artwork = El().art.get_icon_theme_artwork(
                                                  uri,
-                                                 ephemeral)
+                                                 self.__ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)

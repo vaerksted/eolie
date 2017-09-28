@@ -73,19 +73,28 @@ class SitesManager(Gtk.EventBox):
 
         child = None
         empty_child = None
-        # Search for a child for wanted netloc
-        # Clean up any child matching view, allowing us to reuse it
-        for site in self.__box.get_children():
-            if site.netloc == netloc:
-                child = site
-            else:
-                site.remove_view(view)
-                if site.empty:
-                    empty_child = site
+        # Do not group by netloc
+        if view.webview.ephemeral:
+            for site in self.__box.get_children():
+                if site.ephemeral:
+                    child = site
+                    break
+        else:
+            # Search for a child for wanted netloc
+            # Clean up any child matching view, allowing us to reuse it
+            for site in self.__box.get_children():
+                if site.netloc == netloc:
+                    child = site
+                else:
+                    site.remove_view(view)
+                    if site.empty:
+                        empty_child = site
 
         if child is None:
             if empty_child is None:
-                child = SitesManagerChild(netloc, self.__window)
+                child = SitesManagerChild(netloc,
+                                          self.__window,
+                                          view.webview.ephemeral)
                 child.connect("moved", self.__on_moved)
                 position = El().settings.get_value(
                                                 "sidebar-position").get_int32()
@@ -157,15 +166,19 @@ class SitesManager(Gtk.EventBox):
             Unmark all others
         """
         visible = self.__window.container.current
+        ephemeral = visible.webview.ephemeral
         uri = visible.webview.get_uri()
         netloc = urlparse(uri).netloc
         if netloc:
             netloc = netloc.lstrip("www.")
         else:
             netloc = "%s://" % urlparse(uri).scheme
+        class_name = "sidebar-item-selected"
         for child in self.__box.get_children():
-            class_name = "sidebar-item-selected"
-            if child.netloc == netloc:
+            if (child.netloc == netloc and
+                    not ephemeral and
+                    not child.ephemeral) or\
+                    (ephemeral and child.ephemeral):
                 child.get_style_context().add_class(class_name)
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
