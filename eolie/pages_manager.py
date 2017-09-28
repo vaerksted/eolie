@@ -77,12 +77,14 @@ class PagesManager(Gtk.EventBox):
         self.__box.add(child)
         return child
 
-    def update_visible_child(self):
+    def update_visible_child(self, visible=None):
         """
             Mark current child as visible
             Unmark all others
+            @param visible as View/None
         """
-        visible = self.__window.container.current
+        if visible is None:
+            visible = self.__window.container.current
         for child in self.__box.get_children():
             style_context = child.get_style_context()
             if child.view.webview.ephemeral:
