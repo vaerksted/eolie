@@ -93,11 +93,12 @@ class Context:
         style_context = fake.get_style_context()
         (found, color) = style_context.lookup_color("theme_selected_bg_color")
         if found:
+            color.alpha = 0.2
             html_start = html_start.replace("@BACKGROUND_COLOR@",
                                             color.to_string())
         else:
             html_start = html_start.replace("@BACKGROUND_COLOR@",
-                                            "#9dd7f5")
+                                            "rgba(74,144,217,0.2)")
         for (title, uri, netloc, count) in items:
             favicon_path = El().art.get_path(netloc, "favicon")
             if count == 1:  # No navigation for one page
