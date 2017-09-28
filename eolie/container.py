@@ -115,7 +115,9 @@ class Container(Gtk.Overlay):
             window.remove(view)
             view.set_size_request(-1, -1)
             self.__stack.add(view)
-        self.__pages_manager.update_visible_child()
+        # The view was just added, so we need to wait
+        GLib.idle_add(self.__pages_manager.update_visible_child)
+        GLib.idle_add(self.__sites_manager.update_visible_child)
         # Do not count container views as destroy may be pending on somes
         count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)
@@ -155,6 +157,8 @@ class Container(Gtk.Overlay):
         self.__stack.set_visible_child(view)
         if self.__pages_overlay is not None:
             self.__pages_overlay.destroy_child(view)
+        self.__pages_manager.update_visible_child()
+        self.__sites_manager.update_visible_child()
 
     def popup_webview(self, webview, destroy):
         """

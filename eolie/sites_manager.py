@@ -110,7 +110,6 @@ class SitesManager(Gtk.EventBox):
             if empty_child is not None:
                 empty_child.destroy()
             child.add_view(view)
-        self.update_visible_child()
 
     def set_favicon(self, view, surface):
         """
@@ -238,8 +237,6 @@ class SitesManager(Gtk.EventBox):
         elif len(child.views) == 1:
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.set_visible_webview(child.views[0].webview)
-            self.__window.container.pages_manager.update_visible_child()
-            self.__window.container.sites_manager.update_visible_child()
         else:
             self.__window.container.pages_manager.set_filter(child.netloc)
             self.__window.toolbar.actions.view_button.set_active(True)

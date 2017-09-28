@@ -96,7 +96,6 @@ class PagesManager(Gtk.EventBox):
                 style_context.remove_class(class_name)
                 if not child.view.webview.shown:
                     child.label_indicator.show_indicator(True)
-        self.__window.container.sites_manager.update_visible_child()
 
     def destroy(self):
         """
@@ -236,7 +235,6 @@ class PagesManager(Gtk.EventBox):
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,
                                                 Gdk.WindowType.CHILD)
-        self.update_visible_child()
 
     def ctrl_released(self):
         """
@@ -282,7 +280,6 @@ class PagesManager(Gtk.EventBox):
         self.__window.close_popovers()
         self.__window.container.set_visible_view(child.view)
         self.__window.container.set_expose(False)
-        self.update_visible_child()
 
 #######################
 # PRIVATE             #
@@ -309,7 +306,6 @@ class PagesManager(Gtk.EventBox):
             next_row = self.__box.get_child_at_index(0)
         if next_row is not None:
             self.__window.container.set_visible_view(next_row.view)
-        self.update_visible_child()
 
     def __previous(self):
         """
@@ -323,7 +319,6 @@ class PagesManager(Gtk.EventBox):
             next_row = self.__box.get_child_at_index(index - 1)
         if next_row is not None:
             self.__window.container.set_visible_view(next_row.view)
-        self.update_visible_child()
 
     def __get_index(self, view):
         """
