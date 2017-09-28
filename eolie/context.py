@@ -119,11 +119,11 @@ class Context:
             html_start += '<a class="child" id="%s"\
                            title="%s" href="%s">\
                            <img src="file://%s"></img>\
-                           <div class="caption">%s\
+                           <div class="caption">%s</div>\
                            <img onclick="%s(event, %s, %s)"\
                                 class="close_button">\
                            <img class="favicon" src="%s">\
-                           </img></img></div></a>' % (
+                           </img></img></a>' % (
                                           element_id, title, netloc, path,
                                           title, reset_function,
                                           "'%s'" % netloc,
