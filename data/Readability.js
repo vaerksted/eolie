@@ -2112,5 +2112,5 @@ if (reader.isProbablyReaderable(false))
     article = reader.parse();
     // BIG HACK but webkitgtk doesn't allow us to read result from js
     var previous_title = document.title;
-    alert("@&$%ù²".concat(article.content));
+    alert("@EOLIE_READER@".concat(article.content));
     document.title=previous_title;

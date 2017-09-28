@@ -480,10 +480,11 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("\
                             SELECT bookmarks.rowid,\
-                                   bookmarks.title,\
-                                   bookmarks.uri\
+                                   bookmarks.uri,\
+                                   bookmarks.title\
                             FROM bookmarks\
                             WHERE bookmarks.del=0\
+                            AND popularity!=0\
                             AND bookmarks.guid != bookmarks.uri\
                             ORDER BY bookmarks.popularity DESC,\
                             bookmarks.atime DESC\
@@ -682,6 +683,16 @@ class DatabaseBookmarks:
                             WHERE tags.rowid = bookmarks_tags.tag_id\
                             AND bookmarks.rowid = bookmarks_tags.bookmark_id\
                             AND bookmarks.del!=1)")
+            sql.commit()
+
+    def reset_popularity(self, uri):
+        """
+            Reset popularity for uri
+            @param uri as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks SET popularity=0 WHERE uri=?",
+                        (uri,))
             sql.commit()
 
     def import_html(self, path):

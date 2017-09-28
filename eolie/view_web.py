@@ -681,9 +681,18 @@ class WebView(WebKit2.WebView):
             @param webview as WebView
             @param dialog as WebKit2.ScriptDialog
         """
-        if dialog.get_message().startswith("@&$%ù²"):
-            self._readable_content = dialog.get_message().replace("@&$%ù²", "")
+        message = dialog.get_message()
+        if message.startswith("@EOLIE_READER@"):
+            self._readable_content = message.replace("@EOLIE_READER@", "")
             self.emit("readable")
+            return True
+        elif message.startswith("@EOLIE_HIDE_BOOKMARK_POPULARS@"):
+            uri = message.replace("@EOLIE_HIDE_BOOKMARK_POPULARS@", "")
+            El().bookmarks.reset_popularity(uri)
+            return True
+        elif message.startswith("@EOLIE_HIDE_HISTORY_POPULARS@"):
+            uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
+            El().history.reset_popularity(uri)
             return True
 
     def __on_map(self, webview):

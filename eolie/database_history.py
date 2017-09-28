@@ -393,6 +393,7 @@ class DatabaseHistory:
                                        mtime\
                                 FROM history\
                                 WHERE netloc=?\
+                                AND popularity!=0\
                                 ORDER BY popularity DESC,\
                                 mtime DESC\
                                 LIMIT ?", (netloc, limit))
@@ -560,6 +561,21 @@ class DatabaseHistory:
                 scored_items.append(scored_item)
                 uris.append(item[1])
         return scored_items
+
+    def reset_popularity(self, uri):
+        """
+            Reset popularity for uri
+            @param uri as str
+        """
+        with SqlCursor(self) as sql:
+            parsed = urlparse(uri)
+            if parsed.scheme:
+                sql.execute("UPDATE history SET popularity=0 WHERE uri=?",
+                            (uri,))
+            else:
+                sql.execute("UPDATE history SET popularity=0 WHERE netloc=?",
+                            (uri,))
+            sql.commit()
 
     def exists_guid(self, guid):
         """

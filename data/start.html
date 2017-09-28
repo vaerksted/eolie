@@ -2,6 +2,24 @@
 <html>
 <title>@TITLE@</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+<script type="text/javascript">
+
+function reset_bookmark(event, uri, id) {
+    alert("@EOLIE_HIDE_BOOKMARK_POPULARS@" + uri);
+    event.stopPropagation();
+    event.preventDefault();
+    var element = document.getElementById(id);
+    element.parentNode.removeChild(element);
+}
+
+function reset_history(event, uri, id) {
+    alert("@EOLIE_HIDE_HISTORY_POPULARS@" + uri);
+    event.stopPropagation();
+    event.preventDefault();
+    var element = document.getElementById(id);
+    element.parentNode.removeChild(element);
+}
+</script>
 <style type='text/css'>
 
 body {
@@ -48,6 +66,34 @@ body {
     height: 22px;
     line-height: 22px;
     text-align: center;
+}
+
+.child:hover .favicon {
+    display: none;
+}
+
+.child:hover .close_button {
+    display: inline;
+    content:url(internal://window-close-symbolic);
+}
+
+.caption:hover .close_button {
+    filter: contrast(0%);
+}
+
+.close_button {
+    display: none;
+    max-width: 22px;
+    max-height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.close_button:hover {
+    color: black;
 }
 
 .favicon {

@@ -260,7 +260,7 @@ class ViewSignalsHandler:
             self._window.container.pages_manager.close_view(self, False)
             return True
 
-        if not dialog.get_message().startswith("@&$%ù²"):
+        if not dialog.get_message().startswith("@EOLIE_"):
             self.__js_dialog_type = dialog.get_dialog_type()
             self.__js_dialog_message = dialog.get_message()
             self._window.toolbar.title.show_javascript(dialog)

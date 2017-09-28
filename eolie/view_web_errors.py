@@ -75,7 +75,7 @@ class WebViewErrors:
         html = html % (title,
                        css,
                        "load_uri('%s')" % uri,
-                       "internal:/%s" % icon,
+                       "internal://%s" % icon,
                        title,
                        _("%s is a phishing page") % uri,
                        detail,
@@ -134,7 +134,7 @@ class WebViewErrors:
         html = html % (title,
                        css,
                        "load_uri('%s')" % uri,
-                       "internal:/%s" % icon,
+                       "internal://%s" % icon,
                        title,
                        "<b>%s</b> %s" % (uri, error.message),
                        detail,
@@ -181,7 +181,7 @@ class WebViewErrors:
                        css,
                        "load_uri('%s')" % uri.replace("https://",
                                                       "accept://"),
-                       "internal:/dialog-warning-symbolic",
+                       "internal://dialog-warning-symbolic",
                        _("Connection is not secure"),
                        error,
                        _("This does not look like the real %s.<br/>"
@@ -210,7 +210,7 @@ class WebViewErrors:
                        css,
                        "load_uri('https://bugs.webkit.org/"
                        "enter_bug.cgi?product=WebKit')",
-                       "internal:/help-faq-symbolic",
+                       "internal://help-faq-symbolic",
                        _("WebKit web engine crashed"),
                        "",
                        _("The webpage was terminated unexpectedly."

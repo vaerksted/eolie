@@ -73,10 +73,11 @@ class Context:
         start_page = El().settings.get_value("start-page").get_string()
         wanted = El().settings.get_value("max-popular-items").get_int32()
         if start_page == "popular_book":
-            for (item_id, uri,
-                 netloc, title, count) in El().bookmarks.get_populars(wanted):
-                items.append((title, uri, netloc, count))
+            reset_function = "reset_bookmark"
+            for (item_id, uri, title) in El().bookmarks.get_populars(wanted):
+                items.append((title, uri, "", 1))
         else:
+            reset_function = "reset_history"
             for (item_id, uri,
                  netloc, title, count) in El().history.get_populars(
                                                                 parsed.netloc,
@@ -99,10 +100,13 @@ class Context:
         else:
             html_start = html_start.replace("@BACKGROUND_COLOR@",
                                             "rgba(74,144,217,0.2)")
+        idx = 0
         for (title, uri, netloc, count) in items:
-            favicon_path = El().art.get_path(netloc, "favicon")
+            element_id = "element_%s" % idx
+            idx += 1
             if count == 1:  # No navigation for one page
                 netloc = uri
+            favicon_path = El().art.get_path(netloc, "favicon")
             favicon = Gio.File.new_for_path(favicon_path)
             path = El().art.get_path(uri, "start")
             thumbnail = Gio.File.new_for_path(path)
@@ -111,13 +115,19 @@ class Context:
             if favicon.query_exists():
                 favicon_uri = favicon.get_uri()
             else:
-                favicon_uri = "internal:/applications-internet"
-            html_start += '<a class="child" title="%s" href="%s">\
+                favicon_uri = "internal://applications-internet"
+            html_start += '<a class="child" id="%s"\
+                           title="%s" href="%s">\
                            <img src="file://%s"></img>\
                            <div class="caption">%s\
-                           <img class="favicon" src="%s"></img></div></a>' % (
-                                          title, netloc, path,
-                                          title, favicon_uri)
+                           <img onclick="%s(event, %s, %s)"\
+                                class="close_button">\
+                           <img class="favicon" src="%s">\
+                           </img></img></div></a>' % (
+                                          element_id, title, netloc, path,
+                                          title, reset_function,
+                                          "'%s'" % netloc,
+                                          "'%s'" % element_id, favicon_uri)
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
@@ -212,8 +222,8 @@ class Context:
             Load an internal resource
             @param request as WebKit2.URISchemeRequest
         """
-        # We use internal:/ because resource:/ is already used by WebKit2
-        icon_name = request.get_uri().replace("internal:/", "")
+        # We use internal:// because resource:/ is already used by WebKit2
+        icon_name = request.get_uri().replace("internal://", "")
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
                                             icon_name, Gtk.IconSize.BUTTON,
                                             Gtk.IconLookupFlags.FORCE_SVG)
