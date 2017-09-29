@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, GLib, Gio
 from eolie.widget_find import FindWidget
 from eolie.view_signals_handler import ViewSignalsHandler
 from eolie.webview import WebView
+from eolie.widget_uri_label import UriLabelWidget
 from eolie.define import El
 
 
@@ -54,6 +55,8 @@ class View(Gtk.Overlay, ViewSignalsHandler):
         self.__grid.add(self.__webview)
         self.__grid.show()
         self.add(self.__grid)
+        self.__uri_label = UriLabelWidget()
+        self.add_overlay(self.__uri_label)
         if webview.ephemeral:
             image = Gtk.Image.new_from_icon_name("user-not-tracked-symbolic",
                                                  Gtk.IconSize.DIALOG)
@@ -66,6 +69,7 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             self.set_overlay_pass_through(image, True)
         # Connect signals
         self.connect("key-press-event", self.__on_key_press_event)
+        webview.connect("mouse-target-changed", self.__on_mouse_target_changed)
 
     def switch_read_mode(self):
         """
@@ -154,3 +158,16 @@ class View(Gtk.Overlay, ViewSignalsHandler):
                 El().helper.call("SetPreviousForm", None, None, page_id)
             elif event.keyval == Gdk.KEY_Z:
                 El().helper.call("SetNextForm", None, None, page_id)
+
+    def __on_mouse_target_changed(self, webview, hit, modifiers):
+        """
+            Show uri label
+            @param webview as WebView
+            @param hit as WebKit2.HitTestResult
+            @param modifiers as Gdk.ModifierType
+        """
+        if hit.context_is_link():
+            self.__uri_label.set_text(hit.get_link_uri())
+            self.__uri_label.show()
+        else:
+            self.__uri_label.hide()

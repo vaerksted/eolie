@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, GLib, Pango, WebKit2
+from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -19,63 +19,6 @@ import cairo
 
 from eolie.webview import WebView
 from eolie.define import El, Indicator, ArtSize
-
-
-class UriLabel(Gtk.EventBox):
-    """
-        Small label trying to not be under mouse pointer
-    """
-
-    def __init__(self):
-        """
-            Init label
-        """
-        Gtk.EventBox.__init__(self)
-        self.__label = Gtk.Label()
-        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__label.get_style_context().add_class("urilabel")
-        self.__label.show()
-        self.add(self.__label)
-        self.connect("enter-notify-event", self.__on_enter_notify)
-
-    def set_text(self, text):
-        """
-            Set label text
-            @param text as str
-        """
-        if text == self.__label.get_text():
-            return
-        self.set_property("halign", Gtk.Align.END)
-        self.set_property("valign", Gtk.Align.END)
-        self.__label.get_style_context().add_class("bottom-right")
-        self.__label.get_style_context().remove_class("bottom-left")
-        self.__label.get_style_context().remove_class("top-left")
-        self.__label.set_text(text)
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_enter_notify(self, widget, event):
-        """
-            Try to go away from mouse cursor
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        GLib.idle_add(self.hide)
-        # Move label at the right
-        if self.get_property("halign") == Gtk.Align.END:
-            self.set_property("halign", Gtk.Align.START)
-            self.__label.get_style_context().add_class("bottom-left")
-            self.__label.get_style_context().remove_class("bottom-right")
-            self.__label.get_style_context().remove_class("top-left")
-        # Move label at top
-        else:
-            self.set_property("halign", Gtk.Align.END)
-            self.set_property("valign", Gtk.Align.END)
-            self.__label.get_style_context().add_class("top-left")
-            self.__label.get_style_context().remove_class("bottom-left")
-            self.__label.get_style_context().remove_class("bottom-right")
-        GLib.idle_add(self.show)
 
 
 class ViewSignalsHandler:
@@ -88,8 +31,6 @@ class ViewSignalsHandler:
             Init handler
             @param webview as WebView
         """
-        self.__uri_label = UriLabel()
-        self.add_overlay(self.__uri_label)
         self.__js_timeout_id = None
         self.__signals_connected = False
         self.__cancellable = Gio.Cancellable()
@@ -391,19 +332,6 @@ class ViewSignalsHandler:
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_mouse_target_changed(self, webview, hit, modifiers):
-        """
-            Show uri label
-            @param webview as WebView
-            @param hit as WebKit2.HitTestResult
-            @param modifiers as Gdk.ModifierType
-        """
-        if hit.context_is_link():
-            self.__uri_label.set_text(hit.get_link_uri())
-            self.__uri_label.show()
-        else:
-            self.__uri_label.hide()
-
     def __on_resource_load_started(self, webview, resource, request):
         """
             Listen to off loading events
@@ -484,8 +412,6 @@ class ViewSignalsHandler:
             return
         self.__signals_connected = True
         self._window.update(webview)
-        webview.connect("mouse-target-changed",
-                        self.__on_mouse_target_changed)
         webview.connect("notify::estimated-load-progress",
                         self.__on_estimated_load_progress)
         webview.connect("resource-load-started",
@@ -513,7 +439,6 @@ class ViewSignalsHandler:
         if not self.__signals_connected:
             return
         self.__signals_connected = False
-        webview.disconnect_by_func(self.__on_mouse_target_changed)
         webview.disconnect_by_func(self.__on_estimated_load_progress)
         webview.disconnect_by_func(self.__on_resource_load_started)
         webview.disconnect_by_func(self.__on_load_changed)
