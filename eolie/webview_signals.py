@@ -58,7 +58,6 @@ class WebViewSignals:
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
         self.connect("new-page", self.__on_new_page)
-        self.connect("create", self.__on_create)
         self.connect("close", self.__on_close)
         # Always connected as we need on_title_changed() update history
         self.connect("title-changed", self.__on_title_changed)
@@ -401,21 +400,6 @@ class WebViewSignals:
                 # Used to search for best matching webview
                 new.set_rtime(self.rtime - 1)
 
-    def __on_create(self, related, navigation_action):
-        """
-            Create a new view for action
-            @param related as WebView
-            @param navigation_action as WebKit2.NavigationAction
-            @param force as bool
-        """
-        webview = self.new_with_related_view(related, self._window)
-        self.set_rtime(related.rtime - 1)
-        self.connect("ready-to-show",
-                     self.__on_ready_to_show,
-                     related,
-                     navigation_action)
-        return webview
-
     def __on_close(self, webview):
         """
             Close my self
@@ -423,55 +407,6 @@ class WebViewSignals:
         """
         if self.get_ancestor(Gtk.Popover) is None:
             self._window.container.pages_manager.try_close_view(self)
-
-    def __on_popup_close(self, webview, related):
-        """
-            Remove webview from popups
-            @param webview as WebView
-            @param related as WebView
-        """
-        related.remove_popup(webview)
-        if self._window.container.current.webview == related and\
-                not related.popups:
-            self._window.toolbar.title.show_indicator(Indicator.NONE)
-
-    def __on_ready_to_show(self, webview, related, navigation_action):
-        """
-            Add a new webview with related
-            @param webview as WebView
-            @param related as WebView
-            @param navigation_action as WebKit2.NavigationAction
-        """
-        # Do not block if we get a click on view
-        elapsed = time() - related.last_click_time
-        popup_block = El().settings.get_value("popupblock")
-        parsed_related = urlparse(related.get_uri())
-        exception = \
-            related.js_load or\
-            El().popup_exceptions.find(parsed_related.netloc) or\
-            El().popup_exceptions.find(parsed_related.netloc +
-                                       parsed_related.path) or\
-            (not related.is_loading() and elapsed < 0.5)
-        if not exception and popup_block and\
-                navigation_action.get_navigation_type() in [
-                               WebKit2.NavigationType.OTHER,
-                               WebKit2.NavigationType.RELOAD,
-                               WebKit2.NavigationType.BACK_FORWARD]:
-            related.add_popup(webview)
-            self.connect("close", self.__on_popup_close, related)
-            if related == self._window.container.current.webview:
-                self._window.toolbar.title.show_indicator(
-                                                        Indicator.POPUPS)
-            return
-        properties = self.get_window_properties()
-        if properties.get_locationbar_visible() and\
-                properties.get_toolbar_visible() and\
-                not navigation_action.get_modifiers() &\
-                Gdk.ModifierType.SHIFT_MASK:
-            self._window.container.add_view(webview,
-                                            Gdk.WindowType.CHILD)
-        else:
-            self._window.container.popup_webview(webview, True)
 
     def __on_save_password(self, webview, user_form_name, user_form_value,
                            pass_form_name, pass_form_value, uri, form_uri):
@@ -715,6 +650,29 @@ class WebViewSignals:
                 popover.set_pointing_to(rect)
                 helper = PasswordsHelper()
                 helper.get(self.get_uri(), self.__on_password, popover, model)
+
+    def __on_password(self, attributes, password, uri,
+                      index, count, popover, model):
+        """
+            Show form popover
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+            @param index as int
+            @param count as int
+            @param popover as Gtk.Popover
+            @param model as Gio.MenuModel
+        """
+        parsed = urlparse(uri)
+        self._last_click_event = {}
+        if attributes is not None and (count > 1 or
+                                       parsed.scheme == "http"):
+            parsed = urlparse(uri)
+            submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+            if submit_uri == attributes["formSubmitURL"]:
+                model.add_attributes(attributes, uri)
+                if index == 0:
+                    popover.popup()
 
     def __on_map(self, webview):
         """

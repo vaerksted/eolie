@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El
+from eolie.define import El, Indicator
 from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -382,6 +382,7 @@ class WebView(WebKit2.WebView):
         settings.set_property("javascript-can-open-windows-automatically",
                               True)
         settings.set_property("media-playback-allows-inline", True)
+        self.connect("create", self.__on_create)
 
     def __set_system_fonts(self, settings):
         """
@@ -408,28 +409,69 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-smooth-scrolling",
                               source != Gdk.InputSource.MOUSE)
 
-    def __on_password(self, attributes, password, uri,
-                      index, count, popover, model):
+    def __on_create(self, related, navigation_action):
         """
-            Show form popover
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param index as int
-            @param count as int
-            @param popover as Gtk.Popover
-            @param model as Gio.MenuModel
+            Create a new view for action
+            @param related as WebView
+            @param navigation_action as WebKit2.NavigationAction
+            @param force as bool
         """
-        parsed = urlparse(uri)
-        self._last_click_event = {}
-        if attributes is not None and (count > 1 or
-                                       parsed.scheme == "http"):
-            parsed = urlparse(uri)
-            submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            if submit_uri == attributes["formSubmitURL"]:
-                model.add_attributes(attributes, uri)
-                if index == 0:
-                    popover.popup()
+        webview = WebView.new_with_related_view(related, self._window)
+        self.set_rtime(related.rtime - 1)
+        self.connect("ready-to-show",
+                     self.__on_ready_to_show,
+                     related,
+                     navigation_action)
+        return webview
+
+    def __on_ready_to_show(self, webview, related, navigation_action):
+        """
+            Add a new webview with related
+            @param webview as WebView
+            @param related as WebView
+            @param navigation_action as WebKit2.NavigationAction
+        """
+        # Do not block if we get a click on view
+        elapsed = time() - related.last_click_time
+        popup_block = El().settings.get_value("popupblock")
+        parsed_related = urlparse(related.get_uri())
+        exception = \
+            related.js_load or\
+            El().popup_exceptions.find(parsed_related.netloc) or\
+            El().popup_exceptions.find(parsed_related.netloc +
+                                       parsed_related.path) or\
+            (not related.is_loading() and elapsed < 0.5)
+        if not exception and popup_block and\
+                navigation_action.get_navigation_type() in [
+                               WebKit2.NavigationType.OTHER,
+                               WebKit2.NavigationType.RELOAD,
+                               WebKit2.NavigationType.BACK_FORWARD]:
+            related.add_popup(webview)
+            self.connect("close", self.__on_popup_close, related)
+            if related == self._window.container.current.webview:
+                self._window.toolbar.title.show_indicator(
+                                                        Indicator.POPUPS)
+            return
+        properties = self.get_window_properties()
+        if properties.get_locationbar_visible() and\
+                properties.get_toolbar_visible() and\
+                not navigation_action.get_modifiers() &\
+                Gdk.ModifierType.SHIFT_MASK:
+            self._window.container.add_view(webview,
+                                            Gdk.WindowType.CHILD)
+        else:
+            self._window.container.popup_webview(webview, True)
+
+    def __on_popup_close(self, webview, related):
+        """
+            Remove webview from popups
+            @param webview as WebView
+            @param related as WebView
+        """
+        related.remove_popup(webview)
+        if self._window.container.current.webview == related and\
+                not related.popups:
+            self._window.toolbar.title.show_indicator(Indicator.NONE)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors, WebViewSignals):
