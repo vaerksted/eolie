@@ -293,17 +293,6 @@ class WebView(WebKit2.WebView):
         return self.__selection
 
     @property
-    def last_click_time(self):
-        """
-            Get last click time
-            @return float
-        """
-        if self._last_click_event:
-            return self._last_click_event["time"]
-        else:
-            return 0
-
-    @property
     def readable_content(self):
         """
             Readable content
@@ -332,7 +321,6 @@ class WebView(WebKit2.WebView):
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readable_content = ""
-        self._last_click_event = {}
         self.__delayed_uri = None
         self._navigation_uri = None
         self.__related_view = related_view
@@ -432,7 +420,7 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         # Do not block if we get a click on view
-        elapsed = time() - related.last_click_time
+        elapsed = time() - related.last_click_event["time"]
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
         exception = \

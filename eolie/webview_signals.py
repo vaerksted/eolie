@@ -14,18 +14,16 @@ from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2, GObject
 
 from gettext import gettext as _
 from urllib.parse import urlparse
-from ctypes import string_at
 from time import time
 import cairo
 
-from eolie.menu_form import FormMenu
-from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El, Indicator, ArtSize
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
+from eolie.webview_signals_dbus import WebViewDBusSignals
 
 
-class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
+class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
     """
         Handle webview signals
     """
@@ -55,6 +53,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         """
         WebViewMenuSignals.__init__(self)
         WebViewJsSignals.__init__(self)
+        WebViewDBusSignals.__init__(self)
         self.__cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
@@ -62,14 +61,22 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         self.connect("close", self.__on_close)
         # Always connected as we need on_title_changed() update history
         self.connect("title-changed", self.__on_title_changed)
-        self.connect("button-press-event", self.__on_button_press_event)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
-        self.connect("submit-form", self.__on_submit_form)
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_button_press_event(self, webview, event):
+        """
+            Hide Titlebar popover
+            @param webview as WebView
+            @param event as Gdk.Event
+        """
+        if self.get_ancestor(Gtk.Popover) is None:
+            return self._window.close_popovers()
+        WebViewDBusSignals.on_button_press_event(self, webview, event)
+
     def _on_map(self, webview):
         """
             Connect all signals
@@ -82,7 +89,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         self.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)
         self.connect("load-changed", self.__on_load_changed)
-        self.connect("button-press-event", self.__on_button_press)
+        self.connect("button-press-event", self._on_button_press_event)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
         self.connect("leave-fullscreen", self.__on_leave_fullscreen)
@@ -93,9 +100,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
                              "changed",
                              self.__on_back_forward_list_changed,
                              webview)
-        page_id = webview.get_page_id()
-        El().helper.connect(None, self.__on_signal, page_id)
         WebViewJsSignals._on_map(self, webview)
+        WebViewDBusSignals._on_map(self, webview)
 
     def _on_unmap(self, webview):
         """
@@ -107,7 +113,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             return
         self.disconnect_by_func(self.__on_estimated_load_progress)
         self.disconnect_by_func(self.__on_load_changed)
-        self.disconnect_by_func(self.__on_button_press)
+        self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_uri_changed)
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
@@ -115,9 +121,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         self.disconnect_by_func(self.__on_insecure_content_detected)
         self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
-        page_id = webview.get_page_id()
-        El().helper.disconnect(page_id)
         WebViewJsSignals._on_unmap(self, webview)
+        WebViewDBusSignals._on_unmap(self, webview)
 
 #######################
 # PRIVATE             #
@@ -133,30 +138,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
                               self.__cancellable,
                               self.__on_snapshot,
                               uri)
-
-    def __on_get_forms(self, source, result, request, uri):
-        """
-            Set forms value
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param request as WebKit2.FormSubmissionRequest
-            @param uri as str
-        """
-        try:
-            (user_form_name,
-             user_form_value,
-             pass_form_name,
-             pass_form_value) = source.call_finish(result)[0]
-            if user_form_name and pass_form_name:
-                self._window.close_popovers()
-                self.emit("save-password",
-                          user_form_name, user_form_value,
-                          pass_form_name, pass_form_value,
-                          self.get_uri(),
-                          uri)
-            request.submit()
-        except Exception as e:
-            print("WebView::__on_get_forms():", e)
 
     def __on_run_file_chooser(self, webview, request):
         """
@@ -183,38 +164,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             El().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
                                              uri)
         return True
-
-    def __on_submit_form(self, webview, request):
-        """
-            Check for auth forms
-            @param webview as WebKit2.WebView
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        uri = self._navigation_uri
-        if self.ephemeral or not El().settings.get_value("remember-passwords"):
-            return
-        fields = request.get_text_fields()
-        if fields is None:
-            return
-        forms = []
-        for k, v in fields.items():
-            name = string_at(k).decode("utf-8")
-            value = string_at(v).decode("utf-8")
-            forms.append((name, value))
-        page_id = webview.get_page_id()
-        El().helper.call("GetAuthForms",
-                         GLib.Variant("(aasi)", (forms, page_id)),
-                         self.__on_get_forms, page_id, request, uri)
-
-    def __on_button_press_event(self, widget, event):
-        """
-            Store last press event
-            @param widget as WebView
-            @param event as Gdk.EventButton
-        """
-        self._last_click_event = {"x": event.x,
-                                  "y": event.y,
-                                  "time": time()}
 
     def __on_scroll_event(self, webview, event):
         """
@@ -288,15 +237,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
                                                  pass_form_value,
                                                  uri,
                                                  form_uri)
-
-    def __on_button_press(self, webview, event):
-        """
-            Hide Titlebar popover
-            @param webview as WebView
-            @param event as Gdk.Event
-        """
-        if self.get_ancestor(Gtk.Popover) is None:
-            return self._window.close_popovers()
 
     def __on_estimated_load_progress(self, webview, value):
         """
@@ -454,58 +394,3 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
                     El().art.save_artwork(uri, surface, "start")
         except Exception as e:
             print("WebViewSignalsHandler::__on_snapshot():", e)
-
-    def __on_signal(self, connection, sender, path,
-                    interface, signal, params):
-        """
-            Add video to download manager
-            @param connection as Gio.DBusConnection
-            @param sender as str
-            @param path as str
-            @param interface as str
-            @param signal as str
-            @param parameters as GLib.Variant
-        """
-        if signal == "VideoInPage":
-            uri = params[0]
-            title = params[1]
-            page_id = params[2]
-            El().download_manager.add_video(uri, title, page_id)
-        elif signal == "UnsecureFormFocused":
-            self._window.toolbar.title.show_input_warning(self)
-        elif signal == "InputMouseDown":
-            if self.__last_click_event:
-                model = FormMenu(params[0], self.get_page_id())
-                popover = Gtk.Popover.new_from_model(self, model)
-                popover.set_modal(False)
-                self._window.register(popover)
-                rect = Gdk.Rectangle()
-                rect.x = self.__last_click_event["x"]
-                rect.y = self.__last_click_event["y"] - 10
-                rect.width = rect.height = 1
-                popover.set_pointing_to(rect)
-                helper = PasswordsHelper()
-                helper.get(self.get_uri(), self.__on_password, popover, model)
-
-    def __on_password(self, attributes, password, uri,
-                      index, count, popover, model):
-        """
-            Show form popover
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param index as int
-            @param count as int
-            @param popover as Gtk.Popover
-            @param model as Gio.MenuModel
-        """
-        parsed = urlparse(uri)
-        self._last_click_event = {}
-        if attributes is not None and (count > 1 or
-                                       parsed.scheme == "http"):
-            parsed = urlparse(uri)
-            submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            if submit_uri == attributes["formSubmitURL"]:
-                model.add_attributes(attributes, uri)
-                if index == 0:
-                    popover.popup()
