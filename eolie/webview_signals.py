@@ -67,6 +67,7 @@ class WebViewSignals:
         self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("submit-form", self.__on_submit_form)
+        self.connect("script-dialog", self.__on_script_dialog)
 
 #######################
 # PRIVATE             #
@@ -734,7 +735,6 @@ class WebViewSignals:
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
         self.connect("leave-fullscreen", self.__on_leave_fullscreen)
         self.connect("save-password", self.__on_save_password)
-        self.connect("script-dialog", self.__on_script_dialog)
         self.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
         self.get_back_forward_list().connect(
@@ -760,7 +760,6 @@ class WebViewSignals:
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
         self.disconnect_by_func(self.__on_save_password)
-        self.disconnect_by_func(self.__on_script_dialog)
         self.disconnect_by_func(self.__on_insecure_content_detected)
         self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
