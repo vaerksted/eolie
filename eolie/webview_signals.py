@@ -56,7 +56,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         WebViewJsSignals.__init__(self)
         WebViewDBusSignals.__init__(self)
         WebViewLoadSignals.__init__(self)
-        self.__cancellable = Gio.Cancellable()
+        self._cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("new-page", self.__on_new_page)
@@ -225,8 +225,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
             @param uri as GParamString (Do not use)
         """
-        self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self._cancellable.cancel()
+        self._cancellable.reset()
         if webview.get_mapped():
             self._window.toolbar.title.set_uri(uri)
 

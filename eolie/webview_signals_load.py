@@ -66,7 +66,7 @@ class WebViewLoadSignals:
         if uri == self.get_uri() and not self.ephemeral:
             self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                               WebKit2.SnapshotOptions.NONE,
-                              self.__cancellable,
+                              self._cancellable,
                               self.__on_snapshot,
                               uri)
 
