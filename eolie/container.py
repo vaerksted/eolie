@@ -144,13 +144,6 @@ class Container(Gtk.Overlay):
             Set visible view
             @param view as View
         """
-        # Remove from offscreen window if needed
-        # Will kill running get_snapshot :-/
-        parent = view.get_parent()
-        if parent is not None and isinstance(parent, Gtk.OffscreenWindow):
-            parent.remove(view)
-            view.set_size_request(-1, -1)
-            self.__stack.add(view)
         self.__stack.set_visible_child(view)
         if self.__pages_overlay is not None:
             self.__pages_overlay.destroy_child(view)
@@ -182,7 +175,8 @@ class Container(Gtk.Overlay):
         """
         # Show search bar
         child = self.__expose_stack.get_child_by_name("expose")
-        GLib.timeout_add(500, child.set_filtered, search and expose)
+        if not child.filtered:
+            GLib.timeout_add(500, child.set_filtered, search and expose)
         # Show expose mode
         if expose:
             self.__pages_manager.update_sort()

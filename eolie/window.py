@@ -38,10 +38,12 @@ class Window(Gtk.ApplicationWindow):
         self.__popovers = []
         self.__zoom_level = 1.0
         self.__container = None
+        self.__lock_sort = False
         self.__window_state = 0
         self.__setup_content()
         self.setup_window()
         self.connect("realize", self.__on_realize)
+        self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
@@ -130,7 +132,8 @@ class Window(Gtk.ApplicationWindow):
                 uri = webview.get_uri()
             else:
                 webview.load_uri(uri)
-            webview.set_atime()
+            if not self.__lock_sort:
+                webview.set_atime()
             self.container.sites_manager.update_indicator(
                                                       self.__container.current)
             title = webview.get_title()
@@ -386,13 +389,23 @@ class Window(Gtk.ApplicationWindow):
             appinfo = Gio.app_info_get_default_for_type("text/plain", False)
             appinfo.launch([f], None)
 
+    def __on_key_press_event(self, window, event):
+        """
+            Lock sort in Container::PagesManager
+            @param window as Window
+            @param event as Gdk.EventKey
+        """
+        if event.keyval == Gdk.KEY_Control_L:
+            self.__lock_sort = True
+
     def __on_key_release_event(self, window, event):
         """
-            Disable expose if Ctrl released
+            Handle Esc/Ctrl release
             @param window as Window
             @param event as Gdk.EventKey
         """
         if event.keyval in [Gdk.KEY_Control_L, Gdk.KEY_Escape]:
+            self.__lock_sort = False
             self.__container.pages_manager.ctrl_released()
             self.__container.set_expose(False)
         if self.__container.current.reading and event.keyval == Gdk.KEY_Escape:

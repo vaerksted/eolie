@@ -256,9 +256,17 @@ class PagesManager(Gtk.EventBox):
     def filter(self):
         """
             Get filter
-            return str
+            @return str
         """
         return self.__search_entry.get_text()
+
+    @property
+    def filtered(self):
+        """
+            True if filtered
+            @return bool
+        """
+        return self.__search_bar.get_search_mode()
 
     @property
     def children(self):
@@ -299,11 +307,18 @@ class PagesManager(Gtk.EventBox):
             Show next view
         """
         children = self.__box.get_children()
-        index = self.__get_index(self.__window.container.current)
-        if index + 1 < len(children):
-            next_row = self.__box.get_child_at_index(index + 1)
-        else:
-            next_row = self.__box.get_child_at_index(0)
+        if not children:
+            return
+        current_row = None
+        next_row = children[0] if self.__filter_func(children[0]) else None
+        for child in children:
+            # First search for current
+            if child.view == self.__window.container.current:
+                current_row = child
+            # Second search for next
+            elif current_row is not None and self.__filter_func(child):
+                next_row = child
+                break
         if next_row is not None:
             self.__window.container.set_visible_view(next_row.view)
 
@@ -312,13 +327,18 @@ class PagesManager(Gtk.EventBox):
             Show previous view
         """
         children = self.__box.get_children()
-        index = self.__get_index(self.__window.container.current)
-        if index == 0:
-            next_row = self.__box.get_child_at_index(len(children) - 1)
-        else:
-            next_row = self.__box.get_child_at_index(index - 1)
-        if next_row is not None:
-            self.__window.container.set_visible_view(next_row.view)
+        if not children:
+            return
+        prev_row = children[-1] if self.__filter_func(children[-1]) else None
+        for child in self.__box.get_children():
+            # First search for current
+            if child.view == self.__window.container.current:
+                break
+            # Second search for next
+            elif self.__filter_func(child):
+                prev_row = child
+        if prev_row is not None:
+            self.__window.container.set_visible_view(prev_row.view)
 
     def __get_index(self, view):
         """

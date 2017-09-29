@@ -182,7 +182,8 @@ class SitesManager(Gtk.EventBox):
             if len(next_row.views) == 1:
                 self.__window.toolbar.actions.view_button.set_active(False)
             else:
-                self.__window.container.pages_manager.set_filter(child.netloc)
+                self.__window.container.pages_manager.set_filter(
+                                                               next_row.netloc)
                 self.__window.toolbar.actions.view_button.set_active(True)
 
     def previous(self):
@@ -207,7 +208,8 @@ class SitesManager(Gtk.EventBox):
             if len(next_row.views) == 1:
                 self.__window.toolbar.actions.view_button.set_active(False)
             else:
-                self.__window.container.pages_manager.set_filter(child.netloc)
+                self.__window.container.pages_manager.set_filter(
+                                                               next_row.netloc)
                 self.__window.toolbar.actions.view_button.set_active(True)
 
     def update_visible_child(self):
