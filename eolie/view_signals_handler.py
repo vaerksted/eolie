@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from time import time
 import cairo
 
-from eolie.view_web import WebView
+from eolie.webview import WebView
 from eolie.define import El, Indicator, ArtSize
 
 

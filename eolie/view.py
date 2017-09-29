@@ -14,7 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, Gio
 
 from eolie.widget_find import FindWidget
 from eolie.view_signals_handler import ViewSignalsHandler
-from eolie.view_web import WebView
+from eolie.webview import WebView
 from eolie.define import El
 
 

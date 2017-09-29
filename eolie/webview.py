@@ -19,8 +19,8 @@ from time import time
 
 from eolie.define import El
 from eolie.utils import debug
-from eolie.view_web_errors import WebViewErrors
-from eolie.view_web_navigation import WebViewNavigation
+from eolie.webview_errors import WebViewErrors
+from eolie.webview_navigation import WebViewNavigation
 from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
 from eolie.search import Search
