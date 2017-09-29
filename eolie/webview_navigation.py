@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, Gtk, Gio, GObject, WebKit2, Gdk
+from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 
 from urllib.parse import urlparse
 
@@ -23,24 +23,6 @@ class WebViewNavigation:
         Implement WebView navigation (uri, title, readable, ...)
         Should be inherited by a WebView
     """
-
-    gsignals = {
-        "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
-        "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int, int)),
-        "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
-                                                                str,
-                                                                str,
-                                                                str,
-                                                                str,
-                                                                str)),
-    }
-
-    for signal in gsignals:
-        args = gsignals[signal]
-        GObject.signal_new(signal, WebKit2.WebView,
-                           args[0], args[1], args[2])
 
     __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
                "x-scheme-handler/http", "x-scheme-handler/https",
