@@ -184,6 +184,7 @@ class Container(Gtk.Overlay):
         else:
             self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
+            child.set_filtered(False)
 
     @property
     def pages_manager(self):
