@@ -419,6 +419,8 @@ class WebViewSignals:
                              "changed",
                              self.__on_back_forward_list_changed,
                              webview)
+        page_id = webview.get_page_id()
+        El().helper.connect(None, self.__on_signal, page_id)
 
     def __on_unmap(self, webview):
         """
@@ -440,3 +442,5 @@ class WebViewSignals:
         self.disconnect_by_func(self.__on_insecure_content_detected)
         self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
+        page_id = webview.get_page_id()
+        El().helper.disconnect(page_id)

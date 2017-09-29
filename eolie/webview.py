@@ -392,8 +392,6 @@ class WebView(WebKit2.WebView):
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("script-dialog", self.__on_script_dialog)
         self.connect("submit-form", self.__on_submit_form)
-        self.connect("map", self.__on_map)
-        self.connect("unmap", self.__on_unmap)
         self.connect("button-press-event", self.__on_button_press_event)
 
     def __set_system_fonts(self, settings):
@@ -696,22 +694,6 @@ class WebView(WebKit2.WebView):
             uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
             El().history.reset_popularity(uri)
             return True
-
-    def __on_map(self, webview):
-        """
-            Connect signals
-            @parma webview as WebView
-        """
-        page_id = webview.get_page_id()
-        El().helper.connect(None, self.__on_signal, page_id)
-
-    def __on_unmap(self, webview):
-        """
-            Disconnect signals
-            @parma webview as WebView
-        """
-        page_id = webview.get_page_id()
-        El().helper.disconnect(page_id)
 
     def __on_password(self, attributes, password, uri,
                       index, count, popover, model):
