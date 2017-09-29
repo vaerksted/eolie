@@ -176,5 +176,5 @@ class View(Gtk.Overlay):
             Show readable button in titlebar
             @param webview as WebView
         """
-        if webview == self._window.container.current.webview:
+        if webview.get_mapped():
             self._window.toolbar.title.show_readable_button(True)

@@ -505,7 +505,7 @@ class WebViewSignals:
             @param webview as WebView
             @param value GparamFloat
         """
-        if webview == self._window.container.current.webview:
+        if webview.get_mapped():
             value = self.get_estimated_load_progress()
             self._window.toolbar.title.progress.set_fraction(value)
 
@@ -517,8 +517,7 @@ class WebViewSignals:
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
-        # Check needed by WebViewPopover!
-        if webview == self._window.container.current.webview and uri:
+        if webview.get_mapped():
             self._window.toolbar.title.set_uri(uri)
 
     def __on_title_changed(self, webview, title):
@@ -527,8 +526,7 @@ class WebViewSignals:
             @param webview as WebView
             @param title as str
         """
-        # Check needed by WebViewPopover!
-        if webview == self._window.container.current.webview:
+        if webview.get_mapped():
             self._window.toolbar.title.set_title(title)
             self._window.container.sites_manager.update_label(
                                                 self._window.container.current)
@@ -574,7 +572,7 @@ class WebViewSignals:
             @param event as WebKit2.LoadEvent
         """
         # Check needed by WebViewPopover!
-        if webview != self._window.container.current.webview:
+        if not webview.get_mapped():
             return
         self._window.toolbar.title.update_load_indicator(webview)
         uri = self.get_uri()
