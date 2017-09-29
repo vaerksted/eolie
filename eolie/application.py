@@ -383,6 +383,10 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::previous",
                                    ["<Control><Shift>Tab",
                                     "<Control>Page_Up"])
+        self.set_accels_for_action("win.shortcut::next_site",
+                                   ["<Control>twosuperior"])
+        self.set_accels_for_action("win.shortcut::previous_site",
+                                   ["<Control><Shift>twosuperior"])
         self.set_accels_for_action("win.shortcut::zoom_in",
                                    ["<Control>KP_Add",
                                     "<Control>plus",

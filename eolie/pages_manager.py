@@ -309,7 +309,7 @@ class PagesManager(Gtk.EventBox):
 
     def __previous(self):
         """
-            Show next view
+            Show previous view
         """
         children = self.__box.get_children()
         index = self.__get_index(self.__window.container.current)

@@ -444,6 +444,10 @@ class Window(Gtk.ApplicationWindow):
             self.__container.pages_manager.previous()
         elif string == "next":
             self.__container.pages_manager.next()
+        elif string == "previous_site":
+            self.__container.sites_manager.previous()
+        elif string == "next_site":
+            self.__container.sites_manager.next()
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":

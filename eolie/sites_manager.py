@@ -67,7 +67,7 @@ class SitesManager(Gtk.EventBox):
         """
         if uri is None:
             return
-        netloc = urlparse(uri).netloc.lstrip("www.")
+        netloc = self.__get_netloc(uri)
         if not netloc:
             netloc = "%s://" % urlparse(uri).scheme
 
@@ -160,6 +160,56 @@ class SitesManager(Gtk.EventBox):
             if site.empty and count > 1:
                 site.destroy()
 
+    def next(self):
+        """
+            Show next site
+        """
+        current = None
+        children = self.__box.get_children()
+        for child in children:
+            if child.get_style_context().has_class("sidebar-item-selected"):
+                current = child
+            child.get_style_context().remove_class("sidebar-item-selected")
+        index = current.get_index()
+        if index + 1 < len(children):
+            next_row = self.__box.get_row_at_index(index + 1)
+        else:
+            next_row = self.__box.get_row_at_index(0)
+        if next_row is not None:
+            next_row.get_style_context().add_class("sidebar-item-selected")
+            webview = next_row.views[0].webview
+            self.__window.container.set_visible_webview(webview)
+            if len(next_row.views) == 1:
+                self.__window.toolbar.actions.view_button.set_active(False)
+            else:
+                self.__window.container.pages_manager.set_filter(child.netloc)
+                self.__window.toolbar.actions.view_button.set_active(True)
+
+    def previous(self):
+        """
+            Show previous site
+        """
+        current = None
+        children = self.__box.get_children()
+        for child in children:
+            if child.get_style_context().has_class("sidebar-item-selected"):
+                current = child
+            child.get_style_context().remove_class("sidebar-item-selected")
+        index = current.get_index()
+        if index == 0:
+            next_row = self.__box.get_row_at_index(len(children) - 1)
+        else:
+            next_row = self.__box.get_row_at_index(index - 1)
+        if next_row is not None:
+            next_row.get_style_context().add_class("sidebar-item-selected")
+            webview = next_row.views[0].webview
+            self.__window.container.set_visible_webview(webview)
+            if len(next_row.views) == 1:
+                self.__window.toolbar.actions.view_button.set_active(False)
+            else:
+                self.__window.container.pages_manager.set_filter(child.netloc)
+                self.__window.toolbar.actions.view_button.set_active(True)
+
     def update_visible_child(self):
         """
             Mark current child as visible
@@ -175,17 +225,16 @@ class SitesManager(Gtk.EventBox):
             netloc = netloc.lstrip("www.")
         else:
             netloc = "%s://" % urlparse(uri).scheme
-        class_name = "sidebar-item-selected"
         for child in self.__box.get_children():
             if (child.netloc == netloc and
                     not ephemeral and
                     not child.ephemeral) or\
                     (ephemeral and child.ephemeral):
-                child.get_style_context().add_class(class_name)
+                child.get_style_context().add_class("sidebar-item-selected")
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
             else:
-                child.get_style_context().remove_class(class_name)
+                child.get_style_context().remove_class("sidebar-item-selected")
 
 #######################
 # PROTECTED           #
@@ -195,6 +244,16 @@ class SitesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __get_netloc(self, uri):
+        """
+            Calculate netloc
+            @param uri as str
+        """
+        netloc = urlparse(uri).netloc.lstrip("www.")
+        if not netloc:
+            netloc = "%s://" % urlparse(uri).scheme
+        return netloc
+
     def __get_index(self, netloc):
         """
             Get child index
