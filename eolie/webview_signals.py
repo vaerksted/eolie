@@ -15,15 +15,16 @@ from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2, GObject
 from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
-import cairo
 
-from eolie.define import El, Indicator, ArtSize
+from eolie.define import El
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
 from eolie.webview_signals_dbus import WebViewDBusSignals
+from eolie.webview_signals_load import WebViewLoadSignals
 
 
-class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
+class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
+                     WebViewDBusSignals, WebViewLoadSignals):
     """
         Handle webview signals
     """
@@ -54,6 +55,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
         WebViewMenuSignals.__init__(self)
         WebViewJsSignals.__init__(self)
         WebViewDBusSignals.__init__(self)
+        WebViewLoadSignals.__init__(self)
         self.__cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
@@ -86,9 +88,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
         if self._window != self.get_toplevel():
             return
         self._window.update(webview)
-        self.connect("notify::estimated-load-progress",
-                     self.__on_estimated_load_progress)
-        self.connect("load-changed", self.__on_load_changed)
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
@@ -96,12 +95,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
         self.connect("save-password", self.__on_save_password)
         self.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
-        self.get_back_forward_list().connect(
-                             "changed",
-                             self.__on_back_forward_list_changed,
-                             webview)
         WebViewJsSignals._on_map(self, webview)
         WebViewDBusSignals._on_map(self, webview)
+        WebViewLoadSignals._on_map(self, webview)
 
     def _on_unmap(self, webview):
         """
@@ -111,34 +107,19 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
         # We are offscreen
         if self._window != self.get_toplevel():
             return
-        self.disconnect_by_func(self.__on_estimated_load_progress)
-        self.disconnect_by_func(self.__on_load_changed)
         self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_uri_changed)
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
         self.disconnect_by_func(self.__on_save_password)
         self.disconnect_by_func(self.__on_insecure_content_detected)
-        self.get_back_forward_list().disconnect_by_func(
-                                         self.__on_back_forward_list_changed)
         WebViewJsSignals._on_unmap(self, webview)
         WebViewDBusSignals._on_unmap(self, webview)
+        WebViewLoadSignals._on_map(self, webview)
 
 #######################
 # PRIVATE             #
 #######################
-    def __set_snapshot(self, uri):
-        """
-            Set webpage preview
-            @param uri as str
-        """
-        if uri == self.get_uri() and not self.ephemeral:
-            self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                              WebKit2.SnapshotOptions.NONE,
-                              self.__cancellable,
-                              self.__on_snapshot,
-                              uri)
-
     def __on_run_file_chooser(self, webview, request):
         """
             Run own file chooser
@@ -238,16 +219,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
                                                  uri,
                                                  form_uri)
 
-    def __on_estimated_load_progress(self, webview, value):
-        """
-            Update progress bar
-            @param webview as WebView
-            @param value GparamFloat
-        """
-        if webview.get_mapped():
-            value = self.get_estimated_load_progress()
-            self._window.toolbar.title.progress.set_fraction(value)
-
     def __on_uri_changed(self, webview, uri):
         """
             Update UI and cancel current snapshot
@@ -303,94 +274,3 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
             @param event as WebKit2.InsecureContentEvent
         """
         self._window.toolbar.title.set_insecure_content()
-
-    def __on_load_changed(self, webview, event):
-        """
-            Update sidebar/urlbar
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        # Check needed by WebViewPopover!
-        if not webview.get_mapped():
-            return
-        self._window.toolbar.title.update_load_indicator(webview)
-        uri = self.get_uri()
-        parsed = urlparse(uri)
-        wanted_scheme = parsed.scheme in ["http", "https", "file"]
-        if event == WebKit2.LoadEvent.STARTED:
-            self._window.container.current.find_widget.set_search_mode(False)
-            self._window.toolbar.title.set_title(uri)
-            if wanted_scheme:
-                self._window.toolbar.title.show_spinner(True)
-            else:
-                # Give focus to url bar
-                self._window.toolbar.title.start_search()
-            self._window.toolbar.title.show_indicator(Indicator.NONE)
-            # Turn off reading mode if needed
-            if self._window.container.current.reading:
-                self._window.container.current.switch_read_mode()
-            self._window.toolbar.title.progress.show()
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.set_title(uri)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self._window.toolbar.title.show_spinner(False)
-            # Give focus to webview
-            if wanted_scheme:
-                GLib.idle_add(self.grab_focus)
-            # Hide progress delayed to show result to user
-            GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
-            GLib.timeout_add(3000, self.__set_snapshot, uri)
-
-    def __on_back_forward_list_changed(self, bf_list, added, removed, webview):
-        """
-            Update actions
-            @param bf_list as WebKit2.BackForwardList
-            @param added as WebKit2.BackForwardListItem
-            @param removed as WebKit2.BackForwardListItem
-            @param webview as WebView
-        """
-        self._window.toolbar.actions.set_actions(webview)
-
-    def __on_snapshot(self, webview, result, uri):
-        """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
-            @param uri as str
-        """
-        ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
-        # Do not cache snapshot on error
-        if self.error is not None or uri != self.get_uri():
-            return
-        try:
-            snapshot = self.get_snapshot_finish(result)
-            # Set start image scale factor
-            ratio = snapshot.get_width() / snapshot.get_height()
-            if ratio > ART_RATIO:
-                factor = ArtSize.START_HEIGHT / snapshot.get_height()
-            else:
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         ArtSize.START_WIDTH,
-                                         ArtSize.START_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, factor, 0)
-            context.paint()
-            # Cache result
-            # We also cache initial URI
-            uris = [self.get_uri()]
-            parsed = urlparse(uri)
-            # Caching this will break populars navigation
-            # as we are looking for subpage snapshots
-            if parsed.scheme == "populars":
-                return
-            initial_parsed = urlparse(self.initial_uri)
-            if parsed.netloc == initial_parsed.netloc and\
-                    self.initial_uri not in uris:
-                uris.append(self.initial_uri)
-            for uri in uris:
-                if not El().art.exists(uri, "start"):
-                    El().art.save_artwork(uri, surface, "start")
-        except Exception as e:
-            print("WebViewSignalsHandler::__on_snapshot():", e)
