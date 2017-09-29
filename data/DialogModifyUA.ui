@@ -50,7 +50,7 @@
         <col id="1">Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/601.7.7 (KHTML, like Gecko) Version/9.1.2 Safari/601.7.7</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Vivaldi</col>
+        <col id="0">Vivaldi</col>
         <col id="1">Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.105 Safari/537.36 Vivaldi/1.92.917.43</col>
       </row>
     </data>
