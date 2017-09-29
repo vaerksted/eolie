@@ -21,10 +21,10 @@ import cairo
 from eolie.menu_form import FormMenu
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El, Indicator, ArtSize
-from eolie.search import Search
+from eolie.webview_signals_menu import WebViewMenuSignals
 
 
-class WebViewSignals:
+class WebViewSignals(WebViewMenuSignals):
     """
         Handle webview signals
     """
@@ -52,18 +52,18 @@ class WebViewSignals:
             Init handler
             @param webview as WebView
         """
+        WebViewMenuSignals.__init__(self)
         self.__js_timeout_id = None
         self.__cancellable = Gio.Cancellable()
         self.__reset_js_blocker()
-        self.connect("map", self.__on_map)
-        self.connect("unmap", self.__on_unmap)
+        self.connect("map", self._on_map)
+        self.connect("unmap", self._on_unmap)
         self.connect("new-page", self.__on_new_page)
         self.connect("close", self.__on_close)
         # Always connected as we need on_title_changed() update history
         self.connect("title-changed", self.__on_title_changed)
         self.connect("button-press-event", self.__on_button_press_event)
         self.connect("scroll-event", self.__on_scroll_event)
-        self.connect("context-menu", self.__on_context_menu)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("submit-form", self.__on_submit_form)
         self.connect("script-dialog", self.__on_script_dialog)
@@ -114,176 +114,6 @@ class WebViewSignals:
         except Exception as e:
             print("WebView::__on_get_forms():", e)
 
-    def __on_submit_form(self, webview, request):
-        """
-            Check for auth forms
-            @param webview as WebKit2.WebView
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        uri = self._navigation_uri
-        if self.ephemeral or not El().settings.get_value("remember-passwords"):
-            return
-        fields = request.get_text_fields()
-        if fields is None:
-            return
-        forms = []
-        for k, v in fields.items():
-            name = string_at(k).decode("utf-8")
-            value = string_at(v).decode("utf-8")
-            forms.append((name, value))
-        page_id = webview.get_page_id()
-        El().helper.call("GetAuthForms",
-                         GLib.Variant("(aasi)", (forms, page_id)),
-                         self.__on_get_forms, page_id, request, uri)
-
-    def __on_context_menu(self, view, context_menu, event, hit):
-        """
-            Add custom items to menu
-            @param view as WebView
-            @param context_menu as WebKit2.ContextMenu
-            @param event as Gdk.Event
-            @param hit as WebKit2.HitTestResult
-        """
-        parsed = urlparse(view.get_uri())
-        if hit.context_is_link():
-            # Add an item for open in a new page
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("open_new_page",
-                                    _("Open link in a new page"),
-                                    None,
-                                    None)
-            action.connect("activate",
-                           self.__on_open_new_page_activate,
-                           hit.get_link_uri())
-            item = WebKit2.ContextMenuItem.new(action)
-            context_menu.insert(item, 1)
-
-        user_data = context_menu.get_user_data()
-        if user_data is not None and user_data.get_string():
-            selection = user_data.get_string()
-            if hit.context_is_selection():
-                # Add an item for open words in search
-                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-                # Introspection missing, Gtk.Action deprecated
-                action = Gtk.Action.new("search_words",
-                                        _("Search on the Web"),
-                                        None,
-                                        None)
-                action.connect("activate",
-                               self.__on_search_words_activate,
-                               selection)
-                item = WebKit2.ContextMenuItem.new(action)
-                context_menu.insert(item, 1)
-            if hit.context_is_link():
-                # Add an item for open words in search
-                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-                # Introspection missing, Gtk.Action deprecated
-                action = Gtk.Action.new("copy_text",
-                                        _("Copy"),
-                                        None,
-                                        None)
-                action.connect("activate",
-                               self.__on_copy_text_activate,
-                               selection)
-                item = WebKit2.ContextMenuItem.new(action)
-                context_menu.insert(item, 2)
-        else:
-            # Add an item for open all images
-            if view.is_loading() or parsed.scheme not in ["http", "https"]:
-                return
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("save_imgs",
-                                    _("Save images"),
-                                    None,
-                                    None)
-            action.connect("activate", self.__on_save_images_activate,)
-            item = WebKit2.ContextMenuItem.new(action)
-            n_items = context_menu.get_n_items()
-            if El().settings.get_value("developer-extras"):
-                context_menu.insert(item, n_items - 2)
-            else:
-                context_menu.insert(item, n_items)
-            # Add an item for page capture
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("save_as_image",
-                                    _("Save page as image"),
-                                    None,
-                                    None)
-            action.connect("activate", self.__on_save_as_image_activate,)
-            item = WebKit2.ContextMenuItem.new(action)
-            n_items = context_menu.get_n_items()
-            if El().settings.get_value("developer-extras"):
-                context_menu.insert(item, n_items - 2)
-            else:
-                context_menu.insert(item, n_items)
-
-    def __on_open_new_page_activate(self, action, uri):
-        """
-            Open link in a new page
-            @param action as Gtk.Action
-            @param uri as str
-        """
-        self._window.container.add_webview(uri,
-                                           Gdk.WindowType.CHILD,
-                                           self.ephemeral)
-
-    def __on_search_words_activate(self, action, selection):
-        """
-            Open link in a new page
-            @param action as Gtk.Action
-            @param selection as str
-        """
-        search = Search()
-        uri = search.get_search_uri(selection)
-        self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
-
-    def __on_copy_text_activate(self, action, selection):
-        """
-            Open link in a new page
-            @param action as Gtk.Action
-            @param selection as str
-        """
-        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(selection, -1)
-
-    def __on_save_images_activate(self, action):
-        """
-            Show images filtering popover
-            @param action as Gtk.Action
-        """
-        self._window.toolbar.end.save_images(self.get_uri(),
-                                             self.get_page_id())
-
-    def __on_save_as_image_activate(self, action):
-        """
-            Save image in /tmp and show it to user
-            @param action as Gtk.Action
-        """
-        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                          WebKit2.SnapshotOptions.NONE,
-                          None,
-                          self.__on_image_snapshot)
-
-    def __on_image_snapshot(self, webview, result):
-        """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
-        """
-        try:
-            snapshot = webview.get_snapshot_finish(result)
-            pixbuf = Gdk.pixbuf_get_from_surface(snapshot, 0, 0,
-                                                 snapshot.get_width(),
-                                                 snapshot.get_height())
-            pixbuf.savev("/tmp/eolie_snapshot.png", "png", [None], [None])
-            Gtk.show_uri_on_window(self._window,
-                                   "file:///tmp/eolie_snapshot.png",
-                                   Gtk.get_current_event_time())
-        except Exception as e:
-            print("WebView::__on_snapshot():", e)
-
     def __on_run_file_chooser(self, webview, request):
         """
             Run own file chooser
@@ -309,6 +139,28 @@ class WebViewSignals:
             El().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
                                              uri)
         return True
+
+    def __on_submit_form(self, webview, request):
+        """
+            Check for auth forms
+            @param webview as WebKit2.WebView
+            @param request as WebKit2.FormSubmissionRequest
+        """
+        uri = self._navigation_uri
+        if self.ephemeral or not El().settings.get_value("remember-passwords"):
+            return
+        fields = request.get_text_fields()
+        if fields is None:
+            return
+        forms = []
+        for k, v in fields.items():
+            name = string_at(k).decode("utf-8")
+            value = string_at(v).decode("utf-8")
+            forms.append((name, value))
+        page_id = webview.get_page_id()
+        El().helper.call("GetAuthForms",
+                         GLib.Variant("(aasi)", (forms, page_id)),
+                         self.__on_get_forms, page_id, request, uri)
 
     def __on_button_press_event(self, widget, event):
         """
@@ -674,7 +526,7 @@ class WebViewSignals:
                 if index == 0:
                     popover.popup()
 
-    def __on_map(self, webview):
+    def _on_map(self, webview):
         """
             Connect all signals
             @param webview as WebView
@@ -702,7 +554,7 @@ class WebViewSignals:
         page_id = webview.get_page_id()
         El().helper.connect(None, self.__on_signal, page_id)
 
-    def __on_unmap(self, webview):
+    def _on_unmap(self, webview):
         """
             Disconnect all signals
             @param webview as WebView
