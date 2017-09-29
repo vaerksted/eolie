@@ -31,7 +31,6 @@ class WebViewSignals:
             @param webview as WebView
         """
         self.__js_timeout_id = None
-        self.__signals_connected = False
         self.__cancellable = Gio.Cancellable()
         self.__reset_js_blocker()
         self.connect("map", self.__on_map)
@@ -399,9 +398,9 @@ class WebViewSignals:
             Connect all signals
             @param webview as WebView
         """
-        if self.__signals_connected:
+        # We are offscreen
+        if self._window != self.get_toplevel():
             return
-        self.__signals_connected = True
         self._window.update(webview)
         self.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)
@@ -426,9 +425,9 @@ class WebViewSignals:
             Disconnect all signals
             @param webview as WebView
         """
-        if not self.__signals_connected:
+        # We are offscreen
+        if self._window != self.get_toplevel():
             return
-        self.__signals_connected = False
         self.disconnect_by_func(self.__on_estimated_load_progress)
         self.disconnect_by_func(self.__on_resource_load_started)
         self.disconnect_by_func(self.__on_load_changed)
