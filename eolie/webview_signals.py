@@ -73,9 +73,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals, WebViewDBusSignals):
             @param webview as WebView
             @param event as Gdk.Event
         """
+        WebViewDBusSignals._on_button_press_event(self, webview, event)
         if self.get_ancestor(Gtk.Popover) is None:
             return self._window.close_popovers()
-        WebViewDBusSignals.on_button_press_event(self, webview, event)
 
     def _on_map(self, webview):
         """
