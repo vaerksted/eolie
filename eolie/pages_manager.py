@@ -310,11 +310,16 @@ class PagesManager(Gtk.EventBox):
         if not children:
             return
         current_row = None
-        next_row = children[0] if self.__filter_func(children[0]) else None
+        next_row = None
         for child in children:
             # First search for current
             if child.view == self.__window.container.current:
                 current_row = child
+            # Init next to first valid child
+            elif next_row is None and\
+                    current_row is None and\
+                    self.__filter_func(child):
+                next_row = child
             # Second search for next
             elif current_row is not None and self.__filter_func(child):
                 next_row = child
@@ -329,14 +334,21 @@ class PagesManager(Gtk.EventBox):
         children = self.__box.get_children()
         if not children:
             return
-        prev_row = children[-1] if self.__filter_func(children[-1]) else None
-        for child in self.__box.get_children():
+        current_row = None
+        prev_row = None
+        for child in reversed(children):
             # First search for current
             if child.view == self.__window.container.current:
-                break
-            # Second search for next
-            elif self.__filter_func(child):
+                current_row = child
+            # Init prev to first valid child
+            elif prev_row is None and\
+                    current_row is None and\
+                    self.__filter_func(child):
                 prev_row = child
+            # Second search for next
+            elif current_row is not None and self.__filter_func(child):
+                prev_row = child
+                break
         if prev_row is not None:
             self.__window.container.set_visible_view(prev_row.view)
 
