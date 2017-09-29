@@ -26,12 +26,12 @@ function generate_pot()
     echo '[encoding: UTF-8]'
     for file in data/*.xml data/*.in eolie/*.py
     do
-        echo  $file
+        echo  ../$file
     done
     for file in data/*.ui AboutDialog.ui
     do
         echo -n '[type: gettext/glade]'
-        echo $file
+        echo ../$file
     done
 }
 
