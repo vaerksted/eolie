@@ -13,13 +13,12 @@
 from gi.repository import Gtk, Gdk, GLib, Gio
 
 from eolie.widget_find import FindWidget
-from eolie.view_signals_handler import ViewSignalsHandler
 from eolie.webview import WebView
 from eolie.widget_uri_label import UriLabelWidget
 from eolie.define import El
 
 
-class View(Gtk.Overlay, ViewSignalsHandler):
+class View(Gtk.Overlay):
     """
         An overlay with a webview and a find widget
     """
@@ -42,7 +41,6 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             @param window as window
         """
         Gtk.Overlay.__init__(self)
-        ViewSignalsHandler.__init__(self, webview)
         self.__reading_view = None
         self._window = window
         self.__webview = webview
@@ -70,6 +68,7 @@ class View(Gtk.Overlay, ViewSignalsHandler):
         # Connect signals
         self.connect("key-press-event", self.__on_key_press_event)
         webview.connect("mouse-target-changed", self.__on_mouse_target_changed)
+        webview.connect("readable", self.__on_readable)
 
     def switch_read_mode(self):
         """
@@ -171,3 +170,11 @@ class View(Gtk.Overlay, ViewSignalsHandler):
             self.__uri_label.show()
         else:
             self.__uri_label.hide()
+
+    def __on_readable(self, webview):
+        """
+            Show readable button in titlebar
+            @param webview as WebView
+        """
+        if webview == self._window.container.current.webview:
+            self._window.toolbar.title.show_readable_button(True)

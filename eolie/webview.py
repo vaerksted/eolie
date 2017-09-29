@@ -21,6 +21,7 @@ from eolie.define import El
 from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
+from eolie.webview_signals import WebViewSignals
 from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
 from eolie.search import Search
@@ -327,6 +328,7 @@ class WebView(WebKit2.WebView):
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
+        WebViewSignals.__init__(self)
         self._window = window
         self._content_manager = content_manager
         self.__atime = 0
@@ -767,6 +769,6 @@ class WebView(WebKit2.WebView):
                 helper.get(self.get_uri(), self.__on_password, popover, model)
 
 
-class WebViewMeta(WebViewNavigation, WebView, WebViewErrors):
+class WebViewMeta(WebViewNavigation, WebView, WebViewErrors, WebViewSignals):
     def __init__(self):
         pass

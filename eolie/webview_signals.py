@@ -17,16 +17,15 @@ from urllib.parse import urlparse
 from time import time
 import cairo
 
-from eolie.webview import WebView
 from eolie.define import El, Indicator, ArtSize
 
 
-class ViewSignalsHandler:
+class WebViewSignals:
     """
-        Webview signals handler, should be herited by a View
+        Handle webview signals
     """
 
-    def __init__(self, webview):
+    def __init__(self):
         """
             Init handler
             @param webview as WebView
@@ -35,13 +34,13 @@ class ViewSignalsHandler:
         self.__signals_connected = False
         self.__cancellable = Gio.Cancellable()
         self.__reset_js_blocker()
-        webview.connect("map", self.__on_webview_map)
-        webview.connect("unmap", self.__on_webview_unmap)
-        webview.connect("new-page", self.__on_new_page)
-        webview.connect("create", self.__on_create)
-        webview.connect("close", self.__on_close)
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
+        self.connect("new-page", self.__on_new_page)
+        self.connect("create", self.__on_create)
+        self.connect("close", self.__on_close)
         # Always connected as we need on_title_changed() update history
-        webview.connect("title-changed", self.__on_title_changed)
+        self.connect("title-changed", self.__on_title_changed)
 
 #######################
 # PRIVATE             #
@@ -51,12 +50,12 @@ class ViewSignalsHandler:
             Set webpage preview
             @param uri as str
         """
-        if uri == self.webview.get_uri() and not self.webview.ephemeral:
-            self.webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                                      WebKit2.SnapshotOptions.NONE,
-                                      self.__cancellable,
-                                      self.__on_snapshot,
-                                      uri)
+        if uri == self.get_uri() and not self.ephemeral:
+            self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                              WebKit2.SnapshotOptions.NONE,
+                              self.__cancellable,
+                              self.__on_snapshot,
+                              uri)
 
     def __reset_js_blocker(self):
         """
@@ -75,19 +74,19 @@ class ViewSignalsHandler:
         """
         if uri:
             if window_type == Gdk.WindowType.SUBSURFACE:
-                if webview.ephemeral:
-                    webview = WebView.new_ephemeral(self._window)
+                if self.ephemeral:
+                    webview = self.new_ephemeral(self._window)
                 else:
-                    webview = WebView.new(self._window)
+                    webview = self.new(self._window)
                 self._window.container.popup_webview(webview, True)
-                GLib.idle_add(webview.load_uri, uri)
+                GLib.idle_add(self.load_uri, uri)
             else:
                 new = self._window.container.add_webview(uri,
                                                          window_type,
-                                                         webview.ephemeral)
+                                                         self.ephemeral)
                 # parent.rtime = child.rtime + 1
                 # Used to search for best matching webview
-                new.set_rtime(webview.rtime - 1)
+                new.set_rtime(self.rtime - 1)
 
     def __on_create(self, related, navigation_action):
         """
@@ -96,12 +95,12 @@ class ViewSignalsHandler:
             @param navigation_action as WebKit2.NavigationAction
             @param force as bool
         """
-        webview = WebView.new_with_related_view(related, self._window)
-        webview.set_rtime(related.rtime - 1)
-        webview.connect("ready-to-show",
-                        self.__on_ready_to_show,
-                        related,
-                        navigation_action)
+        webview = self.new_with_related_view(related, self._window)
+        self.set_rtime(related.rtime - 1)
+        self.connect("ready-to-show",
+                     self.__on_ready_to_show,
+                     related,
+                     navigation_action)
         return webview
 
     def __on_close(self, webview):
@@ -109,10 +108,10 @@ class ViewSignalsHandler:
             Close my self
             @param webview as WebView
         """
-        if webview.get_ancestor(Gtk.Popover) is None:
+        if self.get_ancestor(Gtk.Popover) is None:
             self._window.container.pages_manager.try_close_view(self)
 
-    def __on_popup_webview_close(self, webview, related):
+    def __on_popup_close(self, webview, related):
         """
             Remove webview from popups
             @param webview as WebView
@@ -146,12 +145,12 @@ class ViewSignalsHandler:
                                WebKit2.NavigationType.RELOAD,
                                WebKit2.NavigationType.BACK_FORWARD]:
             related.add_popup(webview)
-            webview.connect("close", self.__on_popup_webview_close, related)
+            self.connect("close", self.__on_popup_close, related)
             if related == self._window.container.current.webview:
                 self._window.toolbar.title.show_indicator(
                                                         Indicator.POPUPS)
             return
-        properties = webview.get_window_properties()
+        properties = self.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible() and\
                 not navigation_action.get_modifiers() &\
@@ -160,14 +159,6 @@ class ViewSignalsHandler:
                                             Gdk.WindowType.CHILD)
         else:
             self._window.container.popup_webview(webview, True)
-
-    def __on_readable(self, webview):
-        """
-            Show readable button in titlebar
-            @param webview as WebView
-        """
-        if webview == self._window.container.current.webview:
-            self._window.toolbar.title.show_readable_button(True)
 
     def __on_save_password(self, webview, user_form_name, user_form_value,
                            pass_form_name, pass_form_value, uri, form_uri):
@@ -214,7 +205,7 @@ class ViewSignalsHandler:
             @param webview as WebView
             @param event as Gdk.Event
         """
-        if webview.get_ancestor(Gtk.Popover) is None:
+        if self.get_ancestor(Gtk.Popover) is None:
             return self._window.close_popovers()
 
     def __on_estimated_load_progress(self, webview, value):
@@ -224,7 +215,7 @@ class ViewSignalsHandler:
             @param value GparamFloat
         """
         if webview == self._window.container.current.webview:
-            value = webview.get_estimated_load_progress()
+            value = self.get_estimated_load_progress()
             self._window.toolbar.title.progress.set_fraction(value)
 
     def __on_uri_changed(self, webview, uri):
@@ -251,11 +242,11 @@ class ViewSignalsHandler:
             self._window.container.sites_manager.update_label(
                                                 self._window.container.current)
         # We only update history on title changed, should be enough
-        if webview.error is None:
-            uri = webview.get_uri()
+        if self.error is None:
+            uri = self.get_uri()
             parsed = urlparse(uri)
             if parsed.scheme in ["http", "https"] and\
-                    not webview.ephemeral:
+                    not self.ephemeral:
                 mtime = round(time(), 2)
                 El().history.thread_lock.acquire()
                 history_id = El().history.add(title, uri, mtime)
@@ -295,7 +286,7 @@ class ViewSignalsHandler:
         if webview != self._window.container.current.webview:
             return
         self._window.toolbar.title.update_load_indicator(webview)
-        uri = webview.get_uri()
+        uri = self.get_uri()
         parsed = urlparse(uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
@@ -308,8 +299,8 @@ class ViewSignalsHandler:
                 self._window.toolbar.title.start_search()
             self._window.toolbar.title.show_indicator(Indicator.NONE)
             # Turn off reading mode if needed
-            if self.reading:
-                self.switch_read_mode()
+            if self._window.container.current.reading:
+                self._window.container.current.switch_read_mode()
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             self._window.toolbar.title.set_title(uri)
@@ -317,7 +308,7 @@ class ViewSignalsHandler:
             self._window.toolbar.title.show_spinner(False)
             # Give focus to webview
             if wanted_scheme:
-                GLib.idle_add(webview.grab_focus)
+                GLib.idle_add(self.grab_focus)
             # Hide progress delayed to show result to user
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
             GLib.timeout_add(3000, self.__set_snapshot, uri)
@@ -340,7 +331,7 @@ class ViewSignalsHandler:
             @param request as WebKit2.URIRequest
         """
         # Javascript execution happened
-        if not webview.is_loading():
+        if not self.is_loading():
             if self.__js_timeout_id is not None:
                 GLib.source_remove(self.__js_timeout_id)
             self.__js_timeout_id = GLib.timeout_add(500,
@@ -353,7 +344,7 @@ class ViewSignalsHandler:
             @param webview as WebView
         """
         self.__js_timeout_id = None
-        page_id = webview.get_page_id()
+        page_id = self.get_page_id()
         El().helper.call("SetCredentials",
                          GLib.Variant("(i)", (page_id,)),
                          None,
@@ -368,10 +359,10 @@ class ViewSignalsHandler:
         """
         ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
         # Do not cache snapshot on error
-        if webview.error is not None or uri != self.webview.get_uri():
+        if self.error is not None or uri != self.get_uri():
             return
         try:
-            snapshot = webview.get_snapshot_finish(result)
+            snapshot = self.get_snapshot_finish(result)
             # Set start image scale factor
             ratio = snapshot.get_width() / snapshot.get_height()
             if ratio > ART_RATIO:
@@ -387,23 +378,23 @@ class ViewSignalsHandler:
             context.paint()
             # Cache result
             # We also cache initial URI
-            uris = [webview.get_uri()]
+            uris = [self.get_uri()]
             parsed = urlparse(uri)
             # Caching this will break populars navigation
             # as we are looking for subpage snapshots
             if parsed.scheme == "populars":
                 return
-            initial_parsed = urlparse(webview.initial_uri)
+            initial_parsed = urlparse(self.initial_uri)
             if parsed.netloc == initial_parsed.netloc and\
-                    webview.initial_uri not in uris:
-                uris.append(webview.initial_uri)
+                    self.initial_uri not in uris:
+                uris.append(self.initial_uri)
             for uri in uris:
                 if not El().art.exists(uri, "start"):
                     El().art.save_artwork(uri, surface, "start")
         except Exception as e:
             print("WebViewSignalsHandler::__on_snapshot():", e)
 
-    def __on_webview_map(self, webview):
+    def __on_map(self, webview):
         """
             Connect all signals
             @param webview as WebView
@@ -412,26 +403,25 @@ class ViewSignalsHandler:
             return
         self.__signals_connected = True
         self._window.update(webview)
-        webview.connect("notify::estimated-load-progress",
-                        self.__on_estimated_load_progress)
-        webview.connect("resource-load-started",
-                        self.__on_resource_load_started)
-        webview.connect("load-changed", self.__on_load_changed)
-        webview.connect("button-press-event", self.__on_button_press)
-        webview.connect("uri-changed", self.__on_uri_changed)
-        webview.connect("enter-fullscreen", self.__on_enter_fullscreen)
-        webview.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        webview.connect("readable", self.__on_readable)
-        webview.connect("save-password", self.__on_save_password)
-        webview.connect("script-dialog", self.__on_script_dialog)
-        webview.connect("insecure-content-detected",
-                        self.__on_insecure_content_detected)
-        webview.get_back_forward_list().connect(
+        self.connect("notify::estimated-load-progress",
+                     self.__on_estimated_load_progress)
+        self.connect("resource-load-started",
+                     self.__on_resource_load_started)
+        self.connect("load-changed", self.__on_load_changed)
+        self.connect("button-press-event", self.__on_button_press)
+        self.connect("uri-changed", self.__on_uri_changed)
+        self.connect("enter-fullscreen", self.__on_enter_fullscreen)
+        self.connect("leave-fullscreen", self.__on_leave_fullscreen)
+        self.connect("save-password", self.__on_save_password)
+        self.connect("script-dialog", self.__on_script_dialog)
+        self.connect("insecure-content-detected",
+                     self.__on_insecure_content_detected)
+        self.get_back_forward_list().connect(
                              "changed",
                              self.__on_back_forward_list_changed,
                              webview)
 
-    def __on_webview_unmap(self, webview):
+    def __on_unmap(self, webview):
         """
             Disconnect all signals
             @param webview as WebView
@@ -439,16 +429,15 @@ class ViewSignalsHandler:
         if not self.__signals_connected:
             return
         self.__signals_connected = False
-        webview.disconnect_by_func(self.__on_estimated_load_progress)
-        webview.disconnect_by_func(self.__on_resource_load_started)
-        webview.disconnect_by_func(self.__on_load_changed)
-        webview.disconnect_by_func(self.__on_button_press)
-        webview.disconnect_by_func(self.__on_uri_changed)
-        webview.disconnect_by_func(self.__on_enter_fullscreen)
-        webview.disconnect_by_func(self.__on_leave_fullscreen)
-        webview.disconnect_by_func(self.__on_readable)
-        webview.disconnect_by_func(self.__on_save_password)
-        webview.disconnect_by_func(self.__on_script_dialog)
-        webview.disconnect_by_func(self.__on_insecure_content_detected)
-        webview.get_back_forward_list().disconnect_by_func(
+        self.disconnect_by_func(self.__on_estimated_load_progress)
+        self.disconnect_by_func(self.__on_resource_load_started)
+        self.disconnect_by_func(self.__on_load_changed)
+        self.disconnect_by_func(self.__on_button_press)
+        self.disconnect_by_func(self.__on_uri_changed)
+        self.disconnect_by_func(self.__on_enter_fullscreen)
+        self.disconnect_by_func(self.__on_leave_fullscreen)
+        self.disconnect_by_func(self.__on_save_password)
+        self.disconnect_by_func(self.__on_script_dialog)
+        self.disconnect_by_func(self.__on_insecure_content_detected)
+        self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
