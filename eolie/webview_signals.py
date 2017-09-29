@@ -22,9 +22,10 @@ from eolie.menu_form import FormMenu
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El, Indicator, ArtSize
 from eolie.webview_signals_menu import WebViewMenuSignals
+from eolie.webview_signals_js import WebViewJsSignals
 
 
-class WebViewSignals(WebViewMenuSignals):
+class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
     """
         Handle webview signals
     """
@@ -53,9 +54,8 @@ class WebViewSignals(WebViewMenuSignals):
             @param webview as WebView
         """
         WebViewMenuSignals.__init__(self)
-        self.__js_timeout_id = None
+        WebViewJsSignals.__init__(self)
         self.__cancellable = Gio.Cancellable()
-        self.__reset_js_blocker()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("new-page", self.__on_new_page)
@@ -66,7 +66,58 @@ class WebViewSignals(WebViewMenuSignals):
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("submit-form", self.__on_submit_form)
-        self.connect("script-dialog", self.__on_script_dialog)
+
+#######################
+# PROTECTED           #
+#######################
+    def _on_map(self, webview):
+        """
+            Connect all signals
+            @param webview as WebView
+        """
+        # We are offscreen
+        if self._window != self.get_toplevel():
+            return
+        self._window.update(webview)
+        self.connect("notify::estimated-load-progress",
+                     self.__on_estimated_load_progress)
+        self.connect("load-changed", self.__on_load_changed)
+        self.connect("button-press-event", self.__on_button_press)
+        self.connect("uri-changed", self.__on_uri_changed)
+        self.connect("enter-fullscreen", self.__on_enter_fullscreen)
+        self.connect("leave-fullscreen", self.__on_leave_fullscreen)
+        self.connect("save-password", self.__on_save_password)
+        self.connect("insecure-content-detected",
+                     self.__on_insecure_content_detected)
+        self.get_back_forward_list().connect(
+                             "changed",
+                             self.__on_back_forward_list_changed,
+                             webview)
+        page_id = webview.get_page_id()
+        El().helper.connect(None, self.__on_signal, page_id)
+        WebViewJsSignals._on_map(self, webview)
+
+    def _on_unmap(self, webview):
+        """
+            Disconnect all signals
+            @param webview as WebView
+        """
+        # We are offscreen
+        if self._window != self.get_toplevel():
+            return
+        self.disconnect_by_func(self.__on_estimated_load_progress)
+        self.disconnect_by_func(self.__on_load_changed)
+        self.disconnect_by_func(self.__on_button_press)
+        self.disconnect_by_func(self.__on_uri_changed)
+        self.disconnect_by_func(self.__on_enter_fullscreen)
+        self.disconnect_by_func(self.__on_leave_fullscreen)
+        self.disconnect_by_func(self.__on_save_password)
+        self.disconnect_by_func(self.__on_insecure_content_detected)
+        self.get_back_forward_list().disconnect_by_func(
+                                         self.__on_back_forward_list_changed)
+        page_id = webview.get_page_id()
+        El().helper.disconnect(page_id)
+        WebViewJsSignals._on_unmap(self, webview)
 
 #######################
 # PRIVATE             #
@@ -82,13 +133,6 @@ class WebViewSignals(WebViewMenuSignals):
                               self.__cancellable,
                               self.__on_snapshot,
                               uri)
-
-    def __reset_js_blocker(self):
-        """
-            Reset js blocker
-        """
-        self.__js_dialog_type = None
-        self.__js_dialog_message = None
 
     def __on_get_forms(self, source, result, request, uri):
         """
@@ -194,39 +238,6 @@ class WebViewSignals(WebViewMenuSignals):
         elif source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
-
-    def __on_script_dialog(self, webview, dialog):
-        """
-            Show message to user
-            @param webview as WebView
-            @param dialog as WebKit2.ScriptDialog
-        """
-        message = dialog.get_message()
-        # Reader js message
-        if message.startswith("@EOLIE_READER@"):
-            self._readable_content = message.replace("@EOLIE_READER@", "")
-            self.emit("readable")
-        # Populars view message
-        elif message.startswith("@EOLIE_HIDE_BOOKMARK_POPULARS@"):
-            uri = message.replace("@EOLIE_HIDE_BOOKMARK_POPULARS@", "")
-            El().bookmarks.reset_popularity(uri)
-        # Populars view message
-        elif message.startswith("@EOLIE_HIDE_HISTORY_POPULARS@"):
-            uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
-            El().history.reset_popularity(uri)
-        # Here we handle JS flood
-        elif message() == self.__js_dialog_message and\
-                dialog.get_dialog_type() == self.__js_dialog_type:
-            self._window.toolbar.title.show_message(
-                   _("Eolie is going to close this page because it is broken"))
-            self._window.container.pages_manager.close_view(self, False)
-        # Webpage message
-        else:
-            self.__js_dialog_type = dialog.get_dialog_type()
-            self.__js_dialog_message = dialog.get_message()
-            self._window.toolbar.title.show_javascript(dialog)
-            GLib.timeout_add(1000, self.__reset_js_blocker)
-        return True
 
     def __on_new_page(self, webview, uri, window_type, rtime):
         """
@@ -400,33 +411,6 @@ class WebViewSignals(WebViewMenuSignals):
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_resource_load_started(self, webview, resource, request):
-        """
-            Listen to off loading events
-            @param webview as WebView
-            @param resource WebKit2.WebResource
-            @param request as WebKit2.URIRequest
-        """
-        # Javascript execution happened
-        if not self.is_loading():
-            if self.__js_timeout_id is not None:
-                GLib.source_remove(self.__js_timeout_id)
-            self.__js_timeout_id = GLib.timeout_add(500,
-                                                    self.__on_js_timeout,
-                                                    webview)
-
-    def __on_js_timeout(self, webview):
-        """
-            Tell webpage to update credentials
-            @param webview as WebView
-        """
-        self.__js_timeout_id = None
-        page_id = self.get_page_id()
-        El().helper.call("SetCredentials",
-                         GLib.Variant("(i)", (page_id,)),
-                         None,
-                         page_id)
-
     def __on_snapshot(self, webview, result, uri):
         """
             Set snapshot on main image
@@ -525,53 +509,3 @@ class WebViewSignals(WebViewMenuSignals):
                 model.add_attributes(attributes, uri)
                 if index == 0:
                     popover.popup()
-
-    def _on_map(self, webview):
-        """
-            Connect all signals
-            @param webview as WebView
-        """
-        # We are offscreen
-        if self._window != self.get_toplevel():
-            return
-        self._window.update(webview)
-        self.connect("notify::estimated-load-progress",
-                     self.__on_estimated_load_progress)
-        self.connect("resource-load-started",
-                     self.__on_resource_load_started)
-        self.connect("load-changed", self.__on_load_changed)
-        self.connect("button-press-event", self.__on_button_press)
-        self.connect("uri-changed", self.__on_uri_changed)
-        self.connect("enter-fullscreen", self.__on_enter_fullscreen)
-        self.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        self.connect("save-password", self.__on_save_password)
-        self.connect("insecure-content-detected",
-                     self.__on_insecure_content_detected)
-        self.get_back_forward_list().connect(
-                             "changed",
-                             self.__on_back_forward_list_changed,
-                             webview)
-        page_id = webview.get_page_id()
-        El().helper.connect(None, self.__on_signal, page_id)
-
-    def _on_unmap(self, webview):
-        """
-            Disconnect all signals
-            @param webview as WebView
-        """
-        # We are offscreen
-        if self._window != self.get_toplevel():
-            return
-        self.disconnect_by_func(self.__on_estimated_load_progress)
-        self.disconnect_by_func(self.__on_resource_load_started)
-        self.disconnect_by_func(self.__on_load_changed)
-        self.disconnect_by_func(self.__on_button_press)
-        self.disconnect_by_func(self.__on_uri_changed)
-        self.disconnect_by_func(self.__on_enter_fullscreen)
-        self.disconnect_by_func(self.__on_leave_fullscreen)
-        self.disconnect_by_func(self.__on_save_password)
-        self.disconnect_by_func(self.__on_insecure_content_detected)
-        self.get_back_forward_list().disconnect_by_func(
-                                         self.__on_back_forward_list_changed)
-        page_id = webview.get_page_id()
-        El().helper.disconnect(page_id)
