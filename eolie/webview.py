@@ -22,10 +22,8 @@ from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
-from eolie.helper_passwords import PasswordsHelper
 from eolie.list import LinkedList
 from eolie.search import Search
-from eolie.menu_form import FormMenu
 
 
 class WebView(WebKit2.WebView):
@@ -717,38 +715,6 @@ class WebView(WebKit2.WebView):
                 model.add_attributes(attributes, uri)
                 if index == 0:
                     popover.popup()
-
-    def __on_signal(self, connection, sender, path,
-                    interface, signal, params):
-        """
-            Add video to download manager
-            @param connection as Gio.DBusConnection
-            @param sender as str
-            @param path as str
-            @param interface as str
-            @param signal as str
-            @param parameters as GLib.Variant
-        """
-        if signal == "VideoInPage":
-            uri = params[0]
-            title = params[1]
-            page_id = params[2]
-            El().download_manager.add_video(uri, title, page_id)
-        elif signal == "UnsecureFormFocused":
-            self._window.toolbar.title.show_input_warning(self)
-        elif signal == "InputMouseDown":
-            if self.__last_click_event:
-                model = FormMenu(params[0], self.get_page_id())
-                popover = Gtk.Popover.new_from_model(self, model)
-                popover.set_modal(False)
-                self._window.register(popover)
-                rect = Gdk.Rectangle()
-                rect.x = self.__last_click_event["x"]
-                rect.y = self.__last_click_event["y"] - 10
-                rect.width = rect.height = 1
-                popover.set_pointing_to(rect)
-                helper = PasswordsHelper()
-                helper.get(self.get_uri(), self.__on_password, popover, model)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors, WebViewSignals):

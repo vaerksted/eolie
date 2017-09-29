@@ -17,6 +17,8 @@ from urllib.parse import urlparse
 from time import time
 import cairo
 
+from eolie.menu_form import FormMenu
+from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El, Indicator, ArtSize
 
 
@@ -392,6 +394,38 @@ class WebViewSignals:
                     El().art.save_artwork(uri, surface, "start")
         except Exception as e:
             print("WebViewSignalsHandler::__on_snapshot():", e)
+
+    def __on_signal(self, connection, sender, path,
+                    interface, signal, params):
+        """
+            Add video to download manager
+            @param connection as Gio.DBusConnection
+            @param sender as str
+            @param path as str
+            @param interface as str
+            @param signal as str
+            @param parameters as GLib.Variant
+        """
+        if signal == "VideoInPage":
+            uri = params[0]
+            title = params[1]
+            page_id = params[2]
+            El().download_manager.add_video(uri, title, page_id)
+        elif signal == "UnsecureFormFocused":
+            self._window.toolbar.title.show_input_warning(self)
+        elif signal == "InputMouseDown":
+            if self.__last_click_event:
+                model = FormMenu(params[0], self.get_page_id())
+                popover = Gtk.Popover.new_from_model(self, model)
+                popover.set_modal(False)
+                self._window.register(popover)
+                rect = Gdk.Rectangle()
+                rect.x = self.__last_click_event["x"]
+                rect.y = self.__last_click_event["y"] - 10
+                rect.width = rect.height = 1
+                popover.set_pointing_to(rect)
+                helper = PasswordsHelper()
+                helper.get(self.get_uri(), self.__on_password, popover, model)
 
     def __on_map(self, webview):
         """
