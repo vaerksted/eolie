@@ -330,10 +330,7 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
                 if event.button == 2:
                     self.__window.close_popovers()
-            # I guess there is a bug here, just add debug until catching it
-            print("Row::__on_button_release(): enter thread_lock.acquire()")
             El().bookmarks.thread_lock.acquire()
-            print("Row::__on_button_release(): leave thread_lock.acquire()")
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
             El().bookmarks.thread_lock.release()
