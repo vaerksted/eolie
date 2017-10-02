@@ -102,8 +102,11 @@ class Container(Gtk.Overlay):
         if self.__expose_stack.get_visible_child_name() == "expose":
             window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
+            self.__current = view
             self.__stack.add(view)
-            self.set_current(view, True)
+            self.__pages_manager.update_visible_child()
+            self.__sites_manager.update_visible_child()
+            self.__stack.set_visible_child(view)
         elif window_type == Gdk.WindowType.OFFSCREEN:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
@@ -116,6 +119,7 @@ class Container(Gtk.Overlay):
             view.set_size_request(-1, -1)
             self.__stack.add(view)
         # Do not count container views as destroy may be pending on somes
+        # Reason: we do not remove/destroy view to let stack animation run
         count = str(len(self.__pages_manager.children))
         self.__window.toolbar.actions.count_label.set_text(count)
 
