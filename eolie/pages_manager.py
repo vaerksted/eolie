@@ -230,7 +230,7 @@ class PagesManager(Gtk.EventBox):
                 if child.view.webview.rtime > rtime:
                     next_view = child.view
         if next_view is not None:
-            self.__window.container.set_visible_view(next_view)
+            self.__window.container.set_current(next_view)
         else:
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,
@@ -286,7 +286,7 @@ class PagesManager(Gtk.EventBox):
             @param child as PagesManagerChild
         """
         self.__window.close_popovers()
-        self.__window.container.set_visible_view(child.view)
+        self.__window.container.set_current(child.view)
         self.__window.container.set_expose(False)
 
 #######################
@@ -325,7 +325,7 @@ class PagesManager(Gtk.EventBox):
                 next_row = child
                 break
         if next_row is not None:
-            self.__window.container.set_visible_view(next_row.view)
+            self.__window.container.set_current(next_row.view)
 
     def __previous(self):
         """
@@ -350,7 +350,7 @@ class PagesManager(Gtk.EventBox):
                 prev_row = child
                 break
         if prev_row is not None:
-            self.__window.container.set_visible_view(prev_row.view)
+            self.__window.container.set_current(prev_row.view)
 
     def __get_index(self, view):
         """

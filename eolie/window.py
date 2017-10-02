@@ -123,36 +123,37 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
-        if webview == self.__container.current.webview:
-            webview.mark_shown()
-            webview.set_atime()
-            uri = webview.delayed_uri
-            if uri is None:
-                uri = webview.get_uri()
-            else:
-                webview.load_uri(uri)
-            self.container.sites_manager.update_indicator(
-                                                      self.__container.current)
-            title = webview.get_title()
-            self.toolbar.title.update_load_indicator(webview)
-            if webview.popups:
-                self.toolbar.title.show_indicator(Indicator.POPUPS)
-            else:
-                self.toolbar.title.show_indicator(Indicator.NONE)
-            if uri is not None:
-                self.toolbar.title.set_uri(uri)
-            if webview.is_loading():
-                self.toolbar.title.show_spinner(True)
-                self.toolbar.title.progress.show()
-            else:
-                self.toolbar.title.progress.hide()
-                self.toolbar.title.show_readable_button(
-                                                webview.readable_content != "")
-            if title:
-                self.toolbar.title.set_title(title)
-            elif uri:
-                self.toolbar.title.set_title(uri)
-            self.toolbar.actions.set_actions(webview)
+        if self.__container.current is None or\
+                webview != self.__container.current.webview:
+            return
+        webview.mark_shown()
+        webview.set_atime()
+        uri = webview.delayed_uri
+        if uri is None:
+            uri = webview.get_uri()
+        else:
+            webview.load_uri(uri)
+        self.container.sites_manager.update_indicator()
+        title = webview.get_title()
+        self.toolbar.title.update_load_indicator(webview)
+        if webview.popups:
+            self.toolbar.title.show_indicator(Indicator.POPUPS)
+        else:
+            self.toolbar.title.show_indicator(Indicator.NONE)
+        if uri is not None:
+            self.toolbar.title.set_uri(uri)
+        if webview.is_loading():
+            self.toolbar.title.show_spinner(True)
+            self.toolbar.title.progress.show()
+        else:
+            self.toolbar.title.progress.hide()
+            readable_content = webview.readable_content
+            self.toolbar.title.show_readable_button(readable_content != "")
+        if title:
+            self.toolbar.title.set_title(title)
+        elif uri:
+            self.toolbar.title.set_title(uri)
+        self.toolbar.actions.set_actions(webview)
 
     def hide(self):
         """

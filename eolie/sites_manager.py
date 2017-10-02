@@ -140,13 +140,13 @@ class SitesManager(Gtk.EventBox):
                 child.update_label()
                 break
 
-    def update_indicator(self, view):
+    def update_indicator(self):
         """
-            Update indicator for view
+            Update indicator for current view
         """
         for child in self.__box.get_children():
-            if view in child.views:
-                child.update_indicator(view)
+            if self.__window.container.current in child.views:
+                child.update_indicator(self.__window.container.current)
                 break
 
     def remove_view(self, view):
@@ -177,14 +177,7 @@ class SitesManager(Gtk.EventBox):
             next_row = self.__box.get_row_at_index(0)
         if next_row is not None:
             next_row.get_style_context().add_class("sidebar-item-selected")
-            webview = next_row.views[0].webview
-            self.__window.container.set_visible_webview(webview)
-            if len(next_row.views) == 1:
-                self.__window.toolbar.actions.view_button.set_active(False)
-            else:
-                self.__window.container.pages_manager.set_filter(
-                                                               next_row.netloc)
-                self.__window.toolbar.actions.view_button.set_active(True)
+            self.__window.container.set_current(next_row.views[0])
 
     def previous(self):
         """
@@ -203,14 +196,7 @@ class SitesManager(Gtk.EventBox):
             next_row = self.__box.get_row_at_index(index - 1)
         if next_row is not None:
             next_row.get_style_context().add_class("sidebar-item-selected")
-            webview = next_row.views[0].webview
-            self.__window.container.set_visible_webview(webview)
-            if len(next_row.views) == 1:
-                self.__window.toolbar.actions.view_button.set_active(False)
-            else:
-                self.__window.container.pages_manager.set_filter(
-                                                               next_row.netloc)
-                self.__window.toolbar.actions.view_button.set_active(True)
+            self.__window.container.set_current(next_row.views[0])
 
     def update_visible_child(self):
         """
@@ -300,7 +286,7 @@ class SitesManager(Gtk.EventBox):
             self.__window.toolbar.actions.view_button.set_active(False)
         elif len(child.views) == 1:
             self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.set_visible_webview(child.views[0].webview)
+            self.__window.container.set_current(child.views[0], True)
         else:
             self.__window.container.pages_manager.set_filter(child.netloc)
             self.__window.toolbar.actions.view_button.set_active(True)

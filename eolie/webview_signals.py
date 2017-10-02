@@ -61,7 +61,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("unmap", self._on_unmap)
         self.connect("new-page", self.__on_new_page)
         self.connect("close", self.__on_close)
-        # Always connected as we need on_title_changed() update history
+        self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
@@ -89,7 +89,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             return
         self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
-        self.connect("uri-changed", self.__on_uri_changed)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
         self.connect("leave-fullscreen", self.__on_leave_fullscreen)
         self.connect("save-password", self.__on_save_password)
@@ -108,7 +107,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         if self._window != self.get_toplevel():
             return
         self.disconnect_by_func(self._on_button_press_event)
-        self.disconnect_by_func(self.__on_uri_changed)
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
         self.disconnect_by_func(self.__on_save_password)
@@ -238,8 +236,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         if webview.get_mapped():
             self._window.toolbar.title.set_title(title)
-            self._window.container.sites_manager.update_label(
-                                                self._window.container.current)
         # We only update history on title changed, should be enough
         if self.error is None:
             uri = self.get_uri()

@@ -32,6 +32,7 @@ class Container(Gtk.Overlay):
         Gtk.Overlay.__init__(self)
         self.__window = window
         self.__popover = WebViewPopover(window)
+        self.__current = None
 
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
@@ -102,7 +103,7 @@ class Container(Gtk.Overlay):
             window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
             self.__stack.add(view)
-            self.set_visible_view(view)
+            self.set_current(view, True)
         elif window_type == Gdk.WindowType.OFFSCREEN:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
@@ -126,26 +127,17 @@ class Container(Gtk.Overlay):
         if self.current is not None:
             self.current.webview.load_uri(uri)
 
-    def set_visible_webview(self, webview):
-        """
-            Set visible webview
-            @param webview as WebView
-        """
-        wanted = False
-        for view in self.__stack.get_children():
-            if view.webview == webview:
-                wanted = view
-        if wanted is not None:
-            self.set_visible_view(wanted)
-
-    def set_visible_view(self, view):
+    def set_current(self, view, switch=False):
         """
             Set visible view
             @param view as View
+            @param switch as bool
         """
-        self.__stack.set_visible_child(view)
+        self.__current = view
         self.__pages_manager.update_visible_child()
         self.__sites_manager.update_visible_child()
+        if switch:
+            self.__stack.set_visible_child(view)
 
     def popup_webview(self, webview, destroy):
         """
@@ -182,6 +174,7 @@ class Container(Gtk.Overlay):
             self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
             child.set_filtered(False)
+            self.__stack.set_visible_child(self.__current)
 
     @property
     def pages_manager(self):
@@ -213,7 +206,7 @@ class Container(Gtk.Overlay):
             Current view
             @return WebView
         """
-        return self.__stack.get_visible_child()
+        return self.__current
 
 #######################
 # PRIVATE             #

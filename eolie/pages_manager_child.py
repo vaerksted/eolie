@@ -367,6 +367,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param title as str
         """
         self.__title.set_text(title)
+        self.__window.container.sites_manager.update_label(
+                                               self.__window.container.current)
 
     def __on_load_changed(self, webview, event):
         """
