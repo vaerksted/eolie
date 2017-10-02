@@ -99,13 +99,11 @@ class Art:
         if uri is None:
             return None
         parsed = urlparse(uri)
-        # Remove scheme
-        strip = uri.replace("%s://" % parsed.scheme, "")
-        # Remove www
-        strip = strip.lstrip("www.")
-        # Remove last /
-        strip = strip.rstrip("/")
-        encoded = sha256(strip.encode("utf-8")).hexdigest()
+        cached_uri = parsed.netloc.lstrip("www.")
+        cached_path = parsed.path.rstrip("/")
+        if cached_path:
+            cached_uri += cached_path
+        encoded = sha256(cached_uri.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (CACHE_PATH, encoded, suffix)
         return filepath
 
