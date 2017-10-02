@@ -60,7 +60,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("new-page", self.__on_new_page)
-        self.connect("close", self.__on_close)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -190,14 +189,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                 # parent.rtime = child.rtime + 1
                 # Used to search for best matching webview
                 new.set_rtime(self.rtime - 1)
-
-    def __on_close(self, webview):
-        """
-            Close my self
-            @param webview as WebView
-        """
-        if self.get_ancestor(Gtk.Popover) is None:
-            self._window.container.pages_manager.try_close_view(self)
 
     def __on_save_password(self, webview, user_form_name, user_form_value,
                            pass_form_name, pass_form_value, uri, form_uri):

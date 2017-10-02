@@ -69,6 +69,7 @@ class View(Gtk.Overlay):
         self.connect("key-press-event", self.__on_key_press_event)
         webview.connect("mouse-target-changed", self.__on_mouse_target_changed)
         webview.connect("readable", self.__on_readable)
+        webview.connect("close", self.__on_close)
 
     def switch_read_mode(self):
         """
@@ -159,6 +160,14 @@ class View(Gtk.Overlay):
                 El().helper.call("SetPreviousForm", None, None, page_id)
             elif event.keyval == Gdk.KEY_Z:
                 El().helper.call("SetNextForm", None, None, page_id)
+
+    def __on_close(self, webview):
+        """
+            Close my self
+            @param webview as WebView
+        """
+        if self.get_ancestor(Gtk.Popover) is None:
+            self._window.container.pages_manager.try_close_view(self)
 
     def __on_mouse_target_changed(self, webview, hit, modifiers):
         """
