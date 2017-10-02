@@ -31,7 +31,6 @@ class Container(Gtk.Overlay):
         """
         Gtk.Overlay.__init__(self)
         self.__window = window
-        self.__pages_overlay = None
         self.__popover = WebViewPopover(window)
 
         self.__stack = Gtk.Stack()
@@ -145,8 +144,6 @@ class Container(Gtk.Overlay):
             @param view as View
         """
         self.__stack.set_visible_child(view)
-        if self.__pages_overlay is not None:
-            self.__pages_overlay.destroy_child(view)
         self.__pages_manager.update_visible_child()
         self.__sites_manager.update_visible_child()
 

@@ -226,7 +226,7 @@ class WebView(WebKit2.WebView):
         """
             Update access time
         """
-        self.__atime = int(time())
+        self._atime = int(time())
 
     def mark_shown(self):
         """
@@ -248,7 +248,7 @@ class WebView(WebKit2.WebView):
             Get access time
             @return int
         """
-        return self.__atime
+        return self._atime
 
     @property
     def shown(self):
@@ -315,7 +315,7 @@ class WebView(WebKit2.WebView):
         WebViewSignals.__init__(self)
         self._window = window
         self._content_manager = content_manager
-        self.__atime = 0
+        self._atime = 0
         self._rtime = int(time())
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
