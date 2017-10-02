@@ -111,6 +111,7 @@ class SitesManager(Gtk.EventBox):
             if empty_child is not None:
                 empty_child.destroy()
             child.add_view(view)
+            self.update_visible_child()
 
     def set_favicon(self, view, surface):
         """
