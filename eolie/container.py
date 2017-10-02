@@ -69,7 +69,7 @@ class Container(Gtk.Overlay):
     def add_webview(self, uri, window_type, ephemeral=False,
                     state=None, load=True):
         """
-            Add a web view t.container
+            Add a web view to container
             @param uri as str
             @param window_type as Gdk.WindowType
             @param ephemeral as bool
@@ -91,7 +91,7 @@ class Container(Gtk.Overlay):
 
     def add_view(self, webview, window_type):
         """
-            Add view t.container
+            Add view to container
             @param webview as WebView
             @param window_type as Gdk.WindowType
         """
