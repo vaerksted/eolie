@@ -101,4 +101,4 @@ class SitesMenu(Gio.Menu):
             @param GVariant
             @param view as View
         """
-        self.__window.container.set_visible_view(view)
+        self.__window.container.set_current(view, True)
