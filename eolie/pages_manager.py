@@ -228,7 +228,7 @@ class PagesManager(Gtk.EventBox):
                 if child.view.webview.rtime > rtime:
                     next_view = child.view
         if next_view is not None:
-            self.__window.container.set_current(next_view)
+            self.__window.container.set_current(next_view, True)
         else:
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,

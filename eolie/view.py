@@ -117,6 +117,8 @@ class View(Gtk.Overlay):
         """
         Gtk.Overlay.destroy(self)
         self.__webview.destroy()
+        if self.__reading_view is not None:
+            self.__reading_view.destroy()
 
     @property
     def reading(self):
