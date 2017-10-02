@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Gio
+from gi.repository import Gtk, Gdk, GLib, Gio, WebKit2
 
 from eolie.widget_find import FindWidget
 from eolie.webview import WebView
@@ -82,7 +82,7 @@ class View(Gtk.Overlay):
                                                                               )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
         if self.__reading_view is None:
-            self.__reading_view = WebView.new(self._window)
+            self.__reading_view = WebKit2.WebView.new()
             self.__reading_view.show()
             self.add_overlay(self.__reading_view)
             if self.__webview.readable_content:
