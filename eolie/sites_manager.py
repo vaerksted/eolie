@@ -179,6 +179,12 @@ class SitesManager(Gtk.EventBox):
         if next_row is not None:
             next_row.get_style_context().add_class("sidebar-item-selected")
             self.__window.container.set_current(next_row.views[0])
+            if len(next_row.views) == 1:
+                self.__window.container.set_expose(False)
+            else:
+                self.__window.container.pages_manager.set_filter(
+                                                               next_row.netloc)
+                self.__window.container.set_expose(True)
 
     def previous(self):
         """
@@ -198,6 +204,12 @@ class SitesManager(Gtk.EventBox):
         if next_row is not None:
             next_row.get_style_context().add_class("sidebar-item-selected")
             self.__window.container.set_current(next_row.views[0])
+            if len(next_row.views) == 1:
+                self.__window.container.set_expose(False)
+            else:
+                self.__window.container.pages_manager.set_filter(
+                                                               next_row.netloc)
+                self.__window.container.set_expose(True)
 
     def update_visible_child(self):
         """
