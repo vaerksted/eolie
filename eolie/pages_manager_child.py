@@ -211,15 +211,15 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             if not El().art.exists(uri, "favicon"):
                 El().art.save_artwork(uri, resized, "favicon")
             if not El().art.exists(parsed.netloc, "favicon"):
-                # Update site manager favicon (missing or obsolete)
-                self.__window.container.sites_manager.set_favicon(
-                                                          self.__view,
-                                                          resized)
                 El().art.save_artwork(parsed.netloc, resized, "favicon")
             self.__set_favicon_related(resized,
                                        uri,
                                        self.__view.webview.initial_uri)
             self.__close_button.get_image().set_from_surface(resized)
+            # Update site manager favicon (missing or obsolete)
+            self.__window.container.sites_manager.set_favicon(
+                                                          self.__view,
+                                                          resized)
         else:
             self.__close_button.get_image().set_from_icon_name(
                                                   "applications-internet",
