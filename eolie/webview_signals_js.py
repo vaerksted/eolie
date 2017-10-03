@@ -78,7 +78,7 @@ class WebViewJsSignals:
             uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
             El().history.reset_popularity(uri)
         # Here we handle JS flood
-        elif message() == self.__js_dialog_message and\
+        elif message == self.__js_dialog_message and\
                 dialog.get_dialog_type() == self.__js_dialog_type:
             self._window.toolbar.title.show_message(
                    _("Eolie is going to close this page because it is broken"))
