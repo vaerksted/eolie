@@ -164,9 +164,22 @@ class DatabaseAdblock:
         """
         self.__cancellable.cancel()
 
+    def get_default_css_rules(self):
+        """
+            Return default css rules
+        """
+        rules = ""
+        with SqlCursor(self) as sql:
+            request = "SELECT name FROM adblock_css WHERE\
+                       blacklist!='' AND whitelist!=''"
+            result = sql.execute(request)
+            for name in list(itertools.chain(*result)):
+                rules += "%s,\n" % name
+        return rules[:-2] + "{display: none !important;}"
+
     def get_css_rules(self, uri):
         """
-            Return css rules
+            Return css rules for uri
             @return str
         """
         rules = ""
@@ -176,8 +189,7 @@ class DatabaseAdblock:
         netloc = parsed.netloc.lstrip("www.")
         with SqlCursor(self) as sql:
             request = "SELECT name FROM adblock_css WHERE\
-                       (blacklist='' AND whitelist='') OR\
-                       (blacklist!=? AND whitelist=?)"
+                       blacklist!='' AND blacklist!=? AND whitelist=?"
             result = sql.execute(request, (netloc, netloc))
             for name in list(itertools.chain(*result)):
                 rules += "%s,\n" % name

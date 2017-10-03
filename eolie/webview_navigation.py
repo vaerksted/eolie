@@ -341,14 +341,16 @@ class WebViewNavigation:
                 if El().settings.get_value("adblock") and\
                         parsed.scheme in ["http", "https"] and\
                         self._content_manager is not None:
+                    self._content_manager.add_style_sheet(
+                                                      El().default_style_sheet)
                     rules = El().adblock.get_css_rules(uri)
-                    css = WebKit2.UserStyleSheet(
+                    user_style_sheet = WebKit2.UserStyleSheet(
                                  rules,
                                  WebKit2.UserContentInjectedFrames.ALL_FRAMES,
                                  WebKit2.UserStyleLevel.USER,
                                  None,
                                  None)
-                    self._content_manager.add_style_sheet(css)
+                    self._content_manager.add_style_sheet(user_style_sheet)
                 self.update_spell_checking()
                 self.update_zoom_level()
                 user_agent = El().websettings.get_user_agent(uri)

@@ -148,6 +148,18 @@ class Application(Gtk.Application):
         self.add_action(quit_action)
         return menu
 
+    def update_default_style_sheet(self):
+        """
+            Should be called on startup
+        """
+        rules = self.adblock.get_default_css_rules()
+        self.__default_style_sheet = WebKit2.UserStyleSheet(
+                                 rules,
+                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                                 WebKit2.UserStyleLevel.USER,
+                                 None,
+                                 None)
+
     def do_startup(self):
         """
             Init application
@@ -230,6 +242,14 @@ class Application(Gtk.Application):
         else:
             value = self.search.uri
         return value
+
+    @property
+    def default_style_sheet(self):
+        """
+            Get default style sheet
+            @return WebKit2.UserStyleSheet
+        """
+        return self.__default_style_sheet
 
     @property
     def active_window(self):
@@ -331,6 +351,8 @@ class Application(Gtk.Application):
         self.adblock.update()
         self.phishing = DatabasePhishing()
         self.adblock_exceptions = DatabaseExceptions("adblock")
+        # Do not remove this!
+        self.update_default_style_sheet()
         self.popup_exceptions = DatabaseExceptions("popup")
         self.image_exceptions = DatabaseExceptions("image")
         if self.settings.get_user_value("jsblock") is not None:
