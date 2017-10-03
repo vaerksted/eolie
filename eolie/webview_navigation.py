@@ -314,7 +314,6 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
-            self._content_manager.remove_all_style_sheets()
             self._window.toolbar.title.show_readable_button(False)
             self.__initial_uri = uri
             self._cancelled = False
@@ -334,6 +333,7 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
+            self._content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
