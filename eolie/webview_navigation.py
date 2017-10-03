@@ -333,7 +333,8 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
-            self._content_manager.remove_all_style_sheets()
+            if self._content_manager is not None:
+                self._content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
