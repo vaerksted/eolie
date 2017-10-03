@@ -314,6 +314,7 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self._content_manager.remove_all_style_sheets()
             self._window.toolbar.title.show_readable_button(False)
             self.__initial_uri = uri
             self._cancelled = False
