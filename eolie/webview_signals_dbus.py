@@ -101,13 +101,13 @@ class WebViewDBusSignals:
                          GLib.Variant("(aasi)", (forms, page_id)),
                          self.__on_get_forms, page_id, request, uri)
 
-    def __on_get_forms(self, source, result, request, uri):
+    def __on_get_forms(self, source, result, request, form_uri):
         """
             Set forms value
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param request as WebKit2.FormSubmissionRequest
-            @param uri as str
+            @param form_uri as str
         """
         try:
             (user_form_name,
@@ -116,11 +116,13 @@ class WebViewDBusSignals:
              pass_form_value) = source.call_finish(result)[0]
             if user_form_name and pass_form_name:
                 self._window.close_popovers()
-                self.emit("save-password",
-                          user_form_name, user_form_value,
-                          pass_form_name, pass_form_value,
-                          self.get_uri(),
-                          uri)
+                self._window.toolbar.title.show_password(
+                                                 user_form_name,
+                                                 user_form_value,
+                                                 pass_form_name,
+                                                 pass_form_value,
+                                                 self.get_uri(),
+                                                 form_uri)
             request.submit()
         except Exception as e:
             print("WebViewDBusSignals::__on_get_forms():", e)

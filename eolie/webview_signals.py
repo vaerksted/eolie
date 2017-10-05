@@ -33,12 +33,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
-                                                                str,
-                                                                str,
-                                                                str,
-                                                                str,
-                                                                str)),
     }
 
     for signal in gsignals:
@@ -88,7 +82,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
         self.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        self.connect("save-password", self.__on_save_password)
         self.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
         WebViewJsSignals._on_map(self, webview)
@@ -106,7 +99,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
-        self.disconnect_by_func(self.__on_save_password)
         self.disconnect_by_func(self.__on_insecure_content_detected)
         WebViewJsSignals._on_unmap(self, webview)
         WebViewDBusSignals._on_unmap(self, webview)
@@ -163,24 +155,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         elif source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
-
-    def __on_save_password(self, webview, user_form_name, user_form_value,
-                           pass_form_name, pass_form_value, uri, form_uri):
-        """
-            Ask user to save password
-            @param webview as WebView
-            @param user_form_name as str
-            @param user_form_value as str
-            @param pass_form_name as str
-            @param pass_form_value as str
-            @param uri as str
-        """
-        self._window.toolbar.title.show_password(user_form_name,
-                                                 user_form_value,
-                                                 pass_form_name,
-                                                 pass_form_value,
-                                                 uri,
-                                                 form_uri)
 
     def __on_uri_changed(self, webview, uri):
         """
