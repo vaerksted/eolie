@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, WebKit2
+from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -42,6 +42,22 @@ class WebViewMenuSignals:
             @param hit as WebKit2.HitTestResult
         """
         parsed = urlparse(view.get_uri())
+        if parsed.scheme == "populars":
+            context_menu.remove_all()
+            if hit.context_is_link():
+                # Add an item for open in a new page
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("reload_preview",
+                                        _("Reload preview"),
+                                        None,
+                                        None)
+                action.connect("activate",
+                               self.__on_reload_preview_activate,
+                               hit.get_link_uri())
+                item = WebKit2.ContextMenuItem.new(action)
+                context_menu.insert(item, 0)
+                return
         if hit.context_is_link():
             # Add an item for open in a new page
             # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
@@ -87,35 +103,34 @@ class WebViewMenuSignals:
                 context_menu.insert(item, 2)
         else:
             # Add an item for open all images
-            if view.is_loading() or parsed.scheme not in ["http", "https"]:
-                return
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("save_imgs",
-                                    _("Save images"),
-                                    None,
-                                    None)
-            action.connect("activate", self.__on_save_images_activate,)
-            item = WebKit2.ContextMenuItem.new(action)
-            n_items = context_menu.get_n_items()
-            if El().settings.get_value("developer-extras"):
-                context_menu.insert(item, n_items - 2)
-            else:
-                context_menu.insert(item, n_items)
-            # Add an item for page capture
-            # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
-            # Introspection missing, Gtk.Action deprecated
-            action = Gtk.Action.new("save_as_image",
-                                    _("Save page as image"),
-                                    None,
-                                    None)
-            action.connect("activate", self.__on_save_as_image_activate,)
-            item = WebKit2.ContextMenuItem.new(action)
-            n_items = context_menu.get_n_items()
-            if El().settings.get_value("developer-extras"):
-                context_menu.insert(item, n_items - 2)
-            else:
-                context_menu.insert(item, n_items)
+            if not view.is_loading() and parsed.scheme in ["http", "https"]:
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("save_imgs",
+                                        _("Save images"),
+                                        None,
+                                        None)
+                action.connect("activate", self.__on_save_images_activate,)
+                item = WebKit2.ContextMenuItem.new(action)
+                n_items = context_menu.get_n_items()
+                if El().settings.get_value("developer-extras"):
+                    context_menu.insert(item, n_items - 2)
+                else:
+                    context_menu.insert(item, n_items)
+                # Add an item for page capture
+                # FIXME https://bugs.webkit.org/show_bug.cgi?id=159631
+                # Introspection missing, Gtk.Action deprecated
+                action = Gtk.Action.new("save_as_image",
+                                        _("Save page as image"),
+                                        None,
+                                        None)
+                action.connect("activate", self.__on_save_as_image_activate,)
+                item = WebKit2.ContextMenuItem.new(action)
+                n_items = context_menu.get_n_items()
+                if El().settings.get_value("developer-extras"):
+                    context_menu.insert(item, n_items - 2)
+                else:
+                    context_menu.insert(item, n_items)
 
     def __on_open_new_page_activate(self, action, uri):
         """
@@ -162,6 +177,42 @@ class WebViewMenuSignals:
                           WebKit2.SnapshotOptions.NONE,
                           None,
                           self.__on_snapshot)
+
+    def __on_reload_preview_activate(self, action, uri):
+        """
+            Reload preview for uri
+            @param uri as str
+        """
+        try:
+            webview = self.__class__.new(self._window)
+            webview.show()
+            window = Gtk.OffscreenWindow.new()
+            window.set_size_request(self.get_allocated_width(),
+                                    self.get_allocated_height())
+            window.add(webview)
+            window.show()
+            path = El().art.get_path(uri, "start")
+            f = Gio.File.new_for_path(path)
+            f.delete()
+            webview.load_uri(uri)
+            webview.connect("load-changed", self.__on_load_changed, uri)
+        except Exception as e:
+            print("WebViewMenuSignals::__on_reload_preview_activate():", e)
+
+    def __on_load_changed(self, webview, event, uri):
+        """
+            Get a snapshot
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+            @param uri as str
+        """
+        if event == WebKit2.LoadEvent.FINISHED:
+            webview.set_snapshot(uri)
+            # We just destroy view/window with a timeout
+            window = webview.get_toplevel()
+            GLib.timeout_add(1000, self.reload)
+            GLib.timeout_add(2000, webview.destroy)
+            GLib.timeout_add(3000, window.destroy)
 
     def __on_snapshot(self, webview, result):
         """

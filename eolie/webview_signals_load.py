@@ -29,6 +29,18 @@ class WebViewLoadSignals:
         """
         pass
 
+    def set_snapshot(self, uri):
+        """
+            Set webpage preview
+            @param uri as str
+        """
+        if uri == self.get_uri() and not self.ephemeral:
+            self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                              WebKit2.SnapshotOptions.NONE,
+                              self._cancellable,
+                              self.__on_snapshot,
+                              uri)
+
 #######################
 # PROTECTED           #
 #######################
@@ -58,18 +70,6 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __set_snapshot(self, uri):
-        """
-            Set webpage preview
-            @param uri as str
-        """
-        if uri == self.get_uri() and not self.ephemeral:
-            self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                              WebKit2.SnapshotOptions.NONE,
-                              self._cancellable,
-                              self.__on_snapshot,
-                              uri)
-
     def __on_load_changed(self, webview, event):
         """
             Update sidebar/urlbar
@@ -105,7 +105,7 @@ class WebViewLoadSignals:
                 GLib.idle_add(self.grab_focus)
             # Hide progress delayed to show result to user
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
-            GLib.timeout_add(3000, self.__set_snapshot, uri)
+            GLib.timeout_add(3000, self.set_snapshot, uri)
 
     def __on_estimated_load_progress(self, webview, value):
         """

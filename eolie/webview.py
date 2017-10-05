@@ -82,7 +82,7 @@ class WebView(WebKit2.WebView):
             if zoom_level is None:
                 zoom_level = 100
             if self.__related_view is None:
-                zoom_level *= self.get_ancestor(Gtk.Window).zoom_level
+                zoom_level *= self._window.zoom_level
             else:
                 zoom_level *= self.__related_view.get_ancestor(
                                                 Gtk.Window).zoom_level
