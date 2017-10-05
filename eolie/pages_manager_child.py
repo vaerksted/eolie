@@ -12,12 +12,11 @@
 
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
-import cairo
 from urllib.parse import urlparse
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
-from eolie.utils import resize_favicon
+from eolie.utils import resize_favicon, get_snapshot
 
 
 class PagesManagerChild(Gtk.FlowBoxChild):
@@ -189,6 +188,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                          WebKit2.SnapshotRegion.VISIBLE,
                                          WebKit2.SnapshotOptions.NONE,
                                          None,
+                                         get_snapshot,
                                          self.__on_snapshot)
 
     def __set_favicon(self):
@@ -320,31 +320,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__scroll_timeout_id = GLib.timeout_add(250,
                                                     self.__on_scroll_timeout)
 
-    def __on_snapshot(self, webview, result):
+    def __on_snapshot(self, surface):
         """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
+            Set snapshot
+            @param surface as cairo.Surface
         """
-        ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
-        try:
-            snapshot = webview.get_snapshot_finish(result)
-            # Set start image scale factor
-            ratio = snapshot.get_width() / snapshot.get_height()
-            if ratio > ART_RATIO:
-                factor = ArtSize.START_HEIGHT / snapshot.get_height()
-            else:
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         ArtSize.START_WIDTH,
-                                         ArtSize.START_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, factor, 0)
-            context.paint()
-            self.__image.set_from_surface(surface)
-        except Exception as e:
-            print("PagesManagerChild::__on_snapshot():", e)
+        self.__image.set_from_surface(surface)
 
     def __on_uri_changed(self, webview, uri):
         """

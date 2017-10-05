@@ -10,12 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
+from gi.repository import Gtk, Gdk, Gio, WebKit2
 
 from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import El
+from eolie.utils import get_snapshot
 from eolie.search import Search
 
 
@@ -181,16 +182,13 @@ class WebViewMenuSignals:
             @param uri as str
         """
         try:
-            webview = self.__class__.new(self._window)
+            webview = WebKit2.WebView.new()
             webview.show()
             window = Gtk.OffscreenWindow.new()
             window.set_size_request(self.get_allocated_width(),
                                     self.get_allocated_height())
             window.add(webview)
             window.show()
-            path = El().art.get_path(uri, "start")
-            f = Gio.File.new_for_path(path)
-            f.delete()
             webview.load_uri(uri)
             webview.connect("load-changed", self.__on_load_changed, uri)
         except Exception as e:
@@ -204,12 +202,26 @@ class WebViewMenuSignals:
             @param uri as str
         """
         if event == WebKit2.LoadEvent.FINISHED:
-            webview.set_snapshot(uri)
-            # We just destroy view/window with a timeout
-            window = webview.get_toplevel()
-            GLib.timeout_add(1000, self.reload)
-            GLib.timeout_add(2000, webview.destroy)
-            GLib.timeout_add(3000, window.destroy)
+            webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                                 WebKit2.SnapshotOptions.NONE,
+                                 None,
+                                 get_snapshot,
+                                 self.__on_preview_snapshot,
+                                 webview,
+                                 uri)
+
+    def __on_preview_snapshot(self, surface, webview, uri):
+        """
+            Cache snapshot
+            @param surface as cairo.Surface
+            @param webview as WebKit2.WebView
+            @param uri as str
+        """
+        El().art.save_artwork(uri, surface, "start")
+        self.reload()
+        window = webview.get_toplevel()
+        webview.destroy()
+        window.destroy()
 
     def __on_snapshot(self, webview, result):
         """

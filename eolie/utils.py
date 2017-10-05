@@ -45,6 +45,34 @@ def resize_favicon(favicon):
     return surface
 
 
+def get_snapshot(webview, result, callback, *args):
+    """
+        Set snapshot on main image
+        @param webview as WebKit2.WebView
+        @param result as Gio.AsyncResult
+        @return cairo.Surface
+    """
+    ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
+    try:
+        snapshot = webview.get_snapshot_finish(result)
+        # Set start image scale factor
+        ratio = snapshot.get_width() / snapshot.get_height()
+        if ratio > ART_RATIO:
+            factor = ArtSize.START_HEIGHT / snapshot.get_height()
+        else:
+            factor = ArtSize.START_WIDTH / snapshot.get_width()
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                     ArtSize.START_WIDTH,
+                                     ArtSize.START_HEIGHT)
+        context = cairo.Context(surface)
+        context.scale(factor, factor)
+        context.set_source_surface(snapshot, factor, 0)
+        context.paint()
+        callback(surface, *args)
+    except Exception as e:
+        print("get_snapshot():", e)
+
+
 def get_random_string(size):
     """
         Get a rand string at size

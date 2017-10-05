@@ -118,6 +118,7 @@ class Container(Gtk.Overlay):
             window.remove(view)
             view.set_size_request(-1, -1)
             self.__stack.add(view)
+            window.destroy()
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = str(len(self.__pages_manager.children))

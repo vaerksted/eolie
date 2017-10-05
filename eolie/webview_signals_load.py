@@ -13,9 +13,9 @@
 from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
-import cairo
 
-from eolie.define import El, Indicator, ArtSize
+from eolie.define import El, Indicator
+from eolie.utils import get_snapshot
 
 
 class WebViewLoadSignals:
@@ -38,6 +38,7 @@ class WebViewLoadSignals:
             self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                               WebKit2.SnapshotOptions.NONE,
                               self._cancellable,
+                              get_snapshot,
                               self.__on_snapshot,
                               uri)
 
@@ -105,7 +106,8 @@ class WebViewLoadSignals:
                 GLib.idle_add(self.grab_focus)
             # Hide progress delayed to show result to user
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
-            GLib.timeout_add(3000, self.set_snapshot, uri)
+            if parsed.scheme != "populars":
+                GLib.timeout_add(3000, self.set_snapshot, uri)
 
     def __on_estimated_load_progress(self, webview, value):
         """
@@ -127,46 +129,22 @@ class WebViewLoadSignals:
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_snapshot(self, webview, result, uri):
+    def __on_snapshot(self, surface, uri):
         """
-            Set snapshot on main image
-            @param webview as WebView
-            @param result as Gio.AsyncResult
+            Cache snapshot
+            @param surface as cairo.Surface
             @param uri as str
         """
-        ART_RATIO = 1.5  # ArtSize.START_WIDTH / ArtSize.START_HEIGHT
         # Do not cache snapshot on error
         if self.error is not None or uri != self.get_uri():
             return
-        try:
-            snapshot = self.get_snapshot_finish(result)
-            # Set start image scale factor
-            ratio = snapshot.get_width() / snapshot.get_height()
-            if ratio > ART_RATIO:
-                factor = ArtSize.START_HEIGHT / snapshot.get_height()
-            else:
-                factor = ArtSize.START_WIDTH / snapshot.get_width()
-            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                         ArtSize.START_WIDTH,
-                                         ArtSize.START_HEIGHT)
-            context = cairo.Context(surface)
-            context.scale(factor, factor)
-            context.set_source_surface(snapshot, factor, 0)
-            context.paint()
-            # Cache result
-            # We also cache initial URI
-            uris = [self.get_uri()]
-            parsed = urlparse(uri)
-            # Caching this will break populars navigation
-            # as we are looking for subpage snapshots
-            if parsed.scheme == "populars":
-                return
-            initial_parsed = urlparse(self.initial_uri)
-            if parsed.netloc == initial_parsed.netloc and\
-                    self.initial_uri not in uris:
-                uris.append(self.initial_uri)
-            for uri in uris:
-                if not El().art.exists(uri, "start"):
-                    El().art.save_artwork(uri, surface, "start")
-        except Exception as e:
-            print("WebViewSignalsHandler::__on_snapshot():", e)
+        # We also cache initial URI
+        uris = [uri]
+        parsed = urlparse(uri)
+        initial_parsed = urlparse(self.initial_uri)
+        if parsed.netloc == initial_parsed.netloc and\
+                self.initial_uri not in uris:
+            uris.append(self.initial_uri)
+        for uri in uris:
+            if not El().art.exists(uri, "start"):
+                El().art.save_artwork(uri, surface, "start")
