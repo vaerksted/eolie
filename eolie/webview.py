@@ -215,12 +215,12 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def set_rtime(self, time):
+    def set__rtime(self, time):
         """
             Update related time
             @param time as int
         """
-        self._rtime = time
+        self.__rtime = time
 
     def set_atime(self):
         """
@@ -240,7 +240,7 @@ class WebView(WebKit2.WebView):
             Get creation time
             @return int
         """
-        return self._rtime
+        return self.__rtime
 
     @property
     def atime(self):
@@ -316,7 +316,7 @@ class WebView(WebKit2.WebView):
         self._window = window
         self._content_manager = content_manager
         self._atime = 0
-        self._rtime = int(time())
+        self.__rtime = int(time())
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
@@ -402,14 +402,13 @@ class WebView(WebKit2.WebView):
             Create a new view for action
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
-            @param force as bool
         """
         webview = WebView.new_with_related_view(related, self._window)
-        self.set_rtime(related.rtime - 1)
-        self.connect("ready-to-show",
-                     self.__on_ready_to_show,
-                     related,
-                     navigation_action)
+        self.set__rtime(related.rtime - 1)
+        webview.connect("ready-to-show",
+                        self.__on_ready_to_show,
+                        related,
+                        navigation_action)
         return webview
 
     def __on_ready_to_show(self, webview, related, navigation_action):
@@ -420,7 +419,7 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         # Do not block if we get a click on view
-        elapsed = time() - related.last_click_event["time"]
+        elapsed = time() - related.last_click_time
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
         exception = \
@@ -435,12 +434,12 @@ class WebView(WebKit2.WebView):
                                WebKit2.NavigationType.RELOAD,
                                WebKit2.NavigationType.BACK_FORWARD]:
             related.add_popup(webview)
-            self.connect("close", self.__on_popup_close, related)
+            webview.connect("close", self.__on_popup_close, related)
             if related == self._window.container.current.webview:
                 self._window.toolbar.title.show_indicator(
                                                         Indicator.POPUPS)
             return
-        properties = self.get_window_properties()
+        properties = webview.get_window_properties()
         if properties.get_locationbar_visible() and\
                 properties.get_toolbar_visible() and\
                 not navigation_action.get_modifiers() &\

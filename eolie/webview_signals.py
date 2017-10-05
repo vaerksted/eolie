@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2, GObject
+from gi.repository import Gtk, Gdk, Gio, WebKit2, GObject
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -33,7 +33,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "new-page":  (GObject.SignalFlags.RUN_FIRST, None, (str, int, int)),
         "save-password": (GObject.SignalFlags.RUN_FIRST, None, (str,
                                                                 str,
                                                                 str,
@@ -59,7 +58,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
-        self.connect("new-page", self.__on_new_page)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -165,30 +163,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         elif source == Gdk.InputSource.MOUSE:
             event.delta_x *= 2
             event.delta_y *= 2
-
-    def __on_new_page(self, webview, uri, window_type, rtime):
-        """
-            Open a new page, switch to view if show is True
-            @param webview as WebView
-            @param uri as str
-            @param window_type as Gdk.WindowType
-            @param rtime as int
-        """
-        if uri:
-            if window_type == Gdk.WindowType.SUBSURFACE:
-                if self.ephemeral:
-                    webview = self.new_ephemeral(self._window)
-                else:
-                    webview = self.new(self._window)
-                self._window.container.popup_webview(webview, True)
-                GLib.idle_add(self.load_uri, uri)
-            else:
-                new = self._window.container.add_webview(uri,
-                                                         window_type,
-                                                         self.ephemeral)
-                # parent.rtime = child.rtime + 1
-                # Used to search for best matching webview
-                new.set_rtime(self.rtime - 1)
 
     def __on_save_password(self, webview, user_form_name, user_form_value,
                            pass_form_name, pass_form_value, uri, form_uri):

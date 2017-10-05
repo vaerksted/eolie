@@ -129,6 +129,27 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
+    def __new_page(self, webview, window_type):
+        """
+            Open a new page, switch to view if show is True
+            @param webview as WebView
+            @param window_type as Gdk.WindowType
+        """
+        if window_type == Gdk.WindowType.SUBSURFACE:
+            if self.ephemeral:
+                webview = self.new_ephemeral(self._window)
+            else:
+                webview = self.new(self._window)
+            self._window.container.popup_webview(webview, True)
+            GLib.idle_add(self.load_uri, self._navigation_uri)
+        else:
+            new = self._window.container.add_webview(self._navigation_uri,
+                                                     window_type,
+                                                     self.ephemeral)
+            # parent.rtime = child.rtime + 1
+            # Used to search for best matching webview
+            new.set_rtime(self.rtime - 1)
+
     def __on_run_as_modal(self, webview):
         """
         """
@@ -253,10 +274,9 @@ class WebViewNavigation:
             # Prevent opening empty pages
             if self._navigation_uri != "about:blank" and decision_type ==\
                                   WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.emit("new-page",
-                          self._navigation_uri,
-                          Gdk.WindowType.CHILD,
-                          self._rtime)
+                self.__new_page(self._navigation_uri,
+                                Gdk.WindowType.CHILD,
+                                self._rtime)
                 decision.ignore()
                 return True
             else:
@@ -269,26 +289,23 @@ class WebViewNavigation:
                     window_type = Gdk.WindowType.SUBSURFACE
                 else:
                     window_type = Gdk.WindowType.CHILD
-                self.emit("new-page",
-                          self._navigation_uri,
-                          window_type,
-                          self._rtime)
+                self.__new_page(self._navigation_uri,
+                                window_type,
+                                self._rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
-                self.emit("new-page",
-                          self._navigation_uri,
-                          Gdk.WindowType.OFFSCREEN,
-                          self._rtime)
+                self.__new_page(self._navigation_uri,
+                                Gdk.WindowType.OFFSCREEN,
+                                self._rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.SHIFT_MASK:
-                self.emit("new-page",
-                          self._navigation_uri,
-                          Gdk.WindowType.SUBSURFACE,
-                          self._rtime)
+                self.__new_page(self._navigation_uri,
+                                Gdk.WindowType.SUBSURFACE,
+                                self._rtime)
                 decision.ignore()
                 return True
             else:
@@ -297,10 +314,9 @@ class WebViewNavigation:
                 self._error = None
                 return False
         else:
-            self.emit("new-page",
-                      self._navigation_uri,
-                      Gdk.WindowType.OFFSCREEN,
-                      self._rtime)
+            self.__new_page(self._navigation_uri,
+                            Gdk.WindowType.OFFSCREEN,
+                            self._rtime)
             decision.ignore()
             return True
 

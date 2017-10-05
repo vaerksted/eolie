@@ -34,7 +34,7 @@ class WebViewDBusSignals:
         self.connect("submit-form", self.__on_submit_form)
 
     @property
-    def last_click_event(self):
+    def last_click_time(self):
         """
             Get last click time
             @return {}
