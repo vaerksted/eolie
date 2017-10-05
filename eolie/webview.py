@@ -215,7 +215,7 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def set__rtime(self, time):
+    def set_rtime(self, time):
         """
             Update related time
             @param time as int
