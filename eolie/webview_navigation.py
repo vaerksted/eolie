@@ -276,7 +276,7 @@ class WebViewNavigation:
                                   WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 self.__new_page(self._navigation_uri,
                                 Gdk.WindowType.CHILD,
-                                self._rtime)
+                                self.rtime)
                 decision.ignore()
                 return True
             else:
@@ -291,21 +291,21 @@ class WebViewNavigation:
                     window_type = Gdk.WindowType.CHILD
                 self.__new_page(self._navigation_uri,
                                 window_type,
-                                self._rtime)
+                                self.rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
                 self.__new_page(self._navigation_uri,
                                 Gdk.WindowType.OFFSCREEN,
-                                self._rtime)
+                                self.rtime)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.SHIFT_MASK:
                 self.__new_page(self._navigation_uri,
                                 Gdk.WindowType.SUBSURFACE,
-                                self._rtime)
+                                self.rtime)
                 decision.ignore()
                 return True
             else:
@@ -316,7 +316,7 @@ class WebViewNavigation:
         else:
             self.__new_page(self._navigation_uri,
                             Gdk.WindowType.OFFSCREEN,
-                            self._rtime)
+                            self.rtime)
             decision.ignore()
             return True
 
