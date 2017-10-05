@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2
+from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
@@ -27,7 +27,7 @@ class WebViewLoadSignals:
         """
             Init class
         """
-        pass
+        self.__load_monitoring = True
 
     def set_snapshot(self, uri):
         """
@@ -42,6 +42,13 @@ class WebViewLoadSignals:
                               self.__on_snapshot,
                               uri)
 
+    def disable_load_monitoring(self):
+        """
+            Disable load monitoring, related to UI updates
+            Internal load monitoring (adblock, ...) is not affected
+        """
+        self.__load_monitoring = False
+
 #######################
 # PROTECTED           #
 #######################
@@ -50,7 +57,9 @@ class WebViewLoadSignals:
             Connect all signals
             @param webview as WebView
         """
-        self.connect("load-changed", self.__on_load_changed)
+        if self.__load_monitoring:
+            self.connect("load-changed", self.__on_load_changed)
+            self.connect("title-changed", self.__on_title_changed)
         self.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)
         self.get_back_forward_list().connect(
@@ -63,7 +72,9 @@ class WebViewLoadSignals:
             Disconnect all signals
             @param webview as WebView
         """
-        self.disconnect_by_func(self.__on_load_changed)
+        if self.__load_monitoring:
+            self.disconnect_by_func(self.__on_load_changed)
+            self.disconnect_by_func(self.__on_title_changed)
         self.disconnect_by_func(self.__on_estimated_load_progress)
         self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
@@ -77,8 +88,7 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        ancestor = webview.get_ancestor(Gtk.Popover)
-        if not webview.get_mapped() or ancestor is not None:
+        if not webview.get_mapped():
             return
         self._window.toolbar.title.update_load_indicator(webview)
         uri = self.get_uri()
@@ -108,6 +118,15 @@ class WebViewLoadSignals:
             GLib.timeout_add(500, self._window.toolbar.title.progress.hide)
             if parsed.scheme != "populars":
                 GLib.timeout_add(3000, self.set_snapshot, uri)
+
+    def __on_title_changed(self, webview, title):
+        """
+            Update title
+            @param webview as WebView
+            @param title as str
+        """
+        if webview.get_mapped():
+            self._window.toolbar.title.set_title(title)
 
     def __on_estimated_load_progress(self, webview, value):
         """

@@ -47,6 +47,7 @@ class WebViewPopover(Gtk.Popover):
         """
         self.__stack.add(view)
         self.__stack.set_visible_child(view)
+        view.webview.disable_load_monitoring()
         view.webview.connect("close", self.__on_webview_close, destroy)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         view.webview.connect("load-changed", self.__on_webview_load_changed)

@@ -169,12 +169,10 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
 
     def __on_title_changed(self, webview, title):
         """
-            Update title
+            Append title to history
             @param webview as WebView
             @param title as str
         """
-        if webview.get_mapped():
-            self._window.toolbar.title.set_title(title)
         # We only update history on title changed, should be enough
         if self.error is None:
             uri = self.get_uri()
