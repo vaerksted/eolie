@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, WebKit2
+from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -202,13 +202,15 @@ class WebViewMenuSignals:
             @param uri as str
         """
         if event == WebKit2.LoadEvent.FINISHED:
-            webview.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                                 WebKit2.SnapshotOptions.NONE,
-                                 None,
-                                 get_snapshot,
-                                 self.__on_preview_snapshot,
-                                 webview,
-                                 uri)
+            GLib.timeout_add(3000,
+                             webview.get_snapshot,
+                             WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                             WebKit2.SnapshotOptions.NONE,
+                             None,
+                             get_snapshot,
+                             self.__on_preview_snapshot,
+                             webview,
+                             uri)
 
     def __on_preview_snapshot(self, surface, webview, uri):
         """
