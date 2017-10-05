@@ -20,7 +20,7 @@ from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH, ADBLOCK_JS
+from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS
 from eolie.utils import debug
 
 
@@ -28,7 +28,7 @@ class DatabaseAdblock:
     """
         Eolie adblock db
     """
-    DB_PATH = "%s/adblock2.db" % EOLIE_LOCAL_PATH
+    DB_PATH = "%s/adblock2.db" % EOLIE_DATA_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?" +
@@ -100,7 +100,7 @@ class DatabaseAdblock:
         # Lazy loading if not empty
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema

@@ -40,7 +40,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.context import Context
-from eolie.define import EOLIE_LOCAL_PATH, TimeSpan, TimeSpanValues
+from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues
 
 
 class Application(Gtk.Application):
@@ -48,7 +48,7 @@ class Application(Gtk.Application):
         Eolie application:
     """
 
-    __COOKIES_PATH = "%s/cookies.db" % EOLIE_LOCAL_PATH
+    __COOKIES_PATH = "%s/cookies.db" % EOLIE_DATA_PATH
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
     def __init__(self, version, extension_dir):
@@ -480,7 +480,7 @@ class Application(Gtk.Application):
                     session_states.append((uri, ephemeral, state.get_data()))
             if remember_session:
                 dump(session_states,
-                     open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
+                     open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::__save_state()", e)
 
@@ -492,7 +492,7 @@ class Application(Gtk.Application):
         window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
-                                     EOLIE_LOCAL_PATH + "/session_states.bin",
+                                     EOLIE_DATA_PATH + "/session_states.bin",
                                      "rb"))
             for (uri, ephemeral, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
@@ -502,7 +502,7 @@ class Application(Gtk.Application):
                               window_type == Gdk.WindowType.CHILD)
                 window_type = Gdk.WindowType.OFFSCREEN
             dump([],
-                 open(EOLIE_LOCAL_PATH + "/session_states.bin", "wb"))
+                 open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::restore_state()", e)
         return window_type != Gdk.WindowType.CHILD

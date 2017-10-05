@@ -15,7 +15,7 @@ from gi.repository import Gio
 import sqlite3
 
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH
+from eolie.define import EOLIE_DATA_PATH
 
 
 class DatabaseExceptions:
@@ -38,13 +38,13 @@ class DatabaseExceptions:
             Create database tables or manage update if needed
             @param suffix as str
         """
-        self.__DB_PATH = "%s/exceptions_%s.db" % (EOLIE_LOCAL_PATH,
+        self.__DB_PATH = "%s/exceptions_%s.db" % (EOLIE_DATA_PATH,
                                                   suffix)
         self.__cancellable = Gio.Cancellable.new()
         f = Gio.File.new_for_path(self.__DB_PATH)
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema

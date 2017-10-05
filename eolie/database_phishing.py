@@ -18,14 +18,14 @@ import json
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH
+from eolie.define import EOLIE_DATA_PATH
 
 
 class DatabasePhishing:
     """
         Phishing database
     """
-    DB_PATH = "%s/phishing.db" % EOLIE_LOCAL_PATH
+    DB_PATH = "%s/phishing.db" % EOLIE_DATA_PATH
     __URI = "http://data.phishtank.com/data/online-valid.json"
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -48,7 +48,7 @@ class DatabasePhishing:
         # Lazy loading if not empty
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema

@@ -20,7 +20,7 @@ from fcntl import flock, LOCK_EX, LOCK_NB, LOCK_UN
 from time import time, sleep
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, EOLIE_LOCAL_PATH
+from eolie.define import El, EOLIE_DATA_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
 from eolie.helper_passwords import PasswordsHelper
@@ -256,7 +256,7 @@ class SyncWorker:
         try:
             # If syncing, state will be written by self.__sync()
             if not self.syncing:
-                f = open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin", "wb")
+                f = open(EOLIE_DATA_PATH + "/mozilla_sync.bin", "wb")
                 # Lock file
                 flock(f, LOCK_EX | LOCK_NB)
                 self.__mtimes = self.__mozilla_sync.client.info_collections()
@@ -393,7 +393,7 @@ class SyncWorker:
         self.__syncing = True
         self.__sync_cancellable.reset()
         try:
-            self.__mtimes = load(open(EOLIE_LOCAL_PATH + "/mozilla_sync.bin",
+            self.__mtimes = load(open(EOLIE_DATA_PATH + "/mozilla_sync.bin",
                                  "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1,

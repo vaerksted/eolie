@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 import json
 
 from eolie.search import Search
-from eolie.define import El, EOLIE_LOCAL_PATH
+from eolie.define import El, EOLIE_DATA_PATH
 
 
 class Item(GObject.GObject):
@@ -134,7 +134,7 @@ class SearchEngineDialog:
                 if name and search:
                     engines[name] = [uri, search, keyword, encoding, bang]
         content = json.dumps(engines)
-        f = Gio.File.new_for_path(EOLIE_LOCAL_PATH + "/search_engines.json")
+        f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
         f.replace_contents(content.encode("utf-8"),
                            None,
                            False,

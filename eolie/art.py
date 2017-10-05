@@ -16,7 +16,7 @@ from hashlib import sha256
 from time import time
 from urllib.parse import urlparse
 
-from eolie.define import CACHE_PATH
+from eolie.define import EOLIE_CACHE_PATH
 
 
 class Art:
@@ -104,7 +104,7 @@ class Art:
         if cached_path:
             cached_uri += cached_path
         encoded = sha256(cached_uri.encode("utf-8")).hexdigest()
-        filepath = "%s/%s_%s.png" % (CACHE_PATH, encoded, suffix)
+        filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
     def exists(self, uri, suffix):
@@ -129,7 +129,7 @@ class Art:
         """
         current_time = time()
         try:
-            d = Gio.File.new_for_path(CACHE_PATH)
+            d = Gio.File.new_for_path(EOLIE_CACHE_PATH)
             children = d.enumerate_children("standard::name",
                                             Gio.FileQueryInfoFlags.NONE,
                                             None)
@@ -151,7 +151,7 @@ class Art:
             Get cache base uri
             @return str
         """
-        return GLib.filename_to_uri(CACHE_PATH)
+        return GLib.filename_to_uri(EOLIE_CACHE_PATH)
 
 #######################
 # PROTECTED           #
@@ -164,7 +164,7 @@ class Art:
         """
             Create cache dir
         """
-        d = Gio.File.new_for_path(CACHE_PATH)
+        d = Gio.File.new_for_path(EOLIE_CACHE_PATH)
         if not d.query_exists():
             try:
                 d.make_directory_with_parents()

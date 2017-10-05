@@ -16,7 +16,7 @@ import sqlite3
 from urllib.parse import urlparse
 
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_LOCAL_PATH
+from eolie.define import EOLIE_DATA_PATH
 
 
 class DatabaseSettings:
@@ -49,11 +49,11 @@ class DatabaseSettings:
             @param suffix as str
         """
         new_version = len(self.__UPGRADES)
-        self.__DB_PATH = "%s/settings.db" % EOLIE_LOCAL_PATH
+        self.__DB_PATH = "%s/settings.db" % EOLIE_DATA_PATH
         f = Gio.File.new_for_path(self.__DB_PATH)
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema

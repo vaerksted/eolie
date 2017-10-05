@@ -16,7 +16,7 @@ from hashlib import sha256
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import CACHE_PATH, ArtSize, El
+from eolie.define import EOLIE_CACHE_PATH, ArtSize, El
 
 
 class Image(Gtk.FlowBoxChild):
@@ -31,7 +31,7 @@ class Image(Gtk.FlowBoxChild):
         self.__uri = uri
         try:
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            filepath = "%s/%s" % (CACHE_PATH, encoded)
+            filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
                                                        filepath,
                                                        ArtSize.START_HEIGHT,
@@ -190,7 +190,7 @@ class ImagesPopover(Gtk.Popover):
             if child.uri.find(self.__filter) != -1:
                 encoded = sha256(child.uri.encode("utf-8")).hexdigest()
                 child_basename = child.uri.split("/")[-1]
-                filepath = "%s/%s" % (CACHE_PATH, encoded)
+                filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
                 s = Gio.File.new_for_path(filepath)
                 if not s.query_exists():
                     continue
@@ -208,7 +208,7 @@ class ImagesPopover(Gtk.Popover):
         """
         for child in self.__flowbox.get_children():
             encoded = sha256(child.uri.encode("utf-8")).hexdigest()
-            filepath = "%s/%s" % (CACHE_PATH, encoded)
+            filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
             f = Gio.File.new_for_path(filepath)
             try:
                 if f.query_exists():
@@ -239,7 +239,7 @@ class ImagesPopover(Gtk.Popover):
         """
         if status:
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            filepath = "%s/%s" % (CACHE_PATH, encoded)
+            filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
             f = Gio.File.new_for_path(filepath)
             stream = f.append_to(Gio.FileCreateFlags.REPLACE_DESTINATION,
                                  self.__cancellable)

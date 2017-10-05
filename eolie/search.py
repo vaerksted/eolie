@@ -16,7 +16,7 @@ from gettext import gettext as _
 import json
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, EOLIE_LOCAL_PATH
+from eolie.define import El, EOLIE_DATA_PATH
 
 
 class Search:
@@ -139,7 +139,7 @@ class Search:
         engines = {}
         # Load user engines
         try:
-            f = Gio.File.new_for_path(EOLIE_LOCAL_PATH +
+            f = Gio.File.new_for_path(EOLIE_DATA_PATH +
                                       "/search_engines.json")
             if f.query_exists():
                 (status, contents, tag) = f.load_contents(None)

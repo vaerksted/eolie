@@ -19,23 +19,9 @@ PROXY_PATH = '/org/gnome/EolieProxy'
 PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 
 # Setup common paths
-if GLib.getenv("XDG_DATA_HOME") is None:
-    LOCAL_PATH = GLib.get_home_dir() + "/.local/share"
-else:
-    LOCAL_PATH = GLib.getenv("XDG_DATA_HOME")
-
-EOLIE_LOCAL_PATH = LOCAL_PATH + "/eolie"
-ADBLOCK_JS = "%s/adblock_js" % EOLIE_LOCAL_PATH
-
-if GLib.getenv("XDG_CONFIG_HOME") is None:
-    CONFIG_PATH = GLib.get_home_dir() + "/.config"
-else:
-    CONFIG_PATH = GLib.getenv("XDG_CONFIG_HOME")
-
-if GLib.getenv("XDG_CACHE_HOME") is None:
-    CACHE_PATH = GLib.get_home_dir() + "/.cache/eolie"
-else:
-    CACHE_PATH = GLib.getenv("XDG_CACHE_HOME") + "/eolie"
+EOLIE_DATA_PATH = GLib.get_user_data_dir() + "/eolie"
+EOLIE_CACHE_PATH = GLib.get_user_cache_dir() + "/eolie"
+ADBLOCK_JS = "%s/adblock_js" % EOLIE_DATA_PATH
 
 
 class TimeSpan:

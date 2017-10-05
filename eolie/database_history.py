@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El, EOLIE_LOCAL_PATH
+from eolie.define import El, EOLIE_DATA_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -27,7 +27,7 @@ class DatabaseHistory:
     """
         Eolie history db
     """
-    DB_PATH = "%s/history.db" % EOLIE_LOCAL_PATH
+    DB_PATH = "%s/history.db" % EOLIE_DATA_PATH
 
     __UPGRADES = {
         1: "ALTER TABLE history ADD opened INT NOT NULL DEFAULT 0",
@@ -63,7 +63,7 @@ class DatabaseHistory:
         f = Gio.File.new_for_path(self.DB_PATH)
         if not f.query_exists():
             try:
-                d = Gio.File.new_for_path(EOLIE_LOCAL_PATH)
+                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
                 if not d.query_exists():
                     d.make_directory_with_parents()
                 # Create db schema
