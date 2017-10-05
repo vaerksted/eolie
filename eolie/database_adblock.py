@@ -171,7 +171,7 @@ class DatabaseAdblock:
         rules = ""
         with SqlCursor(self) as sql:
             request = "SELECT name FROM adblock_css WHERE\
-                       blacklist!='' AND whitelist!=''"
+                       blacklist='' AND whitelist=''"
             result = sql.execute(request)
             for name in list(itertools.chain(*result)):
                 rules += "%s,\n" % name
@@ -189,7 +189,7 @@ class DatabaseAdblock:
         netloc = parsed.netloc.lstrip("www.")
         with SqlCursor(self) as sql:
             request = "SELECT name FROM adblock_css WHERE\
-                       blacklist!='' AND blacklist!=? AND whitelist=?"
+                       (blacklist!='' AND blacklist!=?) OR whitelist=?"
             result = sql.execute(request, (netloc, netloc))
             for name in list(itertools.chain(*result)):
                 rules += "%s,\n" % name
