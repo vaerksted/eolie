@@ -98,7 +98,7 @@ class SitesMenu(Gio.Menu):
         """
             Load history
             @param Gio.SimpleAction
-            @param GVariant
+            @param GLib.Variant
             @param view as View
         """
         self.__window.container.set_current(view, True)
