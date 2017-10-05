@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, WebKit2
+from gi.repository import Gtk, GLib, WebKit2
 
 from urllib.parse import urlparse
 
@@ -77,8 +77,8 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        # Check needed by WebViewPopover!
-        if not webview.get_mapped():
+        ancestor = webview.get_ancestor(Gtk.Popover)
+        if not webview.get_mapped() or ancestor is not None:
             return
         self._window.toolbar.title.update_load_indicator(webview)
         uri = self.get_uri()

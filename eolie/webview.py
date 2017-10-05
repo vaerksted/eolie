@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, Gio, Gdk
+from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 
 from urllib.parse import urlparse
 from time import time
@@ -214,6 +214,26 @@ class WebView(WebKit2.WebView):
         """
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
+
+    def new_page(self, window_type):
+        """
+            Open a new page
+            @param window_type as Gdk.WindowType
+        """
+        if window_type == Gdk.WindowType.SUBSURFACE:
+            if self.ephemeral:
+                webview = WebView.new_ephemeral(self._window)
+            else:
+                webview = WebView.new(self._window)
+            self._window.container.popup_webview(webview, True)
+            GLib.idle_add(webview.load_uri, self._navigation_uri)
+        else:
+            new = self._window.container.add_webview(self._navigation_uri,
+                                                     window_type,
+                                                     self.ephemeral)
+            # parent.rtime = child.rtime + 1
+            # Used to search for best matching webview
+            new.set_rtime(self.rtime - 1)
 
     def set_rtime(self, time):
         """
