@@ -123,11 +123,11 @@ class WebViewLoadSignals:
                                            uri,
                                            self.initial_uri)
             favicon = None
+            # Keep width to check new quality
+            self.__favicon_width = surface.get_width()
         else:
             favicon = "applications-internet"
         self.emit("favicon-changed", resized, favicon)
-        # Keep width to check new quality
-        self.__favicon_width = surface.get_width()
 
     def __on_load_changed(self, webview, event):
         """
