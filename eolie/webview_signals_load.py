@@ -28,6 +28,7 @@ class WebViewLoadSignals:
             Init class
         """
         self.__load_monitoring = True
+        self.__favicon_width = 0
 
     def set_snapshot(self, uri):
         """
@@ -111,18 +112,22 @@ class WebViewLoadSignals:
         favicon = El().art.get_icon_theme_artwork(uri,
                                                   self.ephemeral)
         if favicon is None and surface is not None:
-            resized = resize_favicon(surface)
-            if not El().art.exists(uri, "favicon"):
-                El().art.save_artwork(uri, resized, "favicon")
-            if not El().art.exists(parsed.netloc, "favicon"):
-                El().art.save_artwork(parsed.netloc, resized, "favicon")
-            self.__set_favicon_related(resized,
-                                       uri,
-                                       self.initial_uri)
+            # Only get better quality
+            if surface.get_width() > self.__favicon_width:
+                resized = resize_favicon(surface)
+                if not El().art.exists(uri, "favicon"):
+                    El().art.save_artwork(uri, resized, "favicon")
+                if not El().art.exists(parsed.netloc, "favicon"):
+                    El().art.save_artwork(parsed.netloc, resized, "favicon")
+                self.__set_favicon_related(resized,
+                                           uri,
+                                           self.initial_uri)
             favicon = None
         else:
             favicon = "applications-internet"
         self.emit("favicon-changed", resized, favicon)
+        # Keep width to check new quality
+        self.__favicon_width = surface.get_width()
 
     def __on_load_changed(self, webview, event):
         """
@@ -137,6 +142,7 @@ class WebViewLoadSignals:
         parsed = urlparse(uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
+            self.__favicon_width = 0
             self._window.container.current.find_widget.set_search_mode(False)
             self._window.toolbar.title.set_title(uri)
             if wanted_scheme:
