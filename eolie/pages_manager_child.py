@@ -31,6 +31,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         Gtk.FlowBoxChild.__init__(self)
         self.__view = view
         self.__window = window
+        self.__favicon = None
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
@@ -170,15 +171,13 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.y >= allocation.height:
             if self.__view.webview.ephemeral:
                 return
-            uri = self.__view.webview.get_uri()
-            favicon_path = El().art.get_path(uri, "favicon")
-            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
-                self.__close_button.get_image().set_from_file(favicon_path)
+            image = self.__close_button.get_image()
+            if self.__favicon is not None:
+                image.set_from_surface(self.__favicon)
             else:
+                uri = self.__view.webview.get_uri()
                 favicon = El().art.get_icon_theme_artwork(uri, False)
-                self.__close_button.get_image().set_from_icon_name(
-                                                  favicon,
-                                                  Gtk.IconSize.INVALID)
+                image.set_from_icon_name(favicon, Gtk.IconSize.INVALID)
 
 #######################
 # PRIVATE             #
@@ -255,6 +254,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param favicon as cairo.Surface
             @param favicon_str as str
         """
+        self.__favicon = favicon
         if favicon is not None:
             self.__close_button.get_image().set_from_surface(favicon)
             # Update site manager favicon (missing or obsolete)
