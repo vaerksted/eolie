@@ -15,7 +15,7 @@ from gi.repository import GLib, WebKit2
 from urllib.parse import urlparse
 
 from eolie.define import El, Indicator
-from eolie.utils import get_snapshot
+from eolie.utils import get_snapshot, resize_favicon
 
 
 class WebViewLoadSignals:
@@ -60,6 +60,7 @@ class WebViewLoadSignals:
         if self.__load_monitoring:
             self.connect("load-changed", self.__on_load_changed)
             self.connect("title-changed", self.__on_title_changed)
+            self.connect("notify::favicon", self.__on_notify_favicon)
         self.connect("notify::estimated-load-progress",
                      self.__on_estimated_load_progress)
         self.get_back_forward_list().connect(
@@ -82,6 +83,47 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon_related(self, surface, uri, initial_uri):
+        """
+            Set favicon for initial uri
+            @param surface as cairo.surface
+            @param uri as str
+            @param initial_uri as str
+        """
+        if initial_uri != uri and initial_uri is not None:
+            parsed = urlparse(uri)
+            initial_parsed = urlparse(initial_uri)
+            if parsed.netloc.lstrip("www.") ==\
+                    initial_parsed.netloc.lstrip("www.") and\
+                    not El().art.exists(initial_uri, "favicon"):
+                El().art.save_artwork(initial_uri, surface, "favicon")
+
+    def __on_notify_favicon(self, webview, favicon):
+        """
+            Set favicon
+            @param webview as WebView
+            @param favicon as Gparam
+        """
+        resized = None
+        uri = self.get_uri()
+        parsed = urlparse(uri)
+        surface = self.get_favicon()
+        favicon = El().art.get_icon_theme_artwork(uri,
+                                                  self.ephemeral)
+        if favicon is None and surface is not None:
+            resized = resize_favicon(surface)
+            if not El().art.exists(uri, "favicon"):
+                El().art.save_artwork(uri, resized, "favicon")
+            if not El().art.exists(parsed.netloc, "favicon"):
+                El().art.save_artwork(parsed.netloc, resized, "favicon")
+            self.__set_favicon_related(resized,
+                                       uri,
+                                       self.initial_uri)
+            favicon = None
+        else:
+            favicon = "applications-internet"
+        self.emit("favicon-changed", resized, favicon)
+
     def __on_load_changed(self, webview, event):
         """
             Update sidebar/urlbar

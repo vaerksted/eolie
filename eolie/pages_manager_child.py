@@ -12,11 +12,9 @@
 
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
-from urllib.parse import urlparse
-
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
-from eolie.utils import resize_favicon, get_snapshot
+from eolie.utils import get_snapshot
 
 
 class PagesManagerChild(Gtk.FlowBoxChild):
@@ -82,7 +80,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                               self.__on_view_destroy)
         self.__connected_ids.append(
                              self.__view.webview.connect(
-                                 "notify::favicon",
+                                 "favicon-changed",
                                  self.__on_notify_favicon))
         self.__connected_ids.append(
                              self.__view.webview.connect(
@@ -170,7 +168,17 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            self.__set_favicon()
+            if self.__view.webview.ephemeral:
+                return
+            uri = self.__view.webview.get_uri()
+            favicon_path = El().art.get_path(uri, "favicon")
+            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+                self.__close_button.get_image().set_from_file(favicon_path)
+            else:
+                favicon = El().art.get_icon_theme_artwork(uri, False)
+                self.__close_button.get_image().set_from_icon_name(
+                                                  favicon,
+                                                  Gtk.IconSize.INVALID)
 
 #######################
 # PRIVATE             #
@@ -190,55 +198,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                          None,
                                          get_snapshot,
                                          self.__on_snapshot)
-
-    def __set_favicon(self):
-        """
-            Set favicon
-        """
-        resized = None
-        uri = self.__view.webview.get_uri()
-        parsed = urlparse(uri)
-        surface = self.__view.webview.get_favicon()
-        artwork = El().art.get_icon_theme_artwork(
-                                                 uri,
-                                                 self.__view.webview.ephemeral)
-        if artwork is not None:
-            self.__close_button.get_image().set_from_icon_name(
-                                                  artwork,
-                                                  Gtk.IconSize.INVALID)
-        elif surface is not None:
-            resized = resize_favicon(surface)
-            if not El().art.exists(uri, "favicon"):
-                El().art.save_artwork(uri, resized, "favicon")
-            if not El().art.exists(parsed.netloc, "favicon"):
-                El().art.save_artwork(parsed.netloc, resized, "favicon")
-            self.__set_favicon_related(resized,
-                                       uri,
-                                       self.__view.webview.initial_uri)
-            self.__close_button.get_image().set_from_surface(resized)
-            # Update site manager favicon (missing or obsolete)
-            self.__window.container.sites_manager.set_favicon(
-                                                          self.__view,
-                                                          resized)
-        else:
-            self.__close_button.get_image().set_from_icon_name(
-                                                  "applications-internet",
-                                                  Gtk.IconSize.INVALID)
-
-    def __set_favicon_related(self, surface, uri, initial_uri):
-        """
-            Set favicon for initial uri
-            @param surface as cairo.surface
-            @param uri as str
-            @param initial_uri as str
-        """
-        if initial_uri != uri and initial_uri is not None:
-            parsed = urlparse(uri)
-            initial_parsed = urlparse(initial_uri)
-            if parsed.netloc.lstrip("www.") ==\
-                    initial_parsed.netloc.lstrip("www.") and\
-                    not El().art.exists(initial_uri, "favicon"):
-                El().art.save_artwork(initial_uri, surface, "favicon")
 
     def __on_scroll_timeout(self):
         """
@@ -289,14 +248,23 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__window.container.sites_manager.remove_view(self.__view)
         GLib.idle_add(self.destroy)
 
-    def __on_notify_favicon(self, webview, favicon):
+    def __on_notify_favicon(self, webview, favicon, favicon_str):
         """
             Set favicon
             @param webview as WebView
-            @param favicon as Gparam
+            @param favicon as cairo.Surface
+            @param favicon_str as str
         """
-        if self.__view.webview == webview:
-            self.__set_favicon()
+        if favicon is not None:
+            self.__close_button.get_image().set_from_surface(favicon)
+            # Update site manager favicon (missing or obsolete)
+            self.__window.container.sites_manager.set_favicon(
+                                                          self.__view,
+                                                          favicon)
+        else:
+            self.__close_button.get_image().set_from_icon_name(
+                                                  favicon_str,
+                                                  Gtk.IconSize.INVALID)
 
     def __on_notify_is_playing_audio(self, webview, playing):
         """
