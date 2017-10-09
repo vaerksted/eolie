@@ -51,20 +51,33 @@ def get_char_surface(char):
         @param char as str
         @return cairo surface
     """
-    colors = [{"r": 0.5, "g": 0, "b": 1},
-              {"r": 1, "g": 0, "b": 0},
-              {"r": 0, "g": 0.56, "b": 1},
-              {"r": 1, "g": 0.43, "b": 0}]
+    colors = [[0.102, 0.737, 0.612],                 # Turquoise
+              [0.204, 0.596, 0.859],                 # Peterriver
+              [0.608, 0.349, 0.714],                 # Amethyst
+              [0.204, 0.286, 0.369],                 # Wetasphalt
+              [0.086, 0.627, 0.522],                 # Greensea
+              [0.153, 0.682, 0.376],                 # Nephritis
+              [0.161, 0.502, 0.725],                 # Belizehole
+              [0.557, 0.267, 0.678],                 # Wisteria
+              [0.173, 0.243, 0.314],                 # Midnightblue
+              [0.827, 0.329, 0.0],                   # Pumpkin
+              [0.753, 0.224, 0.169],                 # Pomegranate
+              [0.498, 0.549, 0.553]                  # Asbestos
+              ]
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
                                  ArtSize.FAVICON,
                                  ArtSize.FAVICON)
     context = cairo.Context(surface)
     color = choice(colors)
-    context.set_source_rgb(color["r"], color["g"], color["b"])
-    context.move_to(3, ArtSize.FAVICON)
+    context.set_source_rgb(color[0], color[1], color[2])
     context.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                              cairo.FONT_WEIGHT_BOLD)
-    context.set_font_size(ArtSize.FAVICON + 6)
+    context.set_font_size(ArtSize.FAVICON)
+    (xbearing, ybearing,
+     width, height,
+     xadvance, yadvance) = context.text_extents(char)
+    context.move_to(ArtSize.FAVICON / 2 - (xadvance + xbearing) / 2,
+                    ArtSize.FAVICON / 2 - ybearing - height / 2)
     context.show_text(char)
     context.stroke()
     return surface
