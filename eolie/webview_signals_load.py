@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import El, Indicator
+from eolie.define import El, Indicator, ArtSize
 from eolie.utils import get_snapshot, resize_favicon, get_char_surface
 
 
@@ -71,7 +71,14 @@ class WebViewLoadSignals:
                 # Never update such favicon as we want to keep same color
                 # get_char_surface() => random color
                 if netloc is not None:
-                    if not El().art.exists(netloc, "favicon"):
+                    if El().art.exists(netloc, "favicon"):
+                        resized = El().art.get_artwork(
+                                       netloc,
+                                       "favicon",
+                                       self.get_scale_factor(),
+                                       ArtSize.FAVICON,
+                                       ArtSize.FAVICON)
+                    else:
                         resized = get_char_surface(netloc[0])
             # If webpage has a favicon and quality is superior, resize it
             elif surface.get_width() > self.__favicon_width:
