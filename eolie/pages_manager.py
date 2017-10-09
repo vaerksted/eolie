@@ -73,6 +73,7 @@ class PagesManager(Gtk.EventBox):
             @return child
         """
         child = PagesManagerChild(view, self.__window)
+        child.label_indicator.show_indicator(not view.webview.shown)
         child.show()
         self.__box.add(child)
         return child

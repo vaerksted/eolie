@@ -102,6 +102,7 @@ class Container(Gtk.Overlay):
         if self.__expose_stack.get_visible_child_name() == "expose":
             window_type = Gdk.WindowType.OFFSCREEN
         if window_type == Gdk.WindowType.CHILD:
+            webview.mark_shown()
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
