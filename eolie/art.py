@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gdk, GdkPixbuf, Gio, GLib
+from gi.repository import Gdk, Gio, GLib
 
 from hashlib import sha256
 from time import time
@@ -49,33 +49,6 @@ class Art:
                                              surface.get_width(),
                                              surface.get_height())
         pixbuf.savev(filepath, "png", [None], [None])
-
-    def get_artwork(self, uri, suffix, scale_factor, width, heigth):
-        """
-            @param uri as str
-            @param suffix as str
-            @param scale factor as int
-            @param width as int
-            @param height as int
-            @return cairo.surface
-        """
-        if uri is None:
-            return None
-        filepath = self.get_path(uri, suffix)
-        f = Gio.File.new_for_path(filepath)
-        try:
-            if f.query_exists():
-                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filepath,
-                                                                 width,
-                                                                 heigth,
-                                                                 True)
-                surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
-                                                               scale_factor,
-                                                               None)
-                return surface
-        except:
-            pass
-        return None
 
     def get_icon_theme_artwork(self, uri, ephemeral):
         """

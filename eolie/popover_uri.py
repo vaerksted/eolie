@@ -18,7 +18,7 @@ from datetime import datetime
 from locale import strcoll
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, Type, TimeSpan, TimeSpanValues, ArtSize
+from eolie.define import El, Type, TimeSpan, TimeSpanValues
 
 
 class Item(GObject.GObject):
@@ -205,13 +205,10 @@ class Row(Gtk.ListBoxRow):
             @param favicon as Gtk.Image
             @param uri as str
         """
-        surface = El().art.get_artwork(self.__item.get_property("uri"),
-                                       "favicon",
-                                       self.get_scale_factor(),
-                                       ArtSize.FAVICON,
-                                       ArtSize.FAVICON)
-        if surface is not None:
-            favicon.set_from_surface(surface)
+        uri = self.__item.get_property("uri")
+        favicon_path = El().art.get_path(uri, "favicon")
+        if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+            favicon.set_from_file(favicon_path)
         else:
             favicon.set_from_icon_name("applications-internet",
                                        Gtk.IconSize.LARGE_TOOLBAR)

@@ -12,8 +12,11 @@
 
 from gi.repository import Gtk, Gdk, GLib, Pango, GObject
 
+from urllib.parse import urlparse
+
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
+from eolie.utils import get_char_surface
 
 
 class SitesManagerChild(Gtk.ListBoxRow):
@@ -267,8 +270,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
         else:
-            self.__image.set_from_icon_name("applications-internet",
-                                            Gtk.IconSize.INVALID)
+            parsed = urlparse(uri)
+            if parsed.netloc:
+                resized = get_char_surface(parsed.netloc.lstrip("www.")[0])
+                self.__image.set_from_surface(resized)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """

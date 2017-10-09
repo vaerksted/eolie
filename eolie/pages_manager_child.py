@@ -50,13 +50,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__audio_indicator = builder.get_object("audio_indicator")
         if view.webview.is_playing_audio():
             self.__audio_indicator.show()
-        if view.webview.ephemeral:
-            self.__close_button.get_image().set_from_icon_name(
+        self.__close_button.get_image().set_from_icon_name(
                                                   "window-close-symbolic",
-                                                  Gtk.IconSize.INVALID)
-        else:
-            self.__close_button.get_image().set_from_icon_name(
-                                                  "applications-internet",
                                                   Gtk.IconSize.INVALID)
         self.__close_button.get_image().set_property("pixel-size",
                                                      ArtSize.FAVICON)
@@ -247,12 +242,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__window.container.sites_manager.remove_view(self.__view)
         GLib.idle_add(self.destroy)
 
-    def __on_notify_favicon(self, webview, favicon, favicon_str):
+    def __on_notify_favicon(self, webview, favicon, icon_theme_artwork):
         """
             Set favicon
             @param webview as WebView
             @param favicon as cairo.Surface
-            @param favicon_str as str
+            @param icon_theme_artwork as str
         """
         self.__favicon = favicon
         if favicon is not None:
@@ -263,7 +258,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                           favicon)
         else:
             self.__close_button.get_image().set_from_icon_name(
-                                                  favicon_str,
+                                                  icon_theme_artwork,
                                                   Gtk.IconSize.INVALID)
 
     def __on_notify_is_playing_audio(self, webview, playing):
@@ -304,10 +299,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         # Js change, update snapshot
         if not webview.is_loading() and not webview.ephemeral:
             GLib.timeout_add(500, self.__set_snapshot)
-        else:
-            self.__window.container.sites_manager.add_view_for_uri(
-                                                          self.__view,
-                                                          uri)
 
     def __on_title_changed(self, webview, title):
         """
@@ -327,14 +318,23 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         uri = webview.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
+            self.__favicon = None
+            self.__close_button.get_image().set_from_icon_name(
+                                                  "applications-internet",
+                                                  Gtk.IconSize.INVALID)
             self.__image.clear()
             self.__audio_indicator.hide()
             self.__spinner.start()
             self.__title.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__title.set_text(uri)
+            self.__window.container.sites_manager.add_view_for_uri(
+                                                          self.__view,
+                                                          uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
             if webview.is_playing_audio():
                 self.__audio_indicator.show()
+            if self.__favicon is None:
+                GLib.timeout_add(500, webview.set_favicon)
             GLib.timeout_add(500, self.__set_snapshot)

@@ -45,6 +45,31 @@ def resize_favicon(favicon):
     return surface
 
 
+def get_char_surface(char):
+    """
+        Draw a char with a random color
+        @param char as str
+        @return cairo surface
+    """
+    colors = [{"r": 0.5, "g": 0, "b": 1},
+              {"r": 1, "g": 0, "b": 0},
+              {"r": 0, "g": 0.56, "b": 1},
+              {"r": 1, "g": 0.43, "b": 0}]
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                 ArtSize.FAVICON,
+                                 ArtSize.FAVICON)
+    context = cairo.Context(surface)
+    color = choice(colors)
+    context.set_source_rgb(color["r"], color["g"], color["b"])
+    context.move_to(3, ArtSize.FAVICON)
+    context.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+                             cairo.FONT_WEIGHT_BOLD)
+    context.set_font_size(ArtSize.FAVICON + 6)
+    context.show_text(char)
+    context.stroke()
+    return surface
+
+
 def get_snapshot(webview, result, callback, *args):
     """
         Set snapshot on main image

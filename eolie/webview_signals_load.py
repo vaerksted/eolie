@@ -15,7 +15,7 @@ from gi.repository import GLib, WebKit2
 from urllib.parse import urlparse
 
 from eolie.define import El, Indicator
-from eolie.utils import get_snapshot, resize_favicon
+from eolie.utils import get_snapshot, resize_favicon, get_char_surface
 
 
 class WebViewLoadSignals:
@@ -49,6 +49,47 @@ class WebViewLoadSignals:
             Internal load monitoring (adblock, ...) is not affected
         """
         self.__load_monitoring = False
+
+    def set_favicon(self):
+        """
+            Set current favicon
+        """
+        resized = None
+        uri = self.get_uri()
+        parsed = urlparse(uri)
+        if parsed.netloc:
+            netloc = parsed.netloc.lstrip("www.")
+        else:
+            netloc = None
+        surface = self.get_favicon()
+        icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
+                                                             self.ephemeral)
+        if icon_theme_artwork is None:
+            # Try to get a favicon
+            if surface is None:
+                # Build a favicon from uri
+                # Never update such favicon as we want to keep same color
+                # get_char_surface() => random color
+                if netloc is not None:
+                    if not El().art.exists(netloc, "favicon"):
+                        resized = get_char_surface(netloc[0])
+            # If webpage has a favicon and quality is superior, resize it
+            elif surface.get_width() > self.__favicon_width:
+                resized = resize_favicon(surface)
+                self.__favicon_width = surface.get_width()
+            # Save favicon if needed:
+            #   - if we have a real favicon
+            #   - if we have a new builtin favicon
+            if resized is not None:
+                if not El().art.exists(uri, "favicon"):
+                    El().art.save_artwork(uri, resized, "favicon")
+                if netloc is not None and\
+                        not El().art.exists(netloc, "favicon"):
+                    El().art.save_artwork(netloc, resized, "favicon")
+                self.__set_favicon_related(resized,
+                                           uri,
+                                           self.initial_uri)
+        self.emit("favicon-changed", resized, icon_theme_artwork)
 
 #######################
 # PROTECTED           #
@@ -105,29 +146,7 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param favicon as Gparam
         """
-        resized = None
-        uri = self.get_uri()
-        parsed = urlparse(uri)
-        surface = self.get_favicon()
-        favicon = El().art.get_icon_theme_artwork(uri,
-                                                  self.ephemeral)
-        if favicon is None and surface is not None:
-            # Only get better quality
-            if surface.get_width() > self.__favicon_width:
-                resized = resize_favicon(surface)
-                if not El().art.exists(uri, "favicon"):
-                    El().art.save_artwork(uri, resized, "favicon")
-                if not El().art.exists(parsed.netloc, "favicon"):
-                    El().art.save_artwork(parsed.netloc, resized, "favicon")
-                self.__set_favicon_related(resized,
-                                           uri,
-                                           self.initial_uri)
-            favicon = None
-            # Keep width to check new quality
-            self.__favicon_width = surface.get_width()
-        else:
-            favicon = "applications-internet"
-        self.emit("favicon-changed", resized, favicon)
+        self.set_favicon()
 
     def __on_load_changed(self, webview, event):
         """
