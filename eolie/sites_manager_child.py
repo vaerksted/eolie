@@ -84,6 +84,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view not in self.__views:
             self.__views.append(view)
             view.webview.connect("shown", self.__on_webview_shown)
+            view.webview.connect("favicon-changed",
+                                 self.__on_webview_favicon_changed)
             self.__indicator_label.shown(view.webview.shown)
         self.__update_indicator(view)
         self.update_label()
@@ -141,13 +143,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__netloc_label.set_text(title)
         else:
             self.__netloc_label.set_text(self.__netloc)
-
-    def set_favicon(self, surface):
-        """
-            Set favicon
-            @param surface as cairo.Surface
-        """
-        self.__image.set_from_surface(surface)
 
     @property
     def empty(self):
@@ -267,6 +262,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
             if parsed.netloc:
                 resized = get_char_surface(parsed.netloc.lstrip("www.")[0])
                 self.__image.set_from_surface(resized)
+
+    def __on_webview_favicon_changed(self, webview, favicon,
+                                     icon_theme_artwork):
+        """
+            Set favicon
+            @param webview as WebView
+            @param favicon as cairo.Surface
+            @param icon_theme_artwork as str
+        """
+        if favicon is not None:
+            self.__image.set_from_surface(favicon)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """

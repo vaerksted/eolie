@@ -77,7 +77,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "favicon-changed",
-                                 self.__on_webview_notify_favicon))
+                                 self.__on_webview_favicon_changed))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "notify::is-playing-audio",
@@ -218,28 +218,27 @@ class PagesManagerChild(Gtk.FlowBoxChild):
 
     def __on_destroy(self, widget):
         """
-            Disconnect signals
+            Disconnect signals and destroy view
             @param widget as Gtk.Widget
         """
-        self.__window.container.sites_manager.remove_view(self.__view)
         while self.__connected_ids:
             connected_id = self.__connected_ids.pop(0)
             self.__view.webview.disconnect(connected_id)
         if self.__view_destroy_id is not None:
             self.__view.disconnect(self.__view_destroy_id)
+        self.__view.destroy()
 
     def __on_view_destroy(self, view):
         """
-            Destroy self
+            Destroy self as view has been destroyed
             @param view as View
         """
         self.__connected_ids = []
         self.__view_destroy_id = None
-        self.__window.container.sites_manager.remove_view(self.__view)
-        GLib.idle_add(self.destroy)
+        self.destroy()
 
-    def __on_webview_notify_favicon(self, webview, favicon,
-                                    icon_theme_artwork):
+    def __on_webview_favicon_changed(self, webview, favicon,
+                                     icon_theme_artwork):
         """
             Set favicon
             @param webview as WebView
@@ -249,10 +248,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__favicon = favicon
         if favicon is not None:
             self.__close_button.get_image().set_from_surface(favicon)
-            # Update site manager favicon (missing or obsolete)
-            self.__window.container.sites_manager.set_favicon(
-                                                          self.__view,
-                                                          favicon)
         else:
             self.__close_button.get_image().set_from_icon_name(
                                                   icon_theme_artwork,
@@ -304,8 +299,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param title as str
         """
         self.__indicator_label.set_text(title)
-        self.__window.container.sites_manager.update_label(
-                                               self.__window.container.current)
 
     def __on_webview_load_changed(self, webview, event):
         """

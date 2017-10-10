@@ -42,7 +42,7 @@ class View(Gtk.Overlay):
         """
         Gtk.Overlay.__init__(self)
         self.__reading_view = None
-        self._window = window
+        self.__window = window
         self.__webview = webview
         webview.set_view(self)
         self.__webview.show()
@@ -115,12 +115,10 @@ class View(Gtk.Overlay):
 
     def destroy(self):
         """
-            Destroy view and webview
+            Delayed destroy
         """
-        Gtk.Overlay.destroy(self)
-        self.__webview.destroy()
-        if self.__reading_view is not None:
-            self.__reading_view.destroy()
+        self.__window.container.sites_manager.remove_view(self)
+        GLib.timeout_add(1000, self.__destroy)
 
     @property
     def reading(self):
@@ -149,6 +147,15 @@ class View(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
+    def __destroy(self):
+        """
+            Destroy view and webview
+        """
+        Gtk.Overlay.destroy(self)
+        self.__webview.destroy()
+        if self.__reading_view is not None:
+            self.__reading_view.destroy()
+
     def __on_key_press_event(self, widget, event):
         """
             Handle Ctrl+Z and Ctrl+Shift+Z (forms undo/redo)
@@ -168,7 +175,7 @@ class View(Gtk.Overlay):
             @param webview as WebView
         """
         if self.get_ancestor(Gtk.Popover) is None:
-            self._window.container.pages_manager.try_close_view(self)
+            self.__window.container.pages_manager.try_close_view(self)
 
     def __on_mouse_target_changed(self, webview, hit, modifiers):
         """
@@ -189,4 +196,4 @@ class View(Gtk.Overlay):
             @param webview as WebView
         """
         if webview.get_mapped():
-            self._window.toolbar.title.show_readable_button(True)
+            self.__window.toolbar.title.show_readable_button(True)

@@ -201,6 +201,7 @@ class WebViewLoadSignals:
         """
         if webview.get_mapped():
             self._window.toolbar.title.set_title(title)
+        self._window.container.sites_manager.update_label(self.view)
 
     def __on_estimated_load_progress(self, webview, value):
         """

@@ -94,15 +94,6 @@ class PagesManager(Gtk.EventBox):
             else:
                 style_context.remove_class(class_name)
 
-    def destroy(self):
-        """
-            Destroy widget and child
-        """
-        # We force child to disconnect from view
-        for child in self.__box.get_children():
-            child.destroy()
-        Gtk.EventBox.destroy(self)
-
     def search_grab_focus(self):
         """
             Grab focus on search entry
@@ -172,7 +163,7 @@ class PagesManager(Gtk.EventBox):
                          GLib.Variant("(i)", (page_id,)),
                          self.__on_forms_filled, page_id, view)
 
-    def close_view(self, view, animate=True):
+    def close_view(self, view):
         """
             close current view
             @param view as View
@@ -198,11 +189,6 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
         child.destroy()
-        # Delay view destroy to allow stack animation
-        if animate:
-            GLib.timeout_add(1000, view.destroy)
-        else:
-            view.destroy()
         # Nothing to do if was not current page
         if not was_current:
             return False
