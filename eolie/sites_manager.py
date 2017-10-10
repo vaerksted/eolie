@@ -141,15 +141,6 @@ class SitesManager(Gtk.EventBox):
                 child.update_label()
                 break
 
-    def update_indicator(self):
-        """
-            Update indicator for current view
-        """
-        for child in self.__box.get_children():
-            if self.__window.container.current in child.views:
-                child.update_indicator(self.__window.container.current)
-                break
-
     def remove_view(self, view):
         """
             Remove view

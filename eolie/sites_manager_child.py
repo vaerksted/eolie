@@ -83,7 +83,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if view not in self.__views:
             self.__views.append(view)
-        self.update_indicator(view)
+            view.webview.connect("shown", self.__on_webview_shown)
+            self.__indicator_label.shown(view.webview.shown)
+        self.__update_indicator(view)
         self.update_label()
 
     def remove_view(self, view):
@@ -93,7 +95,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if view in self.__views:
             self.__views.remove(view)
-        self.update_indicator(view)
+        self.__update_indicator(view)
         self.update_label()
 
     def set_minimal(self, minimal):
@@ -139,26 +141,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__netloc_label.set_text(title)
         else:
             self.__netloc_label.set_text(self.__netloc)
-
-    def update_indicator(self, view):
-        """
-            Update indicator (count and color)
-            @param view as View
-        """
-        i = 0
-        unread = False
-        for view in self.__views:
-            if not view.webview.shown:
-                unread = True
-            i += 1
-        if unread:
-            self.__indicator_label.show_indicator(True)
-        else:
-            self.__indicator_label.show_indicator(False)
-        # We force value to 1, Eolie is going to add a new view
-        if i == 0:
-            i = 1
-        self.__indicator_label.set_text(str(i))
 
     def set_favicon(self, surface):
         """
@@ -245,6 +227,17 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __update_indicator(self, view):
+        """
+            Update indicator (count and color)
+            @param view as View
+        """
+        count = len(self.__views)
+        # We force value to 1, Eolie is going to add a new view
+        if count == 0:
+            count = 1
+        self.__indicator_label.set_text(str(count))
+
     def __update_popover_internals(self, widget):
         """
             Little hack to manage Gtk.ModelButton text
@@ -368,3 +361,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         self.get_style_context().remove_class("drag-up")
         self.get_style_context().remove_class("drag-down")
+
+    def __on_webview_shown(self, webview):
+        """
+            Remove indicator
+        """
+        self.__indicator_label.shown(True)

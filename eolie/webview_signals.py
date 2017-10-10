@@ -31,6 +31,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
 
     gsignals = {
         "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "shown": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "favicon-changed": (GObject.SignalFlags.RUN_FIRST, None,
@@ -80,6 +81,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         # We are offscreen
         if self._window != self.get_toplevel():
             return
+        self.emit("shown")
+        self._shown = True
+        self._atime = int(time())
         self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)

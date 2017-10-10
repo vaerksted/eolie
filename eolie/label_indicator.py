@@ -27,14 +27,14 @@ class LabelIndicator(Gtk.Label):
         Gtk.Label.__init__(self)
         self.set_xalign(0.0)
         self.set_yalign(0.80)
-        self.__show = False
+        self.__show = True
 
-    def show_indicator(self, show):
+    def shown(self, shown):
         """
-            Show indicator
+            Show indicator if not shown
             @param show as bool
         """
-        self.__show = show
+        self.__show = not shown
         self.queue_draw()
 
     def do_get_preferred_width(self):

@@ -123,17 +123,11 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
-        if self.__container.current is None or\
-                webview != self.__container.current.webview:
-            return
-        webview.mark_shown()
-        webview.set_atime()
         uri = webview.delayed_uri
         if uri is None:
             uri = webview.get_uri()
         else:
             webview.load_uri(uri)
-        self.container.sites_manager.update_indicator()
         title = webview.get_title()
         self.toolbar.title.update_load_indicator(webview)
         if webview.popups:

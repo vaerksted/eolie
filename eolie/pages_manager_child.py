@@ -37,14 +37,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PagesManagerChild.ui")
         builder.connect_signals(self)
-        self.__title = LabelIndicator()
-        self.__title.set_hexpand(True)
-        self.__title.set_margin_right(4)
-        self.__title.set_property("halign", Gtk.Align.CENTER)
-        self.__title.set_property("valign", Gtk.Align.CENTER)
-        self.__title.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__title.show()
-        builder.get_object("grid").attach(self.__title, 0, 0, 1, 1)
+        self.__indicator_label = LabelIndicator()
+        self.__indicator_label.set_hexpand(True)
+        self.__indicator_label.set_margin_right(4)
+        self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
+        self.__indicator_label.set_property("valign", Gtk.Align.CENTER)
+        self.__indicator_label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__indicator_label.show()
+        builder.get_object("grid").attach(self.__indicator_label, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
         self.__close_button = builder.get_object("close_button")
         self.__audio_indicator = builder.get_object("audio_indicator")
@@ -77,35 +77,31 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "favicon-changed",
-                                 self.__on_notify_favicon))
+                                 self.__on_webview_notify_favicon))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "notify::is-playing-audio",
-                                 self.__on_notify_is_playing_audio))
+                                 self.__on_webview_notify_is_playing_audio))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "uri-changed",
-                                 self.__on_uri_changed))
+                                 self.__on_webview_uri_changed))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "title-changed",
-                                 self.__on_title_changed))
+                                 self.__on_webview_title_changed))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "scroll-event",
-                                 self.__on_scroll_event))
+                                 self.__on_webview_scroll_event))
         self.__connected_ids.append(
                              self.__view.webview.connect(
                                  "load-changed",
-                                 self.__on_load_changed))
-
-    @property
-    def label_indicator(self):
-        """
-            Get label indicator
-            @return LabelIndicator
-        """
-        return self.__title
+                                 self.__on_webview_load_changed))
+        self.__connected_ids.append(
+                             self.__view.webview.connect(
+                                 "shown",
+                                 self.__on_webview_shown))
 
     @property
     def view(self):
@@ -210,7 +206,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param tooltip as Gtk.Tooltip
         """
         text = ""
-        label = self.__title.get_text()
+        label = self.__indicator_label.get_text()
         uri = self.__view.webview.get_uri()
         # GLib.markup_escape_text
         if uri is None:
@@ -242,7 +238,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__window.container.sites_manager.remove_view(self.__view)
         GLib.idle_add(self.destroy)
 
-    def __on_notify_favicon(self, webview, favicon, icon_theme_artwork):
+    def __on_webview_notify_favicon(self, webview, favicon,
+                                    icon_theme_artwork):
         """
             Set favicon
             @param webview as WebView
@@ -261,7 +258,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                                   icon_theme_artwork,
                                                   Gtk.IconSize.INVALID)
 
-    def __on_notify_is_playing_audio(self, webview, playing):
+    def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
             Update status
             @param webview as WebView
@@ -272,7 +269,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         else:
             self.__audio_indicator.hide()
 
-    def __on_scroll_event(self, webview, event):
+    def __on_webview_scroll_event(self, webview, event):
         """
             Update snapshot
             @param webview as WebView
@@ -290,7 +287,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__image.set_from_surface(surface)
 
-    def __on_uri_changed(self, webview, uri):
+    def __on_webview_uri_changed(self, webview, uri):
         """
             Update uri
             @param webview as WebView
@@ -300,17 +297,17 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         if not webview.is_loading() and not webview.ephemeral:
             GLib.timeout_add(500, self.__set_snapshot)
 
-    def __on_title_changed(self, webview, title):
+    def __on_webview_title_changed(self, webview, title):
         """
             Update title
             @param webview as WebView
             @param title as str
         """
-        self.__title.set_text(title)
+        self.__indicator_label.set_text(title)
         self.__window.container.sites_manager.update_label(
                                                self.__window.container.current)
 
-    def __on_load_changed(self, webview, event):
+    def __on_webview_load_changed(self, webview, event):
         """
             Update widget content
             @param webview as WebView
@@ -325,9 +322,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__image.clear()
             self.__audio_indicator.hide()
             self.__spinner.start()
-            self.__title.set_text(uri)
+            self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__title.set_text(uri)
+            self.__indicator_label.set_text(uri)
             self.__window.container.sites_manager.add_view_for_uri(
                                                           self.__view,
                                                           uri)
@@ -338,3 +335,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             if self.__favicon is None:
                 GLib.timeout_add(500, webview.set_favicon)
             GLib.timeout_add(500, self.__set_snapshot)
+
+    def __on_webview_shown(self, webview):
+        """
+            Remove indicator
+        """
+        self.__indicator_label.shown(True)
