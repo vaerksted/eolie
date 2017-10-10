@@ -245,10 +245,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param favicon as cairo.Surface
             @param icon_theme_artwork as str
         """
-        self.__favicon = favicon
         if favicon is not None:
+            self.__favicon = favicon
             self.__close_button.get_image().set_from_surface(favicon)
-        else:
+        elif icon_theme_artwork is not None:
             self.__close_button.get_image().set_from_icon_name(
                                                   icon_theme_artwork,
                                                   Gtk.IconSize.INVALID)
