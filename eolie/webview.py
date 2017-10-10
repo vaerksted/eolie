@@ -28,25 +28,27 @@ class WebView(WebKit2.WebView):
         WebKit view
     """
 
-    def new(window):
+    def new(window, view):
         """
             New webview
             @param window as Window
+            @param view as View
         """
         content_manager = WebKit2.UserContentManager.new()
         view = WebKit2.WebView.new_with_user_content_manager(content_manager)
         view.__class__ = WebViewMeta
-        view.__init(None, content_manager, window)
+        view.__init(None, content_manager, window, view)
         return view
 
-    def new_ephemeral(window):
+    def new_ephemeral(window, view):
         """
             New ephemeral webview
             @param window as Window
+            @param view as View
         """
         view = WebKit2.WebView.new_with_context(El().ephemeral_context)
         view.__class__ = WebViewMeta
-        view.__init(None, None, window)
+        view.__init(None, None, window, view)
         return view
 
     def new_with_related_view(related, window):
@@ -54,11 +56,12 @@ class WebView(WebKit2.WebView):
             Create a new WebView related to view
             @param related as WebView
             @param window as Window
+            @param view as View
             @return WebView
         """
         view = WebKit2.WebView.new_with_related_view(related)
         view.__class__ = WebViewMeta
-        view.__init(related, None, window)
+        view.__init(related, None, window, related.view)
         return view
 
     def set_setting(self, key, value):
@@ -242,6 +245,13 @@ class WebView(WebKit2.WebView):
         """
         self.__rtime = time
 
+    def set_view(self, view):
+        """
+            Set webview view
+            @param view as View
+        """
+        self.__view = view
+
     @property
     def rtime(self):
         """
@@ -257,6 +267,14 @@ class WebView(WebKit2.WebView):
             @return int
         """
         return self._atime
+
+    @property
+    def view(self):
+        """
+            Get view
+            @return View
+        """
+        return self.__view
 
     @property
     def shown(self):
@@ -311,17 +329,19 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, content_manager, window):
+    def __init(self, related_view, content_manager, window, view):
         """
             Init WebView
             @param related_view as WebView
             @param content_manager as WebKit2.UserContentManager
             @param window as Window
+            @param view as View
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
         self._window = window
+        self.__view = view
         self._content_manager = content_manager
         self._atime = 0
         self.__rtime = int(time())

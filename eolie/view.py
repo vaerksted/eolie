@@ -30,9 +30,9 @@ class View(Gtk.Overlay):
             @param window as Window
         """
         if ephemeral:
-            return WebView.new_ephemeral(window)
+            return WebView.new_ephemeral(window, None)
         else:
-            return WebView.new(window)
+            return WebView.new(window, None)
 
     def __init__(self, webview, window):
         """
@@ -44,6 +44,7 @@ class View(Gtk.Overlay):
         self.__reading_view = None
         self._window = window
         self.__webview = webview
+        webview.set_view(self)
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
