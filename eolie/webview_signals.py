@@ -104,7 +104,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.disconnect_by_func(self.__on_insecure_content_detected)
         WebViewJsSignals._on_unmap(self, webview)
         WebViewDBusSignals._on_unmap(self, webview)
-        WebViewLoadSignals._on_map(self, webview)
+        WebViewLoadSignals._on_unmap(self, webview)
 
 #######################
 # PRIVATE             #
