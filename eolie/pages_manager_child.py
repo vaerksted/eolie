@@ -315,6 +315,9 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         uri = webview.get_uri()
         if event == WebKit2.LoadEvent.STARTED:
+            self.__window.container.sites_manager.add_view_for_uri(
+                                                          self.__view,
+                                                          uri)
             self.__favicon = None
             self.__close_button.get_image().set_from_icon_name(
                                                   "applications-internet",
