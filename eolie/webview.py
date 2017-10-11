@@ -231,12 +231,14 @@ class WebView(WebKit2.WebView):
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
-            new = self._window.container.add_webview(self._navigation_uri,
-                                                     window_type,
-                                                     self.ephemeral)
             # parent.rtime = child.rtime + 1
             # Used to search for best matching webview
-            new.set_rtime(self.rtime - 1)
+            self._window.container.add_webview(self._navigation_uri,
+                                               window_type,
+                                               self.ephemeral,
+                                               None,
+                                               True,
+                                               self.rtime - 1)
 
     def set_rtime(self, time):
         """

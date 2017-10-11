@@ -67,16 +67,20 @@ class Container(Gtk.Overlay):
         self.add(self.__expose_stack)
 
     def add_webview(self, uri, window_type, ephemeral=False,
-                    state=None, load=True):
+                    state=None, load=True, rtime=None):
         """
             Add a web view to container
             @param uri as str
             @param window_type as Gdk.WindowType
             @param ephemeral as bool
             @param state as WebViewSessionState
-            @return WebView
+            @param load as bool
+            @param rtime as int
+            @return NEVER RETURN SOMETHING HERE #258
         """
         webview = View.get_new_webview(ephemeral, self.__window)
+        if rtime is not None:
+            webview.set_rtime(rtime)
         if state is not None:
             webview.restore_session_state(state)
         self.add_view(webview, window_type)
@@ -87,7 +91,6 @@ class Container(Gtk.Overlay):
             else:
                 webview.set_delayed_uri(uri)
                 webview.emit("title-changed", uri)
-        return webview
 
     def add_view(self, webview, window_type):
         """
