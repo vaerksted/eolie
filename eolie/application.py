@@ -167,10 +167,7 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
         if not self.get_windows():
             self.__init()
-            window = self.get_new_window()
-            window.container.add_webview(None,
-                                         Gdk.WindowType.CHILD,
-                                         False)
+            self.get_new_window()
 
     def get_new_window(self):
         """
@@ -505,7 +502,6 @@ class Application(Gtk.Application):
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::restore_state()", e)
-        return window_type != Gdk.WindowType.CHILD
 
     def __on_handle_local_options(self, app, options):
         """
@@ -535,9 +531,9 @@ class Application(Gtk.Application):
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
-        restored = False
-        if self.settings.get_value("remember-session"):
-            restored = self.__restore_state()
+        restored = self.settings.get_value("remember-session")
+        if restored:
+            self.__restore_state()
         if options.contains("new"):
             active_window = self.get_new_window()
         else:
@@ -549,38 +545,21 @@ class Application(Gtk.Application):
                 f = Gio.File.new_for_path(uri)
                 if f.query_exists():
                     uri = f.get_uri()
-                self.__new_or_load(uri, Gdk.WindowType.CHILD, ephemeral)
+                self.active_window.container.add_webview(uri,
+                                                         Gdk.WindowType.CHILD,
+                                                         ephemeral)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
-        elif not restored:
+        elif not restored or self.active_window.container.current is None:
             self.active_window.present_with_time(Gtk.get_current_event_time())
-            self.__new_or_load(self.start_page,
-                               Gdk.WindowType.CHILD,
-                               ephemeral)
+            self.active_window.container.add_webview(self.start_page,
+                                                     Gdk.WindowType.CHILD,
+                                                     ephemeral)
         if self.debug:
             WebKit2.WebContext.get_default().get_plugins(None,
                                                          self.__on_get_plugins,
                                                          None)
         return 0
-
-    def __new_or_load(self, uri, window_type, ephemeral):
-        """
-            Check current webview, if uri is None, use it, else create
-            a new webview
-        """
-        if self.active_window.container.current.webview.get_uri() is None:
-            if ephemeral:
-                self.active_window.container.pages_manager.try_close_view(
-                                          self.active_window.container.current)
-                self.active_window.container.add_webview(uri,
-                                                         window_type,
-                                                         ephemeral)
-            else:
-                self.active_window.container.current.webview.load_uri(uri)
-        else:
-            self.active_window.container.add_webview(uri,
-                                                     window_type,
-                                                     ephemeral)
 
     def __close_window(self, window):
         """
