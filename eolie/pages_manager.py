@@ -415,24 +415,22 @@ class PagesManager(Gtk.EventBox):
 
         try:
             result = source.call_finish(result)[0]
-        except Exception as e:
-            result = None
-            self.close_view(view)
-            print("PagesManager::__on_forms_filled():", e)
-        if result:
-            builder = Gtk.Builder()
-            builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
-            dialog = builder.get_object("dialog")
-            label = builder.get_object("label")
-            close = builder.get_object("close")
-            cancel = builder.get_object("cancel")
-            label.set_text(_("Do you really want to close this page?"))
-            dialog.set_transient_for(self.__window)
-            dialog.connect("response", on_response_id, view, self)
-            close.connect("clicked", on_close, dialog)
-            cancel.connect("clicked", on_cancel, dialog)
-            dialog.run()
-        else:
+            if result:
+                builder = Gtk.Builder()
+                builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
+                dialog = builder.get_object("dialog")
+                label = builder.get_object("label")
+                close = builder.get_object("close")
+                cancel = builder.get_object("cancel")
+                label.set_text(_("Do you really want to close this page?"))
+                dialog.set_transient_for(self.__window)
+                dialog.connect("response", on_response_id, view, self)
+                close.connect("clicked", on_close, dialog)
+                cancel.connect("clicked", on_cancel, dialog)
+                dialog.run()
+            else:
+                self.close_view(view)
+        except:
             self.close_view(view)
 
     def __on_button_press(self, widget, event):

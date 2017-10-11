@@ -89,3 +89,4 @@ class DBusHelper:
                        1000, None, callback, *args)
         except Exception as e:
             print("DBusHelper::__on_get_proxy():", e)
+            callback(None, None, *args)
