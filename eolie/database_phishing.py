@@ -32,7 +32,7 @@ class DatabasePhishing:
     # is an alias for the ROWID.
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
-    __create_pishinbg = '''CREATE TABLE phishing (
+    __create_phishing = '''CREATE TABLE phishing (
                                                id INTEGER PRIMARY KEY,
                                                uri TEXT NOT NULL,
                                                mtime INT NOT NULL
@@ -53,7 +53,7 @@ class DatabasePhishing:
                     d.make_directory_with_parents()
                 # Create db schema
                 with SqlCursor(self) as sql:
-                    sql.execute(self.__create_pishinbg)
+                    sql.execute(self.__create_phishing)
                     sql.commit()
             except Exception as e:
                 print("DatabasePhishing::__init__(): %s" % e)
