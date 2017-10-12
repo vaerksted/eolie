@@ -145,7 +145,6 @@ class FormsExtension:
                 form_input = {"uri": form.get_action()}
                 elements_collection = form.get_elements()
                 h = 0
-                valid_item = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
                     if not isinstance(element,
@@ -154,14 +153,13 @@ class FormsExtension:
                         continue
                     if element.get_input_type() == "password":
                         form_input["password"] = element
-                        valid_item += 1
                     elif element.get_input_type() in ["text",
                                                       "email",
                                                       "search"]:
                         form_input["username"] = element
-                        valid_item += 1
                     h += 1
-                if valid_item == 2:
+                keys = form_input.keys()
+                if "username" in keys and "password" in keys:
                     self.__form_inputs.append(form_input)
             i += 1
 
