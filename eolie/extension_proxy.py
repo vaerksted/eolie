@@ -356,13 +356,13 @@ class ProxyExtension(Server):
                           "UnsecureFormFocused",
                           None)
 
-    def __on_focus(self, form, event):
+    def __on_focus(self, element, event):
         """
             Keep last focused form
-            @param form as WebKit2WebExtension.DOMElement
+            @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
-        self.__focused = form
+        self.__focused = element
 
     def __on_mouse_down(self, form, event):
         """
