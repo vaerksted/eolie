@@ -99,6 +99,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__views.remove(view)
             view.webview.disconnect_by_func(self.__on_webview_shown)
             view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
+            self.__indicator_label.shown(view.webview.shown)
         self.__update_indicator(view)
         self.update_label()
 
