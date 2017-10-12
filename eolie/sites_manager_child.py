@@ -87,7 +87,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             view.webview.connect("favicon-changed",
                                  self.__on_webview_favicon_changed)
             self.__indicator_label.shown(view.webview.shown)
-        self.__update_indicator(view)
+        self.__update_indicator()
         self.update_label()
 
     def remove_view(self, view):
@@ -99,8 +99,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__views.remove(view)
             view.webview.disconnect_by_func(self.__on_webview_shown)
             view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
-            self.__indicator_label.shown(view.webview.shown)
-        self.__update_indicator(view)
+        self.__update_indicator(True)
         self.update_label()
 
     def set_minimal(self, minimal):
@@ -225,16 +224,20 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
-    def __update_indicator(self, view):
+    def __update_indicator(self, update_shown=False):
         """
-            Update indicator (count and color)
-            @param view as View
+            Update indicator
+            @param update_shown as bool
         """
-        count = len(self.__views)
-        # We force value to 1, Eolie is going to add a new view
-        if count == 0:
-            count = 1
-        self.__indicator_label.set_text(str(count))
+        count = 0
+        shown = True
+        for view in self.__views:
+            count += 1
+            if not view.webview.shown:
+                shown = False
+        self.__indicator_label.set_text(str(max(1, count)))
+        if update_shown:
+            self.__indicator_label.shown(shown)
 
     def __update_popover_internals(self, widget):
         """
