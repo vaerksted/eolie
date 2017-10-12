@@ -84,11 +84,13 @@ class WebView(WebKit2.WebView):
             zoom_level = El().websettings.get_zoom(self.get_uri())
             if zoom_level is None:
                 zoom_level = 100
-            if self.__related_view is None:
-                zoom_level *= self._window.zoom_level
-            else:
-                zoom_level *= self.__related_view.get_ancestor(
-                                                Gtk.Window).zoom_level
+            # Offscreen windows does not have a zoom level
+            if self._window == self.get_toplevel():
+                if self.__related_view is None:
+                    zoom_level *= self._window.zoom_level
+                else:
+                    zoom_level *= self.__related_view.get_ancestor(
+                                                    Gtk.Window).zoom_level
         except Exception as e:
             print("WebView::update_zoom_level()", e)
         debug("Update zoom level: %s" % zoom_level)
