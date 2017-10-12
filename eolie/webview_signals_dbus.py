@@ -142,7 +142,8 @@ class WebViewDBusSignals:
             self._window.toolbar.title.show_input_warning(self)
         elif signal == "InputMouseDown":
             if self.__last_click_event:
-                model = FormMenu(params[0], self.get_page_id())
+                userform = params[0]
+                model = FormMenu(self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
                 self._window.register(popover)
@@ -152,7 +153,8 @@ class WebViewDBusSignals:
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
                 helper = PasswordsHelper()
-                helper.get(self.get_uri(), self.__on_password, popover, model)
+                helper.get(self.get_uri(), userform, None,
+                           self.__on_password, popover, model)
 
     def __on_password(self, attributes, password, uri,
                       index, count, popover, model):
@@ -170,9 +172,6 @@ class WebViewDBusSignals:
         self.__last_click_event = {}
         if attributes is not None and (count > 1 or
                                        parsed.scheme == "http"):
-            parsed = urlparse(uri)
-            submit_uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            if submit_uri == attributes["formSubmitURL"]:
-                model.add_attributes(attributes, uri)
-                if index == 0:
-                    popover.popup()
+            model.add_attributes(attributes, uri)
+            if index == 0:
+                popover.popup()

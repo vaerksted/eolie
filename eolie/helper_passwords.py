@@ -58,24 +58,33 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::get_all(): %s" % e)
 
-    def get(self, uri, callback, *args):
+    def get(self, uri, userform, passform, callback, *args):
         """
             Call function
             @param uri as str
+            @param userform as str
+            @param passform as str
             @param callback as function
             @param args
         """
         try:
-            self.__wait_for_secret(self.get, uri, callback, *args)
+            self.__wait_for_secret(self.get, uri, userform,
+                                   passform, callback, *args)
             parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
-                "formSubmitURL": Secret.SchemaAttributeType.STRING
+                "formSubmitURL": Secret.SchemaAttributeType.STRING,
+                "userform": Secret.SchemaAttributeType.STRING,
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "formSubmitURL": "%s://%s" % (parsed.scheme, parsed.netloc)
+                "formSubmitURL": "%s://%s" % (parsed.scheme, parsed.netloc),
+                "userform": userform,
             }
+            if passform is not None:
+                SecretSchema["passform"] = Secret.SchemaAttributeType.STRING
+                SecretAttributes["passform"] = passform
+
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)

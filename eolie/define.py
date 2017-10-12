@@ -71,6 +71,3 @@ class Type:
     TAG = -8
     UNCLASSIFIED = -9
     SEPARATOR = -10
-
-
-LOGINS = ["login", "username", "user", "mail", "email"]

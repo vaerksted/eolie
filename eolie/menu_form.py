@@ -23,14 +23,13 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, userform, page_id):
+    def __init__(self, page_id):
         """
             Init menu
             @param userform as str
             @param page_id as int
         """
         Gio.Menu.__init__(self)
-        self.__userform = userform
         self.__page_id = page_id
         self.__section = Gio.Menu()
         self.append_section(_("Saved credentials"), self.__section)
@@ -41,8 +40,6 @@ class FormMenu(Gio.Menu):
             @param attributes as {}
             @param uri as str
         """
-        if attributes["userform"] != self.__userform:
-            return
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()
         action = El().lookup_action(encoded)
@@ -68,8 +65,9 @@ class FormMenu(Gio.Menu):
             @param attributes as {}
         """
         El().helper.call("SetAuthForms",
-                         GLib.Variant("(si)",
-                                      (attributes["login"],
+                         GLib.Variant("(ssi)",
+                                      (attributes["userform"],
+                                       attributes["login"],
                                        self.__page_id)),
                          None,
                          self.__page_id)

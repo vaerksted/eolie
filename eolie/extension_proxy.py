@@ -98,6 +98,7 @@ class ProxyExtension(Server):
     </method>
     <method name="SetAuthForms">
       <arg type="s" name="username" direction="in" />
+      <arg type="s" name="username" direction="in" />
       <arg type="i" name="page_id" direction="in" />
     </method>
     <method name="GetImages">
@@ -114,6 +115,7 @@ class ProxyExtension(Server):
     </method>
 
     <signal name='UnsecureFormFocused'>
+        <arg type="as" name="forms" direction="out" />
     </signal>
     <signal name='InputMouseDown'>
         <arg type="as" name="forms" direction="out" />
@@ -172,7 +174,7 @@ class ProxyExtension(Server):
             pass_form_name = ""
             pass_form_value = ""
             for (name, value) in forms:
-                if self.__forms.is_password_input(name, page):
+                if self.__forms.is_input(name, "password", page):
                     pass_form_name = name
                     pass_form_value = value
                 else:
@@ -186,21 +188,28 @@ class ProxyExtension(Server):
             print("ProxyExtension::GetAuthForms():", e)
         return ("", "", "", "")
 
-    def SetAuthForms(self, username, page_id):
+    def SetAuthForms(self, userform, username, page_id):
         """
             Get password forms for page id
-            @param username as str
+            @param userform as str
             @param page id as int
         """
         try:
             page = self.__extension.get_page(page_id)
             if page is None:
                 return
-            helper = PasswordsHelper()
-            helper.get(page.get_uri(),
-                       self.__forms.set_input_forms,
-                       page,
-                       username)
+            # Search form
+            for form_input in self.__forms.get_form_inputs(page):
+                if form_input["username"].get_name() == userform:
+                    helper = PasswordsHelper()
+                    helper.get(form_input["uri"],
+                               userform,
+                               form_input["password"].get_name(),
+                               self.__forms.set_input_forms,
+                               page,
+                               form_input,
+                               username)
+                    return
         except Exception as e:
             print("ProxyExtension::SetAuthForms():", e)
 
@@ -361,19 +370,19 @@ class ProxyExtension(Server):
            @param form as WebKit2WebExtension.DOMElement
            @param event as WebKit2WebExtension.DOMUIEvent
         """
-        if self.__forms.is_login_form(form):
-            name = form.get_name()
-            if name in self.__mouse_down_forms:
-                self.__mouse_down_forms.remove(name)
-            else:
-                self.__mouse_down_forms.append(name)
-                args = GLib.Variant.new_tuple(GLib.Variant("s", name))
-                self.__bus.emit_signal(
-                                  None,
-                                  PROXY_PATH,
-                                  self.__proxy_bus,
-                                  "InputMouseDown",
-                                  args)
+        name = form.get_name()
+        # Only send signal on one of the two calls
+        if name in self.__mouse_down_forms:
+            self.__mouse_down_forms.remove(name)
+        else:
+            self.__mouse_down_forms.append(name)
+            args = GLib.Variant.new_tuple(GLib.Variant("s", name))
+            self.__bus.emit_signal(
+                              None,
+                              PROXY_PATH,
+                              self.__proxy_bus,
+                              "InputMouseDown",
+                              args)
 
     def __on_input(self, form, event):
         """
@@ -422,14 +431,15 @@ class ProxyExtension(Server):
         parsed = urlparse(webpage.get_uri())
 
         # Check for unsecure content
-        for form in self.__forms.get_password_inputs(webpage):
-            if parsed.scheme == "http":
-                self.__password_forms.append(form)
-                form.add_event_listener("focus",
+        if parsed.scheme == "http":
+            for form_input in self.__forms.get_form_inputs(webpage):
+                self.__password_forms.append(form_input["password"])
+                form_input["password"].add_event_listener(
+                                        "focus",
                                         self.__on_password_focus,
                                         False)
         # Manage forms input
-        for form in self.__forms.get_input_forms(webpage) +\
+        for form in self.__forms.get_inputs(webpage) +\
                 self.__forms.get_textarea_forms(webpage):
             self.__listened_forms.append(form)
             form.add_event_listener("input", self.__on_input, False)

@@ -111,8 +111,8 @@ class CredentialsPopover(Gtk.Popover):
         """
             Overwrite popup
         """
-        self.__helper.get(self.__uri,
-                          self.__on_get_password)
+        self.__helper.get(self.__uri, self.__user_form_name,
+                          self.__pass_form_name, self.__on_get_password,)
 
 #######################
 # PRIVATE             #
@@ -132,19 +132,14 @@ class CredentialsPopover(Gtk.Popover):
                 Gtk.Popover.popup(self)
             # pass_form_name saved and unchanged
             elif attributes["login"] == self.__user_form_value and\
-                    password == self.__pass_form_value and\
-                    attributes["userform"] == self.__user_form_name and\
-                    attributes["passform"] == self.__pass_form_name:
+                    password == self.__pass_form_value:
                 self.emit("closed")
                 self.set_relative_to(None)  # Prevent popover to be displayed
-            # pass_form_name changed
-            elif attributes["login"] == self.__user_form_value:
+            # login/password changed
+            else:
                 Gtk.Popover.popup(self)
                 self.__uuid = attributes["uuid"]
                 self.__label.set_text(_(
                                    "Do you want to modify this password?"))
-            # Last pass_form_name, it's a new login/pass_form_name
-            elif index == count - 1:
-                Gtk.Popover.popup(self)
         except Exception as e:
             print("CredentialsPopover::__on_get_password()", e)
