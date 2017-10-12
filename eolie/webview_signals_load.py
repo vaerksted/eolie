@@ -153,7 +153,10 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param favicon as Gparam
         """
-        self.set_favicon()
+        # Do not set favicon now, will be down on WebKit2.LoadEvent.FINISHED
+        # Prevent loading/caching a builtin one if page never finishes to load
+        if self.get_favicon() is not None:
+            self.set_favicon()
 
     def __on_load_changed(self, webview, event):
         """
