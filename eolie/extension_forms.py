@@ -38,6 +38,8 @@ class FormsExtension:
             Set credentials on page
             @param webpage as WebKit2WebExtension.WebPage
         """
+        # Do not remove this,
+        # it's needed because page may have changed
         self.update_inputs_list(webpage)
         for form_input in self.__form_inputs:
             self.__helper.get(form_input["uri"],
