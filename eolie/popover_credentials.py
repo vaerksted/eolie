@@ -14,7 +14,7 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 from urllib.parse import urlparse
-from uuid import uuid3, NAMESPACE_DNS
+from uuid import uuid4
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El
@@ -73,9 +73,7 @@ class CredentialsPopover(Gtk.Popover):
             form_uri = "%s://%s" % (parsed_form_uri.scheme,
                                     parsed_form_uri.netloc)
             if self.__uuid is None:
-                self.__uuid = str(uuid3(NAMESPACE_DNS,
-                                        parsed_form_uri.netloc +
-                                        self.__user_form_value))
+                self.__uuid = str(uuid4())
                 self.__helper.store(self.__user_form_name,
                                     self.__user_form_value,
                                     self.__pass_form_name,
