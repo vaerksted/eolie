@@ -59,6 +59,7 @@ class Art:
                     info = f.query_info('time::modified',
                                         Gio.FileQueryInfoFlags.NONE,
                                         None)
+                    # gnumdk birth day ;)
                     date = "1981-03-17T20:05:00+01:00"
                     (status, timeval) = GLib.TimeVal.from_iso8601(date)
                     if status:
