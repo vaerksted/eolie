@@ -233,21 +233,21 @@ class WebView(WebKit2.WebView):
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
-            # parent.rtime = child.rtime + 1
+            # parent.atime = child.atime + 1
             # Used to search for best matching webview
             self._window.container.add_webview(self._navigation_uri,
                                                window_type,
                                                self.ephemeral,
                                                None,
                                                True,
-                                               self.rtime - 1)
+                                               self.atime - 1)
 
-    def set_rtime(self, time):
+    def set_atime(self, atime):
         """
-            Update related time
-            @param time as int
+            Update access time
+            @param atime as int
         """
-        self.__rtime = time
+        self.__atime = atime
 
     def set_view(self, view):
         """
@@ -257,20 +257,12 @@ class WebView(WebKit2.WebView):
         self.__view = view
 
     @property
-    def rtime(self):
-        """
-            Get creation time
-            @return int
-        """
-        return self.__rtime
-
-    @property
     def atime(self):
         """
             Get access time
             @return int
         """
-        return self._atime
+        return self.__atime
 
     @property
     def view(self):
@@ -347,8 +339,7 @@ class WebView(WebKit2.WebView):
         self._window = window
         self.__view = view
         self._content_manager = content_manager
-        self._atime = 0
-        self.__rtime = int(time())
+        self.__atime = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
@@ -440,7 +431,7 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         webview = WebView.new_with_related_view(related, self._window)
-        self.set_rtime(related.rtime - 1)
+        self.set_atime(related.atime - 1)
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,

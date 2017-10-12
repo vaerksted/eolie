@@ -83,7 +83,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             return
         self.emit("shown")
         self._shown = True
-        self._atime = int(time())
+        self.set_atime(int(time()))
         self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
