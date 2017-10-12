@@ -59,14 +59,13 @@ class Art:
                     info = f.query_info('time::modified',
                                         Gio.FileQueryInfoFlags.NONE,
                                         None)
-                    # gnumdk birth day ;)
-                    date = "1981-03-17T20:05:00+01:00"
-                    (status, timeval) = GLib.TimeVal.from_iso8601(date)
-                    if status:
-                        info.set_modification_time(timeval)
-                        f.set_attributes_from_info(info,
-                                                   Gio.FileQueryInfoFlags.NONE,
-                                                   None)
+                    wanted_time = time() - 43200
+                    timeval = GLib.TimeVal()
+                    timeval.tv_sec = wanted_time
+                    info.set_modification_time(timeval)
+                    f.set_attributes_from_info(info,
+                                               Gio.FileQueryInfoFlags.NONE,
+                                               None)
         except Exception as e:
             print("Art::save_artwork():", e)
 
