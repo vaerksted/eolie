@@ -54,6 +54,7 @@ class WebViewLoadSignals:
         """
             Set current favicon
         """
+        builtin = False
         resized = None
         uri = self.get_uri()
         parsed = urlparse(uri)
@@ -71,6 +72,7 @@ class WebViewLoadSignals:
                 # Never update such favicon as we want to keep same color
                 # get_char_surface() => random color
                 if netloc is not None:
+                    builtin = True
                     if El().art.exists(netloc, "favicon"):
                         resized = El().art.get_artwork(
                                        netloc,
@@ -89,13 +91,14 @@ class WebViewLoadSignals:
             #   - if we have a new builtin favicon
             if resized is not None:
                 if not El().art.exists(uri, "favicon"):
-                    El().art.save_artwork(uri, resized, "favicon")
+                    El().art.save_artwork(uri, resized, "favicon", builtin)
                 if netloc is not None and\
                         not El().art.exists(netloc, "favicon"):
-                    El().art.save_artwork(netloc, resized, "favicon")
+                    El().art.save_artwork(netloc, resized, "favicon", builtin)
                 self.__set_favicon_related(resized,
                                            uri,
-                                           self.initial_uri)
+                                           self.initial_uri,
+                                           builtin)
         self.emit("favicon-changed", resized, icon_theme_artwork)
 
 #######################
@@ -132,12 +135,13 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __set_favicon_related(self, surface, uri, initial_uri):
+    def __set_favicon_related(self, surface, uri, initial_uri, builtin):
         """
             Set favicon for initial uri
             @param surface as cairo.surface
             @param uri as str
             @param initial_uri as str
+            @param builtin as bool
         """
         if initial_uri != uri and initial_uri is not None:
             parsed = urlparse(uri)
@@ -145,7 +149,7 @@ class WebViewLoadSignals:
             if parsed.netloc.lstrip("www.") ==\
                     initial_parsed.netloc.lstrip("www.") and\
                     not El().art.exists(initial_uri, "favicon"):
-                El().art.save_artwork(initial_uri, surface, "favicon")
+                El().art.save_artwork(initial_uri, surface, "favicon", builtin)
 
     def __on_notify_favicon(self, webview, favicon):
         """

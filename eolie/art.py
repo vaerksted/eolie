@@ -37,18 +37,37 @@ class Art:
         """
         self.__use_cache = False
 
-    def save_artwork(self, uri, surface, suffix):
+    def save_artwork(self, uri, surface, suffix, builtin=False):
         """
             Save artwork for uri with suffix
             @param uri as str
             @param surface as cairo.surface
             @param suffix as str
+            @param builtin as bool
         """
-        filepath = self.get_path(uri, suffix)
-        pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
-                                             surface.get_width(),
-                                             surface.get_height())
-        pixbuf.savev(filepath, "png", [None], [None])
+        try:
+            filepath = self.get_path(uri, suffix)
+            pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
+                                                 surface.get_width(),
+                                                 surface.get_height())
+            pixbuf.savev(filepath, "png", [None], [None])
+            # Reset modification time to be sure to not keep this in cache
+            if builtin:
+                f = Gio.File.new_for_path(filepath)
+                exists = f.query_exists()
+                if exists:
+                    info = f.query_info('time::modified',
+                                        Gio.FileQueryInfoFlags.NONE,
+                                        None)
+                    date = "1981-03-17T20:05:00+01:00"
+                    (status, timeval) = GLib.TimeVal.from_iso8601(date)
+                    if status:
+                        info.set_modification_time(timeval)
+                        f.set_attributes_from_info(info,
+                                                   Gio.FileQueryInfoFlags.NONE,
+                                                   None)
+        except Exception as e:
+            print("Art::save_artwork():", e)
 
     def get_artwork(self, uri, suffix, scale_factor, width, heigth):
         """
