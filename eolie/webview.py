@@ -145,10 +145,8 @@ class WebView(WebKit2.WebView):
         """
         title = WebKit2.WebView.get_title(self)
         if title is None:
-            title = self.get_uri()
-        if title is None:
             title = self.__delayed_uri
-        return title or ""
+        return title
 
     def set_delayed_uri(self, uri):
         """
