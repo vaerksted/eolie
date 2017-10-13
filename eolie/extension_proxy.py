@@ -487,11 +487,8 @@ class ProxyExtension(Server):
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
         uri = request.get_uri()
         parsed = urlparse(uri)
-        # Facebook broken video killer
-        if uri.find("byteend=") != -1:
-            return
         # Search for video in page
-        if parsed.path.split(".")[-1] in extensions:
+        if uri.split(".")[-1] in extensions:
             title = parsed.path.split("/")[-1]
             args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
                                           GLib.Variant("s", title),
