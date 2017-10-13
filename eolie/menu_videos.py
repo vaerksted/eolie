@@ -13,6 +13,7 @@
 from gi.repository import Gio, GLib
 
 from hashlib import sha256
+from gettext import gettext as _
 
 from eolie.define import El
 
@@ -63,8 +64,11 @@ class VideosMenu(Gio.Menu):
         """
         try:
             items = source.call_finish(result)[0]
-            for (title, uri) in items:
-                self.__add_action(title, uri)
+            if items:
+                for (title, uri) in items:
+                    self.__add_action(title, uri)
+            else:
+                self.__add_action(_("No videos"), "")
         except Exception as e:
             print("VideosMenu::__on_get_videos()", e)
 
