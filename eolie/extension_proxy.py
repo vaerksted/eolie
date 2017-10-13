@@ -139,6 +139,8 @@ class ProxyExtension(Server):
         self.__form_history = {}
         self.__password_forms = []
         self.__listened_forms = []
+        self.__send_requests = []
+        self.__current_uri = None
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
 
@@ -479,37 +481,14 @@ class ProxyExtension(Server):
 
     def __on_send_request(self, webpage, request, redirect):
         """
-            Search for video in page
+            Keep send requests
             @param webpage as WebKit2WebExtension.WebPage
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
-        uri = request.get_uri()
-        parsed = urlparse(uri)
-        # Search for video in page
-        if uri.split(".")[-1] in extensions:
-            title = parsed.path.split("/")[-1]
-            args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
-                                          GLib.Variant("s", title),
-                                          GLib.Variant("i", webpage.get_id()))
-            self.__bus.emit_signal(
-                          None,
-                          PROXY_PATH,
-                          self.__proxy_bus,
-                          "VideoInPage",
-                          args)
-        elif parsed.netloc.endswith("googlevideo.com") and\
-                parsed.path == "/videoplayback":
-            title = webpage.get_dom_document().get_title()
-            if title is None:
-                title = uri
-            args = GLib.Variant.new_tuple(GLib.Variant("s", uri),
-                                          GLib.Variant("s", title),
-                                          GLib.Variant("i", webpage.get_id()))
-            self.__bus.emit_signal(
-                          None,
-                          PROXY_PATH,
-                          self.__proxy_bus,
-                          "VideoInPage",
-                          args)
+        # Reset send requests if uri changed
+        uri = webpage.get_uri()
+        if self.__current_uri != uri:
+            self.__current_uri = uri
+            self.__send_requests = []
+        self.__send_requests.append(request.get_uri())

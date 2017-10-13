@@ -129,16 +129,11 @@ class WebViewDBusSignals:
 
     def __on_signal(self, signal, params):
         """
-            Add video to download manager
+            Handle proxy signals
             @param signal as str
             @params as []
         """
-        if signal == "VideoInPage":
-            uri = params[0]
-            title = params[1]
-            page_id = params[2]
-            El().download_manager.add_video(uri, title, page_id)
-        elif signal == "UnsecureFormFocused":
+        if signal == "UnsecureFormFocused":
             self._window.toolbar.title.show_input_warning(self)
         elif signal == "InputMouseDown":
             if self.__last_click_event:

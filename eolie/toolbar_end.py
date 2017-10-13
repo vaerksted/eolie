@@ -63,8 +63,6 @@ class ToolbarEnd(Gtk.Bin):
                                       self.__on_download)
         El().download_manager.connect("download-finish",
                                       self.__on_download)
-        El().download_manager.connect("video-in-page",
-                                      self.__on_video_in_page)
         overlay = builder.get_object("overlay")
         overlay.add_overlay(self.__progress)
         overlay.set_overlay_pass_through(self.__progress, True)
@@ -522,15 +520,6 @@ class ToolbarEnd(Gtk.Bin):
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
             self.__download_button.get_style_context().add_class("selected")
-            self.__download_button.get_style_context().remove_class(
-                                                            "video-in-page")
-
-    def __on_video_in_page(self, download_manager):
-        """
-            Mark download button
-            @param download_manager as DownloadManager
-        """
-        self.__download_button.get_style_context().add_class("video-in-page")
 
     def __on_popover_closed(self, popover, button):
         """
@@ -539,5 +528,4 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         button.get_style_context().remove_class("selected")
-        button.get_style_context().remove_class("video-in-page")
         button.set_active(False)

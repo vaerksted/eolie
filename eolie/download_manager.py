@@ -23,8 +23,7 @@ class DownloadManager(GObject.GObject):
     """
     __gsignals__ = {
         "download-start": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
-        "download-finish": (GObject.SignalFlags.RUN_FIRST, None, ()),
-        "video-in-page": (GObject.SignalFlags.RUN_FIRST, None, ())
+        "download-finish": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self):
@@ -34,7 +33,6 @@ class DownloadManager(GObject.GObject):
         GObject.GObject.__init__(self)
         self.__downloads = []
         self.__finished = []
-        self.__video_uris = {}
 
     def add(self, download, filename=None):
         """
@@ -49,20 +47,6 @@ class DownloadManager(GObject.GObject):
             download.connect('decide-destination',
                              self.__on_decide_destination, filename)
 
-    def add_video(self, uri, title, page_id):
-        """
-            Emit video-in-page signal
-            @param uri as str
-            @param title as str
-            @param page_id as int
-        """
-        if page_id in self.__video_uris.keys():
-            if (uri, title) not in self.__video_uris[page_id]:
-                self.__video_uris[page_id].append((uri, title))
-        else:
-            self.__video_uris[page_id] = [(uri, title)]
-        self.emit("video-in-page")
-
     def remove(self, download):
         """
             Remove download
@@ -73,41 +57,12 @@ class DownloadManager(GObject.GObject):
         if download in self.__finished:
             self.__finished.remove(download)
 
-    def remove_video(self, uri, title, page_id):
-        """
-            Remove video uris for page
-            @param uri
-            @param title
-            @param page_id as int
-        """
-        if page_id in self.__video_uris.keys():
-            if (uri, title) in self.__video_uris[page_id]:
-                self.__video_uris[page_id].remove((uri, title))
-
-    def remove_videos_for_page(self, page_id):
-        """
-            Remove video uris for page
-            @param page_id as int
-        """
-        if page_id in self.__video_uris.keys():
-            del self.__video_uris[page_id]
-
     def get(self):
         """
             Get running downloads
             @return [WebKit2.Download]
         """
         return self.__downloads
-
-    def get_videos(self, page_id):
-        """
-            Get videos available to download
-            @param page_id as int
-            @return [(uri, title)] as [(str, str)]
-        """
-        if page_id in self.__video_uris.keys():
-            return self.__video_uris[page_id]
-        return []
 
     def get_finished(self):
         """

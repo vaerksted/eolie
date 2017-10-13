@@ -10,94 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, WebKit2
+from gi.repository import Gtk, GLib, Gio
 
 from time import time
 from gettext import gettext as _
 
 from eolie.define import El
-
-
-class VideoRow(Gtk.ListBoxRow):
-    """
-        A video row
-    """
-
-    def __init__(self, uri, title, page_id):
-        """
-            Set video row
-            @param uri as str
-            @param title as str
-            @param page_id as int
-        """
-        Gtk.ListBoxRow.__init__(self)
-        self.__uri = uri
-        self.__title = title
-        self.__page_id = page_id
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/RowDownload.ui")
-        # builder.connect_signals(self)
-        self.__preview = builder.get_object("preview")
-        builder.get_object("progress").hide()
-        builder.get_object("button").hide()
-        self.__label = builder.get_object("label")
-        self.__sublabel = builder.get_object("sublabel")
-        self.__label.set_text(_("Download this video:"))
-        if title:
-            self.__sublabel.set_text(title)
-        else:
-            self.__sublabel.set_text(uri)
-        tooltip = uri
-        if len(tooltip) > 100:
-            tooltip = tooltip[0:100] + "…"
-        self.set_tooltip_text(tooltip)
-        self.__preview.set_from_icon_name("video-x-generic",
-                                          Gtk.IconSize.DIALOG)
-
-        self.add(builder.get_object("row"))
-
-    def download(self):
-        """
-            Download uri using a temp webview
-        """
-        self.hide()
-        view = WebKit2.WebView.new()
-        view.connect("decide-policy", self.__on_decide_policy)
-        context = view.get_context()
-        context.connect("download-started", self.__on_download_started, view)
-        view.load_uri(self.__uri)
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_download_started(self, context, download, view):
-        """
-            A new download started, handle signals
-            @param context as WebKit2.WebContext
-            @param download as WebKit2.Download
-            @param view as WebKit2.WebView
-        """
-        El().download_manager.add(download, self.__title)
-        El().download_manager.remove_video(self.__uri,
-                                           self.__title,
-                                           self.__page_id)
-        GLib.idle_add(self.destroy)
-        context = view.get_context()
-        context.disconnect_by_func(self.__on_download_started)
-        GLib.idle_add(view.destroy)
-
-    def __on_decide_policy(self, view, decision, decision_type):
-        """
-            Navigation policy
-            @param view as WebKit2.WebView
-            @param decision as WebKit2.NavigationPolicyDecision
-            @param decision_type as WebKit2.PolicyDecisionType
-            @return bool
-        """
-        # Always accept response
-        if decision_type == WebKit2.PolicyDecisionType.RESPONSE:
-            decision.download()
-            return False
 
 
 class DownloadRow(Gtk.ListBoxRow):
@@ -415,9 +333,7 @@ class DownloadsPopover(Gtk.Popover):
             @param row1 as Row
             @param row2 as Row
         """
-        if isinstance(row1, VideoRow):
-            return False
-        elif row1.finished:
+        if row1.finished:
             return True
         elif row2.finished or row1.download.get_estimated_progress() >\
                 row2.download.get_estimated_progress():
@@ -428,16 +344,6 @@ class DownloadsPopover(Gtk.Popover):
             Populate listbox
         """
         clear = False
-        webview = El().active_window.container.current.webview
-        for (uri, title) in El().download_manager.get_videos(
-                                                        webview.get_page_id()):
-            child = VideoRow(uri, title, webview.get_page_id())
-            child.connect("size-allocate",
-                          lambda x, y: self.__calculate_height())
-            child.connect("destroy",
-                          lambda x: self.__calculate_height())
-            child.show()
-            self.__listbox.add(child)
         for download in El().download_manager.get():
             child = DownloadRow(download, False)
             child.connect("size-allocate",
@@ -477,9 +383,7 @@ class DownloadsPopover(Gtk.Popover):
             @param row as Row
         """
         try:
-            if isinstance(row, VideoRow):
-                row.download()
-            elif row.finished:
+            if row.finished:
                 Gtk.show_uri(None, row.download.get_destination(), int(time()))
                 self.hide()
         except:  # Destination not found

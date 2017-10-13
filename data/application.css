@@ -203,20 +203,6 @@
     color: red;
 }
 
-@keyframes colorfade {
-  0% { color: inherit;}
-  50% { color: red; }
-  100% { color: inherit; }
-}
-
-.video-in-page {
-    
-    animation-name: colorfade;
-    animation-duration: 20s;
-    animation-timing-function: linear;
-    animation-delay: 1ms;
-}
-
 .row {
     /* https://bugzilla.gnome.org/show_bug.cgi?id=763517 */
     transition: none;
