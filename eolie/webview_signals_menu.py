@@ -94,8 +94,8 @@ class WebViewMenuSignals:
                                                  None)
                 context_menu.insert(item, 2)
         else:
-            # Add an item for open all images
             if not view.is_loading() and parsed.scheme in ["http", "https"]:
+                # Save all images
                 action = Gio.SimpleAction(name="save_imgs")
                 El().add_action(action)
                 action.connect("activate",
@@ -109,6 +109,21 @@ class WebViewMenuSignals:
                     context_menu.insert(item, n_items - 2)
                 else:
                     context_menu.insert(item, n_items)
+                # Save all videos
+                action = Gio.SimpleAction(name="save_videos")
+                El().add_action(action)
+                action.connect("activate",
+                               self.__on_save_videos_activate)
+                item = WebKit2.ContextMenuItem.new_from_gaction(
+                                                 action,
+                                                 _("Save videos"),
+                                                 None)
+                n_items = context_menu.get_n_items()
+                if El().settings.get_value("developer-extras"):
+                    context_menu.insert(item, n_items - 2)
+                else:
+                    context_menu.insert(item, n_items)
+                # Save page as image
                 action = Gio.SimpleAction(name="save_as_image")
                 El().add_action(action)
                 action.connect("activate",
@@ -162,6 +177,14 @@ class WebViewMenuSignals:
         """
         self._window.toolbar.end.save_images(self.get_uri(),
                                              self.get_page_id())
+
+    def __on_save_videos_activate(self, action, variant):
+        """
+            Show videos download popover
+            @param action as Gio.SimpleAction
+            @param variant as GLib.Variant
+        """
+        self._window.toolbar.end.save_videos(self.get_page_id())
 
     def __on_save_as_image_activate(self, action, variant):
         """

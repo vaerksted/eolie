@@ -174,6 +174,18 @@ class ToolbarEnd(Gtk.Bin):
         popover.set_relative_to(self.__download_button)
         popover.popup()
 
+    def save_videos(self, page_id):
+        """
+            Show a popover with videos for page_id
+            @param page_id as int
+        """
+        from eolie.menu_videos import VideosMenu
+        menu = VideosMenu(page_id, self.__window)
+        popover = Gtk.Popover.new_from_model(self.__download_button, menu)
+        popover.set_modal(False)
+        self.__window.register(popover)
+        popover.popup()
+
     def move_control_in_menu(self, b):
         """
             Move home and download buttons in menu

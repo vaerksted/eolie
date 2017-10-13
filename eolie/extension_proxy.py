@@ -105,6 +105,10 @@ class ProxyExtension(Server):
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
+    <method name="GetVideos">
+      <arg type="i" name="page_id" direction="in" />
+      <arg type="aas" name="results" direction="out" />
+    </method>
     <method name="GetImageLinks">
       <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
@@ -119,9 +123,6 @@ class ProxyExtension(Server):
     </signal>
     <signal name='InputMouseDown'>
         <arg type="as" name="forms" direction="out" />
-    </signal>
-    <signal name='VideoInPage'>
-        <arg type="as" name="results" direction="out" />
     </signal>
     </interface>
     </node>
@@ -235,6 +236,34 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::GetImages():", e)
         return []
+
+    def GetVideos(self, page_id):
+        """
+            Get videos for page id
+            @param page id as int
+            @return [str]
+        """
+        page = self.__extension.get_page(page_id)
+        if page is None:
+            return []
+        videos = []
+        extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
+        for uri in self.__send_requests:
+            parsed = urlparse(uri)
+            title = None
+            # Search for video in page
+            if uri.split(".")[-1] in extensions:
+                title = uri
+            elif parsed.netloc.endswith("googlevideo.com") and\
+                    parsed.path == "/videoplayback":
+                title = page.get_dom_document().get_title()
+                if title is None:
+                    title = uri
+                # For youtube, we only want one video:
+                return [(title, uri)]
+            if title is not None and (title, uri) not in videos:
+                videos.append((title, uri))
+        return videos
 
     def GetImageLinks(self, page_id):
         """

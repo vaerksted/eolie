@@ -75,7 +75,7 @@ class Image(Gtk.FlowBoxChild):
 
 class ImagesPopover(Gtk.Popover):
     """
-        Show Images for page id message
+        Show images for page id
     """
 
     def __init__(self, uri, page_id, window):
