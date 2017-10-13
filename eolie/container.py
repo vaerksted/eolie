@@ -90,7 +90,6 @@ class Container(Gtk.Overlay):
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 webview.set_delayed_uri(uri)
-                webview.emit("title-changed", uri)
 
     def add_view(self, webview, window_type):
         """

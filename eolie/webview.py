@@ -138,12 +138,29 @@ class WebView(WebKit2.WebView):
         El().websettings.set_zoom(100, self.get_uri())
         self.update_zoom_level()
 
+    def get_title(self):
+        """
+            Get webview title
+            @return str
+        """
+        title = WebKit2.WebView.get_title(self)
+        if title is None:
+            title = self.get_uri()
+        if title is None:
+            title = self.__delayed_uri
+        return title or ""
+
     def set_delayed_uri(self, uri):
         """
             Set delayed uri
             @param uri as str
         """
         self.__delayed_uri = uri
+        self.emit("title-changed", uri)
+        if self.view is not None:
+            self._window.container.sites_manager.add_view_for_uri(
+                                                          self.view,
+                                                          uri)
 
     def update_spell_checking(self):
         """
