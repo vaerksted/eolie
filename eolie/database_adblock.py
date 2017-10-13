@@ -20,7 +20,7 @@ from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS
+from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS, El
 from eolie.utils import debug
 
 
@@ -203,8 +203,9 @@ class DatabaseAdblock:
         """
         try:
             parsed = urlparse(uri)
-            if parsed.scheme not in ["http", "https"]:
-                return
+            if parsed.scheme not in ["http", "https"] or\
+                    El().adblock_exceptions.find_parsed(parsed):
+                return False
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT mtime FROM adblock\
                                       WHERE dns=?", (parsed.netloc,))

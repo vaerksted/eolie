@@ -465,9 +465,7 @@ class WebView(WebKit2.WebView):
         parsed_related = urlparse(related.get_uri())
         exception = \
             related.js_load or\
-            El().popup_exceptions.find(parsed_related.netloc) or\
-            El().popup_exceptions.find(parsed_related.netloc +
-                                       parsed_related.path) or\
+            El().popup_exceptions.find_parsed(parsed_related) or\
             (not related.is_loading() and elapsed < 0.5)
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [

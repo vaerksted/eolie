@@ -78,15 +78,28 @@ class DatabaseExceptions:
         except:
             pass
 
-    def find(self, uri):
+    def find(self, netloc):
         """
             True if uri is an exception
-            @param uri as str
+            @param netloc as str
             @return bool
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid FROM exceptions\
-                                  WHERE uri=?", (uri,))
+                                  WHERE uri=?", (netloc,))
+            v = result.fetchone()
+            return v is not None
+
+    def find_parsed(self, parsed):
+        """
+            True if uri is an exception
+            @param parsed as urlparse.parsed
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid FROM exceptions\
+                                  WHERE uri=? or uri=?",
+                                 (parsed.netloc, parsed.netloc + parsed.path))
             v = result.fetchone()
             return v is not None
 

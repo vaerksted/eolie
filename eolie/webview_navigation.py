@@ -314,10 +314,7 @@ class WebViewNavigation:
             self.__title = ""
             # Setup js blocker
             if El().settings.get_value("jsblock"):
-                exception = El().js_exceptions.find(
-                                        parsed.netloc) or\
-                    El().js_exceptions.find(
-                                        parsed.netloc + parsed.path)
+                exception = El().js_exceptions.find_parsed(parsed)
                 self.set_setting("enable_javascript", exception)
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
@@ -333,6 +330,7 @@ class WebViewNavigation:
             else:
                 # Can't find a way to block content for ephemeral views
                 if El().settings.get_value("adblock") and\
+                        not El().adblock_exceptions.find_parsed(parsed) and\
                         parsed.scheme in ["http", "https"] and\
                         self._content_manager is not None:
                     self._content_manager.add_style_sheet(
@@ -356,33 +354,26 @@ class WebViewNavigation:
                                                                      None)
                 # Setup image blocker
                 if El().settings.get_value("imgblock"):
-                    exception = El().image_exceptions.find(
-                                            parsed.netloc) or\
-                        El().image_exceptions.find(
-                                            parsed.netloc + parsed.path)
+                    exception = El().image_exceptions.find_parsed(parsed)
                     self.set_setting("auto-load-images", exception)
                 elif not self.get_settings().get_auto_load_images():
                     self.set_setting("auto-load-images", True)
                 # Setup eolie internal adblocker
                 if El().settings.get_value("adblock") and\
                         parsed.scheme in ["http", "https"]:
-                    exception = El().adblock_exceptions.find(
-                                            parsed.netloc) or\
-                                El().adblock_exceptions.find(
-                                            parsed.netloc + parsed.path)
-                    if exception:
-                        return
-                    unlocated_netloc = ".".join(parsed.netloc.split(".")[:-1])
-                    javascripts = ["adblock_%s.js" % parsed.netloc,
-                                   "adblock_%s.js" % unlocated_netloc]
-                    for javascript in javascripts:
-                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
-                                                             javascript))
-                        if f.query_exists():
-                            (status, content, tag) = f.load_contents(None)
-                            js = content.decode("utf-8")
-                            self.run_javascript(js, None, None)
-                            break
+                    exception = El().adblock_exceptions.find_parsed(parsed)
+                    if not exception:
+                        noext = ".".join(parsed.netloc.split(".")[:-1])
+                        javascripts = ["adblock_%s.js" % parsed.netloc,
+                                       "adblock_%s.js" % noext]
+                        for javascript in javascripts:
+                            f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                                 javascript))
+                            if f.query_exists():
+                                (status, content, tag) = f.load_contents(None)
+                                js = content.decode("utf-8")
+                                self.run_javascript(js, None, None)
+                                break
         elif event == WebKit2.LoadEvent.FINISHED:
             if El().show_tls:
                 try:

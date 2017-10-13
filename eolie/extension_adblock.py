@@ -10,10 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from urllib.parse import urlparse
-
 from eolie.database_adblock import DatabaseAdblock
-from eolie.database_exceptions import DatabaseExceptions
 
 
 class AdblockExtension:
@@ -29,7 +26,6 @@ class AdblockExtension:
         """
         self.__settings = settings
         self.__adblock = DatabaseAdblock()
-        self.__exceptions = DatabaseExceptions("adblock")
         extension.connect("page-created", self.__on_page_created)
 
 #######################
@@ -51,11 +47,7 @@ class AdblockExtension:
             @param redirect as WebKit2WebExtension.URIResponse
         """
         uri = request.get_uri()
-        parsed = urlparse(webpage.get_uri())
-        exception = self.__exceptions.find(parsed.netloc) or\
-            self.__exceptions.find(parsed.netloc + parsed.path)
         if self.__settings.get_value("adblock") and\
-                not exception and\
                 self.__adblock.is_blocked(uri):
             return True
         if self.__settings.get_value("do-not-track"):
