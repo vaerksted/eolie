@@ -96,10 +96,10 @@ class WebViewLoadSignals:
                 if netloc is not None and\
                         not El().art.exists(netloc, "favicon"):
                     El().art.save_artwork(netloc, resized, "favicon", builtin)
-                self.__set_favicon_related(resized,
-                                           uri,
-                                           self.initial_uri,
-                                           builtin)
+                self.__set_initial_uri_favicon(resized,
+                                               uri,
+                                               self.initial_uri,
+                                               builtin)
         self.emit("favicon-changed", resized, icon_theme_artwork)
 
 #######################
@@ -136,7 +136,7 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __set_favicon_related(self, surface, uri, initial_uri, builtin):
+    def __set_initial_uri_favicon(self, surface, uri, initial_uri, builtin):
         """
             Set favicon for initial uri
             @param surface as cairo.surface
