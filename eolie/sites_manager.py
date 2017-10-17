@@ -83,7 +83,7 @@ class SitesManager(Gtk.EventBox):
             # Search for a child for wanted netloc
             # Clean up any child matching view, allowing us to reuse it
             for site in self.__box.get_children():
-                if site.netloc == netloc:
+                if site.netloc == netloc and site.ephemeral is False:
                     child = site
                 else:
                     site.remove_view(view)
