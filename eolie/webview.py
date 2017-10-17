@@ -88,7 +88,7 @@ class WebView(WebKit2.WebView):
                 zoom_level *= self._window.zoom_level
             else:
                 window = self.__related_view.get_ancestor(Gtk.Window)
-                if window is not None and window.hasattr("zoom-level"):
+                if window is not None and hasattr(window, "zoom-level"):
                     zoom_level *= window.zoom_level
         except Exception as e:
             print("WebView::update_zoom_level()", e)
