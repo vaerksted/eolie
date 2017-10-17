@@ -254,7 +254,7 @@ class WebView(WebKit2.WebView):
                                                self.ephemeral,
                                                None,
                                                True,
-                                               self.atime - 1)
+                                               self.gtime - 1)
 
     def set_atime(self, atime):
         """
@@ -262,6 +262,13 @@ class WebView(WebKit2.WebView):
             @param atime as int
         """
         self.__atime = atime
+
+    def set_gtime(self, gtime):
+        """
+            Update group time
+            @param atime as int
+        """
+        self.__gtime = gtime
 
     def set_view(self, view):
         """
@@ -277,6 +284,14 @@ class WebView(WebKit2.WebView):
             @return int
         """
         return self.__atime
+
+    @property
+    def gtime(self):
+        """
+            Get group time
+            @return int
+        """
+        return self.__gtime
 
     @property
     def view(self):
@@ -354,6 +369,7 @@ class WebView(WebKit2.WebView):
         self.__view = view
         self._content_manager = content_manager
         self.__atime = 0
+        self.__gtime = int(time())
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""

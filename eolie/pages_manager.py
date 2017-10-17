@@ -183,7 +183,7 @@ class PagesManager(Gtk.EventBox):
         child = self.__box.get_child_at_index(child_index)
         if child is None:
             return
-        atime = child.view.webview.atime
+        gtime = child.view.webview.gtime
         El().pages_menu.add_action(view.webview.get_title(),
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
@@ -196,14 +196,16 @@ class PagesManager(Gtk.EventBox):
         next_view = None
         # First we search a brother ie a paged opened from the same parent page
         for child in self.__box.get_children():
-            if child.view.webview.atime == atime:
+            if child.view.webview.gtime == gtime:
                 next_view = child.view
                 break
-        # Get view with atime -+ 1 (child/parent)
+        # Get view with gtime -+ 1
+        # If closing a parent, go to child
+        # If closing a child, go to parent
         if next_view is None:
             for child in self.__box.get_children():
-                if child.view.webview.atime == atime + 1 or\
-                        child.view.webview.atime == atime - 1:
+                if child.view.webview.gtime == gtime + 1 or\
+                        child.view.webview.gtime == gtime - 1:
                     next_view = child.view
                     break
         # Get view with higher access time

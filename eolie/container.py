@@ -67,7 +67,7 @@ class Container(Gtk.Overlay):
         self.add(self.__expose_stack)
 
     def add_webview(self, uri, window_type, ephemeral=False,
-                    state=None, load=True, atime=None):
+                    state=None, load=True, gtime=None):
         """
             Add a web view to container
             @param uri as str
@@ -75,12 +75,14 @@ class Container(Gtk.Overlay):
             @param ephemeral as bool
             @param state as WebViewSessionState
             @param load as bool
-            @param atime as int
+            @param gtime as int
             @return NEVER RETURN SOMETHING HERE #258
         """
         webview = View.get_new_webview(ephemeral, self.__window)
-        if atime is not None:
-            webview.set_atime(atime)
+        if gtime is not None:
+            # We force atime to be sure child is initially sorted after parent
+            webview.set_atime(gtime)
+            webview.set_gtime(gtime)
         if state is not None:
             webview.restore_session_state(state)
         self.add_view(webview, window_type)
