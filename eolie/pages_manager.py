@@ -194,8 +194,9 @@ class PagesManager(Gtk.EventBox):
             return False
 
         next_view = None
+        reversed_children = reversed(self.__box.get_children())
         # First we search a brother ie a paged opened from the same parent page
-        for child in self.__box.get_children():
+        for child in reversed_children:
             if child.view.webview.gtime == gtime:
                 next_view = child.view
                 break
@@ -203,7 +204,7 @@ class PagesManager(Gtk.EventBox):
         # If closing a parent, go to child
         # If closing a child, go to parent
         if next_view is None:
-            for child in self.__box.get_children():
+            for child in reversed_children:
                 if child.view.webview.gtime == gtime + 1 or\
                         child.view.webview.gtime == gtime - 1:
                     next_view = child.view
