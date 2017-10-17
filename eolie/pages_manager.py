@@ -387,7 +387,8 @@ class PagesManager(Gtk.EventBox):
         uri = row.view.webview.get_uri()
         title = row.view.webview.get_title()
         if (uri is not None and uri.find(filter) != -1) or\
-                (title is not None and title.find(filter) != -1):
+                (title is not None and title.find(filter) != -1) or\
+                (filter == "private://" and row.view.webview.ephemeral):
             return True
         return False
 

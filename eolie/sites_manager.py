@@ -292,7 +292,10 @@ class SitesManager(Gtk.EventBox):
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.set_current(child.views[0], True)
         else:
-            self.__window.container.pages_manager.set_filter(child.netloc)
+            if child.ephemeral:
+                self.__window.container.pages_manager.set_filter("private://")
+            else:
+                self.__window.container.pages_manager.set_filter(child.netloc)
             self.__window.toolbar.actions.view_button.set_active(True)
 
     def __on_button_press(self, widget, event):
