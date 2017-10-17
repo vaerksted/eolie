@@ -33,6 +33,12 @@ class WebViewDBusSignals:
         self.__last_click_event = {}
         self.connect("submit-form", self.__on_submit_form)
 
+    def ignore_last_click_event(self):
+        """
+            Ignore last click event
+        """
+        self.__last_click_event = {}
+
     @property
     def last_click_time(self):
         """
