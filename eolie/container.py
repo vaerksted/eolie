@@ -178,10 +178,11 @@ class Container(Gtk.Overlay):
             self.__pages_manager.update_sort()
             self.__expose_stack.set_visible_child_name("expose")
         else:
+            if self.__stack.get_visible_child() != self.__current:
+                self.__stack.set_visible_child(self.__current)
             self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
             child.set_filtered(False)
-            self.__stack.set_visible_child(self.__current)
 
     @property
     def pages_manager(self):
