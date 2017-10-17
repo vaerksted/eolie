@@ -26,14 +26,27 @@ function generate_pot()
     echo '[encoding: UTF-8]'
     for file in data/*.xml data/*.in eolie/*.py
     do
-        echo ../$file
+        echo $file
     done
     for file in data/*.ui data/AboutDialog.ui.in
     do
         echo -n '[type: gettext/glade]'
-        echo ../$file
+        echo $file
     done
 }
 
+function generate_po()
+{
+    cd po
+    intltool-update --pot
+    mv -f untitled.pot eolie.pot
+    while read po
+    do
+        intltool-update $po
+    done < LINGUAS
+    cd -
+}
+
 generate_resource > data/eolie.gresource.xml
-generate_pot > subprojects/po/POTFILES.in
+generate_pot > po/POTFILES.in
+generate_po
