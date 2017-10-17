@@ -212,6 +212,7 @@ class PagesManager(Gtk.EventBox):
             for child in self.__box.get_children():
                 if child.view.webview.atime > atime:
                     next_view = child.view
+                    atime = child.view.webview.atime
         if next_view is not None:
             self.__window.container.set_current(next_view, True)
         else:
