@@ -206,8 +206,8 @@ class Row(Gtk.ListBoxRow):
             @param uri as str
         """
         uri = self.__item.get_property("uri")
-        favicon_path = El().art.get_path(uri, "favicon")
-        if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+        favicon_path = El().art.get_favicon_path(uri)
+        if favicon_path is not None:
             favicon.set_from_file(favicon_path)
         else:
             favicon.set_from_icon_name("applications-internet",

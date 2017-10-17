@@ -37,13 +37,12 @@ class Art:
         """
         self.__use_cache = False
 
-    def save_artwork(self, uri, surface, suffix, builtin=False):
+    def save_artwork(self, uri, surface, suffix):
         """
             Save artwork for uri with suffix
             @param uri as str
             @param surface as cairo.surface
             @param suffix as str
-            @param builtin as bool
         """
         try:
             filepath = self.get_path(uri, suffix)
@@ -51,21 +50,6 @@ class Art:
                                                  surface.get_width(),
                                                  surface.get_height())
             pixbuf.savev(filepath, "png", [None], [None])
-            # Reset modification time to be sure to not keep this in cache
-            if builtin:
-                f = Gio.File.new_for_path(filepath)
-                exists = f.query_exists()
-                if exists:
-                    info = f.query_info('time::modified',
-                                        Gio.FileQueryInfoFlags.NONE,
-                                        None)
-                    wanted_time = time() - 43200
-                    timeval = GLib.TimeVal()
-                    timeval.tv_sec = wanted_time
-                    info.set_modification_time(timeval)
-                    f.set_attributes_from_info(info,
-                                               Gio.FileQueryInfoFlags.NONE,
-                                               None)
         except Exception as e:
             print("Art::save_artwork():", e)
 
@@ -110,9 +94,22 @@ class Art:
         else:
             return None
 
+    def get_favicon_path(self, uri):
+        """
+            Return favicon cache path for uri
+            @param uri as str/None
+            @return str/None
+        """
+        for favicon_type in ["favicon", "favicon_alt"]:
+            favicon_path = self.get_path(uri, favicon_type)
+            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+                return favicon_path
+        return None
+
     def get_path(self, uri, suffix):
         """
             Return cache image path
+            @param uri as str/None
             @return str/None
         """
         if uri is None:

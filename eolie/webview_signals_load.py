@@ -54,7 +54,6 @@ class WebViewLoadSignals:
         """
             Set current favicon
         """
-        builtin = False
         resized = None
         uri = self.get_uri()
         parsed = urlparse(uri)
@@ -68,38 +67,36 @@ class WebViewLoadSignals:
         if icon_theme_artwork is None:
             # Try to get a favicon
             if surface is None:
+                favicon_type = "favicon_alt"
                 # Build a favicon from uri
                 # Never update such favicon as we want to keep same color
                 # get_char_surface() => random color
                 if netloc is not None:
-                    if El().art.exists(netloc, "favicon"):
-                        builtin = None
+                    if El().art.exists(netloc, favicon_type):
                         resized = El().art.get_artwork(
                                        netloc,
-                                       "favicon",
+                                       favicon_type,
                                        self.get_scale_factor(),
                                        ArtSize.FAVICON,
                                        ArtSize.FAVICON)
                     else:
-                        builtin = True
                         resized = get_char_surface(netloc[0])
             # If webpage has a favicon and quality is superior, resize it
             elif surface.get_width() > self.__favicon_width:
+                favicon_type = "favicon"
                 resized = resize_favicon(surface)
                 self.__favicon_width = surface.get_width()
             # Save favicon if needed:
-            #   - if we have a real favicon
-            #   - if we have a new builtin favicon
-            if resized is not None and builtin is not None:
-                if not El().art.exists(uri, "favicon"):
-                    El().art.save_artwork(uri, resized, "favicon", builtin)
+            if resized is not None:
+                if not El().art.exists(uri, favicon_type):
+                    El().art.save_artwork(uri, resized, favicon_type)
                 if netloc is not None and\
-                        not El().art.exists(netloc, "favicon"):
-                    El().art.save_artwork(netloc, resized, "favicon", builtin)
+                        not El().art.exists(netloc, favicon_type):
+                    El().art.save_artwork(netloc, resized, favicon_type)
                 self.__set_initial_uri_favicon(resized,
                                                uri,
                                                self.initial_uri,
-                                               builtin)
+                                               favicon_type)
         self.emit("favicon-changed", resized, icon_theme_artwork)
 
 #######################
@@ -136,21 +133,22 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __set_initial_uri_favicon(self, surface, uri, initial_uri, builtin):
+    def __set_initial_uri_favicon(self, surface, uri,
+                                  initial_uri, favicon_type):
         """
             Set favicon for initial uri
             @param surface as cairo.surface
             @param uri as str
             @param initial_uri as str
-            @param builtin as bool
+            @param favicon_type as str
         """
         if initial_uri != uri and initial_uri is not None:
             parsed = urlparse(uri)
             initial_parsed = urlparse(initial_uri)
             if parsed.netloc.lstrip("www.") ==\
                     initial_parsed.netloc.lstrip("www.") and\
-                    not El().art.exists(initial_uri, "favicon"):
-                El().art.save_artwork(initial_uri, surface, "favicon", builtin)
+                    not El().art.exists(initial_uri, favicon_type):
+                El().art.save_artwork(initial_uri, surface, favicon_type)
 
     def __on_notify_favicon(self, webview, favicon):
         """

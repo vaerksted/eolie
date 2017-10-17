@@ -106,14 +106,13 @@ class Context:
             idx += 1
             if count == 1:  # No navigation for one page
                 netloc = uri
-            favicon_path = El().art.get_path(netloc, "favicon")
-            favicon = Gio.File.new_for_path(favicon_path)
             path = El().art.get_path(uri, "start")
             thumbnail = Gio.File.new_for_path(path)
             if not thumbnail.query_exists():
                 continue
-            if favicon.query_exists():
-                favicon_uri = favicon.get_uri()
+            favicon_path = El().art.get_favicon_path(netloc)
+            if favicon_path is not None:
+                favicon_uri = "file://%s" % favicon_path
             else:
                 favicon_uri = "internal://applications-internet"
             html_start += '<a class="child" id="%s"\
