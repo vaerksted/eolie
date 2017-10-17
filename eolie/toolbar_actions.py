@@ -164,6 +164,9 @@ class ToolbarActions(Gtk.Bin):
             atime = self.__window.container.current.webview.atime
         self.__window.container.add_webview(El().start_page,
                                             Gdk.WindowType.CHILD,
+                                            False,
+                                            None,
+                                            True,
                                             atime)
         self.__window.close_popovers()
 
