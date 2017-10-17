@@ -158,16 +158,8 @@ class ToolbarActions(Gtk.Bin):
             Add a new web view
             @param button as Gtk.Button
         """
-        # If we have a current webview, use current atime
-        atime = None
-        if self.__window.container.current is not None:
-            atime = self.__window.container.current.webview.atime
         self.__window.container.add_webview(El().start_page,
-                                            Gdk.WindowType.CHILD,
-                                            False,
-                                            None,
-                                            True,
-                                            atime)
+                                            Gdk.WindowType.CHILD)
         self.__window.close_popovers()
 
     def _on_pages_button_toggled(self, button):
