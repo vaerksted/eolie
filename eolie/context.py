@@ -107,8 +107,7 @@ class Context:
             if count == 1:  # No navigation for one page
                 netloc = uri
             path = El().art.get_path(uri, "start")
-            thumbnail = Gio.File.new_for_path(path)
-            if not thumbnail.query_exists():
+            if not GLib.file_test(path, GLib.FileTest.IS_REGULAR):
                 continue
             favicon_path = El().art.get_favicon_path(netloc)
             if favicon_path is not None:

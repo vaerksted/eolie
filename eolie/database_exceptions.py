@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 import sqlite3
 
@@ -41,12 +41,10 @@ class DatabaseExceptions:
         self.__DB_PATH = "%s/exceptions_%s.db" % (EOLIE_DATA_PATH,
                                                   suffix)
         self.__cancellable = Gio.Cancellable.new()
-        f = Gio.File.new_for_path(self.__DB_PATH)
-        if not f.query_exists():
+        if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
-                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
-                if not d.query_exists():
-                    d.make_directory_with_parents()
+                if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
+                    GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_exceptions)

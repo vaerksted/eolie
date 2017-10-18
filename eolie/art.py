@@ -179,9 +179,8 @@ class Art:
         """
             Create cache dir
         """
-        d = Gio.File.new_for_path(EOLIE_CACHE_PATH)
-        if not d.query_exists():
+        if not GLib.file_test(EOLIE_CACHE_PATH, GLib.FileTest.IS_DIR):
             try:
-                d.make_directory_with_parents()
+                GLib.mkdir_with_parents(EOLIE_CACHE_PATH, 0o0750)
             except Exception as e:
                 print("Art::__create_cache():", e)

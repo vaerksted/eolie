@@ -64,12 +64,10 @@ class DatabaseBookmarks:
             Create database tables or manage update if needed
         """
         self.thread_lock = Lock()
-        f = Gio.File.new_for_path(self.DB_PATH)
-        if not f.query_exists():
+        if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
-                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
-                if not d.query_exists():
-                    d.make_directory_with_parents()
+                if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
+                    GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_bookmarks)
@@ -984,16 +982,6 @@ class DatabaseBookmarks:
             return c
         except:
             exit(-1)
-
-    def drop_db(self):
-        """
-            Drop database
-        """
-        try:
-            f = Gio.File.new_for_path(self.DB_PATH)
-            f.trash()
-        except Exception as e:
-            print("DatabaseBookmarks::drop_db():", e)
 
 #######################
 # PRIVATE             #

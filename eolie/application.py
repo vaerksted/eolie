@@ -299,9 +299,8 @@ class Application(Gtk.Application):
         GLib.setenv('PYTHONPATH', self.__extension_dir, True)
 
         # Create favicon path
-        d = Gio.File.new_for_path(self.__FAVICONS_PATH)
-        if not d.query_exists():
-            d.make_directory_with_parents()
+        if not GLib.file_test(self.__FAVICONS_PATH, GLib.FileTest.IS_DIR):
+            GLib.mkdir_with_parents(self.__FAVICONS_PATH, 0o0750)
 
         # Setup default context
         context = WebKit2.WebContext.get_default()
@@ -542,9 +541,9 @@ class Application(Gtk.Application):
         if len(args) > 1:
             for uri in args[1:]:
                 # Transform path to uri
-                f = Gio.File.new_for_path(uri)
-                if f.query_exists():
-                    uri = f.get_uri()
+                parsed = urlparse(uri)
+                if not parsed.scheme:
+                    uri = "file://%s" % uri
                 self.active_window.container.add_webview(uri,
                                                          Gdk.WindowType.CHILD,
                                                          ephemeral)

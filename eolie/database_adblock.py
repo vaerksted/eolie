@@ -96,13 +96,11 @@ class DatabaseAdblock:
         self.__task_helper = TaskHelper()
         self.__adblock_mtime = int(time())
 
-        f = Gio.File.new_for_path(self.DB_PATH)
         # Lazy loading if not empty
-        if not f.query_exists():
+        if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
-                d = Gio.File.new_for_path(EOLIE_DATA_PATH)
-                if not d.query_exists():
-                    d.make_directory_with_parents()
+                if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
+                    GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
@@ -122,8 +120,7 @@ class DatabaseAdblock:
         if git is None:
             print(_("For stronger ad blocking, install git command"))
         else:
-            d = Gio.File.new_for_path(ADBLOCK_JS)
-            if d.query_exists():
+            if GLib.file_test(ADBLOCK_JS, GLib.FileTest.IS_DIR):
                 argv = [git,
                         "-C",
                         ADBLOCK_JS,
