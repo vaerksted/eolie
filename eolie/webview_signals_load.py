@@ -73,14 +73,12 @@ class WebViewLoadSignals:
                 # Never update such favicon as we want to keep same color
                 # get_char_surface() => random color
                 if netloc is not None:
-                    if El().art.exists(netloc, favicon_type):
-                        resized = El().art.get_artwork(
-                                       netloc,
-                                       favicon_type,
-                                       self.get_scale_factor(),
-                                       ArtSize.FAVICON,
-                                       ArtSize.FAVICON)
-                    else:
+                    resized = El().art.get_artwork(netloc,
+                                                   favicon_type,
+                                                   self.get_scale_factor(),
+                                                   ArtSize.FAVICON,
+                                                   ArtSize.FAVICON)
+                    if resized is None:
                         resized = get_char_surface(netloc[0])
             # If webpage has a favicon and quality is superior, resize it
             elif surface.get_width() > self.__favicon_width:

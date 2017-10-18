@@ -65,9 +65,8 @@ class Art:
         if uri is None:
             return None
         filepath = self.get_path(uri, suffix)
-        f = Gio.File.new_for_path(filepath)
         try:
-            if f.query_exists():
+            if GLib.file_test(filepath, GLib.FileTest.IS_REGULAR):
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(filepath,
                                                                  width,
                                                                  heigth,
