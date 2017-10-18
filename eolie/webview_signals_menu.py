@@ -195,7 +195,8 @@ class WebViewMenuSignals:
         self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                           WebKit2.SnapshotOptions.NONE,
                           None,
-                          self.__on_snapshot)
+                          self.__on_snapshot,
+                          True)
 
     def __on_reload_preview_activate(self, action, variant, uri):
         """
@@ -233,26 +234,39 @@ class WebViewMenuSignals:
                              get_snapshot,
                              self.__on_preview_snapshot,
                              webview,
-                             uri)
+                             uri, True)
 
-    def __on_preview_snapshot(self, surface, webview, uri):
+    def __on_preview_snapshot(self, surface, webview, uri, first_pass):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param webview as WebKit2.WebView
             @param uri as str
+            @param first_pass as bool
         """
+        # The 32767 limit on the width/height dimensions
+        # of an image surface is new in cairo 1.10,
+        # try with WebKit2.SnapshotRegion.VISIBLE
+        if surface is None and first_pass:
+            webview.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                 WebKit2.SnapshotOptions.NONE,
+                                 None,
+                                 get_snapshot,
+                                 self.__on_preview_snapshot,
+                                 webview,
+                                 uri, False)
         El().art.save_artwork(uri, surface, "start")
         self.reload()
         window = webview.get_toplevel()
         webview.destroy()
         window.destroy()
 
-    def __on_snapshot(self, webview, result):
+    def __on_snapshot(self, webview, result, first_pass):
         """
             Set snapshot on main image
             @param webview as WebView
             @param result as Gio.AsyncResult
+            @param first_pass as bool
         """
         try:
             snapshot = webview.get_snapshot_finish(result)
@@ -265,3 +279,12 @@ class WebViewMenuSignals:
                                    Gtk.get_current_event_time())
         except Exception as e:
             print("WebView::__on_snapshot():", e)
+            # The 32767 limit on the width/height dimensions
+            # of an image surface is new in cairo 1.10,
+            # try with WebKit2.SnapshotRegion.VISIBLE
+            if first_pass:
+                self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                  WebKit2.SnapshotOptions.NONE,
+                                  None,
+                                  self.__on_snapshot,
+                                  False)

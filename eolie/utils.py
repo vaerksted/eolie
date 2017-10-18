@@ -109,6 +109,7 @@ def get_snapshot(webview, result, callback, *args):
         callback(surface, *args)
     except Exception as e:
         print("get_snapshot():", e)
+        callback(None, *args)
 
 
 def get_random_string(size):

@@ -41,7 +41,8 @@ class WebViewLoadSignals:
                               self._cancellable,
                               get_snapshot,
                               self.__on_snapshot,
-                              uri)
+                              uri,
+                              True)
 
     def disable_load_monitoring(self):
         """
@@ -229,12 +230,25 @@ class WebViewLoadSignals:
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_snapshot(self, surface, uri):
+    def __on_snapshot(self, surface, uri, first_pass):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param uri as str
+            @param first_pass as bool
         """
+        # The 32767 limit on the width/height dimensions
+        # of an image surface is new in cairo 1.10,
+        # try with WebKit2.SnapshotRegion.VISIBLE
+        if surface is None and first_pass:
+            self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                              WebKit2.SnapshotOptions.NONE,
+                              self._cancellable,
+                              get_snapshot,
+                              self.__on_snapshot,
+                              uri,
+                              False)
+            return
         # Do not cache snapshot on error
         if self.error is not None or uri != self.get_uri():
             return
