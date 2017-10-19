@@ -521,6 +521,9 @@ class ToolbarTitle(Gtk.Bin):
                             uri = "%s://%s" % (db_parsed.scheme, uri)
                 self.__window.container.load_uri(uri)
                 self.__window.container.set_expose(False)
+                if self.__entry_changed_timeout is not None:
+                    GLib.source_remove(self.__entry_changed_timeout)
+                    self.__entry_changed_timeout = None
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
