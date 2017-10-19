@@ -34,16 +34,18 @@ class View(Gtk.Overlay):
         else:
             return WebView.new(window, None)
 
-    def __init__(self, webview, window):
+    def __init__(self, webview, window, subsurface=False):
         """
             Init view
             @param webview as WebView
             @param window as window
+            @param subsurface as bool
         """
         Gtk.Overlay.__init__(self)
         self.__reading_view = None
         self.__window = window
         self.__webview = webview
+        self.__subsurface = subsurface
         webview.set_view(self)
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
@@ -119,6 +121,14 @@ class View(Gtk.Overlay):
         """
         self.__window.container.sites_manager.remove_view(self)
         GLib.timeout_add(1000, self.__destroy)
+
+    @property
+    def subsurface(self):
+        """
+            True if subsurface
+            @return bool
+        """
+        return self.__subsurface
 
     @property
     def reading(self):

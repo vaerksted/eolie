@@ -154,7 +154,7 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param destroy webview when popover hidden
         """
-        view = View(webview, self.__window)
+        view = View(webview, self.__window, True)
         view.show()
         self.__popover.add_view(view, destroy)
         if not self.__popover.is_visible():

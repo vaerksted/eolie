@@ -302,7 +302,7 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
-            if self.view is not None:
+            if self.view is not None and not self.view.subsurface:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
                                                           uri)
@@ -321,7 +321,7 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
-            if self.view is not None:
+            if self.view is not None and not self.view.subsurface:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
                                                           uri)
