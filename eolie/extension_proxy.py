@@ -402,6 +402,8 @@ class ProxyExtension(Server):
            @param event as WebKit2WebExtension.DOMUIEvent
         """
         name = form.get_name()
+        if name is None:
+            return
         # Only send signal on one of the two calls
         if name in self.__mouse_down_forms:
             self.__mouse_down_forms.remove(name)
