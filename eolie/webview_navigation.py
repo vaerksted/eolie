@@ -306,7 +306,6 @@ class WebViewNavigation:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
                                                           uri)
-            self._window.toolbar.title.show_readable_button(False)
             self.__initial_uri = uri
             self._cancelled = False
             # Destroy current popups

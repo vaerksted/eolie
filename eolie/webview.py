@@ -56,12 +56,11 @@ class WebView(WebKit2.WebView):
             Create a new WebView related to view
             @param related as WebView
             @param window as Window
-            @param view as View
             @return WebView
         """
         view = WebKit2.WebView.new_with_related_view(related)
         view.__class__ = WebViewMeta
-        view.__init(related, None, window, related.view)
+        view.__init(related, None, window, None)
         return view
 
     def set_setting(self, key, value):

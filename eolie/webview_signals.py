@@ -170,8 +170,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         self._cancellable.cancel()
         self._cancellable.reset()
-        if webview.get_mapped():
-            self._window.toolbar.title.set_uri(uri)
 
     def __on_title_changed(self, webview, title):
         """

@@ -27,7 +27,6 @@ class WebViewLoadSignals:
         """
             Init class
         """
-        self.__load_monitoring = True
         self.__favicon_width = 0
 
     def set_snapshot(self, uri):
@@ -43,13 +42,6 @@ class WebViewLoadSignals:
                               self.__on_snapshot,
                               uri,
                               True)
-
-    def disable_load_monitoring(self):
-        """
-            Disable load monitoring, related to UI updates
-            Internal load monitoring (adblock, ...) is not affected
-        """
-        self.__load_monitoring = False
 
     def set_favicon(self):
         """
@@ -106,27 +98,30 @@ class WebViewLoadSignals:
             Connect all signals
             @param webview as WebView
         """
-        if self.__load_monitoring:
+        if not self.view.subsurface:
             self.connect("load-changed", self.__on_load_changed)
             self.connect("title-changed", self.__on_title_changed)
+            self.connect("uri-changed", self.__on_uri_changed)
             self.connect("notify::favicon", self.__on_notify_favicon)
-        self.connect("notify::estimated-load-progress",
-                     self.__on_estimated_load_progress)
-        self.get_back_forward_list().connect(
-                             "changed",
-                             self.__on_back_forward_list_changed,
-                             webview)
+            self.connect("notify::estimated-load-progress",
+                         self.__on_estimated_load_progress)
+            self.get_back_forward_list().connect(
+                                 "changed",
+                                 self.__on_back_forward_list_changed,
+                                 webview)
 
     def _on_unmap(self, webview):
         """
             Disconnect all signals
             @param webview as WebView
         """
-        if self.__load_monitoring:
+        if not self.view.subsurface:
             self.disconnect_by_func(self.__on_load_changed)
             self.disconnect_by_func(self.__on_title_changed)
-        self.disconnect_by_func(self.__on_estimated_load_progress)
-        self.get_back_forward_list().disconnect_by_func(
+            self.disconnect_by_func(self.__on_uri_changed)
+            self.disconnect_by_func(self.__on_notify_favicon)
+            self.disconnect_by_func(self.__on_estimated_load_progress)
+            self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
 
 #######################
@@ -176,6 +171,7 @@ class WebViewLoadSignals:
             self.__favicon_width = 0
             self._window.container.current.find_widget.set_search_mode(False)
             self._window.toolbar.title.set_title(uri)
+            self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.show_spinner(True)
             else:
@@ -207,6 +203,15 @@ class WebViewLoadSignals:
         if webview.get_mapped():
             self._window.toolbar.title.set_title(title)
         self._window.container.sites_manager.update_label(self.view)
+
+    def __on_uri_changed(self, webview, uri):
+        """
+            Update UI and cancel current snapshot
+            @param webview as WebView
+            @param uri as GParamString (Do not use)
+        """
+        if webview.get_mapped():
+            self._window.toolbar.title.set_uri(uri)
 
     def __on_estimated_load_progress(self, webview, value):
         """
