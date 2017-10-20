@@ -21,6 +21,59 @@ from eolie.popover_uri import UriPopover
 from eolie.widget_edit_bookmark import EditBookmarkWidget
 
 
+class SmoothProgressBar(Gtk.ProgressBar):
+    """
+        Gtk.ProgressBar with full progression
+        If faction is 0.1 and you set it to 0.5, it will be udpated
+        to show all steps
+    """
+
+    def __init__(self):
+        """
+            Init widget
+        """
+        Gtk.ProgressBar.__init__(self)
+        self.__timeout_id = None
+        self.set_property("valign", Gtk.Align.END)
+        self.get_style_context().add_class("progressbar")
+
+    def set_fraction(self, fraction):
+        """
+            Set fraction smoothly
+            @param fraction as float
+        """
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
+        self.__set_fraction(fraction)
+
+    def do_hide(self):
+        """
+            Hide widget and reset fraction
+        """
+        Gtk.ProgressBar.do_hide(self)
+        Gtk.ProgressBar.set_fraction(self, 0)
+
+#######################
+# PRIVATE             #
+#######################
+    def __set_fraction(self, fraction):
+        """
+            Set fraction smoothly
+            @param fraction as float
+        """
+        self.__timeout_id = None
+        current = self.get_fraction()
+        if current + 0.025 < fraction:
+            Gtk.ProgressBar.set_fraction(self, current + 0.025)
+            self.__timeout_id = GLib.timeout_add(25,
+                                                 self.__set_fraction,
+                                                 fraction)
+        else:
+            Gtk.ProgressBar.set_fraction(self, fraction)
+            if fraction == 1.0:
+                GLib.timeout_add(500, self.hide)
+
+
 class ToolbarTitle(Gtk.Bin):
     """
         Title toolbar
@@ -76,7 +129,8 @@ class ToolbarTitle(Gtk.Bin):
         context.add_provider_for_screen(Gdk.Screen.get_default(),
                                         self.__css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
-        self.__progress = builder.get_object("progress")
+        self.__progress = SmoothProgressBar()
+        builder.get_object("overlay").add_overlay(self.__progress)
         # Used for spinner and reader
         self.__indicator_stack = builder.get_object("indicator_stack")
         # Used for popups and geolocation
