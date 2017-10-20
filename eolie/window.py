@@ -422,6 +422,8 @@ class Window(Gtk.ApplicationWindow):
                                                       self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
+        elif string == "home":
+            self.container.current.webview.load_uri(El().start_page)
         elif string == "source":
             uri = self.container.current.webview.get_uri()
             task_helper = TaskHelper()

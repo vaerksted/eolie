@@ -382,6 +382,8 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("win.shortcut::reload",
                                    ["<Control>r", "F5"])
+        self.set_accels_for_action("win.shortcut::home",
+                                   ["<Control>Home"])
         self.set_accels_for_action("win.shortcut::find", ["<Control>f"])
         self.set_accels_for_action("win.shortcut::print", ["<Control>p"])
         self.set_accels_for_action("win.shortcut::source",
