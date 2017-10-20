@@ -86,10 +86,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             view.webview.connect("shown", self.__on_webview_shown)
             view.webview.connect("favicon-changed",
                                  self.__on_webview_favicon_changed)
-            self.__indicator_label.shown(view.webview.shown)
-        self.__update_count()
-        self.__update_indicator()
-        self.update_label()
+            self.update_label()
+            self.__indicator_label.update_count(True)
+            if not view.webview.shown:
+                self.__indicator_label.mark_unshown(view.webview)
 
     def remove_view(self, view):
         """
@@ -100,9 +100,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__views.remove(view)
             view.webview.disconnect_by_func(self.__on_webview_shown)
             view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
-        self.__update_count()
-        self.__update_indicator()
-        self.update_label()
+            self.update_label()
+            self.__indicator_label.update_count(False)
+            if not view.webview.shown:
+                self.__indicator_label.mark_shown(view.webview)
 
     def set_minimal(self, minimal):
         """
@@ -226,23 +227,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
-    def __update_count(self):
-        """
-            Update count
-        """
-        count = len(self.__views)
-        self.__indicator_label.set_text(str(max(1, count)))
-
-    def __update_indicator(self):
-        """
-            Update indicator
-        """
-        shown = True
-        for view in self.__views:
-            if not view.webview.shown:
-                shown = False
-        self.__indicator_label.shown(shown)
-
     def __update_popover_internals(self, widget):
         """
             Little hack to manage Gtk.ModelButton text
@@ -382,4 +366,4 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
             Update indicataor
         """
-        self.__update_indicator()
+        self.__indicator_label.mark_shown(webview)

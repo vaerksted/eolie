@@ -27,14 +27,36 @@ class LabelIndicator(Gtk.Label):
         Gtk.Label.__init__(self)
         self.set_xalign(0.0)
         self.set_yalign(0.80)
-        self.__show = True
+        self.__count = 0
+        self.__unshown = []
 
-    def shown(self, shown):
+    def update_count(self, add):
         """
-            Show indicator if not shown
-            @param show as bool
+            Update view count
+            @param add as bool
         """
-        self.__show = not shown
+        if add:
+            self.__count += 1
+        else:
+            self.__count -= 1
+        self.set_text(str(max(1, self.__count)))
+
+    def mark_unshown(self, webview):
+        """
+            Mark view as unshown and redraw
+            @param webview as WebView
+        """
+        if webview not in self.__unshown:
+            self.__unshown.append(webview)
+        self.queue_draw()
+
+    def mark_shown(self, webview):
+        """
+            Mark view as shown and redraw
+            @param view as WebView
+        """
+        if webview in self.__unshown:
+            self.__unshown.remove(webview)
         self.queue_draw()
 
     def do_get_preferred_width(self):
@@ -50,7 +72,7 @@ class LabelIndicator(Gtk.Label):
             @param cr as cairo.Context
         """
         Gtk.Label.do_draw(self, cr)
-        if self.__show:
+        if self.__unshown:
             w = self.get_allocated_width()
             cr.stroke()
             cr.translate(w - 5, 5)
