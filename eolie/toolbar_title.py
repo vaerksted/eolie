@@ -67,19 +67,19 @@ class SmoothProgressBar(Gtk.ProgressBar):
         self.__timeout_id = None
         current = self.get_fraction()
         if fraction - current > 0.5 or fraction == 1.0:
-            progress = current + 0.05
+            ms = 10
         else:
-            progress = current + 0.025
-
+            ms = 25
+        progress = current + 0.025
         if progress < fraction:
             Gtk.ProgressBar.set_fraction(self, progress)
-            self.__timeout_id = GLib.timeout_add(25,
+            self.__timeout_id = GLib.timeout_add(ms,
                                                  self.__set_fraction,
                                                  fraction)
         else:
             Gtk.ProgressBar.set_fraction(self, fraction)
             if fraction == 1.0:
-                GLib.timeout_add(500, self.hide)
+                self.__timeout_id = GLib.timeout_add(500, self.hide)
 
 
 class ToolbarTitle(Gtk.Bin):
