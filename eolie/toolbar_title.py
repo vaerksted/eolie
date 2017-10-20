@@ -52,6 +52,9 @@ class SmoothProgressBar(Gtk.ProgressBar):
         """
         Gtk.ProgressBar.do_hide(self)
         Gtk.ProgressBar.set_fraction(self, 0)
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
+            self.__timeout_id = None
 
 #######################
 # PRIVATE             #
