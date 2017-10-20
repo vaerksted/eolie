@@ -443,7 +443,23 @@ class UriPopover(Gtk.Popover):
             Popup popover and wanted child
             @param child as str
         """
-        self.__stack.set_visible_child_name(child)
+        # Add a new view for importing bookmarks
+        if child == "bookmarks" and not El().bookmarks.get_all_tags():
+            grid = Gtk.Grid()
+            image = Gtk.Image.new_from_icon_name("bookmark-new-symbolic",
+                                                 Gtk.IconSize.BUTTON)
+            grid.add(image)
+            button = Gtk.Button.new_with_label(_("Import bookmarks"))
+            button.connect("clicked", self._on_import_button_clicked)
+            grid.add(button)
+            grid.set_column_spacing(5)
+            grid.set_property("valign", Gtk.Align.CENTER)
+            grid.set_property("halign", Gtk.Align.CENTER)
+            grid.show_all()
+            self.__stack.add(grid)
+            self.__stack.set_visible_child(grid)
+        else:
+            self.__stack.set_visible_child_name(child)
         Gtk.Popover.popup(self)
 
     def set_search_text(self, search):
@@ -606,6 +622,7 @@ class UriPopover(Gtk.Popover):
             Sync with Mozilla Sync
             @param button as Gtk.Button
         """
+        self.hide()
         from eolie.dialog_import_bookmarks import ImportBookmarksDialog
         dialog = ImportBookmarksDialog(self.__window)
         dialog.run()
