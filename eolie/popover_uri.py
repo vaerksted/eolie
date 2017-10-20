@@ -444,7 +444,7 @@ class UriPopover(Gtk.Popover):
             @param child as str
         """
         # Add a new view for importing bookmarks
-        if child == "bookmarks" and not El().bookmarks.get_all_tags():
+        if child == "bookmarks" and not El().bookmarks.is_empty():
             grid = Gtk.Grid()
             image = Gtk.Image.new_from_icon_name("bookmark-new-symbolic",
                                                  Gtk.IconSize.BUTTON)
