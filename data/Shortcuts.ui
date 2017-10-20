@@ -22,7 +22,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Settings</property>
-                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
+                <property name="accelerator">&lt;Primary&gt;s</property>
               </object>
             </child>
             <child>
@@ -146,7 +146,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Save page</property>
-                <property name="accelerator">&lt;Primary&gt;s</property>
+                <property name="accelerator">&lt;Primary&gt;&lt;Shift&gt;s</property>
               </object>
             </child>
             <child>

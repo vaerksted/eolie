@@ -378,7 +378,7 @@ class Application(Gtk.Application):
                                    ["<Control><Shift>p"])
         self.set_accels_for_action("win.shortcut::close_page", ["<Control>w"])
         self.set_accels_for_action("win.shortcut::quit", ["<Control>q"])
-        self.set_accels_for_action("win.shortcut::save", ["<Control>s"])
+        self.set_accels_for_action("win.shortcut::save", ["<Control><Shift>s"])
         self.set_accels_for_action("win.shortcut::filter", ["<Control>i"])
         self.set_accels_for_action("win.shortcut::reload",
                                    ["<Control>r", "F5"])
@@ -390,7 +390,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::search", ["<Control>k"])
         self.set_accels_for_action("win.shortcut::fullscreen", ["F11"])
         self.set_accels_for_action("app.settings",
-                                   ["<Control><Shift>s"])
+                                   ["<Control>s"])
         self.set_accels_for_action("win.shortcut::backward",
                                    ["<Alt>Left", "XF86Back"])
         self.set_accels_for_action("win.shortcut::forward",

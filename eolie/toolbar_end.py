@@ -163,6 +163,18 @@ class ToolbarEnd(Gtk.Bin):
         popover.popup()
         GLib.timeout_add(2000, popover.destroy)
 
+    def save_page(self):
+        """
+            Show a dialog allowing user to save current page
+        """
+        filechooser = Gtk.FileChooserNative.new(_("Save page"),
+                                                self.__window,
+                                                Gtk.FileChooserAction.SAVE,
+                                                _("Save"),
+                                                _("Cancel"))
+        filechooser.connect("response", self.__on_save_response)
+        filechooser.run()
+
     def save_images(self, uri, page_id):
         """
             Show a popover with all images for page id
@@ -348,13 +360,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         button.get_ancestor(Gtk.Popover).hide()
-        filechooser = Gtk.FileChooserNative.new(_("Save page"),
-                                                self.__window,
-                                                Gtk.FileChooserAction.SAVE,
-                                                _("Save"),
-                                                _("Cancel"))
-        filechooser.connect("response", self.__on_save_response)
-        filechooser.run()
+        self.save_page()
 
     def _on_print_button_clicked(self, button):
         """
