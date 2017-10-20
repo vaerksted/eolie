@@ -66,8 +66,13 @@ class SmoothProgressBar(Gtk.ProgressBar):
         """
         self.__timeout_id = None
         current = self.get_fraction()
-        if current + 0.025 < fraction:
-            Gtk.ProgressBar.set_fraction(self, current + 0.025)
+        if fraction - current > 0.5 or fraction == 1.0:
+            progress = current + 0.05
+        else:
+            progress = current + 0.025
+
+        if progress < fraction:
+            Gtk.ProgressBar.set_fraction(self, progress)
             self.__timeout_id = GLib.timeout_add(25,
                                                  self.__set_fraction,
                                                  fraction)
