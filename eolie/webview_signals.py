@@ -81,8 +81,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         # We are offscreen
         if self._window != self.get_toplevel():
             return
-        self.emit("shown")
         self._shown = True
+        self.emit("shown")
         self.set_atime(int(time()))
         self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
