@@ -39,6 +39,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__views = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
+        self.set_margin_top(1)
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
         builder = Gtk.Builder()
