@@ -1,3 +1,6 @@
 [submodule "subprojects/po"]
 	path = subprojects/po
 	url = https://github.com/gnumdk/eolie-po.git
+[submodule "subprojects/python-gobject"]
+	path = subprojects/python-gobject
+	url = https://github.com/GNOME/pygobject.git

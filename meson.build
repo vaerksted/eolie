@@ -54,4 +54,5 @@ configure_file(
   install_dir: bindir
 )
 
+meson.add_install_script('meson_fix_pygobject.py')
 meson.add_install_script('meson_post_install.py')

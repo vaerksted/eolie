@@ -4,8 +4,14 @@ webkitextension = dependency('webkit2gtk-web-extension-4.0')
 pyobject = dependency('pygobject-3.0')
 python3 = dependency('python3')
 
+pythonloader = configure_file(
+  input: 'pythonloader.c.in',
+  output: 'pythonloader.c',
+  configuration: conf
+)
+
 shared_library('pythonloader',
-               'pythonloader.c',
+               pythonloader,
                dependencies: [webkitextension, pyobject, python3],
                install: true,
                install_dir: extension_dir)
