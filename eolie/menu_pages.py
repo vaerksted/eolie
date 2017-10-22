@@ -88,16 +88,13 @@ class PagesMenu(Gio.Menu):
         if uri == "populars://":
             item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
         else:
-            icon = None
             # Try to set icon
-            for favicon in ["favicon", "favicon_alt"]:
-                filepath = El().art.get_path(uri, favicon)
-                f = Gio.File.new_for_path(filepath)
-                if f.query_exists():
-                    icon = Gio.FileIcon.new(f)
-                    break
-            if icon is not None:
-                item.set_icon(icon)
+            favicon_path = El().art.get_favicon_path(uri)
+            if favicon_path is not None:
+                f = Gio.File.new_for_path(favicon_path)
+                icon = Gio.FileIcon.new(f)
+                if icon is not None:
+                    item.set_icon(icon)
             else:
                 item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
