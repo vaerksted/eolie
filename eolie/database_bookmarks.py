@@ -518,8 +518,7 @@ class DatabaseBookmarks:
                                   bookmarks.uri,\
                                   bookmarks.title\
                                   FROM bookmarks\
-                                  WHERE bookmarks.atime != 0\
-                                  AND bookmarks.del=0\
+                                  WHERE bookmarks.del=0\
                                   AND bookmarks.guid != bookmarks.uri\
                                   ORDER BY bookmarks.mtime DESC")
             return list(result)
