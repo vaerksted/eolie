@@ -125,8 +125,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
-            favicon_path = El().art.get_path(netloc, "favicon")
-            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+            favicon_path = El().art.get_favicon_path(netloc)
+            if favicon_path is not None:
                 self.__image.set_from_file(favicon_path)
             else:
                 self.__set_initial_artwork(self.__netloc)
