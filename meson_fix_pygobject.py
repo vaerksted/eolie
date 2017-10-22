@@ -25,7 +25,7 @@ if not path.exists(eoliedir + '/gi'):
     call(['git', 'submodule', 'update'])
     chdir(pyobjectdir)
     call(['patch', '-p1', '-i', patch])
-    call(['./autogen.sh', '--prefix', tmproot])
+    call(['./autogen.sh', '--prefix', tmproot, '--disable-cairo'])
     call(['make'])
     call(['make', 'install'])
     gidir = find('gi', tmproot)
