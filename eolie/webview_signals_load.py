@@ -48,6 +48,7 @@ class WebViewLoadSignals:
             Set current favicon
         """
         resized = None
+        force_caching = False
         uri = self.get_uri()
         parsed = urlparse(uri)
         if parsed.netloc:
@@ -75,14 +76,19 @@ class WebViewLoadSignals:
             # If webpage has a favicon and quality is superior, resize it
             elif surface.get_width() > self.__favicon_width:
                 favicon_type = "favicon"
+                delta = El().art.get_delta(uri, favicon_type)
+                # We want to cache favicon again if recent (better quality)
+                if delta < 5:
+                    force_caching = True
                 resized = resize_favicon(surface)
                 self.__favicon_width = surface.get_width()
             # Save favicon if needed:
             if resized is not None:
-                if not El().art.exists(uri, favicon_type):
+                if force_caching or not El().art.exists(uri, favicon_type):
                     El().art.save_artwork(uri, resized, favicon_type)
                 if netloc is not None and\
-                        not El().art.exists(netloc, favicon_type):
+                        (force_caching or
+                         not El().art.exists(netloc, favicon_type)):
                     El().art.save_artwork(netloc, resized, favicon_type)
                 self.__set_initial_uri_favicon(resized,
                                                uri,

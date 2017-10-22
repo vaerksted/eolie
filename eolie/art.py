@@ -24,6 +24,8 @@ class Art:
         Base art manager
     """
 
+    __CACHE_DELTA = 43200
+
     def __init__(self):
         """
             Init base art
@@ -108,7 +110,8 @@ class Art:
     def get_path(self, uri, suffix):
         """
             Return cache image path
-            @param uri as str/None
+            @param uri as str
+            @param suffix as str
             @return str/None
         """
         if uri is None:
@@ -122,10 +125,12 @@ class Art:
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
-    def exists(self, uri, suffix):
+    def get_delta(self, uri, suffix):
         """
-            True if exists in cache and not older than 12 hours
-            @return bool
+            Return delta for uri and suffix
+            @param uri as str
+            @param suffix as str
+            @return int
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
         exists = f.query_exists()
@@ -134,9 +139,17 @@ class Art:
                                 Gio.FileQueryInfoFlags.NONE,
                                 None)
             mtime = int(info.get_attribute_as_string('time::modified'))
-            if time() - mtime > 43200:
-                exists = False
-        return self.__use_cache and exists
+            return time() - mtime
+        else:
+            return self.__CACHE_DELTA
+
+    def exists(self, uri, suffix):
+        """
+            True if exists in cache and not older than cache delta
+            @return bool
+        """
+        delta = self.get_delta(uri, suffix)
+        return self.__use_cache and delta < self.__CACHE_DELTA
 
     def vacuum(self):
         """
