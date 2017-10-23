@@ -27,23 +27,60 @@ class WebViewLoadSignals:
         """
             Init class
         """
+        self.__snapshot_id = None
         self.__favicon_width = 0
 
-    def set_snapshot(self, uri):
+#######################
+# PROTECTED           #
+#######################
+    def _on_map(self, webview):
+        """
+            Connect all signals
+            @param webview as WebView
+        """
+        if not self.view.subsurface:
+            self.connect("load-changed", self.__on_load_changed)
+            self.connect("title-changed", self.__on_title_changed)
+            self.connect("uri-changed", self.__on_uri_changed)
+            self.connect("notify::favicon", self.__on_notify_favicon)
+            self.connect("notify::estimated-load-progress",
+                         self.__on_estimated_load_progress)
+            self.get_back_forward_list().connect(
+                                 "changed",
+                                 self.__on_back_forward_list_changed,
+                                 webview)
+
+    def _on_unmap(self, webview):
+        """
+            Disconnect all signals
+            @param webview as WebView
+        """
+        if not self.view.subsurface:
+            self.disconnect_by_func(self.__on_load_changed)
+            self.disconnect_by_func(self.__on_title_changed)
+            self.disconnect_by_func(self.__on_uri_changed)
+            self.disconnect_by_func(self.__on_notify_favicon)
+            self.disconnect_by_func(self.__on_estimated_load_progress)
+            self.get_back_forward_list().disconnect_by_func(
+                                         self.__on_back_forward_list_changed)
+
+#######################
+# PRIVATE             #
+#######################
+    def __set_snapshot(self):
         """
             Set webpage preview
-            @param uri as str
         """
-        if uri == self.get_uri() and not self.ephemeral:
+        self.__snapshot_id = None
+        if not self.ephemeral:
             self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                               WebKit2.SnapshotOptions.NONE,
                               self._cancellable,
                               get_snapshot,
                               self.__on_snapshot,
-                              uri,
                               True)
 
-    def set_favicon(self):
+    def __set_favicon(self):
         """
             Set current favicon
         """
@@ -96,43 +133,6 @@ class WebViewLoadSignals:
                                                favicon_type)
         self.emit("favicon-changed", resized, icon_theme_artwork)
 
-#######################
-# PROTECTED           #
-#######################
-    def _on_map(self, webview):
-        """
-            Connect all signals
-            @param webview as WebView
-        """
-        if not self.view.subsurface:
-            self.connect("load-changed", self.__on_load_changed)
-            self.connect("title-changed", self.__on_title_changed)
-            self.connect("uri-changed", self.__on_uri_changed)
-            self.connect("notify::favicon", self.__on_notify_favicon)
-            self.connect("notify::estimated-load-progress",
-                         self.__on_estimated_load_progress)
-            self.get_back_forward_list().connect(
-                                 "changed",
-                                 self.__on_back_forward_list_changed,
-                                 webview)
-
-    def _on_unmap(self, webview):
-        """
-            Disconnect all signals
-            @param webview as WebView
-        """
-        if not self.view.subsurface:
-            self.disconnect_by_func(self.__on_load_changed)
-            self.disconnect_by_func(self.__on_title_changed)
-            self.disconnect_by_func(self.__on_uri_changed)
-            self.disconnect_by_func(self.__on_notify_favicon)
-            self.disconnect_by_func(self.__on_estimated_load_progress)
-            self.get_back_forward_list().disconnect_by_func(
-                                         self.__on_back_forward_list_changed)
-
-#######################
-# PRIVATE             #
-#######################
     def __set_initial_uri_favicon(self, surface, uri, favicon_type):
         """
             Set favicon for initial uri
@@ -154,7 +154,7 @@ class WebViewLoadSignals:
         # Do not set favicon now, will be down on WebKit2.LoadEvent.FINISHED
         # Prevent loading/caching a builtin one if page never finishes to load
         if self.get_favicon() is not None:
-            self.set_favicon()
+            self.__set_favicon()
 
     def __on_load_changed(self, webview, event):
         """
@@ -170,6 +170,9 @@ class WebViewLoadSignals:
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self.__favicon_width = 0
+            if self.__snapshot_id is not None:
+                GLib.source_remove(self.__snapshot_id)
+                self.__snapshot_id = None
             self._window.container.current.find_widget.set_search_mode(False)
             self._window.toolbar.title.set_title(uri)
             self._window.toolbar.title.show_readable_button(False)
@@ -191,7 +194,8 @@ class WebViewLoadSignals:
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
             if parsed.scheme != "populars":
-                GLib.timeout_add(3000, self.set_snapshot, uri)
+                self.__snapshot_id = GLib.timeout_add(3000,
+                                                      self.__set_snapshot)
 
     def __on_title_changed(self, webview, title):
         """
@@ -232,13 +236,14 @@ class WebViewLoadSignals:
         """
         self._window.toolbar.actions.set_actions(webview)
 
-    def __on_snapshot(self, surface, uri, first_pass):
+    def __on_snapshot(self, surface, first_pass):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param uri as str
             @param first_pass as bool
         """
+        uri = self.get_uri()
         # The 32767 limit on the width/height dimensions
         # of an image surface is new in cairo 1.10,
         # try with WebKit2.SnapshotRegion.VISIBLE
@@ -248,7 +253,6 @@ class WebViewLoadSignals:
                               self._cancellable,
                               get_snapshot,
                               self.__on_snapshot,
-                              uri,
                               False)
             return
         # Do not cache snapshot on error

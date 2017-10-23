@@ -334,8 +334,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__spinner.stop()
             if webview.is_playing_audio():
                 self.__audio_indicator.show()
-            if self.__favicon is None:
-                GLib.timeout_add(500, webview.set_favicon)
             GLib.timeout_add(500, self.__set_snapshot)
 
     def __on_webview_shown(self, webview):
