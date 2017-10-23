@@ -2,7 +2,7 @@
 
 from os import environ, path, chdir, walk, rename, mkdir
 from subprocess import call
-from shutil import move
+from shutil import move, rmtree
 import sys
 
 def find(name, p):
@@ -18,18 +18,18 @@ builddir = environ.get('MESON_BUILD_ROOT')
 tmproot = path.join(builddir, "tmp")
 sourcedir = environ.get('MESON_SOURCE_ROOT')
 patch = path.join(sourcedir, 'python-gobject-fix-segfault.diff')
-pyobjectdir = path.join(sourcedir, "subprojects", "python-gobject")
+pygobjectdir = path.join(sourcedir, "pygobject-3.26.0")
 
 if not path.exists(gidir):
     print('Installing python-gobject fix')
-    call(['git', 'submodule', 'init'])
-    call(['git', 'submodule', 'update'])
-    chdir(pyobjectdir)
+    chdir(sourcedir)
+    call(['tar', 'xvf', 'pygobject-3.26.0.tar.xz'])
+    chdir(pygobjectdir)
     call(['patch', '-p1', '-i', patch])
-    call(['./autogen.sh', '--prefix', tmproot, '--enable-cairo'])
+    call(['./configure', '--prefix', tmproot, '--enable-cairo'])
     call(['make'])
     call(['make', 'install'])
     buildgidir = find('gi', tmproot)
     move(buildgidir, gidir)
-    call(['patch', '-R', '-p1', '-i', patch])
     chdir(sourcedir)
+    rmtree(pygobjectdir)
