@@ -59,23 +59,24 @@ class WebViewLoadSignals:
         icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
                                                              self.ephemeral)
         if icon_theme_artwork is None:
+            favicon_type = "favicon"
             # Try to get a favicon
             if surface is None:
-                favicon_type = "favicon_alt"
-                # Build a favicon from uri
-                # Never update such favicon as we want to keep same color
-                # get_char_surface() => random color
+                # Build a custom favicon if cache is empty for netloc
                 if netloc is not None:
-                    resized = El().art.get_artwork(netloc,
-                                                   favicon_type,
-                                                   self.get_scale_factor(),
-                                                   ArtSize.FAVICON,
-                                                   ArtSize.FAVICON)
+                    for favicon in ["favicon", "favicon_alt"]:
+                        resized = El().art.get_artwork(netloc,
+                                                       favicon,
+                                                       self.get_scale_factor(),
+                                                       ArtSize.FAVICON,
+                                                       ArtSize.FAVICON)
+                        if resized is not None:
+                            favicon_type = favicon
+                            break
                     if resized is None:
                         resized = get_char_surface(netloc[0])
             # If webpage has a favicon and quality is superior, resize it
             elif surface.get_width() > self.__favicon_width:
-                favicon_type = "favicon"
                 delta = El().art.get_delta(uri, favicon_type)
                 # We want to cache favicon again if recent (better quality)
                 if delta < 5:
