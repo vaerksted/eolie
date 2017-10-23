@@ -243,7 +243,6 @@ class WebViewLoadSignals:
             @param uri as str
             @param first_pass as bool
         """
-        uri = self.get_uri()
         # The 32767 limit on the width/height dimensions
         # of an image surface is new in cairo 1.10,
         # try with WebKit2.SnapshotRegion.VISIBLE
@@ -256,8 +255,9 @@ class WebViewLoadSignals:
                               False)
             return
         # Do not cache snapshot on error
-        if self.error is not None or uri != self.get_uri():
+        if self.error is not None:
             return
+        uri = self.get_uri()
         # We also cache initial URI
         uris = [uri]
         if self.initial_uri not in uris:
