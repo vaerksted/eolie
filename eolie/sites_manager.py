@@ -212,11 +212,7 @@ class SitesManager(Gtk.EventBox):
         if uri is None:
             return
         ephemeral = visible.webview.ephemeral
-        netloc = urlparse(uri).netloc
-        if netloc:
-            netloc = netloc.lstrip("www.")
-        else:
-            netloc = "%s://" % urlparse(uri).scheme
+        netloc = self.__get_netloc(uri)
         for child in self.__box.get_children():
             if (child.netloc == netloc and
                     not ephemeral and
