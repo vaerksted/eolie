@@ -93,7 +93,6 @@ class WebViewLoadSignals:
                     El().art.save_artwork(netloc, resized, favicon_type)
                 self.__set_initial_uri_favicon(resized,
                                                uri,
-                                               self.initial_uri,
                                                favicon_type)
         self.emit("favicon-changed", resized, icon_theme_artwork)
 
@@ -134,8 +133,7 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __set_initial_uri_favicon(self, surface, uri,
-                                  initial_uri, favicon_type):
+    def __set_initial_uri_favicon(self, surface, uri, favicon_type):
         """
             Set favicon for initial uri
             @param surface as cairo.surface
@@ -143,13 +141,9 @@ class WebViewLoadSignals:
             @param initial_uri as str
             @param favicon_type as str
         """
-        if initial_uri != uri and initial_uri is not None:
-            parsed = urlparse(uri)
-            initial_parsed = urlparse(initial_uri)
-            if parsed.netloc.lstrip("www.") ==\
-                    initial_parsed.netloc.lstrip("www.") and\
-                    not El().art.exists(initial_uri, favicon_type):
-                El().art.save_artwork(initial_uri, surface, favicon_type)
+        if self.initial_uri != uri and self.initial_uri is not None:
+            if not El().art.exists(self.initial_uri, favicon_type):
+                El().art.save_artwork(self.initial_uri, surface, favicon_type)
 
     def __on_notify_favicon(self, webview, favicon):
         """
@@ -262,10 +256,7 @@ class WebViewLoadSignals:
             return
         # We also cache initial URI
         uris = [uri]
-        parsed = urlparse(uri)
-        initial_parsed = urlparse(self.initial_uri)
-        if parsed.netloc == initial_parsed.netloc and\
-                self.initial_uri not in uris:
+        if self.initial_uri not in uris:
             uris.append(self.initial_uri)
         for uri in uris:
             if not El().art.exists(uri, "start"):

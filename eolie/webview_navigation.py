@@ -166,8 +166,6 @@ class WebViewNavigation:
         """
         self.__title = ""
         uri = webview.get_uri()
-        if not self.is_loading():
-            self.__initial_uri = None
         self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
@@ -306,7 +304,7 @@ class WebViewNavigation:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
                                                           uri)
-            self.__initial_uri = uri
+            self.__initial_uri = uri.rstrip('/')
             self._cancelled = False
             # Destroy current popups
             for popup in self.__popups:
@@ -376,6 +374,7 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__initial_uri = None
             if El().show_tls:
                 try:
                     from OpenSSL import crypto
