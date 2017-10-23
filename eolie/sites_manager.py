@@ -207,17 +207,9 @@ class SitesManager(Gtk.EventBox):
             Mark current child as visible
             Unmark all others
         """
-        visible = self.__window.container.current
-        uri = visible.webview.get_uri()
-        if uri is None:
-            return
-        ephemeral = visible.webview.ephemeral
-        netloc = self.__get_netloc(uri)
+        current = self.__window.container.current
         for child in self.__box.get_children():
-            if (child.netloc == netloc and
-                    not ephemeral and
-                    not child.ephemeral) or\
-                    (ephemeral and child.ephemeral):
+            if current in child.views:
                 child.get_style_context().add_class("sidebar-item-selected")
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
