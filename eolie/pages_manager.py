@@ -85,14 +85,10 @@ class PagesManager(Gtk.EventBox):
         visible = self.__window.container.current
         for child in self.__box.get_children():
             style_context = child.get_style_context()
-            if child.view.webview.ephemeral:
-                class_name = "sidebar-item-selected-private"
-            else:
-                class_name = "sidebar-item-selected"
             if child.view == visible:
-                style_context.add_class(class_name)
+                style_context.add_class("sidebar-item-selected")
             else:
-                style_context.remove_class(class_name)
+                style_context.remove_class("sidebar-item-selected")
 
     def search_grab_focus(self):
         """

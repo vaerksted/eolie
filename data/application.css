@@ -59,11 +59,6 @@
     background-color: @theme_selected_bg_color;
 }
 
-.sidebar-item-selected-private{
-    border-color: #C71585;
-    background-color: #C71585;
-}
-
 .invalid-entry {
     color: @theme_fg_color;
     background-color: alpha(red, 0.1);
