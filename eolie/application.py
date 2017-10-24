@@ -57,9 +57,6 @@ class Application(Gtk.Application):
             @param version as str
             @param extension_dir as str
         """
-        # Remove this as soon https://bugs.webkit.org/show_bug.cgi?id=178387
-        # is fixed
-        GLib.setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1", True)
         self.__version = version
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 16:
