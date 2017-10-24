@@ -16,6 +16,7 @@ from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
 from locale import strcoll
+from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
 from eolie.define import El, Type, TimeSpan, TimeSpanValues
@@ -681,8 +682,9 @@ class UriPopover(Gtk.Popover):
 
         # Update titlebar
         uri = row.item.get_property("uri")
-        if not uri:
-            return
+        parsed = urlparse(uri)
+        if parsed.scheme not in ["http", "https", "file"]:
+            uri = ""
         self.__window.toolbar.title.set_text_entry(uri)
         # Scroll to row
         scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
