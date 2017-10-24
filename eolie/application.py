@@ -85,6 +85,9 @@ class Application(Gtk.Application):
         GLib.set_prgname('org.gnome.Eolie')
         self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Debug Eolie", None)
+        self.add_main_option("force-compositing", b'c', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Force compositing mode",
+                             None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
                              None)
@@ -529,6 +532,9 @@ class Application(Gtk.Application):
             self.debug = True
         if options.contains("show-tls"):
             self.show_tls = True
+        if not options.contains("force-compositing"):
+            # For WebKitGTK 2.18, swap if better with 2.20
+            GLib.setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1", True)
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
