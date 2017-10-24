@@ -190,6 +190,7 @@ class WebViewLoadSignals:
             self._window.toolbar.title.set_title(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.show_spinner(False)
+            self.__set_favicon()
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
