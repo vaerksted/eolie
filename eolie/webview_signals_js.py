@@ -27,6 +27,7 @@ class WebViewJsSignals:
             Init class
         """
         self.__js_timeout_id = None
+        self.__google_fix_count = 0
         self.__reset_js_blocker()
         self.connect("script-dialog", self.__on_script_dialog)
 
@@ -100,11 +101,31 @@ class WebViewJsSignals:
         """
         # Javascript execution happened
         if not self.is_loading():
+            # Special google notifications fix
+            # https://bugs.webkit.org/show_bug.cgi?id=175189
+            resource_uri = resource.get_uri()
+            if resource_uri.startswith("https://notifications.google.com/"):
+                self.__google_fix_count += 1
+                resource.connect("finished", self.__on_resource_load_finished)
+                cookie_manager = self.get_context().get_cookie_manager()
+                cookie_manager.set_accept_policy(0)
+            # Update credentials
             if self.__js_timeout_id is not None:
                 GLib.source_remove(self.__js_timeout_id)
             self.__js_timeout_id = GLib.timeout_add(500,
                                                     self.__on_js_timeout,
                                                     webview)
+
+    def __on_resource_load_finished(self, resource):
+        """
+            Restore cookie storage default behaviour
+            @param resource as WebKit2.WebResource
+        """
+        self.__google_fix_count -= 1
+        if self.__google_fix_count == 0:
+            cookie_manager = self.get_context().get_cookie_manager()
+            storage = El().settings.get_enum("cookie-storage")
+            cookie_manager.set_accept_policy(storage)
 
     def __on_js_timeout(self, webview):
         """
