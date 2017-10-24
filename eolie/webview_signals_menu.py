@@ -255,11 +255,13 @@ class WebViewMenuSignals:
                                  self.__on_preview_snapshot,
                                  webview,
                                  uri, False)
-        El().art.save_artwork(uri, surface, "start")
-        self.reload()
-        window = webview.get_toplevel()
-        webview.destroy()
-        window.destroy()
+        else:
+            if surface is not None:
+                El().art.save_artwork(uri, surface, "start")
+                self.reload()
+            window = webview.get_toplevel()
+            webview.destroy()
+            window.destroy()
 
     def __on_snapshot(self, webview, result, first_pass):
         """
