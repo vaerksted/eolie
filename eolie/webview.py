@@ -137,17 +137,6 @@ class WebView(WebKit2.WebView):
         El().websettings.set_zoom(100, self.get_uri())
         self.update_zoom_level()
 
-    def get_uri(self):
-        """
-            Get webview uri
-            @return str
-        """
-        uri = WebKit2.WebView.get_uri(self)
-        if uri is not None:
-            return uri.rstrip('/')
-        else:
-            return None
-
     def get_title(self):
         """
             Get webview title
