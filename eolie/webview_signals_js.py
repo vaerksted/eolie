@@ -103,12 +103,16 @@ class WebViewJsSignals:
         if not self.is_loading():
             # Special google notifications fix
             # https://bugs.webkit.org/show_bug.cgi?id=175189
-            resource_uri = resource.get_uri()
-            if resource_uri.startswith("https://notifications.google.com/"):
-                self.__google_fix_count += 1
-                resource.connect("finished", self.__on_resource_load_finished)
-                cookie_manager = self.get_context().get_cookie_manager()
-                cookie_manager.set_accept_policy(0)
+            storage = El().settings.get_enum("cookie-storage")
+            # WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY
+            if storage == 2:
+                uri = resource.get_uri()
+                if uri.startswith("https://notifications.google.com/"):
+                    self.__google_fix_count += 1
+                    resource.connect("finished",
+                                     self.__on_resource_load_finished)
+                    cookie_manager = self.get_context().get_cookie_manager()
+                    cookie_manager.set_accept_policy(0)
             # Update credentials
             if self.__js_timeout_id is not None:
                 GLib.source_remove(self.__js_timeout_id)
