@@ -142,9 +142,8 @@ class WebViewLoadSignals:
             @param favicon_type as str
         """
         if self.initial_uri is not None:
-            striped_initial_uri = self.initial_uri.rstrip("/")
             striped_uri = uri.rstrip("/")
-            if striped_initial_uri != striped_uri:
+            if self.initial_uri != striped_uri:
                 if not El().art.exists(self.initial_uri, favicon_type):
                     El().art.save_artwork(self.initial_uri,
                                           surface,
@@ -266,10 +265,9 @@ class WebViewLoadSignals:
         uri = self.get_uri()
         # We also cache initial URI
         uris = [uri.rstrip("/")]
-        if self.initial_uri is not None:
-            striped_initial_uri = self.initial_uri.rstrip("/")
-            if striped_initial_uri not in uris:
-                uris.append(self.initial_uri)
+        if self.initial_uri is not None and\
+                self.initial_uri not in uris:
+            uris.append(self.initial_uri)
         for uri in uris:
             if not El().art.exists(uri, "start"):
                 El().art.save_artwork(uri, surface, "start")

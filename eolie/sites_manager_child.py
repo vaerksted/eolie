@@ -55,11 +55,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
-        favicon_path = El().art.get_favicon_path(netloc)
-        if favicon_path is not None:
-            self.__image.set_from_file(favicon_path)
-        else:
-            self.__set_initial_artwork(self.__netloc)
+        self.__set_artwork()
         self.add(widget)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
@@ -126,11 +122,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
-            favicon_path = El().art.get_favicon_path(netloc)
-            if favicon_path is not None:
-                self.__image.set_from_file(favicon_path)
-            else:
-                self.__set_initial_artwork(self.__netloc)
+            self.__set_artwork()
             self.__netloc_label.set_text(self.__netloc)
 
     def update_label(self):
@@ -237,21 +229,22 @@ class SitesManagerChild(Gtk.ListBoxRow):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __set_initial_artwork(self, uri):
+    def __set_artwork(self):
         """
             Set initial artwork on widget
-            @param uri as str
-            @param ephemeral as bool
         """
-        artwork = El().art.get_icon_theme_artwork(
-                                                 uri,
-                                                 self.__ephemeral)
+        artwork = El().art.get_icon_theme_artwork(self.__netloc,
+                                                  self.__ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
         else:
-            self.__image.set_from_icon_name("applications-internet",
-                                            Gtk.IconSize.INVALID)
+            favicon_path = El().art.get_favicon_path(self.__netloc)
+            if favicon_path is not None:
+                self.__image.set_from_file(favicon_path)
+            else:
+                self.__image.set_from_icon_name("applications-internet",
+                                                Gtk.IconSize.INVALID)
 
     def __on_webview_favicon_changed(self, webview, favicon,
                                      icon_theme_artwork):

@@ -168,16 +168,16 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                 image.set_from_surface(self.__favicon)
             else:
                 uri = self.__view.webview.get_uri()
-                favicon_path = El().art.get_favicon_path(uri)
-                if favicon_path is not None:
-                    image.set_from_file(favicon_path)
+                artwork = El().art.get_icon_theme_artwork(
+                                             uri,
+                                             self.view.webview.ephemeral)
+                if artwork is not None:
+                    image.set_from_icon_name(artwork,
+                                             Gtk.IconSize.INVALID)
                 else:
-                    artwork = El().art.get_icon_theme_artwork(
-                                                 uri,
-                                                 self.view.webview.ephemeral)
-                    if artwork is not None:
-                        image.set_from_icon_name(artwork,
-                                                 Gtk.IconSize.INVALID)
+                    favicon_path = El().art.get_favicon_path(uri)
+                    if favicon_path is not None:
+                        image.set_from_file(favicon_path)
                     else:
                         image.set_from_icon_name("applications-internet",
                                                  Gtk.IconSize.INVALID)
