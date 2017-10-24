@@ -101,7 +101,8 @@ class WebViewDBusSignals:
         for k, v in fields.items():
             name = string_at(k).decode("utf-8")
             value = string_at(v).decode("utf-8")
-            forms.append((name, value))
+            if name and value:
+                forms.append((name, value))
         page_id = webview.get_page_id()
         El().helper.call("GetAuthForms",
                          GLib.Variant("(aasi)", (forms, page_id)),

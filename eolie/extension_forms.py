@@ -42,12 +42,16 @@ class FormsExtension:
         # it's needed because page may have changed
         self.update_inputs_list(webpage)
         for form_input in self.__form_inputs:
-            self.__helper.get(form_input["uri"],
-                              form_input["username"].get_name(),
-                              form_input["password"].get_name(),
-                              self.set_input_forms,
-                              webpage,
-                              form_input)
+            form_input_username = form_input["username"].get_name()
+            form_input_password = form_input["password"].get_name()
+            if form_input_username is not None and\
+                    form_input_password is not None:
+                self.__helper.get(form_input["uri"],
+                                  form_input_username,
+                                  form_input_password,
+                                  self.set_input_forms,
+                                  webpage,
+                                  form_input)
 
     def get_inputs(self, webpage):
         """
@@ -153,11 +157,13 @@ class FormsExtension:
                                       WebKit2WebExtension.DOMHTMLInputElement):
                         h += 1
                         continue
-                    if element.get_input_type() == "password":
+                    if element.get_input_type() == "password" and\
+                            element.get_name() is not None:
                         form_input["password"] = element
                     elif element.get_input_type() in ["text",
                                                       "email",
-                                                      "search"]:
+                                                      "search"] and\
+                            element.get_name() is not None:
                         form_input["username"] = element
                     h += 1
                 keys = form_input.keys()
