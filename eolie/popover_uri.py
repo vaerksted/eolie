@@ -682,6 +682,8 @@ class UriPopover(Gtk.Popover):
 
         # Update titlebar
         uri = row.item.get_property("uri")
+        if not uri:
+            return
         parsed = urlparse(uri)
         if parsed.scheme not in ["http", "https", "file"]:
             uri = ""

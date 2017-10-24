@@ -164,9 +164,11 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param uri as GParamSpec
         """
-        self.__title = ""
         uri = webview.get_uri()
-        self.emit("uri-changed", uri)
+        # JS bookmark (Bookmarklet)
+        if not uri.startswith("javascript:"):
+            self.__title = ""
+            self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
         """
