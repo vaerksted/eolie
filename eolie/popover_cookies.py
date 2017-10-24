@@ -150,6 +150,7 @@ class CookiesPopover(Gtk.Popover):
         sql = sqlite3.connect(El().cookies_path, 600.0)
         sql.execute("DELETE FROM moz_cookies")
         sql.commit()
+        self.popdown()
 
 #######################
 # PRIVATE             #
