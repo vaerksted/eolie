@@ -131,7 +131,8 @@ class WebViewLoadSignals:
                 self.__set_initial_uri_favicon(resized,
                                                uri,
                                                favicon_type)
-        self.emit("favicon-changed", resized, icon_theme_artwork)
+        if resized is not None or icon_theme_artwork is not None:
+            self.emit("favicon-changed", resized, icon_theme_artwork)
 
     def __set_initial_uri_favicon(self, surface, uri, favicon_type):
         """

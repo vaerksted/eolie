@@ -256,6 +256,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if favicon is not None:
             self.__image.set_from_surface(favicon)
+        elif icon_theme_artwork is not None:
+            self.__image.set_from_icon_name(icon_theme_artwork,
+                                            Gtk.IconSize.INVALID)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
