@@ -211,6 +211,10 @@ class WebViewLoadSignals:
         """
         if webview.get_mapped():
             self._window.toolbar.title.set_title(title)
+            # Js update, force favicon caching for current uri
+            if not self.is_loading():
+                self.__favicon_width = 0
+                self.__set_favicon()
         self._window.container.sites_manager.update_label(self.view)
 
     def __on_uri_changed(self, webview, uri):
