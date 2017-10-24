@@ -265,9 +265,11 @@ class WebViewLoadSignals:
             return
         uri = self.get_uri()
         # We also cache initial URI
-        uris = [uri]
-        if self.initial_uri is not None and self.initial_uri not in uris:
-            uris.append(self.initial_uri)
+        uris = [uri.rstrip("/")]
+        if self.initial_uri is not None:
+            striped_initial_uri = self.initial_uri.rstrip("/")
+            if striped_initial_uri not in uris:
+                uris.append(self.initial_uri)
         for uri in uris:
             if not El().art.exists(uri, "start"):
                 El().art.save_artwork(uri, surface, "start")
