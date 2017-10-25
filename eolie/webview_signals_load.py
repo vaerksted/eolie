@@ -28,7 +28,6 @@ class WebViewLoadSignals:
             Init class
         """
         self.__snapshot_id = None
-        self.__favicon_width = 0
 
 #######################
 # PROTECTED           #
@@ -80,9 +79,10 @@ class WebViewLoadSignals:
                               self.__on_snapshot,
                               True)
 
-    def __set_favicon(self):
+    def __set_favicon(self, save=True):
         """
             Set current favicon
+            @param save as bool
         """
         resized = None
         force_caching = False
@@ -112,15 +112,10 @@ class WebViewLoadSignals:
                             break
                     if resized is None:
                         resized = get_char_surface(netloc[0])
-            # If webpage has a favicon and quality is superior, resize it
-            elif surface.get_width() > self.__favicon_width:
-                delta = El().art.get_delta(uri, favicon_type)
-                # We want to cache favicon again if recent (better quality)
-                if delta < 5:
-                    force_caching = True
+            else:
                 resized = resize_favicon(surface)
-                self.__favicon_width = surface.get_width()
-            # Save favicon if needed:
+
+            # Save favicon if needed
             if resized is not None:
                 if force_caching or not El().art.exists(uri, favicon_type):
                     El().art.save_artwork(uri, resized, favicon_type)
@@ -131,6 +126,7 @@ class WebViewLoadSignals:
                 self.__set_initial_uri_favicon(resized,
                                                uri,
                                                favicon_type)
+
         if resized is not None or icon_theme_artwork is not None:
             self.emit("favicon-changed", resized, icon_theme_artwork)
 
@@ -156,10 +152,12 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param favicon as Gparam
         """
-        # Do not set favicon now, will be down on WebKit2.LoadEvent.FINISHED
-        # Prevent loading/caching a builtin one if page never finishes to load
-        if self.get_favicon() is not None:
-            self.__set_favicon()
+        # Do not save favicon on notify, we may have a wrong favicon here
+        # Wrong size, wrong value
+        surface = self.get_favicon()
+        if surface is not None:
+            resized = resize_favicon(surface)
+            self.emit("favicon-changed", resized, None)
 
     def __on_load_changed(self, webview, event):
         """
@@ -174,7 +172,6 @@ class WebViewLoadSignals:
         parsed = urlparse(uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            self.__favicon_width = 0
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
                 self.__snapshot_id = None
@@ -213,7 +210,6 @@ class WebViewLoadSignals:
             self._window.toolbar.title.set_title(title)
             # Js update, force favicon caching for current uri
             if not self.is_loading():
-                self.__favicon_width = 0
                 self.__set_favicon()
         self._window.container.sites_manager.update_label(self.view)
 
