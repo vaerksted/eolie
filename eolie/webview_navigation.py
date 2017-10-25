@@ -185,6 +185,7 @@ class WebViewNavigation:
         self.emit("title-changed", title)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
+            self.__initial_uri = None
             self.set_favicon()
         if self.__js_timeout is not None:
             GLib.source_remove(self.__js_timeout)
