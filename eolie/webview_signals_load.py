@@ -79,10 +79,9 @@ class WebViewLoadSignals:
                               self.__on_snapshot,
                               True)
 
-    def __set_favicon(self, save=True):
+    def __set_favicon(self):
         """
             Set current favicon
-            @param save as bool
         """
         resized = None
         force_caching = False
