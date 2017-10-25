@@ -62,11 +62,21 @@ class WebViewMenuSignals:
             El().add_action(action)
             action.connect("activate",
                            self.__on_open_new_page_activate,
-                           hit.get_link_uri())
+                           hit.get_link_uri(), False)
             item = WebKit2.ContextMenuItem.new_from_gaction(
                                              action,
                                              _("Open link in a new page"),
                                              None)
+            context_menu.insert(item, 1)
+            action = Gio.SimpleAction(name="open_new_private_page")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_open_new_page_activate,
+                           hit.get_link_uri(), True)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                         action,
+                                         _("Open link in a new private page"),
+                                         None)
             context_menu.insert(item, 1)
         user_data = context_menu.get_user_data()
         if user_data is not None and user_data.get_string():
@@ -138,16 +148,17 @@ class WebViewMenuSignals:
                 else:
                     context_menu.insert(item, n_items)
 
-    def __on_open_new_page_activate(self, action, variant, uri):
+    def __on_open_new_page_activate(self, action, variant, uri, ephemeral):
         """
             Open link in a new page
             @param action as Gio.SimpleAction
             @param variant as GLib.Variant
             @param uri as str
+            @param ephemeral as bool
         """
         self._window.container.add_webview(uri,
                                            Gdk.WindowType.CHILD,
-                                           self.ephemeral)
+                                           self.ephemeral or ephemeral)
 
     def __on_search_words_activate(self, action, variant, selection):
         """
