@@ -59,8 +59,8 @@ class Application(Gtk.Application):
         """
         self.__version = version
         # First check WebKit2 version
-        if WebKit2.MINOR_VERSION < 16:
-            exit("You need WebKit2GTK >= 2.16")
+        if WebKit2.MINOR_VERSION < 18:
+            exit("You need WebKit2GTK >= 2.18")
         Gtk.Application.__init__(
                             self,
                             application_id='org.gnome.Eolie',

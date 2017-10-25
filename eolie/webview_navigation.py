@@ -183,6 +183,9 @@ class WebViewNavigation:
             return
         self.__title = title
         self.emit("title-changed", title)
+        # Js update, force favicon caching for current uri
+        if not self.is_loading():
+            self.set_favicon()
         if self.__js_timeout is not None:
             GLib.source_remove(self.__js_timeout)
         self.__js_timeout = GLib.timeout_add(
@@ -302,6 +305,7 @@ class WebViewNavigation:
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self.stop_snapshot()
             if self.view is not None and not self.view.subsurface:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
@@ -376,7 +380,9 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.__initial_uri = None
+            self.set_favicon()
+            if parsed.scheme != "populars":
+                self.set_snapshot()
             if El().show_tls:
                 try:
                     from OpenSSL import crypto

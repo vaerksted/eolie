@@ -20,6 +20,7 @@ from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
+from eolie.webview_artwork import WebViewArtwork
 from eolie.list import LinkedList
 
 
@@ -364,6 +365,7 @@ class WebView(WebKit2.WebView):
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
+        WebViewArtwork.__init__(self)
         self._window = window
         self.__view = view
         self._content_manager = content_manager
@@ -515,6 +517,7 @@ class WebView(WebKit2.WebView):
             self._window.toolbar.title.show_indicator(Indicator.NONE)
 
 
-class WebViewMeta(WebViewNavigation, WebView, WebViewErrors, WebViewSignals):
+class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
+                  WebViewSignals, WebViewArtwork):
     def __init__(self):
         pass
