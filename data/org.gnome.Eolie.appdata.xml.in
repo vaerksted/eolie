@@ -5,9 +5,7 @@
  <_name>Eolie</_name>
  <_summary>Web browser</_summary>
  <description>
-    <_p>
 	Eolie is a new GNOME web browser.
-  </_p>
  </description>
  <screenshots>
     <screenshot type="default">https://raw.githubusercontent.com/gnumdk/eolie-web/master/screenshot.jpg</screenshot>
