@@ -587,6 +587,9 @@ class ToolbarTitle(Gtk.Bin):
                 if self.__entry_changed_id is not None:
                     GLib.source_remove(self.__entry_changed_id)
                     self.__entry_changed_id = None
+                if self.__show_related_id is not None:
+                    GLib.source_remove(self.__show_related_id)
+                    self.__show_related_id = None
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
