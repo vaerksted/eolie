@@ -96,8 +96,9 @@ class ToolbarTitle(Gtk.Bin):
         self.__window = window
         self.__input_warning_shown = False
         self.__signal_id = None
+        self.__entry_changed_id = None
+        self.__show_related_id = None
         self.__secure_content = True
-        self.__entry_changed_timeout = None
         self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
         self.__uri = ""
@@ -583,9 +584,9 @@ class ToolbarTitle(Gtk.Bin):
                             uri = "%s://%s" % (db_parsed.scheme, uri)
                 self.__window.container.load_uri(uri)
                 self.__window.container.set_expose(False)
-                if self.__entry_changed_timeout is not None:
-                    GLib.source_remove(self.__entry_changed_timeout)
-                    self.__entry_changed_timeout = None
+                if self.__entry_changed_id is not None:
+                    GLib.source_remove(self.__entry_changed_id)
+                    self.__entry_changed_id = None
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
@@ -778,6 +779,7 @@ class ToolbarTitle(Gtk.Bin):
             Walk all available views and show it if related to current uri
             @param value as str
         """
+        self.__show_related_id = None
         if not value:
             self.__window.container.set_expose(False)
             return
@@ -899,9 +901,9 @@ class ToolbarTitle(Gtk.Bin):
                 self.__popover.popup("bookmarks")
         elif parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
-        if self.__entry_changed_timeout is not None:
-            GLib.source_remove(self.__entry_changed_timeout)
-        self.__entry_changed_timeout = GLib.timeout_add(
+        if self.__entry_changed_id is not None:
+            GLib.source_remove(self.__entry_changed_id)
+        self.__entry_changed_id = GLib.timeout_add(
                                                100,
                                                self.__on_entry_changed_timeout,
                                                entry,
@@ -914,7 +916,7 @@ class ToolbarTitle(Gtk.Bin):
             @param value as str
         """
         task_helper = TaskHelper()
-        self.__entry_changed_timeout = None
+        self.__entry_changed_id = None
 
         self.__window.container.current.webview.add_text_entry(value)
 
@@ -924,7 +926,12 @@ class ToolbarTitle(Gtk.Bin):
         self.__cancellable.cancel()
         self.__cancellable.reset()
         parsed = urlparse(value)
-        self.__show_related_view(value)
+
+        if self.__show_related_id is not None:
+            GLib.source_remove(self.__show_related_id)
+        self.__show_related_id = GLib.timeout_add(500,
+                                                  self.__show_related_view,
+                                                  value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
