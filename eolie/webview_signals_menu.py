@@ -77,7 +77,7 @@ class WebViewMenuSignals:
                                          action,
                                          _("Open link in a new private page"),
                                          None)
-            context_menu.insert(item, 1)
+            context_menu.insert(item, 2)
         user_data = context_menu.get_user_data()
         if user_data is not None and user_data.get_string():
             selection = user_data.get_string()
