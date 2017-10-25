@@ -1,5 +1,5 @@
 project('eolie', 'c',
-  version: '0.9.5',
+  version: '0.9.6',
   meson_version: '>= 0.40.0',
 )
 i18n = import('i18n')
