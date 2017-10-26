@@ -530,13 +530,6 @@ class SettingsDialog:
                     El().active_window.toolbar.title.show_message,
                     _("You've received an email"
                       " to validate synchronization"))
-                self.__helper.store_sync(username,
-                                         password,
-                                         "",
-                                         "",
-                                         "",
-                                         El().sync_worker.on_password_stored,
-                                         False)
             else:
                 GLib.idle_add(self.__result_label.set_text, str(e))
                 GLib.idle_add(self.__result_image.set_from_icon_name,

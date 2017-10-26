@@ -43,12 +43,15 @@ class SyncWorker:
         self.__sync_cancellable = Gio.Cancellable()
         self.__username = ""
         self.__password = ""
+        self.__token = ""
+        self.__uid = ""
+        self.__keyB = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__mozilla_sync = None
         self.__state_lock = True
         self.__session = None
         self.__helper = PasswordsHelper()
-        self.__helper.get_sync(self.__set_credentials)
+        self.set_credentials()
 
     def login(self, attributes, password):
         """
@@ -59,30 +62,43 @@ class SyncWorker:
         """
         if attributes is None:
             return
+        self.__username = attributes["login"]
+        self.__password = password
+        self.__uid = ""
+        self.__token = ""
+        self.__keyB = ""
         from base64 import b64encode
         if self.__mozilla_sync is None:
             self.__mozilla_sync = MozillaSync()
-        keyB = ""
         session = None
         # Connect to mozilla sync
-        session = self.__mozilla_sync.login(attributes["login"], password)
-        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
-                                                                       session)
-        keyB = b64encode(session.keys[1]).decode("utf-8")
-        # Store credentials
-        if session is None:
-            uid = ""
-            token = ""
-        else:
-            uid = session.uid
-            token = session.token
-        self.__helper.store_sync(attributes["login"],
+        try:
+            session = self.__mozilla_sync.login(self.__username, password)
+            if session is not None:
+                bid_assertion, key = self.__mozilla_sync.\
+                                        get_browserid_assertion(session)
+        except Exception as e:
+            self.__helper.clear_sync()
+            self.__helper.store_sync(self.__username, password, "", "", "")
+            raise e
+        # Store new credentials
+        self.__token = session.token
+        self.__uid = session.uid
+        self.__keyB = b64encode(session.keys[1]).decode("utf-8")
+        self.__helper.clear_sync()
+        self.__helper.store_sync(self.__username,
                                  password,
-                                 uid,
-                                 token,
-                                 keyB,
+                                 self.__uid,
+                                 self.__token,
+                                 self.__keyB,
                                  self.on_password_stored,
                                  True)
+
+    def set_credentials(self):
+        """
+            Set credentials using Secret
+        """
+        self.__helper.get_sync(self.__set_credentials)
 
     def sync(self, loop=False, first_sync=False):
         """
@@ -178,7 +194,7 @@ class SyncWorker:
             @param sync as bool
         """
         if El().sync_worker is not None:
-            self.__helper.get_sync(self.__set_credentials)
+            self.set_credentials()
             # Wait for credentials
             if sync:
                 GLib.timeout_add(10, El().sync_worker.sync, True)
@@ -206,13 +222,15 @@ class SyncWorker:
             @return bool
         """
         try:
+            # Force login if no token
+            if not self.__token and self.__username and self.__password:
+                self.login({"login": self.__username}, self.__password)
             if self.__mozilla_sync is None:
                 self.__mozilla_sync = MozillaSync()
             self.__get_session_bulk_keys()
             self.__mozilla_sync.client.info_collections()
             return True
-        except Exception as e:
-            print("SyncWorker::status:", e)
+        except:
             return False
 
     @property
@@ -457,7 +475,7 @@ class SyncWorker:
         except Exception as e:
             debug("SyncWorker::__sync(): %s" % e)
             if str(e) == "The authentication token could not be found":
-                self.__helper.get_sync(self.__set_credentials)
+                self.set_credentials()
             self.__syncing = False
 
     def __push_bookmarks(self, bulk_keys):

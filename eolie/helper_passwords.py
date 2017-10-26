@@ -184,7 +184,8 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::store(): %s" % e)
 
-    def store_sync(self, login, password, uid, token, keyB, callback, *args):
+    def store_sync(self, login, password, uid,
+                   token, keyB, callback=None, *args):
         """
             Store Mozilla Sync password
             @param login as str
