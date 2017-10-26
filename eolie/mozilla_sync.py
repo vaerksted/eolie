@@ -47,7 +47,7 @@ class SyncWorker:
         self.__uid = ""
         self.__keyB = ""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
-        self.__mozilla_sync = None
+        self.__mozilla_sync = MozillaSync()
         self.__state_lock = True
         self.__session = None
         self.__helper = PasswordsHelper()
@@ -60,7 +60,7 @@ class SyncWorker:
             @param password as str
             @raise exceptions
         """
-        if attributes is None:
+        if attributes is None or not attributes["login"] or not password:
             return
         self.__username = attributes["login"]
         self.__password = password
@@ -68,8 +68,6 @@ class SyncWorker:
         self.__token = ""
         self.__keyB = ""
         from base64 import b64encode
-        if self.__mozilla_sync is None:
-            self.__mozilla_sync = MozillaSync()
         session = None
         # Connect to mozilla sync
         try:
@@ -226,12 +224,11 @@ class SyncWorker:
             # Force login if no token
             if not self.__token and self.__username and self.__password:
                 self.login({"login": self.__username}, self.__password)
-            if self.__mozilla_sync is None:
-                self.__mozilla_sync = MozillaSync()
             self.__get_session_bulk_keys()
             self.__mozilla_sync.client.info_collections()
             return True
-        except:
+        except Exception as e:
+            debug("SyncWorker::status(): %s" % e)
             return False
 
     @property
@@ -250,8 +247,7 @@ class SyncWorker:
             Get session decrypt keys
             @return keys as (b"", b"")
         """
-        if self.__mozilla_sync is None:
-            self.__mozilla_sync = MozillaSync()
+        # FIXME Do we really need to get this all the time?
         if self.__session is None:
             from fxa.core import Session as FxASession
             from fxa.crypto import quick_stretch_password
