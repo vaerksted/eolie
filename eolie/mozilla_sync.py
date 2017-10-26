@@ -82,17 +82,18 @@ class SyncWorker:
             self.__helper.store_sync(self.__username, password, "", "", "")
             raise e
         # Store new credentials
-        self.__token = session.token
-        self.__uid = session.uid
-        self.__keyB = b64encode(session.keys[1]).decode("utf-8")
-        self.__helper.clear_sync()
-        self.__helper.store_sync(self.__username,
-                                 password,
-                                 self.__uid,
-                                 self.__token,
-                                 self.__keyB,
-                                 self.on_password_stored,
-                                 True)
+        if session is not None:
+            self.__token = session.token
+            self.__uid = session.uid
+            self.__keyB = b64encode(session.keys[1]).decode("utf-8")
+            self.__helper.clear_sync()
+            self.__helper.store_sync(self.__username,
+                                     password,
+                                     self.__uid,
+                                     self.__token,
+                                     self.__keyB,
+                                     self.on_password_stored,
+                                     True)
 
     def set_credentials(self):
         """
