@@ -63,9 +63,16 @@ class Application(Gtk.Application):
             exit("You need WebKit2GTK >= 2.18")
         Gtk.Application.__init__(
                             self,
-                            application_id='org.gnome.Eolie',
+                            application_id="org.gnome.Eolie",
                             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-        self.set_property('register-session', True)
+        self.set_property("register-session", True)
+        # Fix proxy for python
+        proxy = GLib.environ_getenv(GLib.get_environ(), "all_proxy")
+        if proxy is not None and proxy.startswith("socks://"):
+            proxy = proxy.replace("socks://", "socks4://")
+            from os import environ
+            environ["all_proxy"] = proxy
+            environ["ALL_PROXY"] = proxy
         # Ideally, we will be able to delete this once Flatpak has a solution
         # for SSL certificate management inside of applications.
         if GLib.file_test("/app", GLib.FileTest.EXISTS):
@@ -74,7 +81,7 @@ class Application(Gtk.Application):
                      "/etc/ssl/cert.pem"]
             for path in paths:
                 if GLib.file_test(path, GLib.FileTest.EXISTS):
-                    GLib.setenv('SSL_CERT_FILE', path, True)
+                    GLib.setenv("SSL_CERT_FILE", path, True)
                     break
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
