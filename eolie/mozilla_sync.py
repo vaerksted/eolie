@@ -211,7 +211,8 @@ class SyncWorker:
             self.__get_session_bulk_keys()
             self.__mozilla_sync.client.info_collections()
             return True
-        except:
+        except Exception as e:
+            print("SyncWorker::status:", e)
             return False
 
     @property
