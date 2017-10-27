@@ -47,7 +47,9 @@ class SyncWorker:
         self.__uid = ""
         self.__keyB = b""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
-        self.__mozilla_sync = MozillaSync()
+        # We do not create this here because it's slow down Eolie startup
+        # See __mozilla_sync property
+        self.__mz = None
         self.__state_lock = True
         self.__session = None
         self.__helper = PasswordsHelper()
@@ -248,6 +250,15 @@ class SyncWorker:
 #######################
 # PRIVATE             #
 #######################
+    @property
+    def __mozilla_sync(self):
+        """
+            Get mozilla sync, create if None
+        """
+        if self.__mz is None:
+            self.__mz = MozillaSync()
+        return self.__mz
+
     def __get_session_bulk_keys(self):
         """
             Get session decrypt keys
