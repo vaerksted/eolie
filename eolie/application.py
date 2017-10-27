@@ -477,6 +477,8 @@ class Application(Gtk.Application):
                     continue
                 for view in window.container.views:
                     uri = view.webview.get_uri()
+                    if uri is None:
+                        uri = view.webview.delayed_uri
                     parsed = urlparse(uri)
                     if parsed.scheme not in ["http", "https"]:
                         continue
