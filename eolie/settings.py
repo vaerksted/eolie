@@ -437,11 +437,13 @@ class SettingsDialog:
             @param button as Gtk.Button
         """
         icon_name = self.__result_image.get_icon_name()[0]
+        login = self.__login_entry.get_text()
+        password = self.__password_entry.get_text()
         if icon_name == "network-transmit-receive-symbolic":
             El().sync_worker.stop(True)
             El().sync_worker.delete_secret()
             self.__setup_sync_button(False)
-        else:
+        elif login and password:
             self.__result_label.set_text(_("Connecting…"))
             button.set_sensitive(False)
             self.__result_image.set_from_icon_name("content-loading-symbolic",
