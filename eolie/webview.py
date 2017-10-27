@@ -464,7 +464,7 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         webview = WebView.new_with_related_view(related, self._window)
-        self.set_atime(related.atime - 1)
+        webview.set_atime(related.atime - 1)
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,
