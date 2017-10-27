@@ -112,12 +112,6 @@ webkit_web_extension_initialize_with_user_data (WebKitWebExtension *extension,
 
     PySys_SetArgvEx (1, argv, 0);
 
-    PyRun_SimpleString(
-       "import sys\n"
-       "sys.path.insert(0, '@EXTENSION_DIR@')\n"
-    );
-
-
     pygobject_init (-1, -1, -1);
     if (PyErr_Occurred ()) {
         g_printerr ("Could not initialize PyGObject");
