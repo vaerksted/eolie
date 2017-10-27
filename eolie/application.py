@@ -40,7 +40,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.context import Context
-from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues
+from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, WindowType
 
 
 class Application(Gtk.Application):
@@ -494,22 +494,20 @@ class Application(Gtk.Application):
             Restore saved state
             @return True as bool if restored
         """
-        window_type = Gdk.WindowType.CHILD
         try:
             session_states = load(open(
                                      EOLIE_DATA_PATH + "/session_states.bin",
                                      "rb"))
+            items = []
             for (uri, ephemeral, state) in session_states:
                 webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
-                GLib.idle_add(self.active_window.container.add_webview,
-                              uri, window_type, ephemeral, webkit_state,
-                              window_type == Gdk.WindowType.CHILD)
-                window_type = Gdk.WindowType.OFFSCREEN
+                items.append((uri, ephemeral, webkit_state))
+            self.active_window.container.add_webviews(items, True)
             dump([],
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
-            print("Application::restore_state()", e)
+            print("Application::__restore_state()", e)
 
     def __on_handle_local_options(self, app, options):
         """
@@ -548,20 +546,23 @@ class Application(Gtk.Application):
             active_window = self.active_window
         # Open command line args
         if len(args) > 1:
+            items = []
             for uri in args[1:]:
                 # Transform path to uri
                 parsed = urlparse(uri)
                 if not parsed.scheme:
-                    uri = "file://%s" % uri
-                self.active_window.container.add_webview(uri,
-                                                         Gdk.WindowType.CHILD,
-                                                         ephemeral)
+                    if uri.startswith('/'):
+                        uri = "file://%s" % uri
+                    else:
+                        uri = "http://%s" % uri
+                items.append((uri, ephemeral, None))
+            self.active_window.container.add_webviews(items, True)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
         elif not restored or self.active_window.container.current is None:
             self.active_window.present_with_time(Gtk.get_current_event_time())
             self.active_window.container.add_webview(self.start_page,
-                                                     Gdk.WindowType.CHILD,
+                                                     WindowType.FOREGROUND,
                                                      ephemeral)
         if self.debug:
             WebKit2.WebContext.get_default().get_plugins(None,
@@ -708,7 +709,7 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
                                 os)
         url = github + GLib.uri_escape_string(body, "", False)
         self.active_window.container.add_webview(url,
-                                                 Gdk.WindowType.CHILD,
+                                                 WindowType.FOREGROUND,
                                                  False)
 
     def __on_about_activate(self, action, param):
@@ -786,4 +787,4 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
         if string == "new_window":
             window = self.get_new_window()
             window.container.add_webview(self.start_page,
-                                         Gdk.WindowType.CHILD)
+                                         WindowType.FOREGROUND)

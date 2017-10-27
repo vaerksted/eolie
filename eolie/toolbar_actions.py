@@ -10,9 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gdk, Pango
+from gi.repository import Gtk, GLib, Pango
 
-from eolie.define import El
+from eolie.define import El, WindowType
 
 
 class ToolbarActions(Gtk.Bin):
@@ -113,7 +113,7 @@ class ToolbarActions(Gtk.Bin):
                 if back_list:
                     uri = back_list[0].get_uri()
                     self.__window.container.add_webview(uri,
-                                                        Gdk.WindowType.CHILD)
+                                                        WindowType.FOREGROUND)
             else:
                 self.__on_back_history_timeout()
 
@@ -149,7 +149,7 @@ class ToolbarActions(Gtk.Bin):
                 if forward_list:
                     uri = forward_list[0].get_uri()
                     self.__window.container.add_webview(uri,
-                                                        Gdk.WindowType.CHILD)
+                                                        WindowType.FOREGROUND)
             else:
                 self.__on_forward_history_timeout()
 
@@ -159,7 +159,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.add_webview(El().start_page,
-                                            Gdk.WindowType.CHILD)
+                                            WindowType.FOREGROUND)
         self.__window.close_popovers()
 
     def _on_pages_button_toggled(self, button):

@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, Indicator
+from eolie.define import El, Indicator, WindowType
 from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -155,10 +155,6 @@ class WebView(WebKit2.WebView):
         """
         self.__delayed_uri = uri
         self.emit("title-changed", uri)
-        if self.view is not None:
-            self._window.container.sites_manager.add_view_for_uri(
-                                                          self.view,
-                                                          uri)
 
     def update_spell_checking(self):
         """
@@ -239,7 +235,7 @@ class WebView(WebKit2.WebView):
             Open a new page
             @param window_type as Gdk.WindowType
         """
-        if window_type == Gdk.WindowType.SUBSURFACE:
+        if window_type == WindowType.POPOVER:
             if self.ephemeral:
                 webview = WebView.new_ephemeral(self._window)
             else:
@@ -253,7 +249,6 @@ class WebView(WebKit2.WebView):
                                                window_type,
                                                self.ephemeral,
                                                None,
-                                               True,
                                                self.gtime - 1)
 
     def set_atime(self, atime):
@@ -501,7 +496,7 @@ class WebView(WebKit2.WebView):
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_view(webview,
-                                            Gdk.WindowType.CHILD)
+                                            WindowType.FOREGROUND)
         else:
             self._window.container.popup_webview(webview, True)
 

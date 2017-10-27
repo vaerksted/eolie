@@ -10,12 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib, Gdk
+from gi.repository import Gio, GLib
 
 from gettext import gettext as _
 from hashlib import sha256
 
-from eolie.define import El
+from eolie.define import El, WindowType
 
 
 class PagesMenu(Gio.Menu):
@@ -153,7 +153,7 @@ class PagesMenu(Gio.Menu):
             @param GVariant
         """
         El().active_window.container.add_webview(El().start_page,
-                                                 Gdk.WindowType.CHILD,
+                                                 WindowType.FOREGROUND,
                                                  True)
 
     def __on_openall_clicked(self, action, variant):
@@ -162,15 +162,16 @@ class PagesMenu(Gio.Menu):
             @param Gio.SimpleAction
             @param GVariant
         """
+        items = []
         for i in range(0, self.__closed_section.get_n_items()):
             uri_attr = self.__closed_section.get_item_attribute_value(i,
                                                                       "uri")
             if uri_attr is None:
                 continue
-            GLib.idle_add(El().active_window.container.add_webview,
-                          uri_attr.get_string(), Gdk.WindowType.OFFSCREEN,
-                          False, None, False)
-            self.__closed_section.remove(i)
+            items.append((uri_attr.get_string(), False, None))
+            i += 1
+        El().active_window.container.add_webviews(items)
+        self.__closed_section.remove_all()
 
     def __on_action_clicked(self, action, variant, data):
         """
@@ -183,7 +184,7 @@ class PagesMenu(Gio.Menu):
         private = data[1]
         state = data[2]
         El().active_window.container.add_webview(uri,
-                                                 Gdk.WindowType.CHILD,
+                                                 WindowType.FOREGROUND,
                                                  private,
                                                  state)
         self.remove_action(uri)

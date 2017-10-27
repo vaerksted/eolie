@@ -10,13 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib
 
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
-from eolie.define import El
+from eolie.define import El, WindowType
 
 
 class Container(Gtk.Overlay):
@@ -67,16 +67,15 @@ class Container(Gtk.Overlay):
         self.add(self.__expose_stack)
 
     def add_webview(self, uri, window_type, ephemeral=False,
-                    state=None, load=True, gtime=None):
+                    state=None, gtime=None):
         """
             Add a web view to container
             @param uri as str
             @param window_type as Gdk.WindowType
             @param ephemeral as bool
             @param state as WebViewSessionState
-            @param load as bool
             @param gtime as int
-            @return NEVER RETURN SOMETHING HERE #258
+            @return WebView
         """
         webview = View.get_new_webview(ephemeral, self.__window)
         if gtime is not None:
@@ -87,11 +86,30 @@ class Container(Gtk.Overlay):
             webview.restore_session_state(state)
         self.add_view(webview, window_type)
         if uri is not None:
-            if load:
+            if window_type != WindowType.OFFLOAD:
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 webview.set_delayed_uri(uri)
+        return webview
+
+    def add_webviews(self, items, first_onscreen=False):
+        """
+            Add webviews offscreen by default
+            @param items as [(uri: str,
+                             ephemeral: bool,
+                             state: WebKit2.WebViewSessionState)]
+            @param first_offscreen as bool
+        """
+        if first_onscreen:
+            window_type = WindowType.FOREGROUND
+        else:
+            window_type = WindowType.OFFLOAD
+        if items:
+            (uri, ephemeral, state) = items.pop(0)
+            webview = self.add_webview(uri, window_type, ephemeral, state)
+            self.sites_manager.add_view_for_uri(webview.view, uri)
+            GLib.idle_add(self.add_webviews, items)
 
     def add_view(self, webview, window_type):
         """
@@ -104,14 +122,14 @@ class Container(Gtk.Overlay):
         self.__pages_manager.add_child(view)
         # Force window type as current window is not visible
         if self.__expose_stack.get_visible_child_name() == "expose":
-            window_type = Gdk.WindowType.OFFSCREEN
-        if window_type == Gdk.WindowType.CHILD:
+            window_type = WindowType.BACKGROUND
+        if window_type == WindowType.FOREGROUND:
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
-        elif window_type == Gdk.WindowType.OFFSCREEN:
+        elif window_type in [WindowType.BACKGROUND, WindowType.OFFLOAD]:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()

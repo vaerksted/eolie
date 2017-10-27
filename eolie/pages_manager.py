@@ -15,7 +15,7 @@ from gi.repository import Gtk, Gdk, GLib
 from gettext import gettext as _
 
 from eolie.pages_manager_child import PagesManagerChild
-from eolie.define import El
+from eolie.define import El, WindowType
 
 
 class PagesManager(Gtk.EventBox):
@@ -217,7 +217,7 @@ class PagesManager(Gtk.EventBox):
         else:
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,
-                                                Gdk.WindowType.CHILD)
+                                                WindowType.FOREGROUND)
 
     def ctrl_released(self):
         """
@@ -442,7 +442,7 @@ class PagesManager(Gtk.EventBox):
         """
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.__window.container.add_webview(El().start_page,
-                                                Gdk.WindowType.CHILD)
+                                                WindowType.FOREGROUND)
         return self.__window.close_popovers()
 
     def __on_key_press(self, widget, event):

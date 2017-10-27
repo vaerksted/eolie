@@ -60,6 +60,13 @@ class Indicator:
     POPUPS = 2
 
 
+class WindowType:
+    FOREGROUND = 0
+    BACKGROUND = 1
+    OFFLOAD = 2
+    POPOVER = 3
+
+
 class Type:
     NONE = -1
     POPULARS = -2

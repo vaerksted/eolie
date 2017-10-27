@@ -19,7 +19,7 @@ from locale import strcoll
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, Type, TimeSpan, TimeSpanValues
+from eolie.define import El, Type, TimeSpan, TimeSpanValues, WindowType
 
 
 class Item(GObject.GObject):
@@ -325,7 +325,7 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.set_expose(False)
                 self.__window.close_popovers()
             else:
-                self.__window.container.add_webview(uri, Gdk.WindowType.CHILD)
+                self.__window.container.add_webview(uri, WindowType.FOREGROUND)
                 if event.button == 2:
                     self.__window.close_popovers()
             El().bookmarks.thread_lock.acquire()
@@ -362,7 +362,7 @@ class Row(Gtk.ListBoxRow):
         i = 0
         for (bid, uri, title) in items:
             GLib.idle_add(self.__window.container.add_webview,
-                          uri, Gdk.WindowType.OFFSCREEN, False,
+                          uri, WindowType.BACKGROUND, False,
                           None, None, i < 15)
             i += 1
 

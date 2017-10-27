@@ -15,7 +15,7 @@ from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import El, WindowType
 from eolie.utils import get_snapshot
 from eolie.search import Search
 
@@ -157,7 +157,7 @@ class WebViewMenuSignals:
             @param ephemeral as bool
         """
         self._window.container.add_webview(uri,
-                                           Gdk.WindowType.CHILD,
+                                           WindowType.FOREGROUND,
                                            self.ephemeral or ephemeral)
 
     def __on_search_words_activate(self, action, variant, selection):
@@ -169,7 +169,7 @@ class WebViewMenuSignals:
         """
         search = Search()
         uri = search.get_search_uri(selection)
-        self._window.container.add_webview(uri, Gdk.WindowType.CHILD)
+        self._window.container.add_webview(uri, WindowType.FOREGROUND)
 
     def __on_copy_text_activate(self, action, variant, selection):
         """
