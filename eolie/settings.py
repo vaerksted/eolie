@@ -53,6 +53,7 @@ class SettingsDialog:
             Init dialog
             @param window as Window
         """
+        self.__window = window
         self.__helper = PasswordsHelper()
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SettingsDialog.ui")
@@ -441,7 +442,6 @@ class SettingsDialog:
             El().sync_worker.delete_secret()
             self.__setup_sync_button(False)
         else:
-            El().sync_worker.delete_secret()
             self.__result_label.set_text(_("Connecting…"))
             button.set_sensitive(False)
             self.__result_image.set_from_icon_name("content-loading-symbolic",
@@ -484,14 +484,16 @@ class SettingsDialog:
                                                       "destructive-action")
             self.__sync_button.set_label(_("Cancel synchronization"))
         else:
-            self.__result_label.set_text(
-                                       _("Synchronization is not working"))
-            self.__result_image.set_from_icon_name(
-                                     "computer-fail-symbolic",
-                                     Gtk.IconSize.MENU)
             self.__sync_button.get_style_context().add_class(
                                                       "suggested-action")
             self.__sync_button.set_label(_("Allow synchronization"))
+            self.__result_image.set_from_icon_name(
+                                 "computer-fail-symbolic",
+                                 Gtk.IconSize.MENU)
+            self.__result_label.set_text(
+                                   _("Synchronization is not working"))
+            self.__sync_button.get_style_context().add_class(
+                                                  "suggested-action")
 
     def __missing_fxa(self):
         """
@@ -514,18 +516,15 @@ class SettingsDialog:
             @thread safe
         """
         try:
+            El().sync_worker.new_session()
             El().sync_worker.login({"login": username}, password)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             print("SettingsDialog::__connect_mozilla_sync():", e)
             GLib.idle_add(self.__sync_button.set_sensitive, True)
             if str(e) == "Unverified account":
-                GLib.timeout_add(1000, self.__settings_dialog.destroy)
-                # Try to go to webmail
-                split = username.split("@")
-                GLib.idle_add(El().active_window.container.add_webview,
-                              "https://%s" % split[1],
-                              Gdk.WindowType.CHILD)
+                GLib.timeout_add(500, self.__settings_dialog.destroy)
+                self.__window.toolbar.end.show_sync_button()
                 GLib.idle_add(
                     El().active_window.toolbar.title.show_message,
                     _("You've received an email"

@@ -45,7 +45,7 @@ class SyncWorker:
         self.__password = ""
         self.__token = ""
         self.__uid = ""
-        self.__keyB = ""
+        self.__keyB = b""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
         self.__mozilla_sync = MozillaSync()
         self.__state_lock = True
@@ -60,38 +60,46 @@ class SyncWorker:
             @param password as str
             @raise exceptions
         """
-        if attributes is None or not attributes["login"] or not password:
-            return
-        self.__username = attributes["login"]
-        self.__password = password
+        self.__username = ""
+        self.__password = ""
         self.__uid = ""
         self.__token = ""
-        self.__keyB = ""
+        self.__keyB = b""
+        if attributes is None or not attributes["login"] or not password:
+            return
         from base64 import b64encode
         session = None
+        self.__username = attributes["login"]
+        self.__password = password
         # Connect to mozilla sync
         try:
             session = self.__mozilla_sync.login(self.__username, password)
             if session is not None:
                 bid_assertion, key = self.__mozilla_sync.\
                                         get_browserid_assertion(session)
+                self.__token = session.token
+                self.__uid = session.uid
+                self.__keyB = session.keys[1]
+                keyB_encoded = b64encode(self.__keyB).decode("utf-8")
+                self.__helper.clear_sync()
+                self.__helper.store_sync(self.__username,
+                                         password,
+                                         self.__uid,
+                                         self.__token,
+                                         keyB_encoded,
+                                         self.on_password_stored,
+                                         True)
         except Exception as e:
             self.__helper.clear_sync()
-            self.__helper.store_sync(self.__username, password, "", "", "")
+            self.__helper.store_sync(attributes["login"], password, "", "", "")
             raise e
-        # Store new credentials
-        if session is not None:
-            self.__token = session.token
-            self.__uid = session.uid
-            self.__keyB = b64encode(session.keys[1]).decode("utf-8")
-            self.__helper.clear_sync()
-            self.__helper.store_sync(self.__username,
-                                     password,
-                                     self.__uid,
-                                     self.__token,
-                                     self.__keyB,
-                                     self.on_password_stored,
-                                     True)
+
+    def new_session(self):
+        """
+            Start a new session
+        """
+        # Just reset session, will be set by get_session_bulk_keys()
+        self.__session = None
 
     def set_credentials(self):
         """
@@ -194,9 +202,9 @@ class SyncWorker:
         """
         if El().sync_worker is not None:
             self.set_credentials()
-            # Wait for credentials
             if sync:
-                GLib.timeout_add(10, El().sync_worker.sync, True)
+                # Wait for credentials (server side)
+                GLib.timeout_add(10, self.sync, True)
 
     @property
     def mtimes(self):
@@ -221,15 +229,12 @@ class SyncWorker:
             @return bool
         """
         try:
-            # Force login if no token
-            if not self.__token and self.__username and self.__password:
-                self.login({"login": self.__username}, self.__password)
-            self.__get_session_bulk_keys()
-            self.__mozilla_sync.client.info_collections()
-            return True
+            if self.__username:
+                self.__get_session_bulk_keys()
+                self.__mozilla_sync.client.info_collections()
+                return True
         except Exception as e:
-            debug("SyncWorker::status(): %s" % e)
-            return False
+            print("SyncWorker::status(): %s" % e)
 
     @property
     def username(self):
@@ -247,7 +252,6 @@ class SyncWorker:
             Get session decrypt keys
             @return keys as (b"", b"")
         """
-        # FIXME Do we really need to get this all the time?
         if self.__session is None:
             from fxa.core import Session as FxASession
             from fxa.crypto import quick_stretch_password

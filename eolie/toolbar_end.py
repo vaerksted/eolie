@@ -17,6 +17,7 @@ from gettext import gettext as _
 
 from eolie.define import El
 from eolie.popover_downloads import DownloadsPopover
+from eolie.helper_passwords import PasswordsHelper
 
 
 class ProgressBar(Gtk.ProgressBar):
@@ -54,6 +55,7 @@ class ToolbarEnd(Gtk.Bin):
         self.__download_button = builder.get_object("download_button")
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
+        self.__sync_button = builder.get_object("sync_button")
         if fullscreen:
             builder.get_object("fullscreen_button").show()
         self.__progress = ProgressBar()
@@ -128,6 +130,12 @@ class ToolbarEnd(Gtk.Bin):
             self.__js_exceptions.connect("activate",
                                          self.__on_exceptions_activate)
             self.__window.add_action(self.__js_exceptions)
+
+    def show_sync_button(self):
+        """
+            Show sync button allowing user to start sync
+        """
+        self.__sync_button.show()
 
     def show_download(self, download):
         """
@@ -231,9 +239,19 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.register(popover)
         popover.popup()
 
+    def _on_sync_button_clicked(self, button):
+        """
+            Start sync
+            @param button as Gtk.Button
+        """
+        helper = PasswordsHelper()
+        helper.get_sync(self.__on_get_sync)
+        button.hide()
+
     def _on_fullscreen_button_clicked(self, button):
         """
             Leave fullscreen mode
+            @param button as Gtk.Button
         """
         self.__window.unfullscreen()
 
@@ -547,3 +565,21 @@ class ToolbarEnd(Gtk.Bin):
         """
         button.get_style_context().remove_class("selected")
         button.set_active(False)
+
+    def __on_get_sync(self, attributes, password, uri, index, count):
+        """
+            Start sync by login again
+            @param attributes as {}
+            @param password as str
+            @param uri as None
+            @param index as int
+            @param count as int
+        """
+        if attributes is None:
+            return
+        try:
+            El().sync_worker.new_session()
+            El().sync_worker.login(attributes, password)
+        except Exception as e:
+            print("ToolbarEnd::__on_get_sync()", e)
+            self.__sync_button.show()
