@@ -186,7 +186,7 @@ class SyncWorker:
         self.__password = ""
         self.__session = None
         self.__sync_cancellable.reset()
-        self.__helper.clear_sync()
+        self.__helper.clear_sync(None)
 
     def stop(self, force=False):
         """
