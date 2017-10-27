@@ -220,8 +220,8 @@ class Context:
             Load an internal resource
             @param request as WebKit2.URISchemeRequest
         """
-        # We use internal:/ because resource:/ is already used by WebKit2
-        icon_name = request.get_uri().replace("internal:/", "")
+        # We use internal:// because resource:// is already used by WebKit2
+        icon_name = request.get_uri().replace("internal://", "")
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
                                             icon_name, Gtk.IconSize.BUTTON,
                                             Gtk.IconLookupFlags.FORCE_SVG)
