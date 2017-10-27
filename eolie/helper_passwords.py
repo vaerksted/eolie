@@ -261,9 +261,10 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::clear(): %s" % e)
 
-    def clear_sync(self):
+    def clear_sync(self, callback, *args):
         """
             Clear sync secrets
+            @param callback as function
         """
         try:
             SecretSchema = {
@@ -279,7 +280,9 @@ class PasswordsHelper:
                                  SecretAttributes,
                                  Secret.SearchFlags.ALL,
                                  None,
-                                 self.__on_clear_search)
+                                 self.__on_clear_search,
+                                 callback,
+                                 *args)
         except Exception as e:
             debug("PasswordsHelper::clear_sync(): %s" % e)
 

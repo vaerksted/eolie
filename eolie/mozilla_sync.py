@@ -66,6 +66,7 @@ class SyncWorker:
         self.__token = ""
         self.__keyB = b""
         if attributes is None or not attributes["login"] or not password:
+            print("SyncWorker::login():", attributes)
             return
         from base64 import b64encode
         session = None
@@ -74,24 +75,25 @@ class SyncWorker:
         # Connect to mozilla sync
         try:
             session = self.__mozilla_sync.login(self.__username, password)
-            if session is not None:
-                bid_assertion, key = self.__mozilla_sync.\
-                                        get_browserid_assertion(session)
-                self.__token = session.token
-                self.__uid = session.uid
-                self.__keyB = session.keys[1]
-                keyB_encoded = b64encode(self.__keyB).decode("utf-8")
-                self.__helper.clear_sync()
-                self.__helper.store_sync(self.__username,
-                                         password,
-                                         self.__uid,
-                                         self.__token,
-                                         keyB_encoded,
-                                         self.on_password_stored,
-                                         True)
+            bid_assertion, key = self.__mozilla_sync.\
+                get_browserid_assertion(session)
+            self.__token = session.token
+            self.__uid = session.uid
+            self.__keyB = session.keys[1]
+            keyB_encoded = b64encode(self.__keyB).decode("utf-8")
+            self.__helper.clear_sync(self.__helper.store_sync,
+                                     self.__username,
+                                     password,
+                                     self.__uid,
+                                     self.__token,
+                                     keyB_encoded,
+                                     self.on_password_stored,
+                                     True)
         except Exception as e:
-            self.__helper.clear_sync()
-            self.__helper.store_sync(attributes["login"], password, "", "", "")
+            self.__helper.clear_sync(self.__helper.store_sync,
+                                     attributes["login"],
+                                     password,
+                                     "", "", "")
             raise e
 
     def new_session(self):
@@ -200,11 +202,10 @@ class SyncWorker:
             @param result as Gio.AsyncResult
             @param sync as bool
         """
-        if El().sync_worker is not None:
-            self.set_credentials()
-            if sync:
-                # Wait for credentials (server side)
-                GLib.timeout_add(10, self.sync, True)
+        self.set_credentials()
+        if sync:
+            # Wait for credentials (server side)
+            GLib.timeout_add(10, self.sync, True)
 
     @property
     def mtimes(self):

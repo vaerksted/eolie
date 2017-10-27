@@ -568,15 +568,13 @@ class ToolbarEnd(Gtk.Bin):
 
     def __on_get_sync(self, attributes, password, uri, index, count):
         """
-            Start sync by login again
+            Start sync
             @param attributes as {}
             @param password as str
             @param uri as None
             @param index as int
             @param count as int
         """
-        if attributes is None:
-            return
         try:
             El().sync_worker.new_session()
             El().sync_worker.login(attributes, password)
