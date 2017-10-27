@@ -30,7 +30,8 @@ class WebViewDBusSignals:
         """
             Init class
         """
-        self.__last_click_event = {}
+        self._last_click_event = Gdk.EventButton()
+        self._last_click_time = 0
         self.connect("submit-form", self.__on_submit_form)
 
     def ignore_last_click_event(self):
@@ -38,17 +39,6 @@ class WebViewDBusSignals:
             Ignore last click event
         """
         self.__last_click_event = {}
-
-    @property
-    def last_click_time(self):
-        """
-            Get last click time
-            @return {}
-        """
-        if self.__last_click_event:
-            return self.__last_click_event["time"]
-        else:
-            return 0
 
 #######################
 # PROTECTED           #
@@ -59,9 +49,8 @@ class WebViewDBusSignals:
             @param widget as WebView
             @param event as Gdk.EventButton
         """
-        self.__last_click_event = {"x": event.x,
-                                   "y": event.y,
-                                   "time": time()}
+        self._last_click_event = event
+        self._last_click_time = time()
 
     def _on_map(self, webview):
         """
@@ -143,15 +132,15 @@ class WebViewDBusSignals:
         if signal == "UnsecureFormFocused":
             self._window.toolbar.title.show_input_warning(self)
         elif signal == "InputMouseDown":
-            if self.__last_click_event:
+            if self.__last_click_time:
                 userform = params[0]
                 model = FormMenu(self.get_page_id())
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
                 self._window.register(popover)
                 rect = Gdk.Rectangle()
-                rect.x = self.__last_click_event["x"]
-                rect.y = self.__last_click_event["y"] - 10
+                rect.x = self.__last_click_event.x
+                rect.y = self.__last_click_event.y - 10
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
                 helper = PasswordsHelper()
@@ -171,7 +160,7 @@ class WebViewDBusSignals:
             @param model as Gio.MenuModel
         """
         parsed = urlparse(uri)
-        self.__last_click_event = {}
+        self.__last_click_time = 0
         if attributes is not None and (count > 1 or
                                        parsed.scheme == "http"):
             model.add_attributes(attributes, uri)

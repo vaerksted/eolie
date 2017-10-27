@@ -237,9 +237,9 @@ class WebView(WebKit2.WebView):
         """
         if window_type == WindowType.POPOVER:
             if self.ephemeral:
-                webview = WebView.new_ephemeral(self._window)
+                webview = WebView.new_ephemeral(self._window, None)
             else:
-                webview = WebView.new(self._window)
+                webview = WebView.new(self._window, None)
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
@@ -271,6 +271,13 @@ class WebView(WebKit2.WebView):
             @param view as View
         """
         self.__view = view
+
+    def set_window(self, window):
+        """
+            Set webview window
+            @param window as Window
+        """
+        self._window = window
 
     @property
     def atime(self):
@@ -472,7 +479,7 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         # Do not block if we get a click on view
-        elapsed = time() - related.last_click_time
+        elapsed = time() - related._last_click_time
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
         exception = \
@@ -495,8 +502,10 @@ class WebView(WebKit2.WebView):
                 properties.get_toolbar_visible() and\
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
-            self._window.container.add_view(webview,
-                                            WindowType.FOREGROUND)
+            window = El().get_new_window()
+            webview.set_window(window)
+            window.container.add_view(webview,
+                                      WindowType.FOREGROUND)
         else:
             self._window.container.popup_webview(webview, True)
 

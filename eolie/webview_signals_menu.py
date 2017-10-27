@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
+from time import time
 
 from eolie.define import El, WindowType
 from eolie.utils import get_snapshot
@@ -30,19 +31,21 @@ class WebViewMenuSignals:
             Init class
         """
         self.connect("context-menu", self.__on_context_menu)
+        self.connect("context-menu-dismissed",
+                     self.__on_context_menu_dismissed)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_context_menu(self, view, context_menu, event, hit):
+    def __on_context_menu(self, webview, context_menu, event, hit):
         """
             Add custom items to menu
-            @param view as WebView
+            @param webview as WebView
             @param context_menu as WebKit2.ContextMenu
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
-        parsed = urlparse(view.get_uri())
+        parsed = urlparse(webview.get_uri())
         if parsed.scheme == "populars":
             context_menu.remove_all()
             if hit.context_is_link():
@@ -104,7 +107,7 @@ class WebViewMenuSignals:
                                                  None)
                 context_menu.insert(item, 2)
         else:
-            if not view.is_loading() and parsed.scheme in ["http", "https"]:
+            if not webview.is_loading() and parsed.scheme in ["http", "https"]:
                 # Save all images
                 action = Gio.SimpleAction(name="save_imgs")
                 El().add_action(action)
@@ -147,6 +150,13 @@ class WebViewMenuSignals:
                     context_menu.insert(item, n_items - 2)
                 else:
                     context_menu.insert(item, n_items)
+
+    def __on_context_menu_dismissed(self, webview):
+        """
+            Add custom items to menu
+            @param webview as WebView
+        """
+        self._last_click_time = time()
 
     def __on_open_new_page_activate(self, action, variant, uri, ephemeral):
         """
