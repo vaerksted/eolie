@@ -36,6 +36,8 @@ class WebViewPopover(Gtk.Popover):
         self.__prev_button = builder.get_object("prev_button")
         self.__next_button = builder.get_object("next_button")
         self.__spinner = builder.get_object("spinner")
+        self.__combobox = builder.get_object("combobox")
+        self.__label = builder.get_object("label")
         self.add(builder.get_object("widget"))
         self.connect("closed", self.__on_closed)
 
@@ -45,13 +47,25 @@ class WebViewPopover(Gtk.Popover):
             @param view as View
             @param destroy webview as bool
         """
+        position = len(self.__stack.get_children())
         self.__stack.add(view)
-        self.__stack.set_visible_child(view)
         view.webview.connect("close", self.__on_webview_close, destroy)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
-        self.__set_title()
-        self.__set_button_state()
+        title = view.webview.get_title()
+        if title is None:
+            title = view.webview.get_uri()
+        if title is None:
+            title = ""
+        self.__combobox.append(str(view), title)
+        if position == 0:
+            self.__label.set_text(title)
+            self.__label.show()
+            self.__combobox.set_active_id(str(view))
+            self.__combobox.hide()
+        else:
+            self.__label.hide()
+            self.__combobox.show()
         if destroy:
             self.__to_destroy.append(view.webview)
 
@@ -65,25 +79,16 @@ class WebViewPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
-    def _on_prev_clicked(self, button):
+    def _on_combobox_changed(self, combobox):
         """
-            Show previous view
-            @param button as Gtk.Button
+            Update visible view
+            @param combobox as Gtk.ComboBoxText
         """
-        previous = self.__get_prev_child()
-        self.__stack.set_visible_child(previous)
-        self.__set_button_state()
-        self.__set_title()
-
-    def _on_next_clicked(self, button):
-        """
-            Show next view
-            @param button as Gtk.Button
-        """
-        next = self.__get_next_child()
-        self.__stack.set_visible_child(next)
-        self.__set_button_state()
-        self.__set_title()
+        active_id = combobox.get_active_id()
+        for child in self.__stack.get_children():
+            if str(child) == active_id:
+                self.__stack.set_visible_child(child)
+                break
 
 #######################
 # PRIVATE             #
@@ -117,38 +122,24 @@ class WebViewPopover(Gtk.Popover):
                 at_current = True
         return child
 
-    def __set_button_state(self):
-        """
-            Check if buttons are sensitive
-        """
-        previous = self.__get_prev_child()
-        self.__prev_button.set_sensitive(previous is not None)
-        next = self.__get_next_child()
-        self.__next_button.set_sensitive(next is not None)
-
-    def __set_title(self):
-        """
-            Set popover title
-        """
-        view = self.__stack.get_visible_child()
-        if view is not None:
-            title = view.webview.get_title()
-            if not title:
-                title = view.webview.get_uri()
-            if title:
-                self.__title.set_text(title)
-                self.__title.set_tooltip_text(title)
-
     def __on_webview_title_changed(self, webview, title):
         """
             Update title if webview is current
             @param webview as WebView
             @param title as str
         """
+        # Search previous entry
+        position = 0
+        for child in self.__stack.get_children():
+            if webview.view == child:
+                break
+            position += 1
+        self.__combobox.remove(position)
+        self.__combobox.insert(position, str(webview.view), title)
+        self.__label.set_text(title)
         view = self.__stack.get_visible_child()
-        if view.webview == webview:
-            self.__title.set_text(title)
-            self.__title.set_tooltip_text(title)
+        if view == webview.view:
+            self.__combobox.set_active_id(str(view))
 
     def __on_webview_load_changed(self, webview, event):
         """
@@ -174,7 +165,7 @@ class WebViewPopover(Gtk.Popover):
                 self.__stack.remove(view)
                 break
         if self.__stack.get_children():
-            self.__set_button_state()
+            pass
         else:
             self.hide()
         if destroy:
