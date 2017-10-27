@@ -176,10 +176,6 @@ class Container(Gtk.Overlay):
         view.show()
         self.__popover.add_view(view, destroy)
         if not self.__popover.is_visible():
-            size = self.__window.get_size()
-            width = min(800, size[0])
-            height = min(800, size[1] * 0.9)
-            self.__popover.set_size_request(width, height)
             self.__popover.set_relative_to(self.__window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
