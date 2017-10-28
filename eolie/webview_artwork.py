@@ -28,6 +28,7 @@ class WebViewArtwork:
             Init class
         """
         self.__snapshot_id = None
+        self.__last_uri = None
         self.__favicon_db = self.get_context().get_favicon_database()
 
     def set_snapshot(self):
@@ -50,7 +51,9 @@ class WebViewArtwork:
             Set favicon for uri
             @param uri as str
         """
-        self.__favicon_db.get_favicon(uri, None, self.__on_favicon, uri)
+        if uri != self.__last_uri:
+            self.__last_uri = uri
+            self.__favicon_db.get_favicon(uri, None, self.__on_favicon, uri)
 
 #######################
 # PROTECTED           #
@@ -132,7 +135,6 @@ class WebViewArtwork:
             self.emit("favicon-changed", None, icon_theme_artwork)
         else:
             favicon_type = "favicon"
-
             # Calculate netloc
             parsed = urlparse(uri)
             if parsed.netloc:
@@ -149,12 +151,11 @@ class WebViewArtwork:
                 resized = resize_favicon(surface)
             elif netloc is not None:
                 for favicon in ["favicon", "favicon_alt"]:
-                    resized = El().art.get_artwork(
-                                               netloc,
-                                               favicon,
-                                               self.get_scale_factor(),
-                                               ArtSize.FAVICON,
-                                               ArtSize.FAVICON)
+                    resized = El().art.get_artwork(netloc,
+                                                   favicon,
+                                                   self.get_scale_factor(),
+                                                   ArtSize.FAVICON,
+                                                   ArtSize.FAVICON)
                     if resized is not None:
                         favicon_type = favicon
                         break
