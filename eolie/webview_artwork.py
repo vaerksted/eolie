@@ -130,8 +130,6 @@ class WebViewArtwork:
                                                              self.ephemeral)
         try:
             surface = favicon_db.get_favicon_finish(result)
-            if surface is None:
-                raise GLib.Error()
             parsed = urlparse(uri)
             if parsed.netloc:
                 netloc = parsed.netloc.lstrip("www.")
