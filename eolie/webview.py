@@ -482,10 +482,8 @@ class WebView(WebKit2.WebView):
         elapsed = time() - related._last_click_time
         popup_block = El().settings.get_value("popupblock")
         parsed_related = urlparse(related.get_uri())
-        exception = \
-            related.js_load or\
-            El().popup_exceptions.find_parsed(parsed_related) or\
-            (not related.is_loading() and elapsed < 0.5)
+        exception = El().popup_exceptions.find_parsed(parsed_related) or\
+            elapsed < 0.5
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,

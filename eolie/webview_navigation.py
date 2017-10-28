@@ -13,6 +13,7 @@
 from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 
 from urllib.parse import urlparse
+from time import time
 
 from eolie.define import El, ADBLOCK_JS, WindowType
 from eolie.utils import get_ftp_cmd
@@ -35,7 +36,6 @@ class WebViewNavigation:
         self.__js_timeout = None
         self.__title = ""
         self.__popups = []
-        self.__js_load = False
         self.__initial_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -73,7 +73,8 @@ class WebViewNavigation:
             if uri.startswith("/"):
                 uri = "file://" + uri
             elif parsed.scheme == "javascript":
-                self.__js_load = True
+                # To bypass popup blocker
+                self._last_click_time = time()
                 uri = GLib.uri_unescape_string(uri, None)
                 self.run_javascript(uri.replace("javascript:", ""), None, None)
             elif parsed.scheme not in ["http", "https", "file",
@@ -109,14 +110,6 @@ class WebViewNavigation:
             @return str
         """
         return self.__initial_uri
-
-    @property
-    def js_load(self):
-        """
-            True if current action was a js execution. Useful when opening
-            a related view to check if popup is wanted
-        """
-        return self.__js_load
 
     @property
     def popups(self):
@@ -302,7 +295,6 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.__js_load = False
         uri = webview.get_uri()
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
