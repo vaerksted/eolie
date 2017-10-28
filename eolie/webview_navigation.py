@@ -382,6 +382,7 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.set_favicon(uri)
             if parsed.scheme != "populars":
                 self.set_snapshot()
             if El().show_tls:

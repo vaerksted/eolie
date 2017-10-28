@@ -128,45 +128,46 @@ class WebViewArtwork:
         resized = None
         icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
                                                              self.ephemeral)
-        try:
-            surface = favicon_db.get_favicon_finish(result)
+        if icon_theme_artwork is not None:
+            self.emit("favicon-changed", None, icon_theme_artwork)
+        else:
+            favicon_type = "favicon"
+
+            # Calculate netloc
             parsed = urlparse(uri)
             if parsed.netloc:
                 netloc = parsed.netloc.lstrip("www.")
             else:
                 netloc = None
-            if icon_theme_artwork is None:
-                favicon_type = "favicon"
-                # Try to get a favicon
-                if surface is None:
-                    # Build a custom favicon if cache is empty for netloc
-                    if netloc is not None:
-                        for favicon in ["favicon", "favicon_alt"]:
-                            resized = El().art.get_artwork(
-                                                       netloc,
-                                                       favicon,
-                                                       self.get_scale_factor(),
-                                                       ArtSize.FAVICON,
-                                                       ArtSize.FAVICON)
-                            if resized is not None:
-                                favicon_type = favicon
-                                break
-                        if resized is None:
-                            resized = get_char_surface(netloc[0])
-                else:
-                    resized = resize_favicon(surface)
-
-                # Save favicon if needed
-                if resized is not None:
-                    if not El().art.exists(uri, favicon_type):
-                        El().art.save_artwork(uri, resized, favicon_type)
-                    if netloc is not None and\
-                            not El().art.exists(netloc, favicon_type):
-                        El().art.save_artwork(netloc, resized, favicon_type)
-                    self.__set_initial_uri_favicon(resized,
-                                                   uri,
-                                                   favicon_type)
-        except:
-            pass
-        if resized is not None or icon_theme_artwork is not None:
-            self.emit("favicon-changed", resized, icon_theme_artwork)
+            # Read result
+            try:
+                surface = favicon_db.get_favicon_finish(result)
+            except:
+                surface = None
+            # Resize surface and set favicon
+            if surface is not None:
+                resized = resize_favicon(surface)
+            elif netloc is not None:
+                for favicon in ["favicon", "favicon_alt"]:
+                    resized = El().art.get_artwork(
+                                               netloc,
+                                               favicon,
+                                               self.get_scale_factor(),
+                                               ArtSize.FAVICON,
+                                               ArtSize.FAVICON)
+                    if resized is not None:
+                        favicon_type = favicon
+                        break
+                if resized is None:
+                    resized = get_char_surface(netloc[0])
+            self.emit("favicon-changed", resized, None)
+            # Save favicon if needed
+            if resized is not None:
+                if not El().art.exists(uri, favicon_type):
+                    El().art.save_artwork(uri, resized, favicon_type)
+                if netloc is not None and\
+                        not El().art.exists(netloc, favicon_type):
+                    El().art.save_artwork(netloc, resized, favicon_type)
+                self.__set_initial_uri_favicon(resized,
+                                               uri,
+                                               favicon_type)
