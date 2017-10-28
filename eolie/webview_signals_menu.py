@@ -45,6 +45,11 @@ class WebViewMenuSignals:
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
+        # HACK, don't know how to add web inspector
+        inspector_item = None
+        if El().settings.get_value("developer-extras"):
+            count = context_menu.get_n_items()
+            inspector_item = context_menu.get_item_at_position(count - 1)
         context_menu.remove_all()
         parsed = urlparse(webview.get_uri())
         if parsed.scheme == "populars":
@@ -58,7 +63,7 @@ class WebViewMenuSignals:
                                                          action,
                                                          _("Reload preview"),
                                                          None)
-                context_menu.insert(item, 0)
+                context_menu.append(item)
                 return
         if hit.context_is_link():
             action = Gio.SimpleAction(name="open_new_page")
@@ -70,7 +75,7 @@ class WebViewMenuSignals:
                                              action,
                                              _("Open link in a new page"),
                                              None)
-            context_menu.insert(item, 1)
+            context_menu.append(item)
             action = Gio.SimpleAction(name="open_new_private_page")
             El().add_action(action)
             action.connect("activate",
@@ -80,7 +85,7 @@ class WebViewMenuSignals:
                                          action,
                                          _("Open link in a new private page"),
                                          None)
-            context_menu.insert(item, 2)
+            context_menu.append(item)
             action = Gio.SimpleAction(name="open_new_window")
             El().add_action(action)
             action.connect("activate",
@@ -90,9 +95,9 @@ class WebViewMenuSignals:
                                              action,
                                              _("Open link in a new window"),
                                              None)
-            context_menu.insert(item, 3)
+            context_menu.append(item)
             item = WebKit2.ContextMenuItem.new_separator()
-            context_menu.insert(item, 4)
+            context_menu.append(item)
             action = Gio.SimpleAction(name="copy_link_uri")
             El().add_action(action)
             action.connect("activate",
@@ -102,9 +107,9 @@ class WebViewMenuSignals:
                                              action,
                                              _("Copy link address"),
                                              None)
-            context_menu.insert(item, 5)
+            context_menu.append(item)
             item = WebKit2.ContextMenuItem.new_separator()
-            context_menu.insert(item, 6)
+            context_menu.append(item)
         user_data = context_menu.get_user_data()
         if user_data is not None and user_data.get_string():
             selection = user_data.get_string()
@@ -118,7 +123,7 @@ class WebViewMenuSignals:
                                                  action,
                                                  _("Search on the Web"),
                                                  None)
-                context_menu.insert(item, 1)
+                context_menu.append(item)
             if hit.context_is_link():
                 action = Gio.SimpleAction(name="copy_text")
                 El().add_action(action)
@@ -129,7 +134,7 @@ class WebViewMenuSignals:
                                                  action,
                                                  _("Copy"),
                                                  None)
-                context_menu.insert(item, 2)
+                context_menu.append(item)
         else:
             if not webview.is_loading() and parsed.scheme in ["http", "https"]:
                 # Save all images
@@ -141,11 +146,7 @@ class WebViewMenuSignals:
                                                  action,
                                                  _("Save images"),
                                                  None)
-                n_items = context_menu.get_n_items()
-                if El().settings.get_value("developer-extras"):
-                    context_menu.insert(item, n_items - 2)
-                else:
-                    context_menu.insert(item, n_items)
+                context_menu.append(item)
                 # Save all videos
                 action = Gio.SimpleAction(name="save_videos")
                 El().add_action(action)
@@ -155,11 +156,7 @@ class WebViewMenuSignals:
                                                  action,
                                                  _("Save videos"),
                                                  None)
-                n_items = context_menu.get_n_items()
-                if El().settings.get_value("developer-extras"):
-                    context_menu.insert(item, n_items - 2)
-                else:
-                    context_menu.insert(item, n_items)
+                context_menu.append(item)
                 # Save page as image
                 action = Gio.SimpleAction(name="save_as_image")
                 El().add_action(action)
@@ -169,11 +166,12 @@ class WebViewMenuSignals:
                                                  action,
                                                  _("Save page as image"),
                                                  None)
-                n_items = context_menu.get_n_items()
-                if El().settings.get_value("developer-extras"):
-                    context_menu.insert(item, n_items - 2)
-                else:
-                    context_menu.insert(item, n_items)
+                context_menu.append(item)
+            item = WebKit2.ContextMenuItem.new_separator()
+            context_menu.append(item)
+            # Dev tools
+            if inspector_item is not None:
+                context_menu.append(inspector_item)
 
     def __on_context_menu_dismissed(self, webview):
         """
