@@ -18,7 +18,6 @@ from urllib.parse import urlparse
 from eolie.helper_task import TaskHelper
 from eolie.define import El, Indicator, Type
 from eolie.popover_uri import UriPopover
-from eolie.widget_edit_bookmark import EditBookmarkWidget
 
 
 class SmoothProgressBar(Gtk.ProgressBar):
@@ -666,8 +665,8 @@ class ToolbarTitle(Gtk.Bin):
                                                         Gtk.IconSize.MENU)
                 bookmark_id = El().bookmarks.add(title,
                                                  uri, None, [])
-
-            widget = EditBookmarkWidget(bookmark_id, False)
+            from eolie.widget_bookmark_edit import BookmarkEditWidget
+            widget = BookmarkEditWidget(bookmark_id, False)
             widget.show()
             popover = Gtk.Popover.new()
             popover.set_relative_to(eventbox)
@@ -875,7 +874,8 @@ class ToolbarTitle(Gtk.Bin):
             if value:
                 webview.add_text_entry(value)
             self.__entry.delete_selection()
-        if isinstance(popover, EditBookmarkWidget):
+        from eolie.widget_bookmark_edit import BookmarkEditWidget
+        if isinstance(popover, BookmarkEditWidget):
             bookmark_id = El().bookmarks.get_id(webview.get_uri())
             if bookmark_id is None:
                 self.__action_image2.set_from_icon_name("non-starred-symbolic",

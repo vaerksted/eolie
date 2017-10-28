@@ -523,6 +523,50 @@ class DatabaseBookmarks:
                                   ORDER BY bookmarks.mtime DESC")
             return list(result)
 
+    def get_popularity(self, bookmark_id):
+        """
+            Get popularity for bookmark id
+            @param bookmark_id as int
+            @return popularity as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT popularity\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
+
+    def get_best_popularity(self):
+        """
+            Get best popularity available
+            @return int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT popularity\
+                                  FROM bookmarks\
+                                  ORDER BY POPULARITY DESC LIMIT 1")
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return 0
+
+    def get_avg_popularity(self):
+        """
+            Return avarage popularity
+            @return avarage popularity as int
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT AVG(popularity)\
+                                  FROM (SELECT popularity\
+                                        FROM bookmarks\
+                                        ORDER BY POPULARITY DESC LIMIT 100)")
+            v = result.fetchone()
+            if v and v[0] > 5:
+                return v[0]
+            return 5
+
     def set_title(self, bookmark_id, title, commit=True):
         """
             Set bookmark title
@@ -548,6 +592,20 @@ class DatabaseBookmarks:
             sql.execute("UPDATE bookmarks\
                          SET uri=?\
                          WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
+            if commit:
+                sql.commit()
+
+    def set_popularity(self, bookmark_id, popularity, commit=True):
+        """
+            Set bookmark popularity
+            @param bookmark id as int
+            @param popularity as int
+            @param commit as bool
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET popularity=?\
+                         WHERE rowid=?", (popularity, bookmark_id,))
             if commit:
                 sql.commit()
 

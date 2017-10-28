@@ -16,6 +16,7 @@ from locale import strcoll
 from time import time
 
 from eolie.define import El
+from eolie.widget_bookmark_rating import BookmarkRatingWidget
 
 
 class MyEntry(Gtk.Entry):
@@ -160,7 +161,7 @@ class TagWidget(Gtk.FlowBoxChild):
         self.__stack.set_visible_child(self.__label)
 
 
-class EditBookmarkWidget(Gtk.Bin):
+class BookmarkEditWidget(Gtk.Bin):
     """
         Widget allowing to edit a bookmark
     """
@@ -204,7 +205,11 @@ class EditBookmarkWidget(Gtk.Bin):
             self.__flowbox.add(tag)
         if not back_enabled:
             builder.get_object("back_button").hide()
-        self.add(builder.get_object("widget"))
+        widget = builder.get_object("widget")
+        bookmark_rating = BookmarkRatingWidget(bookmark_id)
+        bookmark_rating.show()
+        widget.attach(bookmark_rating, 4, 1, 1, 1)
+        self.add(widget)
         self.connect("unmap", self.__on_unmap)
 
 #######################

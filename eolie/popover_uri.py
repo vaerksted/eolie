@@ -1107,8 +1107,8 @@ class UriPopover(Gtk.Popover):
             Edit bookmark associated to row
             @param row as Row
         """
-        from eolie.widget_edit_bookmark import EditBookmarkWidget
-        widget = EditBookmarkWidget(row.item.get_property("id"))
+        from eolie.widget_bookmark_edit import BookmarkEditWidget
+        widget = BookmarkEditWidget(row.item.get_property("id"))
         widget.show()
         self.__stack.add(widget)
         self.__stack.set_visible_child(widget)
