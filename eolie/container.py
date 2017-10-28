@@ -45,7 +45,7 @@ class Container(Gtk.Overlay):
         self.__expose_stack.set_hexpand(True)
         self.__expose_stack.set_vexpand(True)
         self.__expose_stack.set_transition_type(
-                                       Gtk.StackTransitionType.OVER_RIGHT_LEFT)
+                                       Gtk.StackTransitionType.CROSSFADE)
         self.__expose_stack.set_transition_duration(150)
         self.__expose_stack.show()
         self.__pages_manager = PagesManager(self.__window)
