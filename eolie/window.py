@@ -107,7 +107,8 @@ class Window(Gtk.ApplicationWindow):
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
         GLib.idle_add(self.__fullscreen_revealer.destroy)
-        self.__container.sites_manager.show()
+        if El().settings.get_value("show-sidebar"):
+            self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
         self.update(self.container.current.webview)
