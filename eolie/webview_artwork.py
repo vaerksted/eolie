@@ -132,7 +132,6 @@ class WebViewArtwork:
             surface = favicon_db.get_favicon_finish(result)
             if surface is None:
                 raise GLib.Error()
-            force_caching = False
             parsed = urlparse(uri)
             if parsed.netloc:
                 netloc = parsed.netloc.lstrip("www.")
@@ -161,11 +160,10 @@ class WebViewArtwork:
 
                 # Save favicon if needed
                 if resized is not None:
-                    if force_caching or not El().art.exists(uri, favicon_type):
+                    if not El().art.exists(uri, favicon_type):
                         El().art.save_artwork(uri, resized, favicon_type)
                     if netloc is not None and\
-                            (force_caching or
-                             not El().art.exists(netloc, favicon_type)):
+                            not El().art.exists(netloc, favicon_type):
                         El().art.save_artwork(netloc, resized, favicon_type)
                     self.__set_initial_uri_favicon(resized,
                                                    uri,
