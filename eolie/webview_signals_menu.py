@@ -45,9 +45,9 @@ class WebViewMenuSignals:
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
+        context_menu.remove_all()
         parsed = urlparse(webview.get_uri())
         if parsed.scheme == "populars":
-            context_menu.remove_all()
             if hit.context_is_link():
                 action = Gio.SimpleAction(name="reload_preview")
                 El().add_action(action)
@@ -81,6 +81,30 @@ class WebViewMenuSignals:
                                          _("Open link in a new private page"),
                                          None)
             context_menu.insert(item, 2)
+            action = Gio.SimpleAction(name="open_new_window")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_open_new_window_activate,
+                           hit.get_link_uri())
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Open link in a new window"),
+                                             None)
+            context_menu.insert(item, 3)
+            item = WebKit2.ContextMenuItem.new_separator()
+            context_menu.insert(item, 4)
+            action = Gio.SimpleAction(name="copy_link_uri")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_copy_link_uri_activate,
+                           hit.get_link_uri())
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Copy link address"),
+                                             None)
+            context_menu.insert(item, 5)
+            item = WebKit2.ContextMenuItem.new_separator()
+            context_menu.insert(item, 6)
         user_data = context_menu.get_user_data()
         if user_data is not None and user_data.get_string():
             selection = user_data.get_string()
@@ -170,6 +194,19 @@ class WebViewMenuSignals:
                                            WindowType.FOREGROUND,
                                            self.ephemeral or ephemeral)
 
+    def __on_open_new_window_activate(self, action, variant, uri):
+        """
+            Open link in a new page
+            @param action as Gio.SimpleAction
+            @param variant as GLib.Variant
+            @param uri as str
+            @param ephemeral as bool
+        """
+        window = El().get_new_window()
+        window.container.add_webview(uri,
+                                     WindowType.FOREGROUND,
+                                     self.ephemeral)
+
     def __on_search_words_activate(self, action, variant, selection):
         """
             Open link in a new page
@@ -180,6 +217,15 @@ class WebViewMenuSignals:
         search = Search()
         uri = search.get_search_uri(selection)
         self._window.container.add_webview(uri, WindowType.FOREGROUND)
+
+    def __on_copy_link_uri_activate(self, action, variant, uri):
+        """
+            Open link in a new page
+            @param action as Gio.SimpleAction
+            @param variant as GLib.Variant
+            @param selection as str
+        """
+        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
 
     def __on_copy_text_activate(self, action, variant, selection):
         """

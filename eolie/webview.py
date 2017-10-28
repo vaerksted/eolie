@@ -500,10 +500,9 @@ class WebView(WebKit2.WebView):
                 properties.get_toolbar_visible() and\
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
-            window = El().get_new_window()
-            webview.set_window(window)
-            window.container.add_view(webview,
-                                      WindowType.FOREGROUND)
+            self._window.container.add_view(webview,
+                                            WindowType.FOREGROUND)
+
         else:
             self._window.container.popup_webview(webview, True)
 
