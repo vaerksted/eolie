@@ -15,7 +15,6 @@ from gi.repository import GLib, WebKit2
 from urllib.parse import urlparse
 
 from eolie.define import Indicator
-from eolie.utils import resize_favicon
 
 
 class WebViewLoadSignals:
@@ -41,7 +40,6 @@ class WebViewLoadSignals:
             self.connect("load-changed", self.__on_load_changed)
             self.connect("title-changed", self.__on_title_changed)
             self.connect("uri-changed", self.__on_uri_changed)
-            self.connect("notify::favicon", self.__on_notify_favicon)
             self.connect("notify::estimated-load-progress",
                          self.__on_estimated_load_progress)
             self.get_back_forward_list().connect(
@@ -58,7 +56,6 @@ class WebViewLoadSignals:
             self.disconnect_by_func(self.__on_load_changed)
             self.disconnect_by_func(self.__on_title_changed)
             self.disconnect_by_func(self.__on_uri_changed)
-            self.disconnect_by_func(self.__on_notify_favicon)
             self.disconnect_by_func(self.__on_estimated_load_progress)
             self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
@@ -66,19 +63,6 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __on_notify_favicon(self, webview, favicon):
-        """
-            Set favicon
-            @param webview as WebView
-            @param favicon as Gparam
-        """
-        # Do not save favicon on notify, we may have a wrong favicon here
-        # Wrong size, wrong value
-        surface = self.get_favicon()
-        if surface is not None:
-            resized = resize_favicon(surface)
-            self.emit("favicon-changed", resized, None)
-
     def __on_load_changed(self, webview, event):
         """
             Update sidebar/urlbar

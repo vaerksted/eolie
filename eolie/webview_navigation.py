@@ -44,6 +44,7 @@ class WebViewNavigation:
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
         self.connect("load-changed", self.__on_load_changed)
+        self.connect("notify::favicon", self.__on_notify_favicon)
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
 
@@ -186,6 +187,14 @@ class WebViewNavigation:
                              2000,
                              self.__on_js_timeout,
                              "/org/gnome/Eolie/Readability.js")
+
+    def __on_notify_favicon(self, webview, favicon):
+        """
+            Set favicon
+            @param webview as WebView
+            @param favicon as Gparam
+        """
+        self.set_favicon(self.get_uri())
 
     def __on_js_timeout(self, path):
         """
@@ -373,7 +382,6 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.set_favicon(uri)
             if parsed.scheme != "populars":
                 self.set_snapshot()
             if El().show_tls:
