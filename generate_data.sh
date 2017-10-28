@@ -40,10 +40,13 @@ function generate_po()
     cd po
     intltool-update --pot
     mv -f untitled.pot eolie.pot
-    while read po
+    >LINGUAS
+    for file in *.po
     do
+	po=${file%.po}
+	echo $po >> LINGUAS
         intltool-update $po
-    done < LINGUAS
+    done
     cd -
 }
 
