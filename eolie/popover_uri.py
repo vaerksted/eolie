@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, GObject, GLib, Gio, Pango
 from gettext import gettext as _
 from time import mktime, time
 from datetime import datetime
+from dateutil import tz
 from locale import strcoll
 from urllib.parse import urlparse
 
@@ -753,8 +754,8 @@ class UriPopover(Gtk.Popover):
             @param calendar as Gtk.Calendar
         """
         (year, month, day) = calendar.get_date()
-        date = "%02d/%02d/%s" % (day, month + 1, year)
-        atime = mktime(datetime.strptime(date, "%d/%m/%Y").timetuple())
+        date = datetime(year, month + 1, day, 0, 0, tzinfo=tz.tzutc())
+        atime = mktime(date.timetuple())
         result = El().history.get(atime)
         self.__history_model.remove_all()
         self.__add_history_items(result, (year, month, day))
