@@ -150,6 +150,9 @@ class WebViewArtwork:
             if surface is not None:
                 resized = resize_favicon(surface)
             elif netloc is not None:
+                # Check for already cached favicon
+                # We do not want to show a favicon_alt if a favicon is cached
+                # so check for favicon too
                 for favicon in ["favicon", "favicon_alt"]:
                     resized = El().art.get_artwork(netloc,
                                                    favicon,
@@ -161,6 +164,7 @@ class WebViewArtwork:
                         break
                 if resized is None:
                     resized = get_char_surface(netloc[0])
+                    favicon_type = "favicon_alt"
             self.emit("favicon-changed", resized, None)
             # Save favicon if needed
             if not El().art.exists(uri, favicon_type):
