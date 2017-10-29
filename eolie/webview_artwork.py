@@ -163,12 +163,11 @@ class WebViewArtwork:
                     resized = get_char_surface(netloc[0])
             self.emit("favicon-changed", resized, None)
             # Save favicon if needed
-            if resized is not None:
-                if not El().art.exists(uri, favicon_type):
-                    El().art.save_artwork(uri, resized, favicon_type)
-                if netloc is not None and\
-                        not El().art.exists(netloc, favicon_type):
-                    El().art.save_artwork(netloc, resized, favicon_type)
-                self.__set_initial_uri_favicon(resized,
-                                               uri,
-                                               favicon_type)
+            if not El().art.exists(uri, favicon_type):
+                El().art.save_artwork(uri, resized, favicon_type)
+            if netloc is not None and\
+                    not El().art.exists(netloc, favicon_type):
+                El().art.save_artwork(netloc, resized, favicon_type)
+            self.__set_initial_uri_favicon(resized,
+                                           uri,
+                                           favicon_type)
