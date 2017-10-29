@@ -412,6 +412,7 @@ class ToolbarEnd(Gtk.Bin):
             Restore default zoom level
             @param button as Gtk.ToggleButton
         """
+        button.get_ancestor(Gtk.Popover).hide()
         if button.get_active():
             if not self.__window.is_fullscreen:
                 self.__window.fullscreen()
