@@ -112,7 +112,8 @@ class WebViewDBusSignals:
              user_form_value,
              pass_form_name,
              pass_form_value) = source.call_finish(result)[0]
-            if user_form_name and pass_form_name:
+            if user_form_name and pass_form_name and\
+                    user_form_value != pass_form_value:
                 self._window.close_popovers()
                 self._window.toolbar.title.show_password(
                                                  user_form_name,
