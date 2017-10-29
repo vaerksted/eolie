@@ -133,7 +133,6 @@ class WebViewNavigation:
             policy = WebKit2.HardwareAccelerationPolicy.NEVER
         else:
             policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
-        print(policy)
         self.get_settings().set_hardware_acceleration_policy(policy)
 
     def __on_run_as_modal(self, webview):
