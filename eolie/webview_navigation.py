@@ -123,6 +123,19 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
+    def __hw_acceleration_policy(self, netloc):
+        """
+            Disable hw acceleration for blacklist
+            @param netloc as str
+        """
+        blacklist = ["plus.google.com"]
+        if netloc in blacklist:
+            policy = WebKit2.HardwareAccelerationPolicy.NEVER
+        else:
+            policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
+        print(policy)
+        self.get_settings().set_hardware_acceleration_policy(policy)
+
     def __on_run_as_modal(self, webview):
         """
         """
@@ -326,6 +339,7 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
+            self.__hw_acceleration_policy(parsed.netloc)
             if self.view is not None and not self.view.subsurface:
                 self._window.container.sites_manager.add_view_for_uri(
                                                           self.view,
