@@ -65,6 +65,11 @@ class WebViewMenuSignals:
                                                          None)
                 context_menu.append(item)
                 return
+        # Get current selection
+        selection = ""
+        user_data = context_menu.get_user_data()
+        if user_data is not None and user_data.get_string():
+            selection = user_data.get_string()
         if hit.context_is_link():
             action = Gio.SimpleAction(name="open_new_page")
             El().add_action(action)
@@ -96,6 +101,18 @@ class WebViewMenuSignals:
                                              _("Open link in a new window"),
                                              None)
             context_menu.append(item)
+        if selection:
+            action = Gio.SimpleAction(name="copy_text")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_copy_text_activate,
+                           selection)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Copy"),
+                                             None)
+            context_menu.append(item)
+        if hit.context_is_link():
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
             action = Gio.SimpleAction(name="copy_link_uri")
@@ -110,31 +127,17 @@ class WebViewMenuSignals:
             context_menu.append(item)
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
-        user_data = context_menu.get_user_data()
-        if user_data is not None and user_data.get_string():
-            selection = user_data.get_string()
-            if hit.context_is_selection():
-                action = Gio.SimpleAction(name="search_words")
-                El().add_action(action)
-                action.connect("activate",
-                               self.__on_search_words_activate,
-                               selection)
-                item = WebKit2.ContextMenuItem.new_from_gaction(
-                                                 action,
-                                                 _("Search on the Web"),
-                                                 None)
-                context_menu.append(item)
-            if hit.context_is_link():
-                action = Gio.SimpleAction(name="copy_text")
-                El().add_action(action)
-                action.connect("activate",
-                               self.__on_copy_text_activate,
-                               selection)
-                item = WebKit2.ContextMenuItem.new_from_gaction(
-                                                 action,
-                                                 _("Copy"),
-                                                 None)
-                context_menu.append(item)
+        if selection and hit.context_is_selection():
+            action = Gio.SimpleAction(name="search_words")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_search_words_activate,
+                           selection)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Search on the Web"),
+                                             None)
+            context_menu.append(item)
         else:
             if not webview.is_loading() and parsed.scheme in ["http", "https"]:
                 # Save all images
