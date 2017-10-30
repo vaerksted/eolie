@@ -538,9 +538,9 @@ class DatabaseBookmarks:
                 return v[0]
             return 0
 
-    def get_best_popularity(self):
+    def get_higher_popularity(self):
         """
-            Get best popularity available
+            Get higher available popularity
             @return int
         """
         with SqlCursor(self) as sql:

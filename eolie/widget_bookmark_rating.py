@@ -103,7 +103,7 @@ class BookmarkRatingWidget(Gtk.Bin):
             self._on_leave_notify(None, None)
         else:
             avg_popularity = El().bookmarks.get_avg_popularity()
-            best_popularity = El().bookmarks.get_best_popularity()
+            best_popularity = El().bookmarks.get_higher_popularity()
             popularity = int((new_rate * avg_popularity / 5) + 0.5)
             # Special case, if new_rate == 5, try to move bookmark near
             # most popular bookmark
