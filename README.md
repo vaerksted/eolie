@@ -28,6 +28,7 @@ It provides:
 - itstool (make)
 - python (make)
 - python-cairo
+- python-dateutil
 - python-dbus
 - python-gobject
 - python-sqlite
