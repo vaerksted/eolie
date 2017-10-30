@@ -58,7 +58,7 @@ $ sudo ninja -C build install
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-$ sudo apt-get install gir1.2-gtkspell3-3.0 libglib2.0-dev libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0 autoconf-archive
+$ sudo apt-get install gir1.2-gtkspell3-3.0 libglib2.0-dev libgirepository1.0-dev libgtk-3-dev python-gobject-dev python3-dev libwebkit2gtk-4.0-dev gir1.2-webkit2-4.0 autoconf-archive python3-dateutil
 $ meson build
 $ sudo ninja -C build install
 ```
@@ -77,7 +77,7 @@ This will allow you to uninstall eolie as a package, for example with `apt-get u
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-$ sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel gtkspell3
+$ sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel gtkspell3 python3-dateutil
 $ meson build
 $ sudo ninja -C build install
 ```
