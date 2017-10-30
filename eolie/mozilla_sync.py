@@ -35,6 +35,16 @@ class SyncWorker:
        Manage sync with mozilla server, will start syncing on init
     """
 
+    def check_modules():
+        """
+            True if deps are installed
+            @return bool
+        """
+        from importlib import util
+        fxa = util.find_spec("fxa")
+        crypto = util.find_spec("Crypto")
+        return fxa is not None and crypto is not None
+
     def __init__(self):
         """
             Init worker

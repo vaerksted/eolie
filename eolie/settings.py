@@ -501,13 +501,13 @@ class SettingsDialog:
         """
             Show a message about missing fxa module
         """
-        try:
-            from eolie.mozilla_sync import SyncWorker
-            SyncWorker  # Just make PEP8 happy
-        except Exception as e:
-            self.__result_label.set_text(
+        from eolie.mozilla_sync import SyncWorker
+        if not SyncWorker.check_modules():
+            cmd = "<b>$ pip3 install requests-hawk\n"\
+                  "PyFxA pycrypto cryptography</b>"
+            self.__result_label.set_markup(
                   _("Synchronization is not available"
-                    " on your computer:\n %s") % e)
+                    " on your computer:\n %s") % cmd)
             self.__sync_button.set_sensitive(False)
 
     def __connect_mozilla_sync(self, username, password):

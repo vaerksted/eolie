@@ -319,8 +319,8 @@ class Application(Gtk.Application):
         # Add a global DBus helper
         self.helper = DBusHelper()
         # First init sync worker
-        try:
-            from eolie.mozilla_sync import SyncWorker
+        from eolie.mozilla_sync import SyncWorker
+        if SyncWorker.check_modules():
             self.sync_worker = SyncWorker()
             # Run a first sync in 10 seconds, speed up app start
             GLib.timeout_add_seconds(10,
@@ -330,8 +330,7 @@ class Application(Gtk.Application):
             GLib.timeout_add_seconds(3600,
                                      self.sync_worker.sync,
                                      True)
-        except Exception as e:
-            print("Application::init():", e)
+        else:
             self.sync_worker = None
         if self.prefers_app_menu():
             menu = self.get_app_menu()
