@@ -1,4 +1,4 @@
-.progressbar-notrough {
+.progressbar {
     border: none;
     background-color: transparent;
     background-image: none;
@@ -8,14 +8,14 @@
     margin-bottom: 0px;
 }
 
-.progressbar-notrough progress {
+.progressbar progress {
     background-color: @theme_selected_bg_color;
     background-image: none;
     border: none;
     min-height: 2px;
 }
 
-.progressbar-notrough trough {
+.progressbar trough {
     border: none;
     background-color: transparent;
     background-image: none;

@@ -34,7 +34,7 @@ class SmoothProgressBar(Gtk.ProgressBar):
         Gtk.ProgressBar.__init__(self)
         self.__timeout_id = None
         self.set_property("valign", Gtk.Align.END)
-        self.get_style_context().add_class("progressbar-notrough")
+        self.get_style_context().add_class("progressbar")
 
     def set_fraction(self, fraction):
         """
