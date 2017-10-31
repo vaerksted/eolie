@@ -138,10 +138,9 @@ class WebViewArtwork:
             favicon_type = "favicon"
             # Calculate netloc
             parsed = urlparse(uri)
-            if parsed.netloc:
-                netloc = parsed.netloc.lstrip("www.")
-            else:
-                netloc = None
+            if not parsed.netloc:
+                return
+            netloc = parsed.netloc.lstrip("www.")
             # Read result
             try:
                 surface = favicon_db.get_favicon_finish(result)
@@ -150,7 +149,7 @@ class WebViewArtwork:
             # Resize surface and set favicon
             if surface is not None:
                 resized = resize_favicon(surface)
-            elif netloc is not None:
+            else:
                 # Check for already cached favicon
                 # We do not want to show a favicon_alt if a favicon is cached
                 # so check for favicon too
