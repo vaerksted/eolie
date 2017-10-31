@@ -116,7 +116,6 @@ class Window(Gtk.ApplicationWindow):
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.container.pages_manager.children)
         self.toolbar.actions.count_label.set_text(str(count))
-        El().update_unity_badge()
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
         self.__container.current.webview.run_javascript(

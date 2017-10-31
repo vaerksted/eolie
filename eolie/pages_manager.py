@@ -168,6 +168,7 @@ class PagesManager(Gtk.EventBox):
         children_count = len(self.__box.get_children()) - 1
         # Don't show 0 as we are going to open a new one
         if children_count:
+            El().update_unity_badge()
             self.__window.toolbar.actions.count_label.set_text(
                                                        str(children_count))
         El().history.set_page_state(view.webview.get_uri())
