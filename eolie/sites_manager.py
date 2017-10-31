@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, WebKit2
 
 from urllib.parse import urlparse
 
@@ -58,60 +58,16 @@ class SitesManager(Gtk.EventBox):
 
         self.add(self.__scrolled)
 
-    def add_view_for_uri(self, view, uri):
+    def add_view(self, view):
         """
-            Add view for uri
+            Add a new view to monitor
             @param view as View
-            @param uri as str
-            @param surface as cairo.SurfaceImage
         """
-        if uri is None:
-            return
-        netloc = self.__get_netloc(uri)
-        if not netloc:
-            netloc = "%s://" % urlparse(uri).scheme
-
-        child = None
-        empty_child = None
-        # Do not group by netloc
-        if view.webview.ephemeral:
-            for site in self.__box.get_children():
-                if site.ephemeral:
-                    child = site
-                    break
-        else:
-            # Search for a child for wanted netloc
-            # Clean up any child matching view, allowing us to reuse it
-            for site in self.__box.get_children():
-                if site.netloc == netloc and site.ephemeral is False:
-                    child = site
-                else:
-                    site.remove_view(view)
-                    if site.empty:
-                        empty_child = site
-
-        if child is None:
-            if empty_child is None:
-                child = SitesManagerChild(netloc,
-                                          self.__window,
-                                          view.webview.ephemeral)
-                child.connect("moved", self.__on_moved)
-                position = El().settings.get_value(
-                                                "sidebar-position").get_int32()
-                child.set_minimal(position < 80)
-                child.show()
-                child.add_view(view)
-                self.__box.add(child)
-                self.update_visible_child()
-            else:
-                child = empty_child
-                child.reset(netloc)
-                child.add_view(view)
-        else:
-            if empty_child is not None:
-                empty_child.destroy()
-            child.add_view(view)
-            self.update_visible_child()
+        delayed_uri = view.webview.delayed_uri
+        if delayed_uri is not None:
+            self.__loaded_uri(view.webview, delayed_uri)
+        view.webview.connect("load-changed", self.__on_webview_load_changed)
+        view.connect("destroying", self.__on_view_destroying)
 
     def set_favicon(self, view, surface):
         """
@@ -140,17 +96,6 @@ class SitesManager(Gtk.EventBox):
             if view in child.views:
                 child.update_label()
                 break
-
-    def remove_view(self, view):
-        """
-            Remove view
-            @param view as View
-        """
-        count = len(self.__box.get_children())
-        for site in self.__box.get_children():
-            site.remove_view(view)
-            if site.empty and count > 1:
-                site.destroy()
 
     def next(self):
         """
@@ -224,6 +169,58 @@ class SitesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __loaded_uri(self, webview, uri):
+        """
+            Update children based on webview and uri
+            @param webview as WebView
+            @param uri as str
+        """
+        netloc = self.__get_netloc(uri)
+        if not netloc:
+            netloc = "%s://" % urlparse(uri).scheme
+
+        child = None
+        empty_child = None
+        # Do not group by netloc
+        if webview.ephemeral:
+            for site in self.__box.get_children():
+                if site.ephemeral:
+                    child = site
+                    break
+        else:
+            # Search for a child for wanted netloc
+            # Clean up any child matching view, allowing us to reuse it
+            for site in self.__box.get_children():
+                if site.netloc == netloc and site.ephemeral is False:
+                    child = site
+                else:
+                    site.remove_view(webview.view)
+                    if site.empty:
+                        empty_child = site
+
+        if child is None:
+            if empty_child is None:
+                child = SitesManagerChild(netloc,
+                                          self.__window,
+                                          webview.ephemeral)
+                child.connect("moved", self.__on_moved)
+                position = El().settings.get_value(
+                                                "sidebar-position").get_int32()
+                child.set_minimal(position < 80)
+                child.show()
+                child.add_view(webview.view)
+                self.__box.add(child)
+                self.update_visible_child()
+            else:
+                child = empty_child
+                child.reset(netloc)
+                child.add_view(webview.view)
+        else:
+            if empty_child is not None:
+                empty_child.destroy()
+            child.add_view(webview.view)
+            self.update_visible_child()
+
     def __get_netloc(self, uri):
         """
             Calculate netloc
@@ -266,6 +263,29 @@ class SitesManager(Gtk.EventBox):
                 self.__scrolled.get_allocated_height() + value or\
                 y - child.get_allocated_height() < 0 + value:
             self.__scrolled.get_vadjustment().set_value(y)
+
+    def __on_view_destroying(self, view):
+        """
+            Clean children
+            @param view as View
+        """
+        view.webview.disconnect_by_func(self.__on_webview_load_changed)
+        count = len(self.__box.get_children())
+        for site in self.__box.get_children():
+            site.remove_view(view)
+            if site.empty and count > 1:
+                site.destroy()
+
+    def __on_webview_load_changed(self, webview, event):
+        """
+            Update children
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event == WebKit2.LoadEvent.FINISHED:
+            return
+        uri = webview.get_uri()
+        self.__loaded_uri(webview, uri)
 
     def __on_row_activated(self, listbox, child):
         """

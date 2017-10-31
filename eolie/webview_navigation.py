@@ -320,10 +320,6 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.stop_snapshot()
-            if self.view is not None and not self.view.subsurface:
-                self._window.container.sites_manager.add_view_for_uri(
-                                                          self.view,
-                                                          uri)
             self.__initial_uri = uri.rstrip('/')
             self._cancelled = False
             # Destroy current popups
@@ -339,10 +335,6 @@ class WebViewNavigation:
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__hw_acceleration_policy(parsed.netloc)
-            if self.view is not None and not self.view.subsurface:
-                self._window.container.sites_manager.add_view_for_uri(
-                                                          self.view,
-                                                          uri)
             if self._content_manager is not None:
                 self._content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):

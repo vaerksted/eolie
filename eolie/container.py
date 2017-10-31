@@ -86,13 +86,13 @@ class Container(Gtk.Overlay):
             webview.set_gtime(gtime)
         if state is not None:
             webview.restore_session_state(state)
-        self.add_view(webview, window_type)
         if uri is not None:
             if window_type != WindowType.OFFLOAD:
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
             else:
                 webview.set_delayed_uri(uri)
+        self.add_view(webview, window_type)
         return webview
 
     def add_webviews(self, items, first_onscreen=False):
@@ -109,8 +109,7 @@ class Container(Gtk.Overlay):
             window_type = WindowType.OFFLOAD
         if items:
             (uri, ephemeral, state) = items.pop(0)
-            webview = self.add_webview(uri, window_type, ephemeral, state)
-            self.sites_manager.add_view_for_uri(webview.view, uri)
+            self.add_webview(uri, window_type, ephemeral, state)
             GLib.idle_add(self.add_webviews, items)
 
     def add_view(self, webview, window_type):
@@ -121,7 +120,8 @@ class Container(Gtk.Overlay):
         """
         view = self.__get_new_view(webview)
         view.show()
-        self.__pages_manager.add_child(view)
+        self.__pages_manager.add_view(view)
+        self.__sites_manager.add_view(view)
         # Force window type as current window is not visible
         if self.__expose_stack.get_visible_child_name() == "expose":
             window_type = WindowType.BACKGROUND
@@ -240,7 +240,6 @@ class Container(Gtk.Overlay):
                                    view.webview.get_uri(),
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
-        self.__sites_manager.remove_view(view)
         view.destroy()
         # Don't show 0 as we are going to open a new one
         if children_count:

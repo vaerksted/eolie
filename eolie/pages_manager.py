@@ -64,7 +64,7 @@ class PagesManager(Gtk.EventBox):
 
         self.add(grid)
 
-    def add_child(self, view):
+    def add_view(self, view):
         """
             Add child to sidebar
             @param view as View
