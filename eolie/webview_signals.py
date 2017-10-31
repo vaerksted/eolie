@@ -203,7 +203,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
-        self._window.container.sites_manager.show()
+        if El().settings.get_value("show-sidebar"):
+            self._window.container.sites_manager.show()
 
     def __on_insecure_content_detected(self, webview, event):
         """
