@@ -556,10 +556,8 @@ class ToolbarTitle(Gtk.Bin):
         # Forward event to popover, if not used, handle input
         forwarded = self.__popover.forward_event(event)
         if forwarded:
-            self.__entry.get_style_context().remove_class('input')
             return True
         else:
-            self.__entry.get_style_context().add_class('input')
             # Close popover and save current entry
             if event.keyval == Gdk.KEY_Escape:
                 self.__entry.delete_text(0, -1)
@@ -976,8 +974,7 @@ class ToolbarTitle(Gtk.Bin):
         placeholder_margin_start = padding_start + 22 + border
         css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
         # Get value from headerbar as not possible in pure CSS
-        style_context = self.__window.toolbar.get_style_context()
+        style_context = self.get_style_context()
         color = style_context.get_color(Gtk.StateFlags.NORMAL)
         css += ".uribar { color: %s; }" % color.to_string()
-        # Let GTK finish current resizing before injecting CSS
         self.__css_provider.load_from_data(css.encode("utf-8"))
