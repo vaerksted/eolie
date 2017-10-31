@@ -360,12 +360,10 @@ class Row(Gtk.ListBoxRow):
             items = El().bookmarks.get_unclassified()
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
-        i = 0
+        pages = []
         for (bid, uri, title) in items:
-            GLib.idle_add(self.__window.container.add_webview,
-                          uri, WindowType.BACKGROUND, False,
-                          None, None, i < 15)
-            i += 1
+            pages.append((uri, False, None))
+        self.__window.container.add_webviews(pages, True)
 
     def __on_delete_clicked(self, button):
         """
