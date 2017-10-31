@@ -194,7 +194,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as button
         """
         current = self.__window.container.current
-        self.__window.container.pages_manager.try_close_view(current)
+        self.__window.container.try_close_view(current)
 
 #######################
 # PRIVATE             #
