@@ -73,20 +73,29 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
         view.connect("destroying", self.__on_view_destroying)
-        self.__view.webview.connect("favicon-changed",
-                                    self.__on_webview_favicon_changed)
-        self.__view.webview.connect("notify::is-playing-audio",
-                                    self.__on_webview_notify_is_playing_audio)
-        self.__view.webview.connect("uri-changed",
-                                    self.__on_webview_uri_changed)
-        self.__view.webview.connect("title-changed",
-                                    self.__on_webview_title_changed)
-        self.__view.webview.connect("scroll-event",
-                                    self.__on_webview_scroll_event)
-        self.__view.webview.connect("load-changed",
-                                    self.__on_webview_load_changed)
-        self.__view.webview.connect("shown",
-                                    self.__on_webview_shown)
+        self.__connected_signals = []
+        self.__connected_signals.append(
+            self.__view.webview.connect("favicon-changed",
+                                        self.__on_webview_favicon_changed))
+        self.__connected_signals.append(
+            self.__view.webview.connect(
+                                    "notify::is-playing-audio",
+                                    self.__on_webview_notify_is_playing_audio))
+        self.__connected_signals.append(
+            self.__view.webview.connect("uri-changed",
+                                        self.__on_webview_uri_changed))
+        self.__connected_signals.append(
+            self.__view.webview.connect("title-changed",
+                                        self.__on_webview_title_changed))
+        self.__connected_signals.append(
+            self.__view.webview.connect("scroll-event",
+                                        self.__on_webview_scroll_event))
+        self.__connected_signals.append(
+            self.__view.webview.connect("load-changed",
+                                        self.__on_webview_load_changed))
+        self.__connected_signals.append(
+            self.__view.webview.connect("shown",
+                                        self.__on_webview_shown))
 
     @property
     def view(self):
@@ -106,7 +115,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param event as Gdk.Event
         """
         if event.button == 2:
-            self.__window.container.pages_manager.try_close_view(self.__view)
+            self.__window.container.try_close_view(self.__view)
             return True
 
     def _on_button_release_event(self, eventbox, event):
@@ -121,7 +130,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param button as Gtk.Button
         """
-        self.__window.container.pages_manager.try_close_view(self.__view)
+        self.__window.container.try_close_view(self.__view)
         return True
 
     def _on_enter_notify_event(self, eventbox, event):
@@ -217,6 +226,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param view as View
         """
+        for signal_id in self.__connected_signals:
+            self.__view.webview.disconnect(signal_id)
         self.destroy()
 
     def __on_webview_favicon_changed(self, webview, favicon,

@@ -47,6 +47,7 @@ class View(Gtk.Overlay):
         """
         Gtk.Overlay.__init__(self)
         self.__reading_view = None
+        self.__destroying = False
         self.__window = window
         self.__webview = webview
         self.__subsurface = subsurface
@@ -123,8 +124,17 @@ class View(Gtk.Overlay):
         """
             Delayed destroy
         """
+        self.__destroying = True
         self.emit("destroying")
         GLib.timeout_add(1000, self.__destroy)
+
+    @property
+    def destroying(self):
+        """
+            Destroy is pending
+            @return bool
+        """
+        return self.__destroying
 
     @property
     def subsurface(self):
@@ -189,7 +199,7 @@ class View(Gtk.Overlay):
             @param webview as WebView
         """
         if self.get_ancestor(Gtk.Popover) is None:
-            self.__window.container.pages_manager.try_close_view(self)
+            self.__window.container.close_view(self)
 
     def __on_mouse_target_changed(self, webview, hit, modifiers):
         """

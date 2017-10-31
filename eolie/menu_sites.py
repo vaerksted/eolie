@@ -80,7 +80,7 @@ class SitesMenu(Gio.Menu):
         """
         for view in self.__window.container.views:
             if view in views:
-                self.__window.container.pages_manager.try_close_view(view)
+                self.__window.container.try_close_view(view)
 
     def __on_modify_ua_activate(self, action, param, views):
         """

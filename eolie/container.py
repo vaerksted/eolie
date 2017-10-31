@@ -224,7 +224,9 @@ class Container(Gtk.Overlay):
             @param animate as bool
         """
         # Get children less view
-        children = self.__stack.get_children()
+        children = self.__get_children()
+        if view.destroying:
+            return
         children.remove(view)
         reversed_children = list(reversed(children))
         children_count = len(children)
@@ -321,6 +323,14 @@ class Container(Gtk.Overlay):
         view = View(webview, self.__window)
         view.show()
         return view
+
+    def __get_children(self):
+        """
+            Get children
+            @return [View]
+        """
+        return [child for child in self.__stack.get_children()
+                if not child.destroying]
 
     def __on_paned_notify_position(self, paned, ignore):
         """
