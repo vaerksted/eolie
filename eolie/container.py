@@ -363,8 +363,11 @@ class Container(Gtk.Overlay):
             dialog.response(Gtk.ResponseType.CANCEL)
 
         try:
-            result = source.call_finish(result)[0]
-            if result:
+            try:
+                result = source.call_finish(result)
+            except:
+                result = None
+            if result is not None and result[0]:
                 builder = Gtk.Builder()
                 builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
                 dialog = builder.get_object("dialog")
