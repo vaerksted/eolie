@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Gio, WebKit2
+from gi.repository import GObject, Gtk, Gdk, GLib, Gio, WebKit2
 
 from eolie.widget_find import FindWidget
 from eolie.webview import WebView
@@ -22,6 +22,10 @@ class View(Gtk.Overlay):
     """
         An overlay with a webview and a find widget
     """
+
+    __gsignals__ = {
+        'destroying': (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
 
     def get_new_webview(ephemeral, window):
         """
@@ -119,7 +123,7 @@ class View(Gtk.Overlay):
         """
             Delayed destroy
         """
-        self.__window.container.sites_manager.remove_view(self)
+        self.emit("destroying")
         GLib.timeout_add(1000, self.__destroy)
 
     @property

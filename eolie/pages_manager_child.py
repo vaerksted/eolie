@@ -72,37 +72,21 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.START_HEIGHT +
                               ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        self.connect("destroy", self.__on_destroy)
-        self.__view_destroy_id = view.connect("destroy",
-                                              self.__on_view_destroy)
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "favicon-changed",
-                                 self.__on_webview_favicon_changed))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "notify::is-playing-audio",
-                                 self.__on_webview_notify_is_playing_audio))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "uri-changed",
-                                 self.__on_webview_uri_changed))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "title-changed",
-                                 self.__on_webview_title_changed))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "scroll-event",
-                                 self.__on_webview_scroll_event))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "load-changed",
-                                 self.__on_webview_load_changed))
-        self.__connected_ids.append(
-                             self.__view.webview.connect(
-                                 "shown",
-                                 self.__on_webview_shown))
+        view.connect("destroying", self.__on_view_destroying)
+        self.__view.webview.connect("favicon-changed",
+                                    self.__on_webview_favicon_changed)
+        self.__view.webview.connect("notify::is-playing-audio",
+                                    self.__on_webview_notify_is_playing_audio)
+        self.__view.webview.connect("uri-changed",
+                                    self.__on_webview_uri_changed)
+        self.__view.webview.connect("title-changed",
+                                    self.__on_webview_title_changed)
+        self.__view.webview.connect("scroll-event",
+                                    self.__on_webview_scroll_event)
+        self.__view.webview.connect("load-changed",
+                                    self.__on_webview_load_changed)
+        self.__view.webview.connect("shown",
+                                    self.__on_webview_shown)
 
     @property
     def view(self):
@@ -228,25 +212,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                       GLib.markup_escape_text(uri))
         widget.set_tooltip_markup(text)
 
-    def __on_destroy(self, widget):
+    def __on_view_destroying(self, view):
         """
-            Disconnect signals and destroy view
-            @param widget as Gtk.Widget
-        """
-        while self.__connected_ids:
-            connected_id = self.__connected_ids.pop(0)
-            self.__view.webview.disconnect(connected_id)
-        if self.__view_destroy_id is not None:
-            self.__view.disconnect(self.__view_destroy_id)
-        self.__view.destroy()
-
-    def __on_view_destroy(self, view):
-        """
-            Destroy self as view has been destroyed
+            Destroy self
             @param view as View
         """
-        self.__connected_ids = []
-        self.__view_destroy_id = None
         self.destroy()
 
     def __on_webview_favicon_changed(self, webview, favicon,

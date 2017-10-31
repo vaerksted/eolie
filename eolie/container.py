@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib
 
+from gettext import gettext as _
+
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
@@ -139,6 +141,8 @@ class Container(Gtk.Overlay):
             window.show()
             window.remove(view)
             view.set_size_request(-1, -1)
+            # Needed to force view to resize
+            view.queue_draw()
             self.__stack.add(view)
             window.destroy()
         # Do not count container views as destroy may be pending on somes
@@ -202,6 +206,76 @@ class Container(Gtk.Overlay):
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.pages_manager.set_filter("")
             child.set_filtered(False)
+
+    def try_close_view(self, view):
+        """
+            Ask user before closing view if forms filled
+            @param view as View
+        """
+        page_id = view.webview.get_page_id()
+        El().helper.call("FormsFilled",
+                         GLib.Variant("(i)", (page_id,)),
+                         self.__on_forms_filled, page_id, view)
+
+    def close_view(self, view):
+        """
+            close current view
+            @param view as View
+            @param animate as bool
+        """
+        # Get children less view
+        children = self.__stack.get_children()
+        children.remove(view)
+        reversed_children = list(reversed(children))
+        children_count = len(children)
+        El().history.set_page_state(view.webview.get_uri())
+        self.__window.close_popovers()
+        # Needed to unfocus titlebar
+        self.__window.set_focus(None)
+        was_current = view == self.__window.container.current
+        gtime = view.webview.gtime
+        El().pages_menu.add_action(view.webview.get_title(),
+                                   view.webview.get_uri(),
+                                   view.webview.ephemeral,
+                                   view.webview.get_session_state())
+        self.__sites_manager.remove_view(view)
+        view.destroy()
+        # Don't show 0 as we are going to open a new one
+        if children_count:
+            El().update_unity_badge()
+            self.__window.toolbar.actions.count_label.set_text(
+                                                       str(children_count))
+        # Nothing to do if was not current page
+        if not was_current:
+            return False
+        next_view = None
+        # First we search a brother ie a paged opened from the same parent page
+        for view in reversed_children:
+            if view.webview.gtime == gtime:
+                next_view = view
+                break
+        # Get view with gtime -+ 1
+        # If closing a parent, go to child
+        # If closing a child, go to parent
+        if next_view is None:
+            for view in reversed_children:
+                if view.webview.gtime == gtime + 1 or\
+                        view.webview.gtime == gtime - 1:
+                    next_view = view
+                    break
+        # Get view with higher access time
+        if next_view is None:
+            atime = 0
+            for view in reversed_children:
+                if view.webview.atime > atime:
+                    next_view = view
+                    atime = view.webview.atime
+        if next_view is not None:
+            self.__window.container.set_current(next_view, True)
+        else:
+            # We are last row, add a new one
+            self.__window.container.add_webview(El().start_page,
+                                                WindowType.FOREGROUND)
 
     @property
     def pages_manager(self):
@@ -269,3 +343,41 @@ class Container(Gtk.Overlay):
             self.__sites_manager.show()
         else:
             self.__sites_manager.hide()
+
+    def __on_forms_filled(self, source, result, view):
+        """
+            Ask user to close view, if ok, close view
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param view as View
+        """
+        def on_response_id(dialog, response_id, view, self):
+            if response_id == Gtk.ResponseType.CLOSE:
+                self.close_view(view)
+            dialog.destroy()
+
+        def on_close(widget, dialog):
+            dialog.response(Gtk.ResponseType.CLOSE)
+
+        def on_cancel(widget, dialog):
+            dialog.response(Gtk.ResponseType.CANCEL)
+
+        try:
+            result = source.call_finish(result)[0]
+            if result:
+                builder = Gtk.Builder()
+                builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
+                dialog = builder.get_object("dialog")
+                label = builder.get_object("label")
+                close = builder.get_object("close")
+                cancel = builder.get_object("cancel")
+                label.set_text(_("Do you really want to close this page?"))
+                dialog.set_transient_for(self.__window)
+                dialog.connect("response", on_response_id, view, self)
+                close.connect("clicked", on_close, dialog)
+                cancel.connect("clicked", on_cancel, dialog)
+                dialog.run()
+            else:
+                self.close_view(view)
+        except:
+            self.close_view(view)
