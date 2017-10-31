@@ -27,6 +27,7 @@ class ProgressBar(Gtk.ProgressBar):
     def __init__(self):
         Gtk.ProgressBar.__init__(self)
         self.set_property("valign", Gtk.Align.END)
+        self.get_style_context().add_class("progressbar-button")
 
     def do_get_preferred_width(self):
         return (24, 24)
@@ -450,7 +451,9 @@ class ToolbarEnd(Gtk.Bin):
             nb_downloads += 1
             fraction += download.get_estimated_progress()
         if nb_downloads:
-            self.__progress.set_fraction(fraction/nb_downloads)
+            value = fraction / nb_downloads
+            self.__progress.set_fraction(value)
+            El().update_unity_badge(value)
         return True
 
     def __on_save_response(self, dialog, response_id):
@@ -553,6 +556,7 @@ class ToolbarEnd(Gtk.Bin):
                                                      download_manager)
         elif self.__timeout_id is not None:
             self.__progress.set_fraction(1.0)
+            El().update_unity_badge(1.0)
             GLib.timeout_add(1000, self.__hide_progress)
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None

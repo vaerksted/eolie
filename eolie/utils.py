@@ -21,11 +21,11 @@ from base64 import b64encode
 from eolie.define import El, ArtSize
 
 
-def is_gnome():
+def is_unity():
     """
         Return True if desktop is Gnome
     """
-    return GLib.getenv("XDG_CURRENT_DESKTOP") == "GNOME"
+    return GLib.getenv("XDG_CURRENT_DESKTOP") == "ubuntu:GNOME"
 
 
 def resize_favicon(favicon):

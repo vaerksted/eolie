@@ -114,8 +114,9 @@ class Window(Gtk.ApplicationWindow):
         self.update(self.container.current.webview)
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
-        count = str(len(self.container.pages_manager.children))
-        self.toolbar.actions.count_label.set_text(count)
+        count = len(self.container.pages_manager.children)
+        self.toolbar.actions.count_label.set_text(str(count))
+        El().update_unity_badge()
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
         self.__container.current.webview.run_javascript(

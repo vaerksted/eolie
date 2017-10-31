@@ -143,8 +143,9 @@ class Container(Gtk.Overlay):
             window.destroy()
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
-        count = str(len(self.__pages_manager.children))
-        self.__window.toolbar.actions.count_label.set_text(count)
+        count = len(self.__pages_manager.children)
+        self.__window.toolbar.actions.count_label.set_text(str(count))
+        El().update_unity_badge()
 
     def load_uri(self, uri):
         """

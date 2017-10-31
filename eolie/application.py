@@ -41,6 +41,7 @@ from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.context import Context
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, WindowType
+from eolie.utils import is_unity
 
 
 class Application(Gtk.Application):
@@ -195,6 +196,22 @@ class Application(Gtk.Application):
         for window in self.get_windows():
             for view in window.container.views:
                 view.webview.set_setting(key, value)
+
+    def update_unity_badge(self, fraction=None):
+        """
+            Update unity badge count/fraction
+            @param fraction as double
+        """
+        if self.__unity is not None:
+            if fraction is None:
+                count = 0
+                for window in self.get_windows():
+                    count += len(window.container.pages_manager.children)
+                self.__unity.set_property("count", count)
+                self.__unity.set_property("count_visible", True)
+            else:
+                self.__unity.set_property("progress", fraction)
+                self.__unity.set_property("progress_visible", fraction != 1.0)
 
     def quit(self, vacuum=False):
         """
@@ -366,6 +383,17 @@ class Application(Gtk.Application):
         self.search = Search()
         self.download_manager = DownloadManager()
         self.pages_menu = PagesMenu()
+
+        # https://wiki.ubuntu.com/Unity/LauncherAPI
+        self.__unity = None
+        if is_unity:
+            try:
+                gi.require_version('Unity', '7.0')
+                from gi.repository import Unity
+                self.__unity = Unity.LauncherEntry.get_for_desktop_id(
+                                                     "org.gnome.Eolie.desktop")
+            except:
+                pass
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))
