@@ -165,12 +165,6 @@ class PagesManager(Gtk.EventBox):
             @param view as View
             @param animate as bool
         """
-        children_count = len(self.__box.get_children()) - 1
-        # Don't show 0 as we are going to open a new one
-        if children_count:
-            El().update_unity_badge()
-            self.__window.toolbar.actions.count_label.set_text(
-                                                       str(children_count))
         El().history.set_page_state(view.webview.get_uri())
         self.__window.close_popovers()
         # Needed to unfocus titlebar
@@ -186,6 +180,12 @@ class PagesManager(Gtk.EventBox):
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
         child.destroy()
+        children_count = len(self.__box.get_children())
+        # Don't show 0 as we are going to open a new one
+        if children_count:
+            El().update_unity_badge()
+            self.__window.toolbar.actions.count_label.set_text(
+                                                       str(children_count))
         # Nothing to do if was not current page
         if not was_current:
             return False
