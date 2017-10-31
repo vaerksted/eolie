@@ -386,7 +386,8 @@ class Application(Gtk.Application):
 
         # https://wiki.ubuntu.com/Unity/LauncherAPI
         self.__unity = None
-        if is_unity:
+        if is_unity():
+            print("coucou")
             try:
                 gi.require_version('Unity', '7.0')
                 from gi.repository import Unity
