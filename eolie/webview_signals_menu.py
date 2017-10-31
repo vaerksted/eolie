@@ -45,6 +45,8 @@ class WebViewMenuSignals:
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
+        if hit.context_is_editable():
+            return
         # HACK, don't know how to add web inspector
         inspector_item = None
         if El().settings.get_value("developer-extras"):
