@@ -100,13 +100,14 @@ class WebViewArtwork:
         # The 32767 limit on the width/height dimensions
         # of an image surface is new in cairo 1.10,
         # try with WebKit2.SnapshotRegion.VISIBLE
-        if surface is None and first_pass:
-            self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                              WebKit2.SnapshotOptions.NONE,
-                              self._cancellable,
-                              get_snapshot,
-                              self.__on_snapshot,
-                              False)
+        if surface is None:
+            if first_pass:
+                self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                                  WebKit2.SnapshotOptions.NONE,
+                                  self._cancellable,
+                                  get_snapshot,
+                                  self.__on_snapshot,
+                                  False)
             return
         # Do not cache snapshot on error
         if self.error is not None:
