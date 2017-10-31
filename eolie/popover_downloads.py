@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio
+from gi.repository import Gtk, GLib, Gio, WebKit2
 
 from time import time
 from gettext import gettext as _
@@ -84,8 +84,9 @@ class DownloadRow(Gtk.ListBoxRow):
         """
         if self.__button_image.get_icon_name()[0] == "window-close-symbolic":
             self.__download.cancel()
+            self.get_style_context().add_class("download-failed")
         elif self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
-            self.__download.get_web_view().download_uri(self.__uri)
+            WebKit2.WebContext.get_default().download_uri(self.__uri)
             El().download_manager.remove(self.__download)
             self.destroy()
 
@@ -267,6 +268,7 @@ class DownloadRow(Gtk.ListBoxRow):
         """
         self.__button_image.set_from_icon_name("view-refresh-symbolic",
                                                Gtk.IconSize.MENU)
+        self.get_style_context().add_class("download-failed")
 
 
 class DownloadsPopover(Gtk.Popover):
