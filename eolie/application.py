@@ -59,6 +59,7 @@ class Application(Gtk.Application):
             @param extension_dir as str
         """
         self.__version = version
+        self.__state_cache = []
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 18:
             exit("You need WebKit2GTK >= 2.18")
@@ -496,36 +497,58 @@ class Application(Gtk.Application):
             print("Application::__vacuum(): ", e)
         self.art.vacuum()
 
+    def __get_state(self, window):
+        """
+            Return state for window
+            @param window as Window
+            @return {}
+        """
+        window_state = {}
+        window_state["id"] = str(window)
+        window_state["size"] = window.get_size()
+        window_state["maximized"] = window.is_maximized()
+        session_states = []
+        if self.settings.get_value("remember-session"):
+            for view in window.container.views:
+                uri = view.webview.get_uri()
+                if uri is None:
+                    uri = view.webview.delayed_uri
+                parsed = urlparse(uri)
+                if parsed.scheme not in ["http", "https"]:
+                    continue
+                ephemeral = view.webview.ephemeral
+                state = view.webview.get_session_state().serialize()
+                session_states.append((uri,
+                                       ephemeral,
+                                       state.get_data()))
+        window_state["states"] = session_states
+        return window_state
+
     def __save_state(self):
         """
             Save windows state
         """
         try:
-            windows = []
-            for w in self.get_windows():
-                window = {}
-                window["size"] = w.get_size()
-                window["maximized"] = w.is_maximized()
-                session_states = []
-                if self.settings.get_value("remember-session"):
-                    for view in w.container.views:
-                        uri = view.webview.get_uri()
-                        if uri is None:
-                            uri = view.webview.delayed_uri
-                        parsed = urlparse(uri)
-                        if parsed.scheme not in ["http", "https"]:
-                            continue
-                        ephemeral = view.webview.ephemeral
-                        state = view.webview.get_session_state().serialize()
-                        session_states.append((uri,
-                                               ephemeral,
-                                               state.get_data()))
-                window["states"] = session_states
-                windows.append(window)
-            dump(windows,
+            window_states = []
+            for window in self.get_windows():
+                window_state = self.__get_state(window)
+                window_states.append(window_state)
+            for window_state in self.__state_cache:
+                window_states.append(window_state)
+            dump(window_states,
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::__save_state()", e)
+
+    def __clean_state_cache(self, window_id):
+        """
+            Remove window id from cache
+            @param window_id as str
+        """
+        for state in self.__state_cache:
+            if state["id"] == window_id:
+                self.__state_cache.remove(state)
+                break
 
     def __create_initial_windows(self):
         """
@@ -623,6 +646,9 @@ class Application(Gtk.Application):
             Close window
         """
         if len(self.get_windows()) > 1:
+            state = self.__get_state(window)
+            self.__state_cache.append(state)
+            GLib.timeout_add(25000, self.__clean_state_cache, state["id"])
             window.destroy()
         else:
             window.hide()
