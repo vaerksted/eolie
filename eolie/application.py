@@ -175,14 +175,18 @@ class Application(Gtk.Application):
         Gtk.Application.do_startup(self)
         if not self.get_windows():
             self.__init()
-            self.get_new_window()
 
-    def get_new_window(self):
+    def get_new_window(self, size=None, maximized=False):
         """
             Return a new window
             @return Window
         """
-        window = Window(self)
+        windows = self.get_windows()
+        if windows and size is None:
+            active_window = self.active_window
+            size = active_window.get_size()
+            maximized = active_window.is_maximized()
+        window = Window(self, size, maximized)
         window.connect('delete-event', self.__on_delete_event)
         window.show()
         return window
@@ -278,7 +282,7 @@ class Application(Gtk.Application):
             Get active window
             @return Window
         """
-        return self.get_windows()[0]
+        return self.get_active_window()
 
     @property
     def windows(self):
@@ -494,49 +498,66 @@ class Application(Gtk.Application):
 
     def __save_state(self):
         """
-            Save window position and view
+            Save windows state
         """
         try:
-            remember_session = self.settings.get_value("remember-session")
-            session_states = []
-            for window in self.get_windows():
-                if not remember_session:
-                    continue
-                for view in window.container.views:
-                    uri = view.webview.get_uri()
-                    if uri is None:
-                        uri = view.webview.delayed_uri
-                    parsed = urlparse(uri)
-                    if parsed.scheme not in ["http", "https"]:
-                        continue
-                    ephemeral = view.webview.ephemeral
-                    state = view.webview.get_session_state().serialize()
-                    session_states.append((uri, ephemeral, state.get_data()))
-            if remember_session:
-                dump(session_states,
-                     open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
+            windows = []
+            for w in self.get_windows():
+                window = {}
+                window["size"] = w.get_size()
+                window["maximized"] = w.is_maximized()
+                session_states = []
+                if self.settings.get_value("remember-session"):
+                    for view in w.container.views:
+                        uri = view.webview.get_uri()
+                        if uri is None:
+                            uri = view.webview.delayed_uri
+                        parsed = urlparse(uri)
+                        if parsed.scheme not in ["http", "https"]:
+                            continue
+                        ephemeral = view.webview.ephemeral
+                        state = view.webview.get_session_state().serialize()
+                        session_states.append((uri,
+                                               ephemeral,
+                                               state.get_data()))
+                window["states"] = session_states
+                windows.append(window)
+            dump(windows,
+                 open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::__save_state()", e)
 
-    def __restore_state(self):
+    def __create_initial_windows(self):
         """
-            Restore saved state
-            @return True as bool if restored
+            Create initial windows:
+                - read state from file and restore it
+                - or just create a new window
         """
         try:
-            session_states = load(open(
-                                     EOLIE_DATA_PATH + "/session_states.bin",
-                                     "rb"))
-            items = []
-            for (uri, ephemeral, state) in session_states:
-                webkit_state = WebKit2.WebViewSessionState(
+            windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
+            print(windows)
+            if self.settings.get_value("remember-session"):
+                for window in windows:
+                    self.get_new_window(window["size"],
+                                        window["maximized"])
+                    items = []
+                    for (uri, ephemeral, state) in window["states"]:
+                        webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
-                items.append((uri, ephemeral, webkit_state))
-            self.active_window.container.add_webviews(items, True)
-            dump([],
-                 open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
+                        items.append((uri, ephemeral, webkit_state))
+                    if items:
+                        self.active_window.container.add_webviews(items, True)
+            else:
+                size = (800, 600)
+                maximized = False
+                if windows:
+                    size = windows[0]["size"]
+                    maximized = windows[0]["maximized"]
+                self.get_new_window(size, maximized)
+            dump([], open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
-            print("Application::__restore_state()", e)
+            print("Application::__create_initial_windows()", e)
+            self.get_new_window()
 
     def __on_handle_local_options(self, app, options):
         """
@@ -556,6 +577,7 @@ class Application(Gtk.Application):
             @param options as Gio.ApplicationCommandLine
         """
         self.__externals_count = 0
+        self.__create_initial_windows()
         args = app_cmd_line.get_arguments()
         options = app_cmd_line.get_options_dict()
         if options.contains("debug"):
@@ -566,9 +588,6 @@ class Application(Gtk.Application):
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
-        restored = self.settings.get_value("remember-session")
-        if restored:
-            self.__restore_state()
         if options.contains("new"):
             active_window = self.get_new_window()
         else:
@@ -588,7 +607,7 @@ class Application(Gtk.Application):
             self.active_window.container.add_webviews(items, True)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
-        elif not restored or self.active_window.container.current is None:
+        elif self.active_window.container.current is None:
             self.active_window.present_with_time(Gtk.get_current_event_time())
             self.active_window.container.add_webview(self.start_page,
                                                      WindowType.FOREGROUND,

@@ -24,10 +24,12 @@ class Window(Gtk.ApplicationWindow):
         Main window
     """
 
-    def __init__(self, app):
+    def __init__(self, app, size, maximized):
         """
             Init window
             @param app as Gtk.Application
+            @param size as (int, int)
+            @param maximized as bool
         """
         self.__timeout_configure = None
         Gtk.ApplicationWindow.__init__(self,
@@ -40,7 +42,7 @@ class Window(Gtk.ApplicationWindow):
         self.__container = None
         self.__window_state = 0
         self.__setup_content()
-        self.setup_window()
+        self.__setup_window(size, maximized)
         self.connect("realize", self.__on_realize)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
@@ -51,14 +53,6 @@ class Window(Gtk.ApplicationWindow):
                                                GLib.VariantType.new("s"))
         shortcut_action.connect("activate", self.__on_shortcut_action)
         self.add_action(shortcut_action)
-
-    def setup_window(self):
-        """
-            Setup window position and size
-        """
-        self.__setup_pos()
-        if El().settings.get_value("window-maximized"):
-            self.maximize()
 
     def update_zoom_level(self, force):
         """
@@ -285,36 +279,19 @@ class Window(Gtk.ApplicationWindow):
             print("Window::__show_source_code():", e)
             return None
 
-    def __setup_pos(self):
+    def __setup_window(self, size, maximized):
         """
-            Set window position
+            Set window
+            @param size as (int, int)
+            @param maximized as bool
         """
-        size_setting = El().settings.get_value("window-size")
-        if len(size_setting) == 2 and\
-           isinstance(size_setting[0], int) and\
-           isinstance(size_setting[1], int):
-            self.resize(size_setting[0], size_setting[1])
-        position_setting = El().settings.get_value("window-position")
-        if len(position_setting) == 2 and\
-           isinstance(position_setting[0], int) and\
-           isinstance(position_setting[1], int):
-            self.move(position_setting[0], position_setting[1])
-
-    def __save_size_position(self, window):
-        """
-            Save window state, update current view content size
-            @param: window as Gtk.Window
-        """
-        self.update_zoom_level(False)
-        self.__timeout_configure = None
-        size = window.get_size()
-        El().settings.set_value("window-size",
-                                GLib.Variant("ai", [size[0], size[1]]))
-
-        position = window.get_position()
-        El().settings.set_value("window-position",
-                                GLib.Variant("ai",
-                                             [position[0], position[1]]))
+        try:
+            if size is not None:
+                self.resize(size[0], size[1])
+            if maximized:
+                self.maximize()
+        except Exception as e:
+            print("Window::__setup_window():", e)
 
     def __on_configure_event(self, window, event):
         """
@@ -326,14 +303,6 @@ class Window(Gtk.ApplicationWindow):
         # Allow respecting GNOME IHM, should tile on screen == 1280px
         self.toolbar.end.move_control_in_menu(size[0] < 700)
         self.toolbar.title.set_width(size[0]/3)
-        if self.__timeout_configure:
-            GLib.source_remove(self.__timeout_configure)
-            self.__timeout_configure = None
-        if not self.is_maximized():
-            self.__timeout_configure = GLib.timeout_add(
-                                                   1000,
-                                                   self.__save_size_position,
-                                                   window)
 
     def __on_window_state_event(self, widget, event):
         """
@@ -345,9 +314,6 @@ class Window(Gtk.ApplicationWindow):
             size = widget.get_size()
             self.toolbar.end.move_control_in_menu(size[0] < 700)
             self.toolbar.title.set_width(size[0]/3)
-            El().settings.set_boolean("window-maximized",
-                                      event.new_window_state &
-                                      Gdk.WindowState.MAXIMIZED)
         self.__window_state = event.new_window_state
 
     def __on_motion_notify_event(self, widget, event):
