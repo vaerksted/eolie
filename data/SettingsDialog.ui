@@ -318,6 +318,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
+                <property name="halign">start</property>
+                <property name="margin_left">15</property>
                 <property name="draw_indicator">True</property>
                 <signal name="toggled" handler="_on_suggestions_toggled" swapped="no"/>
               </object>
