@@ -173,7 +173,7 @@ class Application(Gtk.Application):
             Init application
         """
         Gtk.Application.do_startup(self)
-        if not self.windows:
+        if not self.get_windows():
             self.__init()
 
     def get_new_window(self, size=None, maximized=False):
@@ -181,7 +181,7 @@ class Application(Gtk.Application):
             Return a new window
             @return Window
         """
-        windows = self.windows
+        windows = self.get_windows()
         if windows and size is None:
             active_window = self.active_window
             size = active_window.get_size()
@@ -197,7 +197,7 @@ class Application(Gtk.Application):
             @param key as str
             @param value as GLib.Variant
         """
-        for window in self.windows:
+        for window in self.get_windows():
             for view in window.container.views:
                 view.webview.set_setting(key, value)
 
@@ -209,7 +209,7 @@ class Application(Gtk.Application):
         if self.__unity is not None:
             if fraction is None:
                 count = 0
-                for window in self.windows:
+                for window in self.get_windows():
                     count += len(window.container.pages_manager.children)
                 self.__unity.set_property("count", count)
                 self.__unity.set_property("count_visible", True)
@@ -290,11 +290,7 @@ class Application(Gtk.Application):
             Get windows
             @return [Window]
         """
-        windows = []
-        for window in self.get_windows():
-            if window.is_visible():
-                windows.append(window)
-        return windows
+        return self.get_windows()
 
     @property
     def cookies_path(self):
@@ -541,7 +537,7 @@ class Application(Gtk.Application):
         maximized = False
         try:
             windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
-            if self.settings.get_value("remember-session") and windows:
+            if self.settings.get_value("remember-session"):
                 for window in windows:
                     self.get_new_window(window["size"],
                                         window["maximized"])
@@ -626,11 +622,10 @@ class Application(Gtk.Application):
         """
             Close window
         """
-        window.hide()
-        visible_count = len(self.windows)
-        if visible_count > 0:
-            GLib.timeout_add(25000, window.destroy)
+        if len(self.get_windows()) > 1:
+            window.destroy()
         else:
+            window.hide()
             self.quit(True)
 
     def __try_closing(self, window, views):
@@ -827,7 +822,7 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
             Call default handler, raise last window
             @param application as Gio.Application
         """
-        if self.windows:
+        if self.get_windows():
             self.active_window.present_with_time(Gtk.get_current_event_time())
 
     def __on_shortcut_action(self, action, param):
