@@ -272,9 +272,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         tooltip = "<b>%s</b>" % GLib.markup_escape_text(self.__netloc)
         for view in self.__views:
             title = view.webview.get_title()
-            if not title:
-                title = view.webview.get_uri()
-            tooltip += "\n%s" % GLib.markup_escape_text(title)
+            if title is not None:
+                tooltip += "\n%s" % GLib.markup_escape_text(title)
         widget.set_tooltip_markup(tooltip)
 
     def __on_drag_begin(self, widget, context):

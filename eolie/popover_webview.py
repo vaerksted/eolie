@@ -56,10 +56,6 @@ class WebViewPopover(Gtk.Popover):
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
         title = view.webview.get_title()
-        if title is None:
-            title = view.webview.get_uri()
-        if title is None:
-            title = ""
         self.__combobox.append(str(view), title)
         if position == 0:
             properties = view.webview.get_window_properties()

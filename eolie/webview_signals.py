@@ -56,7 +56,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("uri-changed", self.__on_uri_changed)
-        self.connect("title-changed", self.__on_title_changed)
+        self.connect("notify::title", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
 
@@ -171,25 +171,26 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._cancellable.cancel()
         self._cancellable.reset()
 
-    def __on_title_changed(self, webview, title):
+    def __on_title_changed(self, webview, event):
         """
             Append title to history
             @param webview as WebView
-            @param title as str
+            @param event as GParamSpec
         """
-        # We only update history on title changed, should be enough
-        if self.error is None:
-            uri = self.get_uri()
-            parsed = urlparse(uri)
-            if parsed.scheme in ["http", "https"] and\
-                    not self.ephemeral:
-                mtime = round(time(), 2)
-                El().history.thread_lock.acquire()
-                history_id = El().history.add(title, uri, mtime)
-                El().history.set_page_state(uri, mtime)
-                El().history.thread_lock.release()
-                if El().sync_worker is not None:
-                    El().sync_worker.push_history([history_id])
+        title = webview.get_title()
+        if self.error is not None or event.name != "title" or not title:
+            return
+        uri = self.get_uri()
+        parsed = urlparse(uri)
+        if parsed.scheme in ["http", "https"] and\
+                not self.ephemeral:
+            mtime = round(time(), 2)
+            El().history.thread_lock.acquire()
+            history_id = El().history.add(title, uri, mtime)
+            El().history.set_page_state(uri, mtime)
+            El().history.thread_lock.release()
+            if El().sync_worker is not None:
+                El().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """

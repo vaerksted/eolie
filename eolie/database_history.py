@@ -103,8 +103,6 @@ class DatabaseHistory:
             return
         uri = uri.rstrip('/')
         parsed = urlparse(uri)
-        if title is None:
-            title = ""
         # No guid provided, first search in bookmarks
         # Then in history. Db may be broken and contains multiple guid
         # for same uri

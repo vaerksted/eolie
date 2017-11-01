@@ -34,7 +34,6 @@ class WebViewNavigation:
             Init navigation
         """
         self.__js_timeout = None
-        self.__title = ""
         self.__popups = []
         self.__initial_uri = None
         self.__insecure_content_detected = False
@@ -173,7 +172,6 @@ class WebViewNavigation:
         uri = webview.get_uri()
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
-            self.__title = ""
             self.emit("uri-changed", uri)
 
     def __on_title_changed(self, webview, event):
@@ -182,12 +180,9 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param event as GParamSpec
         """
-        if event.name != "title":
-            return
         title = webview.get_title()
-        if not title or title == self.__title:
+        if event.name != "title" or not title:
             return
-        self.__title = title
         self.emit("title-changed", title)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
@@ -326,7 +321,6 @@ class WebViewNavigation:
             for popup in self.__popups:
                 popup.destroy()
             self.__popups = []
-            self.__title = ""
             # Setup js blocker
             if El().settings.get_value("jsblock"):
                 exception = El().js_exceptions.find_parsed(parsed)
