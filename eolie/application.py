@@ -537,7 +537,6 @@ class Application(Gtk.Application):
         maximized = False
         try:
             windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
-            print(windows)
             if self.settings.get_value("remember-session"):
                 for window in windows:
                     self.get_new_window(window["size"],
