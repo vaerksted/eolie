@@ -139,6 +139,11 @@
          <summary>DNS prediction</summary>
          <description />
       </key>
+      <key type="b" name="enable-suggestions">
+         <default>true</default>
+         <summary>Enable search suggestions</summary>
+         <description />
+      </key>
       <key type="b" name="enable-spell-check">
          <default>true</default>
          <summary>Enable spell checking</summary>

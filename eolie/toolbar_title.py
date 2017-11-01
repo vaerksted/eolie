@@ -940,7 +940,7 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__popover.set_search_text(value)
 
-        if not El().settings.get_value("do-not-track") and\
+        if El().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
             El().search.search_suggestions(value,
                                            self.__cancellable,

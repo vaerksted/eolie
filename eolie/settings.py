@@ -99,6 +99,9 @@ class SettingsDialog:
         remember_session.set_active(
                                 El().settings.get_value("remember-session"))
 
+        suggestions = builder.get_object("suggestions_check")
+        suggestions.set_active(El().settings.get_value("enable-suggestions"))
+
         enable_dev_tools = builder.get_object("dev_tools_check")
         enable_dev_tools.set_active(
                                 El().settings.get_value("developer-extras"))
@@ -371,6 +374,14 @@ class SettingsDialog:
             @param button as Gtk.ToggleButton
         """
         El().settings.set_value("remember-session",
+                                GLib.Variant("b", button.get_active()))
+
+    def _on_suggestions_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        El().settings.set_value("enable-suggestions",
                                 GLib.Variant("b", button.get_active()))
 
     def _on_start_page_uri_changed(self, entry):
