@@ -555,7 +555,6 @@ class Application(Gtk.Application):
                     size = windows[0]["size"]
                     maximized = windows[0]["maximized"]
                 self.get_new_window(size, maximized)
-            dump([], open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::__create_initial_windows()", e)
             self.get_new_window(size, maximized)
