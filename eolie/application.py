@@ -533,6 +533,8 @@ class Application(Gtk.Application):
                 - read state from file and restore it
                 - or just create a new window
         """
+        size = (800, 600)
+        maximized = False
         try:
             windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
             print(windows)
@@ -557,7 +559,7 @@ class Application(Gtk.Application):
             dump([], open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
             print("Application::__create_initial_windows()", e)
-            self.get_new_window()
+            self.get_new_window(size, maximized)
 
     def __on_handle_local_options(self, app, options):
         """
