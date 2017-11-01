@@ -151,10 +151,11 @@ class WebView(WebKit2.WebView):
     def set_delayed_uri(self, uri):
         """
             Set delayed uri
-            @param uri as str
+            @param uri as str/None
         """
         self.__delayed_uri = uri
-        self.emit("title-changed", uri)
+        if uri is not None:
+            self.emit("title-changed", uri)
 
     def update_spell_checking(self):
         """
@@ -324,10 +325,7 @@ class WebView(WebKit2.WebView):
             Get delayed uri (one time)
             @return str
         """
-        try:
-            return self.__delayed_uri
-        finally:
-            self.__delayed_uri = None
+        return self.__delayed_uri
 
     @property
     def ephemeral(self):

@@ -81,6 +81,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         # We are offscreen
         if self._window != self.get_toplevel():
             return
+        if self.delayed_uri is not None:
+            self.load_uri(self.delayed_uri)
+            self.set_delayed_uri(None)
         self._shown = True
         self.emit("shown")
         self.set_atime(int(time()))
