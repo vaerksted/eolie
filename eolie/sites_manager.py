@@ -104,16 +104,16 @@ class SitesManager(Gtk.EventBox):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.get_style_context().has_class("sidebar-item-selected"):
+            if child.get_style_context().has_class("item-selected"):
                 current = child
-            child.get_style_context().remove_class("sidebar-item-selected")
+            child.get_style_context().remove_class("item-selected")
         index = current.get_index()
         if index + 1 < len(children):
             next_row = self.__box.get_row_at_index(index + 1)
         else:
             next_row = self.__box.get_row_at_index(0)
         if next_row is not None:
-            next_row.get_style_context().add_class("sidebar-item-selected")
+            next_row.get_style_context().add_class("item-selected")
             self.__window.container.set_current(next_row.views[0])
             if len(next_row.views) == 1:
                 self.__window.container.set_expose(False)
@@ -129,16 +129,16 @@ class SitesManager(Gtk.EventBox):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.get_style_context().has_class("sidebar-item-selected"):
+            if child.get_style_context().has_class("item-selected"):
                 current = child
-            child.get_style_context().remove_class("sidebar-item-selected")
+            child.get_style_context().remove_class("item-selected")
         index = current.get_index()
         if index == 0:
             next_row = self.__box.get_row_at_index(len(children) - 1)
         else:
             next_row = self.__box.get_row_at_index(index - 1)
         if next_row is not None:
-            next_row.get_style_context().add_class("sidebar-item-selected")
+            next_row.get_style_context().add_class("item-selected")
             self.__window.container.set_current(next_row.views[0])
             if len(next_row.views) == 1:
                 self.__window.container.set_expose(False)
@@ -155,11 +155,11 @@ class SitesManager(Gtk.EventBox):
         current = self.__window.container.current
         for child in self.__box.get_children():
             if current in child.views:
-                child.get_style_context().add_class("sidebar-item-selected")
+                child.get_style_context().add_class("item-selected")
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
             else:
-                child.get_style_context().remove_class("sidebar-item-selected")
+                child.get_style_context().remove_class("item-selected")
 
 #######################
 # PROTECTED           #

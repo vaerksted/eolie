@@ -32,6 +32,7 @@ class PagesManager(Gtk.EventBox):
         self.__previous_timeout_id = None
         self.get_style_context().add_class("sidebar")
         self.connect("button-press-event", self.__on_button_press)
+        self.connect("key-press-event", self.__on_key_press)
         grid = Gtk.Grid()
         grid.set_orientation(Gtk.Orientation.VERTICAL)
         grid.show()
@@ -84,9 +85,9 @@ class PagesManager(Gtk.EventBox):
         for child in self.__box.get_children():
             style_context = child.get_style_context()
             if child.view == visible:
-                style_context.add_class("sidebar-item-selected")
+                style_context.add_class("item-selected")
             else:
-                style_context.remove_class("sidebar-item-selected")
+                style_context.remove_class("item-selected")
 
     def search_grab_focus(self):
         """
@@ -117,10 +118,10 @@ class PagesManager(Gtk.EventBox):
             self.__search_bar.show()
             self.__search_entry.grab_focus()
             self.__search_entry.connect("key-press-event",
-                                        self.__on_key_press)
+                                        self.__on_search_key_press)
         elif self.__search_bar.is_visible():
             self.__search_bar.hide()
-            self.__search_entry.disconnect_by_func(self.__on_key_press)
+            self.__search_entry.disconnect_by_func(self.__on_search_key_press)
         self.__search_bar.set_search_mode(b)
 
     def next(self):
@@ -213,9 +214,10 @@ class PagesManager(Gtk.EventBox):
         self.__window.container.set_expose(True)
         callback()
 
-    def __next(self):
+    def __next(self, loop=True):
         """
             Show next view
+            @param loop as bool
         """
         children = self.__box.get_children()
         if not children:
@@ -227,7 +229,7 @@ class PagesManager(Gtk.EventBox):
             if child.view == self.__window.container.current:
                 current_row = child
             # Init next to first valid child
-            elif next_row is None and\
+            elif loop and next_row is None and\
                     current_row is None and\
                     self.__filter_func(child):
                 next_row = child
@@ -238,9 +240,10 @@ class PagesManager(Gtk.EventBox):
         if next_row is not None:
             self.__window.container.set_current(next_row.view)
 
-    def __previous(self):
+    def __previous(self, loop=True):
         """
             Show previous view
+            @param loop as bool
         """
         children = self.__box.get_children()
         if not children:
@@ -252,11 +255,11 @@ class PagesManager(Gtk.EventBox):
             if child.view == self.__window.container.current:
                 current_row = child
             # Init prev to first valid child
-            elif prev_row is None and\
+            elif loop and prev_row is None and\
                     current_row is None and\
                     self.__filter_func(child):
                 prev_row = child
-            # Second search for next
+            # Second search for prev
             elif current_row is not None and self.__filter_func(child):
                 prev_row = child
                 break
@@ -309,6 +312,21 @@ class PagesManager(Gtk.EventBox):
         """
         self.__box.invalidate_filter()
 
+    def __on_search_key_press(self, entry, event):
+        """
+            Forward event to self if event is <- or -> and entry is empty
+            @param entry as Gtk.Entry
+            @param event as Gdk.EventKey
+        """
+        if entry.get_text() == "" and\
+                event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right,
+                                 Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+            self.__on_key_press(self, event)
+            return True
+        elif event.keyval == Gdk.KEY_Escape:
+            self.__search_entry.set_text("")
+            return True
+
     def __on_button_press(self, widget, event):
         """
             Hide popover if visible
@@ -322,11 +340,17 @@ class PagesManager(Gtk.EventBox):
 
     def __on_key_press(self, widget, event):
         """
-            If Esc, reset search
-            Otherwise, we get an ugly frame
-            @param widget as Gtk.SearchEntry
+            Next/Prev of Left/Right
+            @param widget as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if event.keyval == Gdk.KEY_Escape:
-            self.__search_entry.set_text("")
-            return True
+        if event.keyval == Gdk.KEY_Left:
+            self.__previous(False)
+        elif event.keyval == Gdk.KEY_Right:
+            self.__next(False)
+        elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+            children = self.__box.get_children()
+            for child in children:
+                if child.get_style_context().has_class("item-selected"):
+                    self._on_child_activated(self.__box, child)
+                    break

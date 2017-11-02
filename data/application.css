@@ -79,7 +79,7 @@
     outline-width: 0px;
 }
 
-.sidebar-item-selected {
+.item-selected {
     border-color: @theme_selected_bg_color;
     background-color: @theme_selected_bg_color;
 }
