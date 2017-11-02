@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Pango
 
-from eolie.define import El, WindowType
+from eolie.define import El, LoadingType
 
 
 class ToolbarActions(Gtk.Bin):
@@ -113,7 +113,7 @@ class ToolbarActions(Gtk.Bin):
                 if back_list:
                     uri = back_list[0].get_uri()
                     self.__window.container.add_webview(uri,
-                                                        WindowType.FOREGROUND)
+                                                        LoadingType.FOREGROUND)
             else:
                 self.__on_back_history_timeout()
 
@@ -149,7 +149,7 @@ class ToolbarActions(Gtk.Bin):
                 if forward_list:
                     uri = forward_list[0].get_uri()
                     self.__window.container.add_webview(uri,
-                                                        WindowType.FOREGROUND)
+                                                        LoadingType.FOREGROUND)
             else:
                 self.__on_forward_history_timeout()
 
@@ -159,7 +159,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.add_webview(El().start_page,
-                                            WindowType.FOREGROUND)
+                                            LoadingType.FOREGROUND)
         self.__window.close_popovers()
 
     def _on_pages_button_toggled(self, button):

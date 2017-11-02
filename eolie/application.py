@@ -40,8 +40,8 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.context import Context
-from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, WindowType
-from eolie.utils import is_unity
+from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
+from eolie.utils import is_unity, wanted_loading_type
 
 
 class Application(Gtk.Application):
@@ -564,7 +564,7 @@ class Application(Gtk.Application):
     def __create_initial_windows(self, foreground):
         """
             Create initial windows based on saved session
-            @param foreground if should load first webview
+            @param foreground  as bool if foreground loading allowed
         """
         size = (800, 600)
         maximized = False
@@ -577,17 +577,15 @@ class Application(Gtk.Application):
                     new_window = self.get_new_window(window["size"],
                                                      window["maximized"])
                     items = []
+                    i = 0 if foreground else 1
                     for (uri, title, atime,
                          gtime, ephemeral, state) in window["states"]:
-                        if foreground:
-                            window_type = WindowType.FOREGROUND
-                        else:
-                            window_type = WindowType.OFFLOAD
+                        loading_type = wanted_loading_type(i)
                         webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                         items.append((uri, title, atime, gtime, ephemeral,
-                                      webkit_state, window_type))
-                        foreground = False
+                                      webkit_state, loading_type))
+                        i += 1
                     new_window.container.add_webviews(items)
             elif windows:
                     size = windows[0]["size"]
@@ -634,7 +632,7 @@ class Application(Gtk.Application):
         # Open command line args
         if len(args) > 1:
             items = []
-            foreground = True
+            i = 0
             for uri in args[1:]:
                 # Transform path to uri
                 parsed = urlparse(uri)
@@ -643,18 +641,15 @@ class Application(Gtk.Application):
                         uri = "file://%s" % uri
                     else:
                         uri = "http://%s" % uri
-                if foreground:
-                    window_type = WindowType.FOREGROUND
-                else:
-                    window_type = WindowType.OFFLOAD
-                items.append((uri, uri, 0, 0, ephemeral, None, window_type))
-                foreground = False
+                loading_type = wanted_loading_type(i)
+                items.append((uri, uri, 0, 0, ephemeral, None, loading_type))
+                i += 1
             active_window.container.add_webviews(items)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
         if not active_window.container.views:
             active_window.container.add_webview(self.start_page,
-                                                WindowType.FOREGROUND,
+                                                LoadingType.FOREGROUND,
                                                 ephemeral)
         if self.debug:
             WebKit2.WebContext.get_default().get_plugins(None,
@@ -804,7 +799,7 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
                                 os)
         url = github + GLib.uri_escape_string(body, "", False)
         self.active_window.container.add_webview(url,
-                                                 WindowType.FOREGROUND,
+                                                 LoadingType.FOREGROUND,
                                                  False)
 
     def __on_about_activate(self, action, param):
@@ -882,4 +877,4 @@ https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
         if string == "new_window":
             window = self.get_new_window()
             window.container.add_webview(self.start_page,
-                                         WindowType.FOREGROUND)
+                                         LoadingType.FOREGROUND)

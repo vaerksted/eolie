@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, WindowType
+from eolie.define import El, LoadingType
 from eolie.utils import get_snapshot
 from eolie.search import Search
 
@@ -194,7 +194,7 @@ class WebViewMenuSignals:
             @param ephemeral as bool
         """
         self._window.container.add_webview(uri,
-                                           WindowType.FOREGROUND,
+                                           LoadingType.FOREGROUND,
                                            self.ephemeral or ephemeral)
 
     def __on_open_new_window_activate(self, action, variant, uri):
@@ -207,7 +207,7 @@ class WebViewMenuSignals:
         """
         window = El().get_new_window()
         window.container.add_webview(uri,
-                                     WindowType.FOREGROUND,
+                                     LoadingType.FOREGROUND,
                                      self.ephemeral)
 
     def __on_search_words_activate(self, action, variant, selection):
@@ -219,7 +219,7 @@ class WebViewMenuSignals:
         """
         search = Search()
         uri = search.get_search_uri(selection)
-        self._window.container.add_webview(uri, WindowType.FOREGROUND)
+        self._window.container.add_webview(uri, LoadingType.FOREGROUND)
 
     def __on_copy_link_uri_activate(self, action, variant, uri):
         """

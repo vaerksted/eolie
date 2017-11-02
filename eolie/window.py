@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk, Soup
 
-from eolie.define import El, Indicator, WindowType
+from eolie.define import El, Indicator, LoadingType
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model
@@ -378,7 +378,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "quit":
             El().quit(True)
         elif string == "new_page":
-            self.container.add_webview(El().start_page, WindowType.FOREGROUND)
+            self.container.add_webview(El().start_page, LoadingType.FOREGROUND)
         elif string == "close_page":
             if self.is_fullscreen:
                 self.container.current.webview.emit("leave-fullscreen")
@@ -414,7 +414,7 @@ class Window(Gtk.ApplicationWindow):
             self.container.current.webview.print()
         elif string == "private":
             self.container.add_webview(El().start_page,
-                                       WindowType.FOREGROUND,
+                                       LoadingType.FOREGROUND,
                                        True)
         elif string == "last_page":
             El().pages_menu.activate_last_action()

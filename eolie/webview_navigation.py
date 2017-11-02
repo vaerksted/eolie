@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, ADBLOCK_JS, WindowType
+from eolie.define import El, ADBLOCK_JS, LoadingType
 from eolie.utils import get_ftp_cmd
 
 
@@ -270,7 +270,7 @@ class WebViewNavigation:
                 decision.use()
                 return True
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.new_page(WindowType.FOREGROUND)
+                self.new_page(LoadingType.FOREGROUND)
                 decision.ignore()
                 return True
             else:
@@ -280,20 +280,20 @@ class WebViewNavigation:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 if navigation_action.get_modifiers() &\
                         Gdk.ModifierType.SHIFT_MASK:
-                    window_type = WindowType.POPOVER
+                    loading_type = LoadingType.POPOVER
                 else:
-                    window_type = WindowType.FOREGROUND
-                self.new_page(window_type)
+                    loading_type = LoadingType.FOREGROUND
+                self.new_page(loading_type)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.CONTROL_MASK:
-                self.new_page(WindowType.BACKGROUND)
+                self.new_page(LoadingType.BACKGROUND)
                 decision.ignore()
                 return True
             elif navigation_action.get_modifiers() &\
                     Gdk.ModifierType.SHIFT_MASK:
-                self.new_page(WindowType.POPOVER)
+                self.new_page(LoadingType.POPOVER)
                 decision.ignore()
                 return True
             else:
@@ -302,7 +302,7 @@ class WebViewNavigation:
                 self._error = None
                 return False
         else:
-            self.new_page(WindowType.BACKGROUND)
+            self.new_page(LoadingType.BACKGROUND)
             decision.ignore()
             return True
 

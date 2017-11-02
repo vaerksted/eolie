@@ -15,7 +15,8 @@ from gi.repository import Gio, GLib
 from gettext import gettext as _
 from hashlib import sha256
 
-from eolie.define import El, WindowType
+from eolie.define import El, LoadingType
+from eolie.utils import wanted_loading_type
 
 
 class PagesMenu(Gio.Menu):
@@ -153,7 +154,7 @@ class PagesMenu(Gio.Menu):
             @param GVariant
         """
         El().active_window.container.add_webview(El().start_page,
-                                                 WindowType.FOREGROUND,
+                                                 LoadingType.FOREGROUND,
                                                  True)
 
     def __on_openall_clicked(self, action, variant):
@@ -173,7 +174,8 @@ class PagesMenu(Gio.Menu):
                 continue
             uri = uri_attr.get_string()
             title = title_attr.get_string()
-            items.append((uri, title, 0, 0, False, None, WindowType.OFFLOAD))
+            loading_type = wanted_loading_type(i)
+            items.append((uri, title, 0, 0, False, None, loading_type))
             i += 1
         El().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()
@@ -189,7 +191,7 @@ class PagesMenu(Gio.Menu):
         private = data[1]
         state = data[2]
         El().active_window.container.add_webview(uri,
-                                                 WindowType.FOREGROUND,
+                                                 LoadingType.FOREGROUND,
                                                  private,
                                                  state)
         self.remove_action(uri)

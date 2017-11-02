@@ -18,7 +18,19 @@ import cairo
 from random import choice
 from base64 import b64encode
 
-from eolie.define import El, ArtSize
+from eolie.define import El, ArtSize, LoadingType
+
+
+def wanted_loading_type(index):
+    """
+        Return window type based on current index
+    """
+    if index == 0:
+        return LoadingType.FOREGROUND
+    elif index < 10:
+        return LoadingType.BACKGROUND
+    else:
+        return LoadingType.OFFLOAD
 
 
 def is_unity():

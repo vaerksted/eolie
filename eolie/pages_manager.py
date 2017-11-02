@@ -13,7 +13,7 @@
 from gi.repository import Gtk, Gdk, GLib
 
 from eolie.pages_manager_child import PagesManagerChild
-from eolie.define import El, WindowType
+from eolie.define import El, LoadingType
 
 
 class PagesManager(Gtk.EventBox):
@@ -317,7 +317,7 @@ class PagesManager(Gtk.EventBox):
         """
         if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.__window.container.add_webview(El().start_page,
-                                                WindowType.FOREGROUND)
+                                                LoadingType.FOREGROUND)
         return self.__window.close_popovers()
 
     def __on_key_press(self, widget, event):

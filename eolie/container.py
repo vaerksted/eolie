@@ -18,7 +18,7 @@ from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
-from eolie.define import El, WindowType
+from eolie.define import El, LoadingType
 
 
 class DelayedStack(Gtk.Stack):
@@ -105,12 +105,12 @@ class Container(Gtk.Overlay):
         self.__expose_stack.add_named(self.__pages_manager, "expose")
         self.add(self.__expose_stack)
 
-    def add_webview(self, uri, window_type, ephemeral=False,
+    def add_webview(self, uri, loading_type, ephemeral=False,
                     state=None, gtime=None):
         """
             Add a webview to container
             @param uri as str
-            @param window_type as Gdk.WindowType
+            @param loading_type as Gdk.LoadingType
             @param ephemeral as bool
             @param state as WebViewSessionState
             @param gtime as int
@@ -125,28 +125,28 @@ class Container(Gtk.Overlay):
             webview.restore_session_state(state)
         if uri is not None:
             webview.set_uri(uri)
-            if window_type != WindowType.OFFLOAD:
+            if loading_type != LoadingType.OFFLOAD:
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
-        self.add_view(webview, window_type)
+        self.add_view(webview, loading_type)
         return webview
 
     def add_webviews(self, items):
         """
             Add webviews to container
             @param items as [(uri, title, atime, gtime,
-                              ephemeral, state, window_type)]
+                              ephemeral, state, loading_type)]
         """
         running = self.__pending_items != []
         self.__pending_items += items
         if not running:
             self.__add_pending_items()
 
-    def add_view(self, webview, window_type):
+    def add_view(self, webview, loading_type):
         """
             Add view to container
             @param webview as WebView
-            @param window_type as Gdk.WindowType
+            @param loading_type as Gdk.LoadingType
         """
         view = self.__get_new_view(webview)
         view.show()
@@ -154,14 +154,14 @@ class Container(Gtk.Overlay):
         self.__sites_manager.add_view(view)
         # Force window type as current window is not visible
         if self.__expose_stack.get_visible_child_name() == "expose":
-            window_type = WindowType.BACKGROUND
-        if window_type == WindowType.FOREGROUND:
+            loading_type = LoadingType.BACKGROUND
+        if loading_type == LoadingType.FOREGROUND:
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
-        elif window_type in [WindowType.BACKGROUND, WindowType.OFFLOAD]:
+        elif loading_type in [LoadingType.BACKGROUND, LoadingType.OFFLOAD]:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
@@ -306,7 +306,7 @@ class Container(Gtk.Overlay):
         else:
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,
-                                                WindowType.FOREGROUND)
+                                                LoadingType.FOREGROUND)
 
     @property
     def pages_manager(self):
@@ -367,8 +367,8 @@ class Container(Gtk.Overlay):
         """
         if self.__pending_items:
             (uri, title, atime, gtime,
-             ephemeral, state, window_type) = self.__pending_items.pop(0)
-            webview = self.add_webview(uri, window_type, ephemeral, state)
+             ephemeral, state, loading_type) = self.__pending_items.pop(0)
+            webview = self.add_webview(uri, loading_type, ephemeral, state)
             webview.set_title(title)
             webview.set_atime(atime)
             webview.set_gtime(gtime)

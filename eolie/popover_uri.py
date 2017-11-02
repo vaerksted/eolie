@@ -20,7 +20,8 @@ from locale import strcoll
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, Type, TimeSpan, TimeSpanValues, WindowType
+from eolie.define import El, Type, TimeSpan, TimeSpanValues, LoadingType
+from eolie.utils import wanted_loading_type
 
 
 class Item(GObject.GObject):
@@ -326,7 +327,8 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.set_expose(False)
                 self.__window.close_popovers()
             else:
-                self.__window.container.add_webview(uri, WindowType.FOREGROUND)
+                self.__window.container.add_webview(uri,
+                                                    LoadingType.FOREGROUND)
                 if event.button == 2:
                     self.__window.close_popovers()
             El().bookmarks.thread_lock.acquire()
@@ -361,8 +363,11 @@ class Row(Gtk.ListBoxRow):
         else:
             items = El().bookmarks.get_bookmarks(tag_id)
         pages = []
+        i = 0
         for (bid, uri, title) in items:
-            pages.append((uri, title, 0, 0, False, None, WindowType.OFFLOAD))
+            loading_type = wanted_loading_type(i)
+            pages.append((uri, title, 0, 0, False, None, loading_type))
+            i += 1
         self.__window.container.add_webviews(pages)
 
     def __on_delete_clicked(self, button):

@@ -60,7 +60,7 @@ class Indicator:
     POPUPS = 2
 
 
-class WindowType:
+class LoadingType:
     FOREGROUND = 0
     BACKGROUND = 1
     OFFLOAD = 2

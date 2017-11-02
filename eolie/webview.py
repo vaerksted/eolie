@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, Indicator, WindowType
+from eolie.define import El, Indicator, LoadingType
 from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -229,12 +229,12 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def new_page(self, window_type):
+    def new_page(self, loading_type):
         """
             Open a new page
-            @param window_type as Gdk.WindowType
+            @param loading_type as Gdk.LoadingType
         """
-        if window_type == WindowType.POPOVER:
+        if loading_type == LoadingType.POPOVER:
             if self.ephemeral:
                 webview = WebView.new_ephemeral(self._window, None)
             else:
@@ -245,7 +245,7 @@ class WebView(WebKit2.WebView):
             # parent.atime = child.atime + 1
             # Used to search for best matching webview
             self._window.container.add_webview(self._navigation_uri,
-                                               window_type,
+                                               loading_type,
                                                self.ephemeral,
                                                None,
                                                self.gtime - 1)
@@ -516,7 +516,7 @@ class WebView(WebKit2.WebView):
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_view(webview,
-                                            WindowType.FOREGROUND)
+                                            LoadingType.FOREGROUND)
 
         else:
             self._window.container.popup_webview(webview, True)
