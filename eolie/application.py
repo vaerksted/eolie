@@ -613,9 +613,7 @@ class Application(Gtk.Application):
             @param options as Gio.ApplicationCommandLine
         """
         self.__externals_count = 0
-        self.__create_initial_windows()
         args = app_cmd_line.get_arguments()
-        uris_on_cmdline = len(args) > 1
         options = app_cmd_line.get_options_dict()
         if options.contains("debug"):
             GLib.setenv("WEBKIT_DEBUG", "network", True)
@@ -625,13 +623,14 @@ class Application(Gtk.Application):
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
-        if options.contains("new") or (self.active_window.container.views and
-                                       uris_on_cmdline):
+        if not self.get_windows():
+            self.__create_initial_windows()
+        if options.contains("new"):
             active_window = self.get_new_window()
         else:
             active_window = self.active_window
         # Open command line args
-        if uris_on_cmdline:
+        if len(args) > 1:
             items = []
             for uri in args[1:]:
                 # Transform path to uri
