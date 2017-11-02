@@ -28,8 +28,7 @@ class WebViewArtwork:
             Init class
         """
         self.__snapshot_id = None
-        self.__last_uri = None
-        self.__favicon_db = self.get_context().get_favicon_database()
+        self.__favicon_id = None
 
     def set_snapshot(self):
         """
@@ -46,10 +45,30 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
+    def wait_for_favicon(self):
+        """
+            Wait a little for favicon, as notify::favicon is fired just after
+            WebKit2.LoadEvent.FINISHED, this allow us to make builtin favicon
+            Calling set_favicon() on WebKit2.LoadEvent.FINISHED may cache
+            previous favicon so it's a bad idea
+        """
+        if not self.ephemeral:
+            self.__favicon_id = GLib.timeout_add(1500,
+                                                 self.__on_set_favicon_timeout)
+
+    def stop_wait_for_favicon(self):
+        """
+            Stop pending favicon
+        """
+        if self.__favicon_id is not None:
+            GLib.source_remove(self.__favicon_id)
+            self.__favicon_id = None
+
     def set_favicon(self):
         """
             Set favicon for uri
         """
+        self.stop_wait_for_favicon()
         resized = None
         uri = self.uri
         icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
@@ -86,14 +105,15 @@ class WebViewArtwork:
                     favicon_type = "favicon_alt"
             self.emit("favicon-changed", resized, None)
             # Save favicon if needed
-            if not El().art.exists(uri, favicon_type):
-                El().art.save_artwork(uri, resized, favicon_type)
-            if netloc is not None and\
-                    not El().art.exists(netloc, favicon_type):
-                El().art.save_artwork(netloc, resized, favicon_type)
-            self.__set_initial_uri_favicon(resized,
-                                           uri,
-                                           favicon_type)
+            if not self.ephemeral:
+                if not El().art.exists(uri, favicon_type):
+                    El().art.save_artwork(uri, resized, favicon_type)
+                if netloc is not None and\
+                        not El().art.exists(netloc, favicon_type):
+                    El().art.save_artwork(netloc, resized, favicon_type)
+                self.__set_initial_uri_favicon(resized,
+                                               uri,
+                                               favicon_type)
 
 #######################
 # PROTECTED           #
@@ -161,3 +181,10 @@ class WebViewArtwork:
         for uri in uris:
             if not El().art.exists(uri, "start"):
                 El().art.save_artwork(uri, surface, "start")
+
+    def __on_set_favicon_timeout(self):
+        """
+            Set favicon
+        """
+        self.__favicon_id = None
+        self.set_favicon()

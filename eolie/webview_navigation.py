@@ -316,6 +316,7 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.stop_snapshot()
+            self.stop_wait_for_favicon()
             self.__initial_uri = uri.rstrip('/')
             self._cancelled = False
             # Destroy current popups
@@ -382,6 +383,7 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.wait_for_favicon()
             if parsed.scheme != "populars":
                 self.set_snapshot()
             if El().show_tls:
