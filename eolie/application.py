@@ -639,7 +639,7 @@ class Application(Gtk.Application):
                         uri = "file://%s" % uri
                     else:
                         uri = "http://%s" % uri
-                items.append((uri, "", 0, 0, ephemeral, None))
+                items.append((uri, uri, 0, 0, ephemeral, None))
             active_window.container.add_webviews(items)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
