@@ -101,7 +101,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__set_favicon_artwork()
         if self.__view.webview.uri is not None:
             artwork_path = El().art.get_path(self.__view.webview.uri, "start")
-            if artwork_path is not None:
+            if artwork_path is not None and\
+                    GLib.file_test(artwork_path, GLib.FileTest.IS_REGULAR):
                 self.__image.set_from_file(artwork_path)
 
     @property
