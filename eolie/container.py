@@ -21,6 +21,42 @@ from eolie.sites_manager import SitesManager
 from eolie.define import El, WindowType
 
 
+class DelayedStack(Gtk.Stack):
+    """
+        Gtk.Stack not mapping widgets on add()
+    """
+
+    def __init__(self):
+        """
+            Init widget
+        """
+        Gtk.Stack.__init__(self)
+        self.__pending_widget = []
+
+    def add(self, widget):
+        """
+            Add widget to stack
+            @param widget as Gtk.Widget
+        """
+        self.__pending_widget.append(widget)
+
+    def set_visible_child(self, widget):
+        """
+            Set widget visible
+        """
+        if widget in self.__pending_widget:
+            self.__pending_widget.remove(widget)
+            Gtk.Stack.add(self, widget)
+        Gtk.Stack.set_visible_child(self, widget)
+
+    def get_children(self):
+        """
+            Return stack children
+            @return [Gtk.Widget]
+        """
+        return Gtk.Stack.get_children(self) + self.__pending_widget
+
+
 class Container(Gtk.Overlay):
     """
         Main Eolie view
@@ -35,8 +71,9 @@ class Container(Gtk.Overlay):
         self.__window = window
         self.__popover = WebViewPopover(window)
         self.__current = None
+        self.__pending_items = []
 
-        self.__stack = Gtk.Stack()
+        self.__stack = DelayedStack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
         self.__stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
@@ -71,7 +108,7 @@ class Container(Gtk.Overlay):
     def add_webview(self, uri, window_type, ephemeral=False,
                     state=None, gtime=None):
         """
-            Add a web view to container
+            Add a webview to container
             @param uri as str
             @param window_type as Gdk.WindowType
             @param ephemeral as bool
@@ -96,22 +133,14 @@ class Container(Gtk.Overlay):
 
     def add_webviews(self, items):
         """
-            Add webviews offscreen by default
-            @param items as [(uri => str,
-                             ephemeral => bool,
-                             state => WebKit2.WebViewSessionState)]
+            Add webviews to container
+            @param items as [(uri, title, atime, gtime,
+                              ephemeral, state, window_type)]
         """
-        if items:
-            (uri, title, atime, gtime, ephemeral, state) = items.pop(0)
-            if not self.__stack.get_children():
-                window_type = WindowType.FOREGROUND
-            else:
-                window_type = WindowType.OFFLOAD
-            webview = self.add_webview(uri, window_type, ephemeral, state)
-            webview.set_title(title)
-            webview.set_atime(atime)
-            webview.set_gtime(gtime)
-            GLib.idle_add(self.add_webviews, items)
+        running = self.__pending_items != []
+        self.__pending_items += items
+        if not running:
+            self.__add_pending_items()
 
     def add_view(self, webview, window_type):
         """
@@ -331,6 +360,19 @@ class Container(Gtk.Overlay):
         """
         return [child for child in self.__stack.get_children()
                 if not child.destroying]
+
+    def __add_pending_items(self):
+        """
+            Add pending items to container
+        """
+        if self.__pending_items:
+            (uri, title, atime, gtime,
+             ephemeral, state, window_type) = self.__pending_items.pop(0)
+            webview = self.add_webview(uri, window_type, ephemeral, state)
+            webview.set_title(title)
+            webview.set_atime(atime)
+            webview.set_gtime(gtime)
+            GLib.idle_add(self.__add_pending_items)
 
     def __on_paned_notify_position(self, paned, ignore):
         """

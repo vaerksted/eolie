@@ -561,11 +561,10 @@ class Application(Gtk.Application):
                 self.__state_cache.remove(state)
                 break
 
-    def __create_initial_windows(self):
+    def __create_initial_windows(self, foreground):
         """
-            Create initial windows:
-                - read state from file and restore it
-                - or just create a new window
+            Create initial windows based on saved session
+            @param foreground if should load first webview
         """
         size = (800, 600)
         maximized = False
@@ -573,20 +572,23 @@ class Application(Gtk.Application):
             windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
             if self.settings.get_value("remember-session"):
                 for window in windows:
+                    if not window["states"]:
+                        continue
                     new_window = self.get_new_window(window["size"],
                                                      window["maximized"])
                     items = []
                     for (uri, title, atime,
                          gtime, ephemeral, state) in window["states"]:
+                        if foreground:
+                            window_type = WindowType.FOREGROUND
+                        else:
+                            window_type = WindowType.OFFLOAD
                         webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
                         items.append((uri, title, atime, gtime, ephemeral,
-                                      webkit_state))
-                    if items:
-                        new_window.container.add_webviews(items)
-                    else:
-                        new_window.container.add_webview(self.start_page,
-                                                         WindowType.FOREGROUND)
+                                      webkit_state, window_type))
+                        foreground = False
+                    new_window.container.add_webviews(items)
             elif windows:
                     size = windows[0]["size"]
                     maximized = windows[0]["maximized"]
@@ -624,7 +626,7 @@ class Application(Gtk.Application):
             self.art.disable_cache()
         ephemeral = options.contains("private")
         if not self.get_windows():
-            self.__create_initial_windows()
+            self.__create_initial_windows(len(args) < 2)
         if options.contains("new"):
             active_window = self.get_new_window()
         else:
@@ -632,6 +634,7 @@ class Application(Gtk.Application):
         # Open command line args
         if len(args) > 1:
             items = []
+            foreground = True
             for uri in args[1:]:
                 # Transform path to uri
                 parsed = urlparse(uri)
@@ -640,7 +643,12 @@ class Application(Gtk.Application):
                         uri = "file://%s" % uri
                     else:
                         uri = "http://%s" % uri
-                items.append((uri, uri, 0, 0, ephemeral, None))
+                if foreground:
+                    window_type = WindowType.FOREGROUND
+                else:
+                    window_type = WindowType.OFFLOAD
+                items.append((uri, uri, 0, 0, ephemeral, None, window_type))
+                foreground = False
             active_window.container.add_webviews(items)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page

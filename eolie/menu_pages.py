@@ -173,7 +173,7 @@ class PagesMenu(Gio.Menu):
                 continue
             uri = uri_attr.get_string()
             title = title_attr.get_string()
-            items.append((uri, title, 0, 0, False, None))
+            items.append((uri, title, 0, 0, False, None, WindowType.OFFLOAD))
             i += 1
         El().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()

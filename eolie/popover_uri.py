@@ -362,7 +362,7 @@ class Row(Gtk.ListBoxRow):
             items = El().bookmarks.get_bookmarks(tag_id)
         pages = []
         for (bid, uri, title) in items:
-            pages.append((uri, title, 0, 0, False, None))
+            pages.append((uri, title, 0, 0, False, None, WindowType.OFFLOAD))
         self.__window.container.add_webviews(pages)
 
     def __on_delete_clicked(self, button):
