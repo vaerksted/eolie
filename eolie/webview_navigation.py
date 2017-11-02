@@ -316,6 +316,7 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.stop_snapshot()
+            self.stop_favicon()
             self.__initial_uri = uri.rstrip('/')
             self._cancelled = False
             # Destroy current popups
