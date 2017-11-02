@@ -127,31 +127,23 @@ class Art:
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
-    def get_delta(self, uri, suffix):
+    def exists(self, uri, suffix):
         """
-            Return delta for uri and suffix
+            Check if file exists and is cached
             @param uri as str
             @param suffix as str
-            @return int
+            @return (exists as bool, cached as bool)
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
         exists = f.query_exists()
-        if exists:
+        if exists and self.__use_cache:
             info = f.query_info('time::modified',
                                 Gio.FileQueryInfoFlags.NONE,
                                 None)
             mtime = int(info.get_attribute_as_string('time::modified'))
-            return time() - mtime
+            return (True, time() - mtime < self.__CACHE_DELTA)
         else:
-            return self.__CACHE_DELTA
-
-    def exists(self, uri, suffix):
-        """
-            True if exists in cache and not older than cache delta
-            @return bool
-        """
-        delta = self.get_delta(uri, suffix)
-        return self.__use_cache and delta < self.__CACHE_DELTA
+            return (False, False)
 
     def vacuum(self):
         """

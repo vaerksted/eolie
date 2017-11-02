@@ -28,7 +28,6 @@ class WebViewArtwork:
             Init class
         """
         self.__snapshot_id = None
-        self.__favicon_id = None
 
     def set_snapshot(self):
         """
@@ -45,30 +44,11 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
-    def wait_for_favicon(self):
-        """
-            Wait a little for favicon, as notify::favicon is fired just after
-            WebKit2.LoadEvent.FINISHED, this allow us to make builtin favicon
-            Calling set_favicon() on WebKit2.LoadEvent.FINISHED may cache
-            previous favicon so it's a bad idea
-        """
-        if not self.ephemeral:
-            self.__favicon_id = GLib.timeout_add(1500,
-                                                 self.__on_set_favicon_timeout)
-
-    def stop_wait_for_favicon(self):
-        """
-            Stop pending favicon
-        """
-        if self.__favicon_id is not None:
-            GLib.source_remove(self.__favicon_id)
-            self.__favicon_id = None
-
-    def set_favicon(self):
+    def set_favicon(self, safe):
         """
             Set favicon for uri
+            @param favicon is safe
         """
-        self.stop_wait_for_favicon()
         resized = None
         uri = self.uri
         icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
@@ -106,14 +86,17 @@ class WebViewArtwork:
             self.emit("favicon-changed", resized, None)
             # Save favicon if needed
             if not self.ephemeral:
-                if not El().art.exists(uri, favicon_type):
+                (exists, cached) = El().art.exists(uri, favicon_type)
+                if not exists or (not cached and safe):
                     El().art.save_artwork(uri, resized, favicon_type)
-                if netloc is not None and\
-                        not El().art.exists(netloc, favicon_type):
-                    El().art.save_artwork(netloc, resized, favicon_type)
+                (exists, cached) = El().art.exists(netloc, favicon_type)
+                if netloc is not None:
+                    if not exists or (not cached and safe):
+                        El().art.save_artwork(netloc, resized, favicon_type)
                 self.__set_initial_uri_favicon(resized,
                                                uri,
-                                               favicon_type)
+                                               favicon_type,
+                                               safe)
 
 #######################
 # PROTECTED           #
@@ -134,18 +117,21 @@ class WebViewArtwork:
                           self.__on_snapshot,
                           True)
 
-    def __set_initial_uri_favicon(self, surface, uri, favicon_type):
+    def __set_initial_uri_favicon(self, surface, uri, favicon_type, safe):
         """
             Set favicon for initial uri
             @param surface as cairo.surface
             @param uri as str
             @param initial_uri as str
             @param favicon_type as str
+            @param safe as str
         """
         if self.initial_uri is not None:
             striped_uri = uri.rstrip("/")
             if self.initial_uri != striped_uri:
-                if not El().art.exists(self.initial_uri, favicon_type):
+                (exists, cached) = El().art.exists(self.initial_uri,
+                                                   favicon_type)
+                if not exists or (not cached and safe):
                     El().art.save_artwork(self.initial_uri,
                                           surface,
                                           favicon_type)
@@ -179,12 +165,6 @@ class WebViewArtwork:
                 self.initial_uri not in uris:
             uris.append(self.initial_uri)
         for uri in uris:
-            if not El().art.exists(uri, "start"):
+            (exists, cached) = El().art.exists(uri, "start")
+            if not cached:
                 El().art.save_artwork(uri, surface, "start")
-
-    def __on_set_favicon_timeout(self):
-        """
-            Set favicon
-        """
-        self.__favicon_id = None
-        self.set_favicon()
