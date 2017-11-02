@@ -297,6 +297,19 @@ class Window(Gtk.ApplicationWindow):
         # Allow respecting GNOME IHM, should tile on screen == 1280px
         self.toolbar.end.move_control_in_menu(size[0] < 700)
         self.toolbar.title.set_width(size[0]/3)
+        if self.__timeout_configure:
+            GLib.source_remove(self.__timeout_configure)
+            self.__timeout_configure = None
+        self.__timeout_configure = GLib.timeout_add(
+                                               250,
+                                               self.__on_configure_timeout)
+
+    def __on_configure_timeout(self):
+        """
+            Update zoom level
+        """
+        self.__timeout_configure = None
+        self.update_zoom_level(False)
 
     def __on_window_state_event(self, widget, event):
         """
