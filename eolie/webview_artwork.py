@@ -28,6 +28,7 @@ class WebViewArtwork:
             Init class
         """
         self.__snapshot_id = None
+        self.__favicon_id = None
 
     def set_snapshot(self):
         """
@@ -44,11 +45,52 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
+    def stop_favicon(self):
+        """
+            Stop pending snapshot
+        """
+        if self.__favicon_id is not None:
+            GLib.source_remove(self.__favicon_id)
+            self.__favicon_id = None
+
     def set_favicon(self, safe):
         """
-            Set favicon for uri
+            Set favicon
             @param favicon is safe
         """
+        if not self.ephemeral:
+            if safe:
+                self.__snapshot_id = GLib.timeout_add(1000,
+                                                      self.__set_favicon,
+                                                      safe)
+            else:
+                self.__set_favicon(safe)
+
+#######################
+# PROTECTED           #
+#######################
+
+#######################
+# PRIVATE             #
+#######################
+    def __set_snapshot(self):
+        """
+            Set webpage preview
+        """
+        self.__snapshot_id = None
+        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+                          WebKit2.SnapshotOptions.NONE,
+                          self._cancellable,
+                          get_snapshot,
+                          self.__on_snapshot,
+                          True)
+
+    def __set_favicon(self, safe):
+        """
+            Cache favicon and emit signal
+            @param safe as bool
+        """
+        self.__favicon_id = None
         resized = None
         uri = self.uri
         icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
@@ -97,25 +139,6 @@ class WebViewArtwork:
                                                uri,
                                                favicon_type,
                                                safe)
-
-#######################
-# PROTECTED           #
-#######################
-
-#######################
-# PRIVATE             #
-#######################
-    def __set_snapshot(self):
-        """
-            Set webpage preview
-        """
-        self.__snapshot_id = None
-        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
-                          WebKit2.SnapshotOptions.NONE,
-                          self._cancellable,
-                          get_snapshot,
-                          self.__on_snapshot,
-                          True)
 
     def __set_initial_uri_favicon(self, surface, uri, favicon_type, safe):
         """
