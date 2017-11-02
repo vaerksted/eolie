@@ -122,6 +122,8 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
+        if webview.uri is not None:
+            self.toolbar.title.set_uri(webview.uri)
         self.toolbar.title.update_load_indicator(webview)
         if webview.popups:
             self.toolbar.title.show_indicator(Indicator.POPUPS)
