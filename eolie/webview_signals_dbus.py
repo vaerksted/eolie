@@ -120,7 +120,7 @@ class WebViewDBusSignals:
                                                  user_form_value,
                                                  pass_form_name,
                                                  pass_form_value,
-                                                 self.get_uri(),
+                                                 self.uri,
                                                  form_uri)
             request.submit()
         except Exception as e:
@@ -147,7 +147,7 @@ class WebViewDBusSignals:
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
                 helper = PasswordsHelper()
-                helper.get(self.get_uri(), userform, None,
+                helper.get(self.uri, userform, None,
                            self.__on_password, popover, model)
 
     def __on_password(self, attributes, password, uri,

@@ -81,7 +81,7 @@ class WebView(WebKit2.WebView):
             Update zoom level
         """
         try:
-            zoom_level = El().websettings.get_zoom(self.get_uri())
+            zoom_level = El().websettings.get_zoom(self.uri)
             if zoom_level is None:
                 zoom_level = 100
             if self.__related_view is None:
@@ -107,11 +107,11 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        current = El().websettings.get_zoom(self.get_uri())
+        current = El().websettings.get_zoom(self.uri)
         if current is None:
             current = 100
         current += 10
-        El().websettings.set_zoom(current, self.get_uri())
+        El().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
         return current
 
@@ -120,13 +120,13 @@ class WebView(WebKit2.WebView):
             Zoom out view
             @return current zoom after zoom out
         """
-        current = El().websettings.get_zoom(self.get_uri())
+        current = El().websettings.get_zoom(self.uri)
         if current is None:
             current = 100
         current -= 10
         if current == 0:
             return 10
-        El().websettings.set_zoom(current, self.get_uri())
+        El().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
         return current
 
@@ -135,33 +135,31 @@ class WebView(WebKit2.WebView):
             Reset zoom level
             @return current zoom after zoom out
         """
-        El().websettings.set_zoom(100, self.get_uri())
+        El().websettings.set_zoom(100, self.uri)
         self.update_zoom_level()
 
-    def get_title(self):
+    def set_title(self, title):
         """
-            Get webview title
-            @return str
+            Set title, will be returned by title property until title is set
+            by WebView
+            @param title as str
         """
-        title = WebKit2.WebView.get_title(self)
-        if title is None:
-            title = self.__delayed_uri
-        return title
+        self._title = title
+        self.emit("title-changed", title)
 
-    def set_delayed_uri(self, uri):
+    def set_uri(self, uri):
         """
             Set delayed uri
-            @param uri as str/None
+            @param uri as str
         """
-        self.__delayed_uri = uri
-        if uri is not None:
-            self.emit("title-changed", uri)
+        self._uri = uri
+        self.emit("uri-changed", uri)
 
     def update_spell_checking(self):
         """
             Update spell checking
         """
-        codes = El().websettings.get_languages(self.get_uri())
+        codes = El().websettings.get_languages(self.uri)
         # If None, default user language
         if codes is not None:
             self.get_context().set_spell_checking_languages(codes)
@@ -320,12 +318,28 @@ class WebView(WebKit2.WebView):
         return self._cancelled
 
     @property
-    def delayed_uri(self):
+    def title(self):
         """
-            Get delayed uri (one time)
+            Get title (loaded or unloaded)
             @return str
         """
-        return self.__delayed_uri
+        title = self.get_title()
+        if title is None:
+            title = self._title
+        if title is None:
+            title = self.uri
+        return title
+
+    @property
+    def uri(self):
+        """
+            Get uri (loaded or unloaded)
+            @return str
+        """
+        uri = self.get_uri()
+        if uri is None:
+            uri = self._uri
+        return uri
 
     @property
     def ephemeral(self):
@@ -375,7 +389,8 @@ class WebView(WebKit2.WebView):
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readable_content = ""
-        self.__delayed_uri = None
+        self._uri = None
+        self._title = None
         self._navigation_uri = None
         self.__related_view = related_view
         self.__input_source = Gdk.InputSource.MOUSE
@@ -481,7 +496,7 @@ class WebView(WebKit2.WebView):
         # Do not block if we get a click on view
         elapsed = time() - related._last_click_time
         popup_block = El().settings.get_value("popupblock")
-        parsed_related = urlparse(related.get_uri())
+        parsed_related = urlparse(related.uri)
         exception = El().popup_exceptions.find_parsed(parsed_related) or\
             elapsed < 0.5
         if not exception and popup_block and\

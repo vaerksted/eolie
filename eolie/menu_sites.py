@@ -32,12 +32,10 @@ class SitesMenu(Gio.Menu):
         self.__window = window
         Gio.Menu.__init__(self)
         for view in views:
-            uri = view.webview.get_uri()
+            uri = view.webview.uri
             if uri is None:
                 continue
-            title = view.webview.get_title()
-            if not title:
-                title = uri
+            title = view.webview.title
             encoded = "SITE_" + sha256(uri.encode("utf-8")).hexdigest()
             action = El().lookup_action(encoded)
             if action is not None:
@@ -91,7 +89,7 @@ class SitesMenu(Gio.Menu):
         """
         if views:
             from eolie.dialog_modify_ua import ModifyUADialog
-            dialog = ModifyUADialog(views[0].webview.get_uri(), self.__window)
+            dialog = ModifyUADialog(views[0].webview.uri, self.__window)
             dialog.run()
 
     def __on_action_clicked(self, action, variant, view):

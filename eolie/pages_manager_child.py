@@ -45,6 +45,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__indicator_label.set_property("valign", Gtk.Align.CENTER)
         self.__indicator_label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__indicator_label.show()
+        if view.webview.title:
+            self.__indicator_label.set_text(view.webview.title)
         builder.get_object("grid").attach(self.__indicator_label, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
         self.__close_button = builder.get_object("close_button")
@@ -96,6 +98,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__connected_signals.append(
             self.__view.webview.connect("shown",
                                         self.__on_webview_shown))
+        self.__set_favicon_artwork()
+        if self.__view.webview.uri is not None:
+            artwork_path = El().art.get_path(self.__view.webview.uri, "start")
+            if artwork_path is not None:
+                self.__image.set_from_file(artwork_path)
 
     @property
     def view(self):
@@ -154,30 +161,36 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            if self.__view.webview.ephemeral:
-                return
-            image = self.__close_button.get_image()
-            if self.__favicon is not None:
-                image.set_from_surface(self.__favicon)
-            else:
-                uri = self.__view.webview.get_uri()
-                artwork = El().art.get_icon_theme_artwork(
-                                             uri,
-                                             self.view.webview.ephemeral)
-                if artwork is not None:
-                    image.set_from_icon_name(artwork,
-                                             Gtk.IconSize.INVALID)
-                else:
-                    favicon_path = El().art.get_favicon_path(uri)
-                    if favicon_path is not None:
-                        image.set_from_file(favicon_path)
-                    else:
-                        image.set_from_icon_name("applications-internet",
-                                                 Gtk.IconSize.INVALID)
+            self.__set_favicon_artwork()
 
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon_artwork(self):
+        """
+            Set favicon artwork
+        """
+        if self.__view.webview.ephemeral:
+                return
+        image = self.__close_button.get_image()
+        if self.__favicon is not None:
+            image.set_from_surface(self.__favicon)
+        else:
+            uri = self.__view.webview.uri
+            artwork = El().art.get_icon_theme_artwork(
+                                         uri,
+                                         self.view.webview.ephemeral)
+            if artwork is not None:
+                image.set_from_icon_name(artwork,
+                                         Gtk.IconSize.INVALID)
+            else:
+                favicon_path = El().art.get_favicon_path(uri)
+                if favicon_path is not None:
+                    image.set_from_file(favicon_path)
+                else:
+                    image.set_from_icon_name("applications-internet",
+                                             Gtk.IconSize.INVALID)
+
     def __set_snapshot(self):
         """
             Set webpage preview
@@ -212,7 +225,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         text = ""
         label = self.__indicator_label.get_text()
-        uri = self.__view.webview.get_uri()
+        uri = self.__view.webview.uri
         # GLib.markup_escape_text
         if uri is None:
             text = "<b>%s</b>" % GLib.markup_escape_text(label)
@@ -299,7 +312,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        uri = webview.get_uri()
+        uri = webview.uri
         if event == WebKit2.LoadEvent.STARTED:
             self.__favicon = None
             self.__close_button.get_image().set_from_icon_name(

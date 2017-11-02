@@ -241,13 +241,13 @@ class ToolbarTitle(Gtk.Bin):
         """
             Show title instead of uri
         """
-        self.__window.set_title(title)
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
             return
         if title:
+            self.__window.set_title(title)
             self.__placeholder.set_text(title)
         else:
             self.__placeholder.set_text(self.__uri)
@@ -609,7 +609,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__indicator2_image.get_icon_name()[0] ==\
                 "mark-location-symbolic":
-            uri = self.__window.container.current.webview.get_uri()
+            uri = self.__window.container.current.webview.uri
             El().websettings.allow_geolocation(uri, False)
             if self.__window.container.current.webview.popups:
                 self.show_indicator(Indicator.POPUPS)
@@ -651,17 +651,14 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.delete_text(0, -1)
             webview.clear_text_entry()
         else:
-            bookmark_id = El().bookmarks.get_id(webview.get_uri())
+            bookmark_id = El().bookmarks.get_id(webview.uri)
             if bookmark_id is None:
-                uri = webview.get_uri()
-                if not uri or uri == "about:blank":
+                uri = webview.uri
+                if uri is None or uri == "about:blank":
                     return
-                title = webview.get_title()
-                if not title:
-                    title = uri
                 self.__action_image2.set_from_icon_name("starred-symbolic",
                                                         Gtk.IconSize.MENU)
-                bookmark_id = El().bookmarks.add(title,
+                bookmark_id = El().bookmarks.add(webview.title,
                                                  uri, None, [])
             from eolie.widget_bookmark_edit import BookmarkEditWidget
             widget = BookmarkEditWidget(bookmark_id, False)
@@ -721,7 +718,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__placeholder.set_opacity(0.8)
         self.set_text_entry("")
         self.__update_secure_content_indicator()
-        uri = view.webview.get_uri()
+        uri = view.webview.uri
         if uri is not None:
             bookmark_id = El().bookmarks.get_id(uri)
             if bookmark_id is not None:
@@ -786,7 +783,7 @@ class ToolbarTitle(Gtk.Bin):
         elif len(value) < 3:
             return
         for view in self.__window.container.views:
-            uri = view.webview.get_uri()
+            uri = view.webview.uri
             if uri is not None:
                 view_parsed = urlparse(uri)
                 if view_parsed.netloc.find(value) != -1:
@@ -874,7 +871,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.delete_selection()
         from eolie.widget_bookmark_edit import BookmarkEditWidget
         if isinstance(popover, BookmarkEditWidget):
-            bookmark_id = El().bookmarks.get_id(webview.get_uri())
+            bookmark_id = El().bookmarks.get_id(webview.uri)
             if bookmark_id is None:
                 self.__action_image2.set_from_icon_name("non-starred-symbolic",
                                                         Gtk.IconSize.MENU)

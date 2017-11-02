@@ -72,12 +72,11 @@ class WebViewLoadSignals:
         if not webview.get_mapped():
             return
         self._window.toolbar.title.update_load_indicator(webview)
-        uri = self.get_uri()
-        parsed = urlparse(uri)
+        parsed = urlparse(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
-            self._window.toolbar.title.set_title(uri)
+            self._window.toolbar.title.set_title(webview.uri)
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.show_spinner(True)
@@ -90,7 +89,7 @@ class WebViewLoadSignals:
                 self._window.container.current.switch_read_mode()
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.set_title(uri)
+            self._window.toolbar.title.set_title(webview.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.show_spinner(False)
             # Give focus to webview

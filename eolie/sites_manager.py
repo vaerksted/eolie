@@ -63,9 +63,9 @@ class SitesManager(Gtk.EventBox):
             Add a new view to monitor
             @param view as View
         """
-        delayed_uri = view.webview.delayed_uri
-        if delayed_uri is not None:
-            self.__loaded_uri(view.webview, delayed_uri)
+        # WebView not loaded, as load-changed will not be emited, force update
+        if view.webview.get_uri() != view.webview.uri:
+            self.__loaded_uri(view.webview, view.webview.uri)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
         view.connect("destroying", self.__on_view_destroying)
 
@@ -284,8 +284,7 @@ class SitesManager(Gtk.EventBox):
         """
         if event == WebKit2.LoadEvent.FINISHED:
             return
-        uri = webview.get_uri()
-        self.__loaded_uri(webview, uri)
+        self.__loaded_uri(webview, webview.uri)
 
     def __on_row_activated(self, listbox, child):
         """

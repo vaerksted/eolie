@@ -106,7 +106,7 @@ class View(Gtk.Overlay):
                             width: %s}\
                         </style></head>" % (document_font_size,
                                             self.get_allocated_width() / 1.5)
-                html += "<title>%s</title>" % self.__webview.get_title()
+                html += "<title>%s</title>" % self.__webview.title
                 html += self.__webview.readable_content
                 html += "</html>"
                 GLib.idle_add(self.__reading_view.load_html, html, None)

@@ -122,19 +122,11 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
-        uri = webview.delayed_uri
-        if uri is None:
-            uri = webview.get_uri()
-        else:
-            webview.load_uri(uri)
-        title = webview.get_title()
         self.toolbar.title.update_load_indicator(webview)
         if webview.popups:
             self.toolbar.title.show_indicator(Indicator.POPUPS)
         else:
             self.toolbar.title.show_indicator(Indicator.NONE)
-        if uri is not None:
-            self.toolbar.title.set_uri(uri)
         if webview.is_loading():
             self.toolbar.title.show_spinner(True)
             self.toolbar.title.progress.show()
@@ -142,10 +134,10 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.progress.hide()
             readable_content = webview.readable_content
             self.toolbar.title.show_readable_button(readable_content != "")
-        if title:
-            self.toolbar.title.set_title(title)
-        elif uri:
-            self.toolbar.title.set_title(uri)
+        if webview.title:
+            self.toolbar.title.set_title(webview.title)
+        else:
+            self.toolbar.title.set_title(webview.uri)
         self.toolbar.actions.set_actions(webview)
 
     def hide(self):
@@ -398,7 +390,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "home":
             self.container.current.webview.load_uri(El().start_page)
         elif string == "source":
-            uri = self.container.current.webview.get_uri()
+            uri = self.container.current.webview.uri
             task_helper = TaskHelper()
             task_helper.run(self.__show_source_code, uri,
                             callback=(self.__on_show_source_code,))

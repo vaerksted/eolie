@@ -166,9 +166,14 @@ class PagesMenu(Gio.Menu):
         for i in range(0, self.__closed_section.get_n_items()):
             uri_attr = self.__closed_section.get_item_attribute_value(i,
                                                                       "uri")
-            if uri_attr is None:
+            title_attr = self.__closed_section.get_item_attribute_value(
+                                                                       i,
+                                                                       "label")
+            if uri_attr is None or title_attr is None:
                 continue
-            items.append((uri_attr.get_string(), False, None))
+            uri = uri_attr.get_string()
+            title = title_attr.get_string()
+            items.append((uri, title, 0, 0, False, None))
             i += 1
         El().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()

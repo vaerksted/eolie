@@ -87,29 +87,30 @@ class Container(Gtk.Overlay):
         if state is not None:
             webview.restore_session_state(state)
         if uri is not None:
+            webview.set_uri(uri)
             if window_type != WindowType.OFFLOAD:
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
-            else:
-                webview.set_delayed_uri(uri)
         self.add_view(webview, window_type)
         return webview
 
-    def add_webviews(self, items, first_onscreen=False):
+    def add_webviews(self, items):
         """
             Add webviews offscreen by default
-            @param items as [(uri: str,
-                             ephemeral: bool,
-                             state: WebKit2.WebViewSessionState)]
-            @param first_offscreen as bool
+            @param items as [(uri => str,
+                             ephemeral => bool,
+                             state => WebKit2.WebViewSessionState)]
         """
-        if first_onscreen:
-            window_type = WindowType.FOREGROUND
-        else:
-            window_type = WindowType.OFFLOAD
         if items:
-            (uri, ephemeral, state) = items.pop(0)
-            self.add_webview(uri, window_type, ephemeral, state)
+            (uri, title, atime, gtime, ephemeral, state) = items.pop(0)
+            if not self.__stack.get_children():
+                window_type = WindowType.FOREGROUND
+            else:
+                window_type = WindowType.OFFLOAD
+            webview = self.add_webview(uri, window_type, ephemeral, state)
+            webview.set_title(title)
+            webview.set_atime(atime)
+            webview.set_gtime(gtime)
             GLib.idle_add(self.add_webviews, items)
 
     def add_view(self, webview, window_type):
@@ -230,14 +231,14 @@ class Container(Gtk.Overlay):
         children.remove(view)
         reversed_children = list(reversed(children))
         children_count = len(children)
-        El().history.set_page_state(view.webview.get_uri())
+        El().history.set_page_state(view.webview.uri)
         self.__window.close_popovers()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
         gtime = view.webview.gtime
-        El().pages_menu.add_action(view.webview.get_title(),
-                                   view.webview.get_uri(),
+        El().pages_menu.add_action(view.webview.title,
+                                   view.webview.uri,
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
         view.destroy()

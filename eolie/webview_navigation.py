@@ -156,7 +156,7 @@ class WebViewNavigation:
             if self.ephemeral:
                 request.deny()
             else:
-                uri = webview.get_uri()
+                uri = webview.uri
                 self._window.toolbar.title.show_geolocation(uri, request)
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
             # Can use Gnome Shell notification policy
@@ -169,7 +169,8 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param uri as GParamSpec
         """
-        uri = webview.get_uri()
+        self._uri = None
+        uri = webview.uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
@@ -180,14 +181,14 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param event as GParamSpec
         """
-        title = webview.get_title()
-        if event.name != "title" or not title:
+        if event.name != "title" or not webview.title:
             return
-        self.emit("title-changed", title)
+        self._title = None
+        self.emit("title-changed", webview.title)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
             self.__initial_uri = None
-            self.set_favicon(self.get_uri())
+            self.set_favicon(self.uri)
         if self.__js_timeout is not None:
             GLib.source_remove(self.__js_timeout)
         self.__js_timeout = GLib.timeout_add(
@@ -201,7 +202,7 @@ class WebViewNavigation:
             @param webview as WebView
             @param favicon as Gparam
         """
-        self.set_favicon(self.get_uri())
+        self.set_favicon(self.uri)
 
     def __on_js_timeout(self, path):
         """
@@ -296,7 +297,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                El().history.set_page_state(webview.get_uri())
+                El().history.set_page_state(webview.uri)
                 decision.use()
                 self._error = None
                 return False
@@ -311,7 +312,7 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        uri = webview.get_uri()
+        uri = webview.uri
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.stop_snapshot()

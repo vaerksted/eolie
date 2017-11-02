@@ -194,10 +194,10 @@ class WebViewErrors:
         self.load_html(html, uri)
         return True
 
-    def __on_web_process_crashed(self, view):
+    def __on_web_process_crashed(self, webview):
         """
             We just crashed :-(
-            @param view as WebKit2.WebView
+            @param webview as WebKit2.WebView
         """
         self._error = GLib.Error()
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
@@ -220,5 +220,5 @@ class WebViewErrors:
                          "Set <b>[GTK]</b> as subject prefix."),
                        "suggested-action",
                        _("Report a bug now"))
-        self.load_html(html, view.get_uri())
+        self.load_html(html, webview.uri)
         return True

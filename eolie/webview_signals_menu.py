@@ -53,7 +53,7 @@ class WebViewMenuSignals:
             count = context_menu.get_n_items()
             inspector_item = context_menu.get_item_at_position(count - 1)
         context_menu.remove_all()
-        parsed = urlparse(webview.get_uri())
+        parsed = urlparse(webview.uri)
         if parsed.scheme == "populars":
             if hit.context_is_link():
                 action = Gio.SimpleAction(name="reload_preview")
@@ -245,7 +245,7 @@ class WebViewMenuSignals:
             @param action as Gio.SimpleAction
             @param variant as GLib.Variant
         """
-        self._window.toolbar.end.save_images(self.get_uri(),
+        self._window.toolbar.end.save_images(self.uri,
                                              self.get_page_id())
 
     def __on_save_videos_activate(self, action, variant):

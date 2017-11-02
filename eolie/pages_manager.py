@@ -294,8 +294,8 @@ class PagesManager(Gtk.EventBox):
         filter = self.__search_entry.get_text()
         if not filter:
             return True
-        uri = row.view.webview.get_uri()
-        title = row.view.webview.get_title()
+        uri = row.view.webview.uri
+        title = row.view.webview.title
         if (uri is not None and uri.find(filter) != -1) or\
                 (title is not None and title.find(filter) != -1) or\
                 (filter == "private://" and row.view.webview.ephemeral):

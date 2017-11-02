@@ -277,7 +277,7 @@ class ToolbarEnd(Gtk.Bin):
         if not self.__download_button.is_visible():
             builder.get_object("toolbar_items").show()
 
-        uri = self.__window.container.current.webview.get_uri()
+        uri = self.__window.container.current.webview.uri
         if not uri:
             return
         parsed = urlparse(uri)
@@ -337,7 +337,7 @@ class ToolbarEnd(Gtk.Bin):
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
 
-        current = El().websettings.get_zoom(webview.get_uri())
+        current = El().websettings.get_zoom(webview.uri)
         if current is None:
             current = 100
         builder.get_object("default_zoom_button").set_label(
@@ -427,7 +427,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         webview = self.__window.container.current.webview
-        El().websettings.set_zoom(100, webview.get_uri())
+        El().websettings.set_zoom(100, webview.uri)
         webview.update_zoom_level()
         button.set_label("100 %")
 
@@ -475,7 +475,7 @@ class ToolbarEnd(Gtk.Bin):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        uri = self.__window.container.current.webview.get_uri()
+        uri = self.__window.container.current.webview.uri
         if not uri:
             return
         if action == self.__adblock_exceptions:

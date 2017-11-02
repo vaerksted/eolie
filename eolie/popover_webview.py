@@ -55,8 +55,7 @@ class WebViewPopover(Gtk.Popover):
         view.webview.connect("close", self.__on_webview_close, destroy)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
-        title = view.webview.get_title()
-        self.__combobox.append(str(view), title)
+        self.__combobox.append(str(view), view.webview.title)
         if position == 0:
             properties = view.webview.get_window_properties()
             geometry = properties.get_geometry()
@@ -64,7 +63,7 @@ class WebViewPopover(Gtk.Popover):
                 self.__stack.set_size_request(geometry.width, geometry.height)
             else:
                 self.__stack.set_size_request(width, height)
-            self.__label.set_text(title)
+            self.__label.set_text(view.webview.title)
             self.__label.show()
             self.__combobox.set_active_id(str(view))
             self.__combobox.hide()

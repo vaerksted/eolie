@@ -81,9 +81,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         # We are offscreen
         if self._window != self.get_toplevel():
             return
-        if self.delayed_uri is not None:
-            self.load_uri(self.delayed_uri)
-            self.set_delayed_uri(None)
+        # URI set but not loaded
+        if webview.get_uri() != webview.uri:
+            webview.load_uri(webview.uri)
         self._shown = True
         self.emit("shown")
         self.set_atime(int(time()))
@@ -122,14 +122,13 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
             @param request as WebKit2.FileChooserRequest
         """
-        uri = webview.get_uri()
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
                                            self._window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
         dialog.set_select_multiple(request.get_select_multiple())
-        chooser_uri = El().websettings.get_chooser_uri(uri)
+        chooser_uri = El().websettings.get_chooser_uri(webview.uri)
         if chooser_uri is not None:
             dialog.set_current_folder_uri(chooser_uri)
         response = dialog.run()
@@ -139,7 +138,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         else:
             request.select_files(dialog.get_filenames())
             El().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
-                                             uri)
+                                             webview.uri)
         return True
 
     def __on_scroll_event(self, webview, event):
@@ -180,17 +179,17 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
             @param event as GParamSpec
         """
+        # We want real title, do not use property here!
         title = webview.get_title()
         if self.error is not None or event.name != "title" or not title:
             return
-        uri = self.get_uri()
-        parsed = urlparse(uri)
+        parsed = urlparse(webview.uri)
         if parsed.scheme in ["http", "https"] and\
                 not self.ephemeral:
             mtime = round(time(), 2)
             El().history.thread_lock.acquire()
-            history_id = El().history.add(title, uri, mtime)
-            El().history.set_page_state(uri, mtime)
+            history_id = El().history.add(title, webview.uri, mtime)
+            El().history.set_page_state(webview.uri, mtime)
             El().history.thread_lock.release()
             if El().sync_worker is not None:
                 El().sync_worker.push_history([history_id])

@@ -112,7 +112,7 @@ class WebViewArtwork:
         # Do not cache snapshot on error
         if self.error is not None:
             return
-        uri = self.get_uri()
+        uri = self.uri
         # We also cache initial URI
         uris = [uri.rstrip("/")]
         if self.initial_uri is not None and\
