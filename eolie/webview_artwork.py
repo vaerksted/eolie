@@ -60,9 +60,9 @@ class WebViewArtwork:
         """
         if not self.ephemeral:
             if safe:
-                self.__snapshot_id = GLib.timeout_add(1000,
-                                                      self.__set_favicon,
-                                                      safe)
+                self.__favicon_id = GLib.timeout_add(1000,
+                                                     self.__set_favicon,
+                                                     safe)
             else:
                 self.__set_favicon(safe)
 
