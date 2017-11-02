@@ -594,9 +594,6 @@ class Application(Gtk.Application):
             print("Application::__create_initial_windows()", e)
         if not self.get_windows():
             self.get_new_window(size, maximized)
-        if not self.active_window.container.views:
-            self.active_window.container.add_webview(self.start_page,
-                                                     WindowType.FOREGROUND)
 
     def __on_handle_local_options(self, app, options):
         """
@@ -627,7 +624,7 @@ class Application(Gtk.Application):
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
-        if options.contains("new"):
+        if options.contains("new") or self.active_window.container.views:
             active_window = self.get_new_window()
         else:
             active_window = self.active_window
@@ -643,14 +640,13 @@ class Application(Gtk.Application):
                     else:
                         uri = "http://%s" % uri
                 items.append((uri, "", 0, 0, ephemeral, None))
-            self.active_window.container.add_webviews(items)
+            active_window.container.add_webviews(items)
             active_window.present_with_time(Gtk.get_current_event_time())
         # Add default start page
-        elif not self.get_windows():
-            self.active_window.present_with_time(Gtk.get_current_event_time())
-            self.active_window.container.add_webview(self.start_page,
-                                                     WindowType.FOREGROUND,
-                                                     ephemeral)
+        if not active_window.container.views:
+            active_window.container.add_webview(self.start_page,
+                                                WindowType.FOREGROUND,
+                                                ephemeral)
         if self.debug:
             WebKit2.WebContext.get_default().get_plugins(None,
                                                          self.__on_get_plugins,
