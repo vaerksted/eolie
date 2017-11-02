@@ -46,14 +46,54 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
-    def set_favicon(self, uri):
+    def set_favicon(self):
         """
             Set favicon for uri
-            @param uri as str
         """
-        if uri != self.__last_uri:
-            self.__last_uri = uri
-            self.__favicon_db.get_favicon(uri, None, self.__on_favicon, uri)
+        resized = None
+        uri = self.uri
+        icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
+                                                             self.ephemeral)
+        if icon_theme_artwork is not None:
+            self.emit("favicon-changed", None, icon_theme_artwork)
+        else:
+            favicon_type = "favicon"
+            # Calculate netloc
+            parsed = urlparse(uri)
+            if not parsed.netloc:
+                return
+            netloc = parsed.netloc.lstrip("www.")
+            # Read result
+            surface = self.get_favicon()
+            # Resize surface and set favicon
+            if surface is not None:
+                resized = resize_favicon(surface)
+            else:
+                # Check for already cached favicon
+                # We do not want to show a favicon_alt if a favicon is cached
+                # so check for favicon too
+                for favicon in ["favicon", "favicon_alt"]:
+                    resized = El().art.get_artwork(netloc,
+                                                   favicon,
+                                                   self.get_scale_factor(),
+                                                   ArtSize.FAVICON,
+                                                   ArtSize.FAVICON)
+                    if resized is not None:
+                        favicon_type = favicon
+                        break
+                if resized is None:
+                    resized = get_char_surface(netloc[0])
+                    favicon_type = "favicon_alt"
+            self.emit("favicon-changed", resized, None)
+            # Save favicon if needed
+            if not El().art.exists(uri, favicon_type):
+                El().art.save_artwork(uri, resized, favicon_type)
+            if netloc is not None and\
+                    not El().art.exists(netloc, favicon_type):
+                El().art.save_artwork(netloc, resized, favicon_type)
+            self.__set_initial_uri_favicon(resized,
+                                           uri,
+                                           favicon_type)
 
 #######################
 # PROTECTED           #
@@ -121,57 +161,3 @@ class WebViewArtwork:
         for uri in uris:
             if not El().art.exists(uri, "start"):
                 El().art.save_artwork(uri, surface, "start")
-
-    def __on_favicon(self, favicon_db, result, uri):
-        """
-            Set current favicon
-            @param favicon_db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param uri as str
-        """
-        resized = None
-        icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
-                                                             self.ephemeral)
-        if icon_theme_artwork is not None:
-            self.emit("favicon-changed", None, icon_theme_artwork)
-        else:
-            favicon_type = "favicon"
-            # Calculate netloc
-            parsed = urlparse(uri)
-            if not parsed.netloc:
-                return
-            netloc = parsed.netloc.lstrip("www.")
-            # Read result
-            try:
-                surface = favicon_db.get_favicon_finish(result)
-            except:
-                surface = None
-            # Resize surface and set favicon
-            if surface is not None:
-                resized = resize_favicon(surface)
-            else:
-                # Check for already cached favicon
-                # We do not want to show a favicon_alt if a favicon is cached
-                # so check for favicon too
-                for favicon in ["favicon", "favicon_alt"]:
-                    resized = El().art.get_artwork(netloc,
-                                                   favicon,
-                                                   self.get_scale_factor(),
-                                                   ArtSize.FAVICON,
-                                                   ArtSize.FAVICON)
-                    if resized is not None:
-                        favicon_type = favicon
-                        break
-                if resized is None:
-                    resized = get_char_surface(netloc[0])
-                    favicon_type = "favicon_alt"
-            self.emit("favicon-changed", resized, None)
-            # Save favicon if needed
-            if not El().art.exists(uri, favicon_type):
-                El().art.save_artwork(uri, resized, favicon_type)
-            if netloc is not None and\
-                    not El().art.exists(netloc, favicon_type):
-                El().art.save_artwork(netloc, resized, favicon_type)
-            self.__set_initial_uri_favicon(resized,
-                                           uri,
-                                           favicon_type)
