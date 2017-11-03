@@ -399,8 +399,7 @@ class Window(Gtk.ApplicationWindow):
             if self.is_fullscreen:
                 self.container.current.webview.emit("leave-fullscreen")
                 Gtk.ApplicationWindow.unfullscreen(self)
-            self.__container.try_close_view(
-                                                      self.container.current)
+            self.__container.try_close_view(self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
         elif string == "home":

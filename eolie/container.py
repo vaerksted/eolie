@@ -235,6 +235,7 @@ class Container(Gtk.Overlay):
             self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.pages_manager.set_filter("")
+            self.__pages_manager.update_visible_child()
             child.set_filtered(False)
 
     def try_close_view(self, view):

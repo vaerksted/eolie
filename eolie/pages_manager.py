@@ -75,12 +75,14 @@ class PagesManager(Gtk.EventBox):
         self.__box.add(child)
         return child
 
-    def update_visible_child(self):
+    def update_visible_child(self, visible=None):
         """
-            Mark current child as visible
+            Mark current child or visible if passed as arg
             Unmark all others
+            @param visible as view
         """
-        visible = self.__window.container.current
+        if visible is None:
+            visible = self.__window.container.current
         for child in self.__box.get_children():
             style_context = child.get_style_context()
             if child.view == visible:
@@ -229,10 +231,10 @@ class PagesManager(Gtk.EventBox):
         self.__window.container.set_expose(True)
         callback()
 
-    def __next(self, loop=True):
+    def __next(self, switch=True):
         """
             Show next view
-            @param loop as bool
+            @param switch as bool
         """
         children = self.__box.get_children()
         if not children:
@@ -241,10 +243,11 @@ class PagesManager(Gtk.EventBox):
         next_row = None
         for child in children:
             # First search for current
-            if child.view == self.__window.container.current:
+            if child == self.__current_child:
                 current_row = child
             # Init next to first valid child
-            elif loop and next_row is None and\
+            # Only loop in switch mode
+            elif switch and next_row is None and\
                     current_row is None and\
                     self.__filter_func(child):
                 next_row = child
@@ -253,12 +256,15 @@ class PagesManager(Gtk.EventBox):
                 next_row = child
                 break
         if next_row is not None:
-            self.__window.container.set_current(next_row.view)
+            if switch:
+                self.__window.container.set_current(next_row.view)
+            else:
+                self.update_visible_child(next_row.view)
 
-    def __previous(self, loop=True):
+    def __previous(self, switch=True):
         """
             Show previous view
-            @param loop as bool
+            @param switch as bool
         """
         children = self.__box.get_children()
         if not children:
@@ -267,10 +273,11 @@ class PagesManager(Gtk.EventBox):
         prev_row = None
         for child in reversed(children):
             # First search for current
-            if child.view == self.__window.container.current:
+            if child == self.__current_child:
                 current_row = child
             # Init prev to first valid child
-            elif loop and prev_row is None and\
+            # Only loop in switch mode
+            elif switch and prev_row is None and\
                     current_row is None and\
                     self.__filter_func(child):
                 prev_row = child
@@ -279,7 +286,10 @@ class PagesManager(Gtk.EventBox):
                 prev_row = child
                 break
         if prev_row is not None:
-            self.__window.container.set_current(prev_row.view)
+            if switch:
+                self.__window.container.set_current(prev_row.view)
+            else:
+                self.update_visible_child(prev_row.view)
 
     def __get_index(self, view):
         """
@@ -363,8 +373,7 @@ class PagesManager(Gtk.EventBox):
                     new_index = index - column_count
                 wanted_child = self.__box.get_child_at_index(new_index)
                 if wanted_child is not None:
-                    self.__window.container.set_current(wanted_child.view)
-                    self.update_visible_child()
+                    self.update_visible_child(wanted_child.view)
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
             if self.__current_child is not None:
                 self._on_child_activated(self.__box, self.__current_child)
