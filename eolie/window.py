@@ -394,7 +394,6 @@ class Window(Gtk.ApplicationWindow):
             El().quit(True)
         elif string == "new_page":
             self.container.add_webview(El().start_page, LoadingType.FOREGROUND)
-            self.container.set_expose(False)
         elif string == "close_page":
             if self.is_fullscreen:
                 self.container.current.webview.emit("leave-fullscreen")
