@@ -527,7 +527,7 @@ class Application(Gtk.Application):
                 session_states.append(state)
             # Do not get view from container to save order
             for view in window.container.views:
-                if view.webview == current:
+                if view.webview == current or view.destroying:
                     continue
                 state = get_state_for_webview(view.webview)
                 if state is not None:
