@@ -28,6 +28,7 @@ class PagesManager(Gtk.EventBox):
         """
         Gtk.EventBox.__init__(self)
         self.__window = window
+        self.__current_child = None
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
         self.get_style_context().add_class("sidebar")
@@ -86,6 +87,7 @@ class PagesManager(Gtk.EventBox):
             style_context = child.get_style_context()
             if child.view == visible:
                 style_context.add_class("item-selected")
+                self.__current_child = child
             else:
                 style_context.remove_class("item-selected")
 
@@ -204,6 +206,18 @@ class PagesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __get_row_count(self):
+        """
+            Calculate row count
+            @return int
+        """
+        children = self.__box.get_children()
+        if children:
+            return int(self.__box.get_allocated_height() /
+                       children[0].get_allocated_height())
+        else:
+            return 0
+
     def __set_expose(self, callback):
         """
             Set expose on and call callback
@@ -320,7 +334,8 @@ class PagesManager(Gtk.EventBox):
         """
         if entry.get_text() == "" and\
                 event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right,
-                                 Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+                                 Gdk.KEY_Return, Gdk.KEY_KP_Enter,
+                                 Gdk.KEY_Down, Gdk.KEY_Up]:
             self.__on_key_press(self, event)
             return True
         elif event.keyval == Gdk.KEY_Escape:
@@ -348,9 +363,20 @@ class PagesManager(Gtk.EventBox):
             self.__previous(False)
         elif event.keyval == Gdk.KEY_Right:
             self.__next(False)
+        elif event.keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
+            if self.__current_child is not None:
+                row_count = self.__get_row_count()
+                children_count = len(self.__box.get_children())
+                child_per_row = int(children_count/row_count)
+                index = self.__current_child.get_index()
+                if event.keyval == Gdk.KEY_Down:
+                    new_index = index + child_per_row
+                else:
+                    new_index = index - child_per_row
+                wanted_child = self.__box.get_child_at_index(new_index)
+                if wanted_child is not None:
+                    self.__window.container.set_current(wanted_child.view)
+                    self.update_visible_child()
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
-            children = self.__box.get_children()
-            for child in children:
-                if child.get_style_context().has_class("item-selected"):
-                    self._on_child_activated(self.__box, child)
-                    break
+            if self.__current_child is not None:
+                self._on_child_activated(self.__box, self.__current_child)
