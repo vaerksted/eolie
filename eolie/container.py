@@ -299,7 +299,7 @@ class Container(Gtk.Overlay):
         if next_view is None:
             atime = 0
             for view in reversed_children:
-                if view.webview.atime > atime:
+                if view.webview.atime >= atime:
                     next_view = view
                     atime = view.webview.atime
         if next_view is not None:
