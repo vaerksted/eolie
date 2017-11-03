@@ -148,21 +148,20 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param loading_type as Gdk.LoadingType
         """
-        in_expose = self.__expose_stack.get_visible_child_name() == "expose"
         view = self.__get_new_view(webview)
         view.show()
         self.__pages_manager.add_view(view)
         self.__sites_manager.add_view(view)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
-        if loading_type == LoadingType.FOREGROUND and not in_expose:
+        if loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
         elif loading_type in [LoadingType.BACKGROUND, LoadingType.OFFLOAD] or\
-                in_expose:
+                self.in_expose:
             # Little hack, we force webview to be shown (offscreen)
             # This allow getting snapshots from webkit
             window = Gtk.OffscreenWindow.new()
@@ -176,7 +175,7 @@ class Container(Gtk.Overlay):
             view.queue_draw()
             self.__stack.add(view)
             window.destroy()
-            if in_expose and loading_type == LoadingType.FOREGROUND:
+            if self.in_expose and loading_type == LoadingType.FOREGROUND:
                 self.set_current(view, True)
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
@@ -311,6 +310,14 @@ class Container(Gtk.Overlay):
             # We are last row, add a new one
             self.__window.container.add_webview(El().start_page,
                                                 LoadingType.FOREGROUND)
+
+    @property
+    def in_expose(self):
+        """
+            True if in expose mode
+            @return bool
+        """
+        return self.__expose_stack.get_visible_child_name() == "expose"
 
     @property
     def pages_manager(self):

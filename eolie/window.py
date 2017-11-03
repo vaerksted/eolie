@@ -41,9 +41,11 @@ class Window(Gtk.ApplicationWindow):
         self.__zoom_level = 1.0
         self.__container = None
         self.__window_state = 0
+        self.__inhibit_ctrl_released = False
         self.__setup_content()
         self.__setup_window(size, maximized)
         self.connect("realize", self.__on_realize)
+        self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
@@ -359,20 +361,34 @@ class Window(Gtk.ApplicationWindow):
             appinfo = Gio.app_info_get_default_for_type("text/plain", False)
             appinfo.launch([f], None)
 
+    def __on_key_press_event(self, window, event):
+        """
+            Handle Ctrl inhibitor
+            @param window as Window
+            @param event as Gdk.EventKey
+        """
+        if event.keyval == Gdk.KEY_Control_L:
+            if self.__container.in_expose:
+                self.__inhibit_ctrl_released = True
+            else:
+                self.__inhibit_ctrl_released = False
+
     def __on_key_release_event(self, window, event):
         """
             Handle Esc/Ctrl release
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval in [Gdk.KEY_Control_L, Gdk.KEY_Escape]:
+        if event.keyval == Gdk.KEY_Control_L and\
+                not self.__inhibit_ctrl_released:
             self.__container.pages_manager.ctrl_released()
             self.__container.set_expose(False)
-        if self.__container.current is not None and\
-                self.__container.current.reading and\
-                event.keyval == Gdk.KEY_Escape:
-            self.__container.current.switch_read_mode()
-            self.__toolbar.title.set_reading()
+        elif event.keyval == Gdk.KEY_Escape:
+            self.__container.set_expose(False)
+            if self.__container.current is not None and\
+                    self.__container.current.reading:
+                self.__container.current.switch_read_mode()
+                self.__toolbar.title.set_reading()
 
     def __on_shortcut_action(self, action, param):
         """
