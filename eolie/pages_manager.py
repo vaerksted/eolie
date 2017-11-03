@@ -204,17 +204,20 @@ class PagesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __get_row_count(self):
+    def __get_column_count(self):
         """
-            Calculate row count
+            Calculate column count
             @return int
         """
-        children = self.__box.get_children()
-        if children:
-            return int(self.__box.get_allocated_height() /
-                       children[0].get_allocated_height())
-        else:
-            return 0
+        count = 0
+        current_y = None
+        for child in self.__box.get_children():
+            (x, y) = child.translate_coordinates(self.__box, 0, 0)
+            if current_y is not None and current_y != y:
+                break
+            current_y = y
+            count += 1
+        return count
 
     def __set_expose(self, callback):
         """
@@ -352,14 +355,12 @@ class PagesManager(Gtk.EventBox):
             self.__next(False)
         elif event.keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
             if self.__current_child is not None:
-                row_count = self.__get_row_count()
-                children_count = len(self.__box.get_children())
-                child_per_row = int(children_count/row_count)
+                column_count = self.__get_column_count()
                 index = self.__current_child.get_index()
                 if event.keyval == Gdk.KEY_Down:
-                    new_index = index + child_per_row
+                    new_index = index + column_count
                 else:
-                    new_index = index - child_per_row
+                    new_index = index - column_count
                 wanted_child = self.__box.get_child_at_index(new_index)
                 if wanted_child is not None:
                     self.__window.container.set_current(wanted_child.view)
