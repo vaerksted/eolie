@@ -13,7 +13,6 @@
 from gi.repository import Gtk, Gdk, GLib
 
 from eolie.pages_manager_child import PagesManagerChild
-from eolie.define import El, LoadingType
 
 
 class PagesManager(Gtk.EventBox):
@@ -32,7 +31,6 @@ class PagesManager(Gtk.EventBox):
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
         self.get_style_context().add_class("sidebar")
-        self.connect("button-press-event", self.__on_button_press)
         self.connect("key-press-event", self.__on_key_press)
         grid = Gtk.Grid()
         grid.set_orientation(Gtk.Orientation.VERTICAL)
@@ -341,17 +339,6 @@ class PagesManager(Gtk.EventBox):
         elif event.keyval == Gdk.KEY_Escape:
             self.__search_entry.set_text("")
             return True
-
-    def __on_button_press(self, widget, event):
-        """
-            Hide popover if visible
-            @param widget as Gtk.Widget
-            @param event as Gdk.EventButton
-        """
-        if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.__window.container.add_webview(El().start_page,
-                                                LoadingType.FOREGROUND)
-        return self.__window.close_popovers()
 
     def __on_key_press(self, widget, event):
         """
