@@ -127,7 +127,7 @@
                     <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
                     <child>
                       <object class="GtkStack" id="indicator_stack">
-                        <property name="visible">True</property>
+                        <property name="visible">False</property>
                         <property name="can_focus">False</property>
                         <child>
                           <object class="GtkImage" id="indicator_image">
