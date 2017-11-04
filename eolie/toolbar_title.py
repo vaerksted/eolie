@@ -955,21 +955,35 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__size_allocation_timeout = None
         style = self.__entry.get_style_context()
-        border = style.get_border(Gtk.StateFlags.NORMAL).bottom
-        padding_start = style.get_padding(Gtk.StateFlags.NORMAL).left
-        margin_start = style.get_margin(Gtk.StateFlags.NORMAL).left
-        margin_end = style.get_margin(Gtk.StateFlags.NORMAL).right
-        margin_bottom = style.get_margin(Gtk.StateFlags.NORMAL).bottom
+        if Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL:
+            state = Gtk.StateFlags.NORMAL | Gtk.StateFlags.DIR_RTL
+        else:
+            state = Gtk.StateFlags.NORMAL | Gtk.StateFlags.DIR_LTR
+        border = style.get_border(state).bottom
+        padding_start = style.get_padding(state).left
+        padding_end = style.get_padding(state).right
+        margin_start = style.get_margin(state).left
+        margin_end = style.get_margin(state).right
+        margin_bottom = style.get_margin(state).bottom
         css = ".progressbar { margin-bottom: %spx;\
                margin-left: %spx;\
                margin-right: %spx; }" % (margin_bottom,
                                          margin_start + border,
                                          margin_end + border)
         # 5 is grid margin (see ui file)
-        css += ".uribar { padding-right: %spx; }" % (allocation.width + 5)
+        uribar_padding = allocation.width + 5
+        css += ".uribar { padding-right: %spx; }" % (uribar_padding)
+        css += ".uribar:dir(rtl)"\
+               "{ padding-left: %spx;padding-right: %spx}" % (uribar_padding,
+                                                              padding_end)
         # 22 is Gtk.EntryIconPosition.PRIMARY
-        placeholder_margin_start = padding_start + 22 + border
-        css += ".placeholder {margin-left: %spx;}" % placeholder_margin_start
+        if Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL:
+            placeholder_margin = padding_end + 22 + border
+        else:
+            placeholder_margin = padding_start + 22 + border
+        css += ".placeholder {margin-left: %spx;}" % placeholder_margin
+        css += ".placeholder:dir(rtl)"\
+               "{margin-right: %spx;margin-left: 0px;}" % placeholder_margin
         # Get value from headerbar as not possible in pure CSS
         style_context = self.get_style_context()
         color = style_context.get_color(Gtk.StateFlags.NORMAL).to_string()
