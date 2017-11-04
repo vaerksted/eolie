@@ -36,10 +36,11 @@ class WebView(WebKit2.WebView):
             @param view as View
         """
         content_manager = WebKit2.UserContentManager.new()
-        view = WebKit2.WebView.new_with_user_content_manager(content_manager)
-        view.__class__ = WebViewMeta
-        view.__init(None, content_manager, window, view)
-        return view
+        webview = WebKit2.WebView.new_with_user_content_manager(
+                                                               content_manager)
+        webview.__class__ = WebViewMeta
+        webview.__init(None, content_manager, window, view)
+        return webview
 
     def new_ephemeral(window, view):
         """
@@ -47,10 +48,11 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        view = WebKit2.WebView.new_with_context(El().ephemeral_context)
-        view.__class__ = WebViewMeta
-        view.__init(None, None, window, view)
-        return view
+        webview = WebKit2.WebView.new_with_context(El().ephemeral_context)
+        webview.__class__ = WebViewMeta
+        content_manager = webview.get_property("user-content-manager")
+        webview.__init(None, content_manager, window, view)
+        return webview
 
     def new_with_related_view(related, window):
         """
@@ -59,10 +61,10 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @return WebView
         """
-        view = WebKit2.WebView.new_with_related_view(related)
-        view.__class__ = WebViewMeta
-        view.__init(related, None, window, None)
-        return view
+        webview = WebKit2.WebView.new_with_related_view(related)
+        webview.__class__ = WebViewMeta
+        webview.__init(related, None, window, None)
+        return webview
 
     def set_setting(self, key, value):
         """
