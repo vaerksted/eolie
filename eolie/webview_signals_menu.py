@@ -114,14 +114,18 @@ class WebViewMenuSignals:
                                              _("Copy"),
                                              None)
             context_menu.append(item)
-        if hit.context_is_link():
+        if hit.context_is_link() or\
+                hit.context_is_image() or\
+                hit.context_is_media():
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
             action = Gio.SimpleAction(name="copy_link_uri")
             El().add_action(action)
             action.connect("activate",
                            self.__on_copy_link_uri_activate,
-                           hit.get_link_uri())
+                           hit.get_link_uri() or
+                           hit.get_image_uri() or
+                           hit.get_media_uri())
             item = WebKit2.ContextMenuItem.new_from_gaction(
                                              action,
                                              _("Copy link address"),
@@ -228,7 +232,8 @@ class WebViewMenuSignals:
             @param variant as GLib.Variant
             @param selection as str
         """
-        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
+        if uri is not None:
+            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
 
     def __on_copy_text_activate(self, action, variant, selection):
         """
