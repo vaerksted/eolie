@@ -79,4 +79,6 @@ class VideosMenu(Gio.Menu):
             @param GVariant
             @param uri as str
         """
-        self.__window.container.current.webview.get_context().download_uri(uri)
+        if uri:
+            context = self.__window.container.current.webview.get_context()
+            context.download_uri(uri)
