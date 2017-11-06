@@ -392,8 +392,9 @@ class Container(Gtk.Overlay):
             @param ignore as GParamInt
         """
         position = paned.get_position()
-        El().settings.set_value("sidebar-position",
-                                GLib.Variant("i", position))
+        if position >= 80:
+            El().settings.set_value("sidebar-position",
+                                    GLib.Variant("i", position))
         self.__sites_manager.set_minimal(position < 80)
 
     def __on_show_sidebar_changed(self, settings, value):
