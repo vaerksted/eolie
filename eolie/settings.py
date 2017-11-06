@@ -496,6 +496,12 @@ class SettingsDialog:
             self.__sync_button.get_style_context().add_class(
                                                       "destructive-action")
             self.__sync_button.set_label(_("Cancel synchronization"))
+        elif self.__login_entry.get_text() and\
+                self.__password_entry.get_text():
+            self.__sync_button.get_style_context().add_class(
+                                                      "suggested-action")
+            self.__sync_button.set_label(_("Start synchronization"))
+            self.__result_label.set_text("")
         else:
             self.__sync_button.get_style_context().add_class(
                                                       "suggested-action")
