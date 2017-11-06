@@ -151,7 +151,7 @@ class ProxyExtension(Server):
             @param page_id as int
         """
         page = self.__extension.get_page(page_id)
-        forms = self.__forms.get_textarea_forms(page)
+        forms = self.__forms.get_textarea(page)
 
         # Check for unsecure content
         for form in forms:
