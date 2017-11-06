@@ -137,7 +137,6 @@ class ImagesPopover(Gtk.Popover):
             Cancel previous download
         """
         self.__cancellable.cancel()
-        self.__cancellable.reset()
         self.__spinner.start()
         self.__button.set_sensitive(False)
         for child in self.__flowbox.get_children():
@@ -269,6 +268,7 @@ class ImagesPopover(Gtk.Popover):
             uris = source.call_finish(result)[0]
         except Exception as e:
             print("ImagesPopover::__on_get_images()", e)
+        self.__cancellable.reset()
         self.__on_load_uri_content(None, False, b"", uris)
 
     def __on_closed(self, popover):
