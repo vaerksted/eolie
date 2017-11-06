@@ -13,6 +13,7 @@
 from gi.repository import Gio, GLib
 
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from eolie.define import PROXY_BUS, PROXY_PATH
 from eolie.list import LinkedList
@@ -91,10 +92,18 @@ class ProxyExtension(Server):
     </method>
     <method name="SetNextForm">
     </method>
-    <method name="GetAuthForms">
+    <method name="FormSubmitted">
       <arg type="aas" name="forms" direction="in" />
+      <arg type="s" name="uri" direction="in" />
+      <arg type="s" name="form_uri" direction="in" />
       <arg type="i" name="page_id" direction="in" />
-      <arg type="as" name="results" direction="out" />
+    </method>
+    <method name="SaveCredentials">
+      <arg type="s" name="uuid" direction="in" />
+      <arg type="s" name="user_form_name" direction="in" />
+      <arg type="s" name="pass_form_name" direction="in" />
+      <arg type="s" name="uri" direction="in" />
+      <arg type="s" name="form_uri" direction="in" />
     </method>
     <method name="SetAuthForms">
       <arg type="s" name="username" direction="in" />
@@ -124,6 +133,13 @@ class ProxyExtension(Server):
     <signal name='InputMouseDown'>
         <arg type="as" name="forms" direction="out" />
     </signal>
+    <signal name='AskSaveCredentials'>
+        <arg type="s" name="uuid" direction="out" />
+        <arg type="s" name="user_form_value" direction="out" />
+        <arg type="s" name="uri" direction="out" />
+        <arg type="s" name="form_uri" direction="out" />
+        <arg type="i" name="page_id" direction="out" />
+    </signal>
     </interface>
     </node>
     '''
@@ -141,7 +157,9 @@ class ProxyExtension(Server):
         self.__password_forms = []
         self.__listened_forms = []
         self.__send_requests = []
+        self.__pending_credentials = None
         self.__current_uri = None
+        self.__helper = PasswordsHelper()
         extension.connect("page-created", self.__on_page_created)
         self.__bus = None
 
@@ -159,10 +177,12 @@ class ProxyExtension(Server):
                 return True
         return False
 
-    def GetAuthForms(self, forms, page_id):
+    def FormSubmitted(self, forms, uri, form_uri, page_id):
         """
-            Get password forms for page id
+            Check for password in org.Freedesktop.Secrets
             @param forms as [(str, str)]
+            @param uri as str
+            @param form_uri as str
             @param page id as int
             @return (username_form, password_form) as (str, str)
         """
@@ -172,10 +192,10 @@ class ProxyExtension(Server):
             self.__forms.update_inputs_list(page)
             if page is None:
                 return ("", "", "", "")
-            user_form_name = ""
-            user_form_value = ""
-            pass_form_name = ""
-            pass_form_value = ""
+            user_form_name = None
+            user_form_value = None
+            pass_form_name = None
+            pass_form_value = None
             for (name, value) in forms:
                 if self.__forms.is_input(name, "password", page):
                     pass_form_name = name
@@ -183,13 +203,74 @@ class ProxyExtension(Server):
                 else:
                     user_form_name = name
                     user_form_value = value
-            return (user_form_name,
-                    user_form_value,
-                    pass_form_name,
-                    pass_form_value)
+            if user_form_value is not None and\
+                    pass_form_value is not None and\
+                    user_form_value != pass_form_value:
+                self.__pending_credentials = (user_form_name,
+                                              user_form_value,
+                                              pass_form_name,
+                                              pass_form_value,
+                                              uri,
+                                              form_uri)
+                self.__helper.get(form_uri, user_form_name,
+                                  pass_form_name, self.__on_get_password,
+                                  user_form_name, user_form_value,
+                                  pass_form_name, pass_form_value,
+                                  uri,
+                                  page_id)
         except Exception as e:
-            print("ProxyExtension::GetAuthForms():", e)
-        return ("", "", "", "")
+            print("ProxyExtension::FormSubmitted():", e)
+
+    def SaveCredentials(self, uuid, user_form_name,
+                        pass_form_name, uri, form_uri):
+        """
+            Save credentials to org.freedesktop.Secrets
+            @param uuid as str
+            @param user_form_name as str
+            @param pass_form_name as str
+            @param uri as str
+            @param form_uri as str
+        """
+        print(self.__pending_credentials, uuid, user_form_name)
+        if self.__pending_credentials is None:
+            return
+        try:
+            (_user_form_name, user_form_value,
+             _pass_form_name, pass_form_value,
+             _uri, _form_uri) = self.__pending_credentials
+            if user_form_name != _user_form_name or\
+                    pass_form_name != _pass_form_name or\
+                    uri != _uri or\
+                    form_uri != _form_uri:
+                return
+            parsed = urlparse(uri)
+            parsed_form_uri = urlparse(form_uri)
+            uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+            form_uri = "%s://%s" % (parsed_form_uri.scheme,
+                                    parsed_form_uri.netloc)
+            if not uuid:
+                uuid = str(uuid4())
+                self.__helper.store(user_form_name,
+                                    user_form_value,
+                                    pass_form_name,
+                                    pass_form_value,
+                                    uri,
+                                    form_uri,
+                                    uuid,
+                                    None)
+            else:
+                self.__helper.clear(uuid,
+                                    self.__helper.store,
+                                    user_form_name,
+                                    user_form_value,
+                                    pass_form_name,
+                                    pass_form_value,
+                                    uri,
+                                    form_uri,
+                                    uuid,
+                                    None)
+        except Exception as e:
+            print("ProxyExtension::SaveCredentials():", e)
 
     def SetAuthForms(self, userform, username, page_id):
         """
@@ -204,14 +285,13 @@ class ProxyExtension(Server):
             # Search form
             for form_input in self.__forms.get_form_inputs(page):
                 if form_input["username"].get_name() == userform:
-                    helper = PasswordsHelper()
-                    helper.get(form_input["uri"],
-                               userform,
-                               form_input["password"].get_name(),
-                               self.__forms.set_input_forms,
-                               page,
-                               form_input,
-                               username)
+                    self.__helper.get(form_input["uri"],
+                                      userform,
+                                      form_input["password"].get_name(),
+                                      self.__forms.set_input_forms,
+                                      page,
+                                      form_input,
+                                      username)
                     return
         except Exception as e:
             print("ProxyExtension::SetAuthForms():", e)
@@ -523,3 +603,39 @@ class ProxyExtension(Server):
             self.__current_uri = uri
             self.__send_requests = []
         self.__send_requests.append(request.get_uri())
+
+    def __on_get_password(self, attributes, password, form_uri, index, count,
+                          user_form_name, user_form_value, pass_form_name,
+                          pass_form_value, uri, page_id):
+        """
+            Set user_form_name/pass_form_name input
+            @param attributes as {}
+            @param password as str
+            @param form_uri as str
+            @param index as int
+            @param count as int
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
+            @param uri as str
+            @param page_id as int
+        """
+        try:
+            uuid = ""
+            if attributes is not None:
+                if password == pass_form_value:
+                    return
+                else:
+                    uuid = attributes["uuid"]
+            args = (uuid, user_form_name, user_form_value,
+                    pass_form_name, uri, form_uri, page_id)
+            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssssi)", args))
+            self.__bus.emit_signal(
+                              None,
+                              PROXY_PATH,
+                              self.__proxy_bus,
+                              "AskSaveCredentials",
+                              variant)
+        except Exception as e:
+            print("ProxyExtension::__on_get_password()", e)

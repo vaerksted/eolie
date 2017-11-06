@@ -677,9 +677,9 @@ class Application(Gtk.Application):
         if views:
             view = views.pop(0)
             page_id = view.webview.get_page_id()
-            self.helper.call("FormsFilled",
+            self.helper.call("FormsFilled", page_id,
                              GLib.Variant("(i)", (page_id,)),
-                             self.__on_forms_filled, page_id, window, views)
+                             self.__on_forms_filled, window, views)
         else:
             self.__close_window(window)
 

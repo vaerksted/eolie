@@ -189,9 +189,9 @@ class View(Gtk.Overlay):
         page_id = self.webview.get_page_id()
         if event.state & Gdk.ModifierType.CONTROL_MASK:
             if event.keyval == Gdk.KEY_z:
-                El().helper.call("SetPreviousForm", None, None, page_id)
+                El().helper.call("SetPreviousForm", page_id)
             elif event.keyval == Gdk.KEY_Z:
-                El().helper.call("SetNextForm", None, None, page_id)
+                El().helper.call("SetNextForm", page_id)
 
     def __on_close(self, webview):
         """

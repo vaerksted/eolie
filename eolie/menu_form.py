@@ -64,10 +64,8 @@ class FormMenu(Gio.Menu):
             @param GVariant
             @param attributes as {}
         """
-        El().helper.call("SetAuthForms",
+        El().helper.call("SetAuthForms", self.__page_id,
                          GLib.Variant("(ssi)",
                                       (attributes["userform"],
                                        attributes["login"],
-                                       self.__page_id)),
-                         None,
-                         self.__page_id)
+                                       self.__page_id)))

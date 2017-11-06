@@ -23,13 +23,13 @@ class DBusHelper:
     def __init__(self):
         self.__signals = {}
 
-    def call(self, call, dbus_args, callback, page_id, *args):
+    def call(self, call, page_id, dbus_args=None, callback=None, *args):
         """
             Call function
             @param call as str
+            @param page_id as int
             @param dbus_args as GLib.Variant()/None
             @param callback as function
-            @param page_id as int
         """
         try:
             bus = El().get_dbus_connection()

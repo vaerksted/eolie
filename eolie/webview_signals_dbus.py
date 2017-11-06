@@ -82,7 +82,6 @@ class WebViewDBusSignals:
             @param webview as WebKit2.WebView
             @param request as WebKit2.FormSubmissionRequest
         """
-        uri = self._navigation_uri
         if self.ephemeral or not El().settings.get_value("remember-passwords"):
             return
         fields = request.get_text_fields()
@@ -95,36 +94,10 @@ class WebViewDBusSignals:
             if name and value:
                 forms.append((name, value))
         page_id = webview.get_page_id()
-        El().helper.call("GetAuthForms",
-                         GLib.Variant("(aasi)", (forms, page_id)),
-                         self.__on_get_forms, page_id, request, uri)
-
-    def __on_get_forms(self, source, result, request, form_uri):
-        """
-            Set forms value
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param request as WebKit2.FormSubmissionRequest
-            @param form_uri as str
-        """
-        try:
-            (user_form_name,
-             user_form_value,
-             pass_form_name,
-             pass_form_value) = source.call_finish(result)[0]
-            if user_form_name and pass_form_name and\
-                    user_form_value != pass_form_value:
-                self._window.close_popovers()
-                self._window.toolbar.title.show_password(
-                                                 user_form_name,
-                                                 user_form_value,
-                                                 pass_form_name,
-                                                 pass_form_value,
-                                                 self.uri,
-                                                 form_uri)
-            request.submit()
-        except Exception as e:
-            print("WebViewDBusSignals::__on_get_forms():", e)
+        form_uri = self._navigation_uri
+        El().helper.call("FormSubmitted", page_id,
+                         GLib.Variant("(aasssi)",
+                                      (forms, self.uri, form_uri, page_id)))
 
     def __on_signal(self, signal, params):
         """
@@ -132,8 +105,22 @@ class WebViewDBusSignals:
             @param signal as str
             @params as []
         """
+        self_page_id = self.get_page_id()
         if signal == "UnsecureFormFocused":
             self._window.toolbar.title.show_input_warning(self)
+        elif signal == "AskSaveCredentials":
+            (uuid, user_form_name, user_form_value,
+             pass_form_name, uri, form_uri, page_id) = params[0]
+            if self_page_id == page_id:
+                self._window.close_popovers()
+                self._window.toolbar.title.show_password(
+                                                 uuid,
+                                                 user_form_name,
+                                                 user_form_value,
+                                                 pass_form_name,
+                                                 uri,
+                                                 form_uri,
+                                                 page_id)
         elif signal == "InputMouseDown":
             if self._last_click_time:
                 userform = params[0]

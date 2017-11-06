@@ -138,7 +138,5 @@ class WebViewJsSignals:
         """
         self.__js_timeout_id = None
         page_id = self.get_page_id()
-        El().helper.call("SetCredentials",
-                         GLib.Variant("(i)", (page_id,)),
-                         None,
-                         page_id)
+        El().helper.call("SetCredentials", page_id,
+                         GLib.Variant("(i)", (page_id,)))

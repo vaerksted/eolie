@@ -10,11 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
-from uuid import uuid4
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import El
@@ -25,16 +24,17 @@ class CredentialsPopover(Gtk.Popover):
         Tell user to save form credentials
     """
 
-    def __init__(self, user_form_name, user_form_value, pass_form_name,
-                 pass_form_value, uri, form_uri, window):
+    def __init__(self, uuid, user_form_name, user_form_value, pass_form_name,
+                 uri, form_uri, page_id, window):
         """
             Init popover
+            @param uuid as str
             @param user_form_name as str
             @param user_form_value as str
             @param pass_form_name as str
-            @param pass_form_value as str
             @param uri as str
             @param form_uri as str
+            @param page_id as int
             @param window as Window
         """
         Gtk.Popover.__init__(self)
@@ -44,18 +44,18 @@ class CredentialsPopover(Gtk.Popover):
         self.__user_form_name = user_form_name
         self.__user_form_value = user_form_value
         self.__pass_form_name = pass_form_name
-        self.__pass_form_value = pass_form_value
         self.__uri = uri
         self.__form_uri = form_uri
-        self.__uuid = None
+        self.__uuid = uuid
+        self.__page_id = page_id
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverCredentials.ui')
         builder.connect_signals(self)
         self.__label = builder.get_object('label')
         parsed = urlparse(uri)
         builder.get_object('uri').set_text(parsed.netloc)
-        builder.get_object('username').set_text(user_form_value)
-        builder.get_object('password').set_text(pass_form_value)
+        if uuid:
+            self.__label.set_text(_("Do you want to modify this password?"))
         self.add(builder.get_object('widget'))
 
 #######################
@@ -66,81 +66,51 @@ class CredentialsPopover(Gtk.Popover):
             Save user_form_name and pass_form_name
             @param button as Gtk.Button
         """
-        try:
-            parsed = urlparse(self.__uri)
-            parsed_form_uri = urlparse(self.__form_uri)
-            uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            form_uri = "%s://%s" % (parsed_form_uri.scheme,
-                                    parsed_form_uri.netloc)
-            if self.__uuid is None:
-                self.__uuid = str(uuid4())
-                self.__helper.store(self.__user_form_name,
-                                    self.__user_form_value,
-                                    self.__pass_form_name,
-                                    self.__pass_form_value,
-                                    uri,
-                                    form_uri,
-                                    self.__uuid,
-                                    None)
-            else:
-                self.__helper.clear(self.__uuid,
-                                    self.__helper.store,
-                                    self.__user_form_name,
-                                    self.__user_form_value,
-                                    self.__pass_form_name,
-                                    self.__pass_form_value,
-                                    uri,
-                                    form_uri,
-                                    self.__uuid,
-                                    None)
-            if El().sync_worker is not None:
-                El().sync_worker.push_password(self.__user_form_name,
-                                               self.__user_form_value,
-                                               self.__pass_form_name,
-                                               self.__pass_form_value,
-                                               uri,
-                                               form_uri,
-                                               self.__uuid)
-            self.destroy()
-        except Exception as e:
-            print("CredentialsPopover::_on_save_clicked()", e)
-
-    def popup(self):
-        """
-            Overwrite popup
-        """
-        self.__helper.get(self.__uri, self.__user_form_name,
-                          self.__pass_form_name, self.__on_get_password,)
+        El().helper.call("SaveCredentials", self.__page_id,
+                         GLib.Variant("(sssss)",
+                                      (self.__uuid, self.__user_form_name,
+                                       self.__pass_form_name, self.__uri,
+                                       self.__form_uri)),
+                         self.__on_save_credentials,
+                         self.__form_uri,
+                         self.__user_form_name,
+                         self.__pass_form_name)
+        self.destroy()
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_get_password(self, attributes, password, uri, index, count):
+    def __on_get_password(self, attributes, password, form_uri, index, count):
         """
-            Set user_form_name/pass_form_name input
+            Push credential to sync
             @param attributes as {}
             @param password as str
-            @param uri as str
+            @param form_uri as str
             @param index as int
             @param count as int
         """
         try:
-            # No saved pass_form_name
-            if attributes is None:
-                Gtk.Popover.popup(self)
-            # pass_form_name saved and unchanged
-            elif attributes["login"] == self.__user_form_value:
-                if password == self.__pass_form_value:
-                    self.emit("closed")
-                    # Prevent popover to be displayed
-                    self.set_relative_to(None)
-                # login/password changed
-                else:
-                    Gtk.Popover.popup(self)
-                    self.__uuid = attributes["uuid"]
-                    self.__label.set_text(_(
-                                       "Do you want to modify this password?"))
-            else:
-                Gtk.Popover.popup(self)
+            if attributes is not None and El().sync_worker is not None:
+                El().sync_worker.push_password(attributes["userform"],
+                                               attributes["login"],
+                                               attributes["passform"],
+                                               password,
+                                               attributes["hostname"],
+                                               attributes["formSubmitURL"],
+                                               attributes["uuid"])
         except Exception as e:
-            print("CredentialsPopover::__on_get_password()", e)
+            print("CredentialsPopover::__on_get_password():", e)
+
+    def __on_save_credentials(self, source, result, form_uri,
+                              user_form_name, pass_form_name):
+        """
+            Get password and push credential to sync
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param form_uri as str
+            @param user_form_name as str
+            @param pass_form_name as str
+        """
+        helper = PasswordsHelper()
+        helper.get(form_uri, user_form_name,
+                   pass_form_name, self.__on_get_password)
