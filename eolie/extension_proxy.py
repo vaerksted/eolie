@@ -230,7 +230,6 @@ class ProxyExtension(Server):
             @param uri as str
             @param form_uri as str
         """
-        print(self.__pending_credentials, uuid, user_form_name)
         if self.__pending_credentials is None:
             return
         try:
@@ -623,7 +622,9 @@ class ProxyExtension(Server):
         try:
             uuid = ""
             if attributes is not None:
-                if password == pass_form_value:
+                if attributes["login"] != user_form_value:
+                    pass  # New login to store
+                elif password == pass_form_value:
                     return
                 else:
                     uuid = attributes["uuid"]
