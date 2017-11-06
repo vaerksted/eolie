@@ -88,6 +88,7 @@ class ImagesPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.set_modal(False)
         window.register(self)
+        self.__cache_uris = []
         self.__uri = uri
         self.__page_id = page_id
         self.__cancellable = Gio.Cancellable()
@@ -206,8 +207,8 @@ class ImagesPopover(Gtk.Popover):
         """
             Clean the cache
         """
-        for child in self.__flowbox.get_children():
-            encoded = sha256(child.uri.encode("utf-8")).hexdigest()
+        for uri in self.__cache_uris:
+            encoded = sha256(uri.encode("utf-8")).hexdigest()
             filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
             f = Gio.File.new_for_path(filepath)
             try:
@@ -226,6 +227,7 @@ class ImagesPopover(Gtk.Popover):
         try:
             stream.write_all_finish(result)
             self.__add_image(uri)
+            self.__cache_uris.append(uri)
         except Exception as e:
             print("ImagesPopover::__on_write_all_async()", e)
 
