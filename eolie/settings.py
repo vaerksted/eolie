@@ -505,8 +505,6 @@ class SettingsDialog:
                                  Gtk.IconSize.MENU)
             self.__result_label.set_text(
                                    _("Synchronization is not working"))
-            self.__sync_button.get_style_context().add_class(
-                                                  "suggested-action")
 
     def __missing_fxa(self):
         """
