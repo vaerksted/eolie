@@ -248,7 +248,7 @@ class ImagesPopover(Gtk.Popover):
             stream.write_all_async(content, GLib.PRIORITY_DEFAULT,
                                    self.__cancellable,
                                    self.__on_write_all_async, uri)
-        if uris:
+        if uris and not self.__cancellable.is_cancelled():
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
