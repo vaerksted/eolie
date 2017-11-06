@@ -151,7 +151,7 @@ class ProxyExtension(Server):
             @param page_id as int
         """
         page = self.__extension.get_page(page_id)
-        forms = self.__forms.get_textarea(page)
+        forms = self.__forms.get_textareas(page)
 
         # Check for unsecure content
         for form in forms:
@@ -473,7 +473,7 @@ class ProxyExtension(Server):
                                         False)
         # Manage forms input
         for form in self.__forms.get_inputs(webpage) +\
-                self.__forms.get_textarea(webpage):
+                self.__forms.get_textareas(webpage):
             self.__listened_forms.append(form)
             form.add_event_listener("input", self.__on_input, False)
             form.add_event_listener("focus", self.__on_focus, False)
