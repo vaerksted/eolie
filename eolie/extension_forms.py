@@ -69,9 +69,9 @@ class FormsExtension:
             i += 1
         return forms
 
-    def get_textarea_forms(self, webpage):
+    def get_textarea(self, webpage):
         """
-            Return forms for webpage
+            Return textarea for webpage
             @param webpage as WebKit2WebExtension.WebPage
             @return [WebKit2WebExtension.DOMHTMLInputElement]
         """
