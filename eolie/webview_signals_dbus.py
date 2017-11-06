@@ -105,22 +105,20 @@ class WebViewDBusSignals:
             @param signal as str
             @params as []
         """
-        self_page_id = self.get_page_id()
         if signal == "UnsecureFormFocused":
             self._window.toolbar.title.show_input_warning(self)
         elif signal == "AskSaveCredentials":
             (uuid, user_form_name, user_form_value,
-             pass_form_name, uri, form_uri, page_id) = params[0]
-            if self_page_id == page_id:
-                self._window.close_popovers()
-                self._window.toolbar.title.show_password(
-                                                 uuid,
-                                                 user_form_name,
-                                                 user_form_value,
-                                                 pass_form_name,
-                                                 uri,
-                                                 form_uri,
-                                                 page_id)
+             pass_form_name, uri, form_uri) = params[0]
+            self._window.close_popovers()
+            self._window.toolbar.title.show_password(
+                                             uuid,
+                                             user_form_name,
+                                             user_form_value,
+                                             pass_form_name,
+                                             uri,
+                                             form_uri,
+                                             self.get_page_id())
         elif signal == "InputMouseDown":
             if self._last_click_time:
                 userform = params[0]

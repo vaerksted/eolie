@@ -138,7 +138,6 @@ class ProxyExtension(Server):
         <arg type="s" name="user_form_value" direction="out" />
         <arg type="s" name="uri" direction="out" />
         <arg type="s" name="form_uri" direction="out" />
-        <arg type="i" name="page_id" direction="out" />
     </signal>
     </interface>
     </node>
@@ -629,8 +628,8 @@ class ProxyExtension(Server):
                 else:
                     uuid = attributes["uuid"]
             args = (uuid, user_form_name, user_form_value,
-                    pass_form_name, uri, form_uri, page_id)
-            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssssi)", args))
+                    pass_form_name, uri, form_uri)
+            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)", args))
             self.__bus.emit_signal(
                               None,
                               PROXY_PATH,
