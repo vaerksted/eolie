@@ -392,7 +392,10 @@ class Container(Gtk.Overlay):
             @param ignore as GParamInt
         """
         position = paned.get_position()
-        if position >= 80:
+        saved_position = El().settings.get_value(
+                                                "sidebar-position").get_int32()
+        # We do not want to keep minimal mode changes
+        if position >= 80 or saved_position > position:
             El().settings.set_value("sidebar-position",
                                     GLib.Variant("i", position))
         self.__sites_manager.set_minimal(position < 80)
