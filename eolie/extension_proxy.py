@@ -535,7 +535,7 @@ class ProxyExtension(Server):
             @param context_menu as WebKit2WebExtension.ContextMenu
             @param hit as WebKit2.HitTestResult
         """
-        value = self.GetSelection(webpage.get_id())
+        value = self.GetSelection()
         context_menu.set_user_data(GLib.Variant("s", value))
 
     def __on_submit_form(self, forms, variant):
