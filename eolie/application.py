@@ -389,6 +389,11 @@ class Application(Gtk.Application):
         self.download_manager = DownloadManager()
         self.pages_menu = PagesMenu()
 
+        # Check MOZ_PLUGIN_PATH
+        if self.settings.get_value('enable-plugins') and\
+                not GLib.getenv("MOZ_PLUGIN_PATH"):
+            print("You need to set MOZ_PLUGIN_PATH to use plugins")
+
         # https://wiki.ubuntu.com/Unity/LauncherAPI
         self.__unity = None
         if is_unity():
