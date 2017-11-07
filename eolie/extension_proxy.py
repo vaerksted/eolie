@@ -606,7 +606,7 @@ class ProxyExtension(Server):
                           user_form_name, user_form_value, pass_form_name,
                           pass_form_value, uri, page_id):
         """
-            Set user_form_name/pass_form_name input
+            Ask for credentials through DBus
             @param attributes as {}
             @param password as str
             @param form_uri as str
