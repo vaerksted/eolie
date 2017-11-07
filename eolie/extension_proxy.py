@@ -73,7 +73,7 @@ class Server:
             pass
 
 
-class ProxyExtension(Server):
+class ProxyExtensionServer(Server):
     '''
     <!DOCTYPE node PUBLIC
     '-//freedesktop//DTD D-BUS Object Introspection 1.0//EN'
@@ -130,14 +130,15 @@ class ProxyExtension(Server):
     </node>
     '''
 
-    def __init__(self, extension, form_extension):
+    def __init__(self, extension, page, form_extension):
         """
             Init server
             @param extension as WebKit2WebExtension.WebExtension
+            @param page as WebKit2WebExtension.WebPage
             @param form_extension as FormsExtension
         """
-        self.__proxy_bus = None
-        self.__page_id = None
+        self.__extension = extension
+        self.__page = page
         self.__form_extension = form_extension
         self.__focused = None
         self.__elements_history = {}
@@ -147,9 +148,19 @@ class ProxyExtension(Server):
         self.__send_requests = []
         self.__current_uri = None
         self.__helper = PasswordsHelper()
-        extension.connect("page-created", self.__on_page_created)
+        self.__proxy_bus = PROXY_BUS % self.__page.get_id()
+        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        Gio.bus_own_name_on_connection(self.__bus,
+                                       self.__proxy_bus,
+                                       Gio.BusNameOwnerFlags.NONE,
+                                       None,
+                                       None)
+        Server.__init__(self, self.__bus, PROXY_PATH)
         form_extension.connect("submit-form", self.__on_submit_form)
-        self.__bus = None
+        page.connect("send-request", self.__on_send_request)
+        page.connect("context-menu", self.__on_context_menu)
+        page.connect("form-controls-associated",
+                     self.__on_form_control_associated)
 
     def FormsFilled(self):
         """
@@ -217,7 +228,7 @@ class ProxyExtension(Server):
             @param userform as str
         """
         try:
-            page = self.__extension.get_page(self.__page_id)
+            page = self.__extension.get_page(self.__page.get_id())
             # Search form
             for form in self.__form_extension.forms:
                 if form["username"].get_name() == userform:
@@ -238,7 +249,7 @@ class ProxyExtension(Server):
             @return [str]
         """
         try:
-            page = self.__extension.get_page(self.__page_id)
+            page = self.__extension.get_page(self.__page.get_id())
             if page is None:
                 return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
@@ -257,7 +268,7 @@ class ProxyExtension(Server):
             Get videos
             @return [str]
         """
-        page = self.__extension.get_page(self.__page_id)
+        page = self.__extension.get_page(self.__page.get_id())
         if page is None:
             return []
         videos = []
@@ -285,7 +296,7 @@ class ProxyExtension(Server):
             @return [str]
         """
         try:
-            page = self.__extension.get_page(self.__page_id)
+            page = self.__extension.get_page(self.__page.get_id())
             if page is None:
                 return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("a")
@@ -308,7 +319,7 @@ class ProxyExtension(Server):
             @param page id as int
             @return str
         """
-        webpage = self.__extension.get_page(self.__page_id)
+        webpage = self.__extension.get_page(self.__page.get_id())
         document = webpage.get_dom_document()
         if document is None:
             return ""
@@ -334,7 +345,7 @@ class ProxyExtension(Server):
             Set focused form to previous value
         """
         try:
-            webpage = self.__extension.get_page(self.__page_id)
+            webpage = self.__extension.get_page(self.__page.get_id())
             self.__form_extension.set_credentials(webpage)
         except Exception as e:
             print("ProxyExtension::SetCredentials():", e)
@@ -497,28 +508,6 @@ class ProxyExtension(Server):
                     item.set_next(next)
                 self.__elements_history[element] = next
 
-    def __on_page_created(self, extension, webpage):
-        """
-            Cache webpage
-            @param extension as WebKit2WebExtension.WebExtension
-            @param page as WebKit2WebExtension.WebPage
-        """
-        self.__page_id = webpage.get_id()
-        if self.__proxy_bus is None:
-            self.__proxy_bus = PROXY_BUS % self.__page_id
-            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-            Gio.bus_own_name_on_connection(self.__bus,
-                                           self.__proxy_bus,
-                                           Gio.BusNameOwnerFlags.NONE,
-                                           None,
-                                           None)
-            Server.__init__(self, self.__bus, PROXY_PATH)
-        webpage.connect("send-request", self.__on_send_request)
-        webpage.connect("context-menu", self.__on_context_menu)
-        webpage.connect("form-controls-associated",
-                        self.__on_form_control_associated)
-        self.__extension = extension
-
     def __on_form_control_associated(self, webpage, elements):
         """
             Add elements to forms
@@ -565,3 +554,34 @@ class ProxyExtension(Server):
             self.__current_uri = uri
             self.__send_requests = []
         self.__send_requests.append(request.get_uri())
+
+
+class ProxyExtension:
+    """
+        Communication proxy for Eolie
+    """
+
+    def __init__(self, extension, form_extension):
+        """
+            Init extension
+            @param extension as WebKit2WebExtension.WebExtension
+            @param form_extension as FormsExtension
+        """
+        self.__server = None
+        extension.connect("page-created",
+                          self.__on_page_created,
+                          form_extension)
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_page_created(self, extension, webpage, form_extension):
+        """
+            Cache webpage
+            @param extension as WebKit2WebExtension.WebExtension
+            @param page as WebKit2WebExtension.WebPage
+            @param form_extension as FormsExtension
+        """
+        self.__server = ProxyExtensionServer(extension,
+                                             webpage,
+                                             form_extension)
