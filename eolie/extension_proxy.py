@@ -82,11 +82,9 @@ class ProxyExtension(Server):
     <interface name="org.gnome.Eolie.Proxy">
 
     <method name="FormsFilled">
-        <arg type="i" name="page_id" direction="in" />
         <arg type="b" name="results" direction="out" />
     </method>
     <method name="SetCredentials">
-        <arg type="i" name="page_id" direction="in" />
     </method>
     <method name="SetPreviousElementValue">
     </method>
@@ -102,22 +100,17 @@ class ProxyExtension(Server):
     <method name="SetAuthForms">
       <arg type="s" name="username" direction="in" />
       <arg type="s" name="username" direction="in" />
-      <arg type="i" name="page_id" direction="in" />
     </method>
     <method name="GetImages">
-      <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
     <method name="GetVideos">
-      <arg type="i" name="page_id" direction="in" />
       <arg type="aas" name="results" direction="out" />
     </method>
     <method name="GetImageLinks">
-      <arg type="i" name="page_id" direction="in" />
       <arg type="as" name="results" direction="out" />
     </method>
     <method name="GetSelection">
-      <arg type="i" name="page_id" direction="in" />
       <arg type="s" name="selection" direction="out" />
     </method>
 
@@ -144,6 +137,7 @@ class ProxyExtension(Server):
             @param forms as FormsExtension
         """
         self.__proxy_bus = None
+        self.__page_id = None
         self.__forms = forms
         self.__focused = None
         self.__elements_history = {}
@@ -156,17 +150,14 @@ class ProxyExtension(Server):
         forms.connect("submit-form", self.__on_submit_form)
         self.__bus = None
 
-    def FormsFilled(self, page_id):
+    def FormsFilled(self):
         """
             True if form contains data
-            @param page_id as int
         """
-        page = self.__extension.get_page(page_id)
-        forms = self.__forms.get_textareas(page)
-
+        page = self.__extension.get_page(self.__page_id)
         # Check for unsecure content
-        for form in forms:
-            if form.is_edited():
+        for textarea in self.__forms.get_textareas(page):
+            if textarea.is_edited():
                 return True
         return False
 
@@ -220,20 +211,17 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::SaveCredentials():", e)
 
-    def SetAuthForms(self, userform, username, page_id):
+    def SetAuthForms(self, userform, username):
         """
-            Get password forms for page id
+            Get password forms
             @param userform as str
-            @param page id as int
         """
         try:
-            page = self.__extension.get_page(page_id)
-            if page is None:
-                return
+            page = self.__extension.get_page(self.__page_id)
             # Search form
             for form_input in self.__forms.get_form_inputs(page):
                 if form_input["username"].get_name() == userform:
-                    self.__helper.get(form_input["uri"],
+                    self.__helper.get(form_input["element"].get_action(),
                                       userform,
                                       form_input["password"].get_name(),
                                       self.__forms.set_input_forms,
@@ -244,14 +232,13 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::SetAuthForms():", e)
 
-    def GetImages(self, page_id):
+    def GetImages(self):
         """
-            Get images for page id
-            @param page id as int
+            Get images
             @return [str]
         """
         try:
-            page = self.__extension.get_page(page_id)
+            page = self.__extension.get_page(self.__page_id)
             if page is None:
                 return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("img")
@@ -265,13 +252,12 @@ class ProxyExtension(Server):
             print("ProxyExtension::GetImages():", e)
         return []
 
-    def GetVideos(self, page_id):
+    def GetVideos(self):
         """
-            Get videos for page id
-            @param page id as int
+            Get videos
             @return [str]
         """
-        page = self.__extension.get_page(page_id)
+        page = self.__extension.get_page(self.__page_id)
         if page is None:
             return []
         videos = []
@@ -293,14 +279,13 @@ class ProxyExtension(Server):
                 videos.append((title, uri))
         return videos
 
-    def GetImageLinks(self, page_id):
+    def GetImageLinks(self):
         """
-            Get image links for page id
-            @param page id as int
+            Get image links
             @return [str]
         """
         try:
-            page = self.__extension.get_page(page_id)
+            page = self.__extension.get_page(self.__page_id)
             if page is None:
                 return []
             dom_list = page.get_dom_document().get_elements_by_tag_name("a")
@@ -317,13 +302,13 @@ class ProxyExtension(Server):
             print("ProxyExtension::GetImagesLinks():", e)
         return []
 
-    def GetSelection(self, page_id):
+    def GetSelection(self):
         """
-            Get selected text for page_id
+            Get selected text
             @param page id as int
             @return str
         """
-        webpage = self.__extension.get_page(page_id)
+        webpage = self.__extension.get_page(self.__page_id)
         document = webpage.get_dom_document()
         if document is None:
             return ""
@@ -344,13 +329,12 @@ class ProxyExtension(Server):
             value = ""
         return value
 
-    def SetCredentials(self, page_id):
+    def SetCredentials(self):
         """
             Set focused form to previous value
-            @param page_id as int
         """
         try:
-            webpage = self.__extension.get_page(page_id)
+            webpage = self.__extension.get_page(self.__page_id)
             self.__forms.set_credentials(webpage)
         except Exception as e:
             print("ProxyExtension::SetCredentials():", e)
@@ -514,7 +498,8 @@ class ProxyExtension(Server):
             @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
         """
-        self.__proxy_bus = PROXY_BUS % webpage.get_id()
+        self.__page_id = webpage.get_id()
+        self.__proxy_bus = PROXY_BUS % self.__page_id
         self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         Gio.bus_own_name_on_connection(self.__bus,
                                        self.__proxy_bus,

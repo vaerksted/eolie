@@ -104,9 +104,7 @@ class ImagesPopover(Gtk.Popover):
         self.__button = builder.get_object("button")
         self.add(widget)
         if Gio.NetworkMonitor.get_default().get_network_available():
-            El().helper.call("GetImages", page_id,
-                             GLib.Variant("(i)", (page_id,)),
-                             self.__on_get_images)
+            El().helper.call("GetImages", page_id, None, self.__on_get_images)
         (width, height) = El().active_window.get_size()
         self.set_size_request(width / 2, height / 1.5)
         self.connect("closed", self.__on_closed)
@@ -144,12 +142,10 @@ class ImagesPopover(Gtk.Popover):
         self.__links = button.get_active()
         if Gio.NetworkMonitor.get_default().get_network_available():
             if button.get_active():
-                El().helper.call("GetImageLinks", self.__page_id,
-                                 GLib.Variant("(i)", (self.__page_id,)),
+                El().helper.call("GetImageLinks", self.__page_id, None,
                                  self.__on_get_images)
             else:
-                El().helper.call("GetImages", self.__page_id,
-                                 GLib.Variant("(i)", (self.__page_id,)),
+                El().helper.call("GetImages", self.__page_id, None,
                                  self.__on_get_images)
 
 #######################

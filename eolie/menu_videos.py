@@ -31,9 +31,7 @@ class VideosMenu(Gio.Menu):
         """
         Gio.Menu.__init__(self)
         self.__window = window
-        El().helper.call("GetVideos", page_id,
-                         GLib.Variant("(i)", (page_id,)),
-                         self.__on_get_videos)
+        El().helper.call("GetVideos", page_id, None, self.__on_get_videos)
 
 #######################
 # PRIVATE             #

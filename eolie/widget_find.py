@@ -85,9 +85,8 @@ class FindWidget(Gtk.SearchBar):
             Search for current clipboard
         """
         page_id = self.__webview.get_page_id()
-        El().helper.call("GetSelection",
-                         GLib.Variant("(i)", (page_id,)),
-                         self.__on_get_selection, page_id)
+        El().helper.call("GetSelection", page_id, None,
+                         self.__on_get_selection)
 
 #######################
 # PRIVATE             #

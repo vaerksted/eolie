@@ -246,8 +246,7 @@ class Container(Gtk.Overlay):
             @param view as View
         """
         page_id = view.webview.get_page_id()
-        El().helper.call("FormsFilled", page_id,
-                         GLib.Variant("(i)", (page_id,)),
+        El().helper.call("FormsFilled", page_id, None,
                          self.__on_forms_filled, view)
 
     def close_view(self, view):
