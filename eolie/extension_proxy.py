@@ -504,14 +504,15 @@ class ProxyExtension(Server):
             @param page as WebKit2WebExtension.WebPage
         """
         self.__page_id = webpage.get_id()
-        self.__proxy_bus = PROXY_BUS % self.__page_id
-        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-        Gio.bus_own_name_on_connection(self.__bus,
-                                       self.__proxy_bus,
-                                       Gio.BusNameOwnerFlags.NONE,
-                                       None,
-                                       None)
-        Server.__init__(self, self.__bus, PROXY_PATH)
+        if self.__proxy_bus is None:
+            self.__proxy_bus = PROXY_BUS % self.__page_id
+            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+            Gio.bus_own_name_on_connection(self.__bus,
+                                           self.__proxy_bus,
+                                           Gio.BusNameOwnerFlags.NONE,
+                                           None,
+                                           None)
+            Server.__init__(self, self.__bus, PROXY_PATH)
         webpage.connect("send-request", self.__on_send_request)
         webpage.connect("context-menu", self.__on_context_menu)
         webpage.connect("form-controls-associated",
