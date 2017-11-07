@@ -14,7 +14,6 @@ if 'EOLIE_TRACE' in os.environ:
 sys.path.insert(1, '@PYTHON_EXEC_DIR@')
 # Make sure we'll find the eolie modules, even in JHBuild
 sys.path.insert(1, '@PYTHON_DIR@')
-os.environ["MOZ_PLUGIN_PATH"]="/usr/lib/epiphany/plugins"
 
 from gi.repository import Gio
 
