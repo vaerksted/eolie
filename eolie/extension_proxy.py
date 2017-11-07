@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, WebKit2WebExtension
 
 from urllib.parse import urlparse
 from uuid import uuid4
@@ -444,13 +444,14 @@ class ProxyExtension(Server):
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
-        if element.get_input_type() == "password":
-            self.__bus.emit_signal(
-                          None,
-                          PROXY_PATH,
-                          self.__proxy_bus,
-                          "UnsecureFormFocused",
-                          None)
+        if isinstance(element, WebKit2WebExtension.DOMHTMLInputElement):
+            if element.get_input_type() == "password":
+                self.__bus.emit_signal(
+                              None,
+                              PROXY_PATH,
+                              self.__proxy_bus,
+                              "UnsecureFormFocused",
+                              None)
         self.__focused = element
 
     def __on_mouse_down(self, element, event):
