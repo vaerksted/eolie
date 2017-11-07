@@ -61,20 +61,6 @@ class FormsExtension(GObject.Object):
                                       webpage,
                                       form)
 
-    def is_input(self, name, input_type, webpage):
-        """
-            Return True if a password input
-            @param name as str
-            @param input_type as str
-            @param webpage as WebKit2WebExtension.WebPage
-            @return WebKit2WebExtension.DOMHTMLInputElement/None
-        """
-        for form_input in self.__forms:
-            input_name = form_input[input_type].get_name()
-            if name == input_name:
-                return True
-        return False
-
     def set_input_forms(self, attributes, password,
                         uri, index, count, webpage, form, username=None):
         """
