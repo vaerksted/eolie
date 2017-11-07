@@ -149,7 +149,13 @@ class ProxyExtensionServer(Server):
         self.__current_uri = None
         self.__helper = PasswordsHelper()
         self.__proxy_bus = PROXY_BUS % self.__page.get_id()
-        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
+        self.__bus = Gio.DBusConnection.new_for_address_sync(
+                               addr,
+                               Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
+                               Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
+                               None,
+                               None)
         Gio.bus_own_name_on_connection(self.__bus,
                                        self.__proxy_bus,
                                        Gio.BusNameOwnerFlags.NONE,
