@@ -10,11 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, Gtk, Gdk
+from gi.repository import Gtk, Gdk
 
 from urllib.parse import urlparse
 from time import time
-from ctypes import string_at
 
 from eolie.menu_form import FormMenu
 from eolie.helper_passwords import PasswordsHelper
@@ -33,7 +32,6 @@ class WebViewDBusSignals:
         self._last_click_event_x = 0
         self._last_click_event_y = 0
         self._last_click_time = 0
-        self.connect("submit-form", self.__on_submit_form)
 
     def ignore_last_click_event(self):
         """
@@ -76,29 +74,6 @@ class WebViewDBusSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __on_submit_form(self, webview, request):
-        """
-            Check for auth forms
-            @param webview as WebKit2.WebView
-            @param request as WebKit2.FormSubmissionRequest
-        """
-        if self.ephemeral or not El().settings.get_value("remember-passwords"):
-            return
-        fields = request.get_text_fields()
-        if fields is None:
-            return
-        forms = []
-        for k, v in fields.items():
-            name = string_at(k).decode("utf-8")
-            value = string_at(v).decode("utf-8")
-            if name and value:
-                forms.append((name, value))
-        page_id = webview.get_page_id()
-        form_uri = self._navigation_uri
-        El().helper.call("FormSubmitted", page_id,
-                         GLib.Variant("(aasssi)",
-                                      (forms, self.uri, form_uri, page_id)))
-
     def __on_signal(self, signal, params):
         """
             Handle proxy signals

@@ -88,15 +88,9 @@ class ProxyExtension(Server):
     <method name="SetCredentials">
         <arg type="i" name="page_id" direction="in" />
     </method>
-    <method name="SetPreviousForm">
+    <method name="SetPreviousElementValue">
     </method>
-    <method name="SetNextForm">
-    </method>
-    <method name="FormSubmitted">
-      <arg type="aas" name="forms" direction="in" />
-      <arg type="s" name="uri" direction="in" />
-      <arg type="s" name="form_uri" direction="in" />
-      <arg type="i" name="page_id" direction="in" />
+    <method name="SetNextElementValue">
     </method>
     <method name="SaveCredentials">
       <arg type="s" name="uuid" direction="in" />
@@ -152,14 +146,14 @@ class ProxyExtension(Server):
         self.__proxy_bus = None
         self.__forms = forms
         self.__focused = None
-        self.__form_history = {}
-        self.__password_forms = []
-        self.__listened_forms = []
+        self.__elements_history = {}
+        self.__listened_form_elements = []
+        self.__listened_elements = []
         self.__send_requests = []
-        self.__pending_credentials = None
         self.__current_uri = None
         self.__helper = PasswordsHelper()
         extension.connect("page-created", self.__on_page_created)
+        forms.connect("submit-form", self.__on_submit_form)
         self.__bus = None
 
     def FormsFilled(self, page_id):
@@ -176,50 +170,6 @@ class ProxyExtension(Server):
                 return True
         return False
 
-    def FormSubmitted(self, forms, uri, form_uri, page_id):
-        """
-            Check for password in org.Freedesktop.Secrets
-            @param forms as [(str, str)]
-            @param uri as str
-            @param form_uri as str
-            @param page id as int
-            @return (username_form, password_form) as (str, str)
-        """
-        try:
-            page = self.__extension.get_page(page_id)
-            # Needed as DOM may have changed since last load
-            self.__forms.update_inputs_list(page)
-            if page is None:
-                return ("", "", "", "")
-            user_form_name = None
-            user_form_value = None
-            pass_form_name = None
-            pass_form_value = None
-            for (name, value) in forms:
-                if self.__forms.is_input(name, "password", page):
-                    pass_form_name = name
-                    pass_form_value = value
-                else:
-                    user_form_name = name
-                    user_form_value = value
-            if user_form_value is not None and\
-                    pass_form_value is not None and\
-                    user_form_value != pass_form_value:
-                self.__pending_credentials = (user_form_name,
-                                              user_form_value,
-                                              pass_form_name,
-                                              pass_form_value,
-                                              uri,
-                                              form_uri)
-                self.__helper.get(form_uri, user_form_name,
-                                  pass_form_name, self.__on_get_password,
-                                  user_form_name, user_form_value,
-                                  pass_form_name, pass_form_value,
-                                  uri,
-                                  page_id)
-        except Exception as e:
-            print("ProxyExtension::FormSubmitted():", e)
-
     def SaveCredentials(self, uuid, user_form_name,
                         pass_form_name, uri, form_uri):
         """
@@ -230,12 +180,12 @@ class ProxyExtension(Server):
             @param uri as str
             @param form_uri as str
         """
-        if self.__pending_credentials is None:
+        if self.__forms.pending_credentials is None:
             return
         try:
             (_user_form_name, user_form_value,
              _pass_form_name, pass_form_value,
-             _uri, _form_uri) = self.__pending_credentials
+             _uri, _form_uri) = self.__forms.pending_credentials
             if user_form_name != _user_form_name or\
                     pass_form_name != _pass_form_name or\
                     uri != _uri or\
@@ -405,16 +355,16 @@ class ProxyExtension(Server):
         except Exception as e:
             print("ProxyExtension::SetCredentials():", e)
 
-    def SetPreviousForm(self):
+    def SetPreviousElementValue(self):
         """
             Set focused form to previous value
         """
         if self.__focused is None:
             return
         try:
-            if self.__focused in self.__form_history.keys():
+            if self.__focused in self.__elements_history.keys():
                 current_value = self.__focused.get_value()
-                item = self.__form_history[self.__focused]
+                item = self.__elements_history[self.__focused]
                 # User added some text, keep it
                 if item.value != current_value:
                     next = LinkedList(current_value.rstrip(" "), None, item)
@@ -422,29 +372,29 @@ class ProxyExtension(Server):
                         item.set_next(next)
                     item = next
                 if item.prev:
-                    self.__form_history[self.__focused] = item.prev
+                    self.__elements_history[self.__focused] = item.prev
                     self.__focused.set_value(item.prev.value)
             else:
                 new_value = self.__focused.get_value().rstrip(" ")
                 if new_value:
                     item = LinkedList(new_value, None, None)
                     next = LinkedList("", item, None)
-                    self.__form_history[self.__focused] = next
+                    self.__elements_history[self.__focused] = next
                     self.__focused.set_value("")
         except Exception as e:
             print("ProxyExtension::SetPreviousForm():", e)
 
-    def SetNextForm(self):
+    def SetNextElementValue(self):
         """
             Set focused form to next value
         """
         if self.__focused is None:
             return
         try:
-            if self.__focused in self.__form_history.keys():
-                item = self.__form_history[self.__focused]
+            if self.__focused in self.__elements_history.keys():
+                item = self.__elements_history[self.__focused]
                 if item.next:
-                    self.__form_history[self.__focused] = item.next
+                    self.__elements_history[self.__focused] = item.next
                     self.__focused.set_value(item.next.value)
         except Exception as e:
             print("ProxyExtension::SetNextForm():", e)
@@ -473,20 +423,20 @@ class ProxyExtension(Server):
         """
         self.__focused = element
 
-    def __on_mouse_down(self, form, event):
+    def __on_mouse_down(self, element, event):
         """
            Emit Input mouse down signal
-           @param form as WebKit2WebExtension.DOMElement
+           @param element as WebKit2WebExtension.DOMElement
            @param event as WebKit2WebExtension.DOMUIEvent
         """
-        name = form.get_name()
+        name = element.get_name()
         if name is None:
             return
         # Only send signal on one of the two calls
-        if name in self.__mouse_down_forms:
-            self.__mouse_down_forms.remove(name)
+        if name in self.__mouse_down_elements:
+            self.__mouse_down_elements.remove(name)
         else:
-            self.__mouse_down_forms.append(name)
+            self.__mouse_down_elements.append(name)
             args = GLib.Variant.new_tuple(GLib.Variant("s", name))
             self.__bus.emit_signal(
                               None,
@@ -495,17 +445,17 @@ class ProxyExtension(Server):
                               "InputMouseDown",
                               args)
 
-    def __on_input(self, form, event):
+    def __on_input(self, element, event):
         """
             Send input signal
-            @param form as WebKit2WebExtension.DOMElement
+            @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
-        new_value = form.get_value()
+        new_value = element.get_value()
         previous_value = ""
         item = LinkedList("", None, None)
-        if form in self.__form_history.keys():
-            item = self.__form_history[form]
+        if element in self.__elements_history.keys():
+            item = self.__elements_history[element]
             previous_value = item.value
         # Here we try to get words
         # If we are LTR then add words on space
@@ -514,7 +464,7 @@ class ProxyExtension(Server):
                 next = LinkedList(new_value.rstrip(" "), None, item)
                 if item is not None:
                     item.set_next(next)
-                self.__form_history[form] = next
+                self.__elements_history[element] = next
 
     def __on_document_loaded(self, webpage):
         """
@@ -522,40 +472,41 @@ class ProxyExtension(Server):
             @param webpage as WebKit2WebExtension.WebPage
         """
         # Remove any previous event listener
-        for form in self.__listened_forms:
-            form.remove_event_listener("input", self.__on_input, False)
-            form.remove_event_listener("focus", self.__on_focus, False)
-            form.remove_event_listener("mousedown",
-                                       self.__on_mouse_down,
-                                       False)
-        for form in self.__password_forms:
-            form.remove_event_listener("focus",
-                                       self.__on_password_focus,
-                                       False)
+        for element in self.__listened_elements:
+            element.remove_event_listener("input", self.__on_input, False)
+            element.remove_event_listener("focus", self.__on_focus, False)
+            element.remove_event_listener("mousedown",
+                                          self.__on_mouse_down,
+                                          False)
+        for element in self.__listened_form_elements:
+            element.remove_event_listener("focus",
+                                          self.__on_password_focus,
+                                          False)
         self.__focused = None
-        self.__form_history = {}
-        self.__listened_forms = []
-        self.__password_forms = []
-        self.__mouse_down_forms = []
+        self.__elements_history = {}
+        self.__listened_elements = []
+        self.__listened_form_elements = []
+        self.__mouse_down_elements = []
 
-        # Manage forms in page
         parsed = urlparse(webpage.get_uri())
 
         # Check for unsecure content
         if parsed.scheme == "http":
-            for form_input in self.__forms.get_form_inputs(webpage):
-                self.__password_forms.append(form_input["password"])
-                form_input["password"].add_event_listener(
-                                        "focus",
-                                        self.__on_password_focus,
-                                        False)
+            for element in self.__forms.get_form_inputs(webpage):
+                self.__listened_form_elements.append(element["password"])
+                element["password"].add_event_listener(
+                                                    "focus",
+                                                    self.__on_password_focus,
+                                                    False)
         # Manage forms input
-        for form in self.__forms.get_inputs(webpage) +\
+        for element in self.__forms.get_inputs(webpage) +\
                 self.__forms.get_textareas(webpage):
-            self.__listened_forms.append(form)
-            form.add_event_listener("input", self.__on_input, False)
-            form.add_event_listener("focus", self.__on_focus, False)
-            form.add_event_listener("mousedown", self.__on_mouse_down, False)
+            self.__listened_elements.append(element)
+            element.add_event_listener("input", self.__on_input, False)
+            element.add_event_listener("focus", self.__on_focus, False)
+            element.add_event_listener("mousedown",
+                                       self.__on_mouse_down,
+                                       False)
 
     def __on_page_created(self, extension, webpage):
         """
@@ -563,16 +514,14 @@ class ProxyExtension(Server):
             @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
         """
-        # Create proxy if None
-        if self.__proxy_bus is None:
-            self.__proxy_bus = PROXY_BUS % webpage.get_id()
-            self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-            Gio.bus_own_name_on_connection(self.__bus,
-                                           self.__proxy_bus,
-                                           Gio.BusNameOwnerFlags.NONE,
-                                           None,
-                                           None)
-            Server.__init__(self, self.__bus, PROXY_PATH)
+        self.__proxy_bus = PROXY_BUS % webpage.get_id()
+        self.__bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        Gio.bus_own_name_on_connection(self.__bus,
+                                       self.__proxy_bus,
+                                       Gio.BusNameOwnerFlags.NONE,
+                                       None,
+                                       None)
+        Server.__init__(self, self.__bus, PROXY_PATH)
         webpage.connect("document-loaded", self.__on_document_loaded)
         webpage.connect("send-request", self.__on_send_request)
         webpage.connect("context-menu", self.__on_context_menu)
@@ -588,6 +537,19 @@ class ProxyExtension(Server):
         value = self.GetSelection(webpage.get_id())
         context_menu.set_user_data(GLib.Variant("s", value))
 
+    def __on_submit_form(self, forms, variant):
+        """
+            Ask for credentials save
+            @param forms as FormsExtension
+            @param variant as GLib.Variant
+        """
+        self.__bus.emit_signal(
+                              None,
+                              PROXY_PATH,
+                              self.__proxy_bus,
+                              "AskSaveCredentials",
+                              variant)
+
     def __on_send_request(self, webpage, request, redirect):
         """
             Keep send requests
@@ -601,41 +563,3 @@ class ProxyExtension(Server):
             self.__current_uri = uri
             self.__send_requests = []
         self.__send_requests.append(request.get_uri())
-
-    def __on_get_password(self, attributes, password, form_uri, index, count,
-                          user_form_name, user_form_value, pass_form_name,
-                          pass_form_value, uri, page_id):
-        """
-            Ask for credentials through DBus
-            @param attributes as {}
-            @param password as str
-            @param form_uri as str
-            @param index as int
-            @param count as int
-            @param user_form_name as str
-            @param user_form_value as str
-            @param pass_form_name as str
-            @param pass_form_value as str
-            @param uri as str
-            @param page_id as int
-        """
-        try:
-            uuid = ""
-            if attributes is not None:
-                if attributes["login"] != user_form_value:
-                    pass  # New login to store
-                elif password == pass_form_value:
-                    return
-                else:
-                    uuid = attributes["uuid"]
-            args = (uuid, user_form_name, user_form_value,
-                    pass_form_name, uri, form_uri)
-            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)", args))
-            self.__bus.emit_signal(
-                              None,
-                              PROXY_PATH,
-                              self.__proxy_bus,
-                              "AskSaveCredentials",
-                              variant)
-        except Exception as e:
-            print("ProxyExtension::__on_get_password()", e)

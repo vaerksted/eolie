@@ -10,17 +10,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2WebExtension
+from gi.repository import WebKit2WebExtension, GLib, GObject
 
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 
 
-class FormsExtension:
+class FormsExtension(GObject.Object):
     """
         Handle forms prefill
     """
+
+    __gsignals__ = {
+        'submit-form': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
+    }
 
     def __init__(self, extension, settings):
         """
@@ -28,9 +32,13 @@ class FormsExtension:
             @param extension as WebKit2WebExtension
             @param settings as Settings
         """
+        GObject.Object.__init__(self)
         self.__helper = PasswordsHelper()
+        self.__extension = extension
         self.__settings = settings
-        self.__form_inputs = []
+        self.__forms = []
+        self.__pending_credentials = None
+        self.__page_id = None
         extension.connect("page-created", self.__on_page_created)
 
     def set_credentials(self, webpage):
@@ -41,17 +49,17 @@ class FormsExtension:
         # Do not remove this,
         # it's needed because page may have changed
         self.update_inputs_list(webpage)
-        for form_input in self.__form_inputs:
-            form_input_username = form_input["username"].get_name()
-            form_input_password = form_input["password"].get_name()
+        for form in self.__forms:
+            form_input_username = form["username"].get_name()
+            form_input_password = form["password"].get_name()
             if form_input_username is not None and\
                     form_input_password is not None:
-                self.__helper.get(form_input["uri"],
+                self.__helper.get(form["element"].get_action(),
                                   form_input_username,
                                   form_input_password,
                                   self.set_input_forms,
                                   webpage,
-                                  form_input)
+                                  form)
 
     def get_inputs(self, webpage):
         """
@@ -90,7 +98,7 @@ class FormsExtension:
             @param webpage as WebKit2WebExtension.WebPage
             @return {}
         """
-        return self.__form_inputs
+        return self.__forms
 
     def is_input(self, name, input_type, webpage):
         """
@@ -100,14 +108,14 @@ class FormsExtension:
             @param webpage as WebKit2WebExtension.WebPage
             @return WebKit2WebExtension.DOMHTMLInputElement/None
         """
-        for form_input in self.__form_inputs:
+        for form_input in self.__forms:
             input_name = form_input[input_type].get_name()
             if name == input_name:
                 return True
         return False
 
     def set_input_forms(self, attributes, password,
-                        uri, index, count, webpage, form_input, username=None):
+                        uri, index, count, webpage, form, username=None):
         """
             Set login/password input
             @param attributes as {}
@@ -116,7 +124,7 @@ class FormsExtension:
             @param index as int
             @param count as int
             @param webpage as WebKit2WebExtension.WebPage
-            @param form_input as {}
+            @param form as {}
             @param username as str
         """
         if attributes is None:
@@ -124,7 +132,7 @@ class FormsExtension:
         # We only set first available password
         if (index != 0 or count > 1) and username is None:
             return
-        parsed = urlparse(form_input["uri"])
+        parsed = urlparse(form["element"].get_action())
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and username is None:
             return
@@ -132,8 +140,8 @@ class FormsExtension:
         if username is not None and username != attributes["login"]:
             return
         try:
-            form_input["username"].set_value(attributes["login"])
-            form_input["password"].set_value(password)
+            form["username"].set_value(attributes["login"])
+            form["password"].set_value(password)
         except Exception as e:
             print("FormsExtension::set_input_forms()", e)
 
@@ -142,14 +150,18 @@ class FormsExtension:
             Update login and password inputs
             @param webpage as WebKit2WebExtension.WebPage
         """
-        self.__form_inputs = []
+        for form in self.__forms:
+            form["element"].remove_event_listener("submit",
+                                                  self.__on_form_submit,
+                                                  False)
+        self.__forms = []
         collection = webpage.get_dom_document().get_forms()
         i = 0
         while i < collection.get_length():
-            form = collection.item(i)
-            if form.get_method() == "post":
-                form_input = {"uri": form.get_action()}
-                elements_collection = form.get_elements()
+            element = collection.item(i)
+            if element.get_method() == "post":
+                form = {"element": element}
+                elements_collection = element.get_elements()
                 h = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
@@ -159,27 +171,110 @@ class FormsExtension:
                         continue
                     if element.get_input_type() == "password" and\
                             element.get_name() is not None:
-                        form_input["password"] = element
+                        form["password"] = element
                     elif element.get_input_type() in ["text",
                                                       "email",
                                                       "search"] and\
                             element.get_name() is not None:
-                        form_input["username"] = element
+                        form["username"] = element
                     h += 1
-                keys = form_input.keys()
+                keys = form.keys()
                 if "username" in keys and "password" in keys:
-                    self.__form_inputs.append(form_input)
+                    self.__forms.append(form)
+                    form["element"].add_event_listener("submit",
+                                                       self.__on_form_submit,
+                                                       False)
             i += 1
+
+    @property
+    def pending_credentials(self):
+        """
+            Get credentials
+            @return (str, str, str, str, str, str)
+        """
+        return self.__pending_credentials
 
 #######################
 # PRIVATE             #
 #######################
+    def __on_form_submit(self, element, event):
+        """
+            Ask user for saving credentials
+            @param element as WebKit2WebExtension.DOMElement
+            @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        page = self.__extension.get_page(self.__page_id)
+        if page is None:
+            return
+        # Search for form
+        form = None
+        for form in self.__forms:
+            if form["element"] == element:
+                break
+        if form is None:
+            return
+        try:
+            uri = page.get_uri()
+            form_uri = form["element"].get_action()
+            user_form_name = form["username"].get_name()
+            user_form_value = form["username"].get_value()
+            pass_form_name = form["password"].get_name()
+            pass_form_value = form["password"].get_value()
+            self.__pending_credentials = (user_form_name,
+                                          user_form_value,
+                                          pass_form_name,
+                                          pass_form_value,
+                                          uri,
+                                          form_uri)
+            self.__helper.get(form_uri, user_form_name,
+                              pass_form_name, self.__on_get_password,
+                              user_form_name, user_form_value,
+                              pass_form_name, pass_form_value,
+                              uri,
+                              self.__page_id)
+        except Exception as e:
+            print("FormsExtension::__on_form_submit():", e)
+
+    def __on_get_password(self, attributes, password, form_uri, index, count,
+                          user_form_name, user_form_value, pass_form_name,
+                          pass_form_value, uri, page_id):
+        """
+            Ask for credentials through DBus
+            @param attributes as {}
+            @param password as str
+            @param form_uri as str
+            @param index as int
+            @param count as int
+            @param user_form_name as str
+            @param user_form_value as str
+            @param pass_form_name as str
+            @param pass_form_value as str
+            @param uri as str
+            @param page_id as int
+        """
+        try:
+            uuid = ""
+            if attributes is not None:
+                if attributes["login"] != user_form_value:
+                    pass  # New login to store
+                elif password == pass_form_value:
+                    return
+                else:
+                    uuid = attributes["uuid"]
+            args = (uuid, user_form_name, user_form_value,
+                    pass_form_name, uri, form_uri)
+            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)", args))
+            self.emit("submit-form", variant)
+        except Exception as e:
+            print("FormsExtension::__on_get_password()", e)
+
     def __on_page_created(self, extension, webpage):
         """
             Connect to send request
             @param extension as WebKit2WebExtension
             @param webpage as WebKit2WebExtension.WebPage
         """
+        self.__page_id = webpage.get_id()
         webpage.connect("document-loaded", self.__on_document_loaded)
 
     def __on_document_loaded(self, webpage):
