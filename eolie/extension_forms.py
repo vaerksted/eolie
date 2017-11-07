@@ -36,7 +36,9 @@ class FormsExtension(GObject.Object):
         self.__helper = PasswordsHelper()
         self.__extension = extension
         self.__settings = settings
+        self.__elements_uri = None
         self.__forms = []
+        self.__textareas = []
         self.__pending_credentials = None
         self.__page_id = None
         extension.connect("page-created", self.__on_page_created)
@@ -46,59 +48,18 @@ class FormsExtension(GObject.Object):
             Set credentials on page
             @param webpage as WebKit2WebExtension.WebPage
         """
-        # Do not remove this,
-        # it's needed because page may have changed
-        self.update_inputs_list(webpage)
-        for form in self.__forms:
-            form_input_username = form["username"].get_name()
-            form_input_password = form["password"].get_name()
-            if form_input_username is not None and\
-                    form_input_password is not None:
-                self.__helper.get(form["element"].get_action(),
-                                  form_input_username,
-                                  form_input_password,
-                                  self.set_input_forms,
-                                  webpage,
-                                  form)
-
-    def get_inputs(self, webpage):
-        """
-            Return forms for webpage
-            @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMHTMLInputElement]
-        """
-        forms = []
-        dom_document = webpage.get_dom_document()
-        inputs = dom_document.get_elements_by_tag_name("input")
-        i = 0
-        while i < inputs.get_length():
-            if inputs.item(i).get_input_type() in ["text", "email", "search"]:
-                forms.append(inputs.item(i))
-            i += 1
-        return forms
-
-    def get_textareas(self, webpage):
-        """
-            Return textarea for webpage
-            @param webpage as WebKit2WebExtension.WebPage
-            @return [WebKit2WebExtension.DOMHTMLInputElement]
-        """
-        forms = []
-        dom_document = webpage.get_dom_document()
-        textareas = dom_document.get_elements_by_tag_name("textarea")
-        i = 0
-        while i < textareas.get_length():
-            forms.append(textareas.item(i))
-            i += 1
-        return forms
-
-    def get_form_inputs(self, webpage):
-        """
-            Return inputs for form
-            @param webpage as WebKit2WebExtension.WebPage
-            @return {}
-        """
-        return self.__forms
+        if self.__settings.get_value("remember-passwords"):
+            for form in self.__forms:
+                form_input_username = form["username"].get_name()
+                form_input_password = form["password"].get_name()
+                if form_input_username is not None and\
+                        form_input_password is not None:
+                    self.__helper.get(form["element"].get_action(),
+                                      form_input_username,
+                                      form_input_password,
+                                      self.set_input_forms,
+                                      webpage,
+                                      form)
 
     def is_input(self, name, input_type, webpage):
         """
@@ -145,38 +106,38 @@ class FormsExtension(GObject.Object):
         except Exception as e:
             print("FormsExtension::set_input_forms()", e)
 
-    def update_inputs_list(self, webpage):
+    def add_elements(self, elements):
         """
             Update login and password inputs
-            @param webpage as WebKit2WebExtension.WebPage
+            @param elements as [WebKit2WebExtension.DOMElement]
         """
         for form in self.__forms:
             form["element"].remove_event_listener("submit",
                                                   self.__on_form_submit,
                                                   False)
         self.__forms = []
-        collection = webpage.get_dom_document().get_forms()
-        i = 0
-        while i < collection.get_length():
-            element = collection.item(i)
-            if element.get_method() == "post":
+        self.__textareas = []
+
+        for element in elements:
+            if isinstance(element, WebKit2WebExtension.DOMHTMLTextAreaElement):
+                self.__textareas.append(element)
+            elif isinstance(element,
+                            WebKit2WebExtension.DOMHTMLFormElement):
                 form = {"element": element}
                 elements_collection = element.get_elements()
                 h = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
-                    if not isinstance(element,
-                                      WebKit2WebExtension.DOMHTMLInputElement):
-                        h += 1
-                        continue
-                    if element.get_input_type() == "password" and\
-                            element.get_name() is not None:
-                        form["password"] = element
-                    elif element.get_input_type() in ["text",
-                                                      "email",
-                                                      "search"] and\
-                            element.get_name() is not None:
-                        form["username"] = element
+                    if isinstance(element,
+                                  WebKit2WebExtension.DOMHTMLInputElement):
+                        if element.get_input_type() == "password" and\
+                                element.get_name() is not None:
+                            form["password"] = element
+                        elif element.get_input_type() in ["text",
+                                                          "email",
+                                                          "search"] and\
+                                element.get_name() is not None:
+                            form["username"] = element
                     h += 1
                 keys = form.keys()
                 if "username" in keys and "password" in keys:
@@ -184,7 +145,22 @@ class FormsExtension(GObject.Object):
                     form["element"].add_event_listener("submit",
                                                        self.__on_form_submit,
                                                        False)
-            i += 1
+
+    @property
+    def textareas(self):
+        """
+            Get textareas
+            @return [WebKit2WebExtension.DOMHTMLTextAreaElement]
+        """
+        return self.__textareas
+
+    @property
+    def forms(self):
+        """
+            Get forms
+            @return [WebKit2WebExtension.DOMHTMLFormElement]
+        """
+        return self.__forms
 
     @property
     def pending_credentials(self):
@@ -275,13 +251,3 @@ class FormsExtension(GObject.Object):
             @param webpage as WebKit2WebExtension.WebPage
         """
         self.__page_id = webpage.get_id()
-        webpage.connect("document-loaded", self.__on_document_loaded)
-
-    def __on_document_loaded(self, webpage):
-        """
-            Restore forms
-            @param webpage as WebKit2WebExtension.WebPage
-        """
-        if not self.__settings.get_value("remember-passwords"):
-            return
-        self.set_credentials(webpage)

@@ -130,33 +130,33 @@ class ProxyExtension(Server):
     </node>
     '''
 
-    def __init__(self, extension, forms):
+    def __init__(self, extension, form_extension):
         """
             Init server
             @param extension as WebKit2WebExtension.WebExtension
-            @param forms as FormsExtension
+            @param form_extension as FormsExtension
         """
         self.__proxy_bus = None
         self.__page_id = None
-        self.__forms = forms
+        self.__form_extension = form_extension
         self.__focused = None
         self.__elements_history = {}
-        self.__listened_form_elements = []
-        self.__listened_elements = []
+        self.__listened_input_elements = []
+        self.__listened_mouse_elements = []
+        self.__listened_focus_elements = []
         self.__send_requests = []
         self.__current_uri = None
         self.__helper = PasswordsHelper()
         extension.connect("page-created", self.__on_page_created)
-        forms.connect("submit-form", self.__on_submit_form)
+        form_extension.connect("submit-form", self.__on_submit_form)
         self.__bus = None
 
     def FormsFilled(self):
         """
             True if form contains data
         """
-        page = self.__extension.get_page(self.__page_id)
         # Check for unsecure content
-        for textarea in self.__forms.get_textareas(page):
+        for textarea in self.__form_extension.textareas:
             if textarea.is_edited():
                 return True
         return False
@@ -171,12 +171,12 @@ class ProxyExtension(Server):
             @param uri as str
             @param form_uri as str
         """
-        if self.__forms.pending_credentials is None:
+        if self.__form_extension.pending_credentials is None:
             return
         try:
             (_user_form_name, user_form_value,
              _pass_form_name, pass_form_value,
-             _uri, _form_uri) = self.__forms.pending_credentials
+             _uri, _form_uri) = self.__form_extension.pending_credentials
             if user_form_name != _user_form_name or\
                     pass_form_name != _pass_form_name or\
                     uri != _uri or\
@@ -219,14 +219,14 @@ class ProxyExtension(Server):
         try:
             page = self.__extension.get_page(self.__page_id)
             # Search form
-            for form_input in self.__forms.get_form_inputs(page):
-                if form_input["username"].get_name() == userform:
-                    self.__helper.get(form_input["element"].get_action(),
+            for form in self.__form_extension.forms:
+                if form["username"].get_name() == userform:
+                    self.__helper.get(form["element"].get_action(),
                                       userform,
-                                      form_input["password"].get_name(),
-                                      self.__forms.set_input_forms,
+                                      form["password"].get_name(),
+                                      self.__form_extension.set_input_forms,
                                       page,
-                                      form_input,
+                                      form,
                                       username)
                     return
         except Exception as e:
@@ -335,7 +335,7 @@ class ProxyExtension(Server):
         """
         try:
             webpage = self.__extension.get_page(self.__page_id)
-            self.__forms.set_credentials(webpage)
+            self.__form_extension.set_credentials(webpage)
         except Exception as e:
             print("ProxyExtension::SetCredentials():", e)
 
@@ -386,18 +386,57 @@ class ProxyExtension(Server):
 #######################
 # PRIVATE             #
 #######################
-    def __on_password_focus(self, password, event):
+    def __add_event_listeners(self, webpage):
         """
-            Emit unsecure focus form signal
-            @param password as WebKit2WebExtension.DOMElement
-            @param event as WebKit2WebExtension.DOMUIEvent
+            Add event listeners on inputs and textareas
+            @param webpage as WebKit2WebExtension.WebPage
         """
-        self.__bus.emit_signal(
-                          None,
-                          PROXY_PATH,
-                          self.__proxy_bus,
-                          "UnsecureFormFocused",
-                          None)
+        # Remove any previous event listener
+        for element in self.__listened_input_elements:
+            element.remove_event_listener("input", self.__on_input, False)
+        for element in self.__listened_mouse_elements:
+            element.remove_event_listener("mousedown",
+                                          self.__on_mouse_down,
+                                          False)
+        for element in self.__listened_focus_elements:
+            element.remove_event_listener("focus",
+                                          self.__on_focus,
+                                          False)
+        self.__focused = None
+        self.__elements_history = {}
+        self.__listened_input_elements = []
+        self.__listened_mouse_elements = []
+        self.__listened_focus_elements = []
+        self.__mouse_down_elements = []
+
+        parsed = urlparse(webpage.get_uri())
+
+        # Manage forms events
+        for form in self.__form_extension.forms:
+            self.__listened_input_elements.append(form["username"])
+            self.__listened_focus_elements.append(form["username"])
+            self.__listened_mouse_elements.append(form["username"])
+            form["username"].add_event_listener("input",
+                                                self.__on_input,
+                                                False)
+            form["username"].add_event_listener("focus",
+                                                self.__on_focus,
+                                                False)
+            form["username"].add_event_listener("mousedown",
+                                                self.__on_mouse_down,
+                                                False)
+            # Check for unsecure content
+            if parsed.scheme == "http":
+                self.__listened_focus_elements.append(form["password"])
+                form["password"].add_event_listener("focus",
+                                                    self.__on_focus,
+                                                    False)
+        # Manage textareas events
+        for textarea in self.__form_extension.textareas:
+            self.__listened_input_elements.append(textarea)
+            self.__listened_focus_elements.append(textarea)
+            textarea.add_event_listener("input", self.__on_input, False)
+            textarea.add_event_listener("focus", self.__on_focus, False)
 
     def __on_focus(self, element, event):
         """
@@ -405,6 +444,13 @@ class ProxyExtension(Server):
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
+        if element.get_input_type() == "password":
+            self.__bus.emit_signal(
+                          None,
+                          PROXY_PATH,
+                          self.__proxy_bus,
+                          "UnsecureFormFocused",
+                          None)
         self.__focused = element
 
     def __on_mouse_down(self, element, event):
@@ -450,48 +496,6 @@ class ProxyExtension(Server):
                     item.set_next(next)
                 self.__elements_history[element] = next
 
-    def __on_document_loaded(self, webpage):
-        """
-            Check for unsecure content
-            @param webpage as WebKit2WebExtension.WebPage
-        """
-        # Remove any previous event listener
-        for element in self.__listened_elements:
-            element.remove_event_listener("input", self.__on_input, False)
-            element.remove_event_listener("focus", self.__on_focus, False)
-            element.remove_event_listener("mousedown",
-                                          self.__on_mouse_down,
-                                          False)
-        for element in self.__listened_form_elements:
-            element.remove_event_listener("focus",
-                                          self.__on_password_focus,
-                                          False)
-        self.__focused = None
-        self.__elements_history = {}
-        self.__listened_elements = []
-        self.__listened_form_elements = []
-        self.__mouse_down_elements = []
-
-        parsed = urlparse(webpage.get_uri())
-
-        # Check for unsecure content
-        if parsed.scheme == "http":
-            for element in self.__forms.get_form_inputs(webpage):
-                self.__listened_form_elements.append(element["password"])
-                element["password"].add_event_listener(
-                                                    "focus",
-                                                    self.__on_password_focus,
-                                                    False)
-        # Manage forms input
-        for element in self.__forms.get_inputs(webpage) +\
-                self.__forms.get_textareas(webpage):
-            self.__listened_elements.append(element)
-            element.add_event_listener("input", self.__on_input, False)
-            element.add_event_listener("focus", self.__on_focus, False)
-            element.add_event_listener("mousedown",
-                                       self.__on_mouse_down,
-                                       False)
-
     def __on_page_created(self, extension, webpage):
         """
             Cache webpage
@@ -507,10 +511,21 @@ class ProxyExtension(Server):
                                        None,
                                        None)
         Server.__init__(self, self.__bus, PROXY_PATH)
-        webpage.connect("document-loaded", self.__on_document_loaded)
         webpage.connect("send-request", self.__on_send_request)
         webpage.connect("context-menu", self.__on_context_menu)
+        webpage.connect("form-controls-associated",
+                        self.__on_form_control_associated)
         self.__extension = extension
+
+    def __on_form_control_associated(self, webpage, elements):
+        """
+            Add elements to forms
+            @param webpage as WebKit2WebExtension.WebPage
+            @param elements as [WebKit2WebExtension.DOMElement]
+        """
+        self.__form_extension.add_elements(elements)
+        self.__add_event_listeners(webpage)
+        self.__form_extension.set_credentials(webpage)
 
     def __on_context_menu(self, webpage, context_menu, hit):
         """
