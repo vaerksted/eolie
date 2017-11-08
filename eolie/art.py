@@ -92,6 +92,8 @@ class Art:
             return "user-not-tracked-symbolic"
         elif uri == "populars://":
             return "emote-love-symbolic"
+        elif uri == "about://":
+            return "applications-internet"
         else:
             return None
 
