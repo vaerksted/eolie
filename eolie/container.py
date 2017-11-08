@@ -372,9 +372,6 @@ class Container(Gtk.Overlay):
         """
         if self.__preloaded and not ephemeral:
             webview = self.__preloaded.pop(0)
-            # Preload next webview if populars scheme
-            if self.__preloaded and El().start_page == "populars://":
-                self.__preloaded[0].load_uri(El().start_page)
         else:
             webview = View.get_new_webview(ephemeral, self.__window)
         return webview
@@ -388,9 +385,6 @@ class Container(Gtk.Overlay):
         if self.__preloaded_max < 1 or self.__preloaded_max > 20:
             return
         webview = View.get_new_webview(False, self.__window)
-        # Preload first webview if populars scheme
-        if not self.__preloaded and El().start_page == "populars://":
-            webview.load_uri(El().start_page)
         self.__preloaded.append(webview)
         if len(self.__preloaded) < self.__preloaded_max:
             return True
