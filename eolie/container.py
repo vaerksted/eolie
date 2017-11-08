@@ -62,6 +62,8 @@ class Container(Gtk.Overlay):
         Main Eolie view
     """
 
+    __PRELOADED = 2
+
     def __init__(self, window):
         """
             Ini.container
@@ -71,7 +73,12 @@ class Container(Gtk.Overlay):
         self.__window = window
         self.__popover = WebViewPopover(window)
         self.__current = None
+        self.__preloaded = []
+        self.__preload_timeout_id = None
         self.__pending_items = []
+
+        self.__preloaded_max = El().settings.get_value(
+                                              "preloaded-webviews").get_int32()
 
         self.__stack = DelayedStack()
         self.__stack.set_hexpand(True)
@@ -106,7 +113,7 @@ class Container(Gtk.Overlay):
         self.add(paned)
 
     def add_webview(self, uri, loading_type, ephemeral=False,
-                    state=None, gtime=None):
+                    state=None, gtime=None,):
         """
             Add a webview to container
             @param uri as str
@@ -116,7 +123,7 @@ class Container(Gtk.Overlay):
             @param gtime as int
             @return WebView
         """
-        webview = View.get_new_webview(ephemeral, self.__window)
+        webview = self.__get_webview(ephemeral)
         if gtime is not None:
             # We force atime to be sure child is initially sorted after parent
             webview.set_atime(gtime)
@@ -129,6 +136,10 @@ class Container(Gtk.Overlay):
                 # Do not load uri until we are on screen
                 GLib.idle_add(webview.load_uri, uri)
         self.add_view(webview, loading_type)
+        if self.__preload_timeout_id is not None:
+            GLib.source_remove(self.__preload_timeout_id)
+        self.__preload_timeout_id = GLib.timeout_add(2000,
+                                                     self.__preload_webviews)
         return webview
 
     def add_webviews(self, items):
@@ -353,6 +364,37 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
+    def __get_webview(self, ephemeral):
+        """
+            Get a new webview
+            @param ephemeral as bool
+            @return WebView
+        """
+        if self.__preloaded and not ephemeral:
+            webview = self.__preloaded.pop(0)
+            # Preload next webview if populars scheme
+            if self.__preloaded and El().start_page == "populars://":
+                self.__preloaded[0].load_uri(El().start_page)
+        else:
+            webview = View.get_new_webview(ephemeral, self.__window)
+        return webview
+
+    def __preload_webviews(self):
+        """
+            Preload some webviews
+        """
+        self.__preload_timeout_id = None
+        # Ignore stupid values
+        if self.__preloaded_max < 1 or self.__preloaded_max > 20:
+            return
+        webview = View.get_new_webview(False, self.__window)
+        # Preload first webview if populars scheme
+        if not self.__preloaded and El().start_page == "populars://":
+            webview.load_uri(El().start_page)
+        self.__preloaded.append(webview)
+        if len(self.__preloaded) < self.__preloaded_max:
+            return True
+
     def __get_new_view(self, webview):
         """
             Get a new view

@@ -114,9 +114,14 @@
          <summary>Popular items shown</summary>
          <description />
       </key>
+        <key type="i" name="preloaded-webviews">
+         <default>2</default>
+         <summary>Webview preloaded per window</summary>
+         <description>Restart needed</description>
+      </key>
       <key type="as" name="default-zoom-level">
          <default>[]</default>
-         <summary>INTERNAL</summary>
+         <summary>Default zoom level</summary>
          <description />
       </key>
       <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
