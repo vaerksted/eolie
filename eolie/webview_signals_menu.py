@@ -144,43 +144,60 @@ class WebViewMenuSignals:
                                              _("Search on the Web"),
                                              None)
             context_menu.append(item)
-        else:
-            if not webview.is_loading() and parsed.scheme in ["http", "https"]:
-                # Save all images
-                action = Gio.SimpleAction(name="save_imgs")
+        if hit.context_is_link() or\
+                hit.context_is_image() or\
+                hit.context_is_media():
+            # Download link if uri looks like a file
+            uri = hit.get_link_uri() or \
+                  hit.get_image_uri() or \
+                  hit.get_media_uri()
+            if uri.split(".")[-1].isalnum():
+                action = Gio.SimpleAction(name="download")
                 El().add_action(action)
                 action.connect("activate",
-                               self.__on_save_images_activate)
+                               self.__on_download_activate,
+                               uri)
                 item = WebKit2.ContextMenuItem.new_from_gaction(
                                                  action,
-                                                 _("Save images"),
+                                                 _("Download this file"),
                                                  None)
                 context_menu.append(item)
-                # Save all videos
-                action = Gio.SimpleAction(name="save_videos")
-                El().add_action(action)
-                action.connect("activate",
-                               self.__on_save_videos_activate)
-                item = WebKit2.ContextMenuItem.new_from_gaction(
-                                                 action,
-                                                 _("Save videos"),
-                                                 None)
-                context_menu.append(item)
-                # Save page as image
-                action = Gio.SimpleAction(name="save_as_image")
-                El().add_action(action)
-                action.connect("activate",
-                               self.__on_save_as_image_activate)
-                item = WebKit2.ContextMenuItem.new_from_gaction(
-                                                 action,
-                                                 _("Save page as image"),
-                                                 None)
-                context_menu.append(item)
+        if not webview.is_loading() and parsed.scheme in ["http", "https"]:
+            # Save all images
+            action = Gio.SimpleAction(name="save_imgs")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_save_images_activate)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Save images"),
+                                             None)
+            context_menu.append(item)
+            # Save all videos
+            action = Gio.SimpleAction(name="save_videos")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_save_videos_activate)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Save videos"),
+                                             None)
+            context_menu.append(item)
+            # Save page as image
+            action = Gio.SimpleAction(name="save_as_image")
+            El().add_action(action)
+            action.connect("activate",
+                           self.__on_save_as_image_activate)
+            item = WebKit2.ContextMenuItem.new_from_gaction(
+                                             action,
+                                             _("Save page as image"),
+                                             None)
+            context_menu.append(item)
+        # Dev tools
+        if inspector_item is not None:
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
-            # Dev tools
-            if inspector_item is not None:
-                context_menu.append(inspector_item)
+            context_menu.append(inspector_item)
 
     def __on_context_menu_dismissed(self, webview):
         """
@@ -243,6 +260,18 @@ class WebViewMenuSignals:
             @param selection as str
         """
         Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(selection, -1)
+
+    def __on_download_activate(self, action, variant, uri):
+        """
+            Download file
+            @param action as Gio.SimpleAction
+            @param variant as GLib.Variant
+            @param uri as str
+        """
+        try:
+            WebKit2.WebContext.get_default().download_uri(uri)
+        except Exception as e:
+            print("WebViewMenuSignals::__on_download_activate():", e)
 
     def __on_save_images_activate(self, action, variant):
         """

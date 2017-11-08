@@ -321,6 +321,14 @@ class Container(Gtk.Overlay):
             self.__window.container.add_webview(El().start_page,
                                                 LoadingType.FOREGROUND)
 
+    def stop_preloading(self):
+        """
+            Stop webview preloading
+        """
+        if self.__preload_timeout_id is not None:
+            GLib.source_remove(self.__preload_timeout_id)
+            self.__preload_timeout_id = None
+
     @property
     def in_expose(self):
         """
