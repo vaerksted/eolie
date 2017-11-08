@@ -150,18 +150,14 @@ class ProxyExtensionServer(Server):
         self.__helper = PasswordsHelper()
         self.__proxy_bus = PROXY_BUS % self.__page.get_id()
         addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
-        self.__bus = Gio.DBusConnection.new_for_address_sync(
+        self.__bus = None
+        Gio.DBusConnection.new_for_address(
                                addr,
                                Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
                                Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
                                None,
-                               None)
-        Gio.bus_own_name_on_connection(self.__bus,
-                                       self.__proxy_bus,
-                                       Gio.BusNameOwnerFlags.NONE,
-                                       None,
-                                       None)
-        Server.__init__(self, self.__bus, PROXY_PATH)
+                               None,
+                               self.__on_bus_new_for_address)
         form_extension.connect("submit-form", self.__on_submit_form)
         page.connect("send-request", self.__on_send_request)
         page.connect("context-menu", self.__on_context_menu)
@@ -455,6 +451,20 @@ class ProxyExtensionServer(Server):
             textarea.add_event_listener("input", self.__on_input, False)
             textarea.add_event_listener("focus", self.__on_focus, False)
 
+    def __on_bus_new_for_address(self, source, result):
+        """
+            Init bus
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        self.__bus = source.new_for_address_finish(result)
+        Gio.bus_own_name_on_connection(self.__bus,
+                                       self.__proxy_bus,
+                                       Gio.BusNameOwnerFlags.NONE,
+                                       None,
+                                       None)
+        Server.__init__(self, self.__bus, PROXY_PATH)
+
     def __on_focus(self, element, event):
         """
             Keep last focused form
@@ -462,7 +472,8 @@ class ProxyExtensionServer(Server):
             @param event as WebKit2WebExtension.DOMUIEvent
         """
         if isinstance(element, WebKit2WebExtension.DOMHTMLInputElement):
-            if element.get_input_type() == "password":
+            if element.get_input_type() == "password" and\
+                    self.__bus is not None:
                 self.__bus.emit_signal(
                               None,
                               PROXY_PATH,
@@ -483,7 +494,7 @@ class ProxyExtensionServer(Server):
         # Only send signal on one of the two calls
         if name in self.__mouse_down_elements:
             self.__mouse_down_elements.remove(name)
-        else:
+        elif self.__bus is not None:
             self.__mouse_down_elements.append(name)
             args = GLib.Variant.new_tuple(GLib.Variant("s", name))
             self.__bus.emit_signal(
@@ -540,12 +551,13 @@ class ProxyExtensionServer(Server):
             @param forms as FormsExtension
             @param variant as GLib.Variant
         """
-        self.__bus.emit_signal(
-                              None,
-                              PROXY_PATH,
-                              self.__proxy_bus,
-                              "AskSaveCredentials",
-                              variant)
+        if self.__bus is not None:
+            self.__bus.emit_signal(
+                                  None,
+                                  PROXY_PATH,
+                                  self.__proxy_bus,
+                                  "AskSaveCredentials",
+                                  variant)
 
     def __on_send_request(self, webpage, request, redirect):
         """
