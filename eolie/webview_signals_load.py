@@ -26,7 +26,15 @@ class WebViewLoadSignals:
         """
             Init class
         """
-        pass
+        self.__current_event = WebKit2.LoadEvent.FINISHED
+
+    @property
+    def current_event(self):
+        """
+            Get current event
+            @return WebKit2.LoadEvent
+        """
+        return self.__current_event
 
 #######################
 # PROTECTED           #
@@ -69,6 +77,7 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        self.__current_event = event
         if not webview.get_mapped():
             return
         self._window.toolbar.title.update_load_indicator(webview)

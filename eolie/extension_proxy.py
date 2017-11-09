@@ -84,8 +84,6 @@ class ProxyExtensionServer(Server):
     <method name="FormsFilled">
         <arg type="b" name="results" direction="out" />
     </method>
-    <method name="SetCredentials">
-    </method>
     <method name="SetPreviousElementValue">
     </method>
     <method name="SetNextElementValue">
@@ -142,9 +140,6 @@ class ProxyExtensionServer(Server):
         self.__form_extension = form_extension
         self.__focused = None
         self.__elements_history = {}
-        self.__listened_input_elements = []
-        self.__listened_mouse_elements = []
-        self.__listened_focus_elements = []
         self.__send_requests = []
         self.__sended_requests = []
         self.__helper = PasswordsHelper()
@@ -168,10 +163,13 @@ class ProxyExtensionServer(Server):
     def FormsFilled(self):
         """
             True if form contains data
+            @return bool
         """
-        # Check for unsecure content
-        for textarea in self.__form_extension.textareas:
-            if textarea.is_edited():
+        page = self.__extension.get_page(self.__page.get_id())
+        dom = page.get_dom_document()
+        collection = dom.get_elements_by_tag_name("textarea")
+        for i in range(0, collection.get_length()):
+            if collection.item(i).is_edited():
                 return True
         return False
 
@@ -232,8 +230,12 @@ class ProxyExtensionServer(Server):
         """
         try:
             page = self.__extension.get_page(self.__page.get_id())
-            # Search form
-            for form in self.__form_extension.forms:
+            collection = page.get_dom_document().get_forms()
+            elements = []
+            for i in range(0, collection.get_length()):
+                elements.append(collection.item(i))
+            (forms, textareas) = self.__form_extension.get_elements(elements)
+            for form in forms:
                 if form["username"].get_name() == userform:
                     self.__helper.get(form["element"].get_action(),
                                       userform,
@@ -343,16 +345,6 @@ class ProxyExtensionServer(Server):
             value = ""
         return value
 
-    def SetCredentials(self):
-        """
-            Set focused form to previous value
-        """
-        try:
-            webpage = self.__extension.get_page(self.__page.get_id())
-            self.__form_extension.set_credentials(webpage)
-        except Exception as e:
-            print("ProxyExtension::SetCredentials():", e)
-
     def SetPreviousElementValue(self):
         """
             Set focused form to previous value
@@ -400,36 +392,21 @@ class ProxyExtensionServer(Server):
 #######################
 # PRIVATE             #
 #######################
-    def __add_event_listeners(self, webpage):
+    def __add_event_listeners(self, forms, textareas, webpage):
         """
             Add event listeners on inputs and textareas
+            @param forms as {}
+            @param textareas as [WebKit2WebExtension.DOMHTMLTextAreaElement]
             @param webpage as WebKit2WebExtension.WebPage
         """
-        # Remove any previous event listener
-        for element in self.__listened_input_elements:
-            element.remove_event_listener("input", self.__on_input, False)
-        for element in self.__listened_mouse_elements:
-            element.remove_event_listener("mousedown",
-                                          self.__on_mouse_down,
-                                          False)
-        for element in self.__listened_focus_elements:
-            element.remove_event_listener("focus",
-                                          self.__on_focus,
-                                          False)
         self.__focused = None
         self.__elements_history = {}
-        self.__listened_input_elements = []
-        self.__listened_mouse_elements = []
-        self.__listened_focus_elements = []
         self.__mouse_down_elements = []
 
         parsed = urlparse(webpage.get_uri())
 
         # Manage forms events
-        for form in self.__form_extension.forms:
-            self.__listened_input_elements.append(form["username"])
-            self.__listened_focus_elements.append(form["username"])
-            self.__listened_mouse_elements.append(form["username"])
+        for form in forms:
             form["username"].add_event_listener("input",
                                                 self.__on_input,
                                                 False)
@@ -446,9 +423,7 @@ class ProxyExtensionServer(Server):
                                                     self.__on_focus,
                                                     False)
         # Manage textareas events
-        for textarea in self.__form_extension.textareas:
-            self.__listened_input_elements.append(textarea)
-            self.__listened_focus_elements.append(textarea)
+        for textarea in textareas:
             textarea.add_event_listener("input", self.__on_input, False)
             textarea.add_event_listener("focus", self.__on_focus, False)
 
@@ -532,9 +507,14 @@ class ProxyExtensionServer(Server):
             @param webpage as WebKit2WebExtension.WebPage
             @param elements as [WebKit2WebExtension.DOMElement]
         """
-        self.__form_extension.add_elements(elements)
-        self.__add_event_listeners(webpage)
-        self.__form_extension.set_credentials(webpage)
+        (forms, textareas) = self.__form_extension.get_elements(elements)
+        self.__add_event_listeners(forms, textareas, webpage)
+        for form in forms:
+            form["element"].add_event_listener(
+                                          "submit",
+                                          self.__form_extension.on_form_submit,
+                                          False)
+            self.__form_extension.set_credentials(form, webpage)
 
     def __on_context_menu(self, webpage, context_menu, hit):
         """

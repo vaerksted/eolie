@@ -37,29 +37,27 @@ class FormsExtension(GObject.Object):
         self.__extension = extension
         self.__settings = settings
         self.__elements_uri = None
-        self.__forms = []
-        self.__textareas = []
         self.__pending_credentials = None
         self.__page_id = None
         extension.connect("page-created", self.__on_page_created)
 
-    def set_credentials(self, webpage):
+    def set_credentials(self, form, webpage):
         """
             Set credentials on page
+            @param form as {}
             @param webpage as WebKit2WebExtension.WebPage
         """
         if self.__settings.get_value("remember-passwords"):
-            for form in self.__forms:
-                form_input_username = form["username"].get_name()
-                form_input_password = form["password"].get_name()
-                if form_input_username is not None and\
-                        form_input_password is not None:
-                    self.__helper.get(form["element"].get_action(),
-                                      form_input_username,
-                                      form_input_password,
-                                      self.set_input_forms,
-                                      webpage,
-                                      form)
+            form_input_username = form["username"].get_name()
+            form_input_password = form["password"].get_name()
+            if form_input_username is not None and\
+                    form_input_password is not None:
+                self.__helper.get(form["element"].get_action(),
+                                  form_input_username,
+                                  form_input_password,
+                                  self.set_input_forms,
+                                  webpage,
+                                  form)
 
     def set_input_forms(self, attributes, password,
                         uri, index, count, webpage, form, username=None):
@@ -92,21 +90,18 @@ class FormsExtension(GObject.Object):
         except Exception as e:
             print("FormsExtension::set_input_forms()", e)
 
-    def add_elements(self, elements):
+    def get_elements(self, elements):
         """
-            Update login and password inputs
+            Get forms as dict and textareas for elements
             @param elements as [WebKit2WebExtension.DOMElement]
+            @return elements as ([{}],
+                                 [WebKit2WebExtension.DOMHTMLTextAreaElement])
         """
-        for form in self.__forms:
-            form["element"].remove_event_listener("submit",
-                                                  self.__on_form_submit,
-                                                  False)
-        self.__forms = []
-        self.__textareas = []
-
+        forms = []
+        textareas = []
         for element in elements:
             if isinstance(element, WebKit2WebExtension.DOMHTMLTextAreaElement):
-                self.__textareas.append(element)
+                textareas.append(element)
             elif isinstance(element,
                             WebKit2WebExtension.DOMHTMLFormElement):
                 form = {"element": element}
@@ -127,43 +122,14 @@ class FormsExtension(GObject.Object):
                     elif isinstance(
                                    element,
                                    WebKit2WebExtension.DOMHTMLTextAreaElement):
-                        self.__textareas.append(element)
+                        textareas.append(element)
                     h += 1
                 keys = form.keys()
                 if "username" in keys and "password" in keys:
-                    self.__forms.append(form)
-                    form["element"].add_event_listener("submit",
-                                                       self.__on_form_submit,
-                                                       False)
+                    forms.append(form)
+        return (forms, textareas)
 
-    @property
-    def textareas(self):
-        """
-            Get textareas
-            @return [WebKit2WebExtension.DOMHTMLTextAreaElement]
-        """
-        return self.__textareas
-
-    @property
-    def forms(self):
-        """
-            Get forms
-            @return [WebKit2WebExtension.DOMHTMLFormElement]
-        """
-        return self.__forms
-
-    @property
-    def pending_credentials(self):
-        """
-            Get credentials
-            @return (str, str, str, str, str, str)
-        """
-        return self.__pending_credentials
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_form_submit(self, element, event):
+    def on_form_submit(self, element, event):
         """
             Ask user for saving credentials
             @param element as WebKit2WebExtension.DOMElement
@@ -172,14 +138,11 @@ class FormsExtension(GObject.Object):
         page = self.__extension.get_page(self.__page_id)
         if page is None:
             return
-        # Search for form
-        form = None
-        for form in self.__forms:
-            if form["element"] == element:
-                break
-        if form is None:
+        (forms, textareas) = self.get_elements([element])
+        if not forms:
             return
         try:
+            form = forms[0]
             uri = page.get_uri()
             form_uri = form["element"].get_action()
             user_form_name = form["username"].get_name()
@@ -199,8 +162,19 @@ class FormsExtension(GObject.Object):
                               uri,
                               self.__page_id)
         except Exception as e:
-            print("FormsExtension::__on_form_submit():", e)
+            print("FormsExtension::on_form_submit():", e)
 
+    @property
+    def pending_credentials(self):
+        """
+            Get credentials
+            @return (str, str, str, str, str, str)
+        """
+        return self.__pending_credentials
+
+#######################
+# PRIVATE             #
+#######################
     def __on_get_password(self, attributes, password, form_uri, index, count,
                           user_form_name, user_form_value, pass_form_name,
                           pass_form_value, uri, page_id):

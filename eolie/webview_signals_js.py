@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib
+from gi.repository import GLib, WebKit2
 
 from gettext import gettext as _
 
@@ -26,7 +26,6 @@ class WebViewJsSignals:
         """
             Init class
         """
-        self.__js_timeout_id = None
         self.__google_fix_count = 0
         self.__reset_js_blocker()
         self.connect("script-dialog", self.__on_script_dialog)
@@ -100,7 +99,7 @@ class WebViewJsSignals:
             @param request as WebKit2.URIRequest
         """
         # Javascript execution happened
-        if not self.is_loading():
+        if self.current_event == WebKit2.LoadEvent.FINISHED:
             # Special google notifications fix
             # https://bugs.webkit.org/show_bug.cgi?id=175189
             storage = El().settings.get_enum("cookie-storage")
@@ -113,12 +112,6 @@ class WebViewJsSignals:
                                      self.__on_resource_load_finished)
                     cookie_manager = self.get_context().get_cookie_manager()
                     cookie_manager.set_accept_policy(0)
-            # Update credentials
-            if self.__js_timeout_id is not None:
-                GLib.source_remove(self.__js_timeout_id)
-            self.__js_timeout_id = GLib.timeout_add(500,
-                                                    self.__on_js_timeout,
-                                                    webview)
 
     def __on_resource_load_finished(self, resource):
         """
@@ -130,12 +123,3 @@ class WebViewJsSignals:
             cookie_manager = self.get_context().get_cookie_manager()
             storage = El().settings.get_enum("cookie-storage")
             cookie_manager.set_accept_policy(storage)
-
-    def __on_js_timeout(self, webview):
-        """
-            Tell webpage to update credentials
-            @param webview as WebView
-        """
-        self.__js_timeout_id = None
-        page_id = self.get_page_id()
-        El().helper.call("SetCredentials", page_id)
