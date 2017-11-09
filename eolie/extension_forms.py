@@ -124,6 +124,10 @@ class FormsExtension(GObject.Object):
                                                           "search"] and\
                                 element.get_name() is not None:
                             form["username"] = element
+                    elif isinstance(
+                                   element,
+                                   WebKit2WebExtension.DOMHTMLTextAreaElement):
+                        self.__textareas.append(element)
                     h += 1
                 keys = form.keys()
                 if "username" in keys and "password" in keys:
