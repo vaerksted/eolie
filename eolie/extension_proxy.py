@@ -401,7 +401,6 @@ class ProxyExtensionServer(Server):
         """
         self.__focused = None
         self.__elements_history = {}
-        self.__mouse_down_elements = []
 
         parsed = urlparse(webpage.get_uri())
 
@@ -418,7 +417,6 @@ class ProxyExtensionServer(Server):
                                                 False)
             # Check for unsecure content
             if parsed.scheme == "http":
-                self.__listened_focus_elements.append(form["password"])
                 form["password"].add_event_listener("focus",
                                                     self.__on_focus,
                                                     False)
@@ -464,15 +462,12 @@ class ProxyExtensionServer(Server):
            @param element as WebKit2WebExtension.DOMElement
            @param event as WebKit2WebExtension.DOMUIEvent
         """
-        name = element.get_name()
-        if name is None:
+        if element.get_name() is None:
             return
-        # Only send signal on one of the two calls
-        if name in self.__mouse_down_elements:
-            self.__mouse_down_elements.remove(name)
-        elif self.__bus is not None:
-            self.__mouse_down_elements.append(name)
-            args = GLib.Variant.new_tuple(GLib.Variant("s", name))
+        if self.__focused != element and\
+                self.__bus is not None:
+            args = GLib.Variant.new_tuple(GLib.Variant("s",
+                                                       element.get_name()))
             self.__bus.emit_signal(
                               None,
                               PROXY_PATH,
