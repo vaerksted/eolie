@@ -92,6 +92,7 @@ class WebViewLoadSignals:
             self._window.toolbar.title.set_title(webview.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.show_spinner(False)
+            self._window.toolbar.title.progress.set_fraction(1.0)
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
