@@ -96,10 +96,11 @@ class WebViewDBusSignals:
                                              self.get_page_id())
         elif signal == "ShowCredentials":
             (userform, form_uri) = params
+            model = FormMenu(self.get_page_id())
             helper = PasswordsHelper()
-            helper.get(form_uri, userform, None, self.__on_password)
+            helper.get(form_uri, userform, None, self.__on_password, model)
 
-    def __on_password(self, attributes, password, uri, index, count):
+    def __on_password(self, attributes, password, uri, index, count, model):
         """
             Show form popover
             @param attributes as {}
@@ -107,11 +108,12 @@ class WebViewDBusSignals:
             @param uri as str
             @param index as int
             @param count as int
+            @param model as FormMenu
         """
         parsed = urlparse(uri)
         if attributes is not None and (count > 1 or
                                        parsed.scheme == "http"):
-            model = FormMenu(attributes, uri, self.get_page_id())
+            model.add_attributes(attributes, uri)
             if index == 0:
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
