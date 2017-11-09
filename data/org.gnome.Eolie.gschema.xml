@@ -116,7 +116,7 @@
       </key>
         <key type="i" name="preloaded-webviews">
          <default>2</default>
-         <summary>Webview preloaded per window</summary>
+         <summary>Webviews preloaded per window</summary>
          <description>Restart needed</description>
       </key>
       <key type="as" name="default-zoom-level">
