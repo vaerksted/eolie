@@ -146,7 +146,7 @@ class ProxyExtensionServer(Server):
         self.__listened_mouse_elements = []
         self.__listened_focus_elements = []
         self.__send_requests = []
-        self.__current_uri = None
+        self.__sended_requests = []
         self.__helper = PasswordsHelper()
         self.__proxy_bus = PROXY_BUS % self.__page.get_id()
         addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
@@ -159,6 +159,7 @@ class ProxyExtensionServer(Server):
                                None,
                                self.__on_bus_new_for_address)
         form_extension.connect("submit-form", self.__on_submit_form)
+        page.connect("document-loaded", self.__on_document_loaded)
         page.connect("send-request", self.__on_send_request)
         page.connect("context-menu", self.__on_context_menu)
         page.connect("form-controls-associated",
@@ -275,7 +276,7 @@ class ProxyExtensionServer(Server):
             return []
         videos = []
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
-        for uri in self.__send_requests:
+        for uri in self.__sended_requests:
             parsed = urlparse(uri)
             title = None
             # Search for video in page
@@ -559,6 +560,13 @@ class ProxyExtensionServer(Server):
                                   "AskSaveCredentials",
                                   variant)
 
+    def __on_document_loaded(self, webpage):
+        """
+            Keep some data for extension
+        """
+        self.__sended_requests = self.__send_requests
+        self.__send_requests = []
+
     def __on_send_request(self, webpage, request, redirect):
         """
             Keep send requests
@@ -566,11 +574,6 @@ class ProxyExtensionServer(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        # Reset send requests if uri changed
-        uri = webpage.get_uri()
-        if self.__current_uri != uri:
-            self.__current_uri = uri
-            self.__send_requests = []
         self.__send_requests.append(request.get_uri())
 
 
@@ -597,7 +600,7 @@ class ProxyExtension:
         """
             Cache webpage
             @param extension as WebKit2WebExtension.WebExtension
-            @param page as WebKit2WebExtension.WebPage
+            @param webpage as WebKit2WebExtension.WebPage
             @param form_extension as FormsExtension
         """
         self.__server = ProxyExtensionServer(extension,
