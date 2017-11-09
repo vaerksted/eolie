@@ -139,6 +139,7 @@ class ProxyExtensionServer(Server):
         self.__page = page
         self.__form_extension = form_extension
         self.__focused = None
+        self.__on_input_timeout_id = None
         self.__elements_history = {}
         self.__send_requests = []
         self.__sended_requests = []
@@ -352,25 +353,18 @@ class ProxyExtensionServer(Server):
         if self.__focused is None:
             return
         try:
+            value = self.__focused.get_value().rstrip(" ")
             if self.__focused in self.__elements_history.keys():
-                current_value = self.__focused.get_value()
-                item = self.__elements_history[self.__focused]
-                # User added some text, keep it
-                if item.value != current_value:
-                    next = LinkedList(current_value.rstrip(" "), None, item)
-                    if item is not None:
-                        item.set_next(next)
-                    item = next
-                if item.prev:
-                    self.__elements_history[self.__focused] = item.prev
-                    self.__focused.set_value(item.prev.value)
-            else:
-                new_value = self.__focused.get_value().rstrip(" ")
-                if new_value:
-                    item = LinkedList(new_value, None, None)
-                    next = LinkedList("", item, None)
-                    self.__elements_history[self.__focused] = next
-                    self.__focused.set_value("")
+                current = self.__elements_history[self.__focused]
+                if current.prev is not None:
+                    self.__elements_history[self.__focused] = current.prev
+                    self.__focused.set_value(current.prev.value)
+            elif value:
+                next = LinkedList(value, None, None)
+                current = LinkedList("", next, None)
+                next.set_prev(current)
+                self.__elements_history[self.__focused] = current
+                self.__focused.set_value("")
         except Exception as e:
             print("ProxyExtension::SetPreviousForm():", e)
 
@@ -382,10 +376,10 @@ class ProxyExtensionServer(Server):
             return
         try:
             if self.__focused in self.__elements_history.keys():
-                item = self.__elements_history[self.__focused]
-                if item.next:
-                    self.__elements_history[self.__focused] = item.next
-                    self.__focused.set_value(item.next.value)
+                current = self.__elements_history[self.__focused]
+                if current.next is not None:
+                    self.__elements_history[self.__focused] = current.next
+                    self.__focused.set_value(current.next.value)
         except Exception as e:
             print("ProxyExtension::SetNextForm():", e)
 
@@ -477,24 +471,30 @@ class ProxyExtensionServer(Server):
 
     def __on_input(self, element, event):
         """
-            Send input signal
+            Run a timeout before saving buffer to history
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
+        if self.__on_input_timeout_id is not None:
+            GLib.source_remove(self.__on_input_timeout_id)
+        self.__on_input_timeout_id = GLib.timeout_add(500,
+                                                      self.__on_input_timeout,
+                                                      element)
+
+    def __on_input_timeout(self, element):
+        """
+            Save buffer to history
+            @param element as WebKit2WebExtension.DOMElement
+        """
+        self.__on_input_timeout_id = None
         new_value = element.get_value()
-        previous_value = ""
         item = LinkedList("", None, None)
         if element in self.__elements_history.keys():
             item = self.__elements_history[element]
-            previous_value = item.value
-        # Here we try to get words
-        # If we are LTR then add words on space
-        if len(new_value) > len(previous_value):
-            if new_value.endswith(" "):
-                next = LinkedList(new_value.rstrip(" "), None, item)
-                if item is not None:
-                    item.set_next(next)
-                self.__elements_history[element] = next
+        next = LinkedList(new_value.rstrip(" "), None, item)
+        if item is not None:
+            item.set_next(next)
+        self.__elements_history[element] = next
 
     def __on_form_control_associated(self, webpage, elements):
         """
