@@ -94,10 +94,25 @@ class WebViewDBusSignals:
                                              uri,
                                              form_uri,
                                              self.get_page_id())
-        elif signal == "InputMouseDown":
-            if self._last_click_time:
-                userform = params[0]
-                model = FormMenu(self.get_page_id())
+        elif signal == "ShowCredentials":
+            (userform, form_uri) = params
+            helper = PasswordsHelper()
+            helper.get(form_uri, userform, None, self.__on_password)
+
+    def __on_password(self, attributes, password, uri, index, count):
+        """
+            Show form popover
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+            @param index as int
+            @param count as int
+        """
+        parsed = urlparse(uri)
+        if attributes is not None and (count > 1 or
+                                       parsed.scheme == "http"):
+            model = FormMenu(attributes, uri, self.get_page_id())
+            if index == 0:
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
                 self._window.register(popover)
@@ -106,26 +121,4 @@ class WebViewDBusSignals:
                 rect.y = self._last_click_event_y - 10
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
-                helper = PasswordsHelper()
-                helper.get(self.uri, userform, None,
-                           self.__on_password, popover, model)
-
-    def __on_password(self, attributes, password, uri,
-                      index, count, popover, model):
-        """
-            Show form popover
-            @param attributes as {}
-            @param password as str
-            @param uri as str
-            @param index as int
-            @param count as int
-            @param popover as Gtk.Popover
-            @param model as Gio.MenuModel
-        """
-        parsed = urlparse(uri)
-        self.__last_click_time = 0
-        if attributes is not None and (count > 1 or
-                                       parsed.scheme == "http"):
-            model.add_attributes(attributes, uri)
-            if index == 0:
                 popover.popup()

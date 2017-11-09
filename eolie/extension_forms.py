@@ -145,6 +145,9 @@ class FormsExtension(GObject.Object):
             form = forms[0]
             uri = page.get_uri()
             form_uri = form["element"].get_action()
+            parsed_form_uri = urlparse(form_uri)
+            form_uri = "%s://%s" % (parsed_form_uri.scheme,
+                                    parsed_form_uri.netloc)
             user_form_name = form["username"].get_name()
             user_form_value = form["username"].get_value()
             pass_form_name = form["password"].get_name()

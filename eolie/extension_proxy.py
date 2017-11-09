@@ -116,8 +116,9 @@ class ProxyExtensionServer(Server):
     <signal name='UnsecureFormFocused'>
         <arg type="as" name="forms" direction="out" />
     </signal>
-    <signal name='InputMouseDown'>
+    <signal name='ShowCredentials'>
         <arg type="as" name="forms" direction="out" />
+        <arg type="as" name="form_uri" direction="out" />
     </signal>
     <signal name='AskSaveCredentials'>
         <arg type="s" name="uuid" direction="out" />
@@ -197,10 +198,7 @@ class ProxyExtensionServer(Server):
                     form_uri != _form_uri:
                 return
             parsed = urlparse(uri)
-            parsed_form_uri = urlparse(form_uri)
             uri = "%s://%s" % (parsed.scheme, parsed.netloc)
-            form_uri = "%s://%s" % (parsed_form_uri.scheme,
-                                    parsed_form_uri.netloc)
             if not uuid:
                 uuid = str(uuid4())
                 self.__helper.store(user_form_name,
@@ -454,20 +452,23 @@ class ProxyExtensionServer(Server):
     def __on_mouse_down(self, element, event):
         """
            Emit Input mouse down signal
-           @param element as WebKit2WebExtension.DOMElement
+           @param element as WebKit2WebExtension.DOMHTMLInputElement
            @param event as WebKit2WebExtension.DOMUIEvent
         """
         if element.get_name() is None:
             return
         if self.__focused != element and\
                 self.__bus is not None:
-            args = GLib.Variant.new_tuple(GLib.Variant("s",
-                                                       element.get_name()))
+            form_uri = element.get_form().get_action()
+            parsed_form_uri = urlparse(form_uri)
+            form_uri = "%s://%s" % (parsed_form_uri.scheme,
+                                    parsed_form_uri.netloc)
+            args = GLib.Variant("(ss)", (element.get_name(), form_uri))
             self.__bus.emit_signal(
                               None,
                               PROXY_PATH,
                               self.__proxy_bus,
-                              "InputMouseDown",
+                              "ShowCredentials",
                               args)
 
     def __on_input(self, element, event):
