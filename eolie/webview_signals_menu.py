@@ -103,6 +103,8 @@ class WebViewMenuSignals:
                                              _("Open link in a new window"),
                                              None)
             context_menu.append(item)
+            item = WebKit2.ContextMenuItem.new_separator()
+            context_menu.append(item)
         if selection:
             action = Gio.SimpleAction(name="copy_text")
             El().add_action(action)
@@ -117,8 +119,6 @@ class WebViewMenuSignals:
         if hit.context_is_link() or\
                 hit.context_is_image() or\
                 hit.context_is_media():
-            item = WebKit2.ContextMenuItem.new_separator()
-            context_menu.append(item)
             action = Gio.SimpleAction(name="copy_link_uri")
             El().add_action(action)
             action.connect("activate",
@@ -130,8 +130,6 @@ class WebViewMenuSignals:
                                              action,
                                              _("Copy link address"),
                                              None)
-            context_menu.append(item)
-            item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
         if selection and hit.context_is_selection():
             action = Gio.SimpleAction(name="search_words")
@@ -163,6 +161,8 @@ class WebViewMenuSignals:
                                                  None)
                 context_menu.append(item)
         if not webview.is_loading() and parsed.scheme in ["http", "https"]:
+            item = WebKit2.ContextMenuItem.new_separator()
+            context_menu.append(item)
             # Save all images
             action = Gio.SimpleAction(name="save_imgs")
             El().add_action(action)
