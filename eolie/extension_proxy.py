@@ -405,6 +405,9 @@ class ProxyExtensionServer(Server):
             form["username"].add_event_listener("focus",
                                                 self.__on_focus,
                                                 False)
+            form["username"].add_event_listener("blur",
+                                                self.__on_blur,
+                                                False)
             form["username"].add_event_listener("mousedown",
                                                 self.__on_mouse_down,
                                                 False)
@@ -448,6 +451,15 @@ class ProxyExtensionServer(Server):
                               "UnsecureFormFocused",
                               None)
         self.__focused = element
+
+    def __on_blur(self, element, event):
+        """
+            Reset focus
+            @param element as WebKit2WebExtension.DOMElement
+            @param event as WebKit2WebExtension.DOMUIEvent
+        """
+        if self.__focused == element:
+            self.__focused = None
 
     def __on_mouse_down(self, element, event):
         """
