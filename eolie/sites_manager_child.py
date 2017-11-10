@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango, GObject
+from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -33,7 +33,7 @@ class PageChildRow(Gtk.ListBoxRow):
         self.get_style_context().add_class("page-child-row")
         self.__view = view
         self.__window = window
-        self.__label = Gtk.Label.new(view.webview.title)
+        self.__label = Gtk.Label.new(view.webview.uri)
         self.__label.set_property("valign", Gtk.Align.CENTER)
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.set_hexpand(True)
@@ -55,7 +55,7 @@ class PageChildRow(Gtk.ListBoxRow):
         self.connect("destroy", self.__on_destroy)
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        view.webview.connect("uri-changed", self.__on_webview_uri_changed)
+        view.webview.connect("load-changed", self.__on_webview_load_changed)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         eventbox.connect("button-press-event", self.__on_button_press_event)
 
@@ -105,16 +105,18 @@ class PageChildRow(Gtk.ListBoxRow):
             Disconnect signals
             @param widget as Gtk.Widget
         """
-        self.__view.webview.disconnect_by_func(self.__on_webview_uri_changed)
+        self.__view.webview.disconnect_by_func(self.__on_webview_load_changed)
         self.__view.webview.disconnect_by_func(self.__on_webview_title_changed)
 
-    def __on_webview_uri_changed(self, webview, uri):
+    def __on_webview_load_changed(self, webview, event):
         """
-            Update uri
+            Update widget content
             @param webview as WebView
-            @param uri as str
+            @param event as WebKit2.LoadEvent
         """
-        self.__label.set_text(uri)
+        if event in [WebKit2.LoadEvent.STARTED,
+                     WebKit2.LoadEvent.COMMITTED]:
+            self.__label.set_text(webview.get_uri())
 
     def __on_webview_title_changed(self, webview, title):
         """
