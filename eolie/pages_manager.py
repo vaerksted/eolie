@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, Gdk, GLib
 
+from urllib.parse import urlparse
+
 from eolie.pages_manager_child import PagesManagerChild
 
 
@@ -30,6 +32,7 @@ class PagesManager(Gtk.EventBox):
         self.__current_child = None
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
+        self.__group_pages = True
         self.get_style_context().add_class("sidebar")
         self.connect("key-press-event", self.__on_key_press)
         grid = Gtk.Grid()
@@ -97,10 +100,12 @@ class PagesManager(Gtk.EventBox):
         """
         self.__search_entry.grab_focus()
 
-    def update_sort(self):
+    def update_sort(self, group=False):
         """
             Reset sort
+            @param group as bool
         """
+        self.__group_pages = group
         self.__box.invalidate_sort()
 
     def set_filter(self, search):
@@ -228,6 +233,7 @@ class PagesManager(Gtk.EventBox):
         """
         self.__next_timeout_id = -1
         self.__previous_timeout_id = -1
+        self.update_sort()
         self.__window.container.set_expose(True)
         callback()
 
@@ -312,7 +318,15 @@ class PagesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
-        return row2.view.webview.atime > row1.view.webview.atime
+        if self.__group_pages:
+            parsed2 = urlparse(row2.view.webview.uri)
+            parsed1 = urlparse(row1.view.webview.uri)
+            if parsed2.netloc != parsed1.netloc:
+                return parsed2.netloc < parsed1.netloc
+            else:
+                return row2.view.webview.atime > row1.view.webview.atime
+        else:
+            return row2.view.webview.atime > row1.view.webview.atime
 
     def __filter_func(self, row):
         """

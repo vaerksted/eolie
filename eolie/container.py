@@ -240,7 +240,7 @@ class Container(Gtk.Overlay):
             GLib.timeout_add(500, child.set_filtered, search and expose)
         # Show expose mode
         if expose:
-            self.__pages_manager.update_sort()
+            self.__pages_manager.update_sort(search)
             self.__expose_stack.set_visible_child_name("expose")
         else:
             if self.__stack.get_visible_child() != self.__current:
