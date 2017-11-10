@@ -318,7 +318,8 @@ class PagesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
-        if self.__group_pages:
+        if self.__group_pages and row2.view.webview.uri is not None and\
+                row1.view.webview.uri is not None:
             parsed2 = urlparse(row2.view.webview.uri)
             parsed1 = urlparse(row1.view.webview.uri)
             if parsed2.netloc != parsed1.netloc:
