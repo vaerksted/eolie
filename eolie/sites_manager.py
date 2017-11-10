@@ -155,11 +155,11 @@ class SitesManager(Gtk.EventBox):
         current = self.__window.container.current
         for child in self.__box.get_children():
             if current in child.views:
-                child.get_style_context().add_class("item-selected")
+                child.set_selected(True)
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
             else:
-                child.get_style_context().remove_class("item-selected")
+                child.set_selected(False)
 
 #######################
 # PROTECTED           #

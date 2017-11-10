@@ -16,6 +16,115 @@ from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
 
 
+class PageChildRow(Gtk.ListBoxRow):
+    """
+        Label for a view
+    """
+
+    def __init__(self, view, window):
+        """
+            Init widget
+            @param view as View
+            @param window as Window
+        """
+        Gtk.ListBoxRow.__init__(self)
+        eventbox = Gtk.EventBox()
+        eventbox.show()
+        self.get_style_context().add_class("page-child-row")
+        self.__view = view
+        self.__window = window
+        self.__label = Gtk.Label.new(view.webview.title)
+        self.__label.set_property("valign", Gtk.Align.CENTER)
+        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__label.set_hexpand(True)
+        self.__label.show()
+        button = Gtk.Button.new_from_icon_name("window-close-symbolic",
+                                               Gtk.IconSize.MENU)
+        button.set_relief(Gtk.ReliefStyle.NONE)
+        button.get_style_context().add_class("no-padding")
+        button.set_property("valign", Gtk.Align.CENTER)
+        button.set_property("halign", Gtk.Align.END)
+        button.connect("clicked", self.__on_button_clicked)
+        button.show()
+        grid = Gtk.Grid()
+        grid.add(self.__label)
+        grid.add(button)
+        grid.show()
+        eventbox.add(grid)
+        self.add(eventbox)
+        self.connect("destroy", self.__on_destroy)
+        self.set_property("has-tooltip", True)
+        self.connect("query-tooltip", self.__on_query_tooltip)
+        view.webview.connect("uri-changed", self.__on_webview_uri_changed)
+        view.webview.connect("title-changed", self.__on_webview_title_changed)
+        eventbox.connect("button-press-event", self.__on_button_press_event)
+
+    @property
+    def view(self):
+        """
+            Get associated view
+        """
+        return self.__view
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_button_clicked(self, button):
+        """
+            Close view
+            @param button as Gtk.Button
+        """
+        self.__window.container.try_close_view(self.__view)
+
+    def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
+        """
+            Show tooltip if needed
+            @param widget as Gtk.Widget
+            @param x as int
+            @param y as int
+            @param keyboard as bool
+            @param tooltip as Gtk.Tooltip
+        """
+        title = self.__view.webview.get_title()
+        if title is not None:
+            tooltip = GLib.markup_escape_text(title)
+            widget.set_tooltip_markup(tooltip)
+
+    def __on_button_press_event(self, widget, event):
+        """
+            Switch to view
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+        """
+        self.__window.container.set_current(self.__view, True)
+        self.__window.container.set_expose(False)
+        return True
+
+    def __on_destroy(self, widget):
+        """
+            Disconnect signals
+            @param widget as Gtk.Widget
+        """
+        self.__view.webview.disconnect_by_func(self.__on_webview_uri_changed)
+        self.__view.webview.disconnect_by_func(self.__on_webview_title_changed)
+
+    def __on_webview_uri_changed(self, webview, uri):
+        """
+            Update uri
+            @param webview as WebView
+            @param uri as str
+        """
+        self.__label.set_text(uri)
+
+    def __on_webview_title_changed(self, webview, title):
+        """
+            Update title
+            @param webview as WebView
+            @param title as str
+        """
+        self.__label.set_text(title)
+
+
 class SitesManagerChild(Gtk.ListBoxRow):
     """
         Child showing snapshot, title and favicon
@@ -35,10 +144,12 @@ class SitesManagerChild(Gtk.ListBoxRow):
         Gtk.ListBoxRow.__init__(self)
         self.__window = window
         self.__netloc = netloc
+        self.__minimal = None
         self.__ephemeral = ephemeral
         self.__views = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
+        self.__pages_listbox = None
         self.set_margin_top(1)
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
@@ -46,11 +157,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
-        self.__close_button = builder.get_object("close_button")
         self.__indicator_label = LabelIndicator()
         self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_label.show()
-        builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
+        self.__grid = builder.get_object("grid")
         self.__netloc_label = builder.get_object("netloc")
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
@@ -84,6 +194,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.update_count(True)
             if not view.webview.shown:
                 self.__indicator_label.mark_unshown(view.webview)
+            if not self.__minimal:
+                child = PageChildRow(view, self.__window)
+                child.show()
+                self.__pages_listbox.add(child)
 
     def remove_view(self, view):
         """
@@ -98,22 +212,44 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.update_count(False)
             if not view.webview.shown:
                 self.__indicator_label.mark_shown(view.webview)
+            for child in self.__pages_listbox.get_children():
+                if child.view == view:
+                    self.__pages_listbox.remove(child)
+                    break
 
     def set_minimal(self, minimal):
         """
             Make widget minimal
             @param minimal as bool
         """
+        if self.__minimal == minimal:
+            return
         if minimal:
-            self.__netloc_label.hide()
-            self.__close_button.hide()
+            self.__grid.remove(self.__netloc_label)
+            if self.__pages_listbox is not None:
+                self.__grid.remove(self.__pages_listbox)
+                self.__pages_listbox.destroy()
+            self.__pages_listbox = None
+            self.__grid.attach(self.__indicator_label, 1, 0, 1, 1)
             self.__image.set_property("halign", Gtk.Align.CENTER)
             self.__image.set_hexpand(True)
         else:
-            self.__netloc_label.show()
-            self.__close_button.show()
+            self.__grid.remove(self.__indicator_label)
+            self.__grid.attach(self.__netloc_label, 1, 0, 1, 1)
+            self.__pages_listbox = Gtk.ListBox.new()
+            self.__pages_listbox.show()
+            self.__grid.attach(self.__pages_listbox, 0, 2, 2, 1)
             self.__image.set_hexpand(False)
             self.__image.set_property("halign", Gtk.Align.START)
+            # Setup listbox
+            current = self.__window.container.current
+            for view in self.__views:
+                child = PageChildRow(view, self.__window)
+                child.show()
+                self.__pages_listbox.add(child)
+                if view == current:
+                    self.__pages_listbox.select_row(child)
+        self.__minimal = minimal
 
     def reset(self, netloc):
         """
@@ -130,14 +266,25 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Update label: if one view, use title else use netloc
             @param view as View
         """
-        if len(self.__views) == 1:
-            title = self.__views[0].webview.get_title()
-            if title is None:
-                self.__netloc_label.set_text(self.__netloc)
-            else:
-                self.__netloc_label.set_text(title)
+        self.__netloc_label.set_text(self.__netloc)
+
+    def set_selected(self, selected):
+        """
+            Mark self as selected
+            @param selected as bool
+        """
+        if selected:
+            self.get_style_context().add_class("item-selected")
         else:
-            self.__netloc_label.set_text(self.__netloc)
+            self.get_style_context().remove_class("item-selected")
+        if self.__pages_listbox is not None:
+            if selected:
+                current = self.__window.container.current
+                for child in self.__pages_listbox.get_children():
+                    if child.view == current:
+                        self.__pages_listbox.select_row(child)
+            else:
+                self.__pages_listbox.unselect_all()
 
     @property
     def empty(self):
@@ -174,14 +321,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
-    def _on_close_button_clicked(self, button):
-        """
-            Close site
-            @param button as Gtk.Button
-        """
-        for view in self.__views:
-            self.__window.container.try_close_view(view)
-
     def _on_scroll_event(self, eventbox, event):
         """
             Switch between children
@@ -269,6 +408,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
+        if self.__pages_listbox is not None:
+            return
         tooltip = "<b>%s</b>" % GLib.markup_escape_text(self.__netloc)
         for view in self.__views:
             title = view.webview.get_title()
