@@ -194,7 +194,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.update_count(True)
             if not view.webview.shown:
                 self.__indicator_label.mark_unshown(view.webview)
-            if not self.__minimal:
+            if self.__pages_listbox is not None:
                 child = PageChildRow(view, self.__window)
                 child.show()
                 self.__pages_listbox.add(child)
@@ -212,10 +212,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.update_count(False)
             if not view.webview.shown:
                 self.__indicator_label.mark_shown(view.webview)
-            for child in self.__pages_listbox.get_children():
-                if child.view == view:
-                    self.__pages_listbox.remove(child)
-                    break
+            if self.__pages_listbox is not None:
+                for child in self.__pages_listbox.get_children():
+                    if child.view == view:
+                        self.__pages_listbox.remove(child)
+                        break
 
     def set_minimal(self, minimal):
         """
