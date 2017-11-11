@@ -234,6 +234,8 @@
 
 .page-child-row:selected *{
     color: @theme_fg_color;
+    background-color: transparent;
+    background-image: none;
 }
 
 .no-padding {
