@@ -21,6 +21,21 @@ from base64 import b64encode
 from eolie.define import El, ArtSize, LoadingType
 
 
+def remove_www(parsed):
+    """
+        Remove www from an urllib parse netloc
+        @param parsed as ParseResult
+        @return str
+    """
+    if parsed.netloc:
+        split = parsed.netloc.split(".")
+        if split[0] == "www":
+            split.pop(0)
+        return ".".join(split)
+    else:
+        return ""
+
+
 def wanted_loading_type(index):
     """
         Return window type based on current index

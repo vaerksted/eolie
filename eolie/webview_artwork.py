@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.define import El, ArtSize
 from eolie.utils import get_snapshot, resize_favicon, get_char_surface
+from eolie.utils import remove_www
 
 
 class WebViewArtwork:
@@ -103,7 +104,7 @@ class WebViewArtwork:
             parsed = urlparse(uri)
             if not parsed.netloc:
                 return
-            netloc = parsed.netloc.lstrip("www.")
+            netloc = remove_www(parsed)
             # Read result
             surface = self.get_favicon()
             # Resize surface and set favicon

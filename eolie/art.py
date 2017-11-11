@@ -17,6 +17,7 @@ from time import time
 from urllib.parse import urlparse
 
 from eolie.define import EOLIE_CACHE_PATH
+from eolie.utils import remove_www
 
 
 class Art:
@@ -121,7 +122,7 @@ class Art:
         if uri is None:
             return None
         parsed = urlparse(uri)
-        cached_uri = parsed.netloc.lstrip("www.")
+        cached_uri = remove_www(parsed)
         cached_path = parsed.path.rstrip("/")
         if cached_path:
             cached_uri += cached_path

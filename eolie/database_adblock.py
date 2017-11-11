@@ -21,7 +21,7 @@ from time import time
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS, El
-from eolie.utils import debug
+from eolie.utils import debug, remove_www
 
 
 class DatabaseAdblock:
@@ -183,7 +183,7 @@ class DatabaseAdblock:
         parsed = urlparse(uri)
         if parsed.scheme not in ["http", "https"]:
             return ""
-        netloc = parsed.netloc.lstrip("www.")
+        netloc = remove_www(parsed)
         with SqlCursor(self) as sql:
             request = "SELECT name FROM adblock_css WHERE\
                        (blacklist!='' AND blacklist!=?) OR whitelist=?"
