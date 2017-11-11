@@ -10,12 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2
+from gi.repository import Gtk, Gdk, GLib, WebKit2
 
 from urllib.parse import urlparse
 
 from eolie.sites_manager_child import SitesManagerChild
-from eolie.define import El
+from eolie.define import El, LoadingType
 from eolie.utils import remove_www
 
 
@@ -313,6 +313,9 @@ class SitesManager(Gtk.EventBox):
             @param widget as Gtk.Widget
             @param event as Gdk.EventButton
         """
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.__window.container.add_webview(El().start_page,
+                                                LoadingType.FOREGROUND)
         return self.__window.close_popovers()
 
     def __on_moved(self, child, netloc, up):
