@@ -229,73 +229,57 @@ class PagesManager(Gtk.EventBox):
     def __set_expose(self, callback):
         """
             Set expose on and call callback
-            @param callback as function
+            @param callback as __next()/__previous()
         """
         self.__next_timeout_id = -1
         self.__previous_timeout_id = -1
         self.update_sort()
         self.__window.container.set_expose(True)
-        callback()
+        callback(True, True)
 
-    def __next(self, switch=True):
+    def __next(self, switch=True, expose=False):
         """
             Show next view
             @param switch as bool
+            @param expose as bool
         """
         children = self.__box.get_children()
         if not children:
             return
-        current_row = None
-        next_row = None
-        for child in children:
-            # First search for current
-            if child == self.__current_child:
-                current_row = child
-            # Init next to first valid child
-            # Only loop in switch mode
-            elif switch and next_row is None and\
-                    current_row is None and\
-                    self.__filter_func(child):
-                next_row = child
-            # Second search for next
-            elif current_row is not None and self.__filter_func(child):
-                next_row = child
-                break
-        if next_row is not None:
-            if switch:
-                self.__window.container.set_current(next_row.view)
-            else:
-                self.update_visible_child(next_row.view)
+        # Search for next child
+        count = len(children)
+        wanted_index = 0
+        current_index = self.__current_child.get_index()
+        wanted_index = current_index + 1
+        if wanted_index >= count:
+            wanted_index = 0
+        child = self.__box.get_child_at_index(wanted_index)
+        if switch:
+            self.__window.container.set_current(child.view)
+        else:
+            self.update_visible_child(child.view)
 
-    def __previous(self, switch=True):
+    def __previous(self, switch=True, expose=False):
         """
             Show previous view
             @param switch as bool
+            @param expose as bool
         """
         children = self.__box.get_children()
         if not children:
             return
-        current_row = None
-        prev_row = None
-        for child in reversed(children):
-            # First search for current
-            if child == self.__current_child:
-                current_row = child
-            # Init prev to first valid child
-            # Only loop in switch mode
-            elif switch and prev_row is None and\
-                    current_row is None and\
-                    self.__filter_func(child):
-                prev_row = child
-            # Second search for prev
-            elif current_row is not None and self.__filter_func(child):
-                prev_row = child
-                break
-        if prev_row is not None:
-            if switch:
-                self.__window.container.set_current(prev_row.view)
-            else:
-                self.update_visible_child(prev_row.view)
+        # Search for next child
+        count = len(children)
+        wanted_index = 0
+        current_index = self.__current_child.get_index()
+        wanted_index = current_index - 1
+        if wanted_index < 0:
+            wanted_index = count - 1
+        child = self.__box.get_child_at_index(wanted_index)
+        if switch:
+            self.__window.container.set_current(child.view)
+        else:
+            self.update_visible_child(child.view)
 
     def __get_index(self, view):
         """
@@ -375,9 +359,9 @@ class PagesManager(Gtk.EventBox):
             @param event as Gdk.Event
         """
         if event.keyval == Gdk.KEY_Left:
-            self.__previous(False)
+            self.__previous(False, True)
         elif event.keyval == Gdk.KEY_Right:
-            self.__next(False)
+            self.__next(False, True)
         elif event.keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
             if self.__current_child is not None:
                 column_count = self.__get_column_count()
