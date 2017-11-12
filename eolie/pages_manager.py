@@ -254,6 +254,12 @@ class PagesManager(Gtk.EventBox):
                 return parsed2.netloc < parsed1.netloc
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
+        elif self.__current_child in [row1, row2]:
+            return self.__current_child == row2
+        elif not row2.view.webview.shown:
+            return True
+        elif not row1.view.webview.shown:
+            return False
         else:
             return row2.view.webview.atime > row1.view.webview.atime
 
