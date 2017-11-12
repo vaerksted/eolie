@@ -368,10 +368,7 @@ class Window(Gtk.ApplicationWindow):
             @param event as Gdk.EventKey
         """
         if event.keyval == Gdk.KEY_Control_L:
-            if self.__container.in_expose:
-                self.__inhibit_ctrl_released = True
-            else:
-                self.__inhibit_ctrl_released = False
+            self.container.pages_manager.update_sort(False)
 
     def __on_key_release_event(self, window, event):
         """
@@ -379,8 +376,7 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval == Gdk.KEY_Control_L and\
-                not self.__inhibit_ctrl_released:
+        if event.keyval == Gdk.KEY_Control_L:
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)

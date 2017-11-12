@@ -76,6 +76,7 @@ class Container(Gtk.Overlay):
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
         self.__preload_timeout_id = None
+        self.__set_filtered_timeout_id = None
         self.__preloaded = []
         self.__pending_items = []
 
@@ -230,28 +231,24 @@ class Container(Gtk.Overlay):
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
 
-    def set_expose(self, expose, search=False):
+    def set_expose(self, expose):
         """
             Show current views
             @param expose as bool
-            @param search as bool
         """
-        # Show search bar
-        child = self.__expose_stack.get_child_by_name("expose")
-        if not child.filtered:
-            GLib.timeout_add(500, child.set_filtered, search and expose)
-        # Show expose mode
+        if self.__set_filtered_timeout_id is not None:
+            GLib.source_remove(self.__set_filtered_timeout_id)
+            self.__set_filtered_timeout_id = None
         if expose:
-            self.__pages_manager.update_sort(search)
-            self.__expose_stack.set_visible_child_name("expose")
+            self.__pages_manager.update_sort(True)
+            self.__set_filtered_timeout_id = GLib.timeout_add(
+                                                    500,
+                                                    self.__on_filtered_timeout)
         else:
-            if self.__stack.get_visible_child() != self.__current:
-                self.__stack.set_visible_child(self.__current)
-            self.__expose_stack.set_visible_child_name("stack")
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.pages_manager.set_filter("")
-            self.__pages_manager.update_visible_child()
-            child.set_filtered(False)
+            self.__pages_manager.set_filtered(False)
+        self.__set_expose(expose)
 
     def try_close_view(self, view):
         """
@@ -338,9 +335,9 @@ class Container(Gtk.Overlay):
         if self.__next_timeout_id is None and\
                 self.__next_timeout_id != -1:
             self.__next_timeout_id = GLib.timeout_add(
-                                                     100,
-                                                     self.__set_expose,
-                                                     self.__pages_manager.next)
+                                                   100,
+                                                   self.__on_prev_next_timeout,
+                                                   self.__pages_manager.next)
         else:
             self.__pages_manager.next()
 
@@ -352,7 +349,7 @@ class Container(Gtk.Overlay):
                 self.__previous_timeout_id != -1:
             self.__previous_timeout_id = GLib.timeout_add(
                                                  100,
-                                                 self.__set_expose,
+                                                 self.__on_prev_next_timeout,
                                                  self.__pages_manager.previous)
         else:
             self.__pages_manager.previous()
@@ -417,16 +414,38 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __set_expose(self, callback):
+    def __on_filtered_timeout(self):
+        """
+            Set PagesManager filter on
+        """
+        self.__set_filtered_timeout_id = None
+        self.__pages_manager.set_filtered(True)
+
+    def __on_prev_next_timeout(self, callback):
         """
             Set expose on and call callback
             @param callback as __next()/__previous()
         """
         self.__next_timeout_id = -1
         self.__previous_timeout_id = -1
-        self.__pages_manager.update_sort()
-        self.set_expose(True)
+        if not self.in_expose:
+            self.__set_expose(True)
         callback()
+
+    def __set_expose(self, expose):
+        """
+            Show current views
+            @param expose as bool
+            @param search as bool
+        """
+        # Show expose mode
+        if expose:
+            self.__expose_stack.set_visible_child_name("expose")
+        else:
+            if self.__stack.get_visible_child() != self.__current:
+                self.__stack.set_visible_child(self.__current)
+            self.__expose_stack.set_visible_child_name("stack")
+            self.__pages_manager.update_visible_child()
 
     def __get_webview(self, ephemeral):
         """

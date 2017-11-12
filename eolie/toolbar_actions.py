@@ -185,7 +185,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.ToggleButton
         """
         active = button.get_active()
-        self.__window.container.set_expose(active, True)
+        self.__window.container.set_expose(active)
         self.__window.close_popovers()
 
     def _on_close_button_clicked(self, button):

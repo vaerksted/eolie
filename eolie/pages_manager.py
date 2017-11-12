@@ -31,13 +31,17 @@ class PagesManager(Gtk.EventBox):
         self.__window = window
         self.__current_child = None
         self.__group_pages = True
+        self.__allow_left_right_in_entry = False
         self.get_style_context().add_class("sidebar")
-        self.connect("key-press-event", self.__on_key_press)
         grid = Gtk.Grid()
         grid.set_orientation(Gtk.Orientation.VERTICAL)
         grid.show()
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.connect("search-changed", self.__on_search_changed)
+        self.__search_entry.connect("key-press-event",
+                                    self.__on_search_key_press)
+        self.__search_entry.connect("button-press-event",
+                                    self.__on_search_button_press)
         self.__search_entry.show()
         self.__search_bar = Gtk.SearchBar.new()
         self.__search_bar.add(self.__search_entry)
@@ -122,11 +126,8 @@ class PagesManager(Gtk.EventBox):
         if b and not self.__search_bar.is_visible():
             self.__search_bar.show()
             self.__search_entry.grab_focus()
-            self.__search_entry.connect("key-press-event",
-                                        self.__on_search_key_press)
         elif self.__search_bar.is_visible():
             self.__search_bar.hide()
-            self.__search_entry.disconnect_by_func(self.__on_search_key_press)
         self.__search_bar.set_search_mode(b)
 
     def next(self, switch=True):
@@ -280,32 +281,28 @@ class PagesManager(Gtk.EventBox):
         """
         self.__box.invalidate_filter()
 
+    def __on_search_button_press(self, entry, event):
+        """
+            Allow user to use <- and -> in entry
+            @param entry as Gtk.Entry
+            @param event as Gdk.EventButton
+        """
+        self.__allow_left_right_in_entry = True
+
     def __on_search_key_press(self, entry, event):
         """
             Forward event to self if event is <- or -> and entry is empty
             @param entry as Gtk.Entry
             @param event as Gdk.EventKey
         """
-        if entry.get_text() == "" and\
-                event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right,
-                                 Gdk.KEY_Return, Gdk.KEY_KP_Enter,
-                                 Gdk.KEY_Down, Gdk.KEY_Up]:
-            self.__on_key_press(self, event)
+        if event.keyval == Gdk.KEY_Left and\
+                not self.__allow_left_right_in_entry:
+            self.previous(False)
             return True
-        elif event.keyval == Gdk.KEY_Escape:
-            self.__search_entry.set_text("")
+        elif event.keyval == Gdk.KEY_Right and\
+                not self.__allow_left_right_in_entry:
+            self.next(False)
             return True
-
-    def __on_key_press(self, widget, event):
-        """
-            Next/Prev of Left/Right
-            @param widget as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if event.keyval == Gdk.KEY_Left:
-            self.__previous(False, True)
-        elif event.keyval == Gdk.KEY_Right:
-            self.__next(False, True)
         elif event.keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
             if self.__current_child is not None:
                 column_count = self.__get_column_count()
@@ -320,3 +317,5 @@ class PagesManager(Gtk.EventBox):
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
             if self.__current_child is not None:
                 self._on_child_activated(self.__box, self.__current_child)
+        elif event.keyval == Gdk.KEY_Escape:
+            self.__search_entry.set_text("")
