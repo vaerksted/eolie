@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk
 
 from urllib.parse import urlparse
 
@@ -30,8 +30,6 @@ class PagesManager(Gtk.EventBox):
         Gtk.EventBox.__init__(self)
         self.__window = window
         self.__current_child = None
-        self.__next_timeout_id = None
-        self.__previous_timeout_id = None
         self.__group_pages = True
         self.get_style_context().add_class("sidebar")
         self.connect("key-press-event", self.__on_key_press)
@@ -131,45 +129,45 @@ class PagesManager(Gtk.EventBox):
             self.__search_entry.disconnect_by_func(self.__on_search_key_press)
         self.__search_bar.set_search_mode(b)
 
-    def next(self):
+    def next(self, switch=True):
         """
             Show next view
+            @param switch as bool
         """
-        if self.__next_timeout_id is None and\
-                self.__next_timeout_id != -1:
-            self.__next_timeout_id = GLib.timeout_add(100,
-                                                      self.__set_expose,
-                                                      self.__next)
+        children = self.__box.get_children()
+        if not children:
+            return
+        # Search for next child
+        count = len(children)
+        current_index = self.__current_child.get_index()
+        wanted_index = current_index + 1
+        if wanted_index >= count:
+            wanted_index = 0
+        child = self.__box.get_child_at_index(wanted_index)
+        if switch:
+            self.__window.container.set_current(child.view)
         else:
-            self.__next()
+            self.update_visible_child(child.view)
 
-    def previous(self):
+    def previous(self, switch=True):
         """
-            Show next view
+            Show previous view
+            @param switch as bool
         """
-        if self.__previous_timeout_id is None and\
-                self.__previous_timeout_id != -1:
-            self.__previous_timeout_id = GLib.timeout_add(100,
-                                                          self.__set_expose,
-                                                          self.__previous)
+        children = self.__box.get_children()
+        if not children:
+            return
+        # Search for next child
+        count = len(children)
+        current_index = self.__current_child.get_index()
+        wanted_index = current_index - 1
+        if wanted_index < 0:
+            wanted_index = count - 1
+        child = self.__box.get_child_at_index(wanted_index)
+        if switch:
+            self.__window.container.set_current(child.view)
         else:
-            self.__previous()
-
-    def ctrl_released(self):
-        """
-            Disable any pending expose
-        """
-        if self.__next_timeout_id is not None:
-            if self.__next_timeout_id != -1:
-                self.__next()
-                GLib.source_remove(self.__next_timeout_id)
-        if self.__previous_timeout_id is not None:
-            if self.__previous_timeout_id != -1:
-                self.__previous()
-                GLib.source_remove(self.__previous_timeout_id)
-
-        self.__next_timeout_id = None
-        self.__previous_timeout_id = None
+            self.update_visible_child(child.view)
 
     @property
     def filter(self):
@@ -226,61 +224,6 @@ class PagesManager(Gtk.EventBox):
             count += 1
         return count
 
-    def __set_expose(self, callback):
-        """
-            Set expose on and call callback
-            @param callback as __next()/__previous()
-        """
-        self.__next_timeout_id = -1
-        self.__previous_timeout_id = -1
-        self.update_sort()
-        self.__window.container.set_expose(True)
-        callback(True, True)
-
-    def __next(self, switch=True, expose=False):
-        """
-            Show next view
-            @param switch as bool
-            @param expose as bool
-        """
-        children = self.__box.get_children()
-        if not children:
-            return
-        # Search for next child
-        count = len(children)
-        wanted_index = 0
-        current_index = self.__current_child.get_index()
-        wanted_index = current_index + 1
-        if wanted_index >= count:
-            wanted_index = 0
-        child = self.__box.get_child_at_index(wanted_index)
-        if switch:
-            self.__window.container.set_current(child.view)
-        else:
-            self.update_visible_child(child.view)
-
-    def __previous(self, switch=True, expose=False):
-        """
-            Show previous view
-            @param switch as bool
-            @param expose as bool
-        """
-        children = self.__box.get_children()
-        if not children:
-            return
-        # Search for next child
-        count = len(children)
-        wanted_index = 0
-        current_index = self.__current_child.get_index()
-        wanted_index = current_index - 1
-        if wanted_index < 0:
-            wanted_index = count - 1
-        child = self.__box.get_child_at_index(wanted_index)
-        if switch:
-            self.__window.container.set_current(child.view)
-        else:
-            self.update_visible_child(child.view)
-
     def __get_index(self, view):
         """
             Get view index
@@ -311,7 +254,8 @@ class PagesManager(Gtk.EventBox):
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
         else:
-            return row2.view.webview.atime > row1.view.webview.atime
+            return row2.view.webview.atime == 0 or\
+                row2.view.webview.atime > row1.view.webview.atime
 
     def __filter_func(self, row):
         """

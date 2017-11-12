@@ -73,8 +73,10 @@ class Container(Gtk.Overlay):
         self.__window = window
         self.__popover = WebViewPopover(window)
         self.__current = None
-        self.__preloaded = []
+        self.__next_timeout_id = None
+        self.__previous_timeout_id = None
         self.__preload_timeout_id = None
+        self.__preloaded = []
         self.__pending_items = []
 
         self.__preloaded_max = El().settings.get_value(
@@ -329,6 +331,49 @@ class Container(Gtk.Overlay):
             GLib.source_remove(self.__preload_timeout_id)
             self.__preload_timeout_id = None
 
+    def next(self):
+        """
+            Show next view
+        """
+        if self.__next_timeout_id is None and\
+                self.__next_timeout_id != -1:
+            self.__next_timeout_id = GLib.timeout_add(
+                                                     100,
+                                                     self.__set_expose,
+                                                     self.__pages_manager.next)
+        else:
+            self.__pages_manager.next()
+
+    def previous(self):
+        """
+            Show next view
+        """
+        if self.__previous_timeout_id is None and\
+                self.__previous_timeout_id != -1:
+            self.__previous_timeout_id = GLib.timeout_add(
+                                                 100,
+                                                 self.__set_expose,
+                                                 self.__pages_manager.previous)
+        else:
+            self.__pages_manager.previous()
+
+    def ctrl_released(self):
+        """
+            Disable any pending expose
+        """
+        if self.__next_timeout_id is not None:
+            if self.__next_timeout_id != -1:
+                self.__next()
+                GLib.source_remove(self.__next_timeout_id)
+        if self.__previous_timeout_id is not None:
+            if self.__previous_timeout_id != -1:
+                self.__previous()
+                GLib.source_remove(self.__previous_timeout_id)
+
+        self.__next_timeout_id = None
+        self.__previous_timeout_id = None
+        self.set_expose(False)
+
     @property
     def in_expose(self):
         """
@@ -372,6 +417,17 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
+    def __set_expose(self, callback):
+        """
+            Set expose on and call callback
+            @param callback as __next()/__previous()
+        """
+        self.__next_timeout_id = -1
+        self.__previous_timeout_id = -1
+        self.__pages_manager.update_sort()
+        self.set_expose(True)
+        callback()
+
     def __get_webview(self, ephemeral):
         """
             Get a new webview

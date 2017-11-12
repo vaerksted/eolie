@@ -381,8 +381,7 @@ class Window(Gtk.ApplicationWindow):
         """
         if event.keyval == Gdk.KEY_Control_L and\
                 not self.__inhibit_ctrl_released:
-            self.__container.pages_manager.ctrl_released()
-            self.__container.set_expose(False)
+            self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)
             if self.__container.current is not None and\
@@ -433,9 +432,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "forward":
             self.toolbar.actions.forward()
         elif string == "previous":
-            self.__container.pages_manager.previous()
+            self.__container.previous()
         elif string == "next":
-            self.__container.pages_manager.next()
+            self.__container.next()
         elif string == "previous_site":
             self.__container.sites_manager.previous()
         elif string == "next_site":
