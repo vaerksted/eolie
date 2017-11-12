@@ -246,6 +246,7 @@ class PagesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
+        # Group pages by net location then atime
         if self.__group_pages and row2.view.webview.uri is not None and\
                 row1.view.webview.uri is not None:
             parsed2 = urlparse(row2.view.webview.uri)
@@ -254,13 +255,16 @@ class PagesManager(Gtk.EventBox):
                 return parsed2.netloc < parsed1.netloc
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
+        # Always show current first
         elif self.__current_child in [row1, row2]:
             return self.__current_child == row2
+        # Row2 unshown
         elif not row2.view.webview.shown:
             if row1.view.webview.shown:
                 return True
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
+        # Row1 unshown
         elif not row1.view.webview.shown:
             if row2.view.webview.shown:
                 return False
