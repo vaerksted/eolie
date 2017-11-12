@@ -360,11 +360,11 @@ class Container(Gtk.Overlay):
         """
         if self.__next_timeout_id is not None:
             if self.__next_timeout_id != -1:
-                self.__next()
+                self.pages_manager.next()
                 GLib.source_remove(self.__next_timeout_id)
         if self.__previous_timeout_id is not None:
             if self.__previous_timeout_id != -1:
-                self.__previous()
+                self.pages_manager.previous()
                 GLib.source_remove(self.__previous_timeout_id)
 
         self.__next_timeout_id = None

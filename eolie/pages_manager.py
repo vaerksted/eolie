@@ -255,8 +255,7 @@ class PagesManager(Gtk.EventBox):
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
         else:
-            return row2.view.webview.atime == 0 or\
-                row2.view.webview.atime > row1.view.webview.atime
+            return row2.view.webview.atime > row1.view.webview.atime
 
     def __filter_func(self, row):
         """

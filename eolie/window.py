@@ -363,12 +363,14 @@ class Window(Gtk.ApplicationWindow):
 
     def __on_key_press_event(self, window, event):
         """
-            Handle Ctrl inhibitor
+            Update PagesManager sort on Ctrl<Tab>
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval == Gdk.KEY_Control_L:
-            self.container.pages_manager.update_sort(False)
+        if event.state & Gdk.ModifierType.CONTROL_MASK and\
+                event.keyval == Gdk.KEY_Tab:
+            if not self.container.in_expose:
+                self.container.pages_manager.update_sort(False)
 
     def __on_key_release_event(self, window, event):
         """
