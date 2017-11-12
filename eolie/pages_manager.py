@@ -257,9 +257,15 @@ class PagesManager(Gtk.EventBox):
         elif self.__current_child in [row1, row2]:
             return self.__current_child == row2
         elif not row2.view.webview.shown:
-            return True
+            if row1.view.webview.shown:
+                return True
+            else:
+                return row2.view.webview.atime > row1.view.webview.atime
         elif not row1.view.webview.shown:
-            return False
+            if row2.view.webview.shown:
+                return False
+            else:
+                return row2.view.webview.atime > row1.view.webview.atime
         else:
             return row2.view.webview.atime > row1.view.webview.atime
 
