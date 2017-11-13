@@ -83,6 +83,11 @@ class Row(Gtk.ListBoxRow):
                                                    Gtk.IconSize.MENU)
             favicon.set_margin_start(2)
             favicon.show()
+        elif item_type == Type.VIEW:
+            favicon = Gtk.Image.new_from_icon_name("view-paged-symbolic",
+                                                   Gtk.IconSize.MENU)
+            favicon.set_margin_start(2)
+            favicon.show()
 
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
@@ -335,6 +340,13 @@ class Row(Gtk.ListBoxRow):
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
             El().bookmarks.thread_lock.release()
+        elif item_id == Type.VIEW:
+            title = self.__item.get_property("title")
+            for view in self.__window.container.views:
+                if view.webview.uri == uri and view.webview.title == title:
+                    self.__window.container.set_current(view, True)
+                    self.__window.close_popovers()
+                    break
         else:
             self.emit("activate")
             # We force focus to stay on title entry
@@ -475,6 +487,23 @@ class UriPopover(Gtk.Popover):
         self.__set_search_text(search)
         self.__stack.set_visible_child_name("search")
 
+    def add_view(self, view):
+        """
+            Add a row representing view
+            @param view as View
+        """
+        if self.__stack.get_visible_child_name() != "search":
+            return
+        item = Item()
+        item.set_property("type", Type.VIEW)
+        item.set_property("title", view.webview.title)
+        item.set_property("uri", view.webview.uri)
+        item.set_property("search", self.__search)
+        item.set_property("score", -1)
+        child = Row(item, self.__window)
+        child.show()
+        self.__search_box.add(child)
+
     def add_suggestion(self, suggestion):
         """
             Add suggestion to search
@@ -489,7 +518,6 @@ class UriPopover(Gtk.Popover):
         item.set_property("search", self.__search)
         item.set_property("score", 100)
         child = Row(item, self.__window)
-        child.connect("edited", self.__on_row_edited)
         child.show()
         self.__search_box.add(child)
 
@@ -870,9 +898,11 @@ class UriPopover(Gtk.Popover):
             @param row1 as Row
             @param row2 as Row
         """
+        if row1.item.get_property("type") < 0:
+            return False
         pos1 = row1.item.get_property("score")
         pos2 = row2.item.get_property("score")
-        return pos2 > 0 and pos1 < pos2
+        return pos1 < pos2
 
     def __sort_tags(self, row1, row2):
         """
@@ -905,7 +935,6 @@ class UriPopover(Gtk.Popover):
             item.set_property("search", self.__search)
             item.set_property("score", score)
             child = Row(item, self.__window)
-            child.connect("edited", self.__on_row_edited)
             child.show()
             self.__search_box.add(child)
             GLib.idle_add(self.__add_searches, searches)

@@ -831,6 +831,20 @@ class ToolbarTitle(Gtk.Bin):
                         if self.__cancellable.is_cancelled():
                             return
 
+    def __search_in_current_views(self, value):
+        """
+            Search views matching value and add them to popover
+            @param value as str
+            @thread safe
+        """
+        for view in self.__window.container.views:
+            uri = view.webview.uri
+            if uri is None:
+                continue
+            parsed = urlparse(uri)
+            if parsed.netloc.lower().find(value) != -1:
+                GLib.idle_add(self.__popover.add_view, view)
+
     def __on_popover_closed(self, popover):
         """
             Clean titlebar if UriPopover, else update star
@@ -915,7 +929,7 @@ class ToolbarTitle(Gtk.Bin):
             El().search.search_suggestions(value,
                                            self.__cancellable,
                                            self.__search_suggestion)
-
+        task_helper.run(self.__search_in_current_views, value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,

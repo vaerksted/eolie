@@ -77,4 +77,5 @@ class Type:
     SEARCH = -7
     TAG = -8
     UNCLASSIFIED = -9
-    SEPARATOR = -10
+    VIEW = -10
+    SEPARATOR = -11
