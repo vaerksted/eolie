@@ -468,8 +468,7 @@ class ToolbarTitle(Gtk.Bin):
         if event.x <= 0 or\
            event.x >= allocation.width or\
            event.y <= 0 or\
-           event.y >= allocation.height or\
-           not isinstance(widget, Gtk.EventBox):
+           event.y >= allocation.height:
             self.__leave()
 
     def _on_entry_focus_in(self, entry, event):
