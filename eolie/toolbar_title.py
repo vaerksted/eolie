@@ -783,13 +783,7 @@ class ToolbarTitle(Gtk.Bin):
             string = content.decode(encoding)
             # format: '["{"words"}",["result1","result2"]]'
             sgs = string.replace('[', '').replace(']', '').split(',')[1:]
-            added = 0
-            for suggestion in sgs:
-                if suggestion:
-                    self.__popover.add_suggestion(suggestion.replace('"', ''))
-                    added += 1
-                    if added > 2:
-                        return
+            self.__popover.add_suggestions(sgs)
 
     def __populate_completion(self, uri):
         """
@@ -837,13 +831,15 @@ class ToolbarTitle(Gtk.Bin):
             @param value as str
             @thread safe
         """
+        views = []
         for view in self.__window.container.views:
             uri = view.webview.uri
             if uri is None:
                 continue
             parsed = urlparse(uri)
             if parsed.netloc.lower().find(value) != -1:
-                GLib.idle_add(self.__popover.add_view, view)
+                views.append(view)
+        GLib.idle_add(self.__popover.add_views, views)
 
     def __on_popover_closed(self, popover):
         """
