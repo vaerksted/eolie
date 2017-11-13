@@ -76,7 +76,6 @@ class Container(Gtk.Overlay):
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
         self.__preload_timeout_id = None
-        self.__set_filtered_timeout_id = None
         self.__preloaded = []
         self.__pending_items = []
 
@@ -237,14 +236,9 @@ class Container(Gtk.Overlay):
             Show current views
             @param expose as bool
         """
-        if self.__set_filtered_timeout_id is not None:
-            GLib.source_remove(self.__set_filtered_timeout_id)
-            self.__set_filtered_timeout_id = None
         if expose:
             self.__pages_manager.update_sort(True)
-            self.__set_filtered_timeout_id = GLib.timeout_add(
-                                                    500,
-                                                    self.__on_filtered_timeout)
+            self.__pages_manager.set_filtered(True)
         else:
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.pages_manager.set_filter("")
@@ -415,13 +409,6 @@ class Container(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __on_filtered_timeout(self):
-        """
-            Set PagesManager filter on
-        """
-        self.__set_filtered_timeout_id = None
-        self.__pages_manager.set_filtered(True)
-
     def __on_prev_next_timeout(self, callback):
         """
             Set expose on and call callback
