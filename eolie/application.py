@@ -752,8 +752,33 @@ class Application(Gtk.Application):
             @param window as Window
             @param event as Gdk.Event
         """
+        def on_response_id(dialog, response_id, window):
+            if response_id == Gtk.ResponseType.CLOSE:
+                self.__try_closing(window, window.container.views)
+            dialog.destroy()
+
+        def on_close(widget, dialog):
+            dialog.response(Gtk.ResponseType.CLOSE)
+
+        def on_cancel(widget, dialog):
+            dialog.response(Gtk.ResponseType.CANCEL)
         # Ask for user if needed
-        self.__try_closing(window, window.container.views)
+        if len(self.get_windows()) == 1 and self.download_manager.is_active:
+            builder = Gtk.Builder()
+            builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
+            dialog = builder.get_object("dialog")
+            label = builder.get_object("label")
+            close = builder.get_object("close")
+            cancel = builder.get_object("cancel")
+            label.set_text(_("You are downloading a file, "
+                             "are you sure you want quit?"))
+            dialog.set_transient_for(window)
+            dialog.connect("response", on_response_id, window)
+            close.connect("clicked", on_close, dialog)
+            cancel.connect("clicked", on_cancel, dialog)
+            dialog.run()
+        else:
+            self.__try_closing(window, window.container.views)
         return True
 
     def __on_settings_activate(self, action, param):
