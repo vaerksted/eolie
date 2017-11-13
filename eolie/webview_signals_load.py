@@ -27,6 +27,30 @@ class WebViewLoadSignals:
             Init class
         """
         self.__current_event = WebKit2.LoadEvent.FINISHED
+        self.__popups = []
+
+    def add_popup(self, webview):
+        """
+            Add webview to popups
+            @webview as WebView
+        """
+        self.__popups.append(webview)
+
+    def remove_popup(self, webview):
+        """
+            Remove webview to popups
+            @webview as WebView
+        """
+        if webview in self.__popups:
+            self.__popups.remove(webview)
+
+    @property
+    def popups(self):
+        """
+            Get popups
+            @return [WebView]
+        """
+        return self.__popups
 
     @property
     def current_event(self):
@@ -111,6 +135,10 @@ class WebViewLoadSignals:
         self.__current_event = event
         if event == WebKit2.LoadEvent.STARTED:
             self._new_pages_opened = 0
+            # Destroy current popups
+            for popup in self.__popups:
+                popup.destroy()
+            self.__popups = []
         if webview.get_mapped():
             self.__update_toolbars(event)
 

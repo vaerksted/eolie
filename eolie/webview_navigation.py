@@ -34,7 +34,6 @@ class WebViewNavigation:
             Init navigation
         """
         self.__js_timeout = None
-        self.__popups = []
         self.__initial_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -86,21 +85,6 @@ class WebViewNavigation:
                 self.__insecure_content_detected = False
             WebKit2.WebView.load_uri(self, uri)
 
-    def add_popup(self, webview):
-        """
-            Add webview to popups
-            @webview as WebView
-        """
-        self.__popups.append(webview)
-
-    def remove_popup(self, webview):
-        """
-            Remove webview to popups
-            @webview as WebView
-        """
-        if webview in self.__popups:
-            self.__popups.remove(webview)
-
     @property
     def initial_uri(self):
         """
@@ -110,14 +94,6 @@ class WebViewNavigation:
             @return str
         """
         return self.__initial_uri
-
-    @property
-    def popups(self):
-        """
-            Get popups
-            @return [WebView]
-        """
-        return self.__popups
 
 #######################
 # PRIVATE             #
@@ -319,10 +295,6 @@ class WebViewNavigation:
             self.stop_favicon()
             self.__initial_uri = uri.rstrip('/')
             self._cancelled = False
-            # Destroy current popups
-            for popup in self.__popups:
-                popup.destroy()
-            self.__popups = []
             # Setup js blocker
             if El().settings.get_value("jsblock"):
                 exception = El().js_exceptions.find_parsed(parsed)
