@@ -245,14 +245,16 @@ class WebView(WebKit2.WebView):
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
             # parent.gtime = child.gtime + 1
-            # Set child atime as atime - 1 to sort item just next parent
+            # Set child atime lower that current atime for sorting next
             # Used to search for best matching webview
+            self._new_pages_opened += 1
             self._window.container.add_webview(self._navigation_uri,
                                                loading_type,
                                                self.ephemeral,
                                                None,
                                                self.gtime - 1,
-                                               self.atime - 1)
+                                               self.atime -
+                                               self._new_pages_opened)
 
     def set_atime(self, atime):
         """
@@ -389,6 +391,7 @@ class WebView(WebKit2.WebView):
         self._content_manager = content_manager
         self.__atime = 0
         self.__gtime = int(time())
+        self._new_pages_opened = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""

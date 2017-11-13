@@ -71,21 +71,17 @@ class WebViewLoadSignals:
 #######################
 # PRIVATE             #
 #######################
-    def __on_load_changed(self, webview, event):
+    def __update_toolbars(self, event):
         """
-            Update sidebar/urlbar
-            @param webview as WebView
+            Update toolbar content with on self
             @param event as WebKit2.LoadEvent
         """
-        self.__current_event = event
-        if not webview.get_mapped():
-            return
-        self._window.toolbar.title.update_load_indicator(webview)
-        parsed = urlparse(webview.uri)
+        self._window.toolbar.title.update_load_indicator(self)
+        parsed = urlparse(self.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
-            self._window.toolbar.title.set_title(webview.uri)
+            self._window.toolbar.title.set_title(self.uri)
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.show_spinner(True)
@@ -98,13 +94,25 @@ class WebViewLoadSignals:
                 self._window.container.current.switch_read_mode()
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.set_title(webview.uri)
+            self._window.toolbar.title.set_title(self.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.show_spinner(False)
             self._window.toolbar.title.progress.set_fraction(1.0)
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
+
+    def __on_load_changed(self, webview, event):
+        """
+            Update sidebar/urlbar
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        self.__current_event = event
+        if event == WebKit2.LoadEvent.STARTED:
+            self._new_pages_opened = 0
+        if webview.get_mapped():
+            self.__update_toolbars(event)
 
     def __on_title_changed(self, webview, title):
         """
