@@ -763,7 +763,7 @@ class Application(Gtk.Application):
         def on_cancel(widget, dialog):
             dialog.response(Gtk.ResponseType.CANCEL)
         # Ask for user if needed
-        if len(self.get_windows()) == 1 and self.download_manager.is_active:
+        if len(self.get_windows()) == 1 and self.download_manager.active:
             builder = Gtk.Builder()
             builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
             dialog = builder.get_object("dialog")

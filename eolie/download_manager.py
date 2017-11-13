@@ -71,20 +71,22 @@ class DownloadManager(GObject.GObject):
         """
         return self.__finished
 
-    def is_active(self):
-        """
-            Get active downloads
-        """
-        for download in self.__downloads:
-            if download.get_estimated_progress() != 1.0:
-                return True
-
     def cancel(self):
         """
             Cancel all downloads
         """
         for download in self.__downloads:
             download.cancel()
+
+    @property
+    def active(self):
+        """
+            Is download active
+            @return bool
+        """
+        for download in self.__downloads:
+            if download.get_estimated_progress() != 1.0:
+                return True
 
 #######################
 # PRIVATE             #

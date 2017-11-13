@@ -548,7 +548,7 @@ class ToolbarEnd(Gtk.Bin):
             @param download_manager as DownloadManager
             @param name as str (do not use this)
         """
-        if download_manager.is_active():
+        if download_manager.active:
             if self.__timeout_id is None:
                 self.__progress.show()
                 self.__timeout_id = GLib.timeout_add(1000,
