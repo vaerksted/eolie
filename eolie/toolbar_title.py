@@ -96,7 +96,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__input_warning_shown = False
         self.__signal_id = None
         self.__entry_changed_id = None
-        self.__show_related_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
@@ -587,9 +586,6 @@ class ToolbarTitle(Gtk.Bin):
                 if self.__entry_changed_id is not None:
                     GLib.source_remove(self.__entry_changed_id)
                     self.__entry_changed_id = None
-                if self.__show_related_id is not None:
-                    GLib.source_remove(self.__show_related_id)
-                    self.__show_related_id = None
                 webview.grab_focus()
                 self.__completion_model.clear()
                 return True
@@ -774,27 +770,6 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "system-search-symbolic")
 
-    def __show_related_view(self, value):
-        """
-            Walk all available views and show it if related to current uri
-            @param value as str
-        """
-        self.__show_related_id = None
-        if not value:
-            self.__window.container.set_expose(False)
-            return
-        elif len(value) < 3:
-            return
-        for view in self.__window.container.views:
-            uri = view.webview.uri
-            if uri is not None:
-                view_parsed = urlparse(uri)
-                if view_parsed.netloc.find(value) != -1:
-                    self.__window.container.pages_manager.set_filter(value)
-                    self.__window.container.set_expose(True)
-                    return
-        self.__window.container.set_expose(False)
-
     def __search_suggestion(self, uri, status, content, encoding, value):
         """
             Add suggestions
@@ -928,11 +903,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__cancellable.reset()
         parsed = urlparse(value)
 
-        if self.__show_related_id is not None:
-            GLib.source_remove(self.__show_related_id)
-        self.__show_related_id = GLib.timeout_add(500,
-                                                  self.__show_related_view,
-                                                  value)
         network = Gio.NetworkMonitor.get_default().get_network_available()
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
