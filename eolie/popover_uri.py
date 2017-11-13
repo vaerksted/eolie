@@ -324,8 +324,8 @@ class Row(Gtk.ListBoxRow):
         if eventbox.get_window() != event.window:
             return True
         uri = self.__item.get_property("uri")
-        item_id = self.__item.get_property("type")
-        if item_id in [Type.HISTORY, Type.SUGGESTION,
+        type_id = self.__item.get_property("type")
+        if type_id in [Type.HISTORY, Type.SUGGESTION,
                        Type.SEARCH, Type.BOOKMARK]:
             if event.button == 1:
                 self.__window.container.current.webview.load_uri(uri)
@@ -340,7 +340,7 @@ class Row(Gtk.ListBoxRow):
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
             El().bookmarks.thread_lock.release()
-        elif item_id == Type.VIEW:
+        elif type_id == Type.VIEW:
             title = self.__item.get_property("title")
             for view in self.__window.container.views:
                 if view.webview.uri == uri and view.webview.title == title:
@@ -616,12 +616,26 @@ class UriPopover(Gtk.Popover):
             if box is not None:
                 selected = box.get_selected_row()
                 if selected is not None:
-                    uri = selected.item.get_property("uri")
-                    if uri:
-                        self.__window.close_popovers()
-                        self.__window.container.current.webview.load_uri(uri)
-                        self.__window.container.set_expose(False)
-                        return True
+                    container = self.__window.container
+                    item = selected.item
+                    # Switch to view
+                    if item.get_property("type") == Type.VIEW:
+                        title = item.get_property("title")
+                        uri = item.get_property("uri")
+                        for view in container.views:
+                            if view.webview.uri == uri and\
+                                    view.webview.title == title:
+                                container.set_current(view, True)
+                                self.__window.close_popovers()
+                                break
+                    # Load URI
+                    else:
+                        uri = selected.item.get_property("uri")
+                        if uri:
+                            self.__window.close_popovers()
+                            container.current.webview.load_uri(uri)
+                            container.set_expose(False)
+                            return True
             else:
                 self.__input = Input.NONE
         else:
