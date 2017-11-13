@@ -127,11 +127,10 @@ class SyncWorker:
             @param loop as bool -> for GLib.timeout_add()
             @param first_sync as bool
         """
-        if self.syncing or\
-                not Gio.NetworkMonitor.get_default().get_network_available():
-            return
-        task_helper = TaskHelper()
-        task_helper.run(self.__sync, first_sync)
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password and not self.syncing:
+            task_helper = TaskHelper()
+            task_helper.run(self.__sync, first_sync)
         return loop
 
     def push_history(self, history_ids):
@@ -139,7 +138,8 @@ class SyncWorker:
             Push history ids
             @param history_ids as [int]
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__push_history, history_ids)
 
@@ -155,7 +155,8 @@ class SyncWorker:
             @param form_uri as str
             @param uuid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
                             user_form_name, user_form_value, pass_form_name,
@@ -166,7 +167,8 @@ class SyncWorker:
             Remove history guid from remote history
             @param guid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_history, guid)
 
@@ -175,7 +177,8 @@ class SyncWorker:
             Remove bookmark guid from remote bookmarks
             @param guid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_bookmarks, guid)
 
@@ -184,7 +187,8 @@ class SyncWorker:
             Remove password from passwords collection
             @param uuid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available():
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_passwords, uuid)
 
