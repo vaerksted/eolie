@@ -33,7 +33,8 @@ class PageChildRow(Gtk.ListBoxRow):
         self.get_style_context().add_class("page-child-row")
         self.__view = view
         self.__window = window
-        self.__label = Gtk.Label.new(view.webview.uri)
+        title = view.webview.title
+        self.__label = Gtk.Label.new(title or "")
         self.__label.set_property("valign", Gtk.Align.CENTER)
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.set_hexpand(True)
