@@ -244,13 +244,15 @@ class WebView(WebKit2.WebView):
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
-            # parent.atime = child.atime + 1
+            # parent.gtime = child.gtime + 1
+            # Set child atime as atime - 1 to sort item just next parent
             # Used to search for best matching webview
             self._window.container.add_webview(self._navigation_uri,
                                                loading_type,
                                                self.ephemeral,
                                                None,
-                                               self.gtime - 1)
+                                               self.gtime - 1,
+                                               self.atime - 1)
 
     def set_atime(self, atime):
         """

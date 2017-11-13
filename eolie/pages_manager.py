@@ -258,18 +258,6 @@ class PagesManager(Gtk.EventBox):
         # Always show current first
         elif self.__current_child in [row1, row2]:
             return self.__current_child == row2
-        # Row2 unshown
-        elif not row2.view.webview.shown:
-            if row1.view.webview.shown:
-                return True
-            else:
-                return row2.view.webview.atime > row1.view.webview.atime
-        # Row1 unshown
-        elif not row1.view.webview.shown:
-            if row2.view.webview.shown:
-                return False
-            else:
-                return row2.view.webview.atime > row1.view.webview.atime
         else:
             return row2.view.webview.atime > row1.view.webview.atime
 

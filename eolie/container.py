@@ -116,7 +116,7 @@ class Container(Gtk.Overlay):
         self.add(paned)
 
     def add_webview(self, uri, loading_type, ephemeral=False,
-                    state=None, gtime=None,):
+                    state=None, gtime=None, atime=None):
         """
             Add a webview to container
             @param uri as str
@@ -124,13 +124,14 @@ class Container(Gtk.Overlay):
             @param ephemeral as bool
             @param state as WebViewSessionState
             @param gtime as int
+            @param atime as int
             @return WebView
         """
         webview = self.__get_webview(ephemeral)
         if gtime is not None:
-            # We force atime to be sure child is initially sorted after parent
-            webview.set_atime(gtime)
             webview.set_gtime(gtime)
+        if atime is not None:
+            webview.set_atime(atime)
         if state is not None:
             webview.restore_session_state(state)
         if uri is not None:
