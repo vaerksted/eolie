@@ -29,7 +29,6 @@ class Search:
             Init search
         """
         # Gettext does not work outside init
-        # FIXME Only works on first run
         self.__ENGINES = {
             'Google': [
                 # Translators: Google url for your country
