@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 from gettext import gettext as _
 import json
@@ -29,6 +29,7 @@ class Search:
             Init search
         """
         # Gettext does not work outside init
+        # FIXME Only works on first run
         self.__ENGINES = {
             'Google': [
                 # Translators: Google url for your country
@@ -44,6 +45,13 @@ class Search:
                 'https://ac.duckduckgo.com/ac/?q=%s&type=list',
                 'utf-8',
                 'd'
+                ],
+            'Qwant': [
+                'https://www.qwant.com',
+                'https://www.qwant.com/?q=%s',
+                'https://api.qwant.com/api/suggest/?q=%s&client=opensearch',
+                'utf-8',
+                'q'
                 ],
             'Yahoo': [
                 # Translators: Yahoo url for your country
@@ -108,7 +116,9 @@ class Search:
         try:
             if not value.strip(" "):
                 return
-            uri = self.__keyword % value
+            uri = self.__keyword % GLib.uri_escape_string(value,
+                                                          None,
+                                                          True)
             task_helper = TaskHelper()
             task_helper.load_uri_content(uri, cancellable,
                                          callback, self.__encoding, value)
