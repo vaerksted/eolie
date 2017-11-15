@@ -122,7 +122,7 @@ class Art:
         if uri is None:
             return None
         parsed = urlparse(uri)
-        cached_uri = remove_www(parsed)
+        cached_uri = remove_www(parsed.netloc)
         cached_path = parsed.path.rstrip("/")
         if cached_path:
             cached_uri += cached_path

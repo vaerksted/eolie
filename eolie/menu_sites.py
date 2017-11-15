@@ -23,6 +23,15 @@ class SitesMenu(Gio.Menu):
         Menu linked to a SitesManagerChild
     """
 
+    # For default gsetting shema translation
+    __PROFILES = {"default": _("Default"),
+                  "social": _("Social networks"),
+                  "work": _("Work"),
+                  "shopping": _("Shopping"),
+                  "personal": _("Personal"),
+                  "finance": _("Finance"),
+                  "sport": _("Sport")}
+
     def __init__(self, views, window):
         """
             Init menu
@@ -30,6 +39,7 @@ class SitesMenu(Gio.Menu):
             @param window as Window
         """
         self.__window = window
+        self.__views = views
         Gio.Menu.__init__(self)
         for view in views:
             uri = view.webview.uri
@@ -50,6 +60,8 @@ class SitesMenu(Gio.Menu):
             self.append_item(item)
         bottom_section = Gio.Menu()
         self.append_section(None, bottom_section)
+        submenu = self.__get_submenu()
+        bottom_section.insert_submenu(0, _("Profiles"), submenu)
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         # Modify UA
@@ -57,39 +69,72 @@ class SitesMenu(Gio.Menu):
             item = Gio.MenuItem.new(_("Modify user agent"),
                                     "win.user_agent")
             bottom_section.append_item(item)
-            action.connect("activate", self.__on_modify_ua_activate, views)
+            action.connect("activate", self.__on_modify_ua_activate)
         # Close site
         action = Gio.SimpleAction.new("close_site")
         self.__window.add_action(action)
         item = Gio.MenuItem.new(_("Close site"),
                                 "win.close_site")
         bottom_section.append_item(item)
-        action.connect("activate", self.__on_close_activate, views)
+        action.connect("activate", self.__on_close_activate)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_close_activate(self, action, param, views):
+    def __get_submenu(self):
+        """
+            Return submenu (profiles) for site
+            return Gio.Menu
+        """
+        menu = Gio.Menu()
+        action = Gio.SimpleAction.new_stateful("eolie_profiles",
+                                               GLib.VariantType.new("s"),
+                                               GLib.Variant("s", "none"))
+        action.connect("activate", self.__on_profiles_activate)
+        self.__window.add_action(action)
+        # Get first view URI
+        uri = self.__views[0].webview.uri
+        profile = El().websettings.get_profile(uri)
+        for key in self.__PROFILES.keys():
+            item = self.__PROFILES[key]
+            self.__window.add_action(action)
+            menu_item = Gio.MenuItem.new(item,
+                                         "win.eolie_profiles::%s" % key)
+            if profile == key:
+                action.change_state(GLib.Variant("s", profile))
+            menu.append_item(menu_item)
+        return menu
+
+    def __on_profiles_activate(self, action, param):
+        """
+            Change profile
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.change_state(param)
+        # Get first view URI
+        uri = self.__views[0].webview.uri
+        El().websettings.set_profile(param.get_string(), uri)
+
+    def __on_close_activate(self, action, param):
         """
             Close wanted page
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
-            @param views as [View]
         """
         for view in self.__window.container.views:
-            if view in views:
+            if view in self.__views:
                 self.__window.container.try_close_view(view)
 
-    def __on_modify_ua_activate(self, action, param, views):
+    def __on_modify_ua_activate(self, action, param):
         """
             Show a dialog allowing user to update User Agent
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
-            @param views as [View]
         """
-        if views:
+        if self.__views:
             from eolie.dialog_modify_ua import ModifyUADialog
-            dialog = ModifyUADialog(views[0].webview.uri, self.__window)
+            dialog = ModifyUADialog(self.__views[0].webview.uri, self.__window)
             dialog.run()
 
     def __on_action_clicked(self, action, variant, view):

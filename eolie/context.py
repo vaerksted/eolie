@@ -36,9 +36,6 @@ class Context:
             cookie_manager = context.get_cookie_manager()
             cookie_manager.set_accept_policy(
                                      El().settings.get_enum("cookie-storage"))
-            cookie_manager.set_persistent_storage(
-                                        El().cookies_path,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
         context.set_web_extensions_directory(El().extension_dir)
         context.set_process_model(
                             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)

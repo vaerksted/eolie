@@ -21,14 +21,14 @@ from base64 import b64encode
 from eolie.define import El, ArtSize, LoadingType
 
 
-def remove_www(parsed):
+def remove_www(netloc):
     """
         Remove www from an urllib parse netloc
-        @param parsed as ParseResult
+        @param netloc as str
         @return str
     """
-    if parsed.netloc:
-        split = parsed.netloc.split(".")
+    if netloc:
+        split = netloc.split(".")
         if split[0] == "www":
             split.pop(0)
         return ".".join(split)

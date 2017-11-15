@@ -183,7 +183,7 @@ class DatabaseAdblock:
         parsed = urlparse(uri)
         if parsed.scheme not in ["http", "https"]:
             return ""
-        netloc = remove_www(parsed)
+        netloc = remove_www(parsed.netloc)
         with SqlCursor(self) as sql:
             request = "SELECT name FROM adblock_css WHERE\
                        (blacklist!='' AND blacklist!=?) OR whitelist=?"

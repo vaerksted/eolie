@@ -21,6 +21,7 @@ from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
+from eolie.context import Context
 from eolie.list import LinkedList
 
 
@@ -35,11 +36,12 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        content_manager = WebKit2.UserContentManager.new()
-        webview = WebKit2.WebView.new_with_user_content_manager(
-                                                               content_manager)
+        context = WebKit2.WebContext.new()
+        Context(context)
+        webview = WebKit2.WebView.new_with_context(context)
+        content_manager = webview.get_property("user-content-manager")
         webview.__class__ = WebViewMeta
-        webview.__init(None, content_manager, window, view)
+        webview.__init(None, context, content_manager, window, view)
         return webview
 
     def new_ephemeral(window, view):
@@ -48,10 +50,12 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        webview = WebKit2.WebView.new_with_context(El().ephemeral_context)
+        context = WebKit2.WebContext.new_ephemeral()
+        Context(context)
+        webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
         content_manager = webview.get_property("user-content-manager")
-        webview.__init(None, content_manager, window, view)
+        webview.__init(None, context, content_manager, window, view)
         return webview
 
     def new_with_related_view(related, window):
@@ -63,7 +67,8 @@ class WebView(WebKit2.WebView):
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        webview.__init(related, None, window, None)
+        webview.__init(related, related.context,
+                       related.content_manager, window, None)
         return webview
 
     def set_setting(self, key, value):
@@ -374,10 +379,11 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, content_manager, window, view):
+    def __init(self, related_view, context, content_manager, window, view):
         """
             Init WebView
             @param related_view as WebView
+            @param context as WebKit2.WebContext
             @param content_manager as WebKit2.UserContentManager
             @param window as Window
             @param view as View
@@ -388,6 +394,7 @@ class WebView(WebKit2.WebView):
         WebViewArtwork.__init__(self)
         self._window = window
         self.__view = view
+        self.__context = context
         self._content_manager = content_manager
         self.__atime = 0
         self.__gtime = int(time())

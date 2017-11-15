@@ -98,13 +98,12 @@ class WebViewArtwork:
                                                              self.ephemeral)
         if icon_theme_artwork is not None:
             self.emit("favicon-changed", None, icon_theme_artwork)
-        else:
+        elif uri is not None:
             favicon_type = "favicon"
-            # Calculate netloc
             parsed = urlparse(uri)
-            if not parsed.netloc:
+            netloc = remove_www(parsed.netloc)
+            if not netloc:
                 return
-            netloc = remove_www(parsed)
             # Read result
             surface = self.get_favicon()
             # Resize surface and set favicon

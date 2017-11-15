@@ -39,7 +39,6 @@ from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
-from eolie.context import Context
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import is_unity, wanted_loading_type
 
@@ -49,7 +48,6 @@ class Application(Gtk.Application):
         Eolie application:
     """
 
-    __COOKIES_PATH = "%s/cookies.db" % EOLIE_DATA_PATH
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
     def __init__(self, version, extension_dir):
@@ -247,14 +245,6 @@ class Application(Gtk.Application):
             Gio.Application.quit(self)
 
     @property
-    def ephemeral_context(self):
-        """
-            Get default ephemral context
-            @return WebKit2.WebContext
-        """
-        return self.__ephemeral_context
-
-    @property
     def start_page(self):
         """
             Get start page
@@ -294,13 +284,6 @@ class Application(Gtk.Application):
         return self.get_windows()
 
     @property
-    def cookies_path(self):
-        """
-            Cookies sqlite db path
-        """
-        return self.__COOKIES_PATH
-
-    @property
     def favicons_path(self):
         """
             Cookies sqlite db path
@@ -330,13 +313,6 @@ class Application(Gtk.Application):
         # Create favicon path
         if not GLib.file_test(self.__FAVICONS_PATH, GLib.FileTest.IS_DIR):
             GLib.mkdir_with_parents(self.__FAVICONS_PATH, 0o0750)
-
-        # Setup default context
-        context = WebKit2.WebContext.get_default()
-        Context(context)
-        # Setup ephemeral context
-        self.__ephemeral_context = WebKit2.WebContext.new_ephemeral()
-        Context(self.__ephemeral_context)
 
         # Add a global DBus helper
         self.helper = DBusHelper()

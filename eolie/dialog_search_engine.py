@@ -133,13 +133,16 @@ class SearchEngineDialog:
                 bang = child.item.get_property("bang")
                 if name and search:
                     engines[name] = [uri, search, keyword, encoding, bang]
-        content = json.dumps(engines)
-        f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
-        f.replace_contents(content.encode("utf-8"),
-                           None,
-                           False,
-                           Gio.FileCreateFlags.REPLACE_DESTINATION,
-                           None)
+        try:
+            content = json.dumps(engines)
+            f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
+            f.replace_contents(content.encode("utf-8"),
+                               None,
+                               False,
+                               Gio.FileCreateFlags.REPLACE_DESTINATION,
+                               None)
+        except Exception as e:
+            print("SearchEngineDialog::run():", e)
         self.__dialog.destroy()
         # Update application search engines
         El().search = Search()

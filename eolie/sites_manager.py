@@ -16,7 +16,6 @@ from urllib.parse import urlparse
 
 from eolie.sites_manager_child import SitesManagerChild
 from eolie.define import El, LoadingType
-from eolie.utils import remove_www
 
 
 class SitesManager(Gtk.EventBox):
@@ -177,9 +176,6 @@ class SitesManager(Gtk.EventBox):
             @param uri as str
         """
         netloc = self.__get_netloc(uri)
-        if not netloc:
-            netloc = "%s://" % urlparse(uri).scheme
-
         child = None
         empty_child = None
         # Do not group by netloc
@@ -228,7 +224,7 @@ class SitesManager(Gtk.EventBox):
             @param uri as str
         """
         parsed = urlparse(uri)
-        netloc = remove_www(parsed)
+        netloc = parsed.netloc
         if not netloc:
             netloc = "%s://" % urlparse(uri).scheme
         return netloc
