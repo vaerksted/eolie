@@ -38,6 +38,7 @@ function generate_pot()
 function generate_po()
 {
     cd po
+    git pull
     intltool-update --pot
     mv -f untitled.pot eolie.pot
     >LINGUAS
