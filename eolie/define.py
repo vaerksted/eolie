@@ -11,7 +11,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gio, GLib
-from gettext import gettext as _
 
 El = Gio.Application.get_default
 
@@ -23,14 +22,6 @@ PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 EOLIE_DATA_PATH = GLib.get_user_data_dir() + "/eolie"
 EOLIE_CACHE_PATH = GLib.get_user_cache_dir() + "/eolie"
 ADBLOCK_JS = "%s/adblock_js" % EOLIE_DATA_PATH
-
-PROFILES = {"default": _("Default"),
-            "social": _("Social networks"),
-            "work": _("Work"),
-            "shopping": _("Shopping"),
-            "personal": _("Personal"),
-            "finance": _("Finance"),
-            "sport": _("Sport")}
 
 COOKIES_PATH = "%s/cookies_%s.db"
 

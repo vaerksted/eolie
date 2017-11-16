@@ -41,7 +41,6 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
-from eolie.define import PROFILES
 from eolie.utils import is_unity, wanted_loading_type
 
 
@@ -228,6 +227,13 @@ class Application(Gtk.Application):
                 (status, contents, tag) = f.load_contents(None)
                 self.__profiles = json.loads(contents.decode("utf-8"))
             else:
+                PROFILES = {"default": _("Default"),
+                            "social": _("Social networks"),
+                            "work": _("Work"),
+                            "shopping": _("Shopping"),
+                            "personal": _("Personal"),
+                            "finance": _("Finance"),
+                            "sport": _("Sport")}
                 content = json.dumps(PROFILES)
                 f.replace_contents(content.encode("utf-8"),
                                    None,
