@@ -14,14 +14,13 @@ from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import Indicator, El, EOLIE_DATA_PATH
+from eolie.define import Indicator
 
 
 class WebViewLoadSignals:
     """
         Handle webview load signal
     """
-    __COOKIES_PATH = "%s/cookies_%s.db"
 
     def __init__(self):
         """
@@ -140,15 +139,6 @@ class WebViewLoadSignals:
             for popup in self.__popups:
                 popup.destroy()
             self.__popups = []
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            context = self.get_context()
-            cookie_manager = context.get_cookie_manager()
-            profile = El().websettings.get_profile(webview.get_uri())
-            path = self.__COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-            cookie_manager.set_persistent_storage(
-                                        path,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
-            context.clear_cache()
         if webview.get_mapped():
             self.__update_toolbars(event)
 

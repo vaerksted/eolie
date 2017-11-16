@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, ADBLOCK_JS, LoadingType
+from eolie.define import El, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
 from eolie.utils import get_ftp_cmd
 
 
@@ -28,12 +28,14 @@ class WebViewNavigation:
     __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
                "x-scheme-handler/http", "x-scheme-handler/https",
                "multipart/related", "application/x-mimearchive"]
+    __COOKIES_PATH = "%s/cookies_%s.db"
 
     def __init__(self):
         """
             Init navigation
         """
         self.__js_timeout = None
+        self.__current_profile = None
         self.__initial_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -109,6 +111,21 @@ class WebViewNavigation:
         else:
             policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
         self.get_settings().set_hardware_acceleration_policy(policy)
+
+    def __switch_profile(self, uri):
+        """
+            Handle cookies manager
+            @param uri as str
+        """
+        profile = El().websettings.get_profile(uri)
+        if self.__current_profile != profile:
+            self.__current_profile = profile
+            cookie_manager = self.get_context().get_cookie_manager()
+            path = self.__COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+            cookie_manager.set_persistent_storage(
+                                        path,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
+        self.get_context().clear_cache()
 
     def __on_run_as_modal(self, webview):
         """
@@ -250,6 +267,9 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
+                # We update profile here, happen on reload
+                if self._navigation_uri == self.get_uri():
+                    self.__switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -274,8 +294,10 @@ class WebViewNavigation:
                 return True
             else:
                 El().history.set_page_state(webview.uri)
-                decision.use()
                 self._error = None
+                # New navigation uri, switch profile
+                self.__switch_profile(self._navigation_uri)
+                decision.use()
                 return False
         else:
             self.new_page(LoadingType.BACKGROUND)
@@ -303,8 +325,7 @@ class WebViewNavigation:
                 self.set_setting("enable_javascript", True)
         if event == WebKit2.LoadEvent.COMMITTED:
             self.__hw_acceleration_policy(parsed.netloc)
-            if self._content_manager is not None:
-                self._content_manager.remove_all_style_sheets()
+            self.content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
@@ -312,8 +333,8 @@ class WebViewNavigation:
                 if El().settings.get_value("adblock") and\
                         not El().adblock_exceptions.find_parsed(parsed) and\
                         parsed.scheme in ["http", "https"] and\
-                        self._content_manager is not None:
-                    self._content_manager.add_style_sheet(
+                        self.content_manager is not None:
+                    self.content_manager.add_style_sheet(
                                                       El().default_style_sheet)
                     rules = El().adblock.get_css_rules(uri)
                     user_style_sheet = WebKit2.UserStyleSheet(
@@ -322,7 +343,7 @@ class WebViewNavigation:
                                  WebKit2.UserStyleLevel.USER,
                                  None,
                                  None)
-                    self._content_manager.add_style_sheet(user_style_sheet)
+                    self.content_manager.add_style_sheet(user_style_sheet)
                 self.update_spell_checking()
                 self.update_zoom_level()
                 user_agent = El().websettings.get_user_agent(uri)

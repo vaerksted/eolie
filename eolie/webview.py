@@ -290,6 +290,22 @@ class WebView(WebKit2.WebView):
         self._window = window
 
     @property
+    def content_manager(self):
+        """
+            Get content manager
+            @return WebKit2.UserContentManager
+        """
+        return self.__content_manager
+
+    @property
+    def context(self):
+        """
+            Get context
+            @return WebKit2.WebContext
+        """
+        return self.__context
+
+    @property
     def atime(self):
         """
             Get access time
@@ -395,7 +411,7 @@ class WebView(WebKit2.WebView):
         self._window = window
         self.__view = view
         self.__context = context
-        self._content_manager = content_manager
+        self.__content_manager = content_manager
         self.__atime = 0
         self.__gtime = int(time())
         self._new_pages_opened = 0
