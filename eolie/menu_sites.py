@@ -60,8 +60,9 @@ class SitesMenu(Gio.Menu):
             self.append_item(item)
         bottom_section = Gio.Menu()
         self.append_section(None, bottom_section)
-        submenu = self.__get_submenu()
-        bottom_section.insert_submenu(0, _("Profiles"), submenu)
+        if views and not views[0].webview.ephemeral:
+            submenu = self.__get_submenu()
+            bottom_section.insert_submenu(0, _("Profiles"), submenu)
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         # Modify UA

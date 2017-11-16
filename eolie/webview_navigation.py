@@ -136,6 +136,8 @@ class WebViewNavigation:
             Handle cookies manager
             @param uri as str
         """
+        if self.ephemeral:
+            return
         profile = El().websettings.get_profile(uri)
         if self.__current_profile != profile:
             self.__current_profile = profile
