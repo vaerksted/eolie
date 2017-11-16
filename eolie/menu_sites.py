@@ -14,6 +14,7 @@ from gi.repository import Gio, GLib
 
 from hashlib import sha256
 from gettext import gettext as _
+from urllib.parse import urlparse
 
 from eolie.define import El
 
@@ -61,8 +62,10 @@ class SitesMenu(Gio.Menu):
         bottom_section = Gio.Menu()
         self.append_section(None, bottom_section)
         if views and not views[0].webview.ephemeral:
-            submenu = self.__get_submenu()
-            bottom_section.insert_submenu(0, _("Profiles"), submenu)
+            parsed = urlparse(views[0].webview.uri)
+            if parsed.scheme in ["http", "https"]:
+                submenu = self.__get_submenu()
+                bottom_section.insert_submenu(0, _("Profiles"), submenu)
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         # Modify UA
