@@ -111,10 +111,16 @@ class SitesMenu(Gio.Menu):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        action.change_state(param)
-        # Get first view URI
-        uri = self.__views[0].webview.uri
-        El().websettings.set_profile(param.get_string(), uri)
+        try:
+            action.change_state(param)
+            # Get first view URI
+            webview = self.__views[0].webview
+            uri = webview.uri
+            El().websettings.set_profile(param.get_string(), uri)
+            webview.stop()
+            webview.load_uri(uri)
+        except Exception as e:
+            print("SitesMenu::__on_profiles_actinvate:", e)
 
     def __on_close_activate(self, action, param):
         """

@@ -85,6 +85,7 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
+            self.__switch_profile(uri)
             WebKit2.WebView.load_uri(self, uri)
 
     @property
@@ -111,6 +112,24 @@ class WebViewNavigation:
         else:
             policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
         self.get_settings().set_hardware_acceleration_policy(policy)
+
+    def __same_domain(self, parsed1, parsed2):
+        """
+            True if uri1 domain == uri2 domain
+            @param parsed1 as UrlParse
+            @param parsed2 as UrlParse
+            @return bool
+        """
+        # Profile management
+        # If root domain does not change, keep current profile
+        # Useful for auth scenario like with accounts.google.com
+        parsed_split1 = parsed1.netloc.split(".")
+        parsed_split2 = parsed2.netloc.split(".")
+        if len(parsed_split1) > 1 and\
+                len(parsed_split2) > 1 and\
+                parsed_split1[-2] == parsed_split2[-2]:
+            return True
+        return False
 
     def __switch_profile(self, uri):
         """
@@ -245,10 +264,10 @@ class WebViewNavigation:
         navigation_action = decision.get_navigation_action()
         self._navigation_uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
-        parsed = urlparse(self._navigation_uri)
+        parsed_navigation = urlparse(self._navigation_uri)
         self.clear_text_entry()
-        if parsed.scheme not in ["http", "https", "file", "about",
-                                 "populars", "accept"]:
+        if parsed_navigation.scheme not in ["http", "https", "file", "about",
+                                            "populars", "accept"]:
             try:
                 Gtk.show_uri_on_window(self._window,
                                        self._navigation_uri,
@@ -267,9 +286,6 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                # We update profile here, happen on reload
-                if self._navigation_uri == self.get_uri():
-                    self.__switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -293,10 +309,12 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                El().history.set_page_state(webview.uri)
+                uri = webview.uri
+                El().history.set_page_state(uri)
                 self._error = None
-                # New navigation uri, switch profile
-                self.__switch_profile(self._navigation_uri)
+                parsed = urlparse(uri)
+                if not self.__same_domain(parsed, parsed_navigation):
+                    self.__switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         else:
