@@ -285,6 +285,16 @@ class DatabaseSettings:
                 return v[0] or "default"
             return "default"
 
+    def remove_profile(self, profile):
+        """
+            Remove profile from settings
+            @param profile as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE settings SET profile=''\
+                        WHERE profile=?", (profile,))
+            sql.commit()
+
     def get_languages(self, uri):
         """
             Get languages for uri

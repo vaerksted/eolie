@@ -381,6 +381,21 @@ class Application(Gtk.Application):
             except:
                 pass
 
+        # Init profiles
+        f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/profiles.json")
+        if not f.query_exists():
+            try:
+                import json
+                from eolie.define import PROFILES
+                content = json.dumps(PROFILES)
+                f.replace_contents(content.encode("utf-8"),
+                                   None,
+                                   False,
+                                   Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                   None)
+            except Exception as e:
+                print("Application::__init():", e)
+
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))
         shortcut_action.connect('activate', self.__on_shortcut_action)

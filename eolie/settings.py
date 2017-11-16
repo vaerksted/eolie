@@ -219,11 +219,9 @@ class SettingsDialog:
             Show cookies popover
             @param button as Gtk.button
         """
-        from eolie.popover_cookies import CookiesPopover
-        popover = CookiesPopover()
-        popover.populate()
-        popover.set_relative_to(button)
-        popover.popup()
+        from eolie.dialog_cookies import CookiesDialog
+        dialog = CookiesDialog(self.__settings_dialog)
+        dialog.run()
 
     def _on_manage_passwords_clicked(self, button):
         """

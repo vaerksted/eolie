@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import El, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
+from eolie.define import COOKIES_PATH
 from eolie.utils import get_ftp_cmd
 
 
@@ -28,7 +29,6 @@ class WebViewNavigation:
     __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
                "x-scheme-handler/http", "x-scheme-handler/https",
                "multipart/related", "application/x-mimearchive"]
-    __COOKIES_PATH = "%s/cookies_%s.db"
 
     def __init__(self):
         """
@@ -150,7 +150,7 @@ class WebViewNavigation:
         if self.__profile != profile:
             self.__profile = profile
             cookie_manager = self.get_context().get_cookie_manager()
-            path = self.__COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
             cookie_manager.set_persistent_storage(
                                         path,
                                         WebKit2.CookiePersistentStorage.SQLITE)

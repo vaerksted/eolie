@@ -32,6 +32,8 @@ PROFILES = {"default": _("Default"),
             "finance": _("Finance"),
             "sport": _("Sport")}
 
+COOKIES_PATH = "%s/cookies_%s.db"
+
 
 class TimeSpan:
     HOUR = "0"

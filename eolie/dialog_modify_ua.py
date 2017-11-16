@@ -81,10 +81,9 @@ class ModifyUADialog:
             @param dialog as Gtk.Dialog
             @param response_id as int
         """
-        if response_id == Gtk.ResponseType.DELETE_EVENT:
-            return
-        user_agent = self.__entry.get_text()
-        El().websettings.set_user_agent(user_agent, self.__uri)
+        if response_id != Gtk.ResponseType.DELETE_EVENT:
+            user_agent = self.__entry.get_text()
+            El().websettings.set_user_agent(user_agent, self.__uri)
 
 #######################
 # PRIVATE             #

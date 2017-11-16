@@ -15,8 +15,9 @@ from gi.repository import Gio, GLib
 from hashlib import sha256
 from gettext import gettext as _
 from urllib.parse import urlparse
+import json
 
-from eolie.define import El, PROFILES
+from eolie.define import El, EOLIE_DATA_PATH
 
 
 class SitesMenu(Gio.Menu):
@@ -90,14 +91,24 @@ class SitesMenu(Gio.Menu):
         # Get first view URI
         uri = self.__views[0].webview.uri
         profile = El().websettings.get_profile(uri)
-        for key in PROFILES.keys():
-            item = PROFILES[key]
-            self.__window.add_action(action)
-            menu_item = Gio.MenuItem.new(item,
-                                         "win.eolie_profiles::%s" % key)
-            if profile == key:
-                action.change_state(GLib.Variant("s", profile))
-            menu.append_item(menu_item)
+        # Load user profiles
+        try:
+            f = Gio.File.new_for_path(EOLIE_DATA_PATH +
+                                      "/profiles.json")
+            if f.query_exists():
+                (status, contents, tag) = f.load_contents(None)
+                profiles = json.loads(contents.decode("utf-8"))
+
+            for key in profiles.keys():
+                item = profiles[key]
+                self.__window.add_action(action)
+                menu_item = Gio.MenuItem.new(item,
+                                             "win.eolie_profiles::%s" % key)
+                if profile == key:
+                    action.change_state(GLib.Variant("s", profile))
+                menu.append_item(menu_item)
+        except Exception as e:
+            print("SitesMenu::__get_submenu():", e)
         return menu
 
     def __on_profiles_activate(self, action, param):
