@@ -23,6 +23,7 @@ from pickle import dump, load
 from urllib.parse import urlparse
 from getpass import getuser
 from time import time
+import json
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -40,6 +41,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
+from eolie.define import PROFILES
 from eolie.utils import is_unity, wanted_loading_type
 
 
@@ -216,6 +218,26 @@ class Application(Gtk.Application):
                 self.__unity.set_property("progress", fraction)
                 self.__unity.set_property("progress_visible", fraction != 1.0)
 
+    def set_profiles(self):
+        """
+            Set profiles
+        """
+        try:
+            f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/profiles.json")
+            if f.query_exists():
+                (status, contents, tag) = f.load_contents(None)
+                self.__profiles = json.loads(contents.decode("utf-8"))
+            else:
+                content = json.dumps(PROFILES)
+                f.replace_contents(content.encode("utf-8"),
+                                   None,
+                                   False,
+                                   Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                   None)
+                self.__profiles = PROFILES
+        except Exception as e:
+            print("Application::set_profiles():", e)
+
     def quit(self, vacuum=False):
         """
             Quit application
@@ -243,6 +265,14 @@ class Application(Gtk.Application):
                             callback=(lambda x: Gio.Application.quit(self),))
         else:
             Gio.Application.quit(self)
+
+    @property
+    def profiles(self):
+        """
+            Get profiles
+            @return {}
+        """
+        return self.__profiles
 
     @property
     def start_page(self):
@@ -382,19 +412,7 @@ class Application(Gtk.Application):
                 pass
 
         # Init profiles
-        f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/profiles.json")
-        if not f.query_exists():
-            try:
-                import json
-                from eolie.define import PROFILES
-                content = json.dumps(PROFILES)
-                f.replace_contents(content.encode("utf-8"),
-                                   None,
-                                   False,
-                                   Gio.FileCreateFlags.REPLACE_DESTINATION,
-                                   None)
-            except Exception as e:
-                print("Application::__init():", e)
+        self.set_profiles()
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))

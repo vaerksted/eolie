@@ -227,14 +227,15 @@ class CookiesDialog:
                 request = "DELETE FROM moz_cookies WHERE "
                 filters = ()
                 for row in rows:
-                    request += "host=? AND "
+                    request += "host=? OR "
                     filters += (row.item.name,)
-                request += " 1"
+                request += " 0"
                 sql = sqlite3.connect(path, 600.0)
                 sql.execute(request, filters)
                 sql.commit()
         except Exception as e:
             print("CookiesDialog::_on_dialog_response():", e)
+        El().set_profiles()
 
     def _on_entry_changed(self, entry):
         """
@@ -361,12 +362,7 @@ class CookiesDialog:
         """
         # Load user profiles
         try:
-            f = Gio.File.new_for_path(EOLIE_DATA_PATH +
-                                      "/profiles.json")
-            if f.query_exists():
-                (status, contents, tag) = f.load_contents(None)
-                profiles = json.loads(contents.decode("utf-8"))
-                self.__add_profiles(profiles)
+            self.__add_profiles(El().profiles)
         except Exception as e:
             print("DialogSearchEngine::__populate():", e)
 

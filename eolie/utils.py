@@ -18,7 +18,7 @@ import cairo
 from random import choice
 from base64 import b64encode
 
-from eolie.define import El, ArtSize, LoadingType, PROFILES
+from eolie.define import El, ArtSize, LoadingType
 
 
 def name_from_profile_id(id):
@@ -27,8 +27,8 @@ def name_from_profile_id(id):
         @param id as str
         @return str
     """
-    if id in PROFILES.keys() and id != "default":
-        return "%s> " % PROFILES[id]
+    if id in El().profiles.keys() and id != "default":
+        return "%s> " % El().profiles[id]
     else:
         return ""
 
