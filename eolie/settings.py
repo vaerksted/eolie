@@ -220,7 +220,7 @@ class SettingsDialog:
             @param button as Gtk.button
         """
         from eolie.dialog_cookies import CookiesDialog
-        dialog = CookiesDialog(self.__settings_dialog)
+        dialog = CookiesDialog(False, self.__settings_dialog)
         dialog.run()
 
     def _on_manage_passwords_clicked(self, button):

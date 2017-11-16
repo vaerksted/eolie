@@ -109,7 +109,24 @@ class SitesMenu(Gio.Menu):
                 menu.append_item(menu_item)
         except Exception as e:
             print("SitesMenu::__get_submenu():", e)
+        action = Gio.SimpleAction(name="eolie_edit_profiles")
+        self.__window.add_action(action)
+        menu_item = Gio.MenuItem.new(_("Edit profiles"),
+                                     "win.eolie_edit_profiles")
+        menu.append_item(menu_item)
+        action.connect('activate',
+                       self.__on_edit_profiles_activate)
         return menu
+
+    def __on_edit_profiles_activate(self, action, param):
+        """
+            Show edit cookies dialog
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        from eolie.dialog_cookies import CookiesDialog
+        dialog = CookiesDialog(True, self.__window)
+        dialog.run()
 
     def __on_profiles_activate(self, action, param):
         """
