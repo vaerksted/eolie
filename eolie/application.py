@@ -779,7 +779,8 @@ class Application(Gtk.Application):
             label = builder.get_object("label")
             close = builder.get_object("close")
             cancel = builder.get_object("cancel")
-            label.set_text(_("Downloads running, are you sure you want quit?"))
+            label.set_text(_("Downloads running,"
+                             " are you sure you want quit ?"))
             dialog.set_transient_for(window)
             dialog.connect("response", on_response_id, window)
             close.connect("clicked", on_close, dialog)
