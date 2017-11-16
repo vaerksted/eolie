@@ -28,7 +28,7 @@ def name_from_profile_id(id):
         @return str
     """
     if id in PROFILES.keys() and id != "default":
-        return "%s>" % PROFILES[id]
+        return "%s> " % PROFILES[id]
     else:
         return ""
 

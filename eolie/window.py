@@ -141,9 +141,9 @@ class Window(Gtk.ApplicationWindow):
         profile = name_from_profile_id(webview.profile)
         title = webview.title
         if title:
-            self.toolbar.title.set_title("%s %s" % (profile, title))
+            self.toolbar.title.set_title("%s%s" % (profile, title))
         else:
-            self.toolbar.title.set_title("%s %s" % (profile, webview.uri))
+            self.toolbar.title.set_title("%s%s" % (profile, webview.uri))
         self.toolbar.actions.set_actions(webview)
 
     def hide(self):
