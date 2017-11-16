@@ -35,7 +35,7 @@ class WebViewNavigation:
             Init navigation
         """
         self.__js_timeout = None
-        self.__current_profile = None
+        self.__profile = None
         self.__initial_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -89,6 +89,14 @@ class WebViewNavigation:
             WebKit2.WebView.load_uri(self, uri)
 
     @property
+    def profile(self):
+        """
+            Get profile
+            @return str
+        """
+        return self.__profile
+
+    @property
     def initial_uri(self):
         """
             Initialy loaded URI
@@ -139,8 +147,8 @@ class WebViewNavigation:
         if self.ephemeral:
             return
         profile = El().websettings.get_profile(uri)
-        if self.__current_profile != profile:
-            self.__current_profile = profile
+        if self.__profile != profile:
+            self.__profile = profile
             cookie_manager = self.get_context().get_cookie_manager()
             path = self.__COOKIES_PATH % (EOLIE_DATA_PATH, profile)
             cookie_manager.set_persistent_storage(

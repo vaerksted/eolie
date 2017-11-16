@@ -18,7 +18,19 @@ import cairo
 from random import choice
 from base64 import b64encode
 
-from eolie.define import El, ArtSize, LoadingType
+from eolie.define import El, ArtSize, LoadingType, PROFILES
+
+
+def name_from_profile_id(id):
+    """
+        Get profile name from id
+        @param id as str
+        @return str
+    """
+    if id in PROFILES.keys() and id != "default":
+        return "%s>" % PROFILES[id]
+    else:
+        return ""
 
 
 def remove_www(netloc):

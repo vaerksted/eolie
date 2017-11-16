@@ -15,6 +15,7 @@ from gi.repository import GLib, WebKit2
 from urllib.parse import urlparse
 
 from eolie.define import Indicator
+from eolie.utils import name_from_profile_id
 
 
 class WebViewLoadSignals:
@@ -105,7 +106,8 @@ class WebViewLoadSignals:
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
-            self._window.toolbar.title.set_title(self.uri)
+            profile = name_from_profile_id(self.profile)
+            self._window.toolbar.title.set_title("%s %s" % (profile, self.uri))
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.show_spinner(True)
@@ -118,7 +120,8 @@ class WebViewLoadSignals:
                 self._window.container.current.switch_read_mode()
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.set_title(self.uri)
+            profile = name_from_profile_id(self.profile)
+            self._window.toolbar.title.set_title("%s %s" % (profile, self.uri))
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.show_spinner(False)
             self._window.toolbar.title.progress.set_fraction(1.0)
@@ -149,7 +152,8 @@ class WebViewLoadSignals:
             @param title as str
         """
         if webview.get_mapped():
-            self._window.toolbar.title.set_title(title)
+            profile = name_from_profile_id(self.profile)
+            self._window.toolbar.title.set_title("%s %s" % (profile, title))
         self._window.container.sites_manager.update_label(self.view)
 
     def __on_uri_changed(self, webview, uri):

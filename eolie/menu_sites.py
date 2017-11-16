@@ -16,22 +16,13 @@ from hashlib import sha256
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import El, PROFILES
 
 
 class SitesMenu(Gio.Menu):
     """
         Menu linked to a SitesManagerChild
     """
-
-    # For default gsetting shema translation
-    __PROFILES = {"default": _("Default"),
-                  "social": _("Social networks"),
-                  "work": _("Work"),
-                  "shopping": _("Shopping"),
-                  "personal": _("Personal"),
-                  "finance": _("Finance"),
-                  "sport": _("Sport")}
 
     def __init__(self, views, window):
         """
@@ -99,8 +90,8 @@ class SitesMenu(Gio.Menu):
         # Get first view URI
         uri = self.__views[0].webview.uri
         profile = El().websettings.get_profile(uri)
-        for key in self.__PROFILES.keys():
-            item = self.__PROFILES[key]
+        for key in PROFILES.keys():
+            item = PROFILES[key]
             self.__window.add_action(action)
             menu_item = Gio.MenuItem.new(item,
                                          "win.eolie_profiles::%s" % key)
