@@ -117,10 +117,10 @@ class SitesMenu(Gio.Menu):
             webview = self.__views[0].webview
             uri = webview.uri
             El().websettings.set_profile(param.get_string(), uri)
-            webview.stop()
+            webview.stop_loading()
             webview.load_uri(uri)
         except Exception as e:
-            print("SitesMenu::__on_profiles_actinvate:", e)
+            print("SitesMenu::__on_profiles_activate:", e)
 
     def __on_close_activate(self, action, param):
         """
