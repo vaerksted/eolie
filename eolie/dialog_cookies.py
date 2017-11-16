@@ -227,7 +227,7 @@ class CookiesDialog:
                 request = "DELETE FROM moz_cookies WHERE "
                 filters = ()
                 for row in rows:
-                    request += "host=? AND"
+                    request += "host=? AND "
                     filters += (row.item.name,)
                 request += " 1"
                 sql = sqlite3.connect(path, 600.0)
