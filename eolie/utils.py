@@ -28,7 +28,7 @@ def name_from_profile_id(id):
         @return str
     """
     if id in El().profiles.keys() and id != "default":
-        return "%s: " % El().profiles[id]
+        return "%s >  " % El().profiles[id]
     else:
         return ""
 
