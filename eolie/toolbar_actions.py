@@ -54,13 +54,23 @@ class ToolbarActions(Gtk.Bin):
         """
             Click next
         """
-        self.__window.container.current.webview.go_back()
+        webview = self.__window.container.current.webview
+        backlist = webview.get_back_forward_list().get_back_list()
+        if backlist:
+            uri = backlist[0].get_uri()
+            webview.go_back()
+            webview.switch_profile(uri)
 
     def forward(self):
         """
             Click previous
         """
-        self.__window.container.current.webview.go_forward()
+        webview = self.__window.container.current.webview
+        fwdlist = webview.get_back_forward_list().get_forward_list()
+        if fwdlist:
+            uri = fwdlist[0].get_uri()
+            webview.go_forward()
+            webview.switch_profile(uri)
 
     @property
     def count_label(self):
@@ -106,7 +116,7 @@ class ToolbarActions(Gtk.Bin):
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
             if event.button == 1:
-                self.__window.container.current.webview.go_back()
+                self.backward()
             elif event.button == 2:
                 back_list = self.__window.container.\
                     current.webview.get_back_forward_list().get_back_list()
@@ -142,7 +152,7 @@ class ToolbarActions(Gtk.Bin):
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
             if event.button == 1:
-                self.__window.container.current.webview.go_forward()
+                self.forward()
             elif event.button == 2:
                 forward_list = self.__window.container.\
                     current.webview.get_back_forward_list().get_forward_list()

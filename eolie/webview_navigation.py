@@ -85,8 +85,25 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
-            self.__switch_profile(uri)
+            self.switch_profile(uri)
             WebKit2.WebView.load_uri(self, uri)
+
+    def switch_profile(self, uri):
+        """
+            Handle cookies manager
+            @param uri as str
+        """
+        if self.ephemeral:
+            return
+        profile = El().websettings.get_profile(uri)
+        if self.__profile != profile:
+            self.__profile = profile
+            cookie_manager = self.get_context().get_cookie_manager()
+            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+            cookie_manager.set_persistent_storage(
+                                        path,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
+        self.get_context().clear_cache()
 
     @property
     def profile(self):
@@ -138,23 +155,6 @@ class WebViewNavigation:
                 parsed_split1[-2] == parsed_split2[-2]:
             return True
         return False
-
-    def __switch_profile(self, uri):
-        """
-            Handle cookies manager
-            @param uri as str
-        """
-        if self.ephemeral:
-            return
-        profile = El().websettings.get_profile(uri)
-        if self.__profile != profile:
-            self.__profile = profile
-            cookie_manager = self.get_context().get_cookie_manager()
-            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-            cookie_manager.set_persistent_storage(
-                                        path,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
-        self.get_context().clear_cache()
 
     def __on_run_as_modal(self, webview):
         """
@@ -322,9 +322,9 @@ class WebViewNavigation:
                 uri = webview.uri
                 El().history.set_page_state(uri)
                 self._error = None
-                parsed = urlparse(uri)
+                parsed = urlparse(self.__initial_uri)
                 if not self.__same_domain(parsed, parsed_navigation):
-                    self.__switch_profile(self._navigation_uri)
+                    self.switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         else:
