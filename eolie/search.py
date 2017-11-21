@@ -72,6 +72,7 @@ class Search:
                 ]
             }
 
+        self.__engines = {}
         self.__uri = ""
         self.__search = ""
         self.__suggest = ""
@@ -83,6 +84,7 @@ class Search:
             Save engines
             @param engines as {}
         """
+        self.__engines = engines
         try:
             content = json.dumps(engines)
             f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
@@ -170,19 +172,19 @@ class Search:
             Get engines
             return {}
         """
-        engines = {}
-        # Load user engines
-        try:
-            f = Gio.File.new_for_path(EOLIE_DATA_PATH +
-                                      "/search_engines.json")
-            if f.query_exists():
-                (status, contents, tag) = f.load_contents(None)
-                engines.update(json.loads(contents.decode("utf-8")))
-        except Exception as e:
-            print("Search::engines():", e)
-        if not engines:
-            engines = self.__ENGINES
-        return engines
+        if not self.__engines:
+            # Load user engines
+            try:
+                f = Gio.File.new_for_path(EOLIE_DATA_PATH +
+                                          "/search_engines.json")
+                if f.query_exists():
+                    (status, contents, tag) = f.load_contents(None)
+                    self.__engines.update(json.loads(contents.decode("utf-8")))
+            except Exception as e:
+                print("Search::engines():", e)
+            if not self.__engines:
+                self.__engines = self.__ENGINES
+        return self.__engines
 
     @property
     def uri(self):
