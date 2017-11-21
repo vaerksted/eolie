@@ -219,6 +219,7 @@ class Search:
         HTML = "text/html"
         JSON = "application/x-suggestions+json"
         try:
+            from eolie.popover_message import MessagePopover
             import xml.etree.ElementTree as xml
             root = xml.fromstring(content)
             name = None
@@ -230,25 +231,27 @@ class Search:
                     name = child.text
                 elif child.tag == URL:
                     if child.attrib["type"] == HTML:
-                        search = child.attrib["template"]
+                        if child.attrib["method"] == "get":
+                            search = child.attrib["template"]
                     elif child.attrib["type"] == JSON:
                         suggest = child.attrib["template"]
                 elif child.tag == ENCODING:
                     encoding = child.text
-            if name is not None and\
-                    search is not None and\
-                    suggest is not None:
-                from eolie.popover_message import MessagePopover
+            if name is not None and search is not None:
                 message = _("Do you want to install\n"
                             "%s search engine?" % name)
-                popover = MessagePopover(message, window,
-                                         self.__on_message_popover_ok,
-                                         name,
-                                         search,
-                                         suggest,
-                                         encoding)
-                popover.set_relative_to(window.toolbar.title)
-                popover.popup()
+                callback = self.__on_message_popover_ok
+            else:
+                message = _("Unsupported search engine")
+                callback = None
+            popover = MessagePopover(message, window,
+                                     callback,
+                                     name,
+                                     search,
+                                     suggest or "",
+                                     encoding)
+            popover.set_relative_to(window.toolbar.title)
+            popover.popup()
         except Exception as e:
             print("Search::__on_engine_loaded()", e)
 
