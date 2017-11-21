@@ -19,11 +19,12 @@ class MessagePopover(Gtk.Popover):
         @warning: will block current execution
     """
 
-    def __init__(self, message, window):
+    def __init__(self, message, window, callback=None, *args):
         """
             Init popover
             @param message as str
             @param window as window
+            @param callback as function
         """
         Gtk.Popover.__init__(self)
         self.set_modal(False)
@@ -39,6 +40,14 @@ class MessagePopover(Gtk.Popover):
         self.add(widget)
         self.__loop = GLib.MainLoop.new(None, False)
         self.connect("closed", self.__on_closed)
+        if callback is not None:
+            self.__callback = callback
+            self.__args = args
+            ok_button = builder.get_object("ok_button")
+            cancel_button = builder.get_object("cancel_button")
+            ok_button.show()
+            cancel_button.show()
+            builder.connect_signals(self)
 
     def popup(self):
         """
@@ -50,6 +59,20 @@ class MessagePopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
+    def _on_ok_button_clicked(self, button):
+        """
+            Pass ok to js
+            @param button as Gtk.Button
+        """
+        self.__callback(*self.__args)
+        self.hide()
+
+    def _on_cancel_button_clicked(self, button):
+        """
+            Pass ok to js
+            @param button as Gtk.Button
+        """
+        self.hide()
 
 #######################
 # PRIVATE             #

@@ -13,6 +13,7 @@
 from gi.repository import Gio, GLib
 
 from gettext import gettext as _
+from urllib.parse import urlparse
 import json
 
 from eolie.helper_task import TaskHelper
@@ -73,9 +74,25 @@ class Search:
 
         self.__uri = ""
         self.__search = ""
-        self.__keyword = ""
+        self.__suggest = ""
         self.__encoding = ""
         self.update_default_engine()
+
+    def save_engines(self, engines):
+        """
+            Save engines
+            @param engines as {}
+        """
+        try:
+            content = json.dumps(engines)
+            f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
+            f.replace_contents(content.encode("utf-8"),
+                               None,
+                               False,
+                               Gio.FileCreateFlags.REPLACE_DESTINATION,
+                               None)
+        except Exception as e:
+            print("Search::save_engines():", e)
 
     def update_default_engine(self):
         """
@@ -86,7 +103,7 @@ class Search:
             if engine == wanted:
                 self.__uri = self.engines[engine][0]
                 self.__search = self.engines[engine][1]
-                self.__keyword = self.engines[engine][2]
+                self.__suggest = self.engines[engine][2]
                 self.__encoding = self.engines[engine][3]
                 break
 
@@ -115,7 +132,7 @@ class Search:
         try:
             if not value.strip(" "):
                 return
-            uri = self.__keyword % GLib.uri_escape_string(value,
+            uri = self.__suggest % GLib.uri_escape_string(value,
                                                           None,
                                                           True)
             task_helper = TaskHelper()
@@ -123,6 +140,14 @@ class Search:
                                          callback, self.__encoding, value)
         except Exception as e:
             print("Search::search_suggestions():", e)
+
+    def install_engine(self, uri, window):
+        """
+            Install new search engine
+            @param uri as str
+            @param window as Window
+        """
+        self.__install_engine(uri, window)
 
     def is_search(self, string):
         """
@@ -170,3 +195,78 @@ class Search:
 #######################
 # PRIVATE             #
 #######################
+    def __install_engine(self, uri, window):
+        """
+            Install engine from uri
+            @param uri as str
+            @param window as Window
+        """
+        task_helper = TaskHelper()
+        task_helper.load_uri_content(uri, None,
+                                     self.__on_engine_loaded,
+                                     window)
+
+    def __on_engine_loaded(self, uri, status, content, window):
+        """
+            Ask user to add engine
+            @param uri as str
+            @param content as bytes
+            @param window as Window
+        """
+        SHORTNAME = "{http://a9.com/-/spec/opensearch/1.1/}ShortName"
+        URL = "{http://a9.com/-/spec/opensearch/1.1/}Url"
+        ENCODING = "{http://a9.com/-/spec/opensearch/1.1/}InputEncoding"
+        HTML = "text/html"
+        JSON = "application/x-suggestions+json"
+        try:
+            import xml.etree.ElementTree as xml
+            root = xml.fromstring(content)
+            name = None
+            search = None
+            suggest = None
+            encoding = "utf-8"
+            for child in root.iter():
+                if child.tag == SHORTNAME:
+                    name = child.text
+                elif child.tag == URL:
+                    if child.attrib["type"] == HTML:
+                        search = child.attrib["template"]
+                    elif child.attrib["type"] == JSON:
+                        suggest = child.attrib["template"]
+                elif child.tag == ENCODING:
+                    encoding = child.text
+            if name is not None and\
+                    search is not None and\
+                    suggest is not None:
+                from eolie.popover_message import MessagePopover
+                message = _("Do you want to install\n"
+                            "%s search engine?" % name)
+                popover = MessagePopover(message, window,
+                                         self.__on_message_popover_ok,
+                                         name,
+                                         search,
+                                         suggest,
+                                         encoding)
+                popover.set_relative_to(window.toolbar.title)
+                popover.popup()
+        except Exception as e:
+            print("Search::__on_engine_loaded()", e)
+
+    def __on_message_popover_ok(self, name, search, suggest, encoding):
+        """
+            Save engine
+            @param name as str
+            @param uri as str
+            @param suggest_uri as str
+            @param encoding as str
+        """
+        # Save engines
+        engines = El().search.engines
+        parsed = urlparse(search)
+        uri = "%s://%s" % (parsed.scheme, parsed.netloc)
+        engines[name] = [uri,
+                         search.replace("{searchTerms}", "%s"),
+                         suggest.replace("{searchTerms}", "%s"),
+                         encoding,
+                         ""]
+        El().search.save_engines(engines)

@@ -10,14 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, GObject, Gio
+from gi.repository import Gtk, GLib, GObject
 
 from gettext import gettext as _
 from urllib.parse import urlparse
-import json
 
 from eolie.search import Search
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import El
 
 
 class Item(GObject.GObject):
@@ -133,19 +132,9 @@ class SearchEngineDialog:
                 bang = child.item.get_property("bang")
                 if name and search:
                     engines[name] = [uri, search, keyword, encoding, bang]
-        try:
-            content = json.dumps(engines)
-            f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/search_engines.json")
-            f.replace_contents(content.encode("utf-8"),
-                               None,
-                               False,
-                               Gio.FileCreateFlags.REPLACE_DESTINATION,
-                               None)
-        except Exception as e:
-            print("SearchEngineDialog::run():", e)
+        El().search.save_engines(engines)
+        El().search.update_default_engine()
         self.__dialog.destroy()
-        # Update application search engines
-        El().search = Search()
 
 #######################
 # PROTECTED           #

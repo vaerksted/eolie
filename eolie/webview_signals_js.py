@@ -69,6 +69,10 @@ class WebViewJsSignals:
         if message.startswith("@EOLIE_READER@"):
             self._readable_content = message.replace("@EOLIE_READER@", "")
             self.emit("readable")
+        # OpenSearch message
+        elif message.startswith("@EOLIE_OPENSEARCH@"):
+            uri = message.replace("@EOLIE_OPENSEARCH@", "")
+            El().search.install_engine(uri, self._window)
         # Populars view message
         elif message.startswith("@EOLIE_HIDE_BOOKMARK_POPULARS@"):
             uri = message.replace("@EOLIE_HIDE_BOOKMARK_POPULARS@", "")
