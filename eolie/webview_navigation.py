@@ -322,9 +322,10 @@ class WebViewNavigation:
                 uri = webview.uri
                 El().history.set_page_state(uri)
                 self._error = None
-                parsed = urlparse(self.__initial_uri)
-                if not self.__same_domain(parsed, parsed_navigation):
-                    self.switch_profile(self._navigation_uri)
+                if self.__initial_uri is not None:
+                    parsed = urlparse(self.__initial_uri)
+                    if not self.__same_domain(parsed, parsed_navigation):
+                        self.switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         else:
