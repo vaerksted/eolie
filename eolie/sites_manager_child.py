@@ -336,10 +336,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if event.direction == Gdk.ScrollDirection.UP:
             self.__window.container.pages_manager.previous()
-            self.__window.container.pages_manager.ctrl_released()
         elif event.direction == Gdk.ScrollDirection.DOWN:
             self.__window.container.pages_manager.next()
-            self.__window.container.pages_manager.ctrl_released()
+        self.__window.container.ctrl_released()
 
     def _on_button_press_event(self, eventbox, event):
         """
