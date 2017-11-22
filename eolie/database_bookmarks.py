@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -90,10 +90,6 @@ class DatabaseBookmarks:
             @param commit as bool
             @return bookmark id as int
         """
-        # Search if bookmark item exists in history
-        history_id = El().history.get_id(uri)
-        if history_id is not None:
-            guid = El().history.get_guid(history_id)
         # Find an uniq guid
         while guid is None:
             guid = get_random_string(12)

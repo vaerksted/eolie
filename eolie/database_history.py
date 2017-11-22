@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 
@@ -103,17 +103,7 @@ class DatabaseHistory:
             return
         uri = uri.rstrip('/')
         parsed = urlparse(uri)
-        # No guid provided, first search in bookmarks
-        # Then in history. Db may be broken and contains multiple guid
-        # for same uri
-        if guid is None:
-            bookmark_id = El().bookmarks.get_id(uri)
-            if bookmark_id is not None:
-                guid = El().bookmarks.get_guid(bookmark_id)
-            else:
-                history_id = El().history.get_id(uri)
-                guid = El().history.get_guid(history_id)
-        # Find an uniq guid if none exists in db
+        # Find an uniq guid
         while guid is None:
             guid = get_random_string(12)
             if self.exists_guid(guid):
