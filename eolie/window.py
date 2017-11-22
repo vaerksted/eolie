@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Gdk, Soup
+from gi.repository import Gtk, GLib, Gio, Gdk
 
 from eolie.define import El, Indicator, LoadingType
 from eolie.toolbar import Toolbar
@@ -252,31 +252,6 @@ class Window(Gtk.ApplicationWindow):
         self.__toolbar.set_show_close_button(True)
         self.add(self.__container)
 
-    def __show_source_code(self, uri):
-        """
-            Show source code for uri
-            @param uri as str
-            @thread safe
-        """
-        # FIXME make this code async using TaskHelper
-        try:
-            (tmp, tmp_stream) = Gio.File.new_tmp("XXXXXX.html")
-            session = Soup.Session.new()
-            request = session.request(uri)
-            stream = request.send(None)
-            bytes = bytearray(0)
-            buf = stream.read_bytes(1024, None).get_data()
-            while buf:
-                bytes += buf
-                buf = stream.read_bytes(1024, None).get_data()
-            tmp_stream.get_output_stream().write_all(bytes)
-            stream.close()
-            tmp_stream.close()
-            return tmp
-        except Exception as e:
-            print("Window::__show_source_code():", e)
-            return None
-
     def __setup_window(self, size, maximized):
         """
             Set window
@@ -307,6 +282,22 @@ class Window(Gtk.ApplicationWindow):
         self.__timeout_configure = GLib.timeout_add(
                                                250,
                                                self.__on_configure_timeout)
+
+    def __on_source_loaded(self, uri, status, content):
+        """
+            Show source code for uri
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+        """
+        try:
+            (tmp, tmp_stream) = Gio.File.new_tmp("XXXXXX.html")
+            tmp_stream.get_output_stream().write_all(content)
+            tmp_stream.close()
+            appinfo = Gio.app_info_get_default_for_type("text/plain", False)
+            appinfo.launch([tmp], None)
+        except Exception as e:
+            print("Window::__on_source_loaded():", e)
 
     def __on_configure_timeout(self):
         """
@@ -353,15 +344,6 @@ class Window(Gtk.ApplicationWindow):
             @param widget as Gtk.Widget
         """
         self.update_zoom_level(False)
-
-    def __on_show_source_code(self, f):
-        """
-            Launch text editor
-            @param f as Gio.File
-        """
-        if f is not None:
-            appinfo = Gio.app_info_get_default_for_type("text/plain", False)
-            appinfo.launch([f], None)
 
     def __on_key_press_event(self, window, event):
         """
@@ -421,8 +403,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "source":
             uri = self.container.current.webview.uri
             task_helper = TaskHelper()
-            task_helper.run(self.__show_source_code, uri,
-                            callback=(self.__on_show_source_code,))
+            task_helper.load_uri_content(uri, None, self.__on_source_loaded)
         elif string == "find":
             find_widget = self.container.current.find_widget
             find_widget.set_search_mode(True)
