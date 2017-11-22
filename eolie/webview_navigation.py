@@ -322,10 +322,6 @@ class WebViewNavigation:
                 uri = webview.uri
                 El().history.set_page_state(uri)
                 self._error = None
-                if self.__initial_uri is not None:
-                    parsed = urlparse(self.__initial_uri)
-                    if not self.__same_domain(parsed, parsed_navigation):
-                        self.switch_profile(self._navigation_uri)
                 decision.use()
                 return False
         else:
@@ -341,7 +337,15 @@ class WebViewNavigation:
         """
         uri = webview.uri
         parsed = urlparse(uri)
+        # Only swtich profile if domain changed
+        switch_profile = False
+        if self.__initial_uri is not None:
+            initial_parsed = urlparse(self.__initial_uri)
+            if not self.__same_domain(parsed, initial_parsed):
+                switch_profile = True
         if event == WebKit2.LoadEvent.STARTED:
+            if switch_profile:
+                self.switch_profile(uri)
             self.stop_snapshot()
             self.stop_favicon()
             self.__initial_uri = uri.rstrip('/')
@@ -352,7 +356,9 @@ class WebViewNavigation:
                 self.set_setting("enable_javascript", exception)
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
-        if event == WebKit2.LoadEvent.COMMITTED:
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            if switch_profile:
+                self.switch_profile(uri)
             self.__hw_acceleration_policy(parsed.netloc)
             self.content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
