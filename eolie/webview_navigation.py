@@ -37,6 +37,7 @@ class WebViewNavigation:
         self.__js_timeout = None
         self.__profile = None
         self.__initial_uri = None
+        self.__previous_uri = ""
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -338,11 +339,8 @@ class WebViewNavigation:
         uri = webview.uri
         parsed = urlparse(uri)
         # Only swtich profile if domain changed
-        switch_profile = False
-        if self.__initial_uri is not None:
-            initial_parsed = urlparse(self.__initial_uri)
-            if not self.__same_domain(parsed, initial_parsed):
-                switch_profile = True
+        previous_parsed = urlparse(self.__previous_uri)
+        switch_profile = not self.__same_domain(parsed, previous_parsed)
         if event == WebKit2.LoadEvent.STARTED:
             if switch_profile:
                 self.switch_profile(uri)
@@ -442,3 +440,4 @@ class WebViewNavigation:
                               "***************************************")
                 except Exception as e:
                     print("Please install OpenSSL python support:", e)
+        self.__previous_uri = uri
