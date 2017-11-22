@@ -36,7 +36,6 @@ class WebViewNavigation:
         """
         self.__js_timeout = None
         self.__profile = None
-        self.__initial_uri = None
         self.__previous_uri = ""
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
@@ -44,7 +43,6 @@ class WebViewNavigation:
                      self.__on_insecure_content_detected)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
-        self.connect("load-changed", self.__on_load_changed)
         self.connect("notify::favicon", self.__on_notify_favicon)
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
@@ -114,15 +112,119 @@ class WebViewNavigation:
         """
         return self.__profile
 
-    @property
-    def initial_uri(self):
+#######################
+# PROTECTED           #
+#######################
+    def _on_load_changed(self, webview, event):
         """
-            Initialy loaded URI
-            When loading an URI, webkit may be redirected and we will
-            be unable to set snapshot/favicon in cache.
-            @return str
+            Update internals
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
         """
-        return self.__initial_uri
+        uri = webview.uri
+        parsed = urlparse(uri)
+        # Only swtich profile if domain changed
+        previous_parsed = urlparse(self.__previous_uri)
+        switch_profile = not self.__same_domain(parsed, previous_parsed)
+        if event == WebKit2.LoadEvent.STARTED:
+            if switch_profile:
+                self.switch_profile(uri)
+            self.stop_snapshot()
+            self.stop_favicon()
+            self._cancelled = False
+            # Setup js blocker
+            if El().settings.get_value("jsblock"):
+                exception = El().js_exceptions.find_parsed(parsed)
+                self.set_setting("enable_javascript", exception)
+            elif not self.get_settings().get_enable_javascript():
+                self.set_setting("enable_javascript", True)
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            if switch_profile:
+                self.switch_profile(uri)
+            self.__hw_acceleration_policy(parsed.netloc)
+            self.content_manager.remove_all_style_sheets()
+            if El().phishing.is_phishing(uri):
+                self._show_phishing_error(uri)
+            else:
+                # Can't find a way to block content for ephemeral views
+                if El().settings.get_value("adblock") and\
+                        not El().adblock_exceptions.find_parsed(parsed) and\
+                        parsed.scheme in ["http", "https"] and\
+                        self.content_manager is not None:
+                    self.content_manager.add_style_sheet(
+                                                      El().default_style_sheet)
+                    rules = El().adblock.get_css_rules(uri)
+                    user_style_sheet = WebKit2.UserStyleSheet(
+                                 rules,
+                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                                 WebKit2.UserStyleLevel.USER,
+                                 None,
+                                 None)
+                    self.content_manager.add_style_sheet(user_style_sheet)
+                self.update_spell_checking()
+                self.update_zoom_level()
+                user_agent = El().websettings.get_user_agent(uri)
+                settings = self.get_settings()
+                if user_agent:
+                    settings.set_user_agent(user_agent)
+                else:
+                    settings.set_user_agent_with_application_details("Eolie",
+                                                                     None)
+                # Setup image blocker
+                if El().settings.get_value("imgblock"):
+                    exception = El().image_exceptions.find_parsed(parsed)
+                    self.set_setting("auto-load-images", exception)
+                elif not self.get_settings().get_auto_load_images():
+                    self.set_setting("auto-load-images", True)
+                # Setup eolie internal adblocker
+                if El().settings.get_value("adblock") and\
+                        parsed.scheme in ["http", "https"]:
+                    exception = El().adblock_exceptions.find_parsed(parsed)
+                    if not exception:
+                        noext = ".".join(parsed.netloc.split(".")[:-1])
+                        javascripts = ["adblock_%s.js" % parsed.netloc,
+                                       "adblock_%s.js" % noext]
+                        for javascript in javascripts:
+                            f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                                 javascript))
+                            if f.query_exists():
+                                (status, content, tag) = f.load_contents(None)
+                                js = content.decode("utf-8")
+                                self.run_javascript(js, None, None)
+                                break
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.run_javascript_from_gresource(
+                                  "/org/gnome/Eolie/Extensions.js", None, None)
+            self.set_favicon(False)
+            if parsed.scheme != "populars":
+                self.set_snapshot()
+            if El().show_tls:
+                try:
+                    from OpenSSL import crypto
+                    from datetime import datetime
+                    (valid, tls, errors) = webview.get_tls_info()
+                    if tls is not None:
+                        print("***************************************"
+                              "***************************************")
+                        cert_pem = tls.get_property("certificate-pem")
+                        cert = crypto.load_certificate(crypto.FILETYPE_PEM,
+                                                       cert_pem)
+                        subject = cert.get_subject()
+                        print("CN: %s" % subject.CN)
+                        start_bytes = cert.get_notBefore()
+                        end_bytes = cert.get_notAfter()
+                        start = datetime.strptime(start_bytes.decode("utf-8"),
+                                                  "%Y%m%d%H%M%SZ")
+                        end = datetime.strptime(end_bytes.decode("utf-8"),
+                                                "%Y%m%d%H%M%SZ")
+                        print("Valid from %s to %s" % (start, end))
+                        print("Serial number: %s" % cert.get_serial_number())
+                        print(cert_pem)
+                        print("***************************************"
+                              "***************************************")
+                except Exception as e:
+                    print("Please install OpenSSL python support:", e)
+        self.__previous_uri = uri
 
 #######################
 # PRIVATE             #
@@ -210,7 +312,6 @@ class WebViewNavigation:
         self.emit("title-changed", webview.title)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
-            self.__initial_uri = None
             self.set_favicon(False)
         if self.__js_timeout is not None:
             GLib.source_remove(self.__js_timeout)
@@ -329,115 +430,3 @@ class WebViewNavigation:
             self.new_page(LoadingType.BACKGROUND)
             decision.ignore()
             return True
-
-    def __on_load_changed(self, webview, event):
-        """
-            Update sidebar/urlbar
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        uri = webview.uri
-        parsed = urlparse(uri)
-        # Only swtich profile if domain changed
-        previous_parsed = urlparse(self.__previous_uri)
-        switch_profile = not self.__same_domain(parsed, previous_parsed)
-        if event == WebKit2.LoadEvent.STARTED:
-            if switch_profile:
-                self.switch_profile(uri)
-            self.stop_snapshot()
-            self.stop_favicon()
-            self.__initial_uri = uri.rstrip('/')
-            self._cancelled = False
-            # Setup js blocker
-            if El().settings.get_value("jsblock"):
-                exception = El().js_exceptions.find_parsed(parsed)
-                self.set_setting("enable_javascript", exception)
-            elif not self.get_settings().get_enable_javascript():
-                self.set_setting("enable_javascript", True)
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            if switch_profile:
-                self.switch_profile(uri)
-            self.__hw_acceleration_policy(parsed.netloc)
-            self.content_manager.remove_all_style_sheets()
-            if El().phishing.is_phishing(uri):
-                self._show_phishing_error(uri)
-            else:
-                # Can't find a way to block content for ephemeral views
-                if El().settings.get_value("adblock") and\
-                        not El().adblock_exceptions.find_parsed(parsed) and\
-                        parsed.scheme in ["http", "https"] and\
-                        self.content_manager is not None:
-                    self.content_manager.add_style_sheet(
-                                                      El().default_style_sheet)
-                    rules = El().adblock.get_css_rules(uri)
-                    user_style_sheet = WebKit2.UserStyleSheet(
-                                 rules,
-                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                                 WebKit2.UserStyleLevel.USER,
-                                 None,
-                                 None)
-                    self.content_manager.add_style_sheet(user_style_sheet)
-                self.update_spell_checking()
-                self.update_zoom_level()
-                user_agent = El().websettings.get_user_agent(uri)
-                settings = self.get_settings()
-                if user_agent:
-                    settings.set_user_agent(user_agent)
-                else:
-                    settings.set_user_agent_with_application_details("Eolie",
-                                                                     None)
-                # Setup image blocker
-                if El().settings.get_value("imgblock"):
-                    exception = El().image_exceptions.find_parsed(parsed)
-                    self.set_setting("auto-load-images", exception)
-                elif not self.get_settings().get_auto_load_images():
-                    self.set_setting("auto-load-images", True)
-                # Setup eolie internal adblocker
-                if El().settings.get_value("adblock") and\
-                        parsed.scheme in ["http", "https"]:
-                    exception = El().adblock_exceptions.find_parsed(parsed)
-                    if not exception:
-                        noext = ".".join(parsed.netloc.split(".")[:-1])
-                        javascripts = ["adblock_%s.js" % parsed.netloc,
-                                       "adblock_%s.js" % noext]
-                        for javascript in javascripts:
-                            f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
-                                                                 javascript))
-                            if f.query_exists():
-                                (status, content, tag) = f.load_contents(None)
-                                js = content.decode("utf-8")
-                                self.run_javascript(js, None, None)
-                                break
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.run_javascript_from_gresource(
-                                  "/org/gnome/Eolie/Extensions.js", None, None)
-            self.set_favicon(False)
-            if parsed.scheme != "populars":
-                self.set_snapshot()
-            if El().show_tls:
-                try:
-                    from OpenSSL import crypto
-                    from datetime import datetime
-                    (valid, tls, errors) = webview.get_tls_info()
-                    if tls is not None:
-                        print("***************************************"
-                              "***************************************")
-                        cert_pem = tls.get_property("certificate-pem")
-                        cert = crypto.load_certificate(crypto.FILETYPE_PEM,
-                                                       cert_pem)
-                        subject = cert.get_subject()
-                        print("CN: %s" % subject.CN)
-                        start_bytes = cert.get_notBefore()
-                        end_bytes = cert.get_notAfter()
-                        start = datetime.strptime(start_bytes.decode("utf-8"),
-                                                  "%Y%m%d%H%M%SZ")
-                        end = datetime.strptime(end_bytes.decode("utf-8"),
-                                                "%Y%m%d%H%M%SZ")
-                        print("Valid from %s to %s" % (start, end))
-                        print("Serial number: %s" % cert.get_serial_number())
-                        print(cert_pem)
-                        print("***************************************"
-                              "***************************************")
-                except Exception as e:
-                    print("Please install OpenSSL python support:", e)
-        self.__previous_uri = uri

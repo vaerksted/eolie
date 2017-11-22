@@ -70,7 +70,6 @@ class WebViewLoadSignals:
             @param webview as WebView
         """
         if not self.view.subsurface:
-            self.connect("load-changed", self.__on_load_changed)
             self.connect("title-changed", self.__on_title_changed)
             self.connect("uri-changed", self.__on_uri_changed)
             self.connect("notify::estimated-load-progress",
@@ -86,12 +85,29 @@ class WebViewLoadSignals:
             @param webview as WebView
         """
         if not self.view.subsurface:
-            self.disconnect_by_func(self.__on_load_changed)
             self.disconnect_by_func(self.__on_title_changed)
             self.disconnect_by_func(self.__on_uri_changed)
             self.disconnect_by_func(self.__on_estimated_load_progress)
             self.get_back_forward_list().disconnect_by_func(
                                          self.__on_back_forward_list_changed)
+
+    def _on_load_changed(self, webview, event):
+        """
+            Update sidebar/urlbar
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if self.view.subsurface:
+            return
+        self.__current_event = event
+        if event == WebKit2.LoadEvent.STARTED:
+            self._new_pages_opened = 0
+            # Destroy current popups
+            for popup in self.__popups:
+                popup.destroy()
+            self.__popups = []
+        if webview.get_mapped():
+            self.__update_toolbars(event)
 
 #######################
 # PRIVATE             #
@@ -128,22 +144,6 @@ class WebViewLoadSignals:
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
-
-    def __on_load_changed(self, webview, event):
-        """
-            Update sidebar/urlbar
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        self.__current_event = event
-        if event == WebKit2.LoadEvent.STARTED:
-            self._new_pages_opened = 0
-            # Destroy current popups
-            for popup in self.__popups:
-                popup.destroy()
-            self.__popups = []
-        if webview.get_mapped():
-            self.__update_toolbars(event)
 
     def __on_title_changed(self, webview, title):
         """

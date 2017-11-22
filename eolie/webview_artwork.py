@@ -30,6 +30,7 @@ class WebViewArtwork:
         """
         self.__snapshot_id = None
         self.__favicon_id = None
+        self.__initial_uri = None
 
     def set_snapshot(self):
         """
@@ -60,16 +61,22 @@ class WebViewArtwork:
             @param favicon is safe
         """
         if not self.ephemeral:
-            if safe:
-                self.__favicon_id = GLib.timeout_add(1000,
-                                                     self.__set_favicon,
-                                                     safe)
-            else:
-                self.__set_favicon(safe)
+            self.__favicon_id = GLib.timeout_add(1000,
+                                                 self.__set_favicon,
+                                                 safe)
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_load_changed(self, webview, event):
+        """
+            Update sidebar/urlbar
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        uri = webview.uri
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__initial_uri = uri.rstrip('/')
 
 #######################
 # PRIVATE             #
@@ -149,13 +156,13 @@ class WebViewArtwork:
             @param favicon_type as str
             @param safe as str
         """
-        if self.initial_uri is not None:
+        if self.__initial_uri is not None:
             striped_uri = uri.rstrip("/")
-            if self.initial_uri != striped_uri:
-                (exists, cached) = El().art.exists(self.initial_uri,
+            if self.__initial_uri != striped_uri:
+                (exists, cached) = El().art.exists(self.__initial_uri,
                                                    favicon_type)
                 if not exists or (not cached and safe):
-                    El().art.save_artwork(self.initial_uri,
+                    El().art.save_artwork(self.__initial_uri,
                                           surface,
                                           favicon_type)
 
@@ -184,9 +191,9 @@ class WebViewArtwork:
         uri = self.uri
         # We also cache initial URI
         uris = [uri.rstrip("/")]
-        if self.initial_uri is not None and\
-                self.initial_uri not in uris:
-            uris.append(self.initial_uri)
+        if self.__initial_uri is not None and\
+                self.__initial_uri not in uris:
+            uris.append(self.__initial_uri)
         for uri in uris:
             (exists, cached) = El().art.exists(uri, "start")
             if not cached:

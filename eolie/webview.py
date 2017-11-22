@@ -474,6 +474,7 @@ class WebView(WebKit2.WebView):
                               True)
         settings.set_property("media-playback-allows-inline", True)
         self.connect("create", self.__on_create)
+        self.connect("load-changed", self._on_load_changed)
 
     def __set_system_fonts(self, settings, system=None):
         """
@@ -567,3 +568,16 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
                   WebViewSignals, WebViewArtwork):
     def __init__(self):
         pass
+
+#######################
+# PROTECTED           #
+#######################
+    def _on_load_changed(self, webview, event):
+        """
+            Update internals
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        WebViewNavigation._on_load_changed(self, webview, event)
+        WebViewSignals._on_load_changed(self, webview, event)
+        WebViewArtwork._on_load_changed(self, webview, event)
