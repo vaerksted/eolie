@@ -310,7 +310,6 @@ class ToolbarTitle(Gtk.Bin):
             Show a message to user about password input field over http
             @param webview as WebView
         """
-        # FIXME should be handled per webview
         if self.__input_warning_shown:
             return
         self.__input_warning_shown = True
