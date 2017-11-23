@@ -8,8 +8,8 @@
     <file compressed="true">start.html</file>
     <file compressed="true">application.css</file>
     <file compressed="true">error.css</file>
-    <file compressed="true">Readability.js</file>
     <file compressed="true">Extensions.js</file>
+    <file compressed="true">Readability.js</file>
      <file compressed="true" preprocess="xml-stripblanks">ActionsMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
