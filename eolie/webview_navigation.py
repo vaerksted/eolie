@@ -84,7 +84,6 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
-            self.switch_profile(uri)
             WebKit2.WebView.load_uri(self, uri)
 
     def switch_profile(self, uri):
@@ -139,6 +138,7 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         elif event == WebKit2.LoadEvent.COMMITTED:
+            self.__previous_uri = uri
             if switch_profile:
                 self.switch_profile(uri)
             self.__hw_acceleration_policy(parsed.netloc)
@@ -224,7 +224,6 @@ class WebViewNavigation:
                               "***************************************")
                 except Exception as e:
                     print("Please install OpenSSL python support:", e)
-        self.__previous_uri = uri
 
 #######################
 # PRIVATE             #
