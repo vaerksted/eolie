@@ -27,7 +27,8 @@ class WebViewJsSignals:
             Init class
         """
         self.__google_fix_count = 0
-        self.__reset_js_blocker()
+        self.__js_blocker_count = 0
+        self.__js_blocker_timeout_id = None
         self.connect("script-dialog", self.__on_script_dialog)
 
 #######################
@@ -55,8 +56,8 @@ class WebViewJsSignals:
         """
             Reset js blocker
         """
-        self.__js_dialog_type = None
-        self.__js_dialog_message = None
+        self.__js_blocker_count = 0
+        self.__js_blocker_timeout_id = None
 
     def __on_script_dialog(self, webview, dialog):
         """
@@ -64,6 +65,9 @@ class WebViewJsSignals:
             @param webview as WebView
             @param dialog as WebKit2.ScriptDialog
         """
+        if self.__js_blocker_timeout_id is not None:
+            GLib.source_remove(self.__js_blocker_timeout_id)
+            self.__js_blocker_timeout_id = None
         message = dialog.get_message()
         # Reader js message
         if message.startswith("@EOLIE_READER@"):
@@ -82,17 +86,18 @@ class WebViewJsSignals:
             uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
             El().history.reset_popularity(uri)
         # Here we handle JS flood
-        elif message == self.__js_dialog_message and\
-                dialog.get_dialog_type() == self.__js_dialog_type:
+        elif self.__js_blocker_count > 5:
+            self.__js_blocker_count = 0
             self._window.toolbar.title.show_message(
                    _("Eolie is going to close this page because it is broken"))
-            self._window.container.pages_manager.close_view(self, False)
+            self._window.container.close_view(self.view)
         # Webpage message
         else:
-            self.__js_dialog_type = dialog.get_dialog_type()
-            self.__js_dialog_message = dialog.get_message()
             self._window.toolbar.title.show_javascript(dialog)
-            GLib.timeout_add(1000, self.__reset_js_blocker)
+            self.__js_blocker_count += 1
+            self.__js_blocker_timeout_id = GLib.timeout_add(
+                                                       1000,
+                                                       self.__reset_js_blocker)
         return True
 
     def __on_resource_load_started(self, webview, resource, request):
