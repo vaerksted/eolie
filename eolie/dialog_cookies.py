@@ -181,7 +181,7 @@ class CookiesDialog:
         self.__remove_button = builder.get_object("remove_button")
         self.__delete_button = builder.get_object("delete_button")
         if self.__hide_cookies:
-            builder.get_object("scrolled").hide()
+            builder.get_object("cookies_box").hide()
             builder.get_object("box").set_hexpand(True)
             builder.get_object("box").set_vexpand(True)
             self.__delete_button.hide()
