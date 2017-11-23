@@ -55,22 +55,14 @@ class ToolbarActions(Gtk.Bin):
             Click next
         """
         webview = self.__window.container.current.webview
-        backlist = webview.get_back_forward_list().get_back_list()
-        if backlist:
-            uri = backlist[0].get_uri()
-            webview.go_back()
-            webview.switch_profile(uri)
+        webview.go_back()
 
     def forward(self):
         """
             Click previous
         """
         webview = self.__window.container.current.webview
-        fwdlist = webview.get_back_forward_list().get_forward_list()
-        if fwdlist:
-            uri = fwdlist[0].get_uri()
-            webview.go_forward()
-            webview.switch_profile(uri)
+        webview.go_forward()
 
     @property
     def count_label(self):
