@@ -312,8 +312,7 @@ class Container(Gtk.Overlay):
             self.__window.container.set_current(next_view, True)
         else:
             # We are last row, add a new one
-            self.__window.container.add_webview(El().start_page,
-                                                LoadingType.FOREGROUND)
+            self.add_webview(El().start_page, LoadingType.FOREGROUND)
 
     def stop_preloading(self):
         """
