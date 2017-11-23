@@ -84,7 +84,9 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
-            WebKit2.WebView.load_uri(self, uri)
+            # Prevent cookies access on profile switching
+            self.stop_loading()
+            GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
     def switch_profile(self, uri):
         """
