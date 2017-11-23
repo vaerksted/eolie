@@ -150,27 +150,57 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScrolledWindow" id="scrolled">
+              <object class="GtkBox">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <property name="shadow_type">in</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkViewport">
+                  <object class="GtkSearchEntry">
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="primary_icon_name">edit-find-symbolic</property>
+                    <property name="primary_icon_activatable">False</property>
+                    <property name="primary_icon_sensitive">False</property>
+                    <signal name="search-changed" handler="_on_search_changed" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolled">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <property name="shadow_type">in</property>
                     <child>
-                      <object class="GtkListBox" id="cookies">
+                      <object class="GtkViewport">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="selection_mode">multiple</property>
-                        <property name="activate_on_single_click">False</property>
-                        <signal name="row-selected" handler="_on_cookie_selected" swapped="no"/>
+                        <child>
+                          <object class="GtkListBox" id="cookies">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="selection_mode">multiple</property>
+                            <property name="activate_on_single_click">False</property>
+                            <signal name="row-selected" handler="_on_cookie_selected" swapped="no"/>
+                          </object>
+                        </child>
                       </object>
                     </child>
                   </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
+                <style>
+                  <class name="linked"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -191,7 +221,7 @@
       <object class="GtkHeaderBar" id="headerbar">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="title" translatable="yes">Profiles manager</property>
+        <property name="title">Profiles manager</property>
         <property name="show_close_button">True</property>
         <child>
           <object class="GtkButton" id="delete_button">
@@ -213,8 +243,5 @@
         </child>
       </object>
     </child>
-    <action-widgets>
-      <action-widget response="-5">delete_button</action-widget>
-    </action-widgets>
   </object>
 </interface>

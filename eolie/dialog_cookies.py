@@ -169,6 +169,7 @@ class CookiesDialog:
             @param parent as Gtk.Window
         """
         self.__hide_cookies = hide_cookies
+        self.__filter = ""
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/DialogCookies.ui")
         self.__dialog = builder.get_object("dialog")
@@ -186,6 +187,7 @@ class CookiesDialog:
             self.__delete_button.hide()
             self.__dialog.set_size_request(300, 400)
         else:
+            self.__cookies.set_filter_func(self.__filter_func)
             self.__dialog.set_size_request(600, 500)
         self.__remove_button.set_sensitive(False)
         builder.connect_signals(self)
@@ -286,6 +288,16 @@ class CookiesDialog:
             except Exception as e:
                 print("DialogSearchEngine::_on_remove_button_clicked():", e)
             row.destroy()
+            for child in self.__cookies.get_children():
+                GLib.idle_add(child.destroy)
+
+    def _on_search_changed(self, entry):
+        """
+            Update filter
+            @param entry as Gtk.SearchEntry
+        """
+        self.__filter = entry.get_text()
+        self.__cookies.invalidate_filter()
 
     def _on_cookie_selected(self, listbox, row):
         """
@@ -324,6 +336,16 @@ class CookiesDialog:
 #######################
 # PRIVATE             #
 #######################
+    def __filter_func(self, row):
+        """
+            Filter cookies
+            @param row as Row
+        """
+        name = row.item.get_property("name")
+        value = row.item.get_property("value")
+        return name.find(self.__filter) != -1 or\
+            value.find(self.__filter) != -1
+
     def __add_cookies(self, cookies):
         """
             Add cookies to model
