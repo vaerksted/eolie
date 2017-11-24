@@ -36,6 +36,7 @@ class WebViewNavigation:
             @param related_view as WebView
         """
         self.__js_timeout = None
+        self.__related_view = related_view
         if related_view is None:
             self.__profile = None
         else:
@@ -57,6 +58,8 @@ class WebViewNavigation:
             @param uri as str
         """
         self._error = None
+        # Reset related view allowing self to profil switching
+        self.__related_view = None
         # If not an URI, start a search
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
@@ -97,7 +100,7 @@ class WebViewNavigation:
             Handle cookies manager
             @param uri as str
         """
-        if self.ephemeral or self._related_view is not None:
+        if self.ephemeral or self.__related_view is not None:
             return
         profile = El().websettings.get_profile(uri)
         if self.__profile != profile:

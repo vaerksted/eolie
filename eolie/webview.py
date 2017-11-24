@@ -91,10 +91,10 @@ class WebView(WebKit2.WebView):
             zoom_level = El().websettings.get_zoom(self.uri)
             if zoom_level is None:
                 zoom_level = 100
-            if self._related_view is None:
+            if self.__related_view is None:
                 zoom_level *= self._window.zoom_level
             else:
-                window = self._related_view.get_ancestor(Gtk.Window)
+                window = self.__related_view.get_ancestor(Gtk.Window)
                 if window is not None and hasattr(window, "zoom-level"):
                     zoom_level *= window.zoom_level
         except Exception as e:
@@ -422,7 +422,7 @@ class WebView(WebKit2.WebView):
         self._uri = None
         self._title = None
         self._navigation_uri = None
-        self._related_view = related_view
+        self.__related_view = related_view
         self.__input_source = Gdk.InputSource.MOUSE
         self._cancelled = False
         self._shown = False
