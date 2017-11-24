@@ -14,6 +14,7 @@ from gi.repository import WebKit2WebExtension, GLib, GObject
 
 from urllib.parse import urlparse
 
+from eolie.define import Type
 from eolie.helper_passwords import PasswordsHelper
 
 
@@ -152,12 +153,6 @@ class FormsExtension(GObject.Object):
             user_form_value = form["username"].get_value()
             pass_form_name = form["password"].get_name()
             pass_form_value = form["password"].get_value()
-            self.__pending_credentials = (user_form_name,
-                                          user_form_value,
-                                          pass_form_name,
-                                          pass_form_value,
-                                          uri,
-                                          form_uri)
             self.__helper.get(form_uri, user_form_name,
                               pass_form_name, self.__on_get_password,
                               user_form_name, user_form_value,
@@ -171,7 +166,7 @@ class FormsExtension(GObject.Object):
     def pending_credentials(self):
         """
             Get credentials
-            @return (str, str, str, str, str, str)
+            @return (str, str, str, str, str, str)/None/Type.NONE
         """
         return self.__pending_credentials
 
@@ -196,18 +191,45 @@ class FormsExtension(GObject.Object):
             @param page_id as int
         """
         try:
-            uuid = ""
-            if attributes is not None:
+            # If credentials not found (!=Type.NONE) and something new
+            # is submitted
+            if self.__pending_credentials != Type.NONE and (
+                    attributes is None or
+                    attributes["login"] != user_form_value or
+                    password != pass_form_value):
                 if attributes["login"] != user_form_value:
-                    pass  # New login to store
-                elif password == pass_form_value:
-                    return
+                    uuid = ""
                 else:
                     uuid = attributes["uuid"]
-            args = (uuid, user_form_name, user_form_value,
-                    pass_form_name, uri, form_uri)
-            variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)", args))
-            self.emit("submit-form", variant)
+                self.__pending_credentials = (uuid,
+                                              user_form_name,
+                                              user_form_value,
+                                              pass_form_name,
+                                              pass_form_value,
+                                              uri,
+                                              form_uri)
+            else:
+                # Found, no more lookup
+                self.__pending_credentials = Type.NONE
+            # Last found credentials
+            if index == count - 1:
+                # Reset pending
+                if self.__pending_credentials == Type.NONE:
+                    self.__pending_credentials = None
+                # Ask for user input
+                elif self.__pending_credentials not in [None, Type.NONE]:
+                    (uuid,
+                     user_form_name,
+                     user_form_value,
+                     pass_form_name,
+                     pass_form_value,
+                     uri,
+                     form_uri) = self.__pending_credentials
+                    args = (uuid, user_form_name, user_form_value,
+                            pass_form_name, uri, form_uri)
+                    variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
+                                                                  args))
+                    self.emit("submit-form", variant)
         except Exception as e:
             print("FormsExtension::__on_get_password()", e)
 

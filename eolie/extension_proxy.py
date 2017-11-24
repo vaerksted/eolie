@@ -16,7 +16,7 @@ from gi.repository import Gio, GLib, WebKit2WebExtension
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from eolie.define import PROXY_BUS, PROXY_PATH
+from eolie.define import PROXY_BUS, PROXY_PATH, Type
 from eolie.list import LinkedList
 from eolie.helper_passwords import PasswordsHelper
 
@@ -186,10 +186,10 @@ class ProxyExtensionServer(Server):
             @param uri as str
             @param form_uri as str
         """
-        if self.__form_extension.pending_credentials is None:
+        if self.__form_extension.pending_credentials in [None, Type.NONE]:
             return
         try:
-            (_user_form_name, user_form_value,
+            (_uuid, _user_form_name, user_form_value,
              _pass_form_name, pass_form_value,
              _uri, _form_uri) = self.__form_extension.pending_credentials
             if user_form_name != _user_form_name or\
