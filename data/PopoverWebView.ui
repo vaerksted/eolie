@@ -45,6 +45,7 @@
             <property name="halign">center</property>
             <property name="valign">center</property>
             <property name="hexpand">True</property>
+            <property name="ellipsize">end</property>
           </object>
           <packing>
             <property name="expand">False</property>
