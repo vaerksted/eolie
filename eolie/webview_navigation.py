@@ -30,12 +30,16 @@ class WebViewNavigation:
                "x-scheme-handler/http", "x-scheme-handler/https",
                "multipart/related", "application/x-mimearchive"]
 
-    def __init__(self):
+    def __init__(self, related_view):
         """
             Init navigation
+            @param related_view as WebView
         """
         self.__js_timeout = None
-        self.__profile = None
+        if related_view is None:
+            self.__profile = None
+        else:
+            self.__profile = related_view.profile
         self.__previous_uri = ""
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)

@@ -405,7 +405,7 @@ class WebView(WebKit2.WebView):
             @param view as View
         """
         WebViewErrors.__init__(self)
-        WebViewNavigation.__init__(self)
+        WebViewNavigation.__init__(self, related_view)
         WebViewSignals.__init__(self)
         WebViewArtwork.__init__(self)
         self._window = window
