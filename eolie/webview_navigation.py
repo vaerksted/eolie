@@ -422,21 +422,10 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                navigation_type = navigation_action.get_navigation_type()
                 El().history.set_page_state(self._navigation_uri)
                 self._error = None
-                # Do not stop loading here because needed by form
-                # May lead to GObject warnings about cookies
-                if navigation_type in [
-                                   WebKit2.NavigationType.FORM_SUBMITTED,
-                                   WebKit2.NavigationType.FORM_RESUBMITTED]:
-                    decision.use()
-                    return False
-                # Force using load_uri() to prevent errors in profile switching
-                else:
-                    decision.ignore()
-                    self.load_uri(self._navigation_uri)
-                    return True
+                decision.use()
+                return False
         else:
             self.new_page(LoadingType.BACKGROUND)
             decision.ignore()
