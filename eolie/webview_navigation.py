@@ -57,6 +57,8 @@ class WebViewNavigation:
             Load uri
             @param uri as str
         """
+        # Allow profile switching
+        self.__previous_uri = ""
         self._error = None
         # Reset related view allowing self to profil switching
         self.__related_view = None
