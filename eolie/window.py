@@ -124,8 +124,9 @@ class Window(Gtk.ApplicationWindow):
             Update window
             @param webview as WebView
         """
-        if webview.uri is not None:
-            self.toolbar.title.set_uri(webview.uri)
+        uri = webview.uri
+        if uri is not None:
+            self.toolbar.title.set_uri(uri)
         self.toolbar.title.update_load_indicator(webview)
         if webview.popups:
             self.toolbar.title.show_indicator(Indicator.POPUPS)
@@ -142,8 +143,8 @@ class Window(Gtk.ApplicationWindow):
         title = webview.title
         if title:
             self.toolbar.title.set_title("%s%s" % (profile, title))
-        else:
-            self.toolbar.title.set_title("%s%s" % (profile, webview.uri))
+        elif uri:
+            self.toolbar.title.set_title("%s%s" % (profile, uri))
         self.toolbar.actions.set_actions(webview)
 
     def hide(self):
