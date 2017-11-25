@@ -51,7 +51,8 @@ class WebViewMenuSignals:
         inspector_item = None
         if El().settings.get_value("developer-extras"):
             count = context_menu.get_n_items()
-            inspector_item = context_menu.get_item_at_position(count - 1)
+            if count > 0:
+                inspector_item = context_menu.get_item_at_position(count - 1)
         context_menu.remove_all()
         parsed = urlparse(webview.uri)
         if parsed.scheme == "populars":
