@@ -61,7 +61,8 @@ class WebViewPopover(Gtk.Popover):
             properties = view.webview.get_window_properties()
             geometry = properties.get_geometry()
             if geometry.width and geometry.height:
-                self.__stack.set_size_request(geometry.width, geometry.height)
+                self.__stack.set_size_request(min(width, geometry.width),
+                                              min(height, geometry.height))
             else:
                 self.__stack.set_size_request(width, height)
             self.__label.set_text(title)
