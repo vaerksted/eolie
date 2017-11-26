@@ -239,8 +239,10 @@ class Context:
         if view.bad_tls is None:
             return
         parsed = urlparse(request.get_uri())
-        self.__context.allow_tls_certificate_for_host(view.bad_tls,
-                                                      parsed.netloc)
+        self.__context.allow_tls_certificate_for_host(
+                                                view.bad_tls,
+                                                # Remove port
+                                                parsed.netloc.split(":")[0])
         view.load_uri("https://" + parsed.netloc + parsed.path)
 
     def __on_download_started(self, context, download):
