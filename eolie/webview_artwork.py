@@ -173,6 +173,9 @@ class WebViewArtwork:
             @param uri as str
             @param first_pass as bool
         """
+        # Do not cache snapshot on error
+        if self.error is not None:
+            return
         # The 32767 limit on the width/height dimensions
         # of an image surface is new in cairo 1.10,
         # try with WebKit2.SnapshotRegion.VISIBLE
@@ -184,9 +187,6 @@ class WebViewArtwork:
                                   get_snapshot,
                                   self.__on_snapshot,
                                   False)
-            return
-        # Do not cache snapshot on error
-        if self.error is not None:
             return
         uri = self.uri
         # We also cache initial URI
