@@ -134,10 +134,11 @@ class Container(Gtk.Overlay):
         if state is not None:
             webview.restore_session_state(state)
         if uri is not None:
-            webview.set_uri(uri)
-            if loading_type != LoadingType.OFFLOAD:
-                # Do not load uri until we are on screen
-                GLib.idle_add(webview.load_uri, uri)
+            # Force loading
+            if loading_type == LoadingType.BACKGROUND:
+                webview.load_uri(uri)
+            elif loading_type in [LoadingType.OFFLOAD, LoadingType.FOREGROUND]:
+                webview.set_uri(uri)
         self.add_view(webview, loading_type)
         if self.__preload_timeout_id is not None:
             GLib.source_remove(self.__preload_timeout_id)
