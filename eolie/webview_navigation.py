@@ -298,28 +298,25 @@ class WebViewNavigation:
             request.allow()
         return True
 
-    def __on_uri_changed(self, webview, uri):
+    def __on_uri_changed(self, webview, param):
         """
             Clear readable context and title
             @param webview as WebKit2.WebView
-            @param uri as GParamSpec
+            @param param as GObject.ParamSpec
         """
-        self._uri = None
-        uri = webview.uri
+        uri = webview.get_property(param.name)
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
 
-    def __on_title_changed(self, webview, event):
+    def __on_title_changed(self, webview, param):
         """
             We launch Readability.js at page loading finished.
             @param webview as WebKit2.WebView
-            @param event as GParamSpec
+            @param param as GObject.ParamSpec
         """
-        if event.name != "title" or not webview.title:
-            return
-        self._title = None
-        self.emit("title-changed", webview.title)
+        title = webview.get_property(param.name)
+        self.emit("title-changed", title)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
             self.set_favicon(False)
