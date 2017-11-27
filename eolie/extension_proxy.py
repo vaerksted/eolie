@@ -144,7 +144,7 @@ class ProxyExtensionServer(Server):
         self.__on_input_timeout_id = None
         self.__elements_history = {}
         self.__send_requests = []
-        self.__sended_requests = []
+        self.__current_uri = None
         self.__helper = PasswordsHelper()
         self.__proxy_bus = PROXY_BUS % self.__page.get_id()
         addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
@@ -157,7 +157,6 @@ class ProxyExtensionServer(Server):
                                None,
                                self.__on_bus_new_for_address)
         form_extension.connect("submit-form", self.__on_submit_form)
-        page.connect("document-loaded", self.__on_document_loaded)
         page.connect("send-request", self.__on_send_request)
         page.connect("context-menu", self.__on_context_menu)
         page.connect("form-controls-associated",
@@ -278,7 +277,7 @@ class ProxyExtensionServer(Server):
             return []
         videos = []
         extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
-        for uri in self.__sended_requests:
+        for uri in self.__send_requests:
             parsed = urlparse(uri)
             title = None
             # Search for video in page
@@ -549,13 +548,6 @@ class ProxyExtensionServer(Server):
                                   "AskSaveCredentials",
                                   variant)
 
-    def __on_document_loaded(self, webpage):
-        """
-            Keep some data for extension
-        """
-        self.__sended_requests = self.__send_requests
-        self.__send_requests = []
-
     def __on_send_request(self, webpage, request, redirect):
         """
             Keep send requests
@@ -563,6 +555,9 @@ class ProxyExtensionServer(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
+        if self.__current_uri != webpage.get_uri():
+            self.__current_uri = webpage.get_uri()
+            self.__send_requests = []
         self.__send_requests.append(request.get_uri())
 
 
