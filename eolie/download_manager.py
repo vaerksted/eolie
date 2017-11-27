@@ -98,9 +98,7 @@ class DownloadManager(GObject.GObject):
             @param filename as str
             @param wanted_filename as str
         """
-        # WebKit fails do download uri
-        # with suggested filename too if contains %
-        filename = filename.replace("%", "")
+        filename = filename.replace("/", "_")
         extension = filename.split(".")[-1]
         if wanted_filename:
             # FIXME We should find a way to pass good extension,

@@ -10,6 +10,7 @@
 /python-webextension/libpythonloader_la-libpythonloader.lo
 /eolie-cli
 /po
+/build
 /help
 /*.bak
 /*.lo
