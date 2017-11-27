@@ -431,6 +431,10 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
+                # We already stop on LoadEvent.STARTED but a running timeout
+                # may cache something with wrong URI, so stop here too
+                self.stop_snapshot()
+                self.stop_favicon()
                 El().history.set_page_state(self._navigation_uri)
                 self._error = None
                 decision.use()
