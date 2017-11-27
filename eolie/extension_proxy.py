@@ -144,7 +144,6 @@ class ProxyExtensionServer(Server):
         self.__on_input_timeout_id = None
         self.__elements_history = {}
         self.__send_requests = []
-        self.__current_uri = None
         self.__helper = PasswordsHelper()
         self.__proxy_bus = PROXY_BUS % self.__page.get_id()
         addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
@@ -159,6 +158,7 @@ class ProxyExtensionServer(Server):
         form_extension.connect("submit-form", self.__on_submit_form)
         page.connect("send-request", self.__on_send_request)
         page.connect("context-menu", self.__on_context_menu)
+        page.connect("notify::uri", self.__on_notify_uri)
         page.connect("form-controls-associated",
                      self.__on_form_control_associated)
 
@@ -548,6 +548,14 @@ class ProxyExtensionServer(Server):
                                   "AskSaveCredentials",
                                   variant)
 
+    def __on_notify_uri(self, webpage, param):
+        """
+            Reset send requests
+            @param webpage as WebKit2WebExtension.WebPage
+            @param uri as GObject.ParamSpec
+        """
+        self.__send_requests = []
+
     def __on_send_request(self, webpage, request, redirect):
         """
             Keep send requests
@@ -555,9 +563,6 @@ class ProxyExtensionServer(Server):
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        if self.__current_uri != webpage.get_uri():
-            self.__current_uri = webpage.get_uri()
-            self.__send_requests = []
         self.__send_requests.append(request.get_uri())
 
 
