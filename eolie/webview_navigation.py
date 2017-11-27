@@ -60,8 +60,6 @@ class WebViewNavigation:
         # Allow profile switching
         self.__previous_uri = ""
         self._error = None
-        # Reset related view allowing self to profil switching
-        self.__related_view = None
         # If not an URI, start a search
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
