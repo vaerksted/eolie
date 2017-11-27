@@ -95,23 +95,6 @@ class WebViewNavigation:
             self.stop_loading()
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
-    def switch_profile(self, uri):
-        """
-            Handle cookies manager
-            @param uri as str
-        """
-        if self.ephemeral or self.__related_view is not None:
-            return
-        profile = El().websettings.get_profile(uri)
-        if self.__profile != profile:
-            self.__profile = profile
-            cookie_manager = self.get_context().get_cookie_manager()
-            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-            cookie_manager.set_persistent_storage(
-                                        path,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
-        self.get_context().clear_cache()
-
     @property
     def profile(self):
         """
@@ -131,14 +114,7 @@ class WebViewNavigation:
         """
         uri = webview.uri
         parsed = urlparse(uri)
-        # Only swtich profile if domain changed
-        previous_parsed = urlparse(self.__previous_uri)
-        switch_profile = not self.__same_domain(parsed, previous_parsed)
         if event == WebKit2.LoadEvent.STARTED:
-            if switch_profile:
-                self.switch_profile(uri)
-            self.stop_snapshot()
-            self.stop_favicon()
             self._cancelled = False
             # Setup js blocker
             if El().settings.get_value("jsblock"):
@@ -147,9 +123,6 @@ class WebViewNavigation:
             elif not self.get_settings().get_enable_javascript():
                 self.set_setting("enable_javascript", True)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__previous_uri = uri
-            if switch_profile:
-                self.switch_profile(uri)
             self.__hw_acceleration_policy(parsed.netloc)
             self.content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
@@ -249,6 +222,23 @@ class WebViewNavigation:
             policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
         self.get_settings().set_hardware_acceleration_policy(policy)
 
+    def __switch_profile(self, uri):
+        """
+            Handle cookies manager
+            @param uri as str
+        """
+        if self.ephemeral or self.__related_view is not None:
+            return
+        profile = El().websettings.get_profile(uri)
+        if self.__profile != profile:
+            self.__profile = profile
+            cookie_manager = self.get_context().get_cookie_manager()
+            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+            cookie_manager.set_persistent_storage(
+                                        path,
+                                        WebKit2.CookiePersistentStorage.SQLITE)
+        self.get_context().clear_cache()
+
     def __same_domain(self, parsed1, parsed2):
         """
             True if uri1 domain == uri2 domain
@@ -303,6 +293,15 @@ class WebViewNavigation:
             @param param as GObject.ParamSpec
         """
         uri = webview.get_property(param.name)
+        parsed = urlparse(uri)
+        # Only switch profile if domain changed
+        previous_parsed = urlparse(self.__previous_uri)
+        switch_profile = not self.__same_domain(parsed, previous_parsed)
+        if switch_profile:
+            self.__switch_profile(uri)
+        self.stop_snapshot()
+        self.stop_favicon()
+        self.__previous_uri = uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
