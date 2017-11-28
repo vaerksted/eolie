@@ -147,10 +147,17 @@ class WebViewMenuSignals:
                 hit.context_is_image() or\
                 hit.context_is_media():
             # Download link if uri looks like a file
-            uri = hit.get_link_uri() or \
-                  hit.get_image_uri() or \
-                  hit.get_media_uri()
-            if uri.split(".")[-1].isalnum():
+            uri = hit.get_link_uri()
+            if not uri or not uri.split(".")[-1].isalnum():
+                if hit.get_image_uri():
+                    msg = _("Download this image")
+                    uri = hit.get_image_uri()
+                else:
+                    msg = _("Download this video")
+                    uri = hit.get_media_uri()
+            else:
+                msg = _("Download this file")
+            if uri:
                 action = Gio.SimpleAction(name="download")
                 El().add_action(action)
                 action.connect("activate",
@@ -158,10 +165,10 @@ class WebViewMenuSignals:
                                uri)
                 item = WebKit2.ContextMenuItem.new_from_gaction(
                                                  action,
-                                                 _("Download this file"),
+                                                 msg,
                                                  None)
                 context_menu.append(item)
-        if not webview.is_loading() and parsed.scheme in ["http", "https"]:
+        elif parsed.scheme in ["http", "https"]:
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
             # Save all images
@@ -270,7 +277,7 @@ class WebViewMenuSignals:
             @param uri as str
         """
         try:
-            WebKit2.WebContext.get_default().download_uri(uri)
+            self.get_context().download_uri(uri)
         except Exception as e:
             print("WebViewMenuSignals::__on_download_activate():", e)
 
