@@ -330,7 +330,7 @@ class WebViewNavigation:
         """
             Set favicon
             @param webview as WebView
-            @param favicon as Gparam
+            @param favicon as GObject.ParamSpec
         """
         self.set_favicon(True)
 
