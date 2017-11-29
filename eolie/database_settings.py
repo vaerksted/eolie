@@ -24,6 +24,7 @@ class DatabaseSettings:
         Store various settings for webpage
     """
     __UPGRADES = {
+        1: "ALTER TABLE settings ADD accept_tls INT NOT NULL DEFAULT 0",
     }
 
     # SQLite documentation:
@@ -32,15 +33,16 @@ class DatabaseSettings:
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
     __create_settings = '''CREATE TABLE settings (
-                                               id INTEGER PRIMARY KEY,
-                                               uri TEXT NOT NULL,
-                                               chooseruri TEXT,
-                                               languages TEXT,
-                                               profile TEXT,
-                                               zoom INT,
-                                               geolocation INT,
-                                               user_agent TEXT
-                                               )'''
+                                           id INTEGER PRIMARY KEY,
+                                           uri TEXT NOT NULL,
+                                           chooseruri TEXT,
+                                           languages TEXT,
+                                           profile TEXT,
+                                           zoom INT,
+                                           accept_tls INT NOT NULL DEFAULT 0,
+                                           geolocation INT,
+                                           user_agent TEXT
+                                           )'''
 
     def __init__(self):
         """
@@ -157,6 +159,46 @@ class DatabaseSettings:
             v = result.fetchone()
             if v is not None:
                 return v[0] == 1
+            return False
+
+    def set_accept_tls(self, uri):
+        """
+            Accept TLS for uri
+            @param uri as str
+        """
+        parsed = urlparse(uri)
+        if parsed.scheme != "https":
+            return
+        try:
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT rowid FROM settings\
+                                      WHERE uri=?", (parsed.netloc,))
+                v = result.fetchone()
+                if v is not None:
+                    sql.execute("UPDATE settings\
+                                 SET accept_tls=1\
+                                 WHERE uri=?", (parsed.netloc,))
+                else:
+                    sql.execute("INSERT INTO settings\
+                                          (uri, accept_tls)\
+                                          VALUES (?, 1)", (parsed.netloc,))
+                sql.commit()
+        except Exception as e:
+            print("DatabaseSettings::set_accept_tls():", e)
+
+    def get_accept_tls(self, uri):
+        """
+            True if should accept tls for uri
+            @param uri as str
+            @return bool
+        """
+        parsed = urlparse(uri)
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT accept_tls FROM settings\
+                                  WHERE uri=?", (parsed.netloc,))
+            v = result.fetchone()
+            if v is not None:
+                return bool(v[0])
             return False
 
     def set_zoom(self, zoom, uri):

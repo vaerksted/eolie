@@ -14,6 +14,8 @@ from gi.repository import GLib, Gio
 
 from gettext import gettext as _
 
+from eolie.define import El
+
 
 class WebViewErrors:
     """
@@ -152,45 +154,50 @@ class WebViewErrors:
             @param certificate as Gio.TlsCertificate
             @parma errors as Gio.TlsCertificateFlags
         """
-        self._error = GLib.Error()
         self.__bad_tls = certificate
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
-        (status, css_content, tag) = f.load_contents(None)
-        css = css_content.decode("utf-8")
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
-        (status, content, tag) = f.load_contents(None)
-        html = content.decode("utf-8")
-        if errors == Gio.TlsCertificateFlags.BAD_IDENTITY:
-            error = _("The certificate does not match this website")
-        elif errors == Gio.TlsCertificateFlags.EXPIRED:
-            error = _("The certificate has expired")
-        elif errors == Gio.TlsCertificateFlags.UNKNOWN_CA:
-            error = _("The signing certificate authority is not known")
-        elif errors == Gio.TlsCertificateFlags.GENERIC_ERROR:
-            error = _("The certificate contains errors")
-        elif errors == Gio.TlsCertificateFlags.REVOKED:
-            error = _("The certificate has been revoked")
-        elif errors == Gio.TlsCertificateFlags.INSECURE:
-            error = _("The certificate is signed using"
-                      " a weak signature algorithm")
-        elif errors == Gio.TlsCertificateFlags.NOT_ACTIVATED:
-            error = _("The certificate activation time is still in the future")
+        accept_uri = uri.replace("https://", "accept://")
+        if El().websettings.get_accept_tls(uri):
+            self.load_uri(accept_uri)
         else:
-            error = _("The identity of this website has not been verified")
-        html = html % (_("Connection is not secure"),
-                       css,
-                       uri.replace("https://", "accept://"),
-                       "internal://dialog-warning-symbolic",
-                       _("Connection is not secure"),
-                       error,
-                       _("This does not look like the real %s.<br/>"
-                         "Attackers might be trying to steal or alter"
-                         " information going to or from this site"
-                         " (for example, private messages, credit card"
-                         " information, or passwords).") % uri,
-                       "destructive-action",
-                       _("Accept Risk and Proceed"))
-        self.load_html(html, uri)
+            self._error = GLib.Error()
+            f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
+            (status, css_content, tag) = f.load_contents(None)
+            css = css_content.decode("utf-8")
+            f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
+            (status, content, tag) = f.load_contents(None)
+            html = content.decode("utf-8")
+            if errors == Gio.TlsCertificateFlags.BAD_IDENTITY:
+                error = _("The certificate does not match this website")
+            elif errors == Gio.TlsCertificateFlags.EXPIRED:
+                error = _("The certificate has expired")
+            elif errors == Gio.TlsCertificateFlags.UNKNOWN_CA:
+                error = _("The signing certificate authority is not known")
+            elif errors == Gio.TlsCertificateFlags.GENERIC_ERROR:
+                error = _("The certificate contains errors")
+            elif errors == Gio.TlsCertificateFlags.REVOKED:
+                error = _("The certificate has been revoked")
+            elif errors == Gio.TlsCertificateFlags.INSECURE:
+                error = _("The certificate is signed using"
+                          " a weak signature algorithm")
+            elif errors == Gio.TlsCertificateFlags.NOT_ACTIVATED:
+                error = _(
+                      "The certificate activation time is still in the future")
+            else:
+                error = _("The identity of this website has not been verified")
+            html = html % (_("Connection is not secure"),
+                           css,
+                           accept_uri,
+                           "internal://dialog-warning-symbolic",
+                           _("Connection is not secure"),
+                           error,
+                           _("This does not look like the real %s.<br/>"
+                             "Attackers might be trying to steal or alter"
+                             " information going to or from this site"
+                             " (for example, private messages, credit card"
+                             " information, or passwords).") % uri,
+                           "destructive-action",
+                           _("Accept Risk and Proceed"))
+            self.load_html(html, uri)
         return True
 
     def __on_web_process_crashed(self, webview):
