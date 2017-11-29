@@ -179,8 +179,7 @@ class WebViewErrors:
             error = _("The identity of this website has not been verified")
         html = html % (_("Connection is not secure"),
                        css,
-                       "load_uri('%s')" % uri.replace("https://",
-                                                      "accept://"),
+                       uri.replace("https://", "accept://"),
                        "internal://dialog-warning-symbolic",
                        _("Connection is not secure"),
                        error,
@@ -208,7 +207,7 @@ class WebViewErrors:
         html = content.decode("utf-8")
         html = html % (_("WebKit web engine crashed"),
                        css,
-                       "load_uri('https://bugs.webkit.org/"
+                       "https://bugs.webkit.org/"
                        "enter_bug.cgi?product=WebKit')",
                        "internal://help-faq-symbolic",
                        _("WebKit web engine crashed"),
