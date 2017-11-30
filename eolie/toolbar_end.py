@@ -268,6 +268,7 @@ class ToolbarEnd(Gtk.Bin):
         button.hide()
         uri = self.__window.container.current.webview.uri
         El().websettings.set_accept_tls(uri, False)
+        self.__window.container.close_view(self.__window.container.current)
 
     def _on_fullscreen_button_clicked(self, button):
         """
