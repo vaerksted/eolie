@@ -178,7 +178,7 @@ class DatabaseSettings:
                 if v is not None:
                     sql.execute("UPDATE settings\
                                  SET accept_tls=?\
-                                 WHERE uri=?", (parsed.netloc, accept))
+                                 WHERE uri=?", (accept, parsed.netloc))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (uri, accept_tls)\
