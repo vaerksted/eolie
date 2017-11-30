@@ -197,7 +197,8 @@ class FormsExtension(GObject.Object):
                     attributes is None or
                     attributes["login"] != user_form_value or
                     password != pass_form_value):
-                if attributes["login"] != user_form_value:
+                if attributes is None or\
+                        attributes["login"] != user_form_value:
                     uuid = ""
                 else:
                     uuid = attributes["uuid"]
@@ -212,7 +213,7 @@ class FormsExtension(GObject.Object):
                 # Found, no more lookup
                 self.__pending_credentials = Type.NONE
             # Last found credentials
-            if index == count - 1:
+            if count < 1 or index == count - 1:
                 # Reset pending
                 if self.__pending_credentials == Type.NONE:
                     self.__pending_credentials = None
