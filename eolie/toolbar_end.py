@@ -57,6 +57,7 @@ class ToolbarEnd(Gtk.Bin):
         self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
         self.__sync_button = builder.get_object("sync_button")
+        self.__tls_button = builder.get_object("tls_button")
         if fullscreen:
             builder.get_object("fullscreen_button").show()
         self.__progress = ProgressBar()
@@ -137,6 +138,16 @@ class ToolbarEnd(Gtk.Bin):
             Show sync button allowing user to start sync
         """
         self.__sync_button.show()
+
+    def show_tls_button(self, show):
+        """
+            Show TLS button allowing user to discard a certificate
+            @param show as bool
+        """
+        if show:
+            self.__tls_button.show()
+        else:
+            self.__tls_button.hide()
 
     def show_download(self, download):
         """
@@ -248,6 +259,15 @@ class ToolbarEnd(Gtk.Bin):
         helper = PasswordsHelper()
         helper.get_sync(self.__on_get_sync)
         button.hide()
+
+    def _on_tls_button_clicked(self, button):
+        """
+            Do not accept TLS for this site by default
+            @param button as Gtk.Button
+        """
+        button.hide()
+        uri = self.__window.container.current.webview.uri
+        El().websettings.set_accept_tls(uri, False)
 
     def _on_fullscreen_button_clicked(self, button):
         """

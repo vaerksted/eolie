@@ -161,10 +161,11 @@ class DatabaseSettings:
                 return v[0] == 1
             return False
 
-    def set_accept_tls(self, uri):
+    def set_accept_tls(self, uri, accept):
         """
             Accept TLS for uri
             @param uri as str
+            @param accept as bool
         """
         parsed = urlparse(uri)
         if parsed.scheme != "https":
@@ -176,12 +177,13 @@ class DatabaseSettings:
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE settings\
-                                 SET accept_tls=1\
-                                 WHERE uri=?", (parsed.netloc,))
+                                 SET accept_tls=?\
+                                 WHERE uri=?", (parsed.netloc, accept))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (uri, accept_tls)\
-                                          VALUES (?, 1)", (parsed.netloc,))
+                                          VALUES (?, ?)", (parsed.netloc,
+                                                           accept))
                 sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_accept_tls():", e)

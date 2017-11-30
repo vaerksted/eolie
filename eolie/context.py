@@ -242,7 +242,7 @@ class Context:
         parsed = urlparse(request_uri)
         uri = request_uri.replace("accept://", "https://")
         if not El().websettings.get_accept_tls(uri):
-            El().websettings.set_accept_tls(uri)
+            El().websettings.set_accept_tls(uri, True)
         self.__context.allow_tls_certificate_for_host(
                                                 view.bad_tls,
                                                 # Remove port

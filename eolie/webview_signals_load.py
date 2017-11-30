@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import Indicator
+from eolie.define import Indicator, El
 from eolie.utils import name_from_profile_id
 
 
@@ -163,6 +163,8 @@ class WebViewLoadSignals:
             @param uri as str
         """
         if webview.get_mapped():
+            accept_tls = El().websettings.get_accept_tls(uri)
+            self._window.toolbar.end.show_tls_button(accept_tls)
             self._window.toolbar.title.set_uri(uri)
 
     def __on_estimated_load_progress(self, webview, value):
