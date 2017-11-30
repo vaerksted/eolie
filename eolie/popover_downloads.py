@@ -228,11 +228,11 @@ class DownloadRow(Gtk.ListBoxRow):
                 self.__avg_download_rates.append(bytes_per_second)
                 self.set_tooltip_text(self.__human_bytes_per_sec(
                                                          bytes_per_second))
-                # Calculate average for last 5 rates
+                # Calculate average for last 10 rates
                 avg = 0
                 for rate in self.__avg_download_rates:
                     avg += rate
-                if len(self.__avg_download_rates) > 5:
+                if len(self.__avg_download_rates) > 10:
                     self.__avg_download_rates.pop(0)
                 avg /= len(self.__avg_download_rates)
                 if incoming > 0:
