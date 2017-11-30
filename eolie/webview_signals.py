@@ -56,7 +56,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("uri-changed", self.__on_uri_changed)
-        self.connect("notify::title", self.__on_title_changed)
+        self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
 
@@ -168,18 +168,17 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
             Update UI and cancel current snapshot
             @param webview as WebView
-            @param uri as GParamString (Do not use)
+            @param uri as str
         """
         self._cancellable.cancel()
         self._cancellable.reset()
 
-    def __on_title_changed(self, webview, param):
+    def __on_title_changed(self, webview, title):
         """
             Append title to history
             @param webview as WebView
-            @param param as GObject.ParamSpec
+            @param title as str
         """
-        title = webview.get_property(param.name)
         parsed = urlparse(webview.uri)
         if self.error is not None or\
                 not title or webview.ephemeral or\
