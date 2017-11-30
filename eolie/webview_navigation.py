@@ -305,6 +305,11 @@ class WebViewNavigation:
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
+        # Js update, force favicon caching for current uri
+        if not self.is_loading():
+            self.stop_snapshot()
+            self.stop_favicon()
+            self.set_favicon(False)
 
     def __on_title_changed(self, webview, param):
         """
@@ -312,19 +317,16 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        title = webview.get_property(param.name)
-        self.emit("title-changed", title)
-        # Js update, force favicon caching for current uri
-        if not self.is_loading():
-            self.stop_snapshot()
-            self.stop_favicon()
-            self.set_favicon(False)
         if self.__js_timeout is not None:
             GLib.source_remove(self.__js_timeout)
-        self.__js_timeout = GLib.timeout_add(
-                             2000,
-                             self.__on_js_timeout,
-                             "/org/gnome/Eolie/Readability.js")
+            self.__js_timeout = None
+        title = webview.get_property(param.name)
+        if title:
+            self.emit("title-changed", title)
+            self.__js_timeout = GLib.timeout_add(
+                                 2000,
+                                 self.__on_js_timeout,
+                                 "/org/gnome/Eolie/Readability.js")
 
     def __on_notify_favicon(self, webview, favicon):
         """

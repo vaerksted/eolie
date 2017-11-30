@@ -105,12 +105,12 @@ class WebViewErrors:
             @param uri as str
             @param error as GLib.Error
         """
-        self._error = error
-        network_available = Gio.NetworkMonitor.get_default(
-                                                      ).get_network_available()
         # Ignore HTTP errors
         if error.code > 101:
             return False
+        network_available = Gio.NetworkMonitor.get_default(
+                                                      ).get_network_available()
+        self._error = error
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
@@ -158,6 +158,7 @@ class WebViewErrors:
         accept_uri = uri.replace("https://", "accept://")
         if El().websettings.get_accept_tls(uri):
             self.load_uri(accept_uri)
+            self._error = None
         else:
             self._error = GLib.Error()
             f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")

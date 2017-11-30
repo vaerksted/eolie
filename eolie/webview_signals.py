@@ -181,7 +181,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         parsed = urlparse(webview.uri)
         if self.error is not None or\
-                not title or webview.ephemeral or\
+                webview.ephemeral or\
                 parsed.scheme not in ["http", "https"]:
             return
         mtime = round(time(), 2)

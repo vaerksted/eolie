@@ -97,17 +97,16 @@ class WebViewLoadSignals:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if self.view.subsurface:
-            return
         self.__current_event = event
-        if event == WebKit2.LoadEvent.STARTED:
-            self._new_pages_opened = 0
-            # Destroy current popups
-            for popup in self.__popups:
-                popup.destroy()
-            self.__popups = []
-        if webview.get_mapped():
-            self.__update_toolbars(event)
+        if not self.view.subsurface:
+            if event == WebKit2.LoadEvent.STARTED:
+                self._new_pages_opened = 0
+                # Destroy current popups
+                for popup in self.__popups:
+                    popup.destroy()
+                self.__popups = []
+            if webview.get_mapped():
+                self.__update_toolbars(event)
 
 #######################
 # PRIVATE             #
