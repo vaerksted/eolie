@@ -271,11 +271,12 @@ class ToolbarTitle(Gtk.Bin):
             Show a popover with javascript message
             @param dialog as WebKit2.ScriptDialog
         """
-        from eolie.popover_javascript import JavaScriptPopover
-        popover = JavaScriptPopover(dialog, self.__window)
-        popover.set_relative_to(self.__entry)
-        popover.connect("closed", self.__on_popover_closed)
-        popover.popup()
+        if dialog.get_message():
+            from eolie.popover_javascript import JavaScriptPopover
+            popover = JavaScriptPopover(dialog, self.__window)
+            popover.set_relative_to(self.__entry)
+            popover.connect("closed", self.__on_popover_closed)
+            popover.popup()
 
     def show_geolocation(self, uri, request):
         """
