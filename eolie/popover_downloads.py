@@ -43,18 +43,14 @@ class DownloadRow(Gtk.ListBoxRow):
         self.__label = builder.get_object("label")
         self.__sublabel = builder.get_object("sublabel")
         destination = download.get_destination()
-        if destination is None:
-            self.__label.set_label(_("Unknown destination"))
-        else:
-            self.__label.set_label(destination.split("/")[-1])
+        self.__label.set_label(destination.split("/")[-1])
         self.__button = builder.get_object("button")
         self.__button_image = builder.get_object("button_image")
         if finished:
             self.__on_finished(download)
         else:
             progress = download.get_estimated_progress()
-            if progress is not None:
-                self.__progress.set_fraction(progress)
+            self.__progress.set_fraction(progress)
         self.add(builder.get_object("row"))
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
@@ -347,6 +343,8 @@ class DownloadsPopover(Gtk.Popover):
         """
         clear = False
         for download in El().download_manager.get():
+            if download.get_destination() is None:
+                continue
             child = DownloadRow(download, False)
             child.connect("size-allocate",
                           lambda x, y: self.__calculate_height())
@@ -355,6 +353,8 @@ class DownloadsPopover(Gtk.Popover):
             child.show()
             self.__listbox.add(child)
         for download in El().download_manager.get_finished():
+            if download.get_destination() is None:
+                continue
             child = DownloadRow(download, True)
             child.connect("size-allocate",
                           lambda x, y: self.__calculate_height())
@@ -419,6 +419,8 @@ class DownloadsPopover(Gtk.Popover):
             @param download_name as str
         """
         for download in El().download_manager.get():
+            if download.get_destination() is None:
+                continue
             if str(download) == download_name:
                 child = DownloadRow(download, False)
                 child.connect("size-allocate",
