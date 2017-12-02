@@ -511,13 +511,14 @@ class ToolbarEnd(Gtk.Bin):
         """
         uri = self.__window.container.current.webview.uri
         parsed = urlparse(uri)
-        action.set_state(param)
-        block_images = El().image_exceptions.find(parsed.netloc)
-        if block_images != param:
-            if param.get_boolean():
-                El().image_exceptions.add_exception(parsed.netloc)
-            else:
-                El().image_exceptions.add_exception(parsed.netloc)
+        if parsed.scheme in ["http", "https"]:
+            action.set_state(param)
+            block_images = El().image_exceptions.find(parsed.netloc)
+            if block_images != param:
+                if param.get_boolean():
+                    El().image_exceptions.add_exception(parsed.netloc)
+                else:
+                    El().image_exceptions.add_exception(parsed.netloc)
 
     def __on_js_change_state(self, action, param):
         """
