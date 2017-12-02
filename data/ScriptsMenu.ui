@@ -13,7 +13,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="hexpand">True</property>
-        <property name="text" translatable="yes">Block javascript</property>
+        <property name="text" translatable="yes">Block JavaScript</property>
         <property name="menu_name">main</property>
         <property name="inverted">True</property>
         <property name="centered">True</property>
