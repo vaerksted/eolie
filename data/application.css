@@ -262,6 +262,11 @@
     color: red;
 }
 
+.menu-listbox {
+    background-image: none;
+    background-color: transparent;
+}
+
 .row {
     /* https://bugzilla.gnome.org/show_bug.cgi?id=763517 */
     transition: none;
