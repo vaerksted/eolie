@@ -115,6 +115,8 @@ class WebViewNavigation:
         uri = webview.uri
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self.set_setting("auto-load-images",
+                             not El().image_exceptions.find(parsed.netloc))
             self._cancelled = False
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__hw_acceleration_policy(parsed.netloc)

@@ -90,8 +90,6 @@ class ToolbarEnd(Gtk.Bin):
                                                     "imgblock",
                                                     None,
                                                     GLib.Variant("b", False))
-        self.__images_action.connect("change-state",
-                                     self.__on_image_change_state)
         self.__window.add_action(self.__images_action)
 
         # Setup exceptions actions
@@ -354,6 +352,8 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.register(popover)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.popup()
+        self.__images_action.connect("change-state",
+                                     self.__on_image_change_state)
 
     def _on_save_button_clicked(self, button):
         """
@@ -513,12 +513,10 @@ class ToolbarEnd(Gtk.Bin):
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https"]:
             action.set_state(param)
-            block_images = El().image_exceptions.find(parsed.netloc)
-            if block_images != param:
-                if param.get_boolean():
-                    El().image_exceptions.add_exception(parsed.netloc)
-                else:
-                    El().image_exceptions.add_exception(parsed.netloc)
+            if param.get_boolean():
+                El().image_exceptions.add_exception(parsed.netloc)
+            else:
+                El().image_exceptions.remove_exception(parsed.netloc)
 
     def __on_js_change_state(self, action, param):
         """
@@ -557,6 +555,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         button.get_style_context().remove_class("selected")
         button.set_active(False)
+        self.__images_action.disconnect_by_func(self.__on_image_change_state)
 
     def __on_get_sync(self, attributes, password, uri, index, count):
         """
