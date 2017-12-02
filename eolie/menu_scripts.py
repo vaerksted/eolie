@@ -37,13 +37,13 @@ class ScriptRow(Gtk.EventBox):
         label.set_property("halign", Gtk.Align.START)
         label.show()
         check = Gtk.CheckButton()
-        check.connect("toggled", self.__on_check_toggled)
         check.show()
         grid.add(check)
         grid.add(label)
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
         check.set_active(not El().js_exceptions.find(uri, domain))
+        check.connect("toggled", self.__on_check_toggled)
 
 #######################
 # PRIVATE             #
