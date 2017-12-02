@@ -86,13 +86,13 @@ class ToolbarEnd(Gtk.Bin):
         popup_action.connect("change-state",
                              self.__on_popup_change_state)
         self.__window.add_action(popup_action)
-        image_action = Gio.SimpleAction.new_stateful(
-               "imgblock",
-               None,
-               GLib.Variant.new_boolean(El().settings.get_value("imgblock")))
-        image_action.connect("change-state",
-                             self.__on_image_change_state)
-        self.__window.add_action(image_action)
+        self.__images_action = Gio.SimpleAction.new_stateful(
+                                                    "imgblock",
+                                                    None,
+                                                    GLib.Variant("b", False))
+        self.__images_action.connect("change-state",
+                                     self.__on_image_change_state)
+        self.__window.add_action(self.__images_action)
 
         # Setup exceptions actions
         self.__adblock_exceptions = Gio.SimpleAction.new_stateful(
@@ -102,13 +102,6 @@ class ToolbarEnd(Gtk.Bin):
         self.__adblock_exceptions.connect("activate",
                                           self.__on_exceptions_activate)
         self.__window.add_action(self.__adblock_exceptions)
-        self.__image_exceptions = Gio.SimpleAction.new_stateful(
-                                                   "image_exceptions",
-                                                   GLib.VariantType.new("s"),
-                                                   GLib.Variant("s", "none"))
-        self.__image_exceptions.connect("activate",
-                                        self.__on_exceptions_activate)
-        self.__window.add_action(self.__image_exceptions)
         self.__popup_exceptions = Gio.SimpleAction.new_stateful(
                                                    "popup_exceptions",
                                                    GLib.VariantType.new("s"),
@@ -296,16 +289,6 @@ class ToolbarEnd(Gtk.Bin):
             self.__adblock_exceptions.change_state(GLib.Variant("s", "site"))
         else:
             self.__adblock_exceptions.change_state(GLib.Variant("s", "page"))
-        # Image exceptions
-        page_ex = El().image_exceptions.find(parsed.netloc +
-                                             parsed.path)
-        site_ex = El().image_exceptions.find(parsed.netloc)
-        if not page_ex and not site_ex:
-            self.__image_exceptions.change_state(GLib.Variant("s", "none"))
-        elif site_ex:
-            self.__image_exceptions.change_state(GLib.Variant("s", "site"))
-        else:
-            self.__image_exceptions.change_state(GLib.Variant("s", "page"))
         # Popup exceptions
         page_ex = El().popup_exceptions.find(parsed.netloc +
                                              parsed.path)
@@ -316,6 +299,9 @@ class ToolbarEnd(Gtk.Bin):
             self.__popup_exceptions.change_state(GLib.Variant("s", "site"))
         else:
             self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
+        # Image action
+        block_images = El().image_exceptions.find(parsed.netloc)
+        self.__images_action.change_state(GLib.Variant("b", block_images))
 
         popover = Gtk.PopoverMenu.new()
         fullscreen_button = builder.get_object("fullscreen_button")
@@ -476,8 +462,6 @@ class ToolbarEnd(Gtk.Bin):
             return
         if action == self.__adblock_exceptions:
             database = El().adblock_exceptions
-        elif action == self.__image_exceptions:
-            database = El().image_exceptions
         elif action == self.__js_exceptions:
             database = El().js_exceptions
         else:
@@ -525,9 +509,15 @@ class ToolbarEnd(Gtk.Bin):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         action.set_state(param)
-        El().settings.set_value("imgblock", param)
-        self.__window.container.current.webview.reload()
+        block_images = El().image_exceptions.find(parsed.netloc)
+        if block_images != param:
+            if param.get_boolean():
+                El().image_exceptions.add_exception(parsed.netloc)
+            else:
+                El().image_exceptions.add_exception(parsed.netloc)
 
     def __on_js_change_state(self, action, param):
         """

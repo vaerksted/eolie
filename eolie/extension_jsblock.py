@@ -79,4 +79,5 @@ class JSblockExtension:
                 for i in range(0, self.__scripts.get_length()):
                     script = self.__scripts.item(i)
                     if script.get_src() == request_uri:
+                        print(request_uri)
                         return True

@@ -389,8 +389,8 @@ class Application(Gtk.Application):
         self.adblock_exceptions = DatabaseExceptions("adblock")
         # Do not remove this!
         self.update_default_style_sheet()
-        self.popup_exceptions = DatabaseExceptions("popup")
-        self.image_exceptions = DatabaseExceptions("image")
+        self.popup_exceptions = DatabaseExceptions("popups")
+        self.image_exceptions = DatabaseExceptions("images")
         if self.settings.get_user_value("jsblock") is not None:
             self.js_exceptions = DatabaseExceptions("js")
         else:

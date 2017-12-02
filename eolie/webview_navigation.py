@@ -147,11 +147,8 @@ class WebViewNavigation:
                     settings.set_user_agent_with_application_details("Eolie",
                                                                      None)
                 # Setup image blocker
-                if El().settings.get_value("imgblock"):
-                    exception = El().image_exceptions.find_parsed(parsed)
-                    self.set_setting("auto-load-images", exception)
-                elif not self.get_settings().get_auto_load_images():
-                    self.set_setting("auto-load-images", True)
+                self.set_setting("auto-load-images",
+                                 not El().image_exceptions.find(parsed.netloc))
                 # Setup eolie internal adblocker
                 if El().settings.get_value("adblock") and\
                         parsed.scheme in ["http", "https"]:

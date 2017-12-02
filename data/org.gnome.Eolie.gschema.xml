@@ -29,11 +29,6 @@
          <summary>Block unwanted popups on pages</summary>
          <description />
       </key>
-      <key type="b" name="imgblock">
-         <default>false</default>
-         <summary>Block images on pages</summary>
-         <description />
-      </key>
       <key type="b" name="jsblock">
          <default>false</default>
          <summary>Block Javascript on pages</summary>
