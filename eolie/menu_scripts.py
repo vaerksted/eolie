@@ -99,14 +99,14 @@ class ScriptsMenu(Gtk.Bin):
         """
         for child in listbox.get_children():
             child.destroy()
-        self.__switch.set_active(El().settings.get_value("jsblock"))
+        self.__switch.set_state(El().settings.get_value("jsblock"))
         page_id = El().active_window.container.current.webview.get_page_id()
         El().helper.call("GetScripts", page_id, None,
                          self.__on_get_scripts, listbox)
 
     def _on_state_set(self, listbox, state):
         """
-            Save spell checking state
+            Save js blocker state
             @param listbox as Gtk.ListBox
             @param state as bool
         """
