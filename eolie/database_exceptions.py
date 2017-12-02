@@ -12,6 +12,7 @@
 
 from gi.repository import Gio, GLib
 
+import itertools
 import sqlite3
 
 from eolie.sqlcursor import SqlCursor
@@ -80,6 +81,17 @@ class DatabaseExceptions:
                 sql.commit()
         except:
             pass
+
+    def get_values_for_domain(self, domain):
+        """
+            Get values for domain
+            @param domain as str
+            @return [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT value FROM exceptions\
+                                  WHERE domain=?", (domain,))
+            return list(itertools.chain(*result))
 
     def find(self, value, domain=""):
         """

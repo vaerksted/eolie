@@ -127,7 +127,9 @@ class ScriptsMenu(Gtk.Bin):
             @param listbox as Gtk.ListBox
         """
         try:
-            for uri in source.call_finish(result)[0]:
+            uris = source.call_finish(result)[0]
+            db_uris = El().js_exceptions.get_values_for_domain(self.__domain)
+            for uri in list(set(db_uris) | set(uris)):
                 row = ScriptRow(uri, self.__domain)
                 row.show()
                 listbox.add(row)
