@@ -99,7 +99,9 @@ class ScriptsMenu(Gtk.Bin):
         """
         for child in listbox.get_children():
             child.destroy()
-        self.__switch.set_state(El().settings.get_value("jsblock"))
+        state = El().settings.get_value("jsblock")
+        self.__switch.set_active(state)
+        listbox.set_sensitive(state)
         page_id = El().active_window.container.current.webview.get_page_id()
         El().helper.call("GetScripts", page_id, None,
                          self.__on_get_scripts, listbox)
