@@ -100,6 +100,9 @@ class ProxyExtensionServer(Server):
       <arg type="s" name="username" direction="in" />
       <arg type="s" name="username" direction="in" />
     </method>
+    <method name="GetScripts">
+      <arg type="as" name="results" direction="out" />
+    </method>
     <method name="GetImages">
       <arg type="as" name="results" direction="out" />
     </method>
@@ -130,16 +133,18 @@ class ProxyExtensionServer(Server):
     </node>
     '''
 
-    def __init__(self, extension, page, form_extension):
+    def __init__(self, extension, page, form_extension, jsblock_extension):
         """
             Init server
             @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
             @param form_extension as FormsExtension
+            @param jsblock_extension as JSBlockExtension
         """
         self.__extension = extension
         self.__page = page
         self.__form_extension = form_extension
+        self.__jsblock_extension = jsblock_extension
         self.__focused = None
         self.__on_input_timeout_id = None
         self.__elements_history = {}
@@ -167,8 +172,7 @@ class ProxyExtensionServer(Server):
             True if form contains data
             @return bool
         """
-        page = self.__extension.get_page(self.__page.get_id())
-        dom = page.get_dom_document()
+        dom = self.__page.get_dom_document()
         collection = dom.get_elements_by_tag_name("textarea")
         for i in range(0, collection.get_length()):
             if collection.item(i).is_edited():
@@ -228,8 +232,7 @@ class ProxyExtensionServer(Server):
             @param userform as str
         """
         try:
-            page = self.__extension.get_page(self.__page.get_id())
-            collection = page.get_dom_document().get_forms()
+            collection = self.__page.get_dom_document().get_forms()
             elements = []
             for i in range(0, collection.get_length()):
                 elements.append(collection.item(i))
@@ -240,12 +243,23 @@ class ProxyExtensionServer(Server):
                                       userform,
                                       form["password"].get_name(),
                                       self.__form_extension.set_input_forms,
-                                      page,
+                                      self.__page,
                                       form,
                                       username)
                     return
         except Exception as e:
             print("ProxyExtension::SetAuthForms():", e)
+
+    def GetScripts(self):
+        """
+            Get images
+            @return [str]
+        """
+        try:
+            return self.__jsblock_extension.scripts
+        except Exception as e:
+            print("ProxyExtension::GetScripts():", e)
+        return []
 
     def GetImages(self):
         """
@@ -571,21 +585,24 @@ class ProxyExtension:
         Communication proxy for Eolie
     """
 
-    def __init__(self, extension, form_extension):
+    def __init__(self, extension, form_extension, jsblock_extension):
         """
             Init extension
             @param extension as WebKit2WebExtension.WebExtension
             @param form_extension as FormsExtension
+            @parma jsblock_extension as JSBlockExtension
         """
         self.__server = None
         extension.connect("page-created",
                           self.__on_page_created,
-                          form_extension)
+                          form_extension,
+                          jsblock_extension)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_page_created(self, extension, webpage, form_extension):
+    def __on_page_created(self, extension, webpage,
+                          form_extension, jsblock_extension):
         """
             Cache webpage
             @param extension as WebKit2WebExtension.WebExtension
@@ -594,4 +611,5 @@ class ProxyExtension:
         """
         self.__server = ProxyExtensionServer(extension,
                                              webpage,
-                                             form_extension)
+                                             form_extension,
+                                             jsblock_extension)

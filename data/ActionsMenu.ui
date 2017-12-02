@@ -294,102 +294,6 @@
         <property name="top_attach">12</property>
       </packing>
     </child>
-    <child>
-      <object class="GtkGrid" id="js_exceptions">
-        <property name="visible">False</property>
-        <child>
-          <object class="GtkGrid">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="column_spacing">4</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Do not block JavaScript</property>
-                <style>
-                  <class name="dim-label"/>
-                </style>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparator">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="valign">center</property>
-                <property name="hexpand">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparator">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="valign">center</property>
-                <property name="hexpand">True</property>
-              </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkModelButton">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="action_name">win.js_exceptions</property>
-            <property name="action_target">"none"</property>
-            <property name="text" translatable="yes" context="JavasSript exception">None</property>
-          </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">14</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkModelButton">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="action_name">win.js_exceptions</property>
-            <property name="action_target">"site"</property>
-            <property name="text" translatable="yes">Current site</property>
-          </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">15</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkModelButton">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="action_name">win.js_exceptions</property>
-            <property name="action_target">"page"</property>
-            <property name="text" translatable="yes">Current page</property>
-          </object>
-          <packing>
-            <property name="left_attach">0</property>
-            <property name="top_attach">16</property>
-          </packing>
-        </child>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">13</property>
-      </packing>
-    </child>
   </object>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
@@ -651,10 +555,10 @@
     </child>
     <child>
       <object class="GtkModelButton" id="js_block">
-        <property name="visible">False</property>
+        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.jsblock</property>
+        <property name="menu_name">scripts</property>
         <property name="text" translatable="yes">Block JavaScript</property>
       </object>
       <packing>

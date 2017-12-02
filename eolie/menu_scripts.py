@@ -10,30 +10,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, GtkSpell
+from gi.repository import Gtk, GLib
 
 from eolie.define import El
 
 
-class LanguageRow(Gtk.EventBox):
+class ScriptRow(Gtk.EventBox):
     """
-        Language row (Allowing to select a language for uri)
+        Script row
     """
 
-    def __init__(self, uri, name, code):
+    def __init__(self, uri, domain):
         """
             Init row
             @param uri as str
-            @param name as str
-            @param code as str
+            @param domain as str
         """
         Gtk.EventBox.__init__(self)
         self.__uri = uri
-        self.__code = code
+        self.__domain = domain
         grid = Gtk.Grid()
         grid.set_column_spacing(5)
         grid.show()
-        label = Gtk.Label.new(name)
+        label = Gtk.Label.new(uri)
         label.set_hexpand(True)
         label.set_property("halign", Gtk.Align.START)
         label.show()
@@ -44,18 +43,7 @@ class LanguageRow(Gtk.EventBox):
         grid.add(label)
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
-        user_code = ""
-        codes = El().websettings.get_languages(uri)
-        if codes is None:
-            codes = []
-            locales = GLib.get_language_names()
-            if locales:
-                user_code = locales[0].split(".")[0]
-                codes = [user_code]
-        check.set_active(codes is not None and code in codes)
-        # Here we force add of default language
-        if user_code == code:
-            check.toggled()
+        check.set_active(not El().js_exceptions.find(uri, domain))
 
 #######################
 # PRIVATE             #
@@ -63,7 +51,7 @@ class LanguageRow(Gtk.EventBox):
     def __on_button_press_event(self, row, event, check):
         """
             Toggle check box
-            @param row as LanguageRow
+            @param row as ScriptRow
             @param event as Gdk.ButtonEvent
             @param check as Gtk.CheckButton
         """
@@ -77,47 +65,44 @@ class LanguageRow(Gtk.EventBox):
         """
         active = check.get_active()
         if active:
-            El().websettings.add_language(self.__code, self.__uri)
+            El().js_exceptions.remove_exception(self.__uri, self.__domain)
         else:
-            El().websettings.remove_language(self.__code, self.__uri)
-        El().active_window.container.current.webview.update_spell_checking()
+            El().js_exceptions.add_exception(self.__uri, self.__domain)
 
 
-class LanguagesWidget(Gtk.Bin):
+class ScriptsMenu(Gtk.Bin):
     """
-        Widget showing languages and allowing user to enable/disable
+        Widget showing Scripts and allowing user to enable/disable
         spell check
     """
 
-    def __init__(self, uri):
+    def __init__(self, netloc):
         """
             Init widget
-            @param uri as str
+            @param netloc as str
         """
+        self.__domain = netloc
         Gtk.Bin.__init__(self)
-        self.__uri = uri
         builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/Languages.ui")
+        builder.add_from_resource("/org/gnome/Eolie/ScriptsMenu.ui")
         builder.connect_signals(self)
         self.__switch = builder.get_object("switch")
-        self.add(builder.get_object("languages"))
+        self.add(builder.get_object("scripts"))
 
 #######################
-# PRIVATE             #
+# PROTECTED           #
 #######################
     def _on_map(self, listbox):
         """
-            Populate languages
+            Populate Scripts
             @param listbox as Gtk.ListBox
         """
-        self.__switch.set_active(El().settings.get_value("enable-spell-check"))
-        if not listbox.get_children():
-            checker = GtkSpell.Checker()
-            for language in checker.get_language_list():
-                name = checker.decode_language_code(language)
-                row = LanguageRow(self.__uri, name, language)
-                row.show()
-                listbox.add(row)
+        for child in listbox.get_children():
+            child.destroy()
+        self.__switch.set_active(El().settings.get_value("jsblock"))
+        page_id = El().active_window.container.current.webview.get_page_id()
+        El().helper.call("GetScripts", page_id, None,
+                         self.__on_get_scripts, listbox)
 
     def _on_state_set(self, listbox, state):
         """
@@ -125,10 +110,24 @@ class LanguagesWidget(Gtk.Bin):
             @param listbox as Gtk.ListBox
             @param state as bool
         """
-        El().settings.set_value("enable-spell-check",
+        El().settings.set_value("jsblock",
                                 GLib.Variant("b", state))
         listbox.set_sensitive(state)
-        for window in El().windows:
-            for view in window.container.views:
-                context = view.webview.get_context()
-                context.set_spell_checking_enabled(state)
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_get_scripts(self, source, result, listbox):
+        """
+            Populate listbox with scripts
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+            @param listbox as Gtk.ListBox
+        """
+        try:
+            for uri in source.call_finish(result)[0]:
+                row = ScriptRow(uri, self.__domain)
+                row.show()
+                listbox.add(row)
+        except Exception as e:
+            print("ScriptsMenu::__on_get_scripts()", e)

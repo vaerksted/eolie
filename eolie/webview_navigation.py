@@ -116,12 +116,6 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
             self._cancelled = False
-            # Setup js blocker
-            if El().settings.get_value("jsblock"):
-                exception = El().js_exceptions.find_parsed(parsed)
-                self.set_setting("enable_javascript", exception)
-            elif not self.get_settings().get_enable_javascript():
-                self.set_setting("enable_javascript", True)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__hw_acceleration_policy(parsed.netloc)
             self.content_manager.remove_all_style_sheets()

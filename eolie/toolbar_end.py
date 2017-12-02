@@ -94,14 +94,6 @@ class ToolbarEnd(Gtk.Bin):
                              self.__on_image_change_state)
         self.__window.add_action(image_action)
 
-        if El().js_exceptions is not None:
-            js_action = Gio.SimpleAction.new_stateful(
-                  "jsblock",
-                  None,
-                  GLib.Variant.new_boolean(El().settings.get_value("jsblock")))
-            js_action.connect("change-state", self.__on_js_change_state)
-            self.__window.add_action(js_action)
-
         # Setup exceptions actions
         self.__adblock_exceptions = Gio.SimpleAction.new_stateful(
                                                    "adblock_exceptions",
@@ -124,14 +116,6 @@ class ToolbarEnd(Gtk.Bin):
         self.__popup_exceptions.connect("activate",
                                         self.__on_exceptions_activate)
         self.__window.add_action(self.__popup_exceptions)
-        if El().js_exceptions is not None:
-            self.__js_exceptions = Gio.SimpleAction.new_stateful(
-                                                   "js_exceptions",
-                                                   GLib.VariantType.new("s"),
-                                                   GLib.Variant("s", "none"))
-            self.__js_exceptions.connect("activate",
-                                         self.__on_exceptions_activate)
-            self.__window.add_action(self.__js_exceptions)
 
     def show_sync_button(self):
         """
@@ -333,20 +317,6 @@ class ToolbarEnd(Gtk.Bin):
         else:
             self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
 
-        # JS exceptions
-        if El().js_exceptions is not None:
-            builder.get_object("js_block").show()
-            builder.get_object("js_exceptions").show()
-            page_ex = El().js_exceptions.find(parsed.netloc +
-                                              parsed.path)
-            site_ex = El().js_exceptions.find(parsed.netloc)
-            if not page_ex and not site_ex:
-                self.__js_exceptions.change_state(GLib.Variant("s", "none"))
-            elif site_ex:
-                self.__js_exceptions.change_state(GLib.Variant("s", "site"))
-            else:
-                self.__js_exceptions.change_state(GLib.Variant("s", "page"))
-
         popover = Gtk.PopoverMenu.new()
         fullscreen_button = builder.get_object("fullscreen_button")
         if self.__window.is_fullscreen:
@@ -365,12 +335,17 @@ class ToolbarEnd(Gtk.Bin):
                                                         "{} %".format(current))
         popover.add(widget)
         exceptions = builder.get_object("exceptions")
-        from eolie.languages import LanguagesWidget
-        languages = LanguagesWidget(uri)
+        from eolie.menu_languages import LanguagesMenu
+        from eolie.menu_scripts import ScriptsMenu
+        languages = LanguagesMenu(uri)
         languages.show()
+        scripts = ScriptsMenu(parsed.netloc)
+        scripts.show()
         popover.add(exceptions)
         popover.add(languages)
+        popover.add(scripts)
         popover.child_set_property(exceptions, "submenu", "exceptions")
+        popover.child_set_property(scripts, "submenu", "scripts")
         popover.child_set_property(languages, "submenu", "languages")
         # Merge appmenu, we assume we only have one level (section -> items)
         if not El().prefers_app_menu():

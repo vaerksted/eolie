@@ -22,7 +22,6 @@ class DatabaseExceptions:
     """
         Handle exceptions
     """
-
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
@@ -30,7 +29,8 @@ class DatabaseExceptions:
     # this make VACUUM not destroy rowids...
     __create_exceptions = '''CREATE TABLE exceptions (
                                                id INTEGER PRIMARY KEY,
-                                               uri TEXT NOT NULL
+                                               value TEXT NOT NULL,
+                                               domain TEXT NOT NULL
                                                )'''
 
     def __init__(self, suffix):
@@ -38,8 +38,8 @@ class DatabaseExceptions:
             Create database tables or manage update if needed
             @param suffix as str
         """
-        self.__DB_PATH = "%s/exceptions_%s.db" % (EOLIE_DATA_PATH,
-                                                  suffix)
+        self.__DB_PATH = "%s/exceptions2_%s.db" % (EOLIE_DATA_PATH,
+                                                   suffix)
         self.__cancellable = Gio.Cancellable.new()
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
@@ -52,51 +52,57 @@ class DatabaseExceptions:
             except Exception as e:
                 print("DatabaseExceptions::__init__(): %s" % e)
 
-    def add_exception(self, uri):
+    def add_exception(self, value, domain=""):
         """
             Add an exception
-            @param uri as str
+            @param value as str
+            @param domain as str
         """
         try:
             with SqlCursor(self) as sql:
-                sql.execute("INSERT INTO exceptions (uri) VALUES (?)", (uri,))
+                sql.execute("INSERT INTO exceptions (value, domain)\
+                             VALUES (?, ?)", (value, domain))
                 sql.commit()
         except:
             pass
 
-    def remove_exception(self, uri):
+    def remove_exception(self, value, domain=""):
         """
             Remove an exception
-            @param uri as str
+            @param value as str
+            @param domain as str
         """
         try:
             with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM exceptions WHERE uri=?", (uri,))
+                sql.execute("DELETE FROM exceptions\
+                             WHERE value=? AND domain=?",
+                            (value, domain))
                 sql.commit()
         except:
             pass
 
-    def find(self, netloc):
+    def find(self, value, domain=""):
         """
-            True if uri is an exception
-            @param netloc as str
+            True if value is an exception
+            @param value  as str
+            @param domain as str
             @return bool
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid FROM exceptions\
-                                  WHERE uri=?", (netloc,))
+                                  WHERE value=? AND domain=?", (value, domain))
             v = result.fetchone()
             return v is not None
 
     def find_parsed(self, parsed):
         """
-            True if uri is an exception
+            True if value is an exception
             @param parsed as urlparse.parsed
             @return bool
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid FROM exceptions\
-                                  WHERE uri=? or uri=?",
+                                  WHERE value=? or value=?",
                                  (parsed.netloc, parsed.netloc + parsed.path))
             v = result.fetchone()
             return v is not None
