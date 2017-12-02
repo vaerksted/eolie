@@ -56,7 +56,6 @@ class ScriptRow(Gtk.EventBox):
             @param check as Gtk.CheckButton
         """
         check.set_active(not check.get_active())
-        check.toggled()
 
     def __on_check_toggled(self, check):
         """
