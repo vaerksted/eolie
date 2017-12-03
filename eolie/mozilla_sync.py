@@ -618,6 +618,7 @@ class SyncWorker:
                                                      bookmark["id"],
                                                      bookmark["id"],
                                                      [],
+                                                     0,
                                                      False)
                 # Will calculate position later
                 if "children" in bookmark.keys():
@@ -640,6 +641,7 @@ class SyncWorker:
                                                      bookmark["bmkUri"],
                                                      bookmark["id"],
                                                      bookmark["tags"],
+                                                     0,
                                                      False)
                 # Update bookmark
                 else:
@@ -670,18 +672,15 @@ class SyncWorker:
                             El().bookmarks.add_tag_to(tag_id,
                                                       bookmark_id,
                                                       False)
-                    El().bookmarks.set_mtime(bookmark_id,
-                                             record["modified"],
-                                             False)
             # Update parent name if available
             if bookmark_id is not None and "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
                                           bookmark["parentid"],
                                           bookmark["parentName"],
                                           False)
-                El().bookmarks.set_mtime(bookmark_id,
-                                         record["modified"],
-                                         False)
+            El().bookmarks.set_mtime(bookmark_id,
+                                     record["modified"],
+                                     False)
         # Update bookmark position
         for children in children_array:
             position = 0
