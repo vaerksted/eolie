@@ -47,6 +47,7 @@ class ToolbarEnd(Gtk.Bin):
         Gtk.Bin.__init__(self)
         self.__window = window
         self.__timeout_id = None
+        self.__image_change_state_id = None
         self.set_hexpand(True)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarEnd.ui")
@@ -352,8 +353,9 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.register(popover)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.popup()
-        self.__images_action.connect("change-state",
-                                     self.__on_image_change_state)
+        self.__image_change_state_id = self.__images_action.connect(
+                                                 "change-state",
+                                                 self.__on_image_change_state)
 
     def _on_save_button_clicked(self, button):
         """
@@ -555,7 +557,9 @@ class ToolbarEnd(Gtk.Bin):
         """
         button.get_style_context().remove_class("selected")
         button.set_active(False)
-        self.__images_action.disconnect_by_func(self.__on_image_change_state)
+        if self.__image_change_state_id is not None:
+            self.__images_action.disconnect(self.__image_change_state_id)
+            self.__image_change_state_id = None
 
     def __on_get_sync(self, attributes, password, uri, index, count):
         """
