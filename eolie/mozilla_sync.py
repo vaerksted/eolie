@@ -531,6 +531,7 @@ class SyncWorker:
             record["title"] = El().bookmarks.get_title(bookmark_id)
             record["tags"] = El().bookmarks.get_tags(bookmark_id)
             record["parentid"] = parent_guid
+            record["parentName"] = El().bookmarks.get_parent_name(bookmark_id)
             record["type"] = "bookmark"
             debug("pushing %s" % record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
