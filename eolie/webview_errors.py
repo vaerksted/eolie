@@ -83,7 +83,7 @@ class WebViewErrors:
                        detail,
                        "",
                        "")
-        self.load_html(html, uri)
+        self.load_alternate_html(html, uri)
 
 #######################
 # PRIVATE             #
@@ -142,7 +142,7 @@ class WebViewErrors:
                        detail,
                        "suggested-action",
                        _("Retry"))
-        self.load_html(html, uri)
+        self.load_alternate_html(html, uri)
         if not network_available:
             GLib.timeout_add(1000, self.__check_for_network, uri)
         return True
@@ -198,7 +198,7 @@ class WebViewErrors:
                              " information, or passwords).") % uri,
                            "destructive-action",
                            _("Accept Risk and Proceed"))
-            self.load_html(html, uri)
+            self.load_alternate_html(html, uri)
         return True
 
     def __on_web_process_crashed(self, webview):
