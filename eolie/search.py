@@ -34,7 +34,7 @@ class Search:
             'Google': [
                 # Translators: Google url for your country
                 _("https://www.google.com"),
-                'https://www.google.com/search?q=%s&ie=utf-8&oe=utf-8',
+                _("https://www.google.com") + '/search?q=%s&ie=utf-8&oe=utf-8',
                 'https://www.google.com/complete/search?client=firefox&q=%s',
                 'unicode_escape',
                 'g'
