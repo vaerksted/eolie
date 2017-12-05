@@ -92,6 +92,8 @@ class View(Gtk.Overlay):
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
         if self.__reading_view is None:
             self.__reading_view = WebKit2.WebView.new()
+            self.__reading_view.connect("decide-policy",
+                                        self.__on_decide_policy)
             self.__reading_view.show()
             self.add_overlay(self.__reading_view)
             if self.__webview.readable_content:
@@ -179,6 +181,24 @@ class View(Gtk.Overlay):
         self.__webview.destroy()
         if self.__reading_view is not None:
             self.__reading_view.destroy()
+
+    def __on_decide_policy(self, webview, decision, decision_type):
+        """
+            Forward decision to main view
+            @param webview as WebKit2.WebView
+            @param decision as WebKit2.NavigationPolicyDecision
+            @param decision_type as WebKit2.PolicyDecisionType
+            @return bool
+        """
+        navigation_action = decision.get_navigation_action()
+        navigation_uri = navigation_action.get_request().get_uri()
+        if navigation_uri == "about:blank":  # load_html()
+            decision.use()
+            return True
+        else:
+            self.__webview.load_uri(navigation_uri)
+            webview.destroy()
+            return False
 
     def __on_key_press_event(self, widget, event):
         """
