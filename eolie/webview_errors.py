@@ -76,7 +76,7 @@ class WebViewErrors:
         icon = "dialog-warning-symbolic"
         html = html % (title,
                        css,
-                       "load_uri('%s')" % uri,
+                       uri,
                        "internal://%s" % icon,
                        title,
                        _("%s is a phishing page") % uri,
@@ -135,7 +135,7 @@ class WebViewErrors:
             icon = "network-offline-symbolic"
         html = html % (title,
                        css,
-                       "load_uri('%s')" % uri,
+                       uri,
                        "internal://%s" % icon,
                        title,
                        "<b>%s</b> %s" % (uri, error.message),
