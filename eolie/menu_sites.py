@@ -33,6 +33,7 @@ class SitesMenu(Gio.Menu):
         """
         self.__window = window
         self.__views = views
+        self.__actions = []
         Gio.Menu.__init__(self)
         # Page switcher
         for view in views:
@@ -41,15 +42,13 @@ class SitesMenu(Gio.Menu):
                 continue
             title = view.webview.title
             encoded = "SITE_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = El().lookup_action(encoded)
-            if action is not None:
-                El().remove_action(encoded)
             action = Gio.SimpleAction(name=encoded)
-            El().add_action(action)
+            self.__window.add_action(action)
+            self.__actions.append(encoded)
             action.connect('activate',
                            self.__on_action_clicked,
                            view)
-            item = Gio.MenuItem.new(title, "app.%s" % encoded)
+            item = Gio.MenuItem.new(title, "win.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             self.append_item(item)
         # Bottom section
@@ -62,8 +61,10 @@ class SitesMenu(Gio.Menu):
             if parsed.scheme in ["http", "https"]:
                 submenu = ProfilesMenu(webview, window)
                 bottom_section.append_submenu(_("Profiles"), submenu)
+                self.__actions.append(submenu.action)
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
+        self.__actions.append("user_agent")
         # Modify UA
         if El().settings.get_value("developer-extras"):
             item = Gio.MenuItem.new(_("Modify user agent"),
@@ -73,10 +74,18 @@ class SitesMenu(Gio.Menu):
         # Close site
         action = Gio.SimpleAction.new("close_site")
         self.__window.add_action(action)
+        self.__actions.append("close_site")
         item = Gio.MenuItem.new(_("Close site"),
                                 "win.close_site")
         bottom_section.append_item(item)
         action.connect("activate", self.__on_close_activate)
+
+    def clean(self):
+        """
+            Clean menu
+        """
+        for action in self.__actions:
+            self.__window.remove_action(action)
 
 #######################
 # PRIVATE             #

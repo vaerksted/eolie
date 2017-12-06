@@ -356,6 +356,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             popover = Gtk.Popover.new_from_model(eventbox, menu)
             popover.set_position(Gtk.PositionType.RIGHT)
             popover.forall(self.__update_popover_internals)
+            popover.connect("closed", self.__on_popover_closed, menu)
             popover.show()
             return True
 
@@ -390,6 +391,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
             else:
                 self.__image.set_from_icon_name("applications-internet",
                                                 Gtk.IconSize.INVALID)
+
+    def __on_popover_closed(self, popover, menu):
+        """
+            Clean model
+            @param popover as Gtk.Popover
+            @param menu as Gio.Menu
+        """
+        menu.clean()
 
     def __on_webview_favicon_changed(self, webview, favicon,
                                      icon_theme_artwork):

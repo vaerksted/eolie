@@ -31,7 +31,7 @@ class ProfilesMenu(Gio.Menu):
         """
         self.__window = window
         Gio.Menu.__init__(self)
-        action = Gio.SimpleAction.new_stateful("eolie_profiles",
+        action = Gio.SimpleAction.new_stateful(self.action,
                                                GLib.VariantType.new("s"),
                                                GLib.Variant("s", "none"))
         action.connect("activate",
@@ -66,6 +66,14 @@ class ProfilesMenu(Gio.Menu):
         self.append_item(menu_item)
         action.connect('activate',
                        self.__on_edit_profiles_activate)
+
+    @property
+    def action(self):
+        """
+            Get stateful action name
+            @return str
+        """
+        return "eolie_profiles"
 
 #######################
 # PRIVATE             #
