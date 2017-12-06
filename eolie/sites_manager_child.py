@@ -370,7 +370,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if isinstance(widget, Gtk.Label):
             widget.set_ellipsize(Pango.EllipsizeMode.END)
-            widget.set_max_width_chars(40)
+            widget.set_max_width_chars(30)
             widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
