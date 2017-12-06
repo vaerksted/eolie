@@ -121,6 +121,7 @@ class View(Gtk.Overlay):
             Free the webview associated with view
         """
         self.__grid.remove(self.__webview)
+        self.__webview = None
 
     def destroy(self):
         """
@@ -178,7 +179,8 @@ class View(Gtk.Overlay):
             Destroy view and webview
         """
         Gtk.Overlay.destroy(self)
-        self.__webview.destroy()
+        if self.__webview is not None:
+            self.__webview.destroy()
         if self.__reading_view is not None:
             self.__reading_view.destroy()
 

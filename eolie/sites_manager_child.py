@@ -398,7 +398,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param popover as Gtk.Popover
             @param menu as Gio.Menu
         """
-        menu.clean()
+        GLib.idle_add(menu.clean)
 
     def __on_webview_favicon_changed(self, webview, favicon,
                                      icon_theme_artwork):

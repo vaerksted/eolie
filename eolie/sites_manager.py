@@ -63,11 +63,18 @@ class SitesManager(Gtk.EventBox):
             Add a new view to monitor
             @param view as View
         """
-        # WebView not loaded, as load-changed will not be emited, force update
-        if view.webview.get_uri() != view.webview.uri:
+        # Force update
+        if view.webview.uri:
             self.__loaded_uri(view.webview, view.webview.uri)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
         view.connect("destroying", self.__on_view_destroying)
+
+    def remove_view(self, view):
+        """
+            Remove view from pages manager
+        """
+        view.disconnect_by_func(self.__on_view_destroying)
+        self.__on_view_destroying(view)
 
     def set_favicon(self, view, surface):
         """

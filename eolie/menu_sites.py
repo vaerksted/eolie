@@ -17,6 +17,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.menu_profiles import ProfilesMenu
+from eolie.menu_move_to import MoveToMenu
 from eolie.define import El
 
 
@@ -46,7 +47,7 @@ class SitesMenu(Gio.Menu):
             self.__window.add_action(action)
             self.__actions.append(encoded)
             action.connect('activate',
-                           self.__on_action_clicked,
+                           self.__on_action_activate,
                            view)
             item = Gio.MenuItem.new(title, "win.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
@@ -56,16 +57,20 @@ class SitesMenu(Gio.Menu):
         self.append_section(None, bottom_section)
         # Profiles switcher
         webview = views[0].webview
-        if views and not webview.ephemeral:
+        if not webview.ephemeral:
             parsed = urlparse(webview.uri)
             if parsed.scheme in ["http", "https"]:
                 submenu = ProfilesMenu(webview, window)
                 bottom_section.append_submenu(_("Profiles"), submenu)
                 self.__actions.append(submenu.action)
+        # Move to
+        submenu = MoveToMenu(views, window)
+        bottom_section.append_submenu(_("Move to"), submenu)
+        self.__actions += submenu.actions
+        # Modify UA
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         self.__actions.append("user_agent")
-        # Modify UA
         if El().settings.get_value("developer-extras"):
             item = Gio.MenuItem.new(_("Modify user agent"),
                                     "win.user_agent")
@@ -138,7 +143,7 @@ class SitesMenu(Gio.Menu):
             dialog = ModifyUADialog(self.__views[0].webview.uri, self.__window)
             dialog.run()
 
-    def __on_action_clicked(self, action, variant, view):
+    def __on_action_activate(self, action, variant, view):
         """
             Load history
             @param Gio.SimpleAction

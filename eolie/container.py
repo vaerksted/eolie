@@ -139,7 +139,7 @@ class Container(Gtk.Overlay):
                 webview.load_uri(uri)
             elif loading_type in [LoadingType.OFFLOAD, LoadingType.FOREGROUND]:
                 webview.set_uri(uri)
-        self.add_view(webview, loading_type)
+        self.add_webview_with_new_view(webview, loading_type)
         if self.__preload_timeout_id is not None:
             GLib.source_remove(self.__preload_timeout_id)
         self.__preload_timeout_id = GLib.timeout_add(2000,
@@ -157,7 +157,7 @@ class Container(Gtk.Overlay):
         if not running:
             self.__add_pending_items()
 
-    def add_view(self, webview, loading_type):
+    def add_webview_with_new_view(self, webview, loading_type):
         """
             Add view to container
             @param webview as WebView
@@ -197,6 +197,41 @@ class Container(Gtk.Overlay):
         count = len(self.__pages_manager.children)
         self.__window.toolbar.actions.count_label.set_text(str(count))
         El().update_unity_badge()
+
+    def add_view(self, view):
+        """
+            Add view to container
+            @param view as View
+        """
+        self.__current = view
+        self.__stack.add(view)
+        self.__pages_manager.add_view(view)
+        self.__sites_manager.add_view(view)
+        self.__stack.set_visible_child(view)
+        count = len(self.__stack.get_children())
+        self.__window.toolbar.actions.count_label.set_text(str(count))
+        El().update_unity_badge()
+        self.__pages_manager.update_visible_child()
+        self.__sites_manager.update_visible_child()
+
+    def remove_view(self, view):
+        """
+            Remove view from container
+            @param view as View
+        """
+        self.__stack.remove(view)
+        self.__pages_manager.remove_view(view)
+        self.__sites_manager.remove_view(view)
+        children = self.__stack.get_children()
+        if children:
+            self.__current = self.__stack.get_visible_child()
+            count = len(children)
+            self.__window.toolbar.actions.count_label.set_text(str(count))
+            El().update_unity_badge()
+            self.__pages_manager.update_visible_child()
+            self.__sites_manager.update_visible_child()
+        else:
+            self.__window.close()
 
     def load_uri(self, uri):
         """

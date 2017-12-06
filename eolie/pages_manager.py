@@ -71,7 +71,7 @@ class PagesManager(Gtk.EventBox):
 
     def add_view(self, view):
         """
-            Add child to sidebar
+            Add child to pages manager
             @param view as View
             @return child
         """
@@ -79,6 +79,15 @@ class PagesManager(Gtk.EventBox):
         child.show()
         self.__box.add(child)
         return child
+
+    def remove_view(self, view):
+        """
+            Remove view from pages manager
+        """
+        for child in self.__box.get_children():
+            if child.view == view:
+                child.destroy()
+                break
 
     def update_visible_child(self, visible=None):
         """
