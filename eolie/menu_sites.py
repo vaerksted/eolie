@@ -15,9 +15,9 @@ from gi.repository import Gio, GLib
 from hashlib import sha256
 from gettext import gettext as _
 from urllib.parse import urlparse
-import json
 
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.menu_profiles import ProfilesMenu
+from eolie.define import El
 
 
 class SitesMenu(Gio.Menu):
@@ -34,6 +34,7 @@ class SitesMenu(Gio.Menu):
         self.__window = window
         self.__views = views
         Gio.Menu.__init__(self)
+        # Page switcher
         for view in views:
             uri = view.webview.uri
             if uri is None:
@@ -51,13 +52,16 @@ class SitesMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "app.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             self.append_item(item)
+        # Bottom section
         bottom_section = Gio.Menu()
         self.append_section(None, bottom_section)
-        if views and not views[0].webview.ephemeral:
-            parsed = urlparse(views[0].webview.uri)
+        # Profiles switcher
+        webview = views[0].webview
+        if views and not webview.ephemeral:
+            parsed = urlparse(webview.uri)
             if parsed.scheme in ["http", "https"]:
-                submenu = self.__get_submenu()
-                bottom_section.insert_submenu(0, _("Profiles"), submenu)
+                submenu = ProfilesMenu(webview, window)
+                bottom_section.append_submenu(_("Profiles"), submenu)
         action = Gio.SimpleAction.new("user_agent")
         self.__window.add_action(action)
         # Modify UA
@@ -77,47 +81,6 @@ class SitesMenu(Gio.Menu):
 #######################
 # PRIVATE             #
 #######################
-    def __get_submenu(self):
-        """
-            Return submenu (profiles) for site
-            return Gio.Menu
-        """
-        menu = Gio.Menu()
-        action = Gio.SimpleAction.new_stateful("eolie_profiles",
-                                               GLib.VariantType.new("s"),
-                                               GLib.Variant("s", "none"))
-        action.connect("activate", self.__on_profiles_activate)
-        self.__window.add_action(action)
-        # Get first view URI
-        uri = self.__views[0].webview.uri
-        profile = El().websettings.get_profile(uri)
-        # Load user profiles
-        try:
-            f = Gio.File.new_for_path(EOLIE_DATA_PATH +
-                                      "/profiles.json")
-            if f.query_exists():
-                (status, contents, tag) = f.load_contents(None)
-                profiles = json.loads(contents.decode("utf-8"))
-
-            for key in profiles.keys():
-                item = profiles[key]
-                self.__window.add_action(action)
-                menu_item = Gio.MenuItem.new(item,
-                                             "win.eolie_profiles::%s" % key)
-                if profile == key:
-                    action.change_state(GLib.Variant("s", profile))
-                menu.append_item(menu_item)
-        except Exception as e:
-            print("SitesMenu::__get_submenu():", e)
-        action = Gio.SimpleAction(name="eolie_edit_profiles")
-        self.__window.add_action(action)
-        menu_item = Gio.MenuItem.new(_("Edit profiles"),
-                                     "win.eolie_edit_profiles")
-        menu.append_item(menu_item)
-        action.connect('activate',
-                       self.__on_edit_profiles_activate)
-        return menu
-
     def __on_edit_profiles_activate(self, action, param):
         """
             Show edit cookies dialog
