@@ -140,7 +140,7 @@ class FormsExtension(GObject.Object):
         if page is None:
             return
         (forms, textareas) = self.get_elements([element])
-        if not forms:
+        if not forms or not forms[0]["password"].get_value():
             return
         try:
             form = forms[0]
