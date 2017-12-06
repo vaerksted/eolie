@@ -36,7 +36,7 @@ class WebViewArtwork:
         """
             Set webpage preview
         """
-        if not self.ephemeral:
+        if not self.ephemeral and not self._error:
             self.__snapshot_id = GLib.timeout_add(3000, self.__set_snapshot)
 
     def stop_snapshot(self):
@@ -60,7 +60,7 @@ class WebViewArtwork:
             Set favicon
             @param favicon is safe
         """
-        if not self.ephemeral:
+        if not self.ephemeral and not self._error:
             self.__favicon_id = GLib.timeout_add(1000,
                                                  self.__set_favicon,
                                                  safe)
@@ -173,9 +173,6 @@ class WebViewArtwork:
             @param uri as str
             @param first_pass as bool
         """
-        # Do not cache snapshot on error
-        if self.error is not None:
-            return
         # The 32767 limit on the width/height dimensions
         # of an image surface is new in cairo 1.10,
         # try with WebKit2.SnapshotRegion.VISIBLE

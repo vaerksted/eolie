@@ -57,9 +57,9 @@ class WebViewNavigation:
             Load uri
             @param uri as str
         """
+        self._error = False
         # Allow profile switching
         self.__previous_uri = ""
-        self._error = None
         # If not an URI, start a search
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
@@ -400,6 +400,7 @@ class WebViewNavigation:
                 return True
             else:
                 decision.use()
+                self._error = False
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
@@ -423,7 +424,7 @@ class WebViewNavigation:
                 return True
             else:
                 El().history.set_page_state(self._navigation_uri)
-                self._error = None
+                self._error = False
                 decision.use()
                 return False
         else:
