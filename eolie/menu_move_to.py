@@ -59,6 +59,13 @@ class MoveToMenu(Gio.Menu):
             item = Gio.MenuItem.new(title, "win.%s" % encoded)
             self.append_item(item)
 
+    def clean(self):
+        """
+            Clean menu
+        """
+        for action in self.__actions:
+            self.__current_window.remove_action(action)
+
     @property
     def actions(self):
         """

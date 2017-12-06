@@ -10,7 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2, Pango
+from gi.repository import Gtk, GLib, WebKit2, Pango, Gio
+
+from gettext import gettext as _
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -133,6 +135,17 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         if event.button == 2:
             self.__window.container.try_close_view(self.__view)
             return True
+        elif event.button == 3:
+            from eolie.menu_move_to import MoveToMenu
+            moveto_menu = MoveToMenu([self.__view], self.__window)
+            menu = Gio.Menu()
+            menu.append_section(_("Move to"), moveto_menu)
+            popover = Gtk.Popover.new_from_model(eventbox, menu)
+            popover.set_position(Gtk.PositionType.RIGHT)
+            popover.forall(self.__update_popover_internals)
+            popover.connect("closed", self.__on_popover_closed, moveto_menu)
+            popover.show()
+            return True
 
     def _on_button_release_event(self, eventbox, event):
         """
@@ -175,6 +188,18 @@ class PagesManagerChild(Gtk.FlowBoxChild):
 #######################
 # PRIVATE             #
 #######################
+    def __update_popover_internals(self, widget):
+        """
+            Little hack to manage Gtk.ModelButton text
+            @param widget as Gtk.Widget
+        """
+        if isinstance(widget, Gtk.Label):
+            widget.set_ellipsize(Pango.EllipsizeMode.END)
+            widget.set_max_width_chars(40)
+            widget.set_tooltip_text(widget.get_text())
+        elif hasattr(widget, "forall"):
+            GLib.idle_add(widget.forall, self.__update_popover_internals)
+
     def __set_favicon_artwork(self):
         """
             Set favicon artwork
@@ -215,6 +240,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                          None,
                                          get_snapshot,
                                          self.__on_snapshot)
+
+    def __on_popover_closed(self, popover, menu):
+        """
+            Clean model
+            @param popover as Gtk.Popover
+            @param menu as Gio.Menu
+        """
+        GLib.idle_add(menu.clean)
 
     def __on_scroll_timeout(self):
         """
