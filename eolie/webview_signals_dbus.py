@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GLib
 
 from urllib.parse import urlparse
 from time import time
@@ -96,7 +96,7 @@ class WebViewDBusSignals:
                                              self.get_page_id())
         elif signal == "ShowCredentials":
             (userform, form_uri) = params
-            model = FormMenu(self.get_page_id())
+            model = FormMenu(self.get_page_id(), self._window)
             helper = PasswordsHelper()
             helper.get(form_uri, userform, None, self.__on_password, model)
 
@@ -123,4 +123,14 @@ class WebViewDBusSignals:
                 rect.y = self._last_click_event_y - 10
                 rect.width = rect.height = 1
                 popover.set_pointing_to(rect)
+                popover.connect("closed", self.__on_form_popover_closed, model)
                 popover.popup()
+
+    def __on_form_popover_closed(self, popover, model):
+        """
+            Clean model
+            @param popover as Gtk.Popover
+            @param model as FormMenu
+        """
+        # Let model activate actions, idle needed to action activate
+        GLib.idle_add(model.clean)

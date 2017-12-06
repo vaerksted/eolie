@@ -23,12 +23,14 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, page_id):
+    def __init__(self, page_id, window):
         """
             Init menu
             @param page_id as int
         """
         Gio.Menu.__init__(self)
+        self.__window = window
+        self.__actions = []
         self.__page_id = page_id
         self.__section = Gio.Menu()
         self.append_section(_("Saved credentials"), self.__section)
@@ -41,17 +43,22 @@ class FormMenu(Gio.Menu):
         """
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()
-        action = El().lookup_action(encoded)
-        if action is not None:
-            El().remove_action(encoded)
         action = Gio.SimpleAction(name=encoded)
         El().add_action(action)
+        self.__actions.append(encoded)
         action.connect('activate',
                        self.__on_action_clicked,
                        attributes)
         label = attributes["login"].replace("_", "__")
         item = Gio.MenuItem.new(label, "app.%s" % encoded)
         self.__section.append_item(item)
+
+    def clean(self):
+        """
+            Clean menu
+        """
+        for action in self.__actions:
+            self.__window.remove_action(action)
 
 #######################
 # PRIVATE             #

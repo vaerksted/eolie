@@ -31,7 +31,15 @@ class VideosMenu(Gio.Menu):
         """
         Gio.Menu.__init__(self)
         self.__window = window
+        self.__actions = []
         El().helper.call("GetVideos", page_id, None, self.__on_get_videos)
+
+    def clean(self):
+        """
+            Clean menu
+        """
+        for action in self.__actions:
+            self.__window.remove_action(action)
 
 #######################
 # PRIVATE             #
@@ -42,15 +50,16 @@ class VideosMenu(Gio.Menu):
             @param title as str
             @param uri as str
         """
-        encoded = sha256(b"@VIDEO@" + uri.encode("utf-8")).hexdigest()
+        encoded = "VIDEO_" + sha256(uri.encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
-        El().add_action(action)
+        self.__window.add_action(action)
+        self.__actions.append(encoded)
         action.connect('activate',
                        self.__on_action_clicked,
                        uri)
         if len(title) > 40:
             title = title[0:40] + "…"
-        item = Gio.MenuItem.new(title, "app.%s" % encoded)
+        item = Gio.MenuItem.new(title, "win.%s" % encoded)
         item.set_attribute_value("uri", GLib.Variant("s", uri))
         self.append_item(item)
 

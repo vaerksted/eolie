@@ -22,12 +22,14 @@ class HistoryMenu(Gio.Menu):
         Menu showing closed page
     """
 
-    def __init__(self, items):
+    def __init__(self, items, window):
         """
             Init menu
             @param items as [WebKit2.BackForwardListItem]
         """
         Gio.Menu.__init__(self)
+        self.__window = window
+        self.__actions = []
         for item in items[:10]:
             uri = item.get_uri()
             if uri is None:
@@ -36,15 +38,13 @@ class HistoryMenu(Gio.Menu):
             if not title:
                 title = uri
             encoded = "HISTORY_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = El().lookup_action(encoded)
-            if action is not None:
-                El().remove_action(encoded)
             action = Gio.SimpleAction(name=encoded)
-            El().add_action(action)
+            window.add_action(action)
+            self.__actions.append(encoded)
             action.connect('activate',
-                           self.__on_action_clicked,
+                           self.__on_action_activate,
                            item)
-            item = Gio.MenuItem.new(title, "app.%s" % encoded)
+            item = Gio.MenuItem.new(title, "win.%s" % encoded)
             item.set_attribute_value("uri", GLib.Variant("s", uri))
             if uri == "populars://":
                 item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
@@ -60,21 +60,17 @@ class HistoryMenu(Gio.Menu):
                     item.set_icon(Gio.ThemedIcon.new("applications-internet"))
             self.append_item(item)
 
-    def remove_actions(self):
+    def clean(self):
         """
-            Remove actions for menu
+            Clean menu
         """
-        for i in range(0, self.get_n_items()):
-            uri = self.get_item_attribute_value(i, "uri").get_string()
-            encoded = "HISTORY_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = El().lookup_action(encoded)
-            if action is not None:
-                El().remove_action(encoded)
+        for action in self.__actions:
+            self.__window.remove_action(action)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_action_clicked(self, action, variant, item):
+    def __on_action_activate(self, action, variant, item):
         """
             Load history
             @param Gio.SimpleAction

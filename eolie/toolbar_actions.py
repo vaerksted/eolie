@@ -229,8 +229,8 @@ class ToolbarActions(Gtk.Bin):
             @param popover
             @param model as HistoryMenu/None
         """
-        # Let model activate actions
-        GLib.idle_add(model.remove_actions)
+        # Let model activate actions, idle needed to action activate
+        GLib.idle_add(model.clean)
 
     def __on_back_history_timeout(self):
         """
@@ -241,7 +241,7 @@ class ToolbarActions(Gtk.Bin):
         back_list = current.get_back_forward_list().get_back_list()
         if back_list:
             from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(back_list)
+            model = HistoryMenu(back_list, self.__window)
             popover = Gtk.Popover.new_from_model(self.__backward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
@@ -260,7 +260,7 @@ class ToolbarActions(Gtk.Bin):
         forward_list = current.get_back_forward_list().get_forward_list()
         if forward_list:
             from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(forward_list)
+            model = HistoryMenu(forward_list, self.__window)
             popover = Gtk.Popover.new_from_model(self.__forward_button, model)
             popover.set_modal(False)
             self.__window.register(popover)
