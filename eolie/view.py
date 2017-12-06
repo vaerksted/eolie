@@ -131,6 +131,14 @@ class View(Gtk.Overlay):
         self.emit("destroying")
         GLib.timeout_add(1000, self.__destroy)
 
+    def set_window(self, window):
+        """
+            Set window
+            @param window as window
+        """
+        self.__window = window
+        self.__webview.set_window(window)
+
     @property
     def destroying(self):
         """

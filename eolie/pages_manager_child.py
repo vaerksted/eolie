@@ -105,6 +105,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                     GLib.file_test(artwork_path, GLib.FileTest.IS_REGULAR):
                 self.__image.set_from_file(artwork_path)
 
+    def destroy(self):
+        """
+            Disconnect signals and destroy self
+        """
+        for signal_id in self.__connected_signals:
+            self.__view.webview.disconnect(signal_id)
+        Gtk.FlowBoxChild.destroy(self)
+
     @property
     def view(self):
         """
@@ -240,8 +248,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param view as View
         """
-        for signal_id in self.__connected_signals:
-            self.__view.webview.disconnect(signal_id)
         self.destroy()
 
     def __on_webview_favicon_changed(self, webview, favicon,
