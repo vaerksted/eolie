@@ -22,11 +22,12 @@ class MoveToMenu(Gtk.Grid):
         Menu allowing to move webviews to a window
     """
 
-    def __init__(self, views, current_window):
+    def __init__(self, views, current_window, back=True):
         """
             Init menu
             @param views as [Views]
             @param current_window as Window
+            @param back as bool
         """
         self.__current_window = current_window
         self.__actions = []
@@ -39,14 +40,15 @@ class MoveToMenu(Gtk.Grid):
         self.set_orientation(Gtk.Orientation.VERTICAL)
 
         # Back button
-        item = Gtk.ModelButton.new()
-        item.set_hexpand(True)
-        item.set_property("centered", True)
-        item.set_property("text", _("Move to"))
-        item.set_property("inverted", True)
-        item.set_property("menu-name", "main")
-        item.show()
-        self.add(item)
+        if back:
+            item = Gtk.ModelButton.new()
+            item.set_hexpand(True)
+            item.set_property("centered", True)
+            item.set_property("text", _("Move to"))
+            item.set_property("inverted", True)
+            item.set_property("menu-name", "main")
+            item.show()
+            self.add(item)
 
         action = Gio.SimpleAction(name="switch_window")
         action = Gio.SimpleAction.new("switch_window",

@@ -10,9 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2, Pango, Gio
-
-from gettext import gettext as _
+from gi.repository import Gtk, GLib, WebKit2, Pango
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import El, ArtSize
@@ -137,12 +135,13 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             return True
         elif event.button == 3:
             from eolie.menu_move_to import MoveToMenu
-            moveto_menu = MoveToMenu([self.__view], self.__window)
-            menu = Gio.Menu()
-            menu.append_section(_("Move to"), moveto_menu)
-            popover = Gtk.Popover.new_from_model(eventbox, menu)
+            moveto_menu = MoveToMenu([self.__view], self.__window, False)
+            moveto_menu.show()
+            popover = Gtk.PopoverMenu.new()
+            popover.set_relative_to(eventbox)
+            popover.set_position(Gtk.PositionType.BOTTOM)
+            popover.add(moveto_menu)
             popover.forall(self.__update_popover_internals)
-            popover.connect("closed", self.__on_popover_closed, moveto_menu)
             popover.show()
             return True
 
@@ -239,14 +238,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                          None,
                                          get_snapshot,
                                          self.__on_snapshot)
-
-    def __on_popover_closed(self, popover, menu):
-        """
-            Clean model
-            @param popover as Gtk.Popover
-            @param menu as Gio.Menu
-        """
-        GLib.idle_add(menu.clean)
 
     def __on_scroll_timeout(self):
         """
