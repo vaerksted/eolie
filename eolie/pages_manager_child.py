@@ -141,7 +141,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             menu = Gio.Menu()
             menu.append_section(_("Move to"), moveto_menu)
             popover = Gtk.Popover.new_from_model(eventbox, menu)
-            popover.set_position(Gtk.PositionType.RIGHT)
             popover.forall(self.__update_popover_internals)
             popover.connect("closed", self.__on_popover_closed, moveto_menu)
             popover.show()
