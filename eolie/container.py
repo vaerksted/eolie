@@ -40,6 +40,16 @@ class DelayedStack(Gtk.Stack):
         """
         self.__pending_widget.append(widget)
 
+    def remove(self, widget):
+        """
+            Remove widget from stack
+            @param widget as Gtk.Widget
+        """
+        if widget in self.__pending_widget:
+            self.__pending_widget.remove(widget)
+        else:
+            Gtk.Stack.remove(self, widget)
+
     def set_visible_child(self, widget):
         """
             Set widget visible

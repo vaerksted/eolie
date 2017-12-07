@@ -102,8 +102,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Disconnect all signals
             @param webview as WebView
         """
-        # We are offscreen
-        if self._window != self.get_toplevel():
+        # We are offscreen or already unmapped (happens with Gtk.Stack)
+        if self._window != self.get_toplevel() or not self.get_mapped():
             return
         self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_enter_fullscreen)

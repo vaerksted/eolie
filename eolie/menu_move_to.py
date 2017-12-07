@@ -137,11 +137,9 @@ class MoveToMenu(Gtk.Grid):
 
         # Move views to window
         for view in self.__views:
-            view.hide()
             self.__current_window.container.remove_view(view)
             window.container.add_view(view)
             view.set_window(window)
-            view.show()
         window.update(view.webview)
         current_view = self.__current_window.container.current
         if current_view is not None:
