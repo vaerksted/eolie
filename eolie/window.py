@@ -179,6 +179,16 @@ class Window(Gtk.ApplicationWindow):
             popover.popdown()
         return closed
 
+    def mark_sidebar(self, mark):
+        """
+            Change window toolbar color
+        """
+        style = self.__toolbar.headerbar.get_style_context()
+        if mark:
+            style.add_class("toolbar-mark")
+        else:
+            style.remove_class("toolbar-mark")
+
     @property
     def container(self):
         """
@@ -252,7 +262,7 @@ class Window(Gtk.ApplicationWindow):
         self.__container = Container(self)
         self.__container.show()
         self.set_titlebar(self.__toolbar)
-        self.__toolbar.set_show_close_button(True)
+        self.__toolbar.headerbar.set_show_close_button(True)
         self.add(self.__container)
 
     def __setup_window(self, size, maximized):

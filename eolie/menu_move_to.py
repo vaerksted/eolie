@@ -79,6 +79,12 @@ class MoveToMenu(Gtk.Grid):
             item.set_action_name("win.switch_window")
             item.set_action_target_value(GLib.Variant("s", str(window)))
             item.show()
+            item.connect("enter-notify-event",
+                         self.__on_enter_notify_event,
+                         window)
+            item.connect("leave-notify-event",
+                         self.__on_leave_notify_event,
+                         window)
             self.add(item)
 
     def do_hide(self):
@@ -91,6 +97,24 @@ class MoveToMenu(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
+    def __on_enter_notify_event(self, widget, event, window):
+        """
+            Mark window
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+            @param window as Window
+        """
+        window.mark_sidebar(True)
+
+    def __on_leave_notify_event(self, widget, event, window):
+        """
+            Unmark window
+            @param widget as Gtk.Widget
+            @param event as Gdk.Event
+            @param window as Window
+        """
+        window.mark_sidebar(False)
+
     def __on_action_activate(self, action, variant):
         """
             Moves views to window

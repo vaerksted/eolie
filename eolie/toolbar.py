@@ -45,12 +45,13 @@ class Toolbar(Gtk.EventBox):
         self.connect("button-press-event", self.__on_button_press)
         self.add(self.__headerbar)
 
-    def set_show_close_button(self, show):
+    @property
+    def headerbar(self):
         """
-            Forward to headerbar
-            @param show as bool
+            Get headerbar
+            @return Gtk.HeaderBar
         """
-        self.__headerbar.set_show_close_button(show)
+        return self.__headerbar
 
     @property
     def title(self):

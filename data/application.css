@@ -288,6 +288,16 @@
     border-bottom: 1px solid alpha(@theme_bg_color, 0.5);
 }
 
+.toolbar-mark {
+    background-color: @theme_selected_bg_color;
+    background-image: none; 
+}
+
+.toolbar-mark > *{
+    background-color: @theme_selected_bg_color;
+    background-image: none; 
+}
+
 .overlay-button {
 	box-shadow: none;
 	min-height: 24px;
