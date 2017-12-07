@@ -231,6 +231,8 @@ class Container(Gtk.Overlay):
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
         else:
+            for window in El().windows:
+                window.mark(False)
             self.__window.close()
 
     def load_uri(self, uri):

@@ -290,12 +290,8 @@
 
 .toolbar-mark {
     background-color: @theme_selected_bg_color;
-    background-image: none; 
-}
-
-.toolbar-mark > *{
-    background-color: @theme_selected_bg_color;
-    background-image: none; 
+    background-image: none;
+    color: @theme_selected_fg_color;
 }
 
 .overlay-button {

@@ -49,6 +49,7 @@ class SitesMenu(Gtk.Grid):
                 continue
             title = view.webview.title
             item = Gtk.ModelButton.new()
+            item.set_hexpand(True)
             item.set_property("text", title)
             item.set_action_name("win.switch_page")
             item.set_action_target_value(GLib.Variant("s", str(view)))

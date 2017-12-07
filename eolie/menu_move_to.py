@@ -104,7 +104,7 @@ class MoveToMenu(Gtk.Grid):
             @param event as Gdk.Event
             @param window as Window
         """
-        window.mark_sidebar(True)
+        window.mark(True)
 
     def __on_leave_notify_event(self, widget, event, window):
         """
@@ -113,7 +113,7 @@ class MoveToMenu(Gtk.Grid):
             @param event as Gdk.Event
             @param window as Window
         """
-        window.mark_sidebar(False)
+        window.mark(False)
 
     def __on_action_activate(self, action, variant):
         """

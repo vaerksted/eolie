@@ -179,7 +179,7 @@ class Window(Gtk.ApplicationWindow):
             popover.popdown()
         return closed
 
-    def mark_sidebar(self, mark):
+    def mark(self, mark):
         """
             Change window toolbar color
         """
