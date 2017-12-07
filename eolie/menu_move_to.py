@@ -10,15 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, Gtk, GLib
 
 from gettext import gettext as _
-from hashlib import sha256
 
 from eolie.define import El
 
 
-class MoveToMenu(Gio.Menu):
+class MoveToMenu(Gtk.Grid):
     """
         Menu allowing to move webviews to a window
     """
@@ -32,60 +31,85 @@ class MoveToMenu(Gio.Menu):
         self.__current_window = current_window
         self.__actions = []
         self.__views = list(views)
-        Gio.Menu.__init__(self)
-        title = _("New window")
-        window_str = "new_window"
-        encoded = "SITE_" + sha256(window_str.encode("utf-8")).hexdigest()
-        action = Gio.SimpleAction(name=encoded)
-        current_window.add_action(action)
-        self.__actions.append(encoded)
+        Gtk.Menu.__init__(self)
+        self.set_margin_start(5)
+        self.set_margin_end(5)
+        self.set_margin_top(5)
+        self.set_margin_bottom(5)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+
+        # Back button
+        item = Gtk.ModelButton.new()
+        item.set_hexpand(True)
+        item.set_property("centered", True)
+        item.set_property("text", _("Move to"))
+        item.set_property("inverted", True)
+        item.set_property("menu-name", "main")
+        item.show()
+        self.add(item)
+
+        action = Gio.SimpleAction(name="switch_window")
+        action = Gio.SimpleAction.new("switch_window",
+                                      GLib.VariantType.new("s"))
         action.connect('activate',
-                       self.__on_action_activate,
-                       None)
-        item = Gio.MenuItem.new(title, "win.%s" % encoded)
-        self.append_item(item)
+                       self.__on_action_activate)
+        current_window.add_action(action)
+
+        # New window button
+        item = Gtk.ModelButton.new()
+        item.set_hexpand(True)
+        item.set_property("text", _("New window"))
+        item.set_action_name("win.switch_window")
+        item.set_action_target_value(GLib.Variant("s", "new_window"))
+        item.show()
+        self.add(item)
+        if len(El().windows) > 1:
+            item = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
+            item.show()
+            self.add(item)
+
         for window in El().windows:
             if window == current_window:
                 continue
-            title = window.get_title()
-            window_str = str(window)
-            encoded = "SITE_" + sha256(window_str.encode("utf-8")).hexdigest()
-            action = Gio.SimpleAction(name=encoded)
-            current_window.add_action(action)
-            self.__actions.append(encoded)
-            action.connect('activate',
-                           self.__on_action_activate,
-                           window)
-            item = Gio.MenuItem.new(title, "win.%s" % encoded)
-            self.append_item(item)
+            item = Gtk.ModelButton.new()
+            item.set_hexpand(True)
+            item.set_property("text", window.get_title())
+            item.set_action_name("win.switch_window")
+            item.set_action_target_value(GLib.Variant("s", str(window)))
+            item.show()
+            self.add(item)
 
-    def clean(self):
+    def do_hide(self):
         """
-            Clean menu
+            Remove action on hide
         """
-        for action in self.__actions:
-            self.__current_window.remove_action(action)
-
-    @property
-    def actions(self):
-        """
-            Get stateful action name
-            @return [str]
-        """
-        return self.__actions
+        Gtk.Grid.do_hide(self)
+        self.__window.remove_action("switch_window")
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_action_activate(self, action, variant, window):
+    def __on_action_activate(self, action, variant):
         """
             Moves views to window
-            @param Gio.SimpleAction
-            @param GLib.Variant
+            @param action as  Gio.SimpleAction
+            @param variant as GLib.Variant
             @param window as Window
         """
-        if window is None:
+        window = None
+        window_str = variant.get_string()
+
+        # Get wanted window
+        if window_str == "new_window":
             window = El().get_new_window()
+        else:
+            for window in El().windows:
+                if window_str == str(window):
+                    break
+        if window is None:
+            return
+
+        # Move views to window
         for view in self.__views:
             view.hide()
             self.__current_window.container.remove_view(view)

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, Gtk
 
 from gettext import gettext as _
 import json
@@ -18,7 +18,7 @@ import json
 from eolie.define import El, EOLIE_DATA_PATH
 
 
-class ProfilesMenu(Gio.Menu):
+class ProfilesMenu(Gtk.Grid):
     """
         Menu allowing to switch current view to a new profile
     """
@@ -30,8 +30,25 @@ class ProfilesMenu(Gio.Menu):
             @param window as Window
         """
         self.__window = window
-        Gio.Menu.__init__(self)
-        action = Gio.SimpleAction.new_stateful(self.action,
+        Gtk.Grid.__init__(self)
+        self.set_margin_start(5)
+        self.set_margin_end(5)
+        self.set_margin_top(5)
+        self.set_margin_bottom(5)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+
+        # Back button
+        item = Gtk.ModelButton.new()
+        item.set_hexpand(True)
+        item.set_property("centered", True)
+        item.set_property("text", _("Profiles"))
+        item.set_property("inverted", True)
+        item.set_property("menu-name", "main")
+        item.show()
+        self.add(item)
+
+        # Profile buttons
+        action = Gio.SimpleAction.new_stateful("switch_profile",
                                                GLib.VariantType.new("s"),
                                                GLib.Variant("s", "none"))
         action.connect("activate",
@@ -50,30 +67,38 @@ class ProfilesMenu(Gio.Menu):
                 profiles = json.loads(contents.decode("utf-8"))
 
             for key in profiles.keys():
-                item = profiles[key]
-                self.__window.add_action(action)
-                menu_item = Gio.MenuItem.new(item,
-                                             "win.eolie_profiles::%s" % key)
+                item = Gtk.ModelButton.new()
+                item.set_property("text", profiles[key])
+                item.set_action_name("win.switch_profile")
+                item.set_action_target_value(GLib.Variant("s", key))
+                item.show()
+                self.add(item)
                 if profile == key:
                     action.change_state(GLib.Variant("s", profile))
-                self.append_item(menu_item)
         except Exception as e:
             print("ProfilesMenu::__init__():", e)
-        action = Gio.SimpleAction(name="eolie_edit_profiles")
-        self.__window.add_action(action)
-        menu_item = Gio.MenuItem.new(_("Edit profiles"),
-                                     "win.eolie_edit_profiles")
-        self.append_item(menu_item)
+
+        # Edit button
+        item = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
+        item.show()
+        self.add(item)
+        action = Gio.SimpleAction(name="edit_profiles")
         action.connect('activate',
                        self.__on_edit_profiles_activate)
+        self.__window.add_action(action)
+        item = Gtk.ModelButton.new()
+        item.set_property("text", _("Edit profiles"))
+        item.set_action_name("win.edit_profiles")
+        item.show()
+        self.add(item)
 
-    @property
-    def action(self):
+    def do_hide(self):
         """
-            Get stateful action name
-            @return str
+            Remove action on hide
         """
-        return "eolie_profiles"
+        Gtk.Grid.do_hide(self)
+        self.__window.remove_action("switch_profile")
+        self.__window.remove_action("edit_profiles")
 
 #######################
 # PRIVATE             #

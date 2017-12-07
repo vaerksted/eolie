@@ -10,18 +10,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, Gtk
 
-from hashlib import sha256
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.menu_profiles import ProfilesMenu
-from eolie.menu_move_to import MoveToMenu
 from eolie.define import El
 
 
-class SitesMenu(Gio.Menu):
+class SitesMenu(Gtk.Grid):
     """
         Menu linked to a SitesManagerChild
     """
@@ -34,63 +31,77 @@ class SitesMenu(Gio.Menu):
         """
         self.__window = window
         self.__views = views
-        self.__actions = []
-        Gio.Menu.__init__(self)
+        Gtk.Grid.__init__(self)
+        self.set_margin_start(5)
+        self.set_margin_end(5)
+        self.set_margin_top(5)
+        self.set_margin_bottom(5)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
         # Page switcher
+        action = Gio.SimpleAction.new("switch_page",
+                                      GLib.VariantType.new("s"))
+        self.__window.add_action(action)
+        action.connect("activate",
+                       self.__on_action_activate)
         for view in views:
             uri = view.webview.uri
             if uri is None:
                 continue
             title = view.webview.title
-            encoded = "SITE_" + sha256(uri.encode("utf-8")).hexdigest()
-            action = Gio.SimpleAction(name=encoded)
-            self.__window.add_action(action)
-            self.__actions.append(encoded)
-            action.connect('activate',
-                           self.__on_action_activate,
-                           view)
-            item = Gio.MenuItem.new(title, "win.%s" % encoded)
-            item.set_attribute_value("uri", GLib.Variant("s", uri))
-            self.append_item(item)
+            item = Gtk.ModelButton.new()
+            item.set_property("text", title)
+            item.set_action_name("win.switch_page")
+            item.set_action_target_value(GLib.Variant("s", str(view)))
+            item.show()
+            self.add(item)
         # Bottom section
-        bottom_section = Gio.Menu()
-        self.append_section(None, bottom_section)
+        separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
+        separator.show()
+        self.add(separator)
         # Profiles switcher
         webview = views[0].webview
         if not webview.ephemeral:
             parsed = urlparse(webview.uri)
             if parsed.scheme in ["http", "https"]:
-                submenu = ProfilesMenu(webview, window)
-                bottom_section.append_submenu(_("Profiles"), submenu)
-                self.__actions.append(submenu.action)
+                item = Gtk.ModelButton.new()
+                item.set_property("text", _("Profiles"))
+                item.set_property("menu-name", "profiles")
+                item.show()
+                self.add(item)
         # Move to
-        submenu = MoveToMenu(views, window)
-        bottom_section.append_submenu(_("Move to"), submenu)
-        self.__actions += submenu.actions
+        item = Gtk.ModelButton.new()
+        item.set_property("text", _("Move to"))
+        item.set_property("menu-name", "moveto")
+        item.show()
+        self.add(item)
         # Modify UA
-        action = Gio.SimpleAction.new("user_agent")
-        self.__window.add_action(action)
-        self.__actions.append("user_agent")
         if El().settings.get_value("developer-extras"):
-            item = Gio.MenuItem.new(_("Modify user agent"),
-                                    "win.user_agent")
-            bottom_section.append_item(item)
+            action = Gio.SimpleAction.new("user_agent")
             action.connect("activate", self.__on_modify_ua_activate)
+            self.__window.add_action(action)
+            item = Gtk.ModelButton.new()
+            item.set_property("text", _("Modify user agent"))
+            item.set_action_name("win.user_agent")
+            item.show()
+            self.add(item)
         # Close site
         action = Gio.SimpleAction.new("close_site")
-        self.__window.add_action(action)
-        self.__actions.append("close_site")
-        item = Gio.MenuItem.new(_("Close site"),
-                                "win.close_site")
-        bottom_section.append_item(item)
         action.connect("activate", self.__on_close_activate)
+        self.__window.add_action(action)
+        item = Gtk.ModelButton.new()
+        item.set_property("text", _("Close site"))
+        item.set_action_name("win.close_site")
+        item.show()
+        self.add(item)
 
-    def clean(self):
+    def do_hide(self):
         """
-            Clean menu
+            Remove actions on hide
         """
-        for action in self.__actions:
-            self.__window.remove_action(action)
+        Gtk.Grid.do_hide(self)
+        self.__window.remove_action("switch_page")
+        self.__window.remove_action("user_agent")
+        self.__window.remove_action("close_site")
 
 #######################
 # PRIVATE             #
@@ -143,11 +154,15 @@ class SitesMenu(Gio.Menu):
             dialog = ModifyUADialog(self.__views[0].webview.uri, self.__window)
             dialog.run()
 
-    def __on_action_activate(self, action, variant, view):
+    def __on_action_activate(self, action, variant):
         """
-            Load history
-            @param Gio.SimpleAction
-            @param GLib.Variant
+            Switch view
+            @param action as Gio.SimpleAction
+            @param variant as GLib.Variant
             @param view as View
         """
-        self.__window.container.set_current(view, True)
+        view_str = variant.get_string()
+        for view in self.__window.container.views:
+            if view_str == str(view):
+                self.__window.container.set_current(view, True)
+                break

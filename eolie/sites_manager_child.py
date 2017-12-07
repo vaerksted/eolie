@@ -346,19 +346,37 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if event.button == 2:
-            for view in self.__views:
-                self.__window.container.try_close_view(view)
-            return True
-        elif event.button == 3:
-            from eolie.menu_sites import SitesMenu
-            menu = SitesMenu(self.__views, self.__window)
-            popover = Gtk.Popover.new_from_model(eventbox, menu)
-            popover.set_position(Gtk.PositionType.RIGHT)
-            popover.forall(self.__update_popover_internals)
-            popover.connect("closed", self.__on_popover_closed, menu)
-            popover.show()
-            return True
+        try:
+            if event.button == 2:
+                for view in self.__views:
+                    self.__window.container.try_close_view(view)
+                return True
+            elif event.button == 3:
+                from eolie.menu_sites import SitesMenu
+                from eolie.menu_profiles import ProfilesMenu
+                from eolie.menu_move_to import MoveToMenu
+                sites_menu = SitesMenu(self.__views, self.__window)
+                sites_menu.show()
+                webview = self.__views[0].webview
+                profiles_menu = ProfilesMenu(webview, self.__window)
+                profiles_menu.show()
+                moveto_menu = MoveToMenu(self.__views, self.__window)
+                moveto_menu.show()
+                popover = Gtk.PopoverMenu.new()
+                popover.add(sites_menu)
+                popover.add(profiles_menu)
+                popover.add(moveto_menu)
+                popover.child_set_property(profiles_menu,
+                                           "submenu", "profiles")
+                popover.child_set_property(moveto_menu,
+                                           "submenu", "moveto")
+                popover.set_relative_to(eventbox)
+                popover.set_position(Gtk.PositionType.RIGHT)
+                popover.forall(self.__update_popover_internals)
+                popover.show()
+                return True
+        except Exception as e:
+            print("SitesManagerChild::_on_button_press_event:", e)
 
 #######################
 # PRIVATE             #
@@ -391,14 +409,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             else:
                 self.__image.set_from_icon_name("applications-internet",
                                                 Gtk.IconSize.INVALID)
-
-    def __on_popover_closed(self, popover, menu):
-        """
-            Clean model
-            @param popover as Gtk.Popover
-            @param menu as Gio.Menu
-        """
-        GLib.idle_add(menu.clean)
 
     def __on_webview_favicon_changed(self, webview, favicon,
                                      icon_theme_artwork):
