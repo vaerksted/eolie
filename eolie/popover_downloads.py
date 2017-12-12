@@ -82,8 +82,12 @@ class DownloadRow(Gtk.ListBoxRow):
             self.__download.cancel()
             self.get_style_context().add_class("download-failed")
         elif self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
-            WebKit2.WebContext.get_default().download_uri(self.__uri)
+            webview = self.__download.get_web_view()
             El().download_manager.remove(self.__download)
+            if webview is None:
+                WebKit2.WebContext.get_default().download_uri(self.__uri)
+            else:
+                webview.download_uri(self.__uri)
             self.destroy()
 
 #######################
