@@ -215,8 +215,7 @@ class DownloadRow(Gtk.ListBoxRow):
         response = download.get_response()
         if response is None:
             return
-        incoming = response.get_content_length() -\
-            download.get_received_data_length()
+        incoming = response.get_content_length() - length
         new_time = time()
         self.__download_bytes += length
         if self.__download_previous_time is not None:
