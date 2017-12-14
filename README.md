@@ -27,7 +27,6 @@ It provides:
 - python (make)
 - python-cairo
 - python-dateutil
-- python-dbus
 - python-gobject
 - python-sqlite
 - WebKit2GTK >= 2.16
