@@ -123,10 +123,6 @@ class Application(Gtk.Application):
         builder.add_from_resource("/org/gnome/Eolie/Appmenu.ui")
         menu = builder.get_object("app-menu")
 
-        report_action = Gio.SimpleAction.new("report", None)
-        report_action.connect("activate", self.__on_report_activate)
-        self.add_action(report_action)
-
         settings_action = Gio.SimpleAction.new("settings", None)
         settings_action.connect("activate", self.__on_settings_activate)
         self.add_action(settings_action)
@@ -804,47 +800,6 @@ class Application(Gtk.Application):
         """
         dialog = SettingsDialog(self.active_window)
         dialog.show()
-
-    def __on_report_activate(self, action, param):
-        """
-            Launch bug report page
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        argv = ["uname", "-a", None]
-        (s, o, e, s) = GLib.spawn_sync(None,
-                                       argv,
-                                       None,
-                                       GLib.SpawnFlags.SEARCH_PATH,
-                                       None)
-        if o:
-            os = o.decode("utf-8")
-        else:
-            os = "Unknown"
-
-        github = "https://github.com/gnumdk/eolie/issues/new?body="
-        body = """
-TRANSLATORS:
-https://translate.zanata.org/project/view/eolie
-
-### Environment
-- Eolie version: %s
-- GTK+ version: %s.%s
-- Operating system: %s
-
-### Bug/Feature
-If your bug is a rendering bug or a WebKit crash, you should report it here:
-https://bugs.webkit.org -> Section WebKit Gtk -> title starting with [GTK]
-
-<Describe your bug here>""" % (
-                                self.__version,
-                                Gtk.get_major_version(),
-                                Gtk.get_minor_version(),
-                                os)
-        url = github + GLib.uri_escape_string(body, "", False)
-        self.active_window.container.add_webview(url,
-                                                 LoadingType.FOREGROUND,
-                                                 False)
 
     def __on_about_activate(self, action, param):
         """

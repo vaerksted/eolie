@@ -6,10 +6,6 @@
         <attribute name="action">app.settings</attribute>
         <attribute name="label" translatable="yes">_Preferences</attribute>
       </item>
-    <item>
-        <attribute name="action">app.report</attribute>
-        <attribute name="label" translatable="yes">_Report a bug</attribute>
-      </item>
     </section>
     <section>
       <item>
