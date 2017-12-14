@@ -19,7 +19,7 @@ It provides:
 
 ## Depends on
 
-- gtk3 >= 3.14
+- gtk3 >= 3.22
 - gobject-introspection
 - python3
 - intltool (make)
