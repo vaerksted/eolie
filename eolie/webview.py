@@ -494,15 +494,6 @@ class WebView(WebKit2.WebView):
                         "serif-font-family",
                         system.get_value("font-name").get_string())
 
-    def __set_smooth_scrolling(self, source):
-        """
-            Set smooth scrolling based on source
-            @param source as Gdk.InputSource
-        """
-        settings = self.get_settings()
-        settings.set_property("enable-smooth-scrolling",
-                              source != Gdk.InputSource.MOUSE)
-
     def __on_create(self, related, navigation_action):
         """
             Create a new view for action
