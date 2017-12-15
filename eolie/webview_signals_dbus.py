@@ -13,7 +13,6 @@
 from gi.repository import Gtk, Gdk, GLib
 
 from urllib.parse import urlparse
-from time import time
 
 from eolie.menu_form import FormMenu
 from eolie.helper_passwords import PasswordsHelper
@@ -29,29 +28,11 @@ class WebViewDBusSignals:
         """
             Init class
         """
-        self._last_click_event_x = 0
-        self._last_click_event_y = 0
-        self._last_click_time = 0
-
-    def ignore_last_click_event(self):
-        """
-            Ignore last click event
-        """
-        self.__last_click_event = {}
+        pass
 
 #######################
 # PROTECTED           #
 #######################
-    def _on_button_press_event(self, widget, event):
-        """
-            Store last press event
-            @param widget as WebView
-            @param event as Gdk.EventButton
-        """
-        self._last_click_event_x = event.x
-        self._last_click_event_y = event.y
-        self._last_click_time = time()
-
     def _on_map(self, webview):
         """
             Connect all signals

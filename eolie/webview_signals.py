@@ -52,6 +52,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         WebViewJsSignals.__init__(self)
         WebViewDBusSignals.__init__(self)
         WebViewLoadSignals.__init__(self)
+        self.reset_last_click_event()
         self._cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
@@ -59,6 +60,14 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
+
+    def reset_last_click_event(self):
+        """
+            Reset last click event
+        """
+        self._last_click_event_x = 0
+        self._last_click_event_y = 0
+        self._last_click_time = 0
 
 #######################
 # PROTECTED           #
@@ -69,7 +78,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
             @param event as Gdk.Event
         """
-        WebViewDBusSignals._on_button_press_event(self, webview, event)
+        self._last_click_event_x = event.x
+        self._last_click_event_y = event.y
+        self._last_click_time = time()
         if self.get_ancestor(Gtk.Popover) is None:
             return self._window.close_popovers()
 

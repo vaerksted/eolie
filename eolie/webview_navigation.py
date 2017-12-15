@@ -391,7 +391,7 @@ class WebViewNavigation:
         elif mouse_button == 0:
             # Prevent opening empty pages
             if self._navigation_uri == "about:blank":
-                self.ignore_last_click_event()
+                self.reset_last_click_event()
                 decision.use()
                 return True
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
