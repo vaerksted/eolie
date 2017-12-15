@@ -30,7 +30,8 @@ class PagesManager(Gtk.EventBox):
         Gtk.EventBox.__init__(self)
         self.__window = window
         self.__current_child = None
-        self.__group_pages = True
+        # Sort pages by netloc
+        self.__sort_pages = []
         self.__allow_left_right_in_entry = False
         self.get_style_context().add_class("sidebar")
         grid = Gtk.Grid()
@@ -111,12 +112,12 @@ class PagesManager(Gtk.EventBox):
         """
         self.__search_entry.grab_focus()
 
-    def update_sort(self, group=False):
+    def update_sort(self, sort=[]):
         """
             Reset sort
-            @param group as bool
+            @param group as [str]
         """
-        self.__group_pages = group
+        self.__sort_pages = sort
         self.__box.invalidate_sort()
 
     def set_filter(self, search):
@@ -255,23 +256,28 @@ class PagesManager(Gtk.EventBox):
             @param row1 as Row
             @param row2 as Row
         """
-        # Group pages by net location then atime
-        if self.__group_pages and row2.view.webview.uri is not None and\
-                row1.view.webview.uri is not None:
-            parsed2 = urlparse(row2.view.webview.uri)
-            parsed1 = urlparse(row1.view.webview.uri)
-            if parsed2.netloc != parsed1.netloc:
-                return parsed2.netloc < parsed1.netloc
+        try:
+            # Group pages by net location then atime
+            if self.__sort_pages and row2.view.webview.uri is not None and\
+                    row1.view.webview.uri is not None:
+                parsed1 = urlparse(row1.view.webview.uri)
+                parsed2 = urlparse(row2.view.webview.uri)
+                if parsed2.netloc != parsed1.netloc:
+                    index1 = self.__sort_pages.index(parsed1.netloc)
+                    index2 = self.__sort_pages.index(parsed2.netloc)
+                    return index2 < index1
+                else:
+                    return row2.view.webview.atime > row1.view.webview.atime
+            # Always show current first
+            elif self.__current_child in [row1, row2]:
+                return self.__current_child == row2
+            # Unshown first
+            elif not row2.view.webview.shown and row1.view.webview.shown:
+                return True
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
-        # Always show current first
-        elif self.__current_child in [row1, row2]:
-            return self.__current_child == row2
-        # Unshown first
-        elif not row2.view.webview.shown and row1.view.webview.shown:
-            return True
-        else:
-            return row2.view.webview.atime > row1.view.webview.atime
+        except Exception as e:
+            print("PagesManager::__sort_func():", e)
 
     def __filter_func(self, row):
         """

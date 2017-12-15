@@ -367,7 +367,7 @@ class Window(Gtk.ApplicationWindow):
         if event.state & Gdk.ModifierType.CONTROL_MASK and\
                 event.keyval == Gdk.KEY_Tab:
             if not self.container.in_expose:
-                self.container.pages_manager.update_sort(False)
+                self.container.pages_manager.update_sort()
 
     def __on_key_release_event(self, window, event):
         """

@@ -168,6 +168,16 @@ class SitesManager(Gtk.EventBox):
             else:
                 child.set_selected(False)
 
+    def get_sort(self):
+        """
+            Get current sort
+            @return [str]
+        """
+        sort = []
+        for child in self.__box.get_children():
+            sort.append(child.netloc)
+        return sort
+
 #######################
 # PROTECTED           #
 #######################

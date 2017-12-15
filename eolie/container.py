@@ -285,7 +285,7 @@ class Container(Gtk.Overlay):
             @param expose as bool
         """
         if expose:
-            self.__pages_manager.update_sort(True)
+            self.__pages_manager.update_sort(self.__sites_manager.get_sort())
             self.__pages_manager.set_filtered(True)
         else:
             self.__window.toolbar.actions.view_button.set_active(False)
