@@ -261,7 +261,8 @@ class PagesManager(Gtk.EventBox):
                     row1.view.webview.uri is not None:
                 netloc1 = get_safe_netloc(row1.view.webview.uri)
                 netloc2 = get_safe_netloc(row2.view.webview.uri)
-                if netloc1 != netloc2:
+                if netloc1 != netloc2 and netloc1 in self.__sort_pages and\
+                        netloc2 in self.__sort_pages:
                     index1 = self.__sort_pages.index(netloc1)
                     index2 = self.__sort_pages.index(netloc2)
                     return index2 < index1
