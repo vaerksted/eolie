@@ -12,9 +12,8 @@
 
 from gi.repository import Gtk, Gdk
 
-from urllib.parse import urlparse
-
 from eolie.pages_manager_child import PagesManagerChild
+from eolie.utils import get_safe_netloc
 
 
 class PagesManager(Gtk.EventBox):
@@ -260,11 +259,11 @@ class PagesManager(Gtk.EventBox):
             # Group pages by net location then atime
             if self.__sort_pages and row2.view.webview.uri is not None and\
                     row1.view.webview.uri is not None:
-                parsed1 = urlparse(row1.view.webview.uri)
-                parsed2 = urlparse(row2.view.webview.uri)
-                if parsed2.netloc != parsed1.netloc:
-                    index1 = self.__sort_pages.index(parsed1.netloc)
-                    index2 = self.__sort_pages.index(parsed2.netloc)
+                netloc1 = get_safe_netloc(row1.view.webview.uri)
+                netloc2 = get_safe_netloc(row2.view.webview.uri)
+                if netloc1 != netloc2:
+                    index1 = self.__sort_pages.index(netloc1)
+                    index2 = self.__sort_pages.index(netloc2)
                     return index2 < index1
                 else:
                     return row2.view.webview.atime > row1.view.webview.atime

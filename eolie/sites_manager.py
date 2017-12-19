@@ -12,10 +12,9 @@
 
 from gi.repository import Gtk, Gdk, GLib, WebKit2
 
-from urllib.parse import urlparse
-
 from eolie.sites_manager_child import SitesManagerChild
 from eolie.define import El, LoadingType
+from eolie.utils import get_safe_netloc
 
 
 class SitesManager(Gtk.EventBox):
@@ -192,7 +191,7 @@ class SitesManager(Gtk.EventBox):
             @param webview as WebView
             @param uri as str
         """
-        netloc = self.__get_netloc(uri)
+        netloc = get_safe_netloc(uri)
         child = None
         empty_child = None
         # Do not group by netloc
@@ -234,17 +233,6 @@ class SitesManager(Gtk.EventBox):
                 empty_child.destroy()
             child.add_view(webview.view)
             self.update_visible_child()
-
-    def __get_netloc(self, uri):
-        """
-            Calculate netloc
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        netloc = parsed.netloc
-        if not netloc:
-            netloc = "%s://" % urlparse(uri).scheme
-        return netloc
 
     def __get_index(self, netloc):
         """

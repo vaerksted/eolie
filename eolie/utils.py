@@ -15,6 +15,7 @@ from gi.repository import Gdk, GLib
 import unicodedata
 import string
 import cairo
+from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
 
@@ -31,6 +32,18 @@ def name_from_profile_id(id):
         return "%s: " % El().profiles[id]
     else:
         return ""
+
+
+def get_safe_netloc(uri):
+    """
+        Get netloc (scheme if empty)
+        @param uri as str
+    """
+    parsed = urlparse(uri)
+    netloc = parsed.netloc
+    if not netloc:
+        netloc = "%s://" % urlparse(uri).scheme
+    return netloc
 
 
 def remove_www(netloc):
