@@ -52,6 +52,7 @@ class WebViewPopover(Gtk.Popover):
         height = min(800, size[1] * 0.9)
         position = len(self.__stack.get_children())
         self.__stack.add(view)
+        self.__stack.set_visible_child(view)
         view.webview.connect("close", self.__on_webview_close, destroy)
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         view.webview.connect("load-changed", self.__on_webview_load_changed)
