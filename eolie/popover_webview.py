@@ -58,20 +58,28 @@ class WebViewPopover(Gtk.Popover):
         view.webview.connect("load-changed", self.__on_webview_load_changed)
         title = view.webview.title or view.webview.uri or ""
         self.__combobox.append(str(view), title)
+
+        # Setup widget size request
+        properties = view.webview.get_window_properties()
+        geometry = properties.get_geometry()
+        current_width = self.__stack.get_allocated_width()
+        current_height = self.__stack.get_allocated_height()
+        if geometry.width and current_width < geometry.width:
+            self.__stack.set_size_request(min(width, geometry.width + 50), -1)
+        elif not geometry.width:
+            self.__stack.set_size_request(width, -1)
+        if geometry.height and current_height < geometry.height:
+            self.__stack.set_size_request(-1,
+                                          min(height, geometry.height + 50))
+        elif not geometry.height:
+            self.__stack.set_size_request(-1, height)
+
         if position == 0:
-            properties = view.webview.get_window_properties()
-            geometry = properties.get_geometry()
-            if geometry.width and geometry.height:
-                self.__stack.set_size_request(min(width, geometry.width),
-                                              min(height, geometry.height))
-            else:
-                self.__stack.set_size_request(width, height)
             self.__label.set_text(title)
             self.__label.show()
             self.__combobox.set_active_id(str(view))
             self.__combobox.hide()
         else:
-            self.__stack.set_size_request(width, height)
             self.__label.hide()
             self.__combobox.show()
         if destroy:
