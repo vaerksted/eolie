@@ -96,6 +96,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__input_warning_shown = False
         self.__signal_id = None
         self.__entry_changed_id = None
+        self.__suggestion_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
@@ -769,7 +770,7 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.EntryIconPosition.PRIMARY,
                                         "system-search-symbolic")
 
-    def __search_suggestion(self, uri, status, content, encoding, value):
+    def __on_search_suggestion(self, uri, status, content, encoding, value):
         """
             Add suggestions
             @param uri as str
@@ -919,16 +920,31 @@ class ToolbarTitle(Gtk.Bin):
         else:
             self.__popover.set_search_text(value)
 
+        # Remove any pending suggestion search
+        if self.__suggestion_id is not None:
+            GLib.source_remove(self.__suggestion_id)
+            self.__suggestion_id = None
+        # Search for suggestions if needed
         if El().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
-            El().search.search_suggestions(value,
-                                           self.__cancellable,
-                                           self.__search_suggestion)
+            self.__suggestion_id = GLib.timeout_add(
+                                                500,
+                                                self.__on_suggestion_timeout,
+                                                value)
         task_helper.run(self.__search_in_current_views, value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           "")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
+
+    def __on_suggestion_timeout(self, value):
+        """
+            Search suggestions
+            @param value as str
+        """
+        self.__suggestion_id = None
+        El().search.search_suggestions(value,
+                                       self.__cancellable,
+                                       self.__on_search_suggestion)
 
     def __on_size_allocation_timeout(self, allocation):
         """

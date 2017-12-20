@@ -25,10 +25,12 @@ class Search:
         Eolie search engines
     """
 
-    def __init__(self):
+    def __init__(self, user_agent):
         """
             Init search
+            @param user_agent as str
         """
+        self.__user_agent = user_agent
         # Gettext does not work outside init
         self.__ENGINES = {
             'Google': [
@@ -137,7 +139,7 @@ class Search:
             uri = self.__suggest % GLib.uri_escape_string(value,
                                                           None,
                                                           True)
-            task_helper = TaskHelper()
+            task_helper = TaskHelper(self.__user_agent)
             task_helper.load_uri_content(uri, cancellable,
                                          callback, self.__encoding, value)
         except Exception as e:
@@ -203,7 +205,7 @@ class Search:
             @param uri as str
             @param window as Window
         """
-        task_helper = TaskHelper()
+        task_helper = TaskHelper(self.__user_agent)
         task_helper.load_uri_content(uri, None,
                                      self.__on_engine_loaded,
                                      window)

@@ -22,12 +22,14 @@ class TaskHelper:
         Simple helper for running a task in background
     """
 
-    def __init__(self):
+    def __init__(self, user_agent=None):
         """
             Init helper
+            @param user_agent as str
         """
         self.__signals = {}
         self.__headers = []
+        self.__user_agent = user_agent
 
     def add_header(self, name, value):
         """
@@ -59,7 +61,10 @@ class TaskHelper:
         """
         try:
             session = Soup.Session.new()
-            session.set_property('accept-language-auto', True)
+            session.set_property("accept-language-auto", True)
+            if self.__user_agent is not None:
+                print(self.__user_agent)
+                session.set_property("user-agent", self.__user_agent)
             request = session.request(uri)
             request.send_async(cancellable,
                                self.__on_request_send_async,
@@ -70,40 +75,6 @@ class TaskHelper:
         except Exception as e:
             print("HelperTask::load_uri_content():",  e)
             callback(None, False, b"", *args)
-
-    def load_uri_content_sync(self, uri, cancellable=None):
-            """
-                Load uri
-                @param uri as str
-                @param cancellable as Gio.Cancellable
-                @return (loaded as bool, content as bytes)
-            """
-            try:
-                session = Soup.Session.new()
-                # Post message
-                if self.__headers:
-                    msg = Soup.Message.new("GET", uri)
-                    headers = msg.get_property("request-headers")
-                    for header in self.__headers:
-                        headers.append(header[0],
-                                       header[1])
-                    session.send_message(msg)
-                    body = msg.get_property("response-body")
-                    bytes = body.flatten().get_data()
-                # Get message
-                else:
-                    request = session.request(uri)
-                    stream = request.send(cancellable)
-                    bytes = bytearray(0)
-                    buf = stream.read_bytes(1024, cancellable).get_data()
-                    while buf:
-                        bytes += buf
-                        buf = stream.read_bytes(1024, cancellable).get_data()
-                    stream.close()
-                return (True, bytes)
-            except Exception as e:
-                print("TaskHelper::load_uri_content_sync():",  e)
-                return (False, b"")
 
 #######################
 # PRIVATE             #

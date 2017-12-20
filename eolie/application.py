@@ -393,7 +393,11 @@ class Application(Gtk.Application):
             self.js_exceptions = None
         self.phishing.update()
         self.art = Art()
-        self.search = Search()
+
+        # Get a default user agent for search
+        settings = WebKit2.Settings.new()
+        self.search = Search(settings.get_user_agent())
+
         self.download_manager = DownloadManager()
         self.pages_menu = PagesMenu()
 
