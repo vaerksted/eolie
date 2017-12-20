@@ -63,7 +63,6 @@ class TaskHelper:
             session = Soup.Session.new()
             session.set_property("accept-language-auto", True)
             if self.__user_agent is not None:
-                print(self.__user_agent)
                 session.set_property("user-agent", self.__user_agent)
             request = session.request(uri)
             request.send_async(cancellable,
