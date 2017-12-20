@@ -36,12 +36,13 @@ class WebViewArtwork:
         """
             Set webpage preview
         """
+        self.stop_snapshot()
         if not self.ephemeral and not self._error:
             self.__snapshot_id = GLib.timeout_add(3000, self.__set_snapshot)
 
     def stop_snapshot(self):
         """
-            Stop pending snapshot
+            Stop pending snapshot loading
         """
         if self.__snapshot_id is not None:
             GLib.source_remove(self.__snapshot_id)
@@ -49,7 +50,7 @@ class WebViewArtwork:
 
     def stop_favicon(self):
         """
-            Stop pending snapshot
+            Stop pending favicon loading
         """
         if self.__favicon_id is not None:
             GLib.source_remove(self.__favicon_id)
@@ -60,6 +61,7 @@ class WebViewArtwork:
             Set favicon
             @param favicon is safe
         """
+        self.stop_favicon()
         if not self.ephemeral and not self._error:
             self.__favicon_id = GLib.timeout_add(1000,
                                                  self.__set_favicon,
