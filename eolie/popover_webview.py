@@ -65,14 +65,14 @@ class WebViewPopover(Gtk.Popover):
         current_width = self.__stack.get_allocated_width()
         current_height = self.__stack.get_allocated_height()
         if geometry.width and current_width < geometry.width:
-            self.__stack.set_size_request(min(width, geometry.width + 50), -1)
-        elif not geometry.width:
-            self.__stack.set_size_request(width, -1)
+            current_width = min(width, geometry.width + 50)
+        elif current_width < 100:
+            current_width = width
         if geometry.height and current_height < geometry.height:
-            self.__stack.set_size_request(-1,
-                                          min(height, geometry.height + 50))
-        elif not geometry.height:
-            self.__stack.set_size_request(-1, height)
+            current_height = min(height, geometry.height + 50)
+        elif current_height < 100:
+            current_height = height
+        self.__stack.set_size_request(current_width, current_height)
 
         if position == 0:
             self.__label.set_text(title)

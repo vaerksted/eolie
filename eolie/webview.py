@@ -533,14 +533,12 @@ class WebView(WebKit2.WebView):
                                                         Indicator.POPUPS)
             return
         properties = webview.get_window_properties()
-        if properties.get_locationbar_visible() and\
-                properties.get_toolbar_visible() and\
+        if properties.get_toolbar_visible() and\
                 not navigation_action.get_modifiers() &\
                 Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_webview_with_new_view(
                                             webview,
                                             LoadingType.FOREGROUND)
-
         else:
             self._window.container.popup_webview(webview, True)
 
