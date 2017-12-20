@@ -31,7 +31,6 @@ class Window(Gtk.ApplicationWindow):
             @param size as (int, int)
             @param maximized as bool
         """
-        self.__timeout_configure = None
         Gtk.ApplicationWindow.__init__(self,
                                        application=app,
                                        title="Eolie",
@@ -40,8 +39,9 @@ class Window(Gtk.ApplicationWindow):
         self.__popovers = []
         self.__zoom_level = 1.0
         self.__container = None
+        self.__modifiers = 0
         self.__window_state = 0
-        self.__inhibit_ctrl_released = False
+        self.__timeout_configure = None
         self.__setup_content()
         self.__setup_window(size, maximized)
         self.connect("realize", self.__on_realize)
@@ -231,6 +231,15 @@ class Window(Gtk.ApplicationWindow):
         """
         return self.__window_state & Gdk.WindowState.FULLSCREEN
 
+    @property
+    def modifiers(self):
+        """
+            Get modifier
+            return int
+        """
+        # https://bugs.webkit.org/show_bug.cgi?id=181041
+        return self.__modifiers
+
 ############
 # Private  #
 ############
@@ -364,6 +373,7 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
+        self.__modifiers = event.keyval
         if event.state & Gdk.ModifierType.CONTROL_MASK and\
                 event.keyval == Gdk.KEY_Tab:
             if not self.container.in_expose:
@@ -375,6 +385,7 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
+        self.__modifiers = 0
         if event.keyval == Gdk.KEY_Control_L:
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
