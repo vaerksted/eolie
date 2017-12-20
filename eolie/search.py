@@ -25,7 +25,7 @@ class Search:
         Eolie search engines
     """
 
-    def __init__(self, user_agent):
+    def __init__(self, user_agent=None):
         """
             Init search
             @param user_agent as str
