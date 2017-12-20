@@ -293,7 +293,7 @@ class WebViewNavigation:
         if switch_profile:
             self.__switch_profile(uri)
         self.stop_snapshot()
-        self.stop_favicon()
+        self.stop_favicon(True)
         self.__previous_uri = uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):

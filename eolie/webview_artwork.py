@@ -31,6 +31,7 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.__favicon_id = None
         self.__initial_uri = None
+        self.__saved = False
 
     def set_snapshot(self):
         """
@@ -48,10 +49,13 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
-    def stop_favicon(self):
+    def stop_favicon(self, reset=False):
         """
             Stop pending favicon loading
+            @param reset as bool, set this to True if uri changed
         """
+        if reset:
+            self.__saved = False
         if self.__favicon_id is not None:
             GLib.source_remove(self.__favicon_id)
             self.__favicon_id = None
@@ -138,11 +142,13 @@ class WebViewArtwork:
             # Save favicon if needed
             if not self.ephemeral:
                 (exists, cached) = El().art.exists(uri, favicon_type)
-                if not exists or (not cached and safe):
+                if not exists or (not cached and safe) or self.__saved:
+                    self.__saved = True
                     El().art.save_artwork(uri, resized, favicon_type)
                 (exists, cached) = El().art.exists(netloc, favicon_type)
                 if netloc is not None:
-                    if not exists or (not cached and safe):
+                    if not exists or (not cached and safe) or self.__saved:
+                        self.__saved = True
                         El().art.save_artwork(netloc, resized, favicon_type)
                 self.__set_initial_uri_favicon(resized,
                                                uri,
@@ -163,7 +169,8 @@ class WebViewArtwork:
             if self.__initial_uri != striped_uri:
                 (exists, cached) = El().art.exists(self.__initial_uri,
                                                    favicon_type)
-                if not exists or (not cached and safe):
+                if not exists or (not cached and safe) or self.__saved:
+                    self.__saved = True
                     El().art.save_artwork(self.__initial_uri,
                                           surface,
                                           favicon_type)
