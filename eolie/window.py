@@ -373,10 +373,9 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        # Only keep Shift
-        if event.keyval & Gdk.ModifierType.SHIFT_MASK:
+        if event.keyval == Gdk.KEY_Shift_L:
             self.__modifiers = event.keyval
-        elif event.state & Gdk.ModifierType.CONTROL_MASK and\
+        if event.state & Gdk.ModifierType.CONTROL_MASK and\
                 event.keyval == Gdk.KEY_Tab:
             if not self.container.in_expose:
                 self.container.pages_manager.update_sort()
