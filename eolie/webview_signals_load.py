@@ -98,7 +98,9 @@ class WebViewLoadSignals:
             @param event as WebKit2.LoadEvent
         """
         self.__current_event = event
-        if not self.view.subsurface:
+        # Load event may happen before a related webview is ready-to-show and
+        # so before a view is associated
+        if self.view is not None and not self.view.subsurface:
             if event == WebKit2.LoadEvent.STARTED:
                 self._new_pages_opened = 0
                 # Destroy current popups
