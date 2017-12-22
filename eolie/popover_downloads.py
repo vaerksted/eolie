@@ -47,7 +47,14 @@ class DownloadRow(Gtk.ListBoxRow):
         self.__button = builder.get_object("button")
         self.__button_image = builder.get_object("button_image")
         if finished:
-            self.__on_finished(download)
+            f = Gio.File.new_for_uri(destination)
+            if f.query_exists():
+                self.__on_finished(download)
+            else:
+                self.__button_image.set_from_icon_name("view-refresh-symbolic",
+                                                       Gtk.IconSize.MENU)
+                self.get_style_context().add_class("download-failed")
+                self.__progress.set_opacity(0)
         else:
             progress = download.get_estimated_progress()
             self.__progress.set_fraction(progress)
@@ -73,9 +80,9 @@ class DownloadRow(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
-    def _on_cancel_button_clicked(self, button):
+    def _on_button_clicked(self, button):
         """
-            Cancel download
+            Cancel download or restart download
             @param button as Gtk.Button
         """
         if self.__button_image.get_icon_name()[0] == "window-close-symbolic":
