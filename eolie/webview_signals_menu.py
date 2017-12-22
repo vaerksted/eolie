@@ -45,6 +45,8 @@ class WebViewMenuSignals:
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
+        # https://bugs.webkit.org/show_bug.cgi?id=181126
+        webview.get_inspector()
         if hit.context_is_editable():
             return
         # HACK, don't know how to add web inspector
