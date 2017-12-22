@@ -110,7 +110,7 @@ class Row(Gtk.ListBoxRow):
             uri.show()
             grid.attach(uri, 1, 1, 1, 1)
 
-        if item == Type.SEARCH:
+        if item_type == Type.HISTORY:
             dt = datetime.fromtimestamp(item.get_property("atime"))
             hour = str(dt.hour).rjust(2, "0")
             minute = str(dt.minute).rjust(2, "0")
