@@ -103,23 +103,26 @@ class DatabaseHistory:
             return
         uri = uri.rstrip('/')
         parsed = urlparse(uri)
-        # Find an uniq guid
-        while guid is None:
-            guid = get_random_string(12)
-            if self.exists_guid(guid):
-                guid = None
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid, popularity FROM history\
-                                  WHERE guid=?", (guid,))
+                                  WHERE uri=?", (uri,))
             v = result.fetchone()
+            # Update current item
             if v is not None:
                 history_id = v[0]
+                guid = self.get_guid(history_id)
                 sql.execute("UPDATE history\
                              SET uri=?, netloc=?, mtime=?,\
-                                 title=?, popularity=?\
+                                 title=?, guid=?, popularity=?\
                              WHERE rowid=?", (uri, parsed.netloc, mtime, title,
-                                              v[1]+1, history_id))
+                                              guid, v[1]+1, history_id))
+            # Add a new item
             else:
+                # Find an uniq guid
+                while guid is None:
+                    guid = get_random_string(12)
+                    if self.exists_guid(guid):
+                        guid = None
                 result = sql.execute("INSERT INTO history\
                                       (title, uri, netloc,\
                                        mtime, popularity, guid)\
