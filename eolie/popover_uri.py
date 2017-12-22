@@ -88,6 +88,8 @@ class Row(Gtk.ListBoxRow):
                                                    Gtk.IconSize.MENU)
             favicon.set_margin_start(2)
             favicon.show()
+        if favicon is not None:
+            grid.attach(favicon, 0, 0, 1, 2)
 
         self.__title = Gtk.Label.new(title)
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
@@ -96,16 +98,19 @@ class Row(Gtk.ListBoxRow):
         self.__title.set_property('has-tooltip', True)
         self.__title.connect('query-tooltip', self.__on_query_tooltip)
         self.__title.show()
+        grid.attach(self.__title, 1, 0, 1, 1)
 
-        uri = Gtk.Label.new(item.get_property("uri"))
-        uri.set_ellipsize(Pango.EllipsizeMode.END)
-        uri.set_property("halign", Gtk.Align.START)
-        uri.get_style_context().add_class("dim-label")
-        uri.set_property('has-tooltip', True)
-        uri.connect('query-tooltip', self.__on_query_tooltip)
-        uri.show()
+        if favicon is not None:
+            uri = Gtk.Label.new(item.get_property("uri"))
+            uri.set_ellipsize(Pango.EllipsizeMode.END)
+            uri.set_property("halign", Gtk.Align.START)
+            uri.get_style_context().add_class("dim-label")
+            uri.set_property('has-tooltip', True)
+            uri.connect('query-tooltip', self.__on_query_tooltip)
+            uri.show()
+            grid.attach(uri, 1, 1, 1, 1)
 
-        if item_type in [Type.HISTORY, Type.SEARCH]:
+        if item == Type.SEARCH:
             dt = datetime.fromtimestamp(item.get_property("atime"))
             hour = str(dt.hour).rjust(2, "0")
             minute = str(dt.minute).rjust(2, "0")
@@ -114,6 +119,9 @@ class Row(Gtk.ListBoxRow):
             atime.get_style_context().add_class("dim-label")
             atime.set_margin_end(2)
             atime.show()
+            grid.attach(atime, 2, 0, 1, 2)
+
+        if item_type in [Type.HISTORY, Type.SEARCH]:
             delete_button = Gtk.Button.new_from_icon_name(
                                                      "user-trash-symbolic",
                                                      Gtk.IconSize.MENU)
@@ -123,10 +131,6 @@ class Row(Gtk.ListBoxRow):
             delete_button.get_style_context().add_class("overlay-button")
             delete_button.set_tooltip_text(_("Delete page from history"))
             delete_button.show()
-            grid.attach(favicon, 0, 0, 1, 2)
-            grid.attach(self.__title, 1, 0, 1, 1)
-            grid.attach(uri, 1, 1, 1, 1)
-            grid.attach(atime, 2, 0, 1, 2)
             grid.attach(delete_button, 3, 0, 1, 2)
         elif item_type == Type.BOOKMARK:
             edit_button = Gtk.Button.new_from_icon_name(
@@ -138,9 +142,6 @@ class Row(Gtk.ListBoxRow):
             edit_button.set_property("valign", Gtk.Align.CENTER)
             edit_button.set_tooltip_text(_("Edit bookmark"))
             edit_button.show()
-            grid.attach(favicon, 0, 0, 1, 2)
-            grid.attach(self.__title, 1, 0, 1, 1)
-            grid.attach(uri, 1, 1, 1, 1)
             grid.attach(edit_button, 2, 0, 1, 2)
         elif item_type == Type.TAG:
             if item_id == Type.NONE:
@@ -159,11 +160,6 @@ class Row(Gtk.ListBoxRow):
             open_button.set_tooltip_text(_("Open all pages for this tag"))
             open_button.show()
             grid.attach(open_button, 0, 0, 1, 1)
-            grid.attach(self.__title, 1, 0, 1, 1)
-        else:
-            grid.attach(favicon, 0, 0, 1, 2)
-            grid.attach(self.__title, 1, 0, 1, 1)
-            grid.attach(uri, 1, 1, 1, 1)
         grid.show()
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             grid.get_style_context().add_class("bigrow")
