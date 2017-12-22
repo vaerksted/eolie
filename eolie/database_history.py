@@ -31,7 +31,10 @@ class DatabaseHistory:
 
     __UPGRADES = {
         1: "ALTER TABLE history ADD opened INT NOT NULL DEFAULT 0",
-        2: "ALTER TABLE history ADD netloc TEXT NOT NULL DEFAULT ''"
+        2: "ALTER TABLE history ADD netloc TEXT NOT NULL DEFAULT ''",
+        3: "DELETE FROM history WHERE popularity=0",
+        4: "DELETE FROM history_atime WHERE NOT EXISTS (SELECT * FROM history\
+            WHERE history.rowid=history_atime.history_id)"
     }
 
     # SQLite documentation:
