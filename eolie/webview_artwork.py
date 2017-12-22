@@ -31,7 +31,7 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.__favicon_id = None
         self.__initial_uri = None
-        self.__saved = False
+        self.__size = None
 
     def set_snapshot(self):
         """
@@ -55,7 +55,7 @@ class WebViewArtwork:
             @param reset as bool, set this to True if uri changed
         """
         if reset:
-            self.__saved = False
+            self.__size = None
         if self.__favicon_id is not None:
             GLib.source_remove(self.__favicon_id)
             self.__favicon_id = None
@@ -141,39 +141,31 @@ class WebViewArtwork:
             self.emit("favicon-changed", resized, None)
             # Save favicon if needed
             if not self.ephemeral:
+                if surface is not None:
+                    size = surface.get_width() * surface.get_height()
+                else:
+                    size = 0
+                # Save favicon for URI
                 (exists, cached) = El().art.exists(uri, favicon_type)
-                if not exists or (not cached and safe) or self.__saved:
-                    self.__saved = True
+                if not exists or\
+                        (not cached and safe) or\
+                        (self.__size is not None and self.__size < size):
+                    self.__size = size
                     El().art.save_artwork(uri, resized, favicon_type)
+                    # Save favicon for initial URI
+                    striped_uri = uri.rstrip("/")
+                    if self.__initial_uri != striped_uri:
+                        El().art.save_artwork(self.__initial_uri,
+                                              resized,
+                                              favicon_type)
+                # Save favicon for netloc
                 (exists, cached) = El().art.exists(netloc, favicon_type)
                 if netloc is not None:
-                    if not exists or (not cached and safe) or self.__saved:
-                        self.__saved = True
+                    if not exists or\
+                            (not cached and safe) or\
+                            (self.__size is not None and self.__size < size):
+                        self.__size = size
                         El().art.save_artwork(netloc, resized, favicon_type)
-                self.__set_initial_uri_favicon(resized,
-                                               uri,
-                                               favicon_type,
-                                               safe)
-
-    def __set_initial_uri_favicon(self, surface, uri, favicon_type, safe):
-        """
-            Set favicon for initial uri
-            @param surface as cairo.surface
-            @param uri as str
-            @param initial_uri as str
-            @param favicon_type as str
-            @param safe as str
-        """
-        if self.__initial_uri is not None:
-            striped_uri = uri.rstrip("/")
-            if self.__initial_uri != striped_uri:
-                (exists, cached) = El().art.exists(self.__initial_uri,
-                                                   favicon_type)
-                if not exists or (not cached and safe) or self.__saved:
-                    self.__saved = True
-                    El().art.save_artwork(self.__initial_uri,
-                                          surface,
-                                          favicon_type)
 
     def __on_snapshot(self, surface, first_pass):
         """
