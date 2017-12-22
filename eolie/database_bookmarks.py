@@ -962,7 +962,7 @@ class DatabaseBookmarks:
             Search string in db (uri and title)
             @param search as str
             @param limit as int
-            @return [(id, title, uri)] as [(int, str, str)]
+            @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
         words = search.split(" ")
         # Remove empty items
@@ -980,7 +980,7 @@ class DatabaseBookmarks:
             filters += (limit,)
 
             # Search items matching all words
-            request = "SELECT title, uri\
+            request = "SELECT rowid, title, uri\
                        FROM bookmarks WHERE\
                        bookmarks.guid != bookmarks.uri AND "
             words_copy = list(words)
@@ -997,7 +997,7 @@ class DatabaseBookmarks:
             items += list(result)
 
             # Search items matching any word
-            request = "SELECT title, uri\
+            request = "SELECT rowid, title, uri\
                        FROM bookmarks WHERE\
                        bookmarks.guid != bookmarks.uri AND "
             words_copy = list(words)
@@ -1018,22 +1018,22 @@ class DatabaseBookmarks:
             score = 0
             for word in words:
                 # Title match
-                if item[0].find(word) != -1:
+                if item[1].find(word) != -1:
                     score += 1
                 # URI match
-                elif item[1].find(word) != -1:
+                elif item[2].find(word) != -1:
                     score += 1
-                    parsed = urlparse(item[1])
+                    parsed = urlparse(item[2])
                     # If netloc match word, +1
                     if parsed.netloc.find(word + "."):
                         score += 1
                     # If root +1
                     if not parsed.path:
                         score += 1
-            scored_item = (item[0], item[1], score)
-            if item[1] not in uris:
+            scored_item = (item[0], item[1], item[2], score)
+            if item[2] not in uris:
                 scored_items.append(scored_item)
-                uris.append(item[1])
+                uris.append(item[2])
         return scored_items
 
     def get_cursor(self):

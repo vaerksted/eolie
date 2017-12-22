@@ -105,7 +105,7 @@ class Row(Gtk.ListBoxRow):
         uri.connect('query-tooltip', self.__on_query_tooltip)
         uri.show()
 
-        if item_type == Type.HISTORY:
+        if item_type in [Type.HISTORY, Type.SEARCH]:
             dt = datetime.fromtimestamp(item.get_property("atime"))
             hour = str(dt.hour).rjust(2, "0")
             minute = str(dt.minute).rjust(2, "0")
@@ -961,7 +961,7 @@ class UriPopover(Gtk.Popover):
         if search != self.__search:
             return
         elif searches:
-            (title, uri, score) = searches.pop(0)
+            (rowid, title, uri, score) = searches.pop(0)
             for child in self.__search_box.get_children():
                 if child.item.get_property("uri") == uri:
                     child.item.set_property("search", self.__search)
@@ -969,6 +969,7 @@ class UriPopover(Gtk.Popover):
                     GLib.idle_add(self.__add_searches, searches, search)
                     return
             item = Item()
+            item.set_property("id", rowid)
             item.set_property("type", Type.SEARCH)
             item.set_property("title", title)
             item.set_property("uri", uri)
