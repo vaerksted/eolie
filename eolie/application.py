@@ -106,13 +106,13 @@ class Application(Gtk.Application):
         self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
-        self.connect('activate', self.__on_activate)
+        self.connect("activate", self.__on_activate)
+        self.connect("shutdown", lambda a: self.__save_state())
         self.connect("handle-local-options", self.__on_handle_local_options)
-        self.connect('command-line', self.__on_command_line)
+        self.connect("command-line", self.__on_command_line)
         self.register(None)
         if self.get_is_remote():
             Gdk.notify_startup_complete()
-        self.__listen_to_gnome_sm()
 
     def get_app_menu(self):
         """
@@ -245,8 +245,6 @@ class Application(Gtk.Application):
             Quit application
             @param vacuum as bool
         """
-        # Save webpage state
-        self.__save_state()
         # Stop pending tasks
         self.download_manager.cancel()
         self.adblock.stop()
@@ -474,22 +472,6 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Subtract", "<Control>minus"])
         self.set_accels_for_action("win.shortcut::zoom_default",
                                    ["<Control>KP_0", "<Control>0"])
-
-    def __listen_to_gnome_sm(self):
-        """
-            Save state on EndSession signal
-        """
-        try:
-            bus = self.get_dbus_connection()
-            bus.signal_subscribe(None,
-                                 "org.gnome.SessionManager.EndSessionDialog",
-                                 "ConfirmedLogout",
-                                 "/org/gnome/SessionManager/EndSessionDialog",
-                                 None,
-                                 Gio.DBusSignalFlags.NONE,
-                                 lambda a, b, c, d, e, f: self.__save_state())
-        except Exception as e:
-            print("Application::__listen_to_gnome_sm():", e)
 
     def __vacuum(self):
         """
