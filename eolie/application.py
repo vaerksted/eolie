@@ -338,7 +338,11 @@ class Application(Gtk.Application):
         self.settings = Settings.new()
 
         # Init extensions
-        GLib.setenv("PYTHONPATH", self.__extension_dir, True)
+        current_path = GLib.getenv("PYTHONPATH")
+        new_path = self.__extension_dir
+        if current_path:
+            new_path = new_path + ':' + current_path
+        GLib.setenv("PYTHONPATH", new_path, True)
 
         # Create favicon path
         if not GLib.file_test(self.__FAVICONS_PATH, GLib.FileTest.IS_DIR):
