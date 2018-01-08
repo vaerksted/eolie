@@ -49,6 +49,7 @@ class ModifyUADialog:
         view.append_column(column)
         user_agent = El().websettings.get_user_agent(self.__uri)
         self.__select_matching(user_agent)
+        self.__entry.set_text(user_agent)
 
     def run(self):
         """
