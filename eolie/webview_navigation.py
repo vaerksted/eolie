@@ -293,15 +293,13 @@ class WebViewNavigation:
         if switch_profile:
             self.__switch_profile(uri)
         self.stop_snapshot()
-        self.stop_favicon(True)
+        self.stop_favicon()
         self.__previous_uri = uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
-            self.stop_snapshot()
-            self.stop_favicon()
             self.set_favicon(False)
 
     def __on_title_changed(self, webview, param):
