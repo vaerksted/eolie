@@ -474,8 +474,6 @@ class ToolbarEnd(Gtk.Bin):
             return
         if action == self.__adblock_exceptions:
             database = El().adblock_exceptions
-        elif action == self.__js_exceptions:
-            database = El().js_exceptions
         else:
             database = El().popup_exceptions
         action.set_state(param)
