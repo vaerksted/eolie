@@ -348,7 +348,7 @@ class Container(Gtk.Overlay):
                 if view.webview != parent_child:
                     next_view = parent_child.view
                     break
-            if next_view is None:
+            if next_view is None and parent.view in children:
                 next_view = parent.view
 
         # Next we search for view with higher atime
