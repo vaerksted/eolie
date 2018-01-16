@@ -36,6 +36,7 @@ class PagesMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_private_clicked)
         action = Gio.SimpleAction(name="openall")
+        action.set_enabled(False)
         El().add_action(action)
         action.connect('activate',
                        self.__on_openall_clicked)
@@ -45,6 +46,9 @@ class PagesMenu(Gio.Menu):
         self.append_item(item)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
+        item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
+        item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
+        self.append_item(item)
         remember_session = El().settings.get_value("remember-session")
         opened_pages = El().history.get_opened_pages()
         if not remember_session and opened_pages:
@@ -99,10 +103,9 @@ class PagesMenu(Gio.Menu):
             else:
                 item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
-        if self.__closed_section.get_n_items() == 2:
-            item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
-            item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
-            self.append_item(item)
+        action = El().lookup_action("openall")
+        if action is not None:
+            action.set_enabled(self.__closed_section.get_n_items() > 1)
 
     def remove_action(self, uri):
         """
@@ -122,6 +125,9 @@ class PagesMenu(Gio.Menu):
                 if uri == _uri:
                     self.__closed_section.remove(i)
                     break
+        action = El().lookup_action("openall")
+        if action is not None:
+            action.set_enabled(self.__closed_section.get_n_items() < 2)
 
 #######################
 # PRIVATE             #
