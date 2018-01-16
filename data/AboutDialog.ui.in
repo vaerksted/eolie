@@ -50,10 +50,6 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Donations:</property>
               </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
             </child>
             <child>
               <object class="GtkLinkButton" id="flattr">
@@ -64,10 +60,16 @@
                 <property name="relief">none</property>
                 <property name="uri">https://flattr.com/profile/lollypop</property>
               </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
+            </child>
+            <child>
+              <object class="GtkLinkButton" id="liberapay">
+                <property name="label" translatable="yes">Liberapay</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="relief">none</property>
+                <property name="uri">https://liberapay.com/gnumdk</property>
+              </object>
             </child>
             <child>
               <object class="GtkLinkButton" id="paypal">
@@ -78,10 +80,6 @@
                 <property name="relief">none</property>
                 <property name="uri">https://www.paypal.me/lollypopgnome</property>
               </object>
-              <packing>
-                <property name="left_attach">2</property>
-                <property name="top_attach">0</property>
-              </packing>
             </child>
           </object>
           <packing>
