@@ -175,7 +175,7 @@ class PagesMenu(Gio.Menu):
             uri = uri_attr.get_string()
             title = title_attr.get_string()
             loading_type = wanted_loading_type(i)
-            items.append((uri, title, 0, 0, False, None, loading_type))
+            items.append((uri, title, 0, False, None, loading_type))
             i += 1
         El().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()

@@ -516,7 +516,7 @@ class Application(Gtk.Application):
                 ephemeral = webview.ephemeral
                 state = webview.get_session_state().serialize()
                 return (uri, webview.title, webview.atime,
-                        webview.gtime, ephemeral, state.get_data())
+                        ephemeral, state.get_data())
             else:
                 return None
 
@@ -585,11 +585,11 @@ class Application(Gtk.Application):
                     items = []
                     i = 0 if foreground else 1
                     for (uri, title, atime,
-                         gtime, ephemeral, state) in window["states"]:
+                         ephemeral, state) in window["states"]:
                         loading_type = wanted_loading_type(i)
                         webkit_state = WebKit2.WebViewSessionState(
                                                          GLib.Bytes.new(state))
-                        items.append((uri, title, atime, gtime, ephemeral,
+                        items.append((uri, title, atime, ephemeral,
                                       webkit_state, loading_type))
                         i += 1
                     new_window.container.add_webviews(items)

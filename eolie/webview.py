@@ -249,17 +249,23 @@ class WebView(WebKit2.WebView):
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, self._navigation_uri)
         else:
-            # parent.gtime = child.gtime + 1
-            # Set child atime lower that current atime for sorting next
-            # Used to search for best matching webview
             self._new_pages_opened += 1
-            self._window.container.add_webview(self._navigation_uri,
-                                               loading_type,
-                                               self.ephemeral,
-                                               None,
-                                               self.gtime - 1,
-                                               self.atime -
-                                               self._new_pages_opened)
+            webview = self._window.container.add_webview(
+                                                        self._navigation_uri,
+                                                        loading_type,
+                                                        self.ephemeral,
+                                                        None,
+                                                        self.atime -
+                                                        self._new_pages_opened)
+            webview.set_parent(self)
+            self.add_child(webview)
+
+    def set_parent(self, parent):
+        """
+            Set webview parent
+            @param parent as WebView
+        """
+        self.__parent = parent
 
     def set_atime(self, atime):
         """
@@ -267,13 +273,6 @@ class WebView(WebKit2.WebView):
             @param atime as int
         """
         self.__atime = atime
-
-    def set_gtime(self, gtime):
-        """
-            Update group time
-            @param atime as int
-        """
-        self.__gtime = gtime
 
     def set_view(self, view):
         """
@@ -288,6 +287,22 @@ class WebView(WebKit2.WebView):
             @param window as Window
         """
         self._window = window
+
+    def add_child(self, child):
+        """
+            Add a child to webview
+            @param child as WebView
+        """
+        if child not in self.__children:
+            self.__children.insert(0, child)
+
+    def remove_child(self, child):
+        """
+            Remove child from webview
+            @param child as WebView
+        """
+        if child in self.__children:
+            self.__children.remove(child)
 
     @property
     def content_manager(self):
@@ -314,12 +329,20 @@ class WebView(WebKit2.WebView):
         return self.__atime
 
     @property
-    def gtime(self):
+    def children(self):
         """
-            Get group time
-            @return int
+            Get page children
+            @return [WebView]
         """
-        return self.__gtime
+        return self.__children
+
+    @property
+    def parent(self):
+        """
+            Get page parent
+            @return WebView/None
+        """
+        return self.__parent
 
     @property
     def view(self):
@@ -413,7 +436,8 @@ class WebView(WebKit2.WebView):
         self.__context = context
         self.__content_manager = content_manager
         self.__atime = 0
-        self.__gtime = int(time())
+        self.__children = []
+        self.__parent = None
         self._new_pages_opened = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
@@ -506,6 +530,8 @@ class WebView(WebKit2.WebView):
                         self.__on_ready_to_show,
                         related,
                         navigation_action)
+        webview.set_parent(self)
+        self.add_child(webview)
         return webview
 
     def __on_ready_to_show(self, webview, related, navigation_action):

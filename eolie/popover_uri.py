@@ -374,7 +374,7 @@ class Row(Gtk.ListBoxRow):
         i = 0
         for (bid, uri, title) in items:
             loading_type = wanted_loading_type(i)
-            pages.append((uri, title, 0, 0, False, None, loading_type))
+            pages.append((uri, title, 0, False, None, loading_type))
             i += 1
         self.__window.container.add_webviews(pages)
 

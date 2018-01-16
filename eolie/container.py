@@ -125,20 +125,17 @@ class Container(Gtk.Overlay):
         self.add(paned)
 
     def add_webview(self, uri, loading_type, ephemeral=False,
-                    state=None, gtime=None, atime=None):
+                    state=None, atime=None):
         """
             Add a webview to container
             @param uri as str
             @param loading_type as Gdk.LoadingType
             @param ephemeral as bool
             @param state as WebViewSessionState
-            @param gtime as int
             @param atime as int
             @return WebView
         """
         webview = self.__get_webview(ephemeral)
-        if gtime is not None:
-            webview.set_gtime(gtime)
         if atime is not None:
             webview.set_atime(atime)
         if state is not None:
@@ -159,7 +156,7 @@ class Container(Gtk.Overlay):
     def add_webviews(self, items):
         """
             Add webviews to container
-            @param items as [(uri, title, atime, gtime,
+            @param items as [(uri, title, atime,
                               ephemeral, state, loading_type)]
         """
         running = self.__pending_items != []
@@ -313,18 +310,20 @@ class Container(Gtk.Overlay):
         if view.destroying:
             return
         children.remove(view)
-        reversed_children = list(reversed(children))
         children_count = len(children)
         El().history.set_page_state(view.webview.uri)
         self.__window.close_popovers()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
-        gtime = view.webview.gtime
         El().pages_menu.add_action(view.webview.title,
                                    view.webview.uri,
                                    view.webview.ephemeral,
                                    view.webview.get_session_state())
+
+        # Remove webview from parent
+        if view.webview.parent is not None:
+            view.webview.parent.remove_child(view.webview)
         view.destroy()
         # Don't show 0 as we are going to open a new one
         if children_count:
@@ -334,25 +333,28 @@ class Container(Gtk.Overlay):
         # Nothing to do if was not current page
         if not was_current:
             return False
+
         next_view = None
-        # First we search a brother ie a paged opened from the same parent page
-        for view in reversed_children:
-            if view.webview.gtime == gtime:
-                next_view = view
-                break
-        # Get view with gtime -+ 1
-        # If closing a parent, go to child
-        # If closing a child, go to parent
-        if next_view is None:
-            for view in reversed_children:
-                if view.webview.gtime == gtime + 1 or\
-                        view.webview.gtime == gtime - 1:
-                    next_view = view
+
+        # First we search for a child for current view
+        if view.webview.children:
+            next_view = view.webview.children[0].view
+
+        # Next we search for a brother for current view
+        # If no brother, use parent
+        parent = view.webview.parent
+        if next_view is None and parent is not None:
+            for parent_child in parent.children:
+                if view.webview != parent_child:
+                    next_view = parent_child.view
                     break
-        # Get view with higher access time
+            if next_view is None:
+                next_view = parent.view
+
+        # Next we search for view with higher atime
         if next_view is None:
             atime = 0
-            for view in reversed_children:
+            for view in reversed(children):
                 if view.webview.atime >= atime:
                     next_view = view
                     atime = view.webview.atime
@@ -530,12 +532,11 @@ class Container(Gtk.Overlay):
             Add pending items to container
         """
         if self.__pending_items:
-            (uri, title, atime, gtime,
+            (uri, title, atime,
              ephemeral, state, loading_type) = self.__pending_items.pop(0)
             webview = self.add_webview(uri, loading_type, ephemeral, state)
             webview.set_title(title)
             webview.set_atime(atime)
-            webview.set_gtime(gtime)
             GLib.idle_add(self.__add_pending_items)
 
     def __on_paned_notify_position(self, paned, ignore):
