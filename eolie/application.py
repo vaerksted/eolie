@@ -648,7 +648,7 @@ class Application(Gtk.Application):
                     else:
                         uri = "http://%s" % uri
                 loading_type = wanted_loading_type(i)
-                items.append((uri, uri, 0, 0, ephemeral, None, loading_type))
+                items.append((uri, uri, 0, ephemeral, None, loading_type))
                 i += 1
             active_window.container.add_webviews(items)
             active_window.present_with_time(Gtk.get_current_event_time())
