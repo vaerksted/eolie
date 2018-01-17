@@ -306,11 +306,11 @@ class Container(Gtk.Overlay):
             @param animate as bool
         """
         # Get children less view
-        children = self.__get_children()
+        views = self.__get_children()
         if view.destroying:
             return
-        children.remove(view)
-        children_count = len(children)
+        views.remove(view)
+        views_count = len(views)
         El().history.set_page_state(view.webview.uri)
         self.__window.close_popovers()
         # Needed to unfocus titlebar
@@ -326,10 +326,10 @@ class Container(Gtk.Overlay):
             view.webview.parent.remove_child(view.webview)
         view.destroy()
         # Don't show 0 as we are going to open a new one
-        if children_count:
+        if views_count:
             El().update_unity_badge()
             self.__window.toolbar.actions.count_label.set_text(
-                                                       str(children_count))
+                                                       str(views_count))
         # Nothing to do if was not current page
         if not was_current:
             return False
@@ -340,6 +340,10 @@ class Container(Gtk.Overlay):
         if view.webview.children:
             next_view = view.webview.children[0].view
 
+        # Current webview children not needed, clear parent
+        for child in view.webview.children:
+            child.set_parent(None)
+
         # Next we search for a brother for current view
         # If no brother, use parent
         parent = view.webview.parent
@@ -348,13 +352,13 @@ class Container(Gtk.Overlay):
                 if view.webview != parent_child:
                     next_view = parent_child.view
                     break
-            if next_view is None and parent.view in children:
+            if next_view is None and parent.view in views:
                 next_view = parent.view
 
         # Next we search for view with higher atime
         if next_view is None:
             atime = 0
-            for view in reversed(children):
+            for view in reversed(views):
                 if view.webview.atime >= atime:
                     next_view = view
                     atime = view.webview.atime
