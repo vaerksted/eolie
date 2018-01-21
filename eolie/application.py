@@ -255,7 +255,7 @@ class Application(Gtk.Application):
             if active_id != TimeSpan.NEVER:
                 atime -= TimeSpanValues[active_id]/1000000
             self.history.clear_to(int(atime))
-        # If sync is running, to avoid db lock, we do not vacuum
+        # If sync is running, to avoid DB lock, we do not vacuum
         if self.sync_worker is not None and self.sync_worker.syncing:
             self.sync_worker.stop()
             Gio.Application.quit(self)
@@ -316,7 +316,7 @@ class Application(Gtk.Application):
     @property
     def favicons_path(self):
         """
-            Cookies sqlite db path
+            Cookies sqlite DB path
         """
         return self.__FAVICONS_PATH
 
@@ -559,7 +559,7 @@ class Application(Gtk.Application):
 
     def __clean_state_cache(self, window_id):
         """
-            Remove window id from cache
+            Remove window ID from cache
             @param window_id as str
         """
         for state in self.__state_cache:
@@ -835,7 +835,7 @@ class Application(Gtk.Application):
         """
             Destroy about dialog when closed
             @param dialog as Gtk.Dialog
-            @param response id as int
+            @param response ID as int
         """
         dialog.destroy()
 
