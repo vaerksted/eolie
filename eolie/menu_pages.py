@@ -66,12 +66,11 @@ class PagesMenu(Gio.Menu):
             if action is not None:
                 action.activate(None)
 
-    def add_action(self, title, uri, private, state):
+    def add_action(self, title, uri, state):
         """
             Add a new action to menu
             @param title as str
             @param uri as str
-            @param private as bool
             @param state as WebKit2.WebViewSessionState
         """
         # Close all item
@@ -85,7 +84,7 @@ class PagesMenu(Gio.Menu):
         El().add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
-                       (uri, private, state))
+                       (uri, state))
         if len(title) > 40:
             title = title[0:40] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
@@ -138,7 +137,7 @@ class PagesMenu(Gio.Menu):
             @param opened_pages as [(str, str)]
         """
         for (uri, title) in opened_pages:
-            self.add_action(title, uri, False, None)
+            self.add_action(title, uri, None)
 
     def __clean_actions(self):
         """
@@ -194,10 +193,9 @@ class PagesMenu(Gio.Menu):
             @param data as (str, WebKit2.WebViewSessionState)
         """
         uri = data[0]
-        private = data[1]
-        state = data[2]
+        state = data[1]
         El().active_window.container.add_webview(uri,
                                                  LoadingType.FOREGROUND,
-                                                 private,
+                                                 False,
                                                  state)
         self.remove_action(uri)

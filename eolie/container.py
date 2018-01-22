@@ -316,10 +316,10 @@ class Container(Gtk.Overlay):
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
-        El().pages_menu.add_action(view.webview.title,
-                                   view.webview.uri,
-                                   view.webview.ephemeral,
-                                   view.webview.get_session_state())
+        if not view.webview.ephemeral:
+            El().pages_menu.add_action(view.webview.title,
+                                       view.webview.uri,
+                                       view.webview.get_session_state())
 
         # Remove webview from parent
         if view.webview.parent is not None:
