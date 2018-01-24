@@ -29,7 +29,15 @@ class JSblockExtension:
         self.__settings = settings
         self.__document = None
         self.__scripts = []
+        self.__whitelist = []
         extension.connect("page-created", self.__on_page_created)
+
+    def enable_for(self, netloc):
+        """
+            Enable JS for netloc
+            @param netloc as str
+        """
+        self.__whitelist.append(netloc)
 
     @property
     def scripts(self):
@@ -70,9 +78,10 @@ class JSblockExtension:
             self.__document = document
             self.__scripts = \
                 document.get_elements_by_tag_name_as_html_collection("script")
-        if self.__settings.get_value("jsblock"):
+        parsed = urlparse(webpage.get_uri())
+        if self.__settings.get_value("jsblock") and\
+                parsed.netloc not in self.__whitelist:
             request_uri = request.get_uri()
-            parsed = urlparse(webpage.get_uri())
             parsed_request = urlparse(request_uri)
             if not El().js_exceptions.find(parsed_request.netloc,
                                            parsed.netloc):

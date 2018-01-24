@@ -528,15 +528,6 @@ class ToolbarEnd(Gtk.Bin):
             else:
                 El().image_exceptions.remove_exception(parsed.netloc)
 
-    def __on_js_change_state(self, action, param):
-        """
-            Update javascript block state
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        El().settings.set_value("jsblock", param)
-
     def __on_download(self, download_manager, name=""):
         """
             Update progress bar

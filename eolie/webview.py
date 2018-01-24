@@ -392,6 +392,16 @@ class WebView(WebKit2.WebView):
         return uri
 
     @property
+    def netloc(self):
+        """
+            Get netloc
+            @return str
+        """
+        uri = self.uri
+        parsed = urlparse(uri)
+        return parsed.netloc
+
+    @property
     def ephemeral(self):
         """
             True if view is private/ephemeral

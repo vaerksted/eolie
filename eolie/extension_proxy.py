@@ -89,6 +89,9 @@ class ProxyExtensionServer(Server):
     </method>
     <method name="SetNextElementValue">
     </method>
+    <method name="EnableJS">
+        <arg type="s" name="netloc" direction="in" />
+    </method>
     <method name="SaveCredentials">
       <arg type="s" name="uuid" direction="in" />
       <arg type="s" name="user_form_name" direction="in" />
@@ -178,6 +181,13 @@ class ProxyExtensionServer(Server):
             if collection.item(i).is_edited():
                 return True
         return False
+
+    def EnableJS(self, netloc):
+        """
+            Enable JS for netloc
+            @param netloc as JS
+        """
+        self.__jsblock_extension.enable_for(netloc)
 
     def SaveCredentials(self, uuid, user_form_name,
                         pass_form_name, uri, form_uri):

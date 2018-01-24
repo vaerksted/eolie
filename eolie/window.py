@@ -468,10 +468,26 @@ class Window(Gtk.ApplicationWindow):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
+        elif string == "jsblock":
+            current_webview = self.container.current.webview
+            El().helper.call("EnableJS",
+                             current_webview.get_page_id(),
+                             GLib.Variant("(s)", (current_webview.netloc,)),
+                             self.__on_js_enabled,
+                             current_webview)
         elif string == "show_left_panel":
             value = El().settings.get_value("show-sidebar")
             El().settings.set_value("show-sidebar",
                                     GLib.Variant("b", not value))
+
+    def __on_js_enabled(self, proxy, task, webview):
+        """
+            Reload page
+            @param proxy as Gio.DBusProxy
+            @param task as Gio.Task
+            @param webview as WebView
+        """
+        webview.reload()
 
     def __on_popover_closed(self, popover):
         """

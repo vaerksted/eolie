@@ -191,6 +191,13 @@
                 <property name="accelerator">&lt;Primary&gt;e</property>
               </object>
             </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">True</property>
+                <property name="title" translatable="yes" context="shortcut window">Temporarily enable JavaScript for current site</property>
+                <property name="accelerator">&lt;Primary&gt;j</property>
+              </object>
+            </child>
           </object>
         </child>
         <child>
