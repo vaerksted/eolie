@@ -124,7 +124,8 @@ class DatabaseAdblock:
                 argv = [git,
                         "-C",
                         ADBLOCK_JS,
-                        "pull"]
+                        "pull",
+                        "https://gitlab.gnome.org/gnumdk/eolie-adblock.git"]
             else:
                 argv = [git,
                         "clone",

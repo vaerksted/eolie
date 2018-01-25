@@ -51,7 +51,7 @@ class JSblockExtension:
             uri = script.get_src()
             if uri is not None:
                 parsed = urlparse(uri)
-                if parsed.netloc not in uris:
+                if parsed.netloc and parsed.netloc not in uris:
                     uris.append(parsed.netloc)
         return uris
 
@@ -83,8 +83,9 @@ class JSblockExtension:
                 parsed.netloc not in self.__whitelist:
             request_uri = request.get_uri()
             parsed_request = urlparse(request_uri)
-            if not El().js_exceptions.find(parsed_request.netloc,
-                                           parsed.netloc):
+            if parsed_request.scheme in ["http", "https"] and\
+                    not El().js_exceptions.find(parsed_request.netloc,
+                                                parsed.netloc):
                 for i in range(0, self.__scripts.get_length()):
                     script = self.__scripts.item(i)
                     if script.get_src() == request_uri:
