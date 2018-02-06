@@ -456,9 +456,9 @@ class Application(Gtk.Application):
         self.set_accels_for_action("app.settings",
                                    ["<Control>s"])
         self.set_accels_for_action("win.shortcut::backward",
-                                   ["<Alt>Left", "XF86Back"])
+                                   ["<Alt>Left", "Back"])
         self.set_accels_for_action("win.shortcut::forward",
-                                   ["<Alt>Right", "XF86Forward"])
+                                   ["<Alt>Right", "Forward"])
         self.set_accels_for_action("win.shortcut::next",
                                    ["<Control>Tab",
                                     "<Control>Page_Down"])
