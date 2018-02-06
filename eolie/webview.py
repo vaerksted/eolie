@@ -457,7 +457,6 @@ class WebView(WebKit2.WebView):
         self._title = None
         self._navigation_uri = None
         self.__related_view = related_view
-        self.__input_source = Gdk.InputSource.MOUSE
         self._cancelled = False
         self._shown = False
         self.set_hexpand(True)
