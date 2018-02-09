@@ -43,6 +43,10 @@ class SyncWorker:
         from importlib import util
         fxa = util.find_spec("fxa")
         crypto = util.find_spec("Crypto")
+        if fxa is None:
+            print("PyFxA missing: pip3 install --user pyfxa")
+        if crypto is None:
+            print("Cyrpto missing: pip3 install --user pycrypto")
         return fxa is not None and crypto is not None
 
     def __init__(self):

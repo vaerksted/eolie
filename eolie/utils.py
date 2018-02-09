@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gdk, GLib
+from gi.repository import Gdk, GLib, Gio
 
 import unicodedata
 import string
@@ -20,6 +20,38 @@ from random import choice
 from base64 import b64encode
 
 from eolie.define import El, ArtSize, LoadingType
+
+
+def set_proxy_from_gnome():
+    """
+        Set proxy settings from GNOME
+    """
+    try:
+        proxy = Gio.Settings.new("org.gnome.system.proxy")
+        mode = proxy.get_value("mode").get_string()
+        if mode == "manual":
+            socks = Gio.Settings.new("org.gnome.system.proxy.socks")
+            h = socks.get_value("host").get_string()
+            p = socks.get_value("port").get_int32()
+            # Set socks proxy
+            if h != "" and p != 0:
+                import socket
+                import socks
+                socks.set_default_proxy(socks.SOCKS4, h, p)
+                socket.socket = socks.socksocket
+            else:
+                http = Gio.Settings.new("org.gnome.system.proxy.http")
+                https = Gio.Settings.new("org.gnome.system.proxy.https")
+                h = http.get_value("host").get_string()
+                p = http.get_value("port").get_int32()
+                hs = https.get_value("host").get_string()
+                ps = https.get_value("port").get_int32()
+                if h != "" and p != 0:
+                    GLib.setenv("http_proxy", "http://%s:%s" % (h, p), True)
+                if hs != "" and ps != 0:
+                    GLib.setenv("https_proxy", "http://%s:%s" % (hs, ps), True)
+    except Exception as e:
+        print("set_proxy_from_gnome()", e)
 
 
 def name_from_profile_id(id):

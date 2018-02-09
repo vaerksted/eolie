@@ -41,7 +41,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
-from eolie.utils import is_unity, wanted_loading_type
+from eolie.utils import is_unity, wanted_loading_type, set_proxy_from_gnome
 
 
 class Application(Gtk.Application):
@@ -59,6 +59,7 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        set_proxy_from_gnome()
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 18:
             exit("You need WebKit2GTK >= 2.18")
