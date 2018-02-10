@@ -111,6 +111,8 @@ class WebViewJsSignals:
         if self.current_event == WebKit2.LoadEvent.FINISHED:
             # Special google notifications fix
             # https://bugs.webkit.org/show_bug.cgi?id=175189
+            # https://bugzilla.gnome.org/show_bug.cgi?id=792130
+            # TODO Remove this, fixed soon in libsoup
             storage = El().settings.get_enum("cookie-storage")
             # WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY
             if storage == 2:
