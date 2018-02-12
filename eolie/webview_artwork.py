@@ -138,7 +138,7 @@ class WebViewArtwork:
                     favicon_type = "favicon_alt"
 
             # Only set favicon if minimal size is ok
-            if not self.ephemeral and size >= ArtSize.FAVICON:
+            if not self.ephemeral:
                 self.emit("favicon-changed", resized, None)
                 # Save favicon for URI if needed
                 (exists, cached) = El().art.exists(uri, favicon_type)
