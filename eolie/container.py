@@ -307,7 +307,7 @@ class Container(Gtk.Overlay):
         """
         # Get children less view
         views = self.__get_children()
-        if view.destroying:
+        if view.destroying or view not in views:
             return
         views.remove(view)
         views_count = len(views)
