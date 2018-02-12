@@ -35,6 +35,7 @@ class WebViewNavigation:
             Init navigation
             @param related_view as WebView
         """
+        self.__load_event_started_uri = None
         self.__js_timeout = None
         self.__related_view = related_view
         if related_view is None:
@@ -115,10 +116,14 @@ class WebViewNavigation:
         uri = webview.uri
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.STARTED:
+            self.__load_event_started_uri = uri
+            self.__update_bookmark_metadata(uri)
             self.set_setting("auto-load-images",
                              not El().image_exceptions.find(parsed.netloc))
             self._cancelled = False
         elif event == WebKit2.LoadEvent.COMMITTED:
+            if uri != self.__load_event_started_uri:
+                self.__update_bookmark_metadata(uri)
             self.__hw_acceleration_policy(parsed.netloc)
             self.content_manager.remove_all_style_sheets()
             if El().phishing.is_phishing(uri):
@@ -203,6 +208,17 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
+    def __update_bookmark_metadata(self, uri):
+        """
+            Update bookmark access time/popularity
+            @param uri as str
+        """
+        if El().bookmarks.get_id(uri) is not None:
+            El().bookmarks.thread_lock.acquire()
+            El().bookmarks.set_access_time(uri, round(time(), 2))
+            El().bookmarks.set_more_popular(uri)
+            El().bookmarks.thread_lock.release()
+
     def __hw_acceleration_policy(self, netloc):
         """
             Disable hw acceleration for blacklist

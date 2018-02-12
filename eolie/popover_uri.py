@@ -332,10 +332,6 @@ class Row(Gtk.ListBoxRow):
                                                     LoadingType.FOREGROUND)
                 if event.button == 2:
                     self.__window.close_popovers()
-            El().bookmarks.thread_lock.acquire()
-            El().bookmarks.set_access_time(uri, round(time(), 2))
-            El().bookmarks.set_more_popular(uri)
-            El().bookmarks.thread_lock.release()
         elif type_id == Type.VIEW:
             title = self.__item.get_property("title")
             for view in self.__window.container.views:
