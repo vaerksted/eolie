@@ -14,7 +14,6 @@ import gi
 gi.require_version('Secret', '1')
 from gi.repository import Secret, GLib
 
-from urllib.parse import urlparse
 from eolie.utils import debug
 
 
@@ -58,19 +57,18 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::get_all(): %s" % e)
 
-    def get(self, uri, userform, passform, callback, *args):
+    def get(self, form_uri, userform, passform, callback, *args):
         """
             Call function
-            @param uri as str
+            @param form_uri as str
             @param userform as str
             @param passform as str
             @param callback as function
             @param args
         """
         try:
-            self.__wait_for_secret(self.get, uri, userform,
+            self.__wait_for_secret(self.get, form_uri, userform,
                                    passform, callback, *args)
-            parsed = urlparse(uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "formSubmitURL": Secret.SchemaAttributeType.STRING,
@@ -78,7 +76,7 @@ class PasswordsHelper:
             }
             SecretAttributes = {
                 "type": "eolie web login",
-                "formSubmitURL": "%s://%s" % (parsed.scheme, parsed.netloc),
+                "formSubmitURL": form_uri,
                 "userform": userform,
             }
             if passform is not None:
@@ -92,7 +90,7 @@ class PasswordsHelper:
                                  Secret.SearchFlags.ALL,
                                  None,
                                  self.__on_secret_search,
-                                 uri,
+                                 form_uri,
                                  callback,
                                  *args)
         except Exception as e:
@@ -125,14 +123,14 @@ class PasswordsHelper:
             debug("PasswordsHelper::get_sync(): %s" % e)
 
     def store(self, user_form_name, user_form_value, pass_form_name,
-              pass_form_value, uri, form_uri, uuid, callback, *args):
+              pass_form_value, hostname_uri, form_uri, uuid, callback, *args):
         """
             Store password
             @param user_form_name as str
             @param user_form_value as str
             @param pass_form_name as str
             @param pass_form_value as str
-            @param uri as str
+            @param hostname_uri as str
             @param form_uri as str
             @param uuid as str
             @param callback as function
@@ -143,15 +141,13 @@ class PasswordsHelper:
                                    user_form_value,
                                    pass_form_name,
                                    pass_form_value,
-                                   uri,
+                                   hostname_uri,
                                    form_uri,
                                    uuid,
                                    callback,
                                    *args)
-            parsed = urlparse(uri)
-            parsed_form_uri = urlparse(form_uri)
-            schema_string = "org.gnome.Eolie: %s@%s" % (user_form_value,
-                                                        parsed.netloc)
+            schema_string = "org.gnome.Eolie: %s > %s" % (user_form_value,
+                                                          hostname_uri)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "uuid": Secret.SchemaAttributeType.STRING,
@@ -165,10 +161,8 @@ class PasswordsHelper:
                 "type": "eolie web login",
                 "uuid": uuid,
                 "login": user_form_value,
-                "hostname": "%s://%s" % (parsed.scheme,
-                                         parsed.netloc),
-                "formSubmitURL": "%s://%s" % (parsed_form_uri.scheme,
-                                              parsed_form_uri.netloc),
+                "hostname": hostname_uri,
+                "formSubmitURL": form_uri,
                 "userform": user_form_name,
                 "passform": pass_form_name
             }
@@ -325,13 +319,13 @@ class PasswordsHelper:
         if self.__secret in [None, -1]:
             raise Exception("Waiting Secret service")
 
-    def __on_load_secret(self, source, result, uri,
+    def __on_load_secret(self, source, result, form_uri,
                          index, count, callback, *args):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param uri as str
+            @param form_uri as str
             @param index as int
             @param count as int
             @param callback as function
@@ -346,14 +340,14 @@ class PasswordsHelper:
                     "sync" in keys:
                 callback(attributes,
                          secret.get().decode('utf-8'),
-                         uri,
+                         form_uri,
                          index,
                          count,
                          *args)
             else:
-                callback(None, None, uri, 0, 0, *args)
+                callback(None, None, form_uri, 0, 0, *args)
         else:
-            callback(None, None, uri, 0, 0, *args)
+            callback(None, None, form_uri, 0, 0, *args)
 
     def __on_clear_search(self, source, result, callback=None, *args):
         """
@@ -371,12 +365,12 @@ class PasswordsHelper:
         except Exception as e:
             debug("PasswordsHelper::__on_clear_search(): %s" % e)
 
-    def __on_secret_search(self, source, result, uri, callback, *args):
+    def __on_secret_search(self, source, result, form_uri, callback, *args):
         """
             Set username/password input
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param uri as str/None
+            @param form_uri as str
             @param callback as function
             @param args
         """
@@ -388,19 +382,19 @@ class PasswordsHelper:
                 for item in items:
                     item.load_secret(None,
                                      self.__on_load_secret,
-                                     uri,
+                                     form_uri,
                                      index,
                                      count,
                                      callback,
                                      *args)
                     index += 1
                 if not items:
-                    callback(None, None, uri, 0, 0, *args)
+                    callback(None, None, form_uri, 0, 0, *args)
             else:
-                callback(None, None, uri, 0, 0, *args)
+                callback(None, None, form_uri, 0, 0, *args)
         except Exception as e:
             debug("PasswordsHelper::__on_secret_search(): %s" % e)
-            callback(None, None, uri, 0, 0, *args)
+            callback(None, None, form_uri, 0, 0, *args)
 
     def __on_get_secret(self, source, result):
         """

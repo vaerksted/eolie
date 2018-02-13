@@ -190,35 +190,37 @@ class ProxyExtensionServer(Server):
         self.__jsblock_extension.enable_for(netloc)
 
     def SaveCredentials(self, uuid, user_form_name,
-                        pass_form_name, uri, form_uri):
+                        pass_form_name, hostname_uri, form_uri):
         """
             Save credentials to org.freedesktop.Secrets
             @param uuid as str
             @param user_form_name as str
             @param pass_form_name as str
-            @param uri as str
+            @param hostname_uri as str
             @param form_uri as str
         """
         if self.__form_extension.pending_credentials in [None, Type.NONE]:
             return
         try:
-            (_uuid, _user_form_name, user_form_value,
-             _pass_form_name, pass_form_value,
-             _uri, _form_uri) = self.__form_extension.pending_credentials
+            (_uuid,
+             _user_form_name,
+             user_form_value,
+             _pass_form_name,
+             pass_form_value,
+             _hostname_uri,
+             _form_uri) = self.__form_extension.pending_credentials
             if user_form_name != _user_form_name or\
                     pass_form_name != _pass_form_name or\
-                    uri != _uri or\
+                    hostname_uri != _hostname_uri or\
                     form_uri != _form_uri:
                 return
-            parsed = urlparse(uri)
-            uri = "%s://%s" % (parsed.scheme, parsed.netloc)
             if not uuid:
                 uuid = str(uuid4())
                 self.__helper.store(user_form_name,
                                     user_form_value,
                                     pass_form_name,
                                     pass_form_value,
-                                    uri,
+                                    hostname_uri,
                                     form_uri,
                                     uuid,
                                     None)
@@ -229,7 +231,7 @@ class ProxyExtensionServer(Server):
                                     user_form_value,
                                     pass_form_name,
                                     pass_form_value,
-                                    uri,
+                                    hostname_uri,
                                     form_uri,
                                     uuid,
                                     None)

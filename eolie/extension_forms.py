@@ -53,7 +53,7 @@ class FormsExtension(GObject.Object):
             form_input_password = form["password"].get_name()
             if form_input_username is not None and\
                     form_input_password is not None:
-                self.__helper.get(form["element"].get_action(),
+                self.__helper.get(self.get_form_uri(form),
                                   form_input_username,
                                   form_input_password,
                                   self.set_input_forms,
@@ -78,7 +78,7 @@ class FormsExtension(GObject.Object):
         # We only set first available password
         if (index != 0 or count > 1) and username is None:
             return
-        parsed = urlparse(form["element"].get_action())
+        parsed = urlparse(self.get_form_uri(form))
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and username is None:
             return
@@ -144,11 +144,8 @@ class FormsExtension(GObject.Object):
             return
         try:
             form = forms[0]
-            uri = page.get_uri()
-            form_uri = form["element"].get_action()
-            parsed_form_uri = urlparse(form_uri)
-            form_uri = "%s://%s" % (parsed_form_uri.scheme,
-                                    parsed_form_uri.netloc)
+            hostname_uri = self.get_hostname_uri(page)
+            form_uri = self.get_form_uri(form)
             user_form_name = form["username"].get_name()
             user_form_value = form["username"].get_value()
             pass_form_name = form["password"].get_name()
@@ -157,10 +154,39 @@ class FormsExtension(GObject.Object):
                               pass_form_name, self.__on_get_password,
                               user_form_name, user_form_value,
                               pass_form_name, pass_form_value,
-                              uri,
+                              hostname_uri,
                               self.__page_id)
         except Exception as e:
             print("FormsExtension::on_form_submit():", e)
+
+    def get_hostname_uri(self, page):
+        """
+            Get form uri for page
+            @param page as WebKit2WebExtension.WebPage
+            @return str
+            @raise Exception
+        """
+        page = self.__extension.get_page(self.__page_id)
+        if page is None:
+            raise Exception("Can't find page!")
+        uri = page.get_uri()
+        parsed = urlparse(uri)
+        return "%s://%s" % (parsed.scheme, parsed.netloc)
+
+    def get_form_uri(self, form):
+        """
+            Get form uri for form
+            @param form as {}
+            @return str
+        """
+        form_uri = form["element"].get_action()
+        if form_uri is None:
+            page = self.__extension.get_page(self.__page_id)
+            return self.get_hostname_uri(page)
+        else:
+            parsed_form_uri = urlparse(form_uri)
+            return "%s://%s" % (parsed_form_uri.scheme,
+                                parsed_form_uri.netloc)
 
     @property
     def pending_credentials(self):
@@ -175,7 +201,7 @@ class FormsExtension(GObject.Object):
 #######################
     def __on_get_password(self, attributes, password, form_uri, index, count,
                           user_form_name, user_form_value, pass_form_name,
-                          pass_form_value, uri, page_id):
+                          pass_form_value, hostname_uri, page_id):
         """
             Ask for credentials through DBus
             @param attributes as {}
@@ -187,7 +213,7 @@ class FormsExtension(GObject.Object):
             @param user_form_value as str
             @param pass_form_name as str
             @param pass_form_value as str
-            @param uri as str
+            @param hostname_uri as str
             @param page_id as int
         """
         try:
@@ -207,7 +233,7 @@ class FormsExtension(GObject.Object):
                                               user_form_value,
                                               pass_form_name,
                                               pass_form_value,
-                                              uri,
+                                              hostname_uri,
                                               form_uri)
             else:
                 # Found, no more lookup
@@ -224,10 +250,10 @@ class FormsExtension(GObject.Object):
                      user_form_value,
                      pass_form_name,
                      pass_form_value,
-                     uri,
+                     hostname_uri,
                      form_uri) = self.__pending_credentials
                     args = (uuid, user_form_name, user_form_value,
-                            pass_form_name, uri, form_uri)
+                            pass_form_name, hostname_uri, form_uri)
                     variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
                                                                   args))
                     self.emit("submit-form", variant)
