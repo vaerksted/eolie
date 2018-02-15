@@ -52,7 +52,6 @@ class AdblockExtension:
         """
         uri = request.get_uri()
         parsed = urlparse(uri)
-        print(uri in self.__not_blocked)
         if self.__settings.get_value("adblock") and\
                 uri not in self.__not_blocked and\
                 parsed.scheme in ["http", "https"] and\
