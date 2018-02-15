@@ -298,7 +298,6 @@ class DownloadsPopover(Gtk.Popover):
         self.__listbox = builder.get_object("downloads_box")
         self.__listbox.connect("row-activated", self.__on_row_activated)
         self.__listbox.set_placeholder(builder.get_object("placeholder"))
-        self.__listbox.set_sort_func(self.__sort)
         self.__scrolled = builder.get_object("scrolled")
         self.__clear_button = builder.get_object("clear_button")
         self.add(builder.get_object("widget"))
@@ -337,18 +336,6 @@ class DownloadsPopover(Gtk.Popover):
 #######################
 # PRIVATE             #
 #######################
-    def __sort(self, row1, row2):
-        """
-            Sort listbox
-            @param row1 as Row
-            @param row2 as Row
-        """
-        if row1.finished:
-            return True
-        elif row2.finished or row1.download.get_estimated_progress() >\
-                row2.download.get_estimated_progress():
-            return False
-
     def __populate(self):
         """
             Populate listbox
