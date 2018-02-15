@@ -135,6 +135,9 @@ class PasswordsHelper:
             @param uuid as str
             @param callback as function
         """
+        # seems to happen, thanks firefox
+        if form_uri is None:
+            return
         try:
             self.__wait_for_secret(self.store,
                                    user_form_name,
@@ -166,6 +169,7 @@ class PasswordsHelper:
                 "userform": user_form_name,
                 "passform": pass_form_name
             }
+
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
