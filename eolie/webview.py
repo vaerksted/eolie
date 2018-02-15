@@ -399,7 +399,7 @@ class WebView(WebKit2.WebView):
         """
         uri = self.uri
         parsed = urlparse(uri)
-        return parsed.netloc
+        return parsed.netloc or ""
 
     @property
     def ephemeral(self):
