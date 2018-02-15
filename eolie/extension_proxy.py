@@ -251,7 +251,7 @@ class ProxyExtensionServer(Server):
             (forms, textareas) = self.__form_extension.get_elements(elements)
             for form in forms:
                 if form["username"].get_name() == userform:
-                    self.__helper.get(form["element"].get_action(),
+                    self.__helper.get(self.__form_extension.get_form_uri(form),
                                       userform,
                                       form["password"].get_name(),
                                       self.__form_extension.set_input_forms,
