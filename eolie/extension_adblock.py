@@ -29,6 +29,7 @@ class AdblockExtension:
         """
         self.__settings = settings
         self.__adblock = DatabaseAdblock()
+        self.__not_blocked = []
         extension.connect("page-created", self.__on_page_created)
 
 #######################
@@ -51,7 +52,9 @@ class AdblockExtension:
         """
         uri = request.get_uri()
         parsed = urlparse(uri)
+        print(uri in self.__not_blocked)
         if self.__settings.get_value("adblock") and\
+                uri not in self.__not_blocked and\
                 parsed.scheme in ["http", "https"] and\
                 not El().adblock_exceptions.find_parsed(parsed):
             if self.__adblock.is_netloc_blocked(parsed.netloc) or\
@@ -60,6 +63,8 @@ class AdblockExtension:
                     self.__adblock.is_query_blocked(parsed.netloc,
                                                     parsed.query):
                 return True
+            else:
+                self.__not_blocked.append(uri)
         if self.__settings.get_value("do-not-track"):
             headers = request.get_http_headers()
             if headers is not None:
