@@ -10,6 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urlparse
+
+from eolie.define import El
 from eolie.database_adblock import DatabaseAdblock
 
 
@@ -47,9 +50,16 @@ class AdblockExtension:
             @param redirect as WebKit2WebExtension.URIResponse
         """
         uri = request.get_uri()
+        parsed = urlparse(uri)
         if self.__settings.get_value("adblock") and\
-                self.__adblock.is_blocked(uri):
-            return True
+                parsed.scheme in ["http", "https"] and\
+                not El().adblock_exceptions.find_parsed(parsed):
+            if self.__adblock.is_netloc_blocked(parsed.netloc) or\
+                    self.__adblock.is_path_blocked(parsed.netloc,
+                                                   parsed.path) or\
+                    self.__adblock.is_query_blocked(parsed.netloc,
+                                                    parsed.query):
+                return True
         if self.__settings.get_value("do-not-track"):
             headers = request.get_http_headers()
             if headers is not None:

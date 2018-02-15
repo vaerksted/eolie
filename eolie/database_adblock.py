@@ -16,11 +16,11 @@ from urllib.parse import urlparse
 import sqlite3
 import itertools
 from gettext import gettext as _
-from time import time
+from time import time, sleep
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS, El
+from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS
 from eolie.utils import debug, remove_www
 
 
@@ -28,7 +28,7 @@ class DatabaseAdblock:
     """
         Eolie adblock db
     """
-    DB_PATH = "%s/adblock2.db" % EOLIE_DATA_PATH
+    DB_PATH = "%s/adblock3.db" % EOLIE_DATA_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?" +
@@ -77,7 +77,9 @@ class DatabaseAdblock:
     # this make VACUUM not destroy rowids...
     __create_adblock = '''CREATE TABLE adblock (
                                                id INTEGER PRIMARY KEY,
-                                               dns TEXT NOT NULL,
+                                               netloc TEXT,
+                                               path TEXT,
+                                               query TEXT,
                                                mtime INT NOT NULL
                                                )'''
     __create_adblock_css = '''CREATE TABLE adblock_css (
@@ -193,25 +195,39 @@ class DatabaseAdblock:
                 rules += "%s,\n" % name
         return rules[:-2] + "{display: none !important;}"
 
-    def is_blocked(self, uri):
+    def is_netloc_blocked(self, netloc):
         """
-            Return True if uri is blocked
-            @param uri as str
+            Return True if netloc is blocked
+            @param netloc as str
             @return bool
         """
         try:
-            parsed = urlparse(uri)
-            if parsed.scheme not in ["http", "https"] or\
-                    El().adblock_exceptions.find_parsed(parsed):
-                return False
             with SqlCursor(self) as sql:
                 result = sql.execute("SELECT mtime FROM adblock\
-                                      WHERE dns=?", (parsed.netloc,))
+                                      WHERE netloc=?", (netloc,))
                 v = result.fetchone()
                 return v is not None
         except Exception as e:
-            print("DatabaseAdblock::is_blocked():", e)
+            print("DatabaseAdblock::is_netloc_blocked():", e)
             return False
+
+    def is_path_blocked(self, netloc, path):
+        """
+            Return True if path is blocked
+            @param netloc as str
+            @param path as str
+            @return bool
+        """
+        return False
+
+    def is_query_blocked(self, netloc, query):
+        """
+            Return True if query is blocked
+            @param netloc as str
+            @param query as str
+            @return bool
+        """
+        return False
 
     def get_cursor(self):
         """
@@ -227,6 +243,25 @@ class DatabaseAdblock:
 #######################
 # PRIVATE             #
 #######################
+    def __add_netloc(self, netloc):
+        """
+            Add a new netloc
+            @param netloc as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime FROM adblock\
+                                  WHERE netloc=?",
+                                 (netloc,))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock\
+                            (netloc, mtime) VALUES (?, ?)",
+                            (netloc, self.__adblock_mtime))
+            else:
+                sql.execute("UPDATE adblock SET mtime=?\
+                             WHERE netloc=?",
+                            (self.__adblock_mtime, netloc))
+
     def __save_rules(self, rules, uris):
         """
             Save rules to db
@@ -237,6 +272,7 @@ class DatabaseAdblock:
         result = rules.decode('utf-8')
         count = 0
         for line in result.split('\n'):
+            sleep(0.001)
             if self.__cancellable.is_cancelled():
                 raise IOError("Cancelled")
             if line.startswith('#'):
@@ -245,16 +281,14 @@ class DatabaseAdblock:
                          ' ', '\t', 1).replace('\t', '@', 1).split('@')
             if len(array) <= 1:
                 continue
-            dns = array[1].replace(
+            netloc = array[1].replace(
                                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
             with SqlCursor(self) as sql:
-                debug("Add filter: %s" % dns)
-                sql.execute("INSERT INTO adblock\
-                            (dns, mtime) VALUES (?, ?)",
-                            (dns, self.__adblock_mtime))
+                debug("Add filter: %s" % netloc)
+                self.__add_netloc(netloc)
                 count += 1
-                if count == 1000:
+                if count == 10000:
                     sql.commit()
                     count = 0
         # We are the last call to save_rules()?
@@ -299,6 +333,16 @@ class DatabaseAdblock:
                          VALUES (?, ?, ?, ?)",
                         (name, whitelist, blacklist, self.__adblock_mtime))
 
+    def __save_abp_rule(self, rule):
+        """
+            Save abp rule
+            @param rule as str
+        """
+        # Simple host rule
+        if rule[:2] == "||" and rule[-1] == "^":
+            debug("Add filter: %s" % rule)
+            self.__add_netloc(rule[2:-1])
+
     def __save_css_rules(self, rules, uris):
         """
             Save rules to db
@@ -317,6 +361,8 @@ class DatabaseAdblock:
                 self.__save_css_default_rule(line)
             elif line.find("##") != -1:
                 self.__save_css_domain_rule(line)
+            else:
+                self.__save_abp_rule(line)
             count += 1
             if count == 1000:
                 with SqlCursor(self) as sql:
