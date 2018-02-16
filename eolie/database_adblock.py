@@ -256,10 +256,14 @@ class DatabaseAdblock:
                 if self.__regex is None:
                     request = "SELECT regex FROM adblock_re"
                     result = sql.execute(request)
-                    regexes = "|".join(regex for regex
-                                       in list(itertools.chain(*result)))
-                    self.__regex = re.compile(regexes)
-                blocked_re = bool(self.__regex.search(uri))
+                    rules = list(itertools.chain(*result))
+                    if rules:
+                        regexes = "|".join(regex for regex in rules)
+                        self.__regex = re.compile(regexes)
+                if self.__regex is not None:
+                    blocked_re = bool(self.__regex.search(uri))
+                else:
+                    blocked_re = False
                 # Find in domain regexes
                 request = "SELECT regex FROM adblock_re_domain\
                            WHERE domain=?"
