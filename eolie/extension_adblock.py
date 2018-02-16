@@ -57,10 +57,7 @@ class AdblockExtension:
                 parsed.scheme in ["http", "https"] and\
                 not El().adblock_exceptions.find_parsed(parsed):
             if self.__adblock.is_netloc_blocked(parsed.netloc) or\
-                    self.__adblock.is_path_blocked(parsed.netloc,
-                                                   parsed.path) or\
-                    self.__adblock.is_query_blocked(parsed.netloc,
-                                                    parsed.query):
+                    self.__adblock.is_uri_blocked(uri, parsed.netloc):
                 return True
             else:
                 self.__not_blocked.append(uri)

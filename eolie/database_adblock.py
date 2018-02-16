@@ -15,6 +15,7 @@ from gi.repository import Gio, GLib
 from urllib.parse import urlparse
 import sqlite3
 import itertools
+import re
 from gettext import gettext as _
 from time import time, sleep
 
@@ -70,6 +71,10 @@ class DatabaseAdblock:
 
     __UPDATE = 172800
 
+    __SPECIAL_CHARS = r"([.$+?{}()\[\]\\])"
+    __REPLACE_CHARS = {"^": "(?:[^\w\d_\-.%]|$)",
+                       "*": ".*"}
+
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
@@ -77,9 +82,18 @@ class DatabaseAdblock:
     # this make VACUUM not destroy rowids...
     __create_adblock = '''CREATE TABLE adblock (
                                                id INTEGER PRIMARY KEY,
-                                               netloc TEXT,
-                                               path TEXT,
-                                               query TEXT,
+                                               netloc TEXT TEXT NOT NULL,
+                                               mtime INT NOT NULL
+                                               )'''
+    __create_adblock_re = '''CREATE TABLE adblock_re (
+                                               id INTEGER PRIMARY KEY,
+                                               regex TEXT NOT NULL,
+                                               mtime INT NOT NULL
+                                               )'''
+    __create_adblock_re_domain = '''CREATE TABLE adblock_re_domain (
+                                               id INTEGER PRIMARY KEY,
+                                               domain TEXT NOT NULL,
+                                               regex TEXT NOT NULL,
                                                mtime INT NOT NULL
                                                )'''
     __create_adblock_css = '''CREATE TABLE adblock_css (
@@ -89,6 +103,10 @@ class DatabaseAdblock:
                                                blacklist TEXT DEFAULT "",
                                                mtime INT NOT NULL
                                                )'''
+    __create_adblock_cache = '''CREATE TABLE adblock_cache (
+                                               id INTEGER PRIMARY KEY,
+                                               allowed_uri TEXT NOT NULL
+                                               )'''
 
     def __init__(self):
         """
@@ -97,6 +115,7 @@ class DatabaseAdblock:
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
         self.__adblock_mtime = int(time())
+        self.__regex = None
 
         # Lazy loading if not empty
         if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
@@ -106,7 +125,10 @@ class DatabaseAdblock:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
+                    sql.execute(self.__create_adblock_re)
+                    sql.execute(self.__create_adblock_re_domain)
                     sql.execute(self.__create_adblock_css)
+                    sql.execute(self.__create_adblock_cache)
                     sql.commit()
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
@@ -138,25 +160,29 @@ class DatabaseAdblock:
                                     flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
             GLib.spawn_close_pid(pid)
 
-        # Check entries in DB, do we need to update?
-        mtime = 0
+        # DB version is last successful sync mtime
+        version = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM adblock\
-                                  ORDER BY mtime LIMIT 1")
+            result = sql.execute("PRAGMA user_version")
             v = result.fetchone()
             if v is not None:
-                mtime = v[0]
+                version = v[0]
         self.__cancellable.reset()
-        if self.__adblock_mtime - mtime > self.__UPDATE:
+        if self.__adblock_mtime - version > self.__UPDATE:
             # Update host rules
             uris = list(self.__URIS)
+            locales = GLib.get_language_names()
+            user_locale = locales[0].split("_")[0]
+            try:
+                uris += self.__CSS_URIS +\
+                        [self.__CSS_LOCALIZED_URIS[user_locale]]
+            except:
+                uris += self.__CSS_URIS
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
                                                 self.__on_load_uri_content,
                                                 uris)
-        else:
-            self.__on_save_rules()
 
     def stop(self):
         """
@@ -211,23 +237,49 @@ class DatabaseAdblock:
             print("DatabaseAdblock::is_netloc_blocked():", e)
             return False
 
-    def is_path_blocked(self, netloc, path):
+    def is_uri_blocked(self, uri, netloc):
         """
-            Return True if path is blocked
+            Return True if uri is blocked
+            @param uri as str
             @param netloc as str
-            @param path as str
             @return bool
         """
-        return False
-
-    def is_query_blocked(self, netloc, query):
-        """
-            Return True if query is blocked
-            @param netloc as str
-            @param query as str
-            @return bool
-        """
-        return False
+        # We cache result for allowed uris
+        # because regex are quite slow in python
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT allowed_uri\
+                                  FROM adblock_cache\
+                                  WHERE allowed_uri=?", (uri,))
+            v = result.fetchone()
+            if v is None:
+                # Search in main regexes
+                if self.__regex is None:
+                    request = "SELECT regex FROM adblock_re"
+                    result = sql.execute(request)
+                    regexes = "|".join(regex for regex
+                                       in list(itertools.chain(*result)))
+                    self.__regex = re.compile(regexes)
+                blocked_re = bool(self.__regex.search(uri))
+                # Find in domain regexes
+                request = "SELECT regex FROM adblock_re_domain\
+                           WHERE domain=?"
+                result = sql.execute(request, (netloc,))
+                rules = list(itertools.chain(*result))
+                if rules:
+                    regexes = "|".join(regex for regex in rules)
+                    blocked_re_domain = bool(re.search(regexes, uri))
+                else:
+                    blocked_re_domain = False
+                if not blocked_re and not blocked_re_domain:
+                    sql.execute("INSERT INTO adblock_cache\
+                                (allowed_uri) VALUES (?)",
+                                (uri,))
+                    sql.commit()
+                    return False
+                else:
+                    return True
+            else:
+                return False
 
     def get_cursor(self):
         """
@@ -262,19 +314,86 @@ class DatabaseAdblock:
                              WHERE netloc=?",
                             (self.__adblock_mtime, netloc))
 
-    def __save_rules(self, rules, uris):
+    def __add_regex(self, regex):
+        """
+            Add a new regex
+            @param regex as str
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime FROM adblock_re\
+                                  WHERE regex=?",
+                                 (regex,))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock_re\
+                            (regex, mtime) VALUES (?, ?)",
+                            (regex, self.__adblock_mtime))
+            else:
+                sql.execute("UPDATE adblock_re SET mtime=?\
+                             WHERE regex=?",
+                            (self.__adblock_mtime, regex))
+
+    def __add_regex_domain(self, regex, domain):
+        """
+            Add a new regex
+            @param regex as str
+            @param domain
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime FROM adblock_re_domain\
+                                  WHERE regex=? AND domain=?",
+                                 (regex, domain))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock_re_domain\
+                            (regex, domain, mtime) VALUES (?, ?, ?)",
+                            (regex, domain, self.__adblock_mtime))
+            else:
+                sql.execute("UPDATE adblock_re_domain SET mtime=?\
+                             WHERE regex=? AND domain=?",
+                            (self.__adblock_mtime, regex, domain))
+
+    def __rule_to_regex(self, rule):
+        """
+            Convert rule to regex
+            @param rule as str
+            @return regex as str
+        """
+        try:
+            # Do nothing if rule is already a regex
+            if rule[0] == rule[-1] == "/":
+                return rule[1:-1]
+
+            rule = re.sub(self.__SPECIAL_CHARS, r"\\\1", rule)
+
+            # Handle ^ separator character, *, etc...
+            for key in self.__REPLACE_CHARS.keys():
+                rule = rule.replace(key, self.__REPLACE_CHARS[key])
+            # End of the address
+            if rule[-1] == "|":
+                rule = rule[:-1] + "$"
+            # Start of the address
+            if rule[0] == "|":
+                rule = "^" + rule[1:]
+            # Escape remaining | but not |$ => see self.__REPLACE_CHARS
+            rule = re.sub("(\|)[^$]", r"\|", rule)
+            return rule
+        except Exception as e:
+            print("DatabaseAdblock::__rule_to_regex()", e)
+            return None
+
+    def __save_rules(self, rules):
         """
             Save rules to db
             @param rules bytes
-            @param uris as [str]
         """
         SqlCursor.add(self)
         result = rules.decode('utf-8')
         count = 0
         for line in result.split('\n'):
-            sleep(0.001)
+            sleep(0.01)
             if self.__cancellable.is_cancelled():
-                raise IOError("Cancelled")
+                raise Exception("Cancelled")
             if line.startswith('#'):
                 continue
             array = line.replace(
@@ -291,13 +410,7 @@ class DatabaseAdblock:
                 if count == 10000:
                     sql.commit()
                     count = 0
-        # We are the last call to save_rules()?
-        # Delete removed entries and commit
-        if not uris:
-            with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM adblock\
-                             WHERE mtime!=?", (self.__adblock_mtime,))
-                sql.commit()
+        sql.commit()
         SqlCursor.remove(self)
 
     def __save_css_default_rule(self, line):
@@ -308,7 +421,6 @@ class DatabaseAdblock:
         name = line[2:]
         # Update entry if exists, create else
         with SqlCursor(self) as sql:
-            debug("Add filter: %s" % name)
             sql.execute("INSERT INTO adblock_css\
                         (name, mtime) VALUES (?, ?)",
                         (name, self.__adblock_mtime))
@@ -327,7 +439,6 @@ class DatabaseAdblock:
             else:
                 whitelist += domain
         with SqlCursor(self) as sql:
-            debug("Add filter: %s" % name)
             sql.execute("INSERT INTO adblock_css\
                          (name, whitelist, blacklist, mtime)\
                          VALUES (?, ?, ?, ?)",
@@ -339,73 +450,60 @@ class DatabaseAdblock:
             @param rule as str
         """
         # Simple host rule
-        if rule[:2] == "||" and rule[-1] == "^":
-            debug("Add filter: %s" % rule)
-            self.__add_netloc(rule[2:-1])
+        if rule[:2] == "||":
+            if rule[-1] == "^":
+                self.__add_netloc(rule[2:-1])
+            else:
+                regex = self.__rule_to_regex(rule[2:])
+                split = re.split("/|\^", rule[2:])
+                uri = "http://%s" % split[0]
+                parsed = urlparse(uri)
+                if parsed.netloc:
+                    self.__add_regex_domain(regex, parsed.netloc)
+                else:
+                    self.__add_regex(regex)
+        else:
+            regex = self.__rule_to_regex(rule)
+            if regex is not None:
+                self.__add_regex(regex)
 
-    def __save_css_rules(self, rules, uris):
+    def __save_abp_rules(self, rules):
         """
             Save rules to db
             @param rules as bytes
-            @param uris as [str]
         """
         SqlCursor.add(self)
         result = rules.decode("utf-8")
         count = 0
         for line in result.split('\n'):
+            sleep(0.01)
             if self.__cancellable.is_cancelled():
-                raise IOError("Cancelled")
-            if line.find("-abp-") != -1:
+                raise Exception("Cancelled")
+            if "-abp-" in line or "$" in line or "!" in line:
                 continue
             elif line.startswith("##"):
                 self.__save_css_default_rule(line)
-            elif line.find("##") != -1:
+            elif "##" in line:
                 self.__save_css_domain_rule(line)
+            elif "@@" in line:
+                pass  # TODO
+            elif "#@#" in line:
+                pass  # TODO
             else:
                 self.__save_abp_rule(line)
+            debug("Add abp filter: %s" % line)
             count += 1
             if count == 1000:
                 with SqlCursor(self) as sql:
                     sql.commit()
                 count = 0
-        # We are the last rule
-        # Delete old entries
-        if not uris:
-            with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM adblock_css\
-                             WHERE mtime!=?", (self.__adblock_mtime,))
-                sql.commit()
+        sql.commit()
         SqlCursor.remove(self)
 
-    def __on_save_css_rules(self, result, uris):
-        """
-            Load next uri
-            @param result as ??
-            @param uris as [str]
-        """
-        if uris:
-            uri = uris.pop(0)
-            self.__task_helper.load_uri_content(uri,
-                                                self.__cancellable,
-                                                self.__on_load_uri_css_content,
-                                                uris)
-
-    def __on_load_uri_css_content(self, uri, status, content, uris):
-        """
-            Load pending uris
-            @param uri as str
-            @param status as bool
-            @param content as bytes
-            @param uris as [str]
-        """
-        if status:
-            self.__task_helper.run(self.__save_css_rules, content, uris,
-                                   callback=(self.__on_save_css_rules, uris))
-
-    def __on_save_rules(self, result=None, uris=[]):
+    def __on_save_rules(self, result, uris=[]):
         """
             Load next uri, if finished, load CSS rules
-            @param result as None
+            @param result (unused)
             @param uris as [str]
         """
         if uris:
@@ -415,29 +513,17 @@ class DatabaseAdblock:
                                                 self.__on_load_uri_content,
                                                 uris)
         else:
-            # Check entries in DB, do we need to update?
-            mtime = 0
             with SqlCursor(self) as sql:
-                result = sql.execute("SELECT mtime FROM adblock_css\
-                                      ORDER BY mtime LIMIT 1")
-                v = result.fetchone()
-                if v is not None:
-                    mtime = v[0]
-            # We ignore update value from rules file
-            if self.__adblock_mtime - mtime < self.__UPDATE:
-                return
-            locales = GLib.get_language_names()
-            user_locale = locales[0].split("_")[0]
-            try:
-                uris = [self.__CSS_LOCALIZED_URIS[user_locale]]
-            except:
-                uris = []
-            uris += list(self.__CSS_URIS)
-            uri = uris.pop(0)
-            self.__task_helper.load_uri_content(uri,
-                                                self.__cancellable,
-                                                self.__on_load_uri_css_content,
-                                                uris)
+                sql.execute("DELETE FROM adblock\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("DELETE FROM adblock_re\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("DELETE FROM adblock_re_domain\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("DELETE FROM adblock_css\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
+                sql.commit()
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """
@@ -447,6 +533,13 @@ class DatabaseAdblock:
             @param content as bytes
             @param uris as [str]
         """
+        debug("DatabaseAdblock::__on_load_uri_content(): %s" % uri)
         if status:
-            self.__task_helper.run(self.__save_rules, content, uris,
-                                   callback=(self.__on_save_rules, uris))
+            if uri in self.__URIS:
+                self.__task_helper.run(self.__save_rules, content,
+                                       callback=(self.__on_save_rules, uris))
+            else:
+                self.__task_helper.run(self.__save_abp_rules, content,
+                                       callback=(self.__on_save_rules, uris))
+        else:
+            self.__on_save_rules(None, uris)
