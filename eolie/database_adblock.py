@@ -522,6 +522,7 @@ class DatabaseAdblock:
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_css\
                              WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("DELETE FROM adblock_cache")
                 sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
                 sql.commit()
 
