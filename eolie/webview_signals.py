@@ -196,10 +196,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                 parsed.scheme not in ["http", "https"]:
             return
         mtime = round(time(), 2)
-        El().history.thread_lock.acquire()
         history_id = El().history.add(title, webview.uri, mtime)
         El().history.set_page_state(webview.uri, mtime)
-        El().history.thread_lock.release()
         if El().sync_worker is not None:
             El().sync_worker.push_history([history_id])
 

@@ -14,6 +14,7 @@ from gi.repository import GLib
 
 import sqlite3
 from urllib.parse import urlparse
+from threading import Lock
 
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
@@ -49,6 +50,7 @@ class DatabaseSettings:
             Create database tables or manage update if needed
             @param suffix as str
         """
+        self.thread_lock = Lock()
         new_version = len(self.__UPGRADES)
         self.__DB_PATH = "%s/settings2.db" % EOLIE_DATA_PATH
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
@@ -59,7 +61,6 @@ class DatabaseSettings:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_settings)
                     sql.execute("PRAGMA user_version=%s" % new_version)
-                    sql.commit()
             except Exception as e:
                 print("DatabaseSettings::__init__(): %s" % e)
         # DB upgrade, TODO Make it generic between class
@@ -76,7 +77,6 @@ class DatabaseSettings:
                     except:
                         print("Settings DB upgrade %s failed" % i)
                 sql.execute("PRAGMA user_version=%s" % new_version)
-                sql.commit()
 
     def set_chooser_uri(self, chooseruri, uri):
         """
@@ -101,7 +101,6 @@ class DatabaseSettings:
                                           (uri, chooseruri)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            chooseruri))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_chooser_uri():", e)
 
@@ -142,7 +141,6 @@ class DatabaseSettings:
                     sql.execute("INSERT INTO settings\
                                           (uri, geolocation)\
                                           VALUES (?, ?)", (b, parsed.netloc))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::allow_geolocation():", e)
 
@@ -184,7 +182,6 @@ class DatabaseSettings:
                                           (uri, accept_tls)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            accept))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_accept_tls():", e)
 
@@ -226,7 +223,6 @@ class DatabaseSettings:
                                           (uri, zoom)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            zoom))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_zoom():", e)
 
@@ -268,7 +264,6 @@ class DatabaseSettings:
                                           (uri, user_agent)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            user_agent))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_user_agent():", e)
 
@@ -310,7 +305,6 @@ class DatabaseSettings:
                                           (uri, profile)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            profile))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::set_profile():", e)
 
@@ -337,7 +331,6 @@ class DatabaseSettings:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE settings SET profile=''\
                         WHERE profile=?", (profile,))
-            sql.commit()
 
     def get_languages(self, uri):
         """
@@ -384,7 +377,6 @@ class DatabaseSettings:
                                           (uri, languages)\
                                           VALUES (?, ?)", (parsed.netloc,
                                                            code))
-                sql.commit()
         except Exception as e:
             print("DatabaseSettings::add_language():", e)
 
@@ -403,7 +395,6 @@ class DatabaseSettings:
                                  SET languages=?\
                                  WHERE uri=?", (";".join(codes),
                                                 parsed.netloc))
-                sql.commit()
 
     def get_cursor(self):
         """

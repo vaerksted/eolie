@@ -74,11 +74,10 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_tags)
                     sql.execute(self.__create_bookmarks_tags)
                     sql.execute(self.__create_parents)
-                    sql.commit()
             except Exception as e:
                 print("DatabaseBookmarks::__init__(): %s" % e)
 
-    def add(self, title, uri, guid, tags, atime=0, commit=True):
+    def add(self, title, uri, guid, tags, atime=0):
         """
             Add a new bookmark
             @param title as str
@@ -87,7 +86,6 @@ class DatabaseBookmarks:
             @param tags as [str]
             @param parent_guid as str
             @param ctime as int
-            @param commit as bool
             @return bookmark id as int
         """
         # Find an uniq guid
@@ -111,25 +109,20 @@ class DatabaseBookmarks:
                 sql.execute("INSERT INTO bookmarks_tags\
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
-            if commit:
-                sql.commit()
             return bookmarks_id
 
-    def delete(self, bookmark_id, delete=True, commit=True):
+    def delete(self, bookmark_id, delete=True):
         """
             Mark bookmark as deleted
             @param bookmark id as int
             @param delete as bool
-            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET del=?\
                          WHERE rowid=?", (delete, bookmark_id))
-            if commit:
-                sql.commit()
 
-    def remove(self, bookmark_id, commit=True):
+    def remove(self, bookmark_id):
         """
             Remove bookmark from db
             @param bookmark id as int
@@ -142,10 +135,8 @@ class DatabaseBookmarks:
                          WHERE bookmark_id=?", (bookmark_id,))
             sql.execute("DELETE FROM parents\
                          WHERE bookmark_id=?", (bookmark_id,))
-            if commit:
-                sql.commit()
 
-    def add_tag(self, tag, commit=False):
+    def add_tag(self, tag):
         """
             Add tag to db, return existing if exists
             @param tag as str
@@ -155,11 +146,9 @@ class DatabaseBookmarks:
             result = sql.execute("INSERT INTO tags\
                                   (title) VALUES (?)",
                                  (tag,))
-            if commit:
-                sql.commit()
             return result.lastrowid
 
-    def del_tag(self, tag, commit=False):
+    def del_tag(self, tag):
         """
             Add tag to db, return existing if exists
             @param tag as str
@@ -172,8 +161,6 @@ class DatabaseBookmarks:
                          WHERE rowid=?", (tag_id,))
             sql.execute("DELETE FROM bookmarks_tags\
                          WHERE tag_id=?", (tag_id,))
-            if commit:
-                sql.commit()
 
     def rename_tag(self, old, new):
         """
@@ -183,7 +170,6 @@ class DatabaseBookmarks:
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE tags set title=? WHERE title=?", (new, old))
-            sql.commit()
 
     def get_tags(self, bookmark_id):
         """
@@ -563,35 +549,29 @@ class DatabaseBookmarks:
                 return v[0]
             return 5
 
-    def set_title(self, bookmark_id, title, commit=True):
+    def set_title(self, bookmark_id, title):
         """
             Set bookmark title
             @param bookmark id as int
             @param title as str
-            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET title=?\
                          WHERE rowid=?", (title, bookmark_id,))
-            if commit:
-                sql.commit()
 
-    def set_uri(self, bookmark_id, uri, commit=True):
+    def set_uri(self, bookmark_id, uri):
         """
             Set bookmark uri
             @param bookmark id as int
             @param uri as str
-            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET uri=?\
                          WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
-            if commit:
-                sql.commit()
 
-    def set_popularity(self, bookmark_id, popularity, commit=True):
+    def set_popularity(self, bookmark_id, popularity):
         """
             Set bookmark popularity
             @param bookmark id as int
@@ -602,16 +582,13 @@ class DatabaseBookmarks:
             sql.execute("UPDATE bookmarks\
                          SET popularity=?\
                          WHERE rowid=?", (popularity, bookmark_id,))
-            if commit:
-                sql.commit()
 
-    def set_parent(self, bookmark_id, parent_guid, parent_name, commit=True):
+    def set_parent(self, bookmark_id, parent_guid, parent_name):
         """
             Set parent id for bookmark
             @param bookmark_id as int
             @param parent_guid as str
             @param parent_name as str
-            @param commit as bool
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT parent_guid\
@@ -628,8 +605,6 @@ class DatabaseBookmarks:
                              SET parent_guid=?, parent_name=?\
                              WHERE bookmark_id=?",
                             (parent_guid, parent_name, bookmark_id))
-            if commit:
-                sql.commit()
 
     def set_access_time(self, uri, atime):
         """
@@ -640,9 +615,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET atime=? where uri=?", (atime, uri.rstrip('/')))
-            sql.commit()
 
-    def set_mtime(self, bookmark_id, mtime, commit=True):
+    def set_mtime(self, bookmark_id, mtime):
         """
             Set bookmark sync time
             @param bookmark id as int
@@ -652,10 +626,8 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks\
                          SET mtime=? where rowid=?", (mtime, bookmark_id))
-            if commit:
-                sql.commit()
 
-    def set_position(self, bookmark_id, position, commit=True):
+    def set_position(self, bookmark_id, position):
         """
             Set bookmark position
             @param bookmark id as int
@@ -666,8 +638,6 @@ class DatabaseBookmarks:
             sql.execute("UPDATE bookmarks\
                          SET position=? where rowid=?", (position,
                                                          bookmark_id))
-            if commit:
-                sql.commit()
 
     def set_tag_title(self, tag_id, title):
         """
@@ -677,7 +647,6 @@ class DatabaseBookmarks:
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE tags SET title=? WHERE id=?", (title, tag_id,))
-            sql.commit()
 
     def set_more_popular(self, uri):
         """
@@ -692,9 +661,8 @@ class DatabaseBookmarks:
             if v is not None:
                 sql.execute("UPDATE bookmarks set popularity=?\
                              WHERE uri=?", (v[0]+1, uri))
-                sql.commit()
 
-    def add_tag_to(self, tag_id, bookmark_id, commit=True):
+    def add_tag_to(self, tag_id, bookmark_id):
         """
             Add tag to bookmark
             @param tag id as int
@@ -705,10 +673,8 @@ class DatabaseBookmarks:
             sql.execute("INSERT INTO bookmarks_tags\
                          (bookmark_id, tag_id) VALUES (?, ?)",
                         (bookmark_id, tag_id))
-            if commit:
-                sql.commit()
 
-    def del_tag_from(self, tag_id, bookmark_id, commit=True):
+    def del_tag_from(self, tag_id, bookmark_id):
         """
             Remove tag from bookmark
             @param tag id as int
@@ -719,8 +685,6 @@ class DatabaseBookmarks:
             sql.execute("DELETE from bookmarks_tags\
                          WHERE bookmark_id=? and tag_id=?",
                         (bookmark_id, tag_id))
-            if commit:
-                sql.commit()
 
     def clean_tags(self):
         """
@@ -734,7 +698,6 @@ class DatabaseBookmarks:
                             WHERE tags.rowid = bookmarks_tags.tag_id\
                             AND bookmarks.rowid = bookmarks_tags.bookmark_id\
                             AND bookmarks.del!=1)")
-            sql.commit()
 
     def reset_popularity(self, uri):
         """
@@ -744,7 +707,6 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             sql.execute("UPDATE bookmarks SET popularity=0 WHERE uri=?",
                         (uri,))
-            sql.commit()
 
     def is_empty(self):
         """
@@ -764,7 +726,6 @@ class DatabaseBookmarks:
             @param path as str
         """
         try:
-            self.thread_lock.acquire()
             from bs4 import BeautifulSoup
             SqlCursor.add(self)
             f = Gio.File.new_for_path(path)
@@ -805,13 +766,9 @@ class DatabaseBookmarks:
                             # Set position
                             self.set_position(bookmark_id, position, False)
                             position += 1
-            with SqlCursor(self) as sql:
-                sql.commit()
             SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_html:", e)
-        finally:
-            self.thread_lock.release()
 
     def import_chromium(self, chrome):
         """
@@ -821,7 +778,6 @@ class DatabaseBookmarks:
             @param chrome as bool
         """
         try:
-            self.thread_lock.acquire()
             SqlCursor.add(self)
             import json
             homedir = GLib.get_home_dir()
@@ -866,20 +822,15 @@ class DatabaseBookmarks:
                             # Set position
                             self.set_position(bookmark_id, position, False)
                             position += 1
-                with SqlCursor(self) as sql:
-                    sql.commit()
                 SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_chromium:", e)
-        finally:
-            self.thread_lock.release()
 
     def import_firefox(self):
         """
             Mozilla Firefox importer
         """
         try:
-            self.thread_lock.acquire()
             SqlCursor.add(self)
             firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
             d = Gio.File.new_for_path(firefox_path)
@@ -938,13 +889,9 @@ class DatabaseBookmarks:
                         self.set_parent(bookmark_id, parent_guid,
                                         parent_name, False)
                         self.set_position(bookmark_id, position, False)
-            with SqlCursor(self) as sql:
-                sql.commit()
             SqlCursor.remove(self)
         except Exception as e:
             print("DatabaseBookmarks::import_firefox:", e)
-        finally:
-            self.thread_lock.release()
 
     def exists_guid(self, guid):
         """

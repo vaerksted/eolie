@@ -14,6 +14,7 @@ from gi.repository import Gio, GLib
 
 import itertools
 import sqlite3
+from threading import Lock
 
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
@@ -39,6 +40,7 @@ class DatabaseExceptions:
             Create database tables or manage update if needed
             @param suffix as str
         """
+        self.thread_lock = Lock()
         self.__DB_PATH = "%s/exceptions2_%s.db" % (EOLIE_DATA_PATH,
                                                    suffix)
         self.__cancellable = Gio.Cancellable.new()
@@ -49,7 +51,6 @@ class DatabaseExceptions:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_exceptions)
-                    sql.commit()
             except Exception as e:
                 print("DatabaseExceptions::__init__(): %s" % e)
 
@@ -63,7 +64,6 @@ class DatabaseExceptions:
             with SqlCursor(self) as sql:
                 sql.execute("INSERT INTO exceptions (value, domain)\
                              VALUES (?, ?)", (value, domain))
-                sql.commit()
         except:
             pass
 
@@ -78,7 +78,6 @@ class DatabaseExceptions:
                 sql.execute("DELETE FROM exceptions\
                              WHERE value=? AND domain=?",
                             (value, domain))
-                sql.commit()
         except:
             pass
 

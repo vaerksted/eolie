@@ -15,6 +15,7 @@ from gi.repository import Gio, GLib
 import sqlite3
 from time import time
 import json
+from threading import Lock
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
@@ -42,6 +43,7 @@ class DatabasePhishing:
         """
             Create database tables or manage update if needed
         """
+        self.thread_lock = Lock()
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
         # Lazy loading if not empty
@@ -52,7 +54,6 @@ class DatabasePhishing:
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_phishing)
-                    sql.commit()
             except Exception as e:
                 print("DatabasePhishing::__init__(): %s" % e)
 
@@ -136,14 +137,12 @@ class DatabasePhishing:
                 if count == 1000:
                     sql.commit()
                     count = 0
-            sql.commit()
         # We are the last call to save_rules()?
         # Delete removed entries and commit
         if not uris:
             with SqlCursor(self) as sql:
                 sql.execute("DELETE FROM phishing\
                              WHERE mtime!=?", (self.__mtime,))
-                sql.commit()
         SqlCursor.remove(self)
 
     def __on_load_uri_content(self, uri, status, content, uris):

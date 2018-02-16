@@ -18,6 +18,7 @@ import itertools
 import re
 from gettext import gettext as _
 from time import time, sleep
+from threading import Lock
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
@@ -112,6 +113,7 @@ class DatabaseAdblock:
         """
             Create database tables or manage update if needed
         """
+        self.thread_lock = Lock()
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
         self.__adblock_mtime = int(time())
@@ -129,7 +131,6 @@ class DatabaseAdblock:
                     sql.execute(self.__create_adblock_re_domain)
                     sql.execute(self.__create_adblock_css)
                     sql.execute(self.__create_adblock_cache)
-                    sql.commit()
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
 
@@ -278,7 +279,6 @@ class DatabaseAdblock:
                     sql.execute("INSERT INTO adblock_cache\
                                 (allowed_uri) VALUES (?)",
                                 (uri,))
-                    sql.commit()
                     return False
                 else:
                     return True
@@ -407,14 +407,12 @@ class DatabaseAdblock:
             netloc = array[1].replace(
                                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
-            with SqlCursor(self) as sql:
-                debug("Add filter: %s" % netloc)
-                self.__add_netloc(netloc)
-                count += 1
-                if count == 10000:
-                    sql.commit()
-                    count = 0
-        sql.commit()
+            debug("Add filter: %s" % netloc)
+            self.__add_netloc(netloc)
+            count += 1
+            if count == 1000:
+                SqlCursor.commit(self)
+                count = 0
         SqlCursor.remove(self)
 
     def __save_css_default_rule(self, line):
@@ -498,10 +496,8 @@ class DatabaseAdblock:
             debug("Add abp filter: %s" % line)
             count += 1
             if count == 1000:
-                with SqlCursor(self) as sql:
-                    sql.commit()
+                SqlCursor.commit(self)
                 count = 0
-        sql.commit()
         SqlCursor.remove(self)
 
     def __on_save_rules(self, result, uris=[]):
@@ -528,7 +524,6 @@ class DatabaseAdblock:
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_cache")
                 sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
-                sql.commit()
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """

@@ -86,12 +86,10 @@ class TagWidget(Gtk.FlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gtk.Event
         """
-        El().bookmarks.thread_lock.acquire()
         tag_title = self.__entry.get_text()
         tag_id = El().bookmarks.get_tag_id(tag_title)
         if tag_id is not None:
             El().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
-        El().bookmarks.thread_lock.release()
         self.destroy()
         return True
 
@@ -220,7 +218,6 @@ class BookmarkEditWidget(Gtk.Bin):
             Destroy self
             @param button as Gtk.Button
         """
-        El().bookmarks.thread_lock.acquire()
         self.disconnect_by_func(self.__on_unmap)
         El().bookmarks.set_title(self.__bookmark_id,
                                  self.__title_entry.get_text())
@@ -241,14 +238,12 @@ class BookmarkEditWidget(Gtk.Bin):
                 # To be sure stop is done
                 GLib.timeout_add(1000, El().sync_worker.sync)
         GLib.timeout_add(1000, self.destroy)
-        El().bookmarks.thread_lock.release()
 
     def _on_del_clicked(self, button):
         """
             Remove item
             @param button as Gtk.Button
         """
-        El().bookmarks.thread_lock.acquire()
         self.disconnect_by_func(self.__on_unmap)
         if El().sync_worker is not None:
             guid = El().bookmarks.get_guid(self.__bookmark_id)
@@ -258,7 +253,6 @@ class BookmarkEditWidget(Gtk.Bin):
             self.get_parent().hide()
         else:
             self.get_parent().set_visible_child_name("bookmarks")
-        El().bookmarks.thread_lock.release()
 
     def _on_new_tag_entry_activate(self, entry, ignore1=None, ignore2=None):
         """
@@ -268,17 +262,15 @@ class BookmarkEditWidget(Gtk.Bin):
         tag_title = self.__new_tag_entry.get_text()
         if not tag_title:
             return
-        El().bookmarks.thread_lock.acquire()
         if not El().bookmarks.has_tag(self.__bookmark_id, tag_title):
             tag_id = El().bookmarks.get_tag_id(tag_title)
             if tag_id is None:
-                tag_id = El().bookmarks.add_tag(tag_title, True)
+                tag_id = El().bookmarks.add_tag(tag_title)
             El().bookmarks.add_tag_to(tag_id, self.__bookmark_id)
             tag = TagWidget(tag_title, self.__bookmark_id)
             tag.show()
             self.__flowbox.add(tag)
         entry.set_text("")
-        El().bookmarks.thread_lock.release()
 
     def _on_flowbox_size_allocate(self, scrolled, allocation):
         """
@@ -307,7 +299,6 @@ class BookmarkEditWidget(Gtk.Bin):
             Save uri and title
             @param widget as Gtk.Widget
         """
-        El().bookmarks.thread_lock.acquire()
         El().bookmarks.set_title(self.__bookmark_id,
                                  self.__title_entry.get_text())
         El().bookmarks.set_uri(self.__bookmark_id,
@@ -325,4 +316,3 @@ class BookmarkEditWidget(Gtk.Bin):
                 El().sync_worker.stop()
                 # To be sure stop is done
                 GLib.timeout_add(1000, El().sync_worker.sync)
-        El().bookmarks.thread_lock.release()

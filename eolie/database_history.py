@@ -72,7 +72,6 @@ class DatabaseHistory:
                     sql.execute(self.__create_history)
                     sql.execute(self.__create_history_atime)
                     sql.execute("PRAGMA user_version=%s" % new_version)
-                    sql.commit()
             except Exception as e:
                 print("DatabaseHistory::__init__(): %s" % e)
         # DB upgrade, TODO Make it generic between class
@@ -89,9 +88,8 @@ class DatabaseHistory:
                     except:
                         print("History DB upgrade %s failed" % i)
                 sql.execute("PRAGMA user_version=%s" % new_version)
-                sql.commit()
 
-    def add(self, title, uri, mtime, guid=None, atimes=[], commit=True):
+    def add(self, title, uri, mtime, guid=None, atimes=[]):
         """
             Add a new entry to history, if exists, update it
             @param title as str
@@ -99,7 +97,6 @@ class DatabaseHistory:
             @param mtime as int
             @parma guid as str
             @param atime as [int]
-            @param commit as bool
             @return history id as int
         """
         if not uri:
@@ -142,8 +139,6 @@ class DatabaseHistory:
                     sql.execute("INSERT INTO history_atime\
                                  (history_id, atime)\
                                  VALUES (?, ?)", (history_id, atime))
-            if commit:
-                sql.commit()
             return history_id
 
     def remove(self, history_id):
@@ -154,7 +149,6 @@ class DatabaseHistory:
         with SqlCursor(self) as sql:
             sql.execute("DELETE from history\
                          WHERE rowid=?", (history_id,))
-            sql.commit()
 
     def clear_from(self, atime):
         """
@@ -164,7 +158,6 @@ class DatabaseHistory:
         with SqlCursor(self) as sql:
             sql.execute("DELETE FROM history_atime\
                          WHERE atime >= ?", (atime,))
-            sql.commit()
 
     def clear_to(self, atime):
         """
@@ -174,7 +167,6 @@ class DatabaseHistory:
         with SqlCursor(self) as sql:
             sql.execute("DELETE FROM history_atime\
                          WHERE atime <= ?", (atime,))
-            sql.commit()
 
     def get_from_atime(self, atime):
         """
@@ -352,7 +344,7 @@ class DatabaseHistory:
                 return v[0]
             return None
 
-    def set_title(self, history_id, title, commit=True):
+    def set_title(self, history_id, title):
         """
             Set history title
             @param history_id as int
@@ -363,8 +355,6 @@ class DatabaseHistory:
             sql.execute("UPDATE history\
                          SET title=?\
                          WHERE rowid=?", (title, history_id,))
-            if commit:
-                sql.commit()
 
     def get_populars(self, netloc, limit):
         """
@@ -418,7 +408,6 @@ class DatabaseHistory:
                 sql.execute("UPDATE history\
                              SET opened=0\
                              WHERE opened=1")
-                sql.commit()
 
     def set_page_state(self, uri, mtime=None):
         """
@@ -439,9 +428,8 @@ class DatabaseHistory:
                 sql.execute("UPDATE history\
                              SET opened=1 WHERE uri=?\
                              AND mtime=?", (uri, mtime))
-            sql.commit()
 
-    def set_atimes(self, history_id, atimes, commit=True):
+    def set_atimes(self, history_id, atimes):
         """
             Set history atime
             @param history_id as int
@@ -454,21 +442,16 @@ class DatabaseHistory:
                 if atime not in current_atimes:
                     sql.execute("INSERT INTO history_atime (history_id, atime)\
                                  VALUES (?, ?)", (history_id, atime))
-            if commit:
-                sql.commit()
 
-    def set_mtime(self, history_id, mtime, commit=True):
+    def set_mtime(self, history_id, mtime):
         """
             Set history mtime
             @param history_id as int
             @param mtime as int
-            @param commit as bool
         """
         with SqlCursor(self) as sql:
             sql.execute("UPDATE history\
                          SET mtime=? where rowid=?", (mtime, history_id))
-            if commit:
-                sql.commit()
 
     def search(self, search, limit):
         """
@@ -567,7 +550,6 @@ class DatabaseHistory:
             else:
                 sql.execute("UPDATE history SET popularity=0 WHERE netloc=?",
                             (uri,))
-            sql.commit()
 
     def exists_guid(self, guid):
         """

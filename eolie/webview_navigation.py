@@ -214,10 +214,8 @@ class WebViewNavigation:
             @param uri as str
         """
         if El().bookmarks.get_id(uri) is not None:
-            El().bookmarks.thread_lock.acquire()
             El().bookmarks.set_access_time(uri, round(time(), 2))
             El().bookmarks.set_more_popular(uri)
-            El().bookmarks.thread_lock.release()
 
     def __hw_acceleration_policy(self, netloc):
         """

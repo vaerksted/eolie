@@ -623,8 +623,7 @@ class SyncWorker:
                                                      bookmark["id"],
                                                      bookmark["id"],
                                                      [],
-                                                     0,
-                                                     False)
+                                                     0)
                 # Will calculate position later
                 if "children" in bookmark.keys():
                     children_array.append(bookmark["children"])
@@ -646,16 +645,13 @@ class SyncWorker:
                                                      bookmark["bmkUri"],
                                                      bookmark["id"],
                                                      bookmark["tags"],
-                                                     0,
-                                                     False)
+                                                     0)
                 # Update bookmark
                 else:
                     El().bookmarks.set_title(bookmark_id,
-                                             bookmark["title"],
-                                             False)
+                                             bookmark["title"])
                     El().bookmarks.set_uri(bookmark_id,
-                                           bookmark["bmkUri"],
-                                           False)
+                                           bookmark["bmkUri"])
                     # Update tags
                     current_tags = El().bookmarks.get_tags(bookmark_id)
                     for tag in El().bookmarks.get_tags(bookmark_id):
@@ -664,8 +660,7 @@ class SyncWorker:
                             tag_id = El().bookmarks.get_tag_id(tag)
                             current_tags.remove(tag)
                             El().bookmarks.del_tag_from(tag_id,
-                                                        bookmark_id,
-                                                        False)
+                                                        bookmark_id)
                     if "tags" in bookmark.keys():
                         for tag in bookmark["tags"]:
                             # Tag already associated
@@ -673,27 +668,23 @@ class SyncWorker:
                                 continue
                             tag_id = El().bookmarks.get_tag_id(tag)
                             if tag_id is None:
-                                tag_id = El().bookmarks.add_tag(tag, False)
+                                tag_id = El().bookmarks.add_tag(tag)
                             El().bookmarks.add_tag_to(tag_id,
-                                                      bookmark_id,
-                                                      False)
+                                                      bookmark_id)
             # Update parent name if available
             if bookmark_id is not None and "parentName" in bookmark.keys():
                 El().bookmarks.set_parent(bookmark_id,
                                           bookmark["parentid"],
-                                          bookmark["parentName"],
-                                          False)
+                                          bookmark["parentName"])
             El().bookmarks.set_mtime(bookmark_id,
-                                     record["modified"],
-                                     False)
+                                     record["modified"])
         # Update bookmark position
         for children in children_array:
             position = 0
             for child in children:
                 bid = El().bookmarks.get_id_by_guid(child)
                 El().bookmarks.set_position(bid,
-                                            position,
-                                            False)
+                                            position)
                 position += 1
         El().bookmarks.clean_tags()  # Will commit
         SqlCursor.remove(El().bookmarks)
@@ -741,7 +732,6 @@ class SyncWorker:
             if record["modified"] < self.__mtimes["history"]:
                 continue
             sleep(0.01)
-            El().history.thread_lock.acquire()
             history = record["payload"]
             keys = history.keys()
             history_id = El().history.get_id_by_guid(history["id"])
@@ -756,7 +746,6 @@ class SyncWorker:
                     for visit in history["visits"]:
                         atimes.append(round(int(visit["date"]) / 1000000, 2))
                 except:
-                    El().history.thread_lock.release()
                     continue
                 debug("pulling %s" % record)
                 title = history["title"].rstrip().lstrip()
@@ -769,7 +758,6 @@ class SyncWorker:
             elif "deleted" in keys:
                 history_id = El().history.get_id_by_guid(history_id)
                 El().history.remove(history_id)
-            El().history.thread_lock.release()
 
     def __set_credentials(self, attributes, password, uri, index, count):
         """

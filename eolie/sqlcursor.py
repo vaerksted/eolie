@@ -25,39 +25,56 @@ class SqlCursor:
             Add cursor to thread list
             Raise an exception if cursor already exists
         """
+        obj.thread_lock.acquire()
         name = current_thread().getName() + obj.__class__.__name__
         El().cursors[name] = obj.get_cursor()
 
     def remove(obj):
         """
-            Remove cursor to thread list
+            Remove cursor from thread list and commit
             Raise an exception if cursor already exists
         """
         name = current_thread().getName() + obj.__class__.__name__
+        El().cursors[name].commit()
+        El().cursors[name].close()
         del El().cursors[name]
+        obj.thread_lock.release()
+
+    def commit(obj):
+        """
+            Commit current obj
+        """
+        name = current_thread().getName() + obj.__class__.__name__
+        El().cursors[name].commit()
+        # Flush pending tasks
+        obj.thread_lock.release()
+        obj.thread_lock.acquire()
 
     def __init__(self, obj):
         """
             Init object
         """
-        self._obj = obj
-        self._creator = False
+        self.__obj = obj
+        self.__creator = False
 
     def __enter__(self):
         """
             Return cursor for thread, create a new one if needed
         """
-        name = current_thread().getName() + self._obj.__class__.__name__
+        name = current_thread().getName() + self.__obj.__class__.__name__
         if name not in El().cursors:
-            self._creator = True
-            El().cursors[name] = self._obj.get_cursor()
+            self.__obj.thread_lock.acquire()
+            self.__creator = True
+            El().cursors[name] = self.__obj.get_cursor()
         return El().cursors[name]
 
     def __exit__(self, type, value, traceback):
         """
             If creator, close cursor and remove it
         """
-        if self._creator:
-            name = current_thread().getName() + self._obj.__class__.__name__
+        if self.__creator:
+            name = current_thread().getName() + self.__obj.__class__.__name__
+            El().cursors[name].commit()
             El().cursors[name].close()
             del El().cursors[name]
+            self.__obj.thread_lock.release()
