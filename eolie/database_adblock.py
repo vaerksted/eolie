@@ -17,7 +17,7 @@ import sqlite3
 import itertools
 import re
 from gettext import gettext as _
-from time import time, sleep
+from time import time
 from threading import Lock
 
 from eolie.helper_task import TaskHelper
@@ -395,8 +395,8 @@ class DatabaseAdblock:
         result = rules.decode('utf-8')
         count = 0
         for line in result.split('\n'):
-            sleep(0.01)
             if self.__cancellable.is_cancelled():
+                SqlCursor.remove(self)
                 raise Exception("Cancelled")
             if line.startswith('#'):
                 continue
@@ -410,7 +410,7 @@ class DatabaseAdblock:
             debug("Add filter: %s" % netloc)
             self.__add_netloc(netloc)
             count += 1
-            if count == 1000:
+            if count == 100:
                 SqlCursor.commit(self)
                 count = 0
         SqlCursor.remove(self)
@@ -478,8 +478,8 @@ class DatabaseAdblock:
         result = rules.decode("utf-8")
         count = 0
         for line in result.split('\n'):
-            sleep(0.01)
             if self.__cancellable.is_cancelled():
+                SqlCursor.remove(self)
                 raise Exception("Cancelled")
             if "-abp-" in line or "$" in line or "!" in line:
                 continue
@@ -495,7 +495,7 @@ class DatabaseAdblock:
                 self.__save_abp_rule(line)
             debug("Add abp filter: %s" % line)
             count += 1
-            if count == 1000:
+            if count == 100:
                 SqlCursor.commit(self)
                 count = 0
         SqlCursor.remove(self)
@@ -506,6 +506,8 @@ class DatabaseAdblock:
             @param result (unused)
             @param uris as [str]
         """
+        if self.__cancellable.is_cancelled():
+            return
         if uris:
             uri = uris.pop(0)
             self.__task_helper.load_uri_content(uri,

@@ -378,9 +378,6 @@ class Application(Gtk.Application):
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
-        # We store cursors for main thread
-        SqlCursor.add(self.history)
-        SqlCursor.add(self.bookmarks)
         self.websettings = DatabaseSettings()
         self.adblock = DatabaseAdblock()
         self.adblock.update()

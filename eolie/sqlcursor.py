@@ -12,6 +12,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from threading import current_thread
+from time import sleep
 
 from eolie.define import El
 
@@ -48,6 +49,7 @@ class SqlCursor:
         El().cursors[name].commit()
         # Flush pending tasks
         obj.thread_lock.release()
+        sleep(1)
         obj.thread_lock.acquire()
 
     def __init__(self, obj):
