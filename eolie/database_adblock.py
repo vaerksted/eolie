@@ -481,7 +481,7 @@ class DatabaseAdblock:
             if self.__cancellable.is_cancelled():
                 SqlCursor.remove(self)
                 raise Exception("Cancelled")
-            if "-abp-" in line or "$" in line or "!" in line:
+            if "-abp-" in line or "$" in line or "!" in line or "[" in line:
                 continue
             elif line.startswith("##"):
                 self.__save_css_default_rule(line)
