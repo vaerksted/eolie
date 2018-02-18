@@ -98,6 +98,12 @@ class DatabaseAdblock:
                                                regex TEXT NOT NULL,
                                                mtime INT NOT NULL
                                                )"""
+    __create_adblock_re_domain_ex = """CREATE TABLE adblock_re_domain_ex (
+                                               id INTEGER PRIMARY KEY,
+                                               domain TEXT NOT NULL,
+                                               regex TEXT NOT NULL,
+                                               mtime INT NOT NULL
+                                               )"""
     __create_adblock_css = """CREATE TABLE adblock_css (
                                                id INTEGER PRIMARY KEY,
                                                rule TEXT NOT NULL,
@@ -118,6 +124,12 @@ class DatabaseAdblock:
                                                ON adblock_re_domain(domain)"""
     __create_adblock_re_domain_regex_idx = """CREATE INDEX
                                                idx_adblock_re_domain_regex
+                                               ON adblock_re_domain(regex)"""
+    __create_adblock_re_domain_ex_idx = """CREATE INDEX
+                                               idx_adblock_re_domain_ex
+                                               ON adblock_re_domain(domain)"""
+    __create_adblock_re_domain_regex_ex_idx = """CREATE INDEX
+                                               idx_adblock_re_domain_regex_ex
                                                ON adblock_re_domain(regex)"""
     __create_adblock_css_black_idx = """CREATE INDEX
                                                idx_adblock_css_black
@@ -162,12 +174,15 @@ class DatabaseAdblock:
                     sql.execute(self.__create_adblock)
                     sql.execute(self.__create_adblock_re)
                     sql.execute(self.__create_adblock_re_domain)
+                    sql.execute(self.__create_adblock_re_domain_ex)
                     sql.execute(self.__create_adblock_css)
                     sql.execute(self.__create_adblock_cache)
                     sql.execute(self.__create_adblock_idx)
                     sql.execute(self.__create_adblock_re_idx)
                     sql.execute(self.__create_adblock_re_domain_idx)
                     sql.execute(self.__create_adblock_re_domain_regex_idx)
+                    sql.execute(self.__create_adblock_re_domain_ex_idx)
+                    sql.execute(self.__create_adblock_re_domain_regex_ex_idx)
                     sql.execute(self.__create_adblock_css_black_idx)
                     sql.execute(self.__create_adblock_css_white_idx)
                     sql.execute(self.__create_adblock_cache_idx)
@@ -319,6 +334,16 @@ class DatabaseAdblock:
                     blocked_re_domain = bool(re.search(regexes, uri))
                 else:
                     blocked_re_domain = False
+                # If previous regexes blocked uri, check for an exception
+                if blocked_re_domain:
+                    request = "SELECT regex FROM adblock_re_domain_ex\
+                               WHERE domain=?"
+                    result = sql.execute(request, (netloc,))
+                    rules = list(itertools.chain(*result))
+                    if rules:
+                        regexes = "|".join(regex for regex in rules)
+                        if bool(re.search(regexes, uri)):
+                            blocked_re_domain = False
                 if not blocked_re and not blocked_re_domain:
                     sql.execute("INSERT INTO adblock_cache\
                                 (allowed_uri) VALUES (?)",
@@ -390,6 +415,26 @@ class DatabaseAdblock:
                             (regex, domain, self.__adblock_mtime))
             else:
                 sql.execute("UPDATE adblock_re_domain SET mtime=?\
+                             WHERE regex=? AND domain=?",
+                            (self.__adblock_mtime, regex, domain))
+
+    def __add_regex_domain_ex(self, regex, domain):
+        """
+            Add a new exception regex
+            @param regex as str
+            @param domain
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT mtime FROM adblock_re_domain_ex\
+                                  WHERE regex=? AND domain=?",
+                                 (regex, domain))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock_re_domain_ex\
+                            (regex, domain, mtime) VALUES (?, ?, ?)",
+                            (regex, domain, self.__adblock_mtime))
+            else:
+                sql.execute("UPDATE adblock_re_domain_ex SET mtime=?\
                              WHERE regex=? AND domain=?",
                             (self.__adblock_mtime, regex, domain))
 
@@ -520,18 +565,18 @@ class DatabaseAdblock:
             else:
                 (rowid, blacklist) = v
                 blacklist += ",%s" % domain
-                print(blacklist, rule)
                 sql.execute("UPDATE adblock_css SET blacklist=?\
                              WHERE rowid=?", (blacklist, rowid))
 
-    def __save_abp_rule(self, rule):
+    def __save_abp_rule(self, rule, exception):
         """
             Save abp rule
             @param rule as str
+            @param exception as bool
         """
         # Simple host rule
         if rule[:2] == "||":
-            if rule[-1] == "^":
+            if rule[-1] == "^" and not exception:
                 self.__add_netloc(rule[2:-1])
             else:
                 regex = self.__rule_to_regex(rule[2:])
@@ -539,10 +584,13 @@ class DatabaseAdblock:
                 uri = "http://%s" % split[0]
                 parsed = urlparse(uri)
                 if parsed.netloc:
-                    self.__add_regex_domain(regex, parsed.netloc)
-                else:
+                    if exception:
+                        self.__add_regex_domain_ex(regex, parsed.netloc)
+                    else:
+                        self.__add_regex_domain(regex, parsed.netloc)
+                elif not exception:
                     self.__add_regex(regex)
-        else:
+        elif not exception:
             regex = self.__rule_to_regex(rule)
             if regex is not None:
                 self.__add_regex(regex)
@@ -567,12 +615,10 @@ class DatabaseAdblock:
                 self.__save_css_exception(line)
             elif "##" in line:
                 self.__save_css_domain_rule(line)
-            elif "@@" in line:
-                pass  # TODO
-            elif "#@#" in line:
-                pass  # TODO
+            elif line.startswith("@@"):
+                self.__save_abp_rule(line[2:], True)
             else:
-                self.__save_abp_rule(line)
+                self.__save_abp_rule(line, False)
             debug("Add abp filter: %s" % line)
             count += 1
             if count == 1000:
@@ -601,6 +647,8 @@ class DatabaseAdblock:
                 sql.execute("DELETE FROM adblock_re\
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_re_domain\
+                             WHERE mtime!=?", (self.__adblock_mtime,))
+                sql.execute("DELETE FROM adblock_re_domain_ex\
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_css\
                              WHERE mtime!=?", (self.__adblock_mtime,))
