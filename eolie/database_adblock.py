@@ -30,7 +30,7 @@ class DatabaseAdblock:
     """
         Eolie adblock db
     """
-    DB_PATH = "%s/adblock3.db" % EOLIE_DATA_PATH
+    __DB_PATH = "%s/adblock.db" % EOLIE_DATA_PATH
 
     __URIS = ["https://adaway.org/hosts.txt",
               "https://pgl.yoyo.org/adservers/serverlist.php?" +
@@ -70,6 +70,7 @@ class DatabaseAdblock:
         "hu": "https://raw.githubusercontent.com/szpeter80/" +
               "hufilter/master/hufilter.txt"}
 
+    __DB_VERSION = 0
     __UPDATE = 172800
 
     __SPECIAL_CHARS = r"([.$+?{}()\[\]\\])"
@@ -119,11 +120,22 @@ class DatabaseAdblock:
         self.__adblock_mtime = int(time())
         self.__regex = None
 
-        # Lazy loading if not empty
-        if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
+    def create_db(self):
+        """
+            Create databse
+        """
+        if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
+            GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
+        # If DB schema changed, remove it
+        if GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
+            with SqlCursor(self) as sql:
+                result = sql.execute("PRAGMA db_version")
+                v = result.fetchone()
+                if v is None or v[0] == self.__DB_VERSION:
+                    f = Gio.File.new_for_path(self.__DB_PATH)
+                    f.delete()
+        if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
-                if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
-                    GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_adblock)
@@ -131,6 +143,7 @@ class DatabaseAdblock:
                     sql.execute(self.__create_adblock_re_domain)
                     sql.execute(self.__create_adblock_css)
                     sql.execute(self.__create_adblock_cache)
+                    sql.execute("PRAGMA db_version=%s" % self.__DB_VERSION)
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
 
@@ -164,7 +177,7 @@ class DatabaseAdblock:
         # DB version is last successful sync mtime
         version = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("PRAGMA user_version")
+            result = sql.execute("PRAGMA db_mtime")
             v = result.fetchone()
             if v is not None:
                 version = v[0]
@@ -290,7 +303,7 @@ class DatabaseAdblock:
             Return a new sqlite cursor
         """
         try:
-            c = sqlite3.connect(self.DB_PATH, 600.0)
+            c = sqlite3.connect(self.__DB_PATH, 600.0)
             return c
         except Exception as e:
             print(e)
@@ -525,7 +538,7 @@ class DatabaseAdblock:
                 sql.execute("DELETE FROM adblock_css\
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_cache")
-                sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
+                sql.execute("PRAGMA db_mtime=%s" % self.__adblock_mtime)
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """

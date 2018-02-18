@@ -380,6 +380,7 @@ class Application(Gtk.Application):
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
         self.adblock = DatabaseAdblock()
+        self.adblock.create_db()
         self.adblock.update()
         self.phishing = DatabasePhishing()
         self.adblock_exceptions = DatabaseExceptions("adblock")
