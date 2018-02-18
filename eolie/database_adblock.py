@@ -70,7 +70,7 @@ class DatabaseAdblock:
         "hu": "https://raw.githubusercontent.com/szpeter80/" +
               "hufilter/master/hufilter.txt"}
 
-    __DB_VERSION = 0
+    __SCHEMA_VERSION = 0
     __UPDATE = 172800
 
     __SPECIAL_CHARS = r"([.$+?{}()\[\]\\])"
@@ -82,33 +82,54 @@ class DatabaseAdblock:
     # is an alias for the ROWID.
     # Here, we define an id INT PRIMARY KEY but never feed it,
     # this make VACUUM not destroy rowids...
-    __create_adblock = '''CREATE TABLE adblock (
+    __create_adblock = """CREATE TABLE adblock (
                                                id INTEGER PRIMARY KEY,
                                                netloc TEXT TEXT NOT NULL,
                                                mtime INT NOT NULL
-                                               )'''
-    __create_adblock_re = '''CREATE TABLE adblock_re (
+                                               )"""
+    __create_adblock_re = """CREATE TABLE adblock_re (
                                                id INTEGER PRIMARY KEY,
                                                regex TEXT NOT NULL,
                                                mtime INT NOT NULL
-                                               )'''
-    __create_adblock_re_domain = '''CREATE TABLE adblock_re_domain (
+                                               )"""
+    __create_adblock_re_domain = """CREATE TABLE adblock_re_domain (
                                                id INTEGER PRIMARY KEY,
                                                domain TEXT NOT NULL,
                                                regex TEXT NOT NULL,
                                                mtime INT NOT NULL
-                                               )'''
-    __create_adblock_css = '''CREATE TABLE adblock_css (
+                                               )"""
+    __create_adblock_css = """CREATE TABLE adblock_css (
                                                id INTEGER PRIMARY KEY,
-                                               name TEXT NOT NULL,
-                                               whitelist TEXT DEFAULT "",
-                                               blacklist TEXT DEFAULT "",
+                                               rule TEXT NOT NULL,
+                                               whitelist TEXT DEFAULT '',
+                                               blacklist TEXT DEFAULT '',
                                                mtime INT NOT NULL
-                                               )'''
-    __create_adblock_cache = '''CREATE TABLE adblock_cache (
+                                               )"""
+    __create_adblock_cache = """CREATE TABLE adblock_cache (
                                                id INTEGER PRIMARY KEY,
                                                allowed_uri TEXT NOT NULL
-                                               )'''
+                                               )"""
+    __create_adblock_idx = """CREATE UNIQUE INDEX idx_adblock ON adblock(
+                                               netloc)"""
+    __create_adblock_re_idx = """CREATE UNIQUE INDEX idx_adblock_re
+                                               ON adblock_re(regex)"""
+    __create_adblock_re_domain_idx = """CREATE INDEX
+                                               idx_adblock_re_domain
+                                               ON adblock_re_domain(domain)"""
+    __create_adblock_re_domain_regex_idx = """CREATE INDEX
+                                               idx_adblock_re_domain_regex
+                                               ON adblock_re_domain(regex)"""
+    __create_adblock_css_black_idx = """CREATE INDEX
+                                               idx_adblock_css_black
+                                               ON adblock_css(
+                                               blacklist)"""
+    __create_adblock_css_white_idx = """CREATE INDEX
+                                               idx_adblock_css_white
+                                               ON adblock_css(
+                                               whitelist)"""
+    __create_adblock_cache_idx = """CREATE UNIQUE INDEX idx_adblock_cache
+                                               ON adblock_cache(
+                                               allowed_uri)"""
 
     def __init__(self):
         """
@@ -129,9 +150,9 @@ class DatabaseAdblock:
         # If DB schema changed, remove it
         if GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             with SqlCursor(self) as sql:
-                result = sql.execute("PRAGMA db_version")
+                result = sql.execute("PRAGMA schema_version")
                 v = result.fetchone()
-                if v is None or v[0] == self.__DB_VERSION:
+                if v is None or v[0] == self.__SCHEMA_VERSION:
                     f = Gio.File.new_for_path(self.__DB_PATH)
                     f.delete()
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
@@ -143,7 +164,15 @@ class DatabaseAdblock:
                     sql.execute(self.__create_adblock_re_domain)
                     sql.execute(self.__create_adblock_css)
                     sql.execute(self.__create_adblock_cache)
-                    sql.execute("PRAGMA db_version=%s" % self.__DB_VERSION)
+                    sql.execute(self.__create_adblock_idx)
+                    sql.execute(self.__create_adblock_re_idx)
+                    sql.execute(self.__create_adblock_re_domain_idx)
+                    sql.execute(self.__create_adblock_re_domain_regex_idx)
+                    sql.execute(self.__create_adblock_css_black_idx)
+                    sql.execute(self.__create_adblock_css_white_idx)
+                    sql.execute(self.__create_adblock_cache_idx)
+                    sql.execute("PRAGMA schema_version=%s" %
+                                self.__SCHEMA_VERSION)
             except Exception as e:
                 print("DatabaseAdblock::__init__(): %s" % e)
 
@@ -177,7 +206,7 @@ class DatabaseAdblock:
         # DB version is last successful sync mtime
         version = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("PRAGMA db_mtime")
+            result = sql.execute("PRAGMA user_version")
             v = result.fetchone()
             if v is not None:
                 version = v[0]
@@ -210,11 +239,11 @@ class DatabaseAdblock:
         """
         rules = ""
         with SqlCursor(self) as sql:
-            request = "SELECT name FROM adblock_css WHERE\
+            request = "SELECT rule FROM adblock_css WHERE\
                        blacklist='' AND whitelist=''"
             result = sql.execute(request)
-            for name in list(itertools.chain(*result)):
-                rules += "%s,\n" % name
+            for rule in list(itertools.chain(*result)):
+                rules += "%s,\n" % rule
         return rules[:-2] + "{display: none !important;}"
 
     def get_css_rules(self, uri):
@@ -228,11 +257,13 @@ class DatabaseAdblock:
             return ""
         netloc = remove_www(parsed.netloc)
         with SqlCursor(self) as sql:
-            request = "SELECT name FROM adblock_css WHERE\
-                       (blacklist!='' AND blacklist!=?) OR whitelist=?"
-            result = sql.execute(request, (netloc, netloc))
-            for name in list(itertools.chain(*result)):
-                rules += "%s,\n" % name
+            request = "SELECT rule FROM adblock_css WHERE\
+                       (blacklist!='' AND blacklist NOT LIKE ?) OR\
+                       whitelist LIKE ?"
+            result = sql.execute(request, ("%" + netloc + "%",
+                                           "%" + netloc + "%"))
+            for rule in list(itertools.chain(*result)):
+                rules += "%s,\n" % rule
         return rules[:-2] + "{display: none !important;}"
 
     def is_netloc_blocked(self, netloc):
@@ -318,15 +349,11 @@ class DatabaseAdblock:
             @param netloc as str
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM adblock\
-                                  WHERE netloc=?",
-                                 (netloc,))
-            v = result.fetchone()
-            if v is None:
+            try:
                 sql.execute("INSERT INTO adblock\
                             (netloc, mtime) VALUES (?, ?)",
                             (netloc, self.__adblock_mtime))
-            else:
+            except:
                 sql.execute("UPDATE adblock SET mtime=?\
                              WHERE netloc=?",
                             (self.__adblock_mtime, netloc))
@@ -337,15 +364,11 @@ class DatabaseAdblock:
             @param regex as str
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM adblock_re\
-                                  WHERE regex=?",
-                                 (regex,))
-            v = result.fetchone()
-            if v is None:
+            try:
                 sql.execute("INSERT INTO adblock_re\
                             (regex, mtime) VALUES (?, ?)",
                             (regex, self.__adblock_mtime))
-            else:
+            except:
                 sql.execute("UPDATE adblock_re SET mtime=?\
                              WHERE regex=?",
                             (self.__adblock_mtime, regex))
@@ -420,10 +443,11 @@ class DatabaseAdblock:
             netloc = array[1].replace(
                                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
-            debug("Add filter: %s" % netloc)
-            self.__add_netloc(netloc)
+            if netloc != "localhost":
+                debug("Add filter: %s" % netloc)
+                self.__add_netloc(netloc)
             count += 1
-            if count == 100:
+            if count == 1000:
                 SqlCursor.commit(self)
                 count = 0
         SqlCursor.remove(self)
@@ -433,31 +457,72 @@ class DatabaseAdblock:
             Save default (without blacklist, whitelist) rule to db
             @param line as str
         """
-        name = line[2:]
+        rule = line[2:]
         # Update entry if exists, create else
         with SqlCursor(self) as sql:
-            sql.execute("INSERT INTO adblock_css\
-                        (name, mtime) VALUES (?, ?)",
-                        (name, self.__adblock_mtime))
+            try:
+                sql.execute("INSERT INTO adblock_css\
+                            (rule, mtime) VALUES (?, ?)",
+                            (rule, self.__adblock_mtime))
+            except:
+                sql.execute("UPDATE adblock_css SET mtime=?\
+                             WHERE rule=?",
+                            (self.__adblock_mtime, rule))
 
     def __save_css_domain_rule(self, line):
         """
             Save domain rule to db
             @param line as str
         """
-        whitelist = ""
-        blacklist = ""
-        (domains, name) = line.split("##")
+        whitelist = []
+        blacklist = []
+        (domains, rule) = line.split("##")
         for domain in domains.split(","):
             if domain.startswith("~"):
-                blacklist += "@%s@" % domain[1:]
+                blacklist.append(domain[1:])
             else:
-                whitelist += domain
+                whitelist.append(domain)
+        str_whitelist = ",".join(whitelist)
+        str_blacklist = ",".join(blacklist)
         with SqlCursor(self) as sql:
-            sql.execute("INSERT INTO adblock_css\
-                         (name, whitelist, blacklist, mtime)\
-                         VALUES (?, ?, ?, ?)",
-                        (name, whitelist, blacklist, self.__adblock_mtime))
+            result = sql.execute("SELECT mtime FROM adblock_css\
+                                  WHERE blacklist=? AND whitelist=?\
+                                  AND rule=?",
+                                 (str_blacklist, str_whitelist, rule))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock_css\
+                             (rule, whitelist, blacklist, mtime)\
+                             VALUES (?, ?, ?, ?)",
+                            (rule, str_whitelist, str_blacklist,
+                             self.__adblock_mtime))
+            else:
+                sql.execute("UPDATE adblock_css SET mtime=?\
+                             WHERE rule=? and blacklist=? and whitelist=?",
+                            (self.__adblock_mtime, rule,
+                             str_blacklist, str_whitelist))
+
+    def __save_css_exception(self, line):
+        """
+            Add a new exception
+            @param line as str
+        """
+        (domain, rule) = line.split("#@#")
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT rowid, blacklist FROM adblock_css\
+                                  WHERE rule=?", (rule,))
+            v = result.fetchone()
+            if v is None:
+                sql.execute("INSERT INTO adblock_css\
+                             (rule, whitelist, blacklist, mtime)\
+                             VALUES (?, ?, ?, ?)",
+                            (rule, "", domain, self.__adblock_mtime))
+            else:
+                (rowid, blacklist) = v
+                blacklist += ",%s" % domain
+                print(blacklist, rule)
+                sql.execute("UPDATE adblock_css SET blacklist=?\
+                             WHERE rowid=?", (blacklist, rowid))
 
     def __save_abp_rule(self, rule):
         """
@@ -498,6 +563,8 @@ class DatabaseAdblock:
                 continue
             elif line.startswith("##"):
                 self.__save_css_default_rule(line)
+            elif "#@#" in line:
+                self.__save_css_exception(line)
             elif "##" in line:
                 self.__save_css_domain_rule(line)
             elif "@@" in line:
@@ -508,7 +575,7 @@ class DatabaseAdblock:
                 self.__save_abp_rule(line)
             debug("Add abp filter: %s" % line)
             count += 1
-            if count == 100:
+            if count == 1000:
                 SqlCursor.commit(self)
                 count = 0
         SqlCursor.remove(self)
@@ -538,7 +605,7 @@ class DatabaseAdblock:
                 sql.execute("DELETE FROM adblock_css\
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_cache")
-                sql.execute("PRAGMA db_mtime=%s" % self.__adblock_mtime)
+                sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """
