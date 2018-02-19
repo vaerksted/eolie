@@ -256,6 +256,7 @@ class JSBlockMenu(BlockMenu):
         self.__submenu = builder.get_object("submenu")
         BlockMenu.__init__(self, uri, window, True)
         self.add(builder.get_object("menu"))
+        self.set_size_request(-1, 400)
 
 #######################
 # PROTECTED           #
