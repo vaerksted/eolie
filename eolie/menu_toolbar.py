@@ -22,7 +22,7 @@ from eolie.define import App
 
 class ToolbarMenu(Gtk.PopoverMenu):
     """
-        Gtk.self showing main menu
+        Gtk.PopoverMenu showing main menu
     """
 
     def __init__(self, uri, window, toolbar):
