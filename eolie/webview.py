@@ -550,14 +550,17 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
         """
         popup_block = App().settings.get_value("popupblock")
-        parsed = urlparse(webview.uri)
-        parsed_related = urlparse(related.uri)
-        netloc = parsed.netloc.split(".")[-2:]
-        netloc_related = parsed_related.netloc.split(".")[-2:]
-        trust_websites = App().settings.get_value("trust-websites-popups")
-        exception = (trust_websites and
-                     netloc == netloc_related) or\
-            App().popup_exceptions.find_parsed(parsed_related)
+        if webview.uri is not None and related.uri is not None:
+            parsed = urlparse(webview.uri)
+            parsed_related = urlparse(related.uri)
+            netloc = parsed.netloc.split(".")[-2:]
+            netloc_related = parsed_related.netloc.split(".")[-2:]
+            trust_websites = App().settings.get_value("trust-websites-popups")
+            exception = (trust_websites and
+                         netloc == netloc_related) or\
+                App().popup_exceptions.find_parsed(parsed_related)
+        else:
+            exception = False
 
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
