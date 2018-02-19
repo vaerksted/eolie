@@ -51,7 +51,7 @@
       </key>
       <key type="b" name="jsblock">
          <default>false</default>
-         <summary>Block Javascript on pages</summary>
+         <summary>Block JavaScript on pages</summary>
          <description />
       </key>
       <key type="s" name="download-uri">
