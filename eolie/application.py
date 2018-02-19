@@ -18,6 +18,7 @@ gi.require_version('Secret', '1')
 gi.require_version('GtkSpell', '3.0')
 from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
 
+from threading import current_thread
 from gettext import gettext as _
 from pickle import dump, load
 from urllib.parse import urlparse
@@ -46,7 +47,7 @@ from eolie.utils import is_unity, wanted_loading_type, set_proxy_from_gnome
 
 class Application(Gtk.Application):
     """
-        Eolie application:
+        Eolie application
     """
 
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
@@ -59,6 +60,10 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        # Set main thread name
+        # We force it to current python 3.6 name, to be sure in case of
+        # change in python
+        current_thread().setName("MainThread")
         set_proxy_from_gnome()
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 18:

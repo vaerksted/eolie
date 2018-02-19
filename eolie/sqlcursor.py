@@ -47,10 +47,17 @@ class SqlCursor:
         """
         name = current_thread().getName() + obj.__class__.__name__
         App().cursors[name].commit()
-        # Flush pending tasks
-        obj.thread_lock.release()
-        sleep(1)
-        obj.thread_lock.acquire()
+
+    def allow_main_thread_execution(obj):
+        """
+            Release thread lock allowing main thread execution
+        """
+        name = "MainThread" + obj.__class__.__name__
+        if name in App().cursors.keys():
+            obj.thread_lock.release()
+            while name in App().cursors.keys():
+                sleep(0.1)
+            obj.thread_lock.acquire()
 
     def __init__(self, obj):
         """
@@ -65,9 +72,9 @@ class SqlCursor:
         """
         name = current_thread().getName() + self.__obj.__class__.__name__
         if name not in App().cursors:
-            self.__obj.thread_lock.acquire()
             self.__creator = True
             App().cursors[name] = self.__obj.get_cursor()
+            self.__obj.thread_lock.acquire()
         return App().cursors[name]
 
     def __exit__(self, type, value, traceback):

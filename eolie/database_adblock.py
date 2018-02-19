@@ -17,7 +17,7 @@ import sqlite3
 import itertools
 import re
 from gettext import gettext as _
-from time import time
+from time import time, sleep
 from threading import Lock
 
 from eolie.helper_task import TaskHelper
@@ -476,6 +476,7 @@ class DatabaseAdblock:
         result = rules.decode('utf-8')
         count = 0
         for line in result.split('\n'):
+            SqlCursor.allow_main_thread_execution(self)
             if self.__cancellable.is_cancelled():
                 SqlCursor.remove(self)
                 raise Exception("Cancelled")
@@ -494,6 +495,8 @@ class DatabaseAdblock:
             count += 1
             if count == 1000:
                 SqlCursor.commit(self)
+                # Do not flood sqlite, this allow webkit extension to run
+                sleep(0.1)
                 count = 0
         SqlCursor.remove(self)
 
@@ -604,6 +607,7 @@ class DatabaseAdblock:
         result = rules.decode("utf-8")
         count = 0
         for line in result.split('\n'):
+            SqlCursor.allow_main_thread_execution(self)
             if self.__cancellable.is_cancelled():
                 SqlCursor.remove(self)
                 raise Exception("Cancelled")
@@ -623,6 +627,8 @@ class DatabaseAdblock:
             count += 1
             if count == 1000:
                 SqlCursor.commit(self)
+                # Do not flood sqlite, this allow webkit extension to run
+                sleep(0.1)
                 count = 0
         SqlCursor.remove(self)
 
