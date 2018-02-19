@@ -14,7 +14,7 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class ImportBookmarksDialog:
@@ -74,11 +74,11 @@ class ImportBookmarksDialog:
             return
         index = self.__listbox.get_selected_row().get_index()
         if index == self.__Choice.FIREFOX:
-            El().bookmarks.import_firefox()
+            App().bookmarks.import_firefox()
         elif index == self.__Choice.CHROME:
-            El().bookmarks.import_chromium(True)
+            App().bookmarks.import_chromium(True)
         elif index == self.__Choice.CHROMIUM:
-            El().bookmarks.import_chromium(False)
+            App().bookmarks.import_chromium(False)
         else:
             dialog = Gtk.FileChooserDialog(
                                    _("Import HTML bookmarks"), self.__window,
@@ -101,4 +101,4 @@ class ImportBookmarksDialog:
         """
         if response_id == Gtk.ResponseType.OK:
             path = dialog.get_filename()
-            El().bookmarks.import_html(path)
+            App().bookmarks.import_html(path)

@@ -18,7 +18,7 @@ from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
-from eolie.define import El, LoadingType
+from eolie.define import App, LoadingType
 
 
 class DelayedStack(Gtk.Stack):
@@ -89,7 +89,7 @@ class Container(Gtk.Overlay):
         self.__preloaded = []
         self.__pending_items = []
 
-        self.__preloaded_max = El().settings.get_value(
+        self.__preloaded_max = App().settings.get_value(
                                               "preloaded-webviews").get_int32()
 
         self.__stack = DelayedStack()
@@ -109,14 +109,14 @@ class Container(Gtk.Overlay):
         self.__pages_manager = PagesManager(self.__window)
         self.__pages_manager.show()
         self.__sites_manager = SitesManager(self.__window)
-        if El().settings.get_value("show-sidebar"):
+        if App().settings.get_value("show-sidebar"):
             self.__sites_manager.show()
-        El().settings.connect("changed::show-sidebar",
-                              self.__on_show_sidebar_changed)
+        App().settings.connect("changed::show-sidebar",
+                               self.__on_show_sidebar_changed)
         paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
         paned.pack1(self.__sites_manager, False, False)
         paned.add2(self.__expose_stack)
-        position = El().settings.get_value("sidebar-position").get_int32()
+        position = App().settings.get_value("sidebar-position").get_int32()
         paned.set_position(position)
         paned.connect("notify::position", self.__on_paned_notify_position)
         paned.show()
@@ -203,7 +203,7 @@ class Container(Gtk.Overlay):
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.__pages_manager.children)
         self.__window.toolbar.actions.count_label.set_text(str(count))
-        El().update_unity_badge()
+        App().update_unity_badge()
 
     def add_view(self, view):
         """
@@ -217,7 +217,7 @@ class Container(Gtk.Overlay):
         self.__stack.set_visible_child(view)
         count = len(self.__stack.get_children())
         self.__window.toolbar.actions.count_label.set_text(str(count))
-        El().update_unity_badge()
+        App().update_unity_badge()
         self.__pages_manager.update_visible_child()
         self.__sites_manager.update_visible_child()
 
@@ -234,11 +234,11 @@ class Container(Gtk.Overlay):
             self.__current = self.__stack.get_visible_child()
             count = len(children)
             self.__window.toolbar.actions.count_label.set_text(str(count))
-            El().update_unity_badge()
+            App().update_unity_badge()
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
         else:
-            for window in El().windows:
+            for window in App().windows:
                 window.mark(False)
             self.__window.close()
 
@@ -296,8 +296,8 @@ class Container(Gtk.Overlay):
             @param view as View
         """
         page_id = view.webview.get_page_id()
-        El().helper.call("FormsFilled", page_id, None,
-                         self.__on_forms_filled, view)
+        App().helper.call("FormsFilled", page_id, None,
+                          self.__on_forms_filled, view)
 
     def close_view(self, view):
         """
@@ -311,15 +311,15 @@ class Container(Gtk.Overlay):
             return
         views.remove(view)
         views_count = len(views)
-        El().history.set_page_state(view.webview.uri)
+        App().history.set_page_state(view.webview.uri)
         self.__window.close_popovers()
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
         if not view.webview.ephemeral:
-            El().pages_menu.add_action(view.webview.title,
-                                       view.webview.uri,
-                                       view.webview.get_session_state())
+            App().pages_menu.add_action(view.webview.title,
+                                        view.webview.uri,
+                                        view.webview.get_session_state())
 
         # Remove webview from parent
         if view.webview.parent is not None:
@@ -327,7 +327,7 @@ class Container(Gtk.Overlay):
         view.destroy()
         # Don't show 0 as we are going to open a new one
         if views_count:
-            El().update_unity_badge()
+            App().update_unity_badge()
             self.__window.toolbar.actions.count_label.set_text(
                                                        str(views_count))
         # Nothing to do if was not current page
@@ -366,7 +366,7 @@ class Container(Gtk.Overlay):
             self.__window.container.set_current(next_view, True)
         else:
             # We are last row, add a new one
-            self.add_webview(El().start_page, LoadingType.FOREGROUND)
+            self.add_webview(App().start_page, LoadingType.FOREGROUND)
 
     def stop_preloading(self):
         """
@@ -550,12 +550,12 @@ class Container(Gtk.Overlay):
             @param ignore as GParamInt
         """
         position = paned.get_position()
-        saved_position = El().settings.get_value(
+        saved_position = App().settings.get_value(
                                                 "sidebar-position").get_int32()
         # We do not want to keep minimal mode changes
         if position >= 80 or saved_position > position:
-            El().settings.set_value("sidebar-position",
-                                    GLib.Variant("i", position))
+            App().settings.set_value("sidebar-position",
+                                     GLib.Variant("i", position))
         self.__sites_manager.set_minimal(position < 80)
 
     def __on_show_sidebar_changed(self, settings, value):
@@ -564,7 +564,7 @@ class Container(Gtk.Overlay):
             @param settings as Gio.Settings
             @param value as bool
         """
-        if El().settings.get_value("show-sidebar"):
+        if App().settings.get_value("show-sidebar"):
             self.__sites_manager.show()
         else:
             self.__sites_manager.hide()

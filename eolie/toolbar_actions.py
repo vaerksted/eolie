@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Pango
 
-from eolie.define import El, LoadingType
+from eolie.define import App, LoadingType
 
 
 class ToolbarActions(Gtk.Bin):
@@ -160,7 +160,7 @@ class ToolbarActions(Gtk.Bin):
             Add a new web view
             @param button as Gtk.Button
         """
-        self.__window.container.add_webview(El().start_page,
+        self.__window.container.add_webview(App().start_page,
                                             LoadingType.FOREGROUND)
         self.__window.close_popovers()
 
@@ -172,7 +172,7 @@ class ToolbarActions(Gtk.Bin):
         self.__window.close_popovers()
         if not button.get_active():
             return
-        popover = Gtk.Popover.new_from_model(button, El().pages_menu)
+        popover = Gtk.Popover.new_from_model(button, App().pages_menu)
         popover.set_modal(False)
         self.__window.register(popover)
         popover.forall(self.__update_popover_internals)

@@ -14,7 +14,7 @@
 from threading import current_thread
 from time import sleep
 
-from eolie.define import El
+from eolie.define import App
 
 
 class SqlCursor:
@@ -28,7 +28,7 @@ class SqlCursor:
         """
         obj.thread_lock.acquire()
         name = current_thread().getName() + obj.__class__.__name__
-        El().cursors[name] = obj.get_cursor()
+        App().cursors[name] = obj.get_cursor()
 
     def remove(obj):
         """
@@ -36,9 +36,9 @@ class SqlCursor:
             Raise an exception if cursor already exists
         """
         name = current_thread().getName() + obj.__class__.__name__
-        El().cursors[name].commit()
-        El().cursors[name].close()
-        del El().cursors[name]
+        App().cursors[name].commit()
+        App().cursors[name].close()
+        del App().cursors[name]
         obj.thread_lock.release()
 
     def commit(obj):
@@ -46,7 +46,7 @@ class SqlCursor:
             Commit current obj
         """
         name = current_thread().getName() + obj.__class__.__name__
-        El().cursors[name].commit()
+        App().cursors[name].commit()
         # Flush pending tasks
         obj.thread_lock.release()
         sleep(1)
@@ -64,11 +64,11 @@ class SqlCursor:
             Return cursor for thread, create a new one if needed
         """
         name = current_thread().getName() + self.__obj.__class__.__name__
-        if name not in El().cursors:
+        if name not in App().cursors:
             self.__obj.thread_lock.acquire()
             self.__creator = True
-            El().cursors[name] = self.__obj.get_cursor()
-        return El().cursors[name]
+            App().cursors[name] = self.__obj.get_cursor()
+        return App().cursors[name]
 
     def __exit__(self, type, value, traceback):
         """
@@ -76,7 +76,7 @@ class SqlCursor:
         """
         if self.__creator:
             name = current_thread().getName() + self.__obj.__class__.__name__
-            El().cursors[name].commit()
-            El().cursors[name].close()
-            del El().cursors[name]
+            App().cursors[name].commit()
+            App().cursors[name].close()
+            del App().cursors[name]
             self.__obj.thread_lock.release()

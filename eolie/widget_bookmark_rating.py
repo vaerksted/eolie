@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk
 
-from eolie.define import El
+from eolie.define import App
 
 
 class BookmarkRatingWidget(Gtk.Bin):
@@ -99,17 +99,17 @@ class BookmarkRatingWidget(Gtk.Bin):
             position = -1
         new_rate = position + 1
         if new_rate == 0 or new_rate == max_heart:
-            El().bookmarks.set_popularity(self.__bookmark_id, 0)
+            App().bookmarks.set_popularity(self.__bookmark_id, 0)
             self._on_leave_notify(None, None)
         else:
-            avg_popularity = El().bookmarks.get_avg_popularity()
-            best_popularity = El().bookmarks.get_higher_popularity()
+            avg_popularity = App().bookmarks.get_avg_popularity()
+            best_popularity = App().bookmarks.get_higher_popularity()
             popularity = int((new_rate * avg_popularity / 5) + 0.5)
             # Special case, if new_rate == 5, try to move bookmark near
             # most popular bookmark
             if new_rate == 5:
                 popularity = (popularity + best_popularity) / 2
-            El().bookmarks.set_popularity(self.__bookmark_id, popularity)
+            App().bookmarks.set_popularity(self.__bookmark_id, popularity)
         return True
 
 #######################
@@ -119,8 +119,8 @@ class BookmarkRatingWidget(Gtk.Bin):
         """
             Get bookmark rate: popularity related to avarage popularity
         """
-        avg_popularity = El().bookmarks.get_avg_popularity()
-        popularity = El().bookmarks.get_popularity(self.__bookmark_id)
+        avg_popularity = App().bookmarks.get_avg_popularity()
+        popularity = App().bookmarks.get_popularity(self.__bookmark_id)
         return popularity * 5 / avg_popularity + 0.5
 
     def __heart_from_rate(self, rate):

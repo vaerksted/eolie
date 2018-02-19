@@ -15,7 +15,7 @@ from gi.repository import Gio, GLib, Gtk
 from gettext import gettext as _
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import App
 
 
 class SitesMenu(Gtk.Grid):
@@ -76,7 +76,7 @@ class SitesMenu(Gtk.Grid):
         item.show()
         self.add(item)
         # Modify UA
-        if El().settings.get_value("developer-extras"):
+        if App().settings.get_value("developer-extras"):
             action = Gio.SimpleAction.new("user_agent")
             action.connect("activate", self.__on_modify_ua_activate)
             self.__window.add_action(action)
@@ -128,7 +128,7 @@ class SitesMenu(Gtk.Grid):
             # Get first view URI
             webview = self.__views[0].webview
             uri = webview.uri
-            El().websettings.set_profile(param.get_string(), uri)
+            App().websettings.set_profile(param.get_string(), uri)
             webview.stop_loading()
             webview.load_uri(uri)
         except Exception as e:

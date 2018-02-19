@@ -12,7 +12,7 @@
 
 from gi.repository import Gio
 
-from eolie.define import PROXY_BUS, PROXY_PATH, PROXY_INTERFACE, El
+from eolie.define import PROXY_BUS, PROXY_PATH, PROXY_INTERFACE, App
 
 
 class DBusHelper:
@@ -32,7 +32,7 @@ class DBusHelper:
             @param callback as function
         """
         try:
-            bus = El().get_dbus_connection()
+            bus = App().get_dbus_connection()
             proxy_bus = PROXY_BUS % page_id
             Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
                               proxy_bus,
@@ -51,7 +51,7 @@ class DBusHelper:
             @param page_id as int
         """
         try:
-            bus = El().get_dbus_connection()
+            bus = App().get_dbus_connection()
             proxy_bus = PROXY_BUS % page_id
             subscribe_id = bus.signal_subscribe(None, proxy_bus, signal,
                                                 PROXY_PATH, None,

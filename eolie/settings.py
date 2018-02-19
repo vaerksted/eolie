@@ -17,7 +17,7 @@ from gi.repository import Gio, Gdk, Gtk, GLib
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 from eolie.utils import get_current_monitor_model
 from eolie.helper_task import TaskHelper
 from eolie.helper_passwords import PasswordsHelper
@@ -70,7 +70,7 @@ class SettingsDialog:
             self.__settings_dialog.set_titlebar(headerbar)
 
         download_chooser = builder.get_object("download_chooser")
-        dir_uri = El().settings.get_value("download-uri").get_string()
+        dir_uri = App().settings.get_value("download-uri").get_string()
         if not dir_uri:
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
@@ -83,11 +83,11 @@ class SettingsDialog:
 
         open_downloads = builder.get_object("open_downloads_check")
         open_downloads.set_active(
-                                El().settings.get_value("open-downloads"))
+                                App().settings.get_value("open-downloads"))
 
         self.__start_page_uri = builder.get_object("start_page_uri")
         combo_start = builder.get_object("combo_start")
-        start_page = El().settings.get_value("start-page").get_string()
+        start_page = App().settings.get_value("start-page").get_string()
         if start_page.startswith("http"):
             combo_start.set_active_id("address")
             self.__start_page_uri.set_text(start_page)
@@ -97,42 +97,42 @@ class SettingsDialog:
 
         remember_session = builder.get_object("remember_sessions_check")
         remember_session.set_active(
-                                El().settings.get_value("remember-session"))
+                                App().settings.get_value("remember-session"))
 
         suggestions = builder.get_object("suggestions_check")
-        suggestions.set_active(El().settings.get_value("enable-suggestions"))
+        suggestions.set_active(App().settings.get_value("enable-suggestions"))
 
         enable_dev_tools = builder.get_object("dev_tools_check")
         enable_dev_tools.set_active(
-                                El().settings.get_value("developer-extras"))
+                                App().settings.get_value("developer-extras"))
 
         enable_plugins = builder.get_object("plugins_check")
         enable_plugins.set_active(
-                                El().settings.get_value("enable-plugins"))
+                                App().settings.get_value("enable-plugins"))
 
         self.__fonts_grid = builder.get_object("fonts_grid")
         use_system_fonts = builder.get_object("system_fonts_check")
         use_system_fonts.set_active(
-                                El().settings.get_value("use-system-fonts"))
+                                App().settings.get_value("use-system-fonts"))
         self.__fonts_grid.set_sensitive(
-                            not El().settings.get_value("use-system-fonts"))
+                            not App().settings.get_value("use-system-fonts"))
 
         sans_serif_button = builder.get_object("sans_serif_button")
         sans_serif_button.set_font_name(
-                       El().settings.get_value("font-sans-serif").get_string())
+                      App().settings.get_value("font-sans-serif").get_string())
         serif_button = builder.get_object("serif_button")
         serif_button.set_font_name(
-                       El().settings.get_value("font-serif").get_string())
+                       App().settings.get_value("font-serif").get_string())
         monospace_button = builder.get_object("monospace_button")
         monospace_button.set_font_name(
-                       El().settings.get_value("font-monospace").get_string())
+                       App().settings.get_value("font-monospace").get_string())
 
         min_font_size_spin = builder.get_object("min_font_size_spin")
         min_font_size_spin.set_value(
-                       El().settings.get_value("min-font-size").get_int32())
+                       App().settings.get_value("min-font-size").get_int32())
 
         monitor_model = get_current_monitor_model(window)
-        zoom_levels = El().settings.get_value("default-zoom-level")
+        zoom_levels = App().settings.get_value("default-zoom-level")
         wanted_zoom_level = 1.0
         try:
             for zoom_level in zoom_levels:
@@ -145,29 +145,29 @@ class SettingsDialog:
         default_zoom_level.set_value(float(wanted_zoom_level))
 
         cookies_combo = builder.get_object("cookies_combo")
-        storage = El().settings.get_enum("cookie-storage")
+        storage = App().settings.get_enum("cookie-storage")
         cookies_combo.set_active_id(str(storage))
 
         history_combo = builder.get_object("history_combo")
-        storage = El().settings.get_enum("history-storage")
+        storage = App().settings.get_enum("history-storage")
         history_combo.set_active_id(str(storage))
 
         self.__populars_count = builder.get_object("populars_count")
         if start_page in ["popular_book", "popular_hist"]:
             self.__populars_count.show()
-        max_popular_items = El().settings.get_value(
+        max_popular_items = App().settings.get_value(
                                               "max-popular-items").get_int32()
         builder.get_object("popular_spin_button").set_value(max_popular_items)
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
-                                El().settings.get_value("remember-passwords"))
+                                App().settings.get_value("remember-passwords"))
 
         dns_prediction_check = builder.get_object("dns_prediction_check")
         dns_prediction_check.set_active(
-                                El().settings.get_value("dns-prediction"))
+                                App().settings.get_value("dns-prediction"))
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
-                                El().settings.get_value("do-not-track"))
+                                App().settings.get_value("do-not-track"))
         self.__result_label = builder.get_object("result_label")
         self.__sync_button = builder.get_object("sync_button")
         self.__login_entry = builder.get_object("login_entry")
@@ -194,7 +194,7 @@ class SettingsDialog:
             @param button as Gtk.SpinButton
         """
         value = GLib.Variant("i", button.get_value())
-        El().settings.set_value("max-popular-items", value)
+        App().settings.set_value("max-popular-items", value)
 
     def _on_configure_engines_clicked(self, button):
         """
@@ -239,36 +239,36 @@ class SettingsDialog:
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("dns-prediction",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("dns-prediction",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_tracking_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("do-not-track",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("do-not-track",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_cookies_changed(self, combo):
         """
             Save cookies setting
             @param combo as Gtk.ComboBoxText
         """
-        El().settings.set_enum("cookie-storage", int(combo.get_active_id()))
-        for window in El().windows:
+        App().settings.set_enum("cookie-storage", int(combo.get_active_id()))
+        for window in App().windows:
             for view in window.container.views:
                 context = view.webview.get_context()
                 cookie_manager = context.get_cookie_manager()
                 cookie_manager.set_accept_policy(
-                                     El().settings.get_enum("cookie-storage"))
+                                     App().settings.get_enum("cookie-storage"))
 
     def _on_history_changed(self, combo):
         """
             Save history keep setting
             @param combo as Gtk.ComboBoxText
         """
-        El().settings.set_enum("history-storage", int(combo.get_active_id()))
+        App().settings.set_enum("history-storage", int(combo.get_active_id()))
 
     def _on_default_zoom_changed(self, button):
         """
@@ -280,7 +280,7 @@ class SettingsDialog:
         try:
             # Add current value less monitor model
             zoom_levels = []
-            for zoom_level in El().settings.get_value("default-zoom-level"):
+            for zoom_level in App().settings.get_value("default-zoom-level"):
                 zoom_splited = zoom_level.split('@')
                 if zoom_splited[0] == monitor_model:
                     continue
@@ -289,9 +289,9 @@ class SettingsDialog:
                                                   zoom_splited[1]))
             # Add new zoom value for monitor model
             zoom_levels.append("%s@%s" % (monitor_model, button.get_value()))
-            El().settings.set_value("default-zoom-level",
-                                    GLib.Variant("as", zoom_levels))
-            for window in El().windows:
+            App().settings.set_value("default-zoom-level",
+                                     GLib.Variant("as", zoom_levels))
+            for window in App().windows:
                 window.update_zoom_level(True)
         except Exception as e:
             print("SettingsDialog::_on_default_zoom_changed():", e)
@@ -302,8 +302,8 @@ class SettingsDialog:
             @param button as Gtk.SpinButton
         """
         value = GLib.Variant("i", button.get_value())
-        El().settings.set_value("min-font-size", value)
-        El().set_setting("minimum-font-size", button.get_value())
+        App().settings.set_value("min-font-size", value)
+        App().set_setting("minimum-font-size", button.get_value())
 
     def _on_system_fonts_toggled(self, button):
         """
@@ -311,8 +311,8 @@ class SettingsDialog:
             @param button as Gtk.ToggleButton
         """
         self.__fonts_grid.set_sensitive(not button.get_active())
-        El().settings.set_value("use-system-fonts",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("use-system-fonts",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_font_sans_serif_set(self, fontbutton):
         """
@@ -320,8 +320,8 @@ class SettingsDialog:
             @param fontchooser as Gtk.FontButton
         """
         value = GLib.Variant("s", fontbutton.get_font_name())
-        El().settings.set_value("font-sans-serif", value)
-        El().set_setting("sans-serif-font-family", fontbutton.get_font_name())
+        App().settings.set_value("font-sans-serif", value)
+        App().set_setting("sans-serif-font-family", fontbutton.get_font_name())
 
     def _on_font_serif_set(self, fontbutton):
         """
@@ -329,8 +329,8 @@ class SettingsDialog:
             @param fontchooser as Gtk.FontButton
         """
         value = GLib.Variant("s", fontbutton.get_font_name())
-        El().settings.set_value("font-serif", value)
-        El().set_setting("serif-font-family", fontbutton.get_font_name())
+        App().settings.set_value("font-serif", value)
+        App().set_setting("serif-font-family", fontbutton.get_font_name())
 
     def _on_font_monospace_set(self, fontbutton):
         """
@@ -338,8 +338,8 @@ class SettingsDialog:
             @param fontchooser as Gtk.FontButton
         """
         value = GLib.Variant("s", fontbutton.get_font_name())
-        El().settings.set_value("font-monospace", value)
-        El().set_setting("monospace-font-family", fontbutton.get_font_name())
+        App().settings.set_value("font-monospace", value)
+        App().set_setting("monospace-font-family", fontbutton.get_font_name())
 
     def _on_plugins_toggled(self, button):
         """
@@ -347,8 +347,8 @@ class SettingsDialog:
             @param button as Gtk.ToggleButton
         """
         value = GLib.Variant("b", button.get_active())
-        El().settings.set_value("enable-plugins", value)
-        El().set_setting("enable-plugins", button.get_active())
+        App().settings.set_value("enable-plugins", value)
+        App().set_setting("enable-plugins", button.get_active())
 
     def _on_dev_tools_toggled(self, button):
         """
@@ -356,39 +356,39 @@ class SettingsDialog:
             @param button as Gtk.ToggleButton
         """
         value = GLib.Variant("b", button.get_active())
-        El().settings.set_value("developer-extras", value)
+        App().settings.set_value("developer-extras", value)
 
     def _on_remember_passwords_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("remember-passwords",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("remember-passwords",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_remember_sessions_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("remember-session",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("remember-session",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_suggestions_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("enable-suggestions",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("enable-suggestions",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_start_page_uri_changed(self, entry):
         """
             Save startup page
             @param entry as Gtk.Entry
         """
-        El().settings.set_value("start-page",
-                                GLib.Variant("s", entry.get_text()))
+        App().settings.set_value("start-page",
+                                 GLib.Variant("s", entry.get_text()))
 
     def _on_start_changed(self, combo):
         """
@@ -401,25 +401,25 @@ class SettingsDialog:
             self.__start_page_uri.show()
         elif combo.get_active_id() in ["popular_hist", "popular_book"]:
             self.__populars_count.show()
-        El().settings.set_value("start-page",
-                                GLib.Variant("s", combo.get_active_id()))
+        App().settings.set_value("start-page",
+                                 GLib.Variant("s", combo.get_active_id()))
 
     def _on_engine_changed(self, combo):
         """
             Save engine
             @param combo as Gtk.ComboBoxText
         """
-        El().settings.set_value("search-engine",
-                                GLib.Variant("s", combo.get_active_id()))
-        El().search.update_default_engine()
+        App().settings.set_value("search-engine",
+                                 GLib.Variant("s", combo.get_active_id()))
+        App().search.update_default_engine()
 
     def _on_open_downloads_toggled(self, button):
         """
             Save state
             @param button as Gtk.ToggleButton
         """
-        El().settings.set_value("open-downloads",
-                                GLib.Variant("b", button.get_active()))
+        App().settings.set_value("open-downloads",
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_selection_changed(self, chooser):
         """
@@ -429,7 +429,7 @@ class SettingsDialog:
         uri = chooser.get_uri()
         if uri is None:
             uri = ""
-        El().settings.set_value("download-uri", GLib.Variant("s", uri))
+        App().settings.set_value("download-uri", GLib.Variant("s", uri))
 
     def _on_key_release_event(self, widget, event):
         """
@@ -449,8 +449,8 @@ class SettingsDialog:
         login = self.__login_entry.get_text()
         password = self.__password_entry.get_text()
         if icon_name == "network-transmit-receive-symbolic":
-            El().sync_worker.stop(True)
-            El().sync_worker.delete_secret()
+            App().sync_worker.stop(True)
+            App().sync_worker.delete_secret()
             self.__setup_sync_button(False)
         elif login and password:
             self.__result_label.set_text(_("Connecting…"))
@@ -470,8 +470,8 @@ class SettingsDialog:
             Get sync status
             @thread safe
         """
-        if El().sync_worker is not None:
-            status = El().sync_worker.status
+        if App().sync_worker is not None:
+            status = App().sync_worker.status
             GLib.idle_add(self.__setup_sync_button, status)
         else:
             GLib.idle_add(self.__missing_fxa)
@@ -531,8 +531,8 @@ class SettingsDialog:
             @thread safe
         """
         try:
-            El().sync_worker.new_session()
-            El().sync_worker.login({"login": username}, password)
+            App().sync_worker.new_session()
+            App().sync_worker.login({"login": username}, password)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             print("SettingsDialog::__connect_mozilla_sync():", e)
@@ -541,7 +541,7 @@ class SettingsDialog:
                 GLib.timeout_add(500, self.__settings_dialog.destroy)
                 self.__window.toolbar.end.show_sync_button()
                 GLib.idle_add(
-                    El().active_window.toolbar.title.show_message,
+                    App().active_window.toolbar.title.show_message,
                     _("You've received an email"
                       " to validate synchronization"))
             else:

@@ -15,7 +15,7 @@ from gi.repository import Gio, GLib
 from hashlib import sha256
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class FormMenu(Gio.Menu):
@@ -44,7 +44,7 @@ class FormMenu(Gio.Menu):
         encoded = "FORM_" + sha256(
                                attributes["login"].encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
-        El().add_action(action)
+        App().add_action(action)
         self.__actions.append(encoded)
         action.connect('activate',
                        self.__on_action_clicked,
@@ -70,7 +70,7 @@ class FormMenu(Gio.Menu):
             @param GVariant
             @param attributes as {}
         """
-        El().helper.call("SetAuthForms", self.__page_id,
-                         GLib.Variant("(ss)",
-                                      (attributes["userform"],
-                                       attributes["login"])))
+        App().helper.call("SetAuthForms", self.__page_id,
+                          GLib.Variant("(ss)",
+                                       (attributes["userform"],
+                                        attributes["login"])))

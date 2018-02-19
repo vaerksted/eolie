@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GObject, Pango, GLib
 
 from eolie.helper_passwords import PasswordsHelper
-from eolie.define import El
+from eolie.define import App
 
 
 class Item(GObject.GObject):
@@ -75,8 +75,8 @@ class Row(Gtk.ListBoxRow):
         self.hide()
         uuid = self.__item.get_property("uuid")
         self.__helper.clear(uuid)
-        if El().sync_worker is not None:
-            El().sync_worker.remove_from_passwords(uuid)
+        if App().sync_worker is not None:
+            App().sync_worker.remove_from_passwords(uuid)
 
     @property
     def item(self):

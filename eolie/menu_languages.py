@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, GtkSpell
 
-from eolie.define import El
+from eolie.define import App
 
 
 class LanguageRow(Gtk.EventBox):
@@ -45,7 +45,7 @@ class LanguageRow(Gtk.EventBox):
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
         user_code = ""
-        codes = El().websettings.get_languages(uri)
+        codes = App().websettings.get_languages(uri)
         if codes is None:
             codes = []
             locales = GLib.get_language_names()
@@ -76,10 +76,10 @@ class LanguageRow(Gtk.EventBox):
         """
         active = check.get_active()
         if active:
-            El().websettings.add_language(self.__code, self.__uri)
+            App().websettings.add_language(self.__code, self.__uri)
         else:
-            El().websettings.remove_language(self.__code, self.__uri)
-        El().active_window.container.current.webview.update_spell_checking()
+            App().websettings.remove_language(self.__code, self.__uri)
+        App().active_window.container.current.webview.update_spell_checking()
 
 
 class LanguagesMenu(Gtk.Bin):
@@ -109,7 +109,8 @@ class LanguagesMenu(Gtk.Bin):
             Populate languages
             @param listbox as Gtk.ListBox
         """
-        self.__switch.set_active(El().settings.get_value("enable-spell-check"))
+        enable_spell_checking = App().settings.get_value("enable-spell-check")
+        self.__switch.set_active(enable_spell_checking)
         if not listbox.get_children():
             checker = GtkSpell.Checker()
             for language in checker.get_language_list():
@@ -124,10 +125,10 @@ class LanguagesMenu(Gtk.Bin):
             @param listbox as Gtk.ListBox
             @param state as bool
         """
-        El().settings.set_value("enable-spell-check",
-                                GLib.Variant("b", state))
+        App().settings.set_value("enable-spell-check",
+                                 GLib.Variant("b", state))
         listbox.set_sensitive(state)
-        for window in El().windows:
+        for window in App().windows:
             for view in window.container.views:
                 context = view.webview.get_context()
                 context.set_spell_checking_enabled(state)

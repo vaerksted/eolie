@@ -15,7 +15,7 @@ from gi.repository import Gio, GLib, Gtk
 from gettext import gettext as _
 import json
 
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import App, EOLIE_DATA_PATH
 
 
 class ProfilesMenu(Gtk.Grid):
@@ -57,7 +57,7 @@ class ProfilesMenu(Gtk.Grid):
         self.__window.add_action(action)
         # Get first view URI
         uri = webview.uri
-        profile = El().websettings.get_profile(uri)
+        profile = App().websettings.get_profile(uri)
         # Load user profiles
         try:
             f = Gio.File.new_for_path(EOLIE_DATA_PATH +
@@ -123,7 +123,7 @@ class ProfilesMenu(Gtk.Grid):
         try:
             action.change_state(param)
             uri = webview.uri
-            El().websettings.set_profile(param.get_string(), uri)
+            App().websettings.set_profile(param.get_string(), uri)
             webview.stop_loading()
             # We need to reset URI before reloading
             # This allow WebViewNavigation to operate profile switching

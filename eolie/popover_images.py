@@ -16,7 +16,7 @@ from hashlib import sha256
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import EOLIE_CACHE_PATH, ArtSize, El
+from eolie.define import EOLIE_CACHE_PATH, ArtSize, App
 
 
 class Image(Gtk.FlowBoxChild):
@@ -104,8 +104,8 @@ class ImagesPopover(Gtk.Popover):
         self.__button = builder.get_object("button")
         self.add(widget)
         if Gio.NetworkMonitor.get_default().get_network_available():
-            El().helper.call("GetImages", page_id, None, self.__on_get_images)
-        (width, height) = El().active_window.get_size()
+            App().helper.call("GetImages", page_id, None, self.__on_get_images)
+        (width, height) = App().active_window.get_size()
         self.set_size_request(width / 2, height / 1.5)
         self.connect("closed", self.__on_closed)
         self.__task_helper = TaskHelper()
@@ -142,11 +142,11 @@ class ImagesPopover(Gtk.Popover):
         self.__links = button.get_active()
         if Gio.NetworkMonitor.get_default().get_network_available():
             if button.get_active():
-                El().helper.call("GetImageLinks", self.__page_id, None,
-                                 self.__on_get_images)
+                App().helper.call("GetImageLinks", self.__page_id, None,
+                                  self.__on_get_images)
             else:
-                El().helper.call("GetImages", self.__page_id, None,
-                                 self.__on_get_images)
+                App().helper.call("GetImages", self.__page_id, None,
+                                  self.__on_get_images)
 
 #######################
 # PRIVATE             #
@@ -173,7 +173,7 @@ class ImagesPopover(Gtk.Popover):
             Move image to download directory
         """
         parsed = urlparse(self.__uri)
-        directory_uri = El().settings.get_value('download-uri').get_string()
+        directory_uri = App().settings.get_value('download-uri').get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)

@@ -20,7 +20,7 @@ from fcntl import flock, LOCK_EX, LOCK_NB, LOCK_UN
 from time import time, sleep
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import App, EOLIE_DATA_PATH
 from eolie.utils import debug
 from eolie.sqlcursor import SqlCursor
 from eolie.helper_passwords import PasswordsHelper
@@ -327,12 +327,12 @@ class SyncWorker:
                 self.__check_worker()
                 sleep(0.01)
                 record = {}
-                atimes = El().history.get_atimes(history_id)
-                guid = El().history.get_guid(history_id)
+                atimes = App().history.get_atimes(history_id)
+                guid = App().history.get_guid(history_id)
                 if atimes:
-                    record["histUri"] = El().history.get_uri(history_id)
+                    record["histUri"] = App().history.get_uri(history_id)
                     record["id"] = guid
-                    record["title"] = El().history.get_title(history_id)
+                    record["title"] = App().history.get_title(history_id)
                     record["visits"] = []
                     for atime in atimes:
                         record["visits"].append({"date": atime*1000000,
@@ -518,53 +518,53 @@ class SyncWorker:
         """
         debug("push bookmarks")
         parents = []
-        for bookmark_id in El().bookmarks.get_ids_for_mtime(
+        for bookmark_id in App().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
             self.__check_worker()
             sleep(0.01)
-            parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
+            parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
             # No parent, move it to unfiled
             if parent_guid is None:
                 parent_guid = "unfiled"
-            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
+            parent_id = App().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
             record = {}
-            record["bmkUri"] = El().bookmarks.get_uri(bookmark_id)
-            record["id"] = El().bookmarks.get_guid(bookmark_id)
-            record["title"] = El().bookmarks.get_title(bookmark_id)
-            record["tags"] = El().bookmarks.get_tags(bookmark_id)
+            record["bmkUri"] = App().bookmarks.get_uri(bookmark_id)
+            record["id"] = App().bookmarks.get_guid(bookmark_id)
+            record["title"] = App().bookmarks.get_title(bookmark_id)
+            record["tags"] = App().bookmarks.get_tags(bookmark_id)
             record["parentid"] = parent_guid
-            record["parentName"] = El().bookmarks.get_parent_name(bookmark_id)
+            record["parentName"] = App().bookmarks.get_parent_name(bookmark_id)
             record["type"] = "bookmark"
             debug("pushing %s" % record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         # Del old bookmarks
-        for bookmark_id in El().bookmarks.get_deleted_ids():
+        for bookmark_id in App().bookmarks.get_deleted_ids():
             self.__check_worker()
             sleep(0.01)
-            parent_guid = El().bookmarks.get_parent_guid(bookmark_id)
-            parent_id = El().bookmarks.get_id_by_guid(parent_guid)
+            parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
+            parent_id = App().bookmarks.get_id_by_guid(parent_guid)
             if parent_id not in parents:
                 parents.append(parent_id)
             record = {}
-            record["id"] = El().bookmarks.get_guid(bookmark_id)
+            record["id"] = App().bookmarks.get_guid(bookmark_id)
             record["type"] = "bookmark"
             record["deleted"] = True
             debug("deleting %s" % record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
-            El().bookmarks.remove(bookmark_id)
+            App().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handled later
         # Otherwise, order will be broken by new children updates
         while parents:
             parent_id = parents.pop(0)
-            parent_guid = El().bookmarks.get_guid(parent_id)
-            parent_name = El().bookmarks.get_title(parent_id)
-            children = El().bookmarks.get_children(parent_guid)
+            parent_guid = App().bookmarks.get_guid(parent_id)
+            parent_name = App().bookmarks.get_title(parent_id)
+            children = App().bookmarks.get_children(parent_guid)
             # So search if children in parents
             found = False
             for child_guid in children:
-                child_id = El().bookmarks.get_id_by_guid(child_guid)
+                child_id = App().bookmarks.get_id_by_guid(child_guid)
                 if child_id in parents:
                     found = True
                     break
@@ -578,16 +578,16 @@ class SyncWorker:
             record["type"] = "folder"
             # A parent with parent as unfiled needs to be moved to places
             # Firefox internal
-            grand_parent_guid = El().bookmarks.get_parent_guid(parent_id)
+            grand_parent_guid = App().bookmarks.get_parent_guid(parent_id)
             if grand_parent_guid == "unfiled":
                 grand_parent_guid = "places"
             record["parentid"] = grand_parent_guid
-            record["parentName"] = El().bookmarks.get_parent_name(parent_id)
+            record["parentName"] = App().bookmarks.get_parent_name(parent_id)
             record["title"] = parent_name
             record["children"] = children
             debug("pushing parent %s" % record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
-        El().bookmarks.clean_tags()
+        App().bookmarks.clean_tags()
 
     def __pull_bookmarks(self, bulk_keys, first_sync):
         """
@@ -597,7 +597,7 @@ class SyncWorker:
             @raise StopIteration
         """
         debug("pull bookmarks")
-        SqlCursor.add(El().bookmarks)
+        SqlCursor.add(App().bookmarks)
         records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
         children_array = []
         for record in records:
@@ -606,24 +606,24 @@ class SyncWorker:
                 continue
             sleep(0.01)
             bookmark = record["payload"]
-            bookmark_id = El().bookmarks.get_id_by_guid(bookmark["id"])
+            bookmark_id = App().bookmarks.get_id_by_guid(bookmark["id"])
             # Nothing to apply, continue
-            if El().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
+            if App().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
             debug("pulling %s" % record)
             # Deleted bookmark
             if "deleted" in bookmark.keys():
-                El().bookmarks.remove(bookmark_id)
+                App().bookmarks.remove(bookmark_id)
             # Keep folder only for firefox compatiblity
             elif "type" in bookmark.keys() and bookmark["type"] == "folder"\
                     and bookmark["id"] is not None\
                     and bookmark["title"]:
                 if bookmark_id is None:
-                    bookmark_id = El().bookmarks.add(bookmark["title"],
-                                                     bookmark["id"],
-                                                     bookmark["id"],
-                                                     [],
-                                                     0)
+                    bookmark_id = App().bookmarks.add(bookmark["title"],
+                                                      bookmark["id"],
+                                                      bookmark["id"],
+                                                      [],
+                                                      0)
                 # Will calculate position later
                 if "children" in bookmark.keys():
                     children_array.append(bookmark["children"])
@@ -641,53 +641,53 @@ class SyncWorker:
                             bookmark["tags"] = [bookmark["parentName"]]
                         else:
                             bookmark["tags"] = []
-                    bookmark_id = El().bookmarks.add(bookmark["title"],
-                                                     bookmark["bmkUri"],
-                                                     bookmark["id"],
-                                                     bookmark["tags"],
-                                                     0)
+                    bookmark_id = App().bookmarks.add(bookmark["title"],
+                                                      bookmark["bmkUri"],
+                                                      bookmark["id"],
+                                                      bookmark["tags"],
+                                                      0)
                 # Update bookmark
                 else:
-                    El().bookmarks.set_title(bookmark_id,
-                                             bookmark["title"])
-                    El().bookmarks.set_uri(bookmark_id,
-                                           bookmark["bmkUri"])
+                    App().bookmarks.set_title(bookmark_id,
+                                              bookmark["title"])
+                    App().bookmarks.set_uri(bookmark_id,
+                                            bookmark["bmkUri"])
                     # Update tags
-                    current_tags = El().bookmarks.get_tags(bookmark_id)
-                    for tag in El().bookmarks.get_tags(bookmark_id):
+                    current_tags = App().bookmarks.get_tags(bookmark_id)
+                    for tag in App().bookmarks.get_tags(bookmark_id):
                         if "tags" in bookmark.keys() and\
                                 tag not in bookmark["tags"]:
-                            tag_id = El().bookmarks.get_tag_id(tag)
+                            tag_id = App().bookmarks.get_tag_id(tag)
                             current_tags.remove(tag)
-                            El().bookmarks.del_tag_from(tag_id,
-                                                        bookmark_id)
+                            App().bookmarks.del_tag_from(tag_id,
+                                                         bookmark_id)
                     if "tags" in bookmark.keys():
                         for tag in bookmark["tags"]:
                             # Tag already associated
                             if tag in current_tags:
                                 continue
-                            tag_id = El().bookmarks.get_tag_id(tag)
+                            tag_id = App().bookmarks.get_tag_id(tag)
                             if tag_id is None:
-                                tag_id = El().bookmarks.add_tag(tag)
-                            El().bookmarks.add_tag_to(tag_id,
-                                                      bookmark_id)
+                                tag_id = App().bookmarks.add_tag(tag)
+                            App().bookmarks.add_tag_to(tag_id,
+                                                       bookmark_id)
             # Update parent name if available
             if bookmark_id is not None and "parentName" in bookmark.keys():
-                El().bookmarks.set_parent(bookmark_id,
-                                          bookmark["parentid"],
-                                          bookmark["parentName"])
-            El().bookmarks.set_mtime(bookmark_id,
-                                     record["modified"])
+                App().bookmarks.set_parent(bookmark_id,
+                                           bookmark["parentid"],
+                                           bookmark["parentName"])
+            App().bookmarks.set_mtime(bookmark_id,
+                                      record["modified"])
         # Update bookmark position
         for children in children_array:
             position = 0
             for child in children:
-                bid = El().bookmarks.get_id_by_guid(child)
-                El().bookmarks.set_position(bid,
-                                            position)
+                bid = App().bookmarks.get_id_by_guid(child)
+                App().bookmarks.set_position(bid,
+                                             position)
                 position += 1
-        El().bookmarks.clean_tags()  # Will commit
-        SqlCursor.remove(El().bookmarks)
+        App().bookmarks.clean_tags()  # Will commit
+        SqlCursor.remove(App().bookmarks)
 
     def __pull_passwords(self, bulk_keys):
         """
@@ -734,12 +734,12 @@ class SyncWorker:
             sleep(0.01)
             history = record["payload"]
             keys = history.keys()
-            history_id = El().history.get_id_by_guid(history["id"])
+            history_id = App().history.get_id_by_guid(history["id"])
             # Check we have a valid history item
             if "histUri" in keys and\
                     "title" in keys and\
                     history["title"] and\
-                    El().history.get_mtime(history_id) < record["modified"]:
+                    App().history.get_mtime(history_id) < record["modified"]:
                 # Try to get visit date
                 atimes = []
                 try:
@@ -749,15 +749,15 @@ class SyncWorker:
                     continue
                 debug("pulling %s" % record)
                 title = history["title"].rstrip().lstrip()
-                history_id = El().history.add(title,
-                                              history["histUri"],
-                                              record["modified"],
-                                              history["id"],
-                                              atimes,
-                                              True)
+                history_id = App().history.add(title,
+                                               history["histUri"],
+                                               record["modified"],
+                                               history["id"],
+                                               atimes,
+                                               True)
             elif "deleted" in keys:
-                history_id = El().history.get_id_by_guid(history_id)
-                El().history.remove(history_id)
+                history_id = App().history.get_id_by_guid(history_id)
+                App().history.remove(history_id)
 
     def __set_credentials(self, attributes, password, uri, index, count):
         """

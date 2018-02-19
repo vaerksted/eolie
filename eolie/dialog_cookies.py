@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, GObject, Gio, Gdk
 import json
 import sqlite3
 
-from eolie.define import El, EOLIE_DATA_PATH, COOKIES_PATH
+from eolie.define import App, EOLIE_DATA_PATH, COOKIES_PATH
 
 
 class Profile(GObject.GObject):
@@ -239,7 +239,7 @@ class CookiesDialog:
                 sql.commit()
         except Exception as e:
             print("CookiesDialog::_on_dialog_response():", e)
-        El().set_profiles()
+        App().set_profiles()
 
     def _on_entry_changed(self, entry):
         """
@@ -279,7 +279,7 @@ class CookiesDialog:
         row = self.__profiles.get_selected_row()
         if row is not None:
             profile = row.item.get_property("profile")
-            El().websettings.remove_profile(profile)
+            App().websettings.remove_profile(profile)
             try:
                 path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
                 f = Gio.File.new_for_path(path)
@@ -386,7 +386,7 @@ class CookiesDialog:
         """
         # Load user profiles
         try:
-            self.__add_profiles(El().profiles)
+            self.__add_profiles(App().profiles)
         except Exception as e:
             print("DialogSearchEngine::__populate():", e)
 

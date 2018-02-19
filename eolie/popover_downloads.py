@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, Gio, WebKit2
 from time import time
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class DownloadRow(Gtk.ListBoxRow):
@@ -90,7 +90,7 @@ class DownloadRow(Gtk.ListBoxRow):
             self.get_style_context().add_class("download-failed")
         elif self.__button_image.get_icon_name()[0] == "view-refresh-symbolic":
             webview = self.__download.get_web_view()
-            El().download_manager.remove(self.__download)
+            App().download_manager.remove(self.__download)
             if webview is None:
                 WebKit2.WebContext.get_default().download_uri(self.__uri)
             else:
@@ -313,7 +313,7 @@ class DownloadsPopover(Gtk.Popover):
             Open download folder
             @param button as Gtk.button
         """
-        directory_uri = El().settings.get_value("download-uri").get_string()
+        directory_uri = App().settings.get_value("download-uri").get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
@@ -330,7 +330,7 @@ class DownloadsPopover(Gtk.Popover):
         for child in self.__listbox.get_children():
             if isinstance(child, DownloadRow):
                 if child.finished:
-                    El().download_manager.remove(child.download)
+                    App().download_manager.remove(child.download)
                     child.destroy()
 
 #######################
@@ -341,7 +341,7 @@ class DownloadsPopover(Gtk.Popover):
             Populate listbox
         """
         clear = False
-        for download in El().download_manager.get():
+        for download in App().download_manager.get():
             if download.get_destination() is None:
                 continue
             child = DownloadRow(download, False)
@@ -351,7 +351,7 @@ class DownloadsPopover(Gtk.Popover):
                           lambda x: self.__calculate_height())
             child.show()
             self.__listbox.add(child)
-        for download in El().download_manager.get_finished():
+        for download in App().download_manager.get_finished():
             if download.get_destination() is None:
                 continue
             child = DownloadRow(download, True)
@@ -395,10 +395,10 @@ class DownloadsPopover(Gtk.Popover):
             Setup widget
             @param widget as Gtk.Widget
         """
-        El().download_manager.connect("download-start",
-                                      self.__on_download_start)
-        El().download_manager.connect("download-finish",
-                                      self.__on_download_finish)
+        App().download_manager.connect("download-start",
+                                       self.__on_download_start)
+        App().download_manager.connect("download-finish",
+                                       self.__on_download_finish)
         self.set_size_request(400, -1)
 
     def __on_unmap(self, widget):
@@ -408,8 +408,8 @@ class DownloadsPopover(Gtk.Popover):
         """
         for child in self.__listbox.get_children():
             child.destroy()
-        El().download_manager.disconnect_by_func(self.__on_download_start)
-        El().download_manager.disconnect_by_func(self.__on_download_finish)
+        App().download_manager.disconnect_by_func(self.__on_download_start)
+        App().download_manager.disconnect_by_func(self.__on_download_finish)
 
     def __on_download_start(self, download_manager, download_name):
         """
@@ -417,7 +417,7 @@ class DownloadsPopover(Gtk.Popover):
             @param download manager as Download Manager
             @param download_name as str
         """
-        for download in El().download_manager.get():
+        for download in App().download_manager.get():
             if download.get_destination() is None:
                 continue
             if str(download) == download_name:

@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El
+from eolie.define import App
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
 from eolie.webview_signals_dbus import WebViewDBusSignals
@@ -139,7 +139,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                                            _("Open"),
                                            _("Cancel"))
         dialog.set_select_multiple(request.get_select_multiple())
-        chooser_uri = El().websettings.get_chooser_uri(webview.uri)
+        chooser_uri = App().websettings.get_chooser_uri(webview.uri)
         if chooser_uri is not None:
             dialog.set_current_folder_uri(chooser_uri)
         response = dialog.run()
@@ -148,8 +148,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             request.cancel()
         else:
             request.select_files(dialog.get_filenames())
-            El().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
-                                             webview.uri)
+            App().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
+                                              webview.uri)
         return True
 
     def __on_scroll_event(self, webview, event):
@@ -196,10 +196,10 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                 parsed.scheme not in ["http", "https"]:
             return
         mtime = round(time(), 2)
-        history_id = El().history.add(title, webview.uri, mtime)
-        El().history.set_page_state(webview.uri, mtime)
-        if El().sync_worker is not None:
-            El().sync_worker.push_history([history_id])
+        history_id = App().history.add(title, webview.uri, mtime)
+        App().history.set_page_state(webview.uri, mtime)
+        if App().sync_worker is not None:
+            App().sync_worker.push_history([history_id])
 
     def __on_enter_fullscreen(self, webview):
         """
@@ -213,7 +213,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Show sidebar (conflict with fs)
             @param webview as WebView
         """
-        if El().settings.get_value("show-sidebar"):
+        if App().settings.get_value("show-sidebar"):
             self._window.container.sites_manager.show()
 
     def __on_insecure_content_detected(self, webview, event):

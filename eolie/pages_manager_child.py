@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import El, ArtSize
+from eolie.define import App, ArtSize
 from eolie.utils import get_snapshot
 
 
@@ -100,7 +100,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                         self.__on_webview_shown))
         self.__set_favicon_artwork()
         if self.__view.webview.uri is not None:
-            artwork_path = El().art.get_path(self.__view.webview.uri, "start")
+            artwork_path = App().art.get_path(self.__view.webview.uri, "start")
             if artwork_path is not None and\
                     GLib.file_test(artwork_path, GLib.FileTest.IS_REGULAR):
                 self.__image.set_from_file(artwork_path)
@@ -209,14 +209,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             image.set_from_surface(self.__favicon)
         else:
             uri = self.__view.webview.uri
-            artwork = El().art.get_icon_theme_artwork(
+            artwork = App().art.get_icon_theme_artwork(
                                          uri,
                                          self.view.webview.ephemeral)
             if artwork is not None:
                 image.set_from_icon_name(artwork,
                                          Gtk.IconSize.INVALID)
             else:
-                favicon_path = El().art.get_favicon_path(uri)
+                favicon_path = App().art.get_favicon_path(uri)
                 if favicon_path is not None:
                     image.set_from_file(favicon_path)
                 else:

@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, Pango
 
-from eolie.define import El
+from eolie.define import App
 
 
 class ModifyUADialog:
@@ -47,7 +47,7 @@ class ModifyUADialog:
         column.pack_start(renderer0, True)
         column.add_attribute(renderer0, "text", 0)
         view.append_column(column)
-        user_agent = El().websettings.get_user_agent(self.__uri)
+        user_agent = App().websettings.get_user_agent(self.__uri)
         self.__select_matching(user_agent)
         self.__entry.set_text(user_agent)
 
@@ -84,7 +84,7 @@ class ModifyUADialog:
         """
         if response_id != Gtk.ResponseType.DELETE_EVENT:
             user_agent = self.__entry.get_text()
-            El().websettings.set_user_agent(user_agent, self.__uri)
+            App().websettings.set_user_agent(user_agent, self.__uri)
 
 #######################
 # PRIVATE             #

@@ -14,7 +14,7 @@ from gi.repository import GObject, GLib, Gio, Gtk
 
 from time import time
 
-from eolie.define import El
+from eolie.define import App
 
 
 class DownloadManager(GObject.GObject):
@@ -106,7 +106,7 @@ class DownloadManager(GObject.GObject):
             if extension == filename:
                 extension = "avi"
             filename = wanted_filename + "." + extension
-        directory_uri = El().settings.get_value('download-uri').get_string()
+        directory_uri = App().settings.get_value('download-uri').get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
@@ -143,7 +143,7 @@ class DownloadManager(GObject.GObject):
         download.set_destination(webkit_uri)
         self.emit('download-start', str(download))
         # Notify user about download
-        window = El().active_window
+        window = App().active_window
         if window is not None:
             window.toolbar.end.show_download(download)
 
@@ -154,7 +154,7 @@ class DownloadManager(GObject.GObject):
         self.remove(download)
         self.__finished.append(download)
         self.emit('download-finish')
-        if El().settings.get_value('open-downloads'):
+        if App().settings.get_value('open-downloads'):
             destination = download.get_destination()
             f = Gio.File.new_for_uri(destination)
             if f.query_exists():

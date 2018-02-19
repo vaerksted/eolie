@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib
 
-from eolie.define import El
+from eolie.define import App
 
 
 class ScriptRow(Gtk.EventBox):
@@ -42,7 +42,7 @@ class ScriptRow(Gtk.EventBox):
         grid.add(label)
         self.add(grid)
         self.connect("button-press-event", self.__on_button_press_event, check)
-        check.set_active(not El().js_exceptions.find(uri, domain))
+        check.set_active(not App().js_exceptions.find(uri, domain))
         check.connect("toggled", self.__on_check_toggled)
 
 #######################
@@ -64,9 +64,9 @@ class ScriptRow(Gtk.EventBox):
         """
         active = check.get_active()
         if active:
-            El().js_exceptions.remove_exception(self.__uri, self.__domain)
+            App().js_exceptions.remove_exception(self.__uri, self.__domain)
         else:
-            El().js_exceptions.add_exception(self.__uri, self.__domain)
+            App().js_exceptions.add_exception(self.__uri, self.__domain)
 
 
 class ScriptsMenu(Gtk.Bin):
@@ -98,12 +98,12 @@ class ScriptsMenu(Gtk.Bin):
         """
         for child in listbox.get_children():
             child.destroy()
-        state = El().settings.get_value("jsblock")
+        state = App().settings.get_value("jsblock")
         self.__switch.set_active(state)
         listbox.set_sensitive(state)
-        page_id = El().active_window.container.current.webview.get_page_id()
-        El().helper.call("GetScripts", page_id, None,
-                         self.__on_get_scripts, listbox)
+        page_id = App().active_window.container.current.webview.get_page_id()
+        App().helper.call("GetScripts", page_id, None,
+                          self.__on_get_scripts, listbox)
 
     def _on_state_set(self, listbox, state):
         """
@@ -111,8 +111,8 @@ class ScriptsMenu(Gtk.Bin):
             @param listbox as Gtk.ListBox
             @param state as bool
         """
-        El().settings.set_value("jsblock",
-                                GLib.Variant("b", state))
+        App().settings.set_value("jsblock",
+                                 GLib.Variant("b", state))
         listbox.set_sensitive(state)
 
 #######################
@@ -127,7 +127,7 @@ class ScriptsMenu(Gtk.Bin):
         """
         try:
             uris = source.call_finish(result)[0]
-            db_uris = El().js_exceptions.get_values_for_domain(self.__domain)
+            db_uris = App().js_exceptions.get_values_for_domain(self.__domain)
             for uri in list(set(db_uris) | set(uris)):
                 row = ScriptRow(uri, self.__domain)
                 row.show()

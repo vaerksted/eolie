@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk
 
-from eolie.define import El, Indicator, LoadingType
+from eolie.define import App, Indicator, LoadingType
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model, name_from_profile_id
@@ -103,7 +103,7 @@ class Window(Gtk.ApplicationWindow):
         self.disconnect_by_func(self.__on_motion_notify_event)
         GLib.idle_add(self.__fullscreen_toolbar.destroy)
         GLib.idle_add(self.__fullscreen_revealer.destroy)
-        if El().settings.get_value("show-sidebar"):
+        if App().settings.get_value("show-sidebar"):
             self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
@@ -127,7 +127,7 @@ class Window(Gtk.ApplicationWindow):
         uri = webview.uri
         if uri is not None:
             self.toolbar.title.set_uri(uri)
-            accept_tls = El().websettings.get_accept_tls(uri)
+            accept_tls = App().websettings.get_accept_tls(uri)
             self.toolbar.end.show_tls_button(accept_tls)
         self.toolbar.title.update_load_indicator(webview)
         if webview.popups:
@@ -248,7 +248,7 @@ class Window(Gtk.ApplicationWindow):
             Update zoom level for default screen
         """
         monitor_model = get_current_monitor_model(self)
-        zoom_levels = El().settings.get_value(
+        zoom_levels = App().settings.get_value(
                                          "default-zoom-level")
         user_zoom_level = False
         for zoom_level in zoom_levels:
@@ -413,9 +413,10 @@ class Window(Gtk.ApplicationWindow):
             else:
                 self.fullscreen()
         elif string == "quit":
-            El().quit(True)
+            App().quit(True)
         elif string == "new_page":
-            self.container.add_webview(El().start_page, LoadingType.FOREGROUND)
+            self.container.add_webview(App().start_page,
+                                       LoadingType.FOREGROUND)
         elif string == "close_page":
             if self.is_fullscreen:
                 self.container.current.webview.emit("leave-fullscreen")
@@ -424,7 +425,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "reload":
             self.container.current.webview.reload()
         elif string == "home":
-            self.container.current.webview.load_uri(El().start_page)
+            self.container.current.webview.load_uri(App().start_page)
         elif string == "source":
             uri = self.container.current.webview.uri
             task_helper = TaskHelper()
@@ -448,11 +449,11 @@ class Window(Gtk.ApplicationWindow):
         elif string == "print":
             self.container.current.webview.print()
         elif string == "private":
-            self.container.add_webview(El().start_page,
+            self.container.add_webview(App().start_page,
                                        LoadingType.FOREGROUND,
                                        True)
         elif string == "last_page":
-            El().pages_menu.activate_last_action()
+            App().pages_menu.activate_last_action()
         elif string == "zoom_in":
             self.container.current.webview.zoom_in()
         elif string == "zoom_out":
@@ -470,15 +471,15 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.actions.view_button.set_active(not active)
         elif string == "jsblock":
             current_webview = self.container.current.webview
-            El().helper.call("EnableJS",
-                             current_webview.get_page_id(),
-                             GLib.Variant("(s)", (current_webview.netloc,)),
-                             self.__on_js_enabled,
-                             current_webview)
+            App().helper.call("EnableJS",
+                              current_webview.get_page_id(),
+                              GLib.Variant("(s)", (current_webview.netloc,)),
+                              self.__on_js_enabled,
+                              current_webview)
         elif string == "show_left_panel":
-            value = El().settings.get_value("show-sidebar")
-            El().settings.set_value("show-sidebar",
-                                    GLib.Variant("b", not value))
+            value = App().settings.get_value("show-sidebar")
+            App().settings.set_value("show-sidebar",
+                                     GLib.Variant("b", not value))
 
     def __on_js_enabled(self, proxy, task, webview):
         """

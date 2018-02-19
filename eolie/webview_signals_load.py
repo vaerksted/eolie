@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import Indicator, El
+from eolie.define import Indicator, App
 from eolie.utils import name_from_profile_id
 
 
@@ -164,7 +164,7 @@ class WebViewLoadSignals:
             @param uri as str
         """
         if webview.get_mapped():
-            accept_tls = El().websettings.get_accept_tls(uri)
+            accept_tls = App().websettings.get_accept_tls(uri)
             self._window.toolbar.end.show_tls_button(accept_tls)
             self._window.toolbar.title.set_uri(uri)
 

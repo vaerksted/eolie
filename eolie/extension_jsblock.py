@@ -12,7 +12,7 @@
 
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import App
 
 
 class JSblockExtension:
@@ -84,8 +84,8 @@ class JSblockExtension:
             request_uri = request.get_uri()
             parsed_request = urlparse(request_uri)
             if parsed_request.scheme in ["http", "https"] and\
-                    not El().js_exceptions.find(parsed_request.netloc,
-                                                parsed.netloc):
+                    not App().js_exceptions.find(parsed_request.netloc,
+                                                 parsed.netloc):
                 for i in range(0, self.__scripts.get_length()):
                     script = self.__scripts.item(i)
                     if script.get_src() == request_uri:

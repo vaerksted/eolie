@@ -13,7 +13,7 @@
 from gi.repository import Gtk, Gdk, GLib, WebKit2
 
 from eolie.sites_manager_child import SitesManagerChild
-from eolie.define import El, LoadingType
+from eolie.define import App, LoadingType
 from eolie.utils import get_safe_netloc
 
 
@@ -217,7 +217,7 @@ class SitesManager(Gtk.EventBox):
                                           self.__window,
                                           webview.ephemeral)
                 child.connect("moved", self.__on_moved)
-                position = El().settings.get_value(
+                position = App().settings.get_value(
                                                 "sidebar-position").get_int32()
                 child.set_minimal(position < 80)
                 child.show()
@@ -315,7 +315,7 @@ class SitesManager(Gtk.EventBox):
             @param event as Gdk.EventButton
         """
         if event.type == Gdk.EventType._2BUTTON_PRESS:
-            self.__window.container.add_webview(El().start_page,
+            self.__window.container.add_webview(App().start_page,
                                                 LoadingType.FOREGROUND)
         return self.__window.close_popovers()
 

@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class WebViewJsSignals:
@@ -76,15 +76,15 @@ class WebViewJsSignals:
         # OpenSearch message
         elif message.startswith("@EOLIE_OPENSEARCH@"):
             uri = message.replace("@EOLIE_OPENSEARCH@", "")
-            El().search.install_engine(uri, self._window)
+            App().search.install_engine(uri, self._window)
         # Populars view message
         elif message.startswith("@EOLIE_HIDE_BOOKMARK_POPULARS@"):
             uri = message.replace("@EOLIE_HIDE_BOOKMARK_POPULARS@", "")
-            El().bookmarks.reset_popularity(uri)
+            App().bookmarks.reset_popularity(uri)
         # Populars view message
         elif message.startswith("@EOLIE_HIDE_HISTORY_POPULARS@"):
             uri = message.replace("@EOLIE_HIDE_HISTORY_POPULARS@", "")
-            El().history.reset_popularity(uri)
+            App().history.reset_popularity(uri)
         # Here we handle JS flood
         elif self.__js_blocker_count > 5:
             self.__js_blocker_count = 0
@@ -113,7 +113,7 @@ class WebViewJsSignals:
             # https://bugs.webkit.org/show_bug.cgi?id=175189
             # https://bugzilla.gnome.org/show_bug.cgi?id=792130
             # TODO Remove this, fixed soon in libsoup
-            storage = El().settings.get_enum("cookie-storage")
+            storage = App().settings.get_enum("cookie-storage")
             # WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY
             if storage == 2:
                 uri = resource.get_uri()
@@ -132,5 +132,5 @@ class WebViewJsSignals:
         self.__google_fix_count -= 1
         if self.__google_fix_count == 0:
             cookie_manager = self.get_context().get_cookie_manager()
-            storage = El().settings.get_enum("cookie-storage")
+            storage = App().settings.get_enum("cookie-storage")
             cookie_manager.set_accept_policy(storage)

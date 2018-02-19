@@ -14,7 +14,7 @@ from gi.repository import Gio, GLib
 
 from hashlib import sha256
 
-from eolie.define import El
+from eolie.define import App
 
 
 class HistoryMenu(Gio.Menu):
@@ -50,7 +50,7 @@ class HistoryMenu(Gio.Menu):
                 item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
             else:
                 # Try to set icon
-                favicon_path = El().art.get_favicon_path(uri)
+                favicon_path = App().art.get_favicon_path(uri)
                 if favicon_path is not None:
                     f = Gio.File.new_for_path(favicon_path)
                     icon = Gio.FileIcon.new(f)
@@ -77,5 +77,5 @@ class HistoryMenu(Gio.Menu):
             @param GVariant
             @param item as WebKit2.BackForwardListItem
         """
-        El().active_window.\
+        App().active_window.\
             container.current.webview.go_to_back_forward_list_item(item)

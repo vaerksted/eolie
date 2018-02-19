@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from gettext import gettext as _
 from datetime import datetime
 
-from eolie.define import El
+from eolie.define import App
 
 
 class Context:
@@ -32,15 +32,15 @@ class Context:
         self.__context = context
         if not context.is_ephemeral():
             context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
-            context.set_favicon_database_directory(El().favicons_path)
+            context.set_favicon_database_directory(App().favicons_path)
             cookie_manager = context.get_cookie_manager()
             cookie_manager.set_accept_policy(
-                                     El().settings.get_enum("cookie-storage"))
-        context.set_web_extensions_directory(El().extension_dir)
+                                     App().settings.get_enum("cookie-storage"))
+        context.set_web_extensions_directory(App().extension_dir)
         context.set_process_model(
                             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_spell_checking_enabled(
-                                 El().settings.get_value("enable-spell-check"))
+                                App().settings.get_value("enable-spell-check"))
         locales = GLib.get_language_names()
         try:
             user_locale = locales[0].split(".")[0]
@@ -67,16 +67,16 @@ class Context:
         uri = request.get_uri()
         parsed = urlparse(uri)
         items = []
-        start_page = El().settings.get_value("start-page").get_string()
-        wanted = El().settings.get_value("max-popular-items").get_int32()
+        start_page = App().settings.get_value("start-page").get_string()
+        wanted = App().settings.get_value("max-popular-items").get_int32()
         if start_page == "popular_book":
             reset_function = "reset_bookmark"
-            for (item_id, uri, title) in El().bookmarks.get_populars(wanted):
+            for (item_id, uri, title) in App().bookmarks.get_populars(wanted):
                 items.append((title, uri, "", 1))
         else:
             reset_function = "reset_history"
             for (item_id, uri,
-                 netloc, title, count) in El().history.get_populars(
+                 netloc, title, count) in App().history.get_populars(
                                                                 parsed.netloc,
                                                                 wanted):
                 items.append((title, uri, netloc, count))
@@ -103,10 +103,10 @@ class Context:
             idx += 1
             if count == 1:  # No navigation for one page
                 netloc = uri
-            path = El().art.get_path(uri, "start")
+            path = App().art.get_path(uri, "start")
             if not GLib.file_test(path, GLib.FileTest.IS_REGULAR):
                 continue
-            favicon_path = El().art.get_favicon_path(netloc)
+            favicon_path = App().art.get_favicon_path(netloc)
             if favicon_path is not None:
                 favicon_uri = "file://%s" % favicon_path
             else:
@@ -241,8 +241,8 @@ class Context:
         request_uri = request.get_uri()
         parsed = urlparse(request_uri)
         uri = request_uri.replace("accept://", "https://")
-        if not El().websettings.get_accept_tls(uri):
-            El().websettings.set_accept_tls(uri, True)
+        if not App().websettings.get_accept_tls(uri):
+            App().websettings.set_accept_tls(uri, True)
         self.__context.allow_tls_certificate_for_host(
                                                 view.bad_tls,
                                                 # Remove port
@@ -255,4 +255,4 @@ class Context:
             @param context as WebKit2.WebContext
             @param download as WebKit2.Download
         """
-        El().download_manager.add(download)
+        App().download_manager.add(download)

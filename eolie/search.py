@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 import json
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, EOLIE_DATA_PATH
+from eolie.define import App, EOLIE_DATA_PATH
 
 
 class Search:
@@ -102,7 +102,7 @@ class Search:
         """
             Update default engine based on user settings
         """
-        wanted = El().settings.get_value('search-engine').get_string()
+        wanted = App().settings.get_value('search-engine').get_string()
         for engine in self.engines:
             if engine == wanted:
                 self.__uri = self.engines[engine][0]
@@ -268,7 +268,7 @@ class Search:
             @param encoding as str
         """
         # Save engines
-        engines = El().search.engines
+        engines = App().search.engines
         parsed = urlparse(search)
         uri = "%s://%s" % (parsed.scheme, parsed.netloc)
         engines[name] = [uri,
@@ -276,4 +276,4 @@ class Search:
                          suggest.replace("{searchTerms}", "%s"),
                          encoding,
                          ""]
-        El().search.save_engines(engines)
+        App().search.save_engines(engines)

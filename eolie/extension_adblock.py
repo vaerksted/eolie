@@ -12,7 +12,7 @@
 
 from urllib.parse import urlparse
 
-from eolie.define import El
+from eolie.define import App
 from eolie.database_adblock import DatabaseAdblock
 
 
@@ -55,7 +55,7 @@ class AdblockExtension:
         if self.__settings.get_value("adblock") and\
                 uri not in self.__not_blocked and\
                 parsed.scheme in ["http", "https"] and\
-                not El().adblock_exceptions.find_parsed(parsed):
+                not App().adblock_exceptions.find_parsed(parsed):
             if self.__adblock.is_netloc_blocked(parsed.netloc) or\
                     self.__adblock.is_uri_blocked(uri, parsed.netloc):
                 return True

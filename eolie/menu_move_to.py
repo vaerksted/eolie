@@ -14,7 +14,7 @@ from gi.repository import Gio, Gtk, GLib
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class MoveToMenu(Gtk.Grid):
@@ -65,12 +65,12 @@ class MoveToMenu(Gtk.Grid):
         item.set_action_target_value(GLib.Variant("s", "new_window"))
         item.show()
         self.add(item)
-        if len(El().windows) > 1:
+        if len(App().windows) > 1:
             item = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
             item.show()
             self.add(item)
 
-        for window in El().windows:
+        for window in App().windows:
             if window == current_window:
                 continue
             item = Gtk.ModelButton.new()
@@ -127,9 +127,9 @@ class MoveToMenu(Gtk.Grid):
 
         # Get wanted window
         if window_str == "new_window":
-            window = El().get_new_window()
+            window = App().get_new_window()
         else:
-            for window in El().windows:
+            for window in App().windows:
                 if window_str == str(window):
                     break
         if window is None:

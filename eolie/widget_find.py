@@ -14,7 +14,7 @@ from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class FindWidget(Gtk.SearchBar):
@@ -85,8 +85,8 @@ class FindWidget(Gtk.SearchBar):
             Search for current clipboard
         """
         page_id = self.__webview.get_page_id()
-        El().helper.call("GetSelection", page_id, None,
-                         self.__on_get_selection)
+        App().helper.call("GetSelection", page_id, None,
+                          self.__on_get_selection)
 
 #######################
 # PRIVATE             #
@@ -123,9 +123,9 @@ class FindWidget(Gtk.SearchBar):
         self.__action = Gio.SimpleAction.new("find_shortcut",
                                              GLib.VariantType.new('s'))
         self.__action.connect("activate", self.__on_shortcut_action)
-        El().add_action(self.__action)
-        El().set_accels_for_action("app.find_shortcut::next", ["F3"])
-        El().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
+        App().add_action(self.__action)
+        App().set_accels_for_action("app.find_shortcut::next", ["F3"])
+        App().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
 
     def __on_unmap(self, entry):
         """
@@ -133,7 +133,7 @@ class FindWidget(Gtk.SearchBar):
             @param entry as Gtk.Entry
         """
         self.__label.set_width_chars(-1)
-        El().remove_action("find_shortcut")
+        App().remove_action("find_shortcut")
         self.__find_controller.search_finish()
 
     def __on_shortcut_action(self, action, param):

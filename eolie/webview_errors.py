@@ -14,7 +14,7 @@ from gi.repository import GLib, Gio
 
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class WebViewErrors:
@@ -149,7 +149,7 @@ class WebViewErrors:
         self._error = True
         self.__bad_tls = certificate
         accept_uri = uri.replace("https://", "accept://")
-        if El().websettings.get_accept_tls(uri):
+        if App().websettings.get_accept_tls(uri):
             self.load_uri(accept_uri)
         else:
             f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")

@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
-from eolie.define import El
+from eolie.define import App
 
 
 class CredentialsPopover(Gtk.Popover):
@@ -66,15 +66,15 @@ class CredentialsPopover(Gtk.Popover):
             Save user_form_name and pass_form_name
             @param button as Gtk.Button
         """
-        El().helper.call("SaveCredentials", self.__page_id,
-                         GLib.Variant("(sssss)",
-                                      (self.__uuid, self.__user_form_name,
-                                       self.__pass_form_name, self.__uri,
-                                       self.__form_uri)),
-                         self.__on_save_credentials,
-                         self.__form_uri,
-                         self.__user_form_name,
-                         self.__pass_form_name)
+        App().helper.call("SaveCredentials", self.__page_id,
+                          GLib.Variant("(sssss)",
+                                       (self.__uuid, self.__user_form_name,
+                                        self.__pass_form_name, self.__uri,
+                                        self.__form_uri)),
+                          self.__on_save_credentials,
+                          self.__form_uri,
+                          self.__user_form_name,
+                          self.__pass_form_name)
         self.destroy()
 
 #######################
@@ -90,14 +90,14 @@ class CredentialsPopover(Gtk.Popover):
             @param count as int
         """
         try:
-            if attributes is not None and El().sync_worker is not None:
-                El().sync_worker.push_password(attributes["userform"],
-                                               attributes["login"],
-                                               attributes["passform"],
-                                               password,
-                                               attributes["hostname"],
-                                               attributes["formSubmitURL"],
-                                               attributes["uuid"])
+            if attributes is not None and App().sync_worker is not None:
+                App().sync_worker.push_password(attributes["userform"],
+                                                attributes["login"],
+                                                attributes["passform"],
+                                                password,
+                                                attributes["hostname"],
+                                                attributes["formSubmitURL"],
+                                                attributes["uuid"])
         except Exception as e:
             print("CredentialsPopover::__on_get_password():", e)
 

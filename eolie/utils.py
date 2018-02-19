@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
 
-from eolie.define import El, ArtSize, LoadingType
+from eolie.define import App, ArtSize, LoadingType
 
 
 def set_proxy_from_gnome():
@@ -60,8 +60,8 @@ def name_from_profile_id(id):
         @param id as str
         @return str
     """
-    if id in El().profiles.keys() and id != "default":
-        return "%s: " % El().profiles[id]
+    if id in App().profiles.keys() and id != "default":
+        return "%s: " % App().profiles[id]
     else:
         return ""
 
@@ -248,5 +248,5 @@ def debug(str):
         Print debug
         @param debug as str
     """
-    if El().debug is True:
+    if App().debug is True:
         print(str)

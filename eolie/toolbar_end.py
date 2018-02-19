@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, Gio, WebKit2, Pango
 from urllib.parse import urlparse
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 from eolie.popover_downloads import DownloadsPopover
 from eolie.helper_passwords import PasswordsHelper
 
@@ -62,12 +62,12 @@ class ToolbarEnd(Gtk.Bin):
         if fullscreen:
             builder.get_object("fullscreen_button").show()
         self.__progress = ProgressBar()
-        if El().download_manager.get():
+        if App().download_manager.get():
             self.__progress.show()
-        El().download_manager.connect("download-start",
-                                      self.__on_download)
-        El().download_manager.connect("download-finish",
-                                      self.__on_download)
+        App().download_manager.connect("download-start",
+                                       self.__on_download)
+        App().download_manager.connect("download-finish",
+                                       self.__on_download)
         overlay = builder.get_object("overlay")
         overlay.add_overlay(self.__progress)
         overlay.set_overlay_pass_through(self.__progress, True)
@@ -77,13 +77,14 @@ class ToolbarEnd(Gtk.Bin):
         adblock_action = Gio.SimpleAction.new_stateful(
                "adblock",
                None,
-               GLib.Variant.new_boolean(El().settings.get_value("adblock")))
+               GLib.Variant.new_boolean(App().settings.get_value("adblock")))
         adblock_action.connect("change-state", self.__on_adblock_change_state)
         self.__window.add_action(adblock_action)
         popup_action = Gio.SimpleAction.new_stateful(
-               "popupblock",
-               None,
-               GLib.Variant.new_boolean(El().settings.get_value("popupblock")))
+                                      "popupblock",
+                                      None,
+                                      GLib.Variant.new_boolean(
+                                       App().settings.get_value("popupblock")))
         popup_action.connect("change-state",
                              self.__on_popup_change_state)
         self.__window.add_action(popup_action)
@@ -244,7 +245,7 @@ class ToolbarEnd(Gtk.Bin):
         """
         button.hide()
         uri = self.__window.container.current.webview.uri
-        El().websettings.set_accept_tls(uri, False)
+        App().websettings.set_accept_tls(uri, False)
         self.__window.container.close_view(self.__window.container.current)
 
     def _on_fullscreen_button_clicked(self, button):
@@ -260,7 +261,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.close_popovers()
-        self.__window.container.current.webview.load_uri(El().start_page)
+        self.__window.container.current.webview.load_uri(App().start_page)
 
     def _on_menu_button_toggled(self, button):
         """
@@ -280,9 +281,9 @@ class ToolbarEnd(Gtk.Bin):
             return
         parsed = urlparse(uri)
         # Adblock exceptions
-        page_ex = El().adblock_exceptions.find(parsed.netloc +
-                                               parsed.path)
-        site_ex = El().adblock_exceptions.find(parsed.netloc)
+        page_ex = App().adblock_exceptions.find(parsed.netloc +
+                                                parsed.path)
+        site_ex = App().adblock_exceptions.find(parsed.netloc)
         if not page_ex and not site_ex:
             self.__adblock_exceptions.change_state(GLib.Variant("s", "none"))
         elif site_ex:
@@ -290,9 +291,9 @@ class ToolbarEnd(Gtk.Bin):
         else:
             self.__adblock_exceptions.change_state(GLib.Variant("s", "page"))
         # Popup exceptions
-        page_ex = El().popup_exceptions.find(parsed.netloc +
-                                             parsed.path)
-        site_ex = El().popup_exceptions.find(parsed.netloc)
+        page_ex = App().popup_exceptions.find(parsed.netloc +
+                                              parsed.path)
+        site_ex = App().popup_exceptions.find(parsed.netloc)
         if not page_ex and not site_ex:
             self.__popup_exceptions.change_state(GLib.Variant("s", "none"))
         elif site_ex:
@@ -300,7 +301,7 @@ class ToolbarEnd(Gtk.Bin):
         else:
             self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
         # Image action
-        block_images = El().image_exceptions.find(parsed.netloc)
+        block_images = App().image_exceptions.find(parsed.netloc)
         self.__images_action.change_state(GLib.Variant("b", block_images))
 
         popover = Gtk.PopoverMenu.new()
@@ -314,7 +315,7 @@ class ToolbarEnd(Gtk.Bin):
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
 
-        current = El().websettings.get_zoom(webview.uri)
+        current = App().websettings.get_zoom(webview.uri)
         if current is None:
             current = 100
         builder.get_object("default_zoom_button").set_label(
@@ -334,11 +335,11 @@ class ToolbarEnd(Gtk.Bin):
         popover.child_set_property(scripts, "submenu", "scripts")
         popover.child_set_property(languages, "submenu", "languages")
         # Merge appmenu, we assume we only have one level (section -> items)
-        if not El().prefers_app_menu():
+        if not App().prefers_app_menu():
             separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
             separator.show()
             widget.add(separator)
-            menu = El().get_app_menu()
+            menu = App().get_app_menu()
             for i in range(0, menu.get_n_items()):
                 section = menu.get_item_link(i, "section")
                 for y in range(0, section.get_n_items()):
@@ -412,7 +413,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         webview = self.__window.container.current.webview
-        El().websettings.set_zoom(100, webview.uri)
+        App().websettings.set_zoom(100, webview.uri)
         webview.update_zoom_level()
         button.set_label("100 %")
 
@@ -438,7 +439,7 @@ class ToolbarEnd(Gtk.Bin):
         if nb_downloads:
             value = fraction / nb_downloads
             self.__progress.set_fraction(value)
-            El().update_unity_badge(value)
+            App().update_unity_badge(value)
         return True
 
     def __on_video_menu_popover_closed(self, popover, model):
@@ -473,9 +474,9 @@ class ToolbarEnd(Gtk.Bin):
         if not uri:
             return
         if action == self.__adblock_exceptions:
-            database = El().adblock_exceptions
+            database = App().adblock_exceptions
         else:
-            database = El().popup_exceptions
+            database = App().popup_exceptions
         action.set_state(param)
         parsed = urlparse(uri)
         page_ex = database.find(parsed.netloc + parsed.path)
@@ -501,7 +502,7 @@ class ToolbarEnd(Gtk.Bin):
             @param param as GLib.Variant
         """
         action.set_state(param)
-        El().settings.set_value("adblock", param)
+        App().settings.set_value("adblock", param)
         self.__window.container.current.webview.reload()
 
     def __on_popup_change_state(self, action, param):
@@ -511,7 +512,7 @@ class ToolbarEnd(Gtk.Bin):
             @param param as GLib.Variant
         """
         action.set_state(param)
-        El().settings.set_value("popupblock", param)
+        App().settings.set_value("popupblock", param)
 
     def __on_image_change_state(self, action, param):
         """
@@ -524,9 +525,9 @@ class ToolbarEnd(Gtk.Bin):
         if parsed.scheme in ["http", "https"]:
             action.set_state(param)
             if param.get_boolean():
-                El().image_exceptions.add_exception(parsed.netloc)
+                App().image_exceptions.add_exception(parsed.netloc)
             else:
-                El().image_exceptions.remove_exception(parsed.netloc)
+                App().image_exceptions.remove_exception(parsed.netloc)
 
     def __on_download(self, download_manager, name=""):
         """
@@ -542,7 +543,7 @@ class ToolbarEnd(Gtk.Bin):
                                                      download_manager)
         elif self.__timeout_id is not None:
             self.__progress.set_fraction(1.0)
-            El().update_unity_badge(1.0)
+            App().update_unity_badge(1.0)
             GLib.timeout_add(1000, self.__hide_progress)
             GLib.source_remove(self.__timeout_id)
             self.__timeout_id = None
@@ -570,8 +571,8 @@ class ToolbarEnd(Gtk.Bin):
             @param count as int
         """
         try:
-            El().sync_worker.new_session()
-            El().sync_worker.login(attributes, password)
+            App().sync_worker.new_session()
+            App().sync_worker.login(attributes, password)
         except Exception as e:
             print("ToolbarEnd::__on_get_sync()", e)
             self.__sync_button.show()

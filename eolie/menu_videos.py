@@ -15,7 +15,7 @@ from gi.repository import Gio, GLib
 from hashlib import sha256
 from gettext import gettext as _
 
-from eolie.define import El
+from eolie.define import App
 
 
 class VideosMenu(Gio.Menu):
@@ -32,7 +32,7 @@ class VideosMenu(Gio.Menu):
         Gio.Menu.__init__(self)
         self.__window = window
         self.__actions = []
-        El().helper.call("GetVideos", page_id, None, self.__on_get_videos)
+        App().helper.call("GetVideos", page_id, None, self.__on_get_videos)
 
     def clean(self):
         """

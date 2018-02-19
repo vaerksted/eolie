@@ -13,7 +13,7 @@
 from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import El, ArtSize
+from eolie.define import App, ArtSize
 from eolie.utils import remove_www
 
 
@@ -397,13 +397,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
             Set initial artwork on widget
         """
-        artwork = El().art.get_icon_theme_artwork(remove_www(self.__netloc),
-                                                  self.__ephemeral)
+        artwork = App().art.get_icon_theme_artwork(remove_www(self.__netloc),
+                                                   self.__ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
         else:
-            favicon_path = El().art.get_favicon_path(remove_www(self.__netloc))
+            netloc = remove_www(self.__netloc)
+            favicon_path = App().art.get_favicon_path(netloc)
             if favicon_path is not None:
                 self.__image.set_from_file(favicon_path)
             else:

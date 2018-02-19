@@ -12,7 +12,7 @@
 
 from gi.repository import Gio, GLib
 
-El = Gio.Application.get_default
+App = Gio.Application.get_default
 
 PROXY_BUS = 'org.gnome.Eolie.Proxy.Page%s'
 PROXY_PATH = '/org/gnome/EolieProxy'

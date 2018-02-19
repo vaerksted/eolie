@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.search import Search
-from eolie.define import El
+from eolie.define import App
 
 
 class Item(GObject.GObject):
@@ -132,8 +132,8 @@ class SearchEngineDialog:
                 bang = child.item.get_property("bang")
                 if name and search:
                     engines[name] = [uri, search, keyword, encoding, bang]
-        El().search.save_engines(engines)
-        El().search.update_default_engine()
+        App().search.save_engines(engines)
+        App().search.update_default_engine()
         self.__dialog.destroy()
 
 #######################
@@ -149,8 +149,8 @@ class SearchEngineDialog:
             row = self.__listbox.get_selected_row()
             if row is not None:
                 name = row.item.get_property("name")
-                El().settings.set_value("search-engine",
-                                        GLib.Variant("s", name))
+                App().settings.set_value("search-engine",
+                                         GLib.Variant("s", name))
 
     def _on_add_button_clicked(self, button):
         """
@@ -202,7 +202,7 @@ class SearchEngineDialog:
         self.__uri_entry.set_text(row.item.get_property("uri"))
         self.__search_entry.set_text(row.item.get_property("search"))
         self.__bang_entry.set_text(row.item.get_property("bang"))
-        default_search_engine = El().settings.get_value(
+        default_search_engine = App().settings.get_value(
                                                   "search-engine").get_string()
         self.__default_switch.set_active(default_search_engine ==
                                          row.item.get_property("name"))
@@ -218,9 +218,9 @@ class SearchEngineDialog:
             return
         # Update search engine if needed
         name = row.item.get_property("name")
-        if name == El().settings.get_value("search-engine").get_string():
-            El().settings.set_value("search-engine",
-                                    GLib.Variant("s", new_name))
+        if name == App().settings.get_value("search-engine").get_string():
+            App().settings.set_value("search-engine",
+                                     GLib.Variant("s", new_name))
         row.item.set_property("name", new_name)
         row.set_name(new_name)
 

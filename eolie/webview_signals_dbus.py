@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.menu_form import FormMenu
 from eolie.helper_passwords import PasswordsHelper
-from eolie.define import El
+from eolie.define import App
 
 
 class WebViewDBusSignals:
@@ -39,10 +39,10 @@ class WebViewDBusSignals:
             @param webview as WebView
         """
         page_id = webview.get_page_id()
-        El().helper.connect(None,
-                            lambda a, b, c, d, e, f:
-                            WebViewDBusSignals.__on_signal(self, e, f),
-                            page_id)
+        App().helper.connect(None,
+                             lambda a, b, c, d, e, f:
+                             WebViewDBusSignals.__on_signal(self, e, f),
+                             page_id)
 
     def _on_unmap(self, webview):
         """
@@ -50,7 +50,7 @@ class WebViewDBusSignals:
             @param webview as WebView
         """
         page_id = webview.get_page_id()
-        El().helper.disconnect(page_id)
+        App().helper.disconnect(page_id)
 
 #######################
 # PRIVATE             #

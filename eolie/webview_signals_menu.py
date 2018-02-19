@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, LoadingType
+from eolie.define import App, LoadingType
 from eolie.utils import get_snapshot
 from eolie.search import Search
 
@@ -51,7 +51,7 @@ class WebViewMenuSignals:
             return
         # HACK, don't know how to add web inspector
         inspector_item = None
-        if El().settings.get_value("developer-extras"):
+        if App().settings.get_value("developer-extras"):
             count = context_menu.get_n_items()
             if count > 0:
                 inspector_item = context_menu.get_item_at_position(count - 1)
@@ -60,7 +60,7 @@ class WebViewMenuSignals:
         if parsed.scheme == "populars":
             if hit.context_is_link():
                 action = Gio.SimpleAction(name="reload_preview")
-                El().add_action(action)
+                App().add_action(action)
                 action.connect("activate",
                                self.__on_reload_preview_activate,
                                hit.get_link_uri())
@@ -77,7 +77,7 @@ class WebViewMenuSignals:
             selection = user_data.get_string()
         if hit.context_is_link():
             action = Gio.SimpleAction(name="open_new_page")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_open_new_page_activate,
                            hit.get_link_uri(), False)
@@ -87,7 +87,7 @@ class WebViewMenuSignals:
                                              None)
             context_menu.append(item)
             action = Gio.SimpleAction(name="open_new_private_page")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_open_new_page_activate,
                            hit.get_link_uri(), True)
@@ -97,7 +97,7 @@ class WebViewMenuSignals:
                                          None)
             context_menu.append(item)
             action = Gio.SimpleAction(name="open_new_window")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_open_new_window_activate,
                            hit.get_link_uri())
@@ -110,7 +110,7 @@ class WebViewMenuSignals:
             context_menu.append(item)
         if selection:
             action = Gio.SimpleAction(name="copy_text")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_copy_text_activate,
                            selection)
@@ -123,7 +123,7 @@ class WebViewMenuSignals:
                 hit.context_is_image() or\
                 hit.context_is_media():
             action = Gio.SimpleAction(name="copy_link_uri")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_copy_link_uri_activate,
                            hit.get_link_uri() or
@@ -136,7 +136,7 @@ class WebViewMenuSignals:
             context_menu.append(item)
         if selection and hit.context_is_selection():
             action = Gio.SimpleAction(name="search_words")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_search_words_activate,
                            selection)
@@ -161,7 +161,7 @@ class WebViewMenuSignals:
                 msg = _("Download this file")
             if uri:
                 action = Gio.SimpleAction(name="download")
-                El().add_action(action)
+                App().add_action(action)
                 action.connect("activate",
                                self.__on_download_activate,
                                uri)
@@ -175,7 +175,7 @@ class WebViewMenuSignals:
             context_menu.append(item)
             # Save all images
             action = Gio.SimpleAction(name="save_imgs")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_save_images_activate)
             item = WebKit2.ContextMenuItem.new_from_gaction(
@@ -185,7 +185,7 @@ class WebViewMenuSignals:
             context_menu.append(item)
             # Save all videos
             action = Gio.SimpleAction(name="save_videos")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_save_videos_activate)
             item = WebKit2.ContextMenuItem.new_from_gaction(
@@ -195,7 +195,7 @@ class WebViewMenuSignals:
             context_menu.append(item)
             # Save page as image
             action = Gio.SimpleAction(name="save_as_image")
-            El().add_action(action)
+            App().add_action(action)
             action.connect("activate",
                            self.__on_save_as_image_activate)
             item = WebKit2.ContextMenuItem.new_from_gaction(
@@ -236,7 +236,7 @@ class WebViewMenuSignals:
             @param uri as str
             @param ephemeral as bool
         """
-        window = El().get_new_window()
+        window = App().get_new_window()
         window.container.add_webview(uri,
                                      LoadingType.FOREGROUND,
                                      self.ephemeral)
@@ -371,7 +371,7 @@ class WebViewMenuSignals:
                                  uri, False)
         else:
             if surface is not None:
-                El().art.save_artwork(uri, surface, "start")
+                App().art.save_artwork(uri, surface, "start")
                 self.reload()
             window = webview.get_toplevel()
             webview.destroy()

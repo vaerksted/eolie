@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, Indicator, Type
+from eolie.define import App, Indicator, Type
 from eolie.popover_uri import UriPopover
 
 
@@ -229,7 +229,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__input_warning_shown = False
         self.__secure_content = True
         self.__update_secure_content_indicator()
-        bookmark_id = El().bookmarks.get_id(uri)
+        bookmark_id = App().bookmarks.get_id(uri)
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
         else:
@@ -285,7 +285,7 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
             @param request as WebKit2.PermissionRequest
         """
-        if El().websettings.allowed_geolocation(uri):
+        if App().websettings.allowed_geolocation(uri):
             request.allow()
             self.show_indicator(Indicator.GEOLOCATION)
         else:
@@ -573,7 +573,7 @@ class ToolbarTitle(Gtk.Bin):
                 parsed = urlparse(uri)
                 # Search a missing scheme
                 if uri.find(".") != -1 and not parsed.scheme:
-                    db_uri = El().history.get_match(uri)
+                    db_uri = App().history.get_match(uri)
                     if db_uri is not None:
                         db_parsed = urlparse(db_uri)
                         if db_parsed.netloc.startswith("www.") and\
@@ -609,7 +609,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__indicator2_image.get_icon_name()[0] ==\
                 "mark-location-symbolic":
             uri = self.__window.container.current.webview.uri
-            El().websettings.allow_geolocation(uri, False)
+            App().websettings.allow_geolocation(uri, False)
             if self.__window.container.current.webview.popups:
                 self.show_indicator(Indicator.POPUPS)
             else:
@@ -650,15 +650,15 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.delete_text(0, -1)
             webview.clear_text_entry()
         else:
-            bookmark_id = El().bookmarks.get_id(webview.uri)
+            bookmark_id = App().bookmarks.get_id(webview.uri)
             if bookmark_id is None:
                 uri = webview.uri
                 if uri is None or uri == "about:blank":
                     return
                 self.__action_image2.set_from_icon_name("starred-symbolic",
                                                         Gtk.IconSize.MENU)
-                bookmark_id = El().bookmarks.add(webview.title,
-                                                 uri, None, [])
+                bookmark_id = App().bookmarks.add(webview.title,
+                                                  uri, None, [])
             from eolie.widget_bookmark_edit import BookmarkEditWidget
             widget = BookmarkEditWidget(bookmark_id, False)
             widget.show()
@@ -719,7 +719,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__update_secure_content_indicator()
         uri = view.webview.uri
         if uri is not None:
-            bookmark_id = El().bookmarks.get_id(uri)
+            bookmark_id = App().bookmarks.get_id(uri)
             if bookmark_id is not None:
                 icon_name = "starred-symbolic"
             else:
@@ -793,7 +793,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__entry.get_text() == uri:
             self.__completion_model.clear()
             # Look for a match in history
-            match = El().history.get_match(uri)
+            match = App().history.get_match(uri)
             if match is not None:
                 if self.__cancellable.is_cancelled():
                     return
@@ -806,7 +806,7 @@ class ToolbarTitle(Gtk.Bin):
                     else:
                         self.__completion_model.append([netloc])
 
-            if not El().settings.get_value("dns-prediction"):
+            if not App().settings.get_value("dns-prediction"):
                 return
             # Try some DNS request, FIXME Better list?
             from socket import gethostbyname
@@ -859,7 +859,7 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.delete_selection()
         from eolie.widget_bookmark_edit import BookmarkEditWidget
         if isinstance(popover, BookmarkEditWidget):
-            bookmark_id = El().bookmarks.get_id(webview.uri)
+            bookmark_id = App().bookmarks.get_id(webview.uri)
             if bookmark_id is None:
                 self.__action_image2.set_from_icon_name("non-starred-symbolic",
                                                         Gtk.IconSize.MENU)
@@ -925,7 +925,7 @@ class ToolbarTitle(Gtk.Bin):
             GLib.source_remove(self.__suggestion_id)
             self.__suggestion_id = None
         # Search for suggestions if needed
-        if El().settings.get_value("enable-suggestions") and\
+        if App().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
             self.__suggestion_id = GLib.timeout_add(
                                                 500,
@@ -942,9 +942,9 @@ class ToolbarTitle(Gtk.Bin):
             @param value as str
         """
         self.__suggestion_id = None
-        El().search.search_suggestions(value,
-                                       self.__cancellable,
-                                       self.__on_search_suggestion)
+        App().search.search_suggestions(value,
+                                        self.__cancellable,
+                                        self.__on_search_suggestion)
 
     def __on_size_allocation_timeout(self, allocation):
         """

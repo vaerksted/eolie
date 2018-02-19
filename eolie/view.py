@@ -15,7 +15,7 @@ from gi.repository import GObject, Gtk, Gdk, GLib, Gio, WebKit2
 from eolie.widget_find import FindWidget
 from eolie.webview import WebView
 from eolie.widget_uri_label import UriLabelWidget
-from eolie.define import El
+from eolie.define import App
 
 
 class View(Gtk.Overlay):
@@ -219,9 +219,9 @@ class View(Gtk.Overlay):
         page_id = self.webview.get_page_id()
         if event.state & Gdk.ModifierType.CONTROL_MASK:
             if event.keyval == Gdk.KEY_z:
-                El().helper.call("SetPreviousElementValue", page_id)
+                App().helper.call("SetPreviousElementValue", page_id)
             elif event.keyval == Gdk.KEY_Z:
-                El().helper.call("SetNextElementValue", page_id)
+                App().helper.call("SetNextElementValue", page_id)
 
     def __on_close(self, webview):
         """

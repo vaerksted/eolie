@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, Indicator, LoadingType
+from eolie.define import App, Indicator, LoadingType
 from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -88,7 +88,7 @@ class WebView(WebKit2.WebView):
             Update zoom level
         """
         try:
-            zoom_level = El().websettings.get_zoom(self.uri)
+            zoom_level = App().websettings.get_zoom(self.uri)
             if zoom_level is None:
                 zoom_level = 100
             if self.__related_view is None:
@@ -114,11 +114,11 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        current = El().websettings.get_zoom(self.uri)
+        current = App().websettings.get_zoom(self.uri)
         if current is None:
             current = 100
         current += 10
-        El().websettings.set_zoom(current, self.uri)
+        App().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
         return current
 
@@ -127,13 +127,13 @@ class WebView(WebKit2.WebView):
             Zoom out view
             @return current zoom after zoom out
         """
-        current = El().websettings.get_zoom(self.uri)
+        current = App().websettings.get_zoom(self.uri)
         if current is None:
             current = 100
         current -= 10
         if current == 0:
             return 10
-        El().websettings.set_zoom(current, self.uri)
+        App().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
         return current
 
@@ -142,7 +142,7 @@ class WebView(WebKit2.WebView):
             Reset zoom level
             @return current zoom after zoom out
         """
-        El().websettings.set_zoom(100, self.uri)
+        App().websettings.set_zoom(100, self.uri)
         self.update_zoom_level()
 
     def set_title(self, title):
@@ -166,7 +166,7 @@ class WebView(WebKit2.WebView):
         """
             Update spell checking
         """
-        codes = El().websettings.get_languages(self.uri)
+        codes = App().websettings.get_languages(self.uri)
         # If None, default user language
         if codes is not None:
             self.get_context().set_spell_checking_languages(codes)
@@ -467,23 +467,23 @@ class WebView(WebKit2.WebView):
         system = Gio.Settings.new("org.gnome.desktop.interface")
         animations = system.get_value("enable-animations")
         settings.set_property("enable-java",
-                              El().settings.get_value('enable-plugins'))
+                              App().settings.get_value('enable-plugins'))
         settings.set_property("enable-plugins",
-                              El().settings.get_value('enable-plugins'))
+                              App().settings.get_value('enable-plugins'))
         settings.set_property("minimum-font-size",
-                              El().settings.get_value(
+                              App().settings.get_value(
                                 "min-font-size").get_int32())
-        if El().settings.get_value("use-system-fonts"):
+        if App().settings.get_value("use-system-fonts"):
             self.__set_system_fonts(settings, system)
         else:
             settings.set_property("monospace-font-family",
-                                  El().settings.get_value(
+                                  App().settings.get_value(
                                     "font-monospace").get_string())
             settings.set_property("sans-serif-font-family",
-                                  El().settings.get_value(
+                                  App().settings.get_value(
                                     "font-sans-serif").get_string())
             settings.set_property("serif-font-family",
-                                  El().settings.get_value(
+                                  App().settings.get_value(
                                     "font-serif").get_string())
         settings.set_property("auto-load-images", True)
         settings.set_property("enable-mediasource", True)
@@ -495,7 +495,7 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-mediasource", True)
         settings.set_property("enable-developer-extras",
-                              El().settings.get_value("developer-extras"))
+                              App().settings.get_value("developer-extras"))
         settings.set_property("enable-offline-web-application-cache", True)
         settings.set_property("enable-page-cache", True)
         settings.set_property("enable-resizable-text-areas", True)
@@ -552,9 +552,9 @@ class WebView(WebKit2.WebView):
         """
         # Do not block if we get a click on view
         elapsed = time() - related._last_click_time
-        popup_block = El().settings.get_value("popupblock")
+        popup_block = App().settings.get_value("popupblock")
         parsed_related = urlparse(related.uri)
-        exception = El().popup_exceptions.find_parsed(parsed_related) or\
+        exception = App().popup_exceptions.find_parsed(parsed_related) or\
             elapsed < 0.5
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [

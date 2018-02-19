@@ -20,7 +20,7 @@ from locale import strcoll
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import El, Type, TimeSpan, TimeSpanValues, LoadingType
+from eolie.define import App, Type, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import wanted_loading_type
 
 
@@ -210,7 +210,7 @@ class Row(Gtk.ListBoxRow):
             @param uri as str
         """
         uri = self.__item.get_property("uri")
-        favicon_path = El().art.get_favicon_path(uri)
+        favicon_path = App().art.get_favicon_path(uri)
         if favicon_path is not None:
             favicon.set_from_file(favicon_path)
         else:
@@ -359,13 +359,13 @@ class Row(Gtk.ListBoxRow):
         self.__window.close_popovers()
         tag_id = self.__item.get_property("id")
         if tag_id == Type.POPULARS:
-            items = El().bookmarks.get_populars(50)
+            items = App().bookmarks.get_populars(50)
         elif tag_id == Type.RECENTS:
-            items = El().bookmarks.get_recents()
+            items = App().bookmarks.get_recents()
         elif tag_id == Type.UNCLASSIFIED:
-            items = El().bookmarks.get_unclassified()
+            items = App().bookmarks.get_unclassified()
         else:
-            items = El().bookmarks.get_bookmarks(tag_id)
+            items = App().bookmarks.get_bookmarks(tag_id)
         pages = []
         i = 0
         for (bid, uri, title) in items:
@@ -380,10 +380,10 @@ class Row(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         history_id = self.__item.get_property("id")
-        guid = El().history.get_guid(history_id)
-        if El().sync_worker is not None:
-            El().sync_worker.remove_from_history(guid)
-        El().history.remove(history_id)
+        guid = App().history.get_guid(history_id)
+        if App().sync_worker is not None:
+            App().sync_worker.remove_from_history(guid)
+        App().history.remove(history_id)
         GLib.idle_add(self.destroy)
 
 
@@ -439,7 +439,7 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
                                         self.__on_item_create)
         self.__calendar = builder.get_object("calendar")
-        if El().sync_worker is not None:
+        if App().sync_worker is not None:
             self.__sync_stack = builder.get_object("sync_stack")
             self.__sync_stack.show()
         self.add(builder.get_object("widget"))
@@ -452,7 +452,7 @@ class UriPopover(Gtk.Popover):
             @param child as str
         """
         # Add a new view for importing bookmarks
-        if child == "bookmarks" and not El().bookmarks.is_empty():
+        if child == "bookmarks" and not App().bookmarks.is_empty():
             grid = Gtk.Grid()
             image = Gtk.Image.new_from_icon_name("bookmark-new-symbolic",
                                                  Gtk.IconSize.BUTTON)
@@ -512,7 +512,7 @@ class UriPopover(Gtk.Popover):
                 item = Item()
                 item.set_property("type", Type.SUGGESTION)
                 item.set_property("title", value)
-                item.set_property("uri", El().search.get_search_uri(value))
+                item.set_property("uri", App().search.get_search_uri(value))
                 item.set_property("search", self.__search)
                 item.set_property("score", -1)
                 child = Row(item, self.__window)
@@ -659,7 +659,7 @@ class UriPopover(Gtk.Popover):
             Sync with Mozilla Sync
             @param button as Gtk.Button
         """
-        El().sync_worker.sync()
+        App().sync_worker.sync()
         GLib.timeout_add(1000, self.__check_sync_timer)
 
     def _on_import_button_clicked(self, button):
@@ -679,12 +679,12 @@ class UriPopover(Gtk.Popover):
         """
         for row in self.__bookmarks_box.get_selected_rows():
             item_id = row.item.get_property("id")
-            El().bookmarks.delete(item_id)
+            App().bookmarks.delete(item_id)
             self.__bookmarks_box.remove(row)
             self.__remove_button.hide()
-        El().bookmarks.clean_tags()
-        if El().sync_worker is not None:
-            El().sync_worker.sync()
+        App().bookmarks.clean_tags()
+        if App().sync_worker is not None:
+            App().sync_worker.sync()
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
@@ -787,7 +787,7 @@ class UriPopover(Gtk.Popover):
                    _("Recent")),
                   (Type.UNCLASSIFIED,
                   _("Unclassified"))]
-        self.__add_tags(static + El().bookmarks.get_all_tags(), current)
+        self.__add_tags(static + App().bookmarks.get_all_tags(), current)
 
     def _on_day_selected(self, calendar):
         """
@@ -797,7 +797,7 @@ class UriPopover(Gtk.Popover):
         (year, month, day) = calendar.get_date()
         date = datetime(year, month + 1, day, 0, 0, tzinfo=tz.tzutc())
         atime = mktime(date.timetuple())
-        result = El().history.get(atime)
+        result = App().history.get(atime)
         self.__history_model.remove_all()
         self.__add_history_items(result, (year, month, day))
         self.__infobar.hide()
@@ -879,21 +879,21 @@ class UriPopover(Gtk.Popover):
             @param atime as double
             @thread safe
         """
-        history_ids = El().history.get_from_atime(atime)
-        El().history.clear_from(atime)
+        history_ids = App().history.get_from_atime(atime)
+        App().history.clear_from(atime)
         GLib.idle_add(self._on_day_selected, self.__calendar)
-        if El().sync_worker is None:
-            for history_id in El().history.get_empties():
-                El().history.remove(history_id)
+        if App().sync_worker is None:
+            for history_id in App().history.get_empties():
+                App().history.remove(history_id)
         else:
-            El().sync_worker.push_history(history_ids)
+            App().sync_worker.push_history(history_ids)
 
     def __check_sync_timer(self):
         """
             Check sync status, if sync, show spinner and reload
             else show sync button and quit
         """
-        if El().sync_worker.syncing:
+        if App().sync_worker.syncing:
             self.__sync_stack.set_visible_child_name("spinner")
             self.__sync_stack.get_visible_child().start()
             return True
@@ -1071,10 +1071,10 @@ class UriPopover(Gtk.Popover):
         """
         self.__search = search
         if search == '':
-            result = El().history.search(search, 50)
+            result = App().history.search(search, 50)
         else:
-            result = El().history.search(search, 15)
-            result += El().bookmarks.search(search, 15)
+            result = App().history.search(search, 15)
+            result += App().bookmarks.search(search, 15)
 
         self.__add_searches(result, search)
 
@@ -1086,13 +1086,13 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_model.remove_all()
         self.__remove_button.hide()
         if tag_id == Type.POPULARS:
-            items = El().bookmarks.get_populars(50)
+            items = App().bookmarks.get_populars(50)
         elif tag_id == Type.RECENTS:
-            items = El().bookmarks.get_recents()
+            items = App().bookmarks.get_recents()
         elif tag_id == Type.UNCLASSIFIED:
-            items = El().bookmarks.get_unclassified()
+            items = App().bookmarks.get_unclassified()
         else:
-            items = El().bookmarks.get_bookmarks(tag_id)
+            items = App().bookmarks.get_bookmarks(tag_id)
         self.__bookmarks_count.set_text(_("%s bookmarks") % len(items))
         self.__add_bookmarks(items)
 
@@ -1155,12 +1155,12 @@ class UriPopover(Gtk.Popover):
         current_tag_id = tag_row.item.get_property("id")
         for item in items:
             if current_tag_id >= 0:
-                El().bookmarks.del_tag_from(current_tag_id, item[0])
-            El().bookmarks.add_tag_to(item[1], item[0])
+                App().bookmarks.del_tag_from(current_tag_id, item[0])
+            App().bookmarks.add_tag_to(item[1], item[0])
         self.__on_row_activated(tag_row)
-        El().bookmarks.clean_tags()
-        if El().sync_worker is not None:
-            El().sync_worker.sync()
+        App().bookmarks.clean_tags()
+        if App().sync_worker is not None:
+            App().sync_worker.sync()
 
     def __on_row_edited(self, row):
         """

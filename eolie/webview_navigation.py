@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import El, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
+from eolie.define import App, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
 from eolie.define import COOKIES_PATH
 from eolie.utils import get_ftp_cmd
 
@@ -67,8 +67,8 @@ class WebViewNavigation:
                                    "https", "file", "populars"]
         if not is_uri and\
                 not uri.startswith("/") and\
-                El().search.is_search(uri):
-            uri = El().search.get_search_uri(uri)
+                App().search.is_search(uri):
+            uri = App().search.get_search_uri(uri)
         parsed = urlparse(uri)
         if uri == "about:blank":
             WebKit2.WebView.load_plain_text(self, "")
@@ -119,24 +119,24 @@ class WebViewNavigation:
             self.__load_event_started_uri = uri
             self.__update_bookmark_metadata(uri)
             self.set_setting("auto-load-images",
-                             not El().image_exceptions.find(parsed.netloc))
+                             not App().image_exceptions.find(parsed.netloc))
             self._cancelled = False
         elif event == WebKit2.LoadEvent.COMMITTED:
             if uri != self.__load_event_started_uri:
                 self.__update_bookmark_metadata(uri)
             self.__hw_acceleration_policy(parsed.netloc)
             self.content_manager.remove_all_style_sheets()
-            if El().phishing.is_phishing(uri):
+            if App().phishing.is_phishing(uri):
                 self._show_phishing_error(uri)
             else:
                 # Can't find a way to block content for ephemeral views
-                if El().settings.get_value("adblock") and\
-                        not El().adblock_exceptions.find_parsed(parsed) and\
+                if App().settings.get_value("adblock") and\
+                        not App().adblock_exceptions.find_parsed(parsed) and\
                         parsed.scheme in ["http", "https"] and\
                         self.content_manager is not None:
                     self.content_manager.add_style_sheet(
-                                                      El().default_style_sheet)
-                    rules = El().adblock.get_css_rules(uri)
+                                                     App().default_style_sheet)
+                    rules = App().adblock.get_css_rules(uri)
                     user_style_sheet = WebKit2.UserStyleSheet(
                                  rules,
                                  WebKit2.UserContentInjectedFrames.ALL_FRAMES,
@@ -145,7 +145,7 @@ class WebViewNavigation:
                                  None)
                     self.content_manager.add_style_sheet(user_style_sheet)
                 self.update_zoom_level()
-                user_agent = El().websettings.get_user_agent(uri)
+                user_agent = App().websettings.get_user_agent(uri)
                 settings = self.get_settings()
                 if user_agent:
                     settings.set_user_agent(user_agent)
@@ -154,11 +154,12 @@ class WebViewNavigation:
                                                                      None)
                 # Setup image blocker
                 self.set_setting("auto-load-images",
-                                 not El().image_exceptions.find(parsed.netloc))
+                                 not App().image_exceptions.find(
+                                                                parsed.netloc))
                 # Setup eolie internal adblocker
-                if El().settings.get_value("adblock") and\
+                if App().settings.get_value("adblock") and\
                         parsed.scheme in ["http", "https"]:
-                    exception = El().adblock_exceptions.find_parsed(parsed)
+                    exception = App().adblock_exceptions.find_parsed(parsed)
                     if not exception:
                         noext = ".".join(parsed.netloc.split(".")[:-1])
                         javascripts = ["adblock_%s.js" % parsed.netloc,
@@ -178,7 +179,7 @@ class WebViewNavigation:
             if parsed.scheme != "populars":
                 self.set_snapshot()
             self.update_spell_checking()
-            if El().show_tls:
+            if App().show_tls:
                 try:
                     from OpenSSL import crypto
                     from datetime import datetime
@@ -213,9 +214,9 @@ class WebViewNavigation:
             Update bookmark access time/popularity
             @param uri as str
         """
-        if El().bookmarks.get_id(uri) is not None:
-            El().bookmarks.set_access_time(uri, round(time(), 2))
-            El().bookmarks.set_more_popular(uri)
+        if App().bookmarks.get_id(uri) is not None:
+            App().bookmarks.set_access_time(uri, round(time(), 2))
+            App().bookmarks.set_more_popular(uri)
 
     def __hw_acceleration_policy(self, netloc):
         """
@@ -236,7 +237,7 @@ class WebViewNavigation:
         """
         if self.ephemeral or self.__related_view is not None:
             return
-        profile = El().websettings.get_profile(uri)
+        profile = App().websettings.get_profile(uri)
         if self.__profile != profile:
             self.__profile = profile
             cookie_manager = self.get_context().get_cookie_manager()
@@ -432,7 +433,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                El().history.set_page_state(self._navigation_uri)
+                App().history.set_page_state(self._navigation_uri)
                 self._error = False
                 decision.use()
                 return False

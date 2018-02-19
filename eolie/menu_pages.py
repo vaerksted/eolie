@@ -15,7 +15,7 @@ from gi.repository import Gio, GLib
 from gettext import gettext as _
 from hashlib import sha256
 
-from eolie.define import El, LoadingType
+from eolie.define import App, LoadingType
 from eolie.utils import wanted_loading_type
 
 
@@ -32,12 +32,12 @@ class PagesMenu(Gio.Menu):
 
         # Setup actions
         action = Gio.SimpleAction(name="new-private")
-        El().add_action(action)
+        App().add_action(action)
         action.connect('activate',
                        self.__on_private_clicked)
         action = Gio.SimpleAction(name="openall")
         action.set_enabled(False)
-        El().add_action(action)
+        App().add_action(action)
         action.connect('activate',
                        self.__on_openall_clicked)
         # Setup menu
@@ -49,8 +49,8 @@ class PagesMenu(Gio.Menu):
         item = Gio.MenuItem.new(_("Open all pages"), "app.openall")
         item.set_icon(Gio.ThemedIcon.new("document-open-symbolic"))
         self.append_item(item)
-        remember_session = El().settings.get_value("remember-session")
-        opened_pages = El().history.get_opened_pages()
+        remember_session = App().settings.get_value("remember-session")
+        opened_pages = App().history.get_opened_pages()
         if not remember_session and opened_pages:
             # Delayed to not slow down startup
             GLib.timeout_add(1000, self.__append_opened_pages, opened_pages)
@@ -62,7 +62,7 @@ class PagesMenu(Gio.Menu):
         if self.__closed_section.get_n_items():
             uri = self.__closed_section.get_item_attribute_value(0, "uri")
             encoded = sha256(uri.get_string().encode("utf-8")).hexdigest()
-            action = El().lookup_action(encoded)
+            action = App().lookup_action(encoded)
             if action is not None:
                 action.activate(None)
 
@@ -81,7 +81,7 @@ class PagesMenu(Gio.Menu):
         self.__clean_actions()
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
-        El().add_action(action)
+        App().add_action(action)
         action.connect('activate',
                        self.__on_action_clicked,
                        (uri, state))
@@ -93,7 +93,7 @@ class PagesMenu(Gio.Menu):
             item.set_icon(Gio.ThemedIcon.new("emote-love-symbolic"))
         else:
             # Try to set icon
-            favicon_path = El().art.get_favicon_path(uri)
+            favicon_path = App().art.get_favicon_path(uri)
             if favicon_path is not None:
                 f = Gio.File.new_for_path(favicon_path)
                 icon = Gio.FileIcon.new(f)
@@ -102,7 +102,7 @@ class PagesMenu(Gio.Menu):
             else:
                 item.set_icon(Gio.ThemedIcon.new("applications-internet"))
         self.__closed_section.insert_item(0, item)
-        action = El().lookup_action("openall")
+        action = App().lookup_action("openall")
         if action is not None:
             action.set_enabled(self.__closed_section.get_n_items() > 1)
 
@@ -111,9 +111,9 @@ class PagesMenu(Gio.Menu):
             Remove action from menu
         """
         encoded = sha256(uri.encode("utf-8")).hexdigest()
-        action = El().lookup_action(encoded)
+        action = App().lookup_action(encoded)
         if action is not None:
-            El().remove_action(encoded)
+            App().remove_action(encoded)
             for i in range(0, self.__closed_section.get_n_items() - 1):
                 attribute = self.__closed_section.get_item_attribute_value(
                                                                          i,
@@ -124,7 +124,7 @@ class PagesMenu(Gio.Menu):
                 if uri == _uri:
                     self.__closed_section.remove(i)
                     break
-        action = El().lookup_action("openall")
+        action = App().lookup_action("openall")
         if action is not None:
             action.set_enabled(self.__closed_section.get_n_items() < 2)
 
@@ -147,9 +147,9 @@ class PagesMenu(Gio.Menu):
             uri = self.__closed_section.get_item_attribute_value(
                                                          0, "uri").get_string()
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            action = El().lookup_action(encoded)
+            action = App().lookup_action(encoded)
             if action is not None:
-                El().remove_action(encoded)
+                App().remove_action(encoded)
             self.__closed_section.remove(0)
 
     def __on_private_clicked(self, action, variant):
@@ -158,9 +158,9 @@ class PagesMenu(Gio.Menu):
             @param Gio.SimpleAction
             @param GVariant
         """
-        El().active_window.container.add_webview(El().start_page,
-                                                 LoadingType.FOREGROUND,
-                                                 True)
+        App().active_window.container.add_webview(App().start_page,
+                                                  LoadingType.FOREGROUND,
+                                                  True)
 
     def __on_openall_clicked(self, action, variant):
         """
@@ -182,7 +182,7 @@ class PagesMenu(Gio.Menu):
             loading_type = wanted_loading_type(i)
             items.append((uri, title, 0, False, None, loading_type))
             i += 1
-        El().active_window.container.add_webviews(items)
+        App().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()
 
     def __on_action_clicked(self, action, variant, data):
@@ -194,8 +194,8 @@ class PagesMenu(Gio.Menu):
         """
         uri = data[0]
         state = data[1]
-        El().active_window.container.add_webview(uri,
-                                                 LoadingType.FOREGROUND,
-                                                 False,
-                                                 state)
+        App().active_window.container.add_webview(uri,
+                                                  LoadingType.FOREGROUND,
+                                                  False,
+                                                  state)
         self.remove_action(uri)

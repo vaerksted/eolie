@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import El, ArtSize
+from eolie.define import App, ArtSize
 from eolie.utils import get_snapshot, resize_favicon, get_char_surface
 from eolie.utils import remove_www
 
@@ -103,8 +103,8 @@ class WebViewArtwork:
         self.__favicon_id = None
         resized = None
         uri = self.uri
-        icon_theme_artwork = El().art.get_icon_theme_artwork(uri,
-                                                             self.ephemeral)
+        icon_theme_artwork = App().art.get_icon_theme_artwork(uri,
+                                                              self.ephemeral)
         if icon_theme_artwork is not None:
             self.emit("favicon-changed", None, icon_theme_artwork)
         elif uri is not None:
@@ -125,11 +125,11 @@ class WebViewArtwork:
                 # We do not want to show a favicon_alt if a favicon is cached
                 # so check for favicon too
                 for favicon in ["favicon", "favicon_alt"]:
-                    resized = El().art.get_artwork(netloc,
-                                                   favicon,
-                                                   self.get_scale_factor(),
-                                                   size,
-                                                   size)
+                    resized = App().art.get_artwork(netloc,
+                                                    favicon,
+                                                    self.get_scale_factor(),
+                                                    size,
+                                                    size)
                     if resized is not None:
                         favicon_type = favicon
                         break
@@ -141,22 +141,22 @@ class WebViewArtwork:
             if not self.ephemeral:
                 self.emit("favicon-changed", resized, None)
                 # Save favicon for URI if needed
-                (exists, cached) = El().art.exists(uri, favicon_type)
+                (exists, cached) = App().art.exists(uri, favicon_type)
                 if not exists or\
                         (not cached and safe):
-                    El().art.save_artwork(uri, resized, favicon_type)
+                    App().art.save_artwork(uri, resized, favicon_type)
                     # Save favicon for initial URI
                     striped_uri = uri.rstrip("/")
                     if self.__initial_uri != striped_uri:
-                        El().art.save_artwork(self.__initial_uri,
-                                              resized,
-                                              favicon_type)
+                        App().art.save_artwork(self.__initial_uri,
+                                               resized,
+                                               favicon_type)
                 # Save favicon for netloc
-                (exists, cached) = El().art.exists(netloc, favicon_type)
+                (exists, cached) = App().art.exists(netloc, favicon_type)
                 if netloc is not None:
                     if not exists or\
                             (not cached and safe):
-                        El().art.save_artwork(netloc, resized, favicon_type)
+                        App().art.save_artwork(netloc, resized, favicon_type)
 
     def __on_snapshot(self, surface, first_pass):
         """
@@ -184,6 +184,6 @@ class WebViewArtwork:
                 self.__initial_uri not in uris:
             uris.append(self.__initial_uri)
         for uri in uris:
-            (exists, cached) = El().art.exists(uri, "start")
+            (exists, cached) = App().art.exists(uri, "start")
             if not cached:
-                El().art.save_artwork(uri, surface, "start")
+                App().art.save_artwork(uri, surface, "start")
