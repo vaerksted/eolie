@@ -552,9 +552,11 @@ class WebView(WebKit2.WebView):
         popup_block = App().settings.get_value("popupblock")
         parsed = urlparse(webview.uri)
         parsed_related = urlparse(related.uri)
+        netloc = parsed.netloc.split(".")[-2:]
+        netloc_related = parsed_related.netloc.split(".")[-2:]
         trust_websites = App().settings.get_value("trust-websites-popups")
         exception = (trust_websites and
-                     parsed.netloc == parsed_related.netloc) or\
+                     netloc == netloc_related) or\
             App().popup_exceptions.find_parsed(parsed_related)
 
         if not exception and popup_block and\

@@ -53,7 +53,9 @@ class AdblockExtension:
         parsed = urlparse(uri)
         request_uri = request.get_uri()
         parsed_request = urlparse(request_uri)
-        if parsed.netloc == parsed_request.netloc and\
+        netloc = parsed.netloc.split(".")[-2:]
+        netloc_request = parsed_request.netloc.split(".")[-2:]
+        if netloc == netloc_request and\
                 self.__settings.get_value("trust-websites-adblock"):
             pass
         elif self.__settings.get_value("adblock") and\
