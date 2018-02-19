@@ -173,6 +173,14 @@ class ToolbarEnd(Gtk.Bin):
             self.__home_button.show()
             self.set_hexpand(True)
 
+    @property
+    def download_button(self):
+        """
+            Get download button
+            @return Gtk.ToogleButton
+        """
+        return self.__download_button
+
 #######################
 # PROTECTED           #
 #######################
@@ -235,67 +243,8 @@ class ToolbarEnd(Gtk.Bin):
         uri = self.__window.container.current.webview.uri
         if not button.get_active() or not uri:
             return
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
-        if not self.__download_button.is_visible():
-            builder.get_object("toolbar_items").show()
-        popover = Gtk.PopoverMenu.new()
-        fullscreen_button = builder.get_object("fullscreen_button")
-        if self.__window.is_fullscreen:
-            fullscreen_button.set_active(True)
-            fullscreen_button.set_tooltip_text(_("Leave fullscreen"))
-        else:
-            fullscreen_button.set_tooltip_text(_("Enter fullscreen"))
-        builder.connect_signals(self)
-        widget = builder.get_object("widget")
-        webview = self.__window.container.current.webview
-        current = App().websettings.get_zoom(webview.uri)
-        if current is None:
-            current = 100
-        builder.get_object("default_zoom_button").set_label(
-                                                        "{} %".format(current))
-        popover.add(widget)
-        from eolie.menu_languages import LanguagesMenu
-        from eolie.menu_block import JSBlockMenu, AdblockMenu
-        from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
-        adblock_menu = AdblockMenu(uri, self.__window)
-        adblock_menu.show()
-        js_block_menu = JSBlockMenu(uri, self.__window)
-        js_block_menu.show()
-        popup_block_menu = PopupBlockMenu(uri, self.__window)
-        popup_block_menu.show()
-        image_block_menu = ImageBlockMenu(uri, self.__window)
-        image_block_menu.show()
-        languages_menu = LanguagesMenu(uri)
-        languages_menu.show()
-        popover.add(adblock_menu)
-        popover.add(popup_block_menu)
-        popover.add(js_block_menu)
-        popover.add(image_block_menu)
-        popover.add(languages_menu)
-        popover.child_set_property(adblock_menu, "submenu", "adblock_menu")
-        popover.child_set_property(js_block_menu, "submenu", "js_block_menu")
-        popover.child_set_property(popup_block_menu,
-                                   "submenu", "popup_block_menu")
-        popover.child_set_property(image_block_menu,
-                                   "submenu", "image_block_menu")
-        popover.child_set_property(languages_menu, "submenu", "languages")
-        # Merge appmenu, we assume we only have one level (section -> items)
-        if not App().prefers_app_menu():
-            separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
-            separator.show()
-            widget.add(separator)
-            menu = App().get_app_menu()
-            for i in range(0, menu.get_n_items()):
-                section = menu.get_item_link(i, "section")
-                for y in range(0, section.get_n_items()):
-                    label = section.get_item_attribute_value(y, "label")
-                    action = section.get_item_attribute_value(y, "action")
-                    item = Gtk.ModelButton.new()
-                    item.set_property("text", label.get_string())
-                    item.set_action_name(action.get_string())
-                    item.show()
-                    widget.add(item)
+        from eolie.menu_toolbar import ToolbarMenu
+        popover = ToolbarMenu(uri, self.__window, self)
         popover.set_relative_to(button)
         popover.set_modal(False)
         self.__window.register(popover)
@@ -318,47 +267,6 @@ class ToolbarEnd(Gtk.Bin):
         button.get_ancestor(Gtk.Popover).hide()
         action = self.__window.lookup_action("shortcut")
         action.activate(GLib.Variant("s", "print"))
-
-    def _on_zoom_button_clicked(self, button):
-        """
-            Zoom current page
-            @param button as Gtk.Button
-        """
-        webview = self.__window.container.current.webview
-        current = webview.zoom_in()
-        button.set_label("{} %".format(current))
-
-    def _on_unzoom_button_clicked(self, button):
-        """
-            Unzoom current page
-            @param button as Gtk.Button
-        """
-        webview = self.__window.container.current.webview
-        current = webview.zoom_out()
-        button.set_label("{} %".format(current))
-
-    def _on_fullscreen_button_toggled(self, button):
-        """
-            Restore default zoom level
-            @param button as Gtk.ToggleButton
-        """
-        button.get_ancestor(Gtk.Popover).hide()
-        if button.get_active():
-            if not self.__window.is_fullscreen:
-                self.__window.fullscreen()
-        else:
-            if self.__window.is_fullscreen:
-                self.__window.unfullscreen()
-
-    def _on_default_zoom_button_clicked(self, button):
-        """
-            Restore default zoom level
-            @param button as Gtk.Button
-        """
-        webview = self.__window.container.current.webview
-        App().websettings.set_zoom(100, webview.uri)
-        webview.update_zoom_level()
-        button.set_label("100 %")
 
 #######################
 # PRIVATE             #
