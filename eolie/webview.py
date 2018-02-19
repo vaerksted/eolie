@@ -13,7 +13,6 @@
 from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
 
 from urllib.parse import urlparse
-from time import time
 
 from eolie.define import App, Indicator, LoadingType
 from eolie.utils import debug
@@ -550,12 +549,14 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        # Do not block if we get a click on view
-        elapsed = time() - related._last_click_time
         popup_block = App().settings.get_value("popupblock")
+        parsed = urlparse(webview.uri)
         parsed_related = urlparse(related.uri)
-        exception = App().popup_exceptions.find_parsed(parsed_related) or\
-            elapsed < 0.5
+        trust_websites = App().settings.get_value("trust-websites-popups")
+        exception = (trust_websites and
+                     parsed.netloc == parsed_related.netloc) or\
+            App().popup_exceptions.find_parsed(parsed_related)
+
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
                                WebKit2.NavigationType.OTHER,

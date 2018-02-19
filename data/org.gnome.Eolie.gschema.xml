@@ -24,9 +24,29 @@
          <summary>Block ads on pages</summary>
          <description />
       </key>
+      <key type="b" name="trust-websites-adblock">
+         <default>true</default>
+         <summary>Trust websites: no adblock for internal URIs</summary>
+         <description />
+      </key>
+      <key type="b" name="trust-websites-js">
+         <default>true</default>
+         <summary>Trust websites: no JavaScript blocking for internal URIs</summary>
+         <description />
+      </key>
+      <key type="b" name="trust-websites-popup">
+         <default>true</default>
+         <summary>Trust websites: no popup blocking for internal URIs</summary>
+         <description />
+      </key>
       <key type="b" name="popupblock">
          <default>true</default>
          <summary>Block unwanted popups on pages</summary>
+         <description />
+      </key>
+      <key type="b" name="imageblock">
+         <default>false</default>
+         <summary>Block images on page</summary>
          <description />
       </key>
       <key type="b" name="jsblock">

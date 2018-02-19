@@ -81,8 +81,6 @@ class WebViewNavigation:
             if uri.startswith("/"):
                 uri = "file://" + uri
             elif parsed.scheme == "javascript":
-                # To bypass popup blocker
-                self._last_click_time = time()
                 uri = GLib.uri_unescape_string(uri, None)
                 self.run_javascript(uri.replace("javascript:", ""), None, None)
             elif parsed.scheme not in ["http", "https", "file",
@@ -115,11 +113,15 @@ class WebViewNavigation:
         """
         uri = webview.uri
         parsed = urlparse(uri)
+        http_scheme = parsed.scheme in ["http", "https"]
         if event == WebKit2.LoadEvent.STARTED:
             self.__load_event_started_uri = uri
             self.__update_bookmark_metadata(uri)
-            self.set_setting("auto-load-images",
-                             not App().image_exceptions.find(parsed.netloc))
+            # Setup image blocker
+            block_image = http_scheme and\
+                App().settings.get_value("imageblock") and\
+                not App().image_exceptions.find_parsed(parsed)
+            self.set_setting("auto-load-images", not block_image)
             self._cancelled = False
         elif event == WebKit2.LoadEvent.COMMITTED:
             if uri != self.__load_event_started_uri:
@@ -132,7 +134,7 @@ class WebViewNavigation:
                 # Can't find a way to block content for ephemeral views
                 if App().settings.get_value("adblock") and\
                         not App().adblock_exceptions.find_parsed(parsed) and\
-                        parsed.scheme in ["http", "https"] and\
+                        http_scheme and\
                         self.content_manager is not None:
                     self.content_manager.add_style_sheet(
                                                      App().default_style_sheet)
@@ -153,12 +155,13 @@ class WebViewNavigation:
                     settings.set_user_agent_with_application_details("Eolie",
                                                                      None)
                 # Setup image blocker
-                self.set_setting("auto-load-images",
-                                 not App().image_exceptions.find(
-                                                                parsed.netloc))
+                block_image = http_scheme and\
+                    App().settings.get_value("imageblock") and\
+                    not App().image_exceptions.find_parsed(parsed)
+                self.set_setting("auto-load-images", not block_image)
                 # Setup eolie internal adblocker
                 if App().settings.get_value("adblock") and\
-                        parsed.scheme in ["http", "https"]:
+                        http_scheme:
                     exception = App().adblock_exceptions.find_parsed(parsed)
                     if not exception:
                         noext = ".".join(parsed.netloc.split(".")[:-1])

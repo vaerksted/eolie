@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, WebKit2, Pango
+from gi.repository import Gtk, GLib, WebKit2, Pango
 
 from urllib.parse import urlparse
 from gettext import gettext as _
@@ -72,43 +72,6 @@ class ToolbarEnd(Gtk.Bin):
         overlay.add_overlay(self.__progress)
         overlay.set_overlay_pass_through(self.__progress, True)
         self.add(builder.get_object("end"))
-
-        # Setup main menu actions
-        adblock_action = Gio.SimpleAction.new_stateful(
-               "adblock",
-               None,
-               GLib.Variant.new_boolean(App().settings.get_value("adblock")))
-        adblock_action.connect("change-state", self.__on_adblock_change_state)
-        self.__window.add_action(adblock_action)
-        popup_action = Gio.SimpleAction.new_stateful(
-                                      "popupblock",
-                                      None,
-                                      GLib.Variant.new_boolean(
-                                       App().settings.get_value("popupblock")))
-        popup_action.connect("change-state",
-                             self.__on_popup_change_state)
-        self.__window.add_action(popup_action)
-        self.__images_action = Gio.SimpleAction.new_stateful(
-                                                    "imgblock",
-                                                    None,
-                                                    GLib.Variant("b", False))
-        self.__window.add_action(self.__images_action)
-
-        # Setup exceptions actions
-        self.__adblock_exceptions = Gio.SimpleAction.new_stateful(
-                                                   "adblock_exceptions",
-                                                   GLib.VariantType.new("s"),
-                                                   GLib.Variant("s", "none"))
-        self.__adblock_exceptions.connect("activate",
-                                          self.__on_exceptions_activate)
-        self.__window.add_action(self.__adblock_exceptions)
-        self.__popup_exceptions = Gio.SimpleAction.new_stateful(
-                                                   "popup_exceptions",
-                                                   GLib.VariantType.new("s"),
-                                                   GLib.Variant("s", "none"))
-        self.__popup_exceptions.connect("activate",
-                                        self.__on_exceptions_activate)
-        self.__window.add_action(self.__popup_exceptions)
 
     def show_sync_button(self):
         """
@@ -269,41 +232,13 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.ToogleButton
         """
         self.__window.close_popovers()
-        if not button.get_active():
+        uri = self.__window.container.current.webview.uri
+        if not button.get_active() or not uri:
             return
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ActionsMenu.ui")
         if not self.__download_button.is_visible():
             builder.get_object("toolbar_items").show()
-
-        uri = self.__window.container.current.webview.uri
-        if not uri:
-            return
-        parsed = urlparse(uri)
-        # Adblock exceptions
-        page_ex = App().adblock_exceptions.find(parsed.netloc +
-                                                parsed.path)
-        site_ex = App().adblock_exceptions.find(parsed.netloc)
-        if not page_ex and not site_ex:
-            self.__adblock_exceptions.change_state(GLib.Variant("s", "none"))
-        elif site_ex:
-            self.__adblock_exceptions.change_state(GLib.Variant("s", "site"))
-        else:
-            self.__adblock_exceptions.change_state(GLib.Variant("s", "page"))
-        # Popup exceptions
-        page_ex = App().popup_exceptions.find(parsed.netloc +
-                                              parsed.path)
-        site_ex = App().popup_exceptions.find(parsed.netloc)
-        if not page_ex and not site_ex:
-            self.__popup_exceptions.change_state(GLib.Variant("s", "none"))
-        elif site_ex:
-            self.__popup_exceptions.change_state(GLib.Variant("s", "site"))
-        else:
-            self.__popup_exceptions.change_state(GLib.Variant("s", "page"))
-        # Image action
-        block_images = App().image_exceptions.find(parsed.netloc)
-        self.__images_action.change_state(GLib.Variant("b", block_images))
-
         popover = Gtk.PopoverMenu.new()
         fullscreen_button = builder.get_object("fullscreen_button")
         if self.__window.is_fullscreen:
@@ -314,26 +249,37 @@ class ToolbarEnd(Gtk.Bin):
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
-
         current = App().websettings.get_zoom(webview.uri)
         if current is None:
             current = 100
         builder.get_object("default_zoom_button").set_label(
                                                         "{} %".format(current))
         popover.add(widget)
-        exceptions = builder.get_object("exceptions")
         from eolie.menu_languages import LanguagesMenu
-        from eolie.menu_scripts import ScriptsMenu
-        languages = LanguagesMenu(uri)
-        languages.show()
-        scripts = ScriptsMenu(parsed.netloc)
-        scripts.show()
-        popover.add(exceptions)
-        popover.add(languages)
-        popover.add(scripts)
-        popover.child_set_property(exceptions, "submenu", "exceptions")
-        popover.child_set_property(scripts, "submenu", "scripts")
-        popover.child_set_property(languages, "submenu", "languages")
+        from eolie.menu_block import JSBlockMenu, AdblockMenu
+        from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
+        adblock_menu = AdblockMenu(uri, self.__window)
+        adblock_menu.show()
+        js_block_menu = JSBlockMenu(uri, self.__window)
+        js_block_menu.show()
+        popup_block_menu = PopupBlockMenu(uri, self.__window)
+        popup_block_menu.show()
+        image_block_menu = ImageBlockMenu(uri, self.__window)
+        image_block_menu.show()
+        languages_menu = LanguagesMenu(uri)
+        languages_menu.show()
+        popover.add(adblock_menu)
+        popover.add(popup_block_menu)
+        popover.add(js_block_menu)
+        popover.add(image_block_menu)
+        popover.add(languages_menu)
+        popover.child_set_property(adblock_menu, "submenu", "adblock_menu")
+        popover.child_set_property(js_block_menu, "submenu", "js_block_menu")
+        popover.child_set_property(popup_block_menu,
+                                   "submenu", "popup_block_menu")
+        popover.child_set_property(image_block_menu,
+                                   "submenu", "image_block_menu")
+        popover.child_set_property(languages_menu, "submenu", "languages")
         # Merge appmenu, we assume we only have one level (section -> items)
         if not App().prefers_app_menu():
             separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
@@ -355,9 +301,6 @@ class ToolbarEnd(Gtk.Bin):
         self.__window.register(popover)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.popup()
-        self.__image_change_state_id = self.__images_action.connect(
-                                                 "change-state",
-                                                 self.__on_image_change_state)
 
     def _on_save_button_clicked(self, button):
         """
@@ -464,45 +407,25 @@ class ToolbarEnd(Gtk.Bin):
                                     None,
                                     None)
 
-    def __on_exceptions_activate(self, action, param):
-        """
-            Update exception for current page/site
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        uri = self.__window.container.current.webview.uri
-        if not uri:
-            return
-        if action == self.__adblock_exceptions:
-            database = App().adblock_exceptions
-        else:
-            database = App().popup_exceptions
-        action.set_state(param)
-        parsed = urlparse(uri)
-        page_ex = database.find(parsed.netloc + parsed.path)
-        site_ex = database.find(parsed.netloc)
-        # Clean previous exceptions
-        if param.get_string() in ["site", "none"]:
-            if page_ex:
-                database.remove_exception(parsed.netloc + parsed.path)
-        if param.get_string() in ["page", "none"]:
-            if site_ex:
-                database.remove_exception(parsed.netloc)
-        # Add new exceptions
-        if param.get_string() == "site":
-            database.add_exception(parsed.netloc)
-        elif param.get_string() == "page":
-            database.add_exception(parsed.netloc + parsed.path)
-        self.__window.container.current.webview.reload()
-
-    def __on_adblock_change_state(self, action, param):
+    def __on_action_change_state(self, action, param, option):
         """
             Set adblock state
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
+            @param option as str
         """
         action.set_state(param)
-        App().settings.set_value("adblock", param)
+        App().settings.set_value(option, param)
+        self.__window.container.current.webview.reload()
+
+    def __on_trust_change_state(self, action, param):
+        """
+            Set trust state
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        action.set_state(param)
+        App().settings.set_value("trust_websites", param)
         self.__window.container.current.webview.reload()
 
     def __on_popup_change_state(self, action, param):

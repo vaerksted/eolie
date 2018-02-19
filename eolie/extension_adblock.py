@@ -29,7 +29,6 @@ class AdblockExtension:
         """
         self.__settings = settings
         self.__adblock = DatabaseAdblock()
-        self.__not_blocked = []
         extension.connect("page-created", self.__on_page_created)
 
 #######################
@@ -50,17 +49,19 @@ class AdblockExtension:
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
-        uri = request.get_uri()
+        uri = webpage.get_uri()
         parsed = urlparse(uri)
-        if self.__settings.get_value("adblock") and\
-                uri not in self.__not_blocked and\
-                parsed.scheme in ["http", "https"] and\
-                not App().adblock_exceptions.find_parsed(parsed):
-            if self.__adblock.is_netloc_blocked(parsed.netloc) or\
-                    self.__adblock.is_uri_blocked(uri, parsed.netloc):
+        request_uri = request.get_uri()
+        parsed_request = urlparse(request_uri)
+        if parsed.netloc == parsed_request.netloc and\
+                self.__settings.get_value("trust-websites-adblock"):
+            pass
+        elif self.__settings.get_value("adblock") and\
+                parsed_request.scheme in ["http", "https"] and\
+                not App().adblock_exceptions.find_parsed(parsed_request):
+            if self.__adblock.is_netloc_blocked(parsed_request.netloc) or\
+                    self.__adblock.is_uri_blocked(uri, parsed_request.netloc):
                 return True
-            else:
-                self.__not_blocked.append(uri)
         if self.__settings.get_value("do-not-track"):
             headers = request.get_http_headers()
             if headers is not None:

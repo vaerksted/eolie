@@ -28,7 +28,7 @@ class JSblockExtension:
         """
         self.__settings = settings
         self.__document = None
-        self.__scripts = []
+        self.__scripts = None
         self.__whitelist = []
         extension.connect("page-created", self.__on_page_created)
 
@@ -46,6 +46,8 @@ class JSblockExtension:
             @return str
         """
         uris = []
+        if self.__scripts is None:
+            return []
         for i in range(0, self.__scripts.get_length()):
             script = self.__scripts.item(i)
             uri = script.get_src()
@@ -73,16 +75,21 @@ class JSblockExtension:
             @param request as WebKit2.URIRequest
             @param redirect as WebKit2WebExtension.URIResponse
         """
+        uri = webpage.get_uri()
+        parsed = urlparse(uri)
+        request_uri = request.get_uri()
+        parsed_request = urlparse(request_uri)
+        if parsed.netloc == parsed_request.netloc and\
+                self.__settings.get_value("trust-websites-js"):
+            return False
+
         document = webpage.get_dom_document()
         if self.__document != document:
             self.__document = document
             self.__scripts = \
                 document.get_elements_by_tag_name_as_html_collection("script")
-        parsed = urlparse(webpage.get_uri())
         if self.__settings.get_value("jsblock") and\
                 parsed.netloc not in self.__whitelist:
-            request_uri = request.get_uri()
-            parsed_request = urlparse(request_uri)
             if parsed_request.scheme in ["http", "https"] and\
                     not App().js_exceptions.find(parsed_request.netloc,
                                                  parsed.netloc):
