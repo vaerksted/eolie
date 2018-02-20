@@ -11,7 +11,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.trust-websites-popup</property>
-        <property name="tooltip-text" translatable="yes">Do not block current website popups</property>
+        <property name="tooltip_text" translatable="yes">Do not filter current website content</property>
         <property name="text" translatable="yes" context="Trust web sites">Trust web sites</property>
       </object>
       <packing>
