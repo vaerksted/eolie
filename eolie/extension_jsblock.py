@@ -91,14 +91,14 @@ class JSblockExtension:
         parsed_request = urlparse(request_uri)
         netloc = parsed.netloc.split(".")[-2:]
         netloc_request = parsed_request.netloc.split(".")[-2:]
-        if netloc == netloc_request and\
-                self.__settings.get_value("trust-websites-js"):
-            return False
         document = webpage.get_dom_document()
         if self.__document != document:
             self.__document = document
             self.__scripts = \
                 document.get_elements_by_tag_name_as_html_collection("script")
+        if netloc == netloc_request and\
+                self.__settings.get_value("trust-websites-js"):
+            return False
         if self.__settings.get_value("jsblock") and\
                 parsed.netloc not in self.__whitelist:
             if parsed_request.scheme in ["http", "https"] and\
