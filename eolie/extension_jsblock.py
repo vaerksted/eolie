@@ -26,6 +26,7 @@ class JSblockExtension:
             @param extension as WebKit2WebExtension
             @param settings as Settings
         """
+        self.__webpage = None
         self.__settings = settings
         self.__document = None
         self.__scripts = None
@@ -45,17 +46,25 @@ class JSblockExtension:
             Get available scripts
             @return str
         """
-        uris = []
-        if self.__scripts is None:
+        script_uris = []
+        if self.__scripts is None or self.__webpage is None:
             return []
+        uri = self.__webpage.get_uri()
+        parsed = urlparse(uri)
+        netloc = parsed.netloc.split(".")[-2:]
         for i in range(0, self.__scripts.get_length()):
             script = self.__scripts.item(i)
-            uri = script.get_src()
-            if uri is not None:
-                parsed = urlparse(uri)
-                if parsed.netloc and parsed.netloc not in uris:
-                    uris.append(parsed.netloc)
-        return uris
+            script_uri = script.get_src()
+            if script_uri is not None:
+                parsed_script = urlparse(script_uri)
+                netloc_script = parsed_script.netloc.split(".")[-2:]
+                if netloc == netloc_script and\
+                        self.__settings.get_value("trust-websites-js"):
+                    continue
+                if parsed_script.netloc and\
+                        parsed_script.netloc not in script_uris:
+                    script_uris.append(parsed_script.netloc)
+        return script_uris
 
 #######################
 # PRIVATE             #
@@ -66,6 +75,7 @@ class JSblockExtension:
             @param extension as WebKit2WebExtension
             @param webpage as WebKit2WebExtension.WebPage
         """
+        self.__webpage = webpage
         webpage.connect("send-request", self.__on_send_request)
 
     def __on_send_request(self, webpage, request, redirect):
