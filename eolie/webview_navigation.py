@@ -248,7 +248,7 @@ class WebViewNavigation:
             cookie_manager.set_persistent_storage(
                                         path,
                                         WebKit2.CookiePersistentStorage.SQLITE)
-        self.get_context().clear_cache()
+            self.get_context().clear_cache()
 
     def __same_domain(self, parsed1, parsed2):
         """
