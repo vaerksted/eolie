@@ -59,8 +59,6 @@ class WebViewNavigation:
             @param uri as str
         """
         self._error = False
-        # Allow profile switching
-        self.__previous_uri = ""
         # If not an URI, start a search
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
@@ -240,15 +238,21 @@ class WebViewNavigation:
         """
         if self.ephemeral or self.__related_view is not None:
             return
-        profile = App().websettings.get_profile(uri)
-        if self.__profile != profile:
-            self.__profile = profile
-            cookie_manager = self.get_context().get_cookie_manager()
-            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-            cookie_manager.set_persistent_storage(
+        parsed = urlparse(uri)
+        # Only switch profile if domain changed
+        previous_parsed = urlparse(self.__previous_uri)
+        switch_profile = not self.__same_domain(parsed, previous_parsed)
+        if switch_profile:
+            profile = App().websettings.get_profile(uri)
+            if self.__profile != profile:
+                self.__profile = profile
+                cookie_manager = self.get_context().get_cookie_manager()
+                path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+                cookie_manager.set_persistent_storage(
                                         path,
                                         WebKit2.CookiePersistentStorage.SQLITE)
-            self.get_context().clear_cache()
+                self.get_context().clear_cache()
+        self.__previous_uri = uri
 
     def __same_domain(self, parsed1, parsed2):
         """
@@ -304,15 +308,8 @@ class WebViewNavigation:
             @param param as GObject.ParamSpec
         """
         uri = webview.get_property(param.name)
-        parsed = urlparse(uri)
-        # Only switch profile if domain changed
-        previous_parsed = urlparse(self.__previous_uri)
-        switch_profile = not self.__same_domain(parsed, previous_parsed)
-        if switch_profile:
-            self.__switch_profile(uri)
         self.stop_snapshot()
         self.stop_favicon()
-        self.__previous_uri = uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
@@ -415,6 +412,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
+                self.__switch_profile(self._navigation_uri)
                 decision.use()
                 self._error = False
                 return False
@@ -437,6 +435,7 @@ class WebViewNavigation:
                 return True
             else:
                 App().history.set_page_state(self._navigation_uri)
+                self.__switch_profile(self._navigation_uri)
                 self._error = False
                 decision.use()
                 return False
