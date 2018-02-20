@@ -208,7 +208,7 @@ class PopupBlockMenu(ExceptionBlockMenu):
         builder.add_from_resource("/org/gnome/Eolie/PopupBlockMenu.ui")
         builder.connect_signals(self)
         self.__submenu = builder.get_object("submenu")
-        ExceptionBlockMenu.__init__(self, uri, window, True,
+        ExceptionBlockMenu.__init__(self, uri, window, False,
                                     "popup_exceptions",
                                     App().popup_exceptions)
         self.add(builder.get_object("menu"))

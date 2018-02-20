@@ -34,11 +34,6 @@
          <summary>Trust websites: no JavaScript blocking for internal URIs</summary>
          <description />
       </key>
-      <key type="b" name="trust-websites-popup">
-         <default>true</default>
-         <summary>Trust websites: no popup blocking for internal URIs</summary>
-         <description />
-      </key>
       <key type="b" name="popupblock">
          <default>true</default>
          <summary>Block unwanted popups on pages</summary>

@@ -67,6 +67,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         self._last_click_event_x = 0
         self._last_click_event_y = 0
+        self._last_click_time = 0
 
 #######################
 # PROTECTED           #
@@ -79,6 +80,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         self._last_click_event_x = event.x
         self._last_click_event_y = event.y
+        self._last_click_time = time()
         if self.get_ancestor(Gtk.Popover) is None:
             return self._window.close_popovers()
 

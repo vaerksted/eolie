@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, Gio, WebKit2, GLib
 
 from gettext import gettext as _
 from urllib.parse import urlparse
+from time import time
 
 from eolie.define import App, LoadingType
 from eolie.utils import get_snapshot
@@ -30,6 +31,8 @@ class WebViewMenuSignals:
             Init class
         """
         self.connect("context-menu", self.__on_context_menu)
+        self.connect("context-menu-dismissed",
+                     self.__on_context_menu_dismissed)
 
 #######################
 # PRIVATE             #
@@ -205,6 +208,13 @@ class WebViewMenuSignals:
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
             context_menu.append(inspector_item)
+
+    def __on_context_menu_dismissed(self, webview):
+        """
+            Add custom items to menu
+            @param webview as WebView
+        """
+        self._last_click_time = time()
 
     def __on_open_new_page_activate(self, action, variant, uri, ephemeral):
         """

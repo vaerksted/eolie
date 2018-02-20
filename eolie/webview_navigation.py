@@ -81,6 +81,8 @@ class WebViewNavigation:
             if uri.startswith("/"):
                 uri = "file://" + uri
             elif parsed.scheme == "javascript":
+                # To bypass popup blocker
+                self._last_click_time = time()
                 uri = GLib.uri_unescape_string(uri, None)
                 self.run_javascript(uri.replace("javascript:", ""), None, None)
             elif parsed.scheme not in ["http", "https", "file",
