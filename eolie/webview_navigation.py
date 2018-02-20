@@ -90,6 +90,8 @@ class WebViewNavigation:
             if parsed.scheme != "accept":
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
+            self.stop_loading()
+            self.__switch_profile(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
     @property
@@ -412,7 +414,6 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                self.__switch_profile(self._navigation_uri)
                 decision.use()
                 self._error = False
                 return False
