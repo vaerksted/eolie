@@ -242,13 +242,15 @@ class WebViewNavigation:
             return
         profile = App().websettings.get_profile(uri)
         if self.__profile != profile:
+            self.stop_loading()
             self.__profile = profile
             cookie_manager = self.get_context().get_cookie_manager()
             path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
             cookie_manager.set_persistent_storage(
                                         path,
                                         WebKit2.CookiePersistentStorage.SQLITE)
-        self.get_context().clear_cache()
+            self.get_context().clear_cache()
+            self.load_uri(uri)
 
     def __same_domain(self, parsed1, parsed2):
         """
@@ -305,13 +307,17 @@ class WebViewNavigation:
         """
         uri = webview.get_property(param.name)
         parsed = urlparse(uri)
+        # Prevent a loop in __switch_profile
+        # Change cookie manager make WebView to reload previous uri!
+        if parsed.scheme == "populars":
+            return
         # Only switch profile if domain changed
         previous_parsed = urlparse(self.__previous_uri)
         switch_profile = not self.__same_domain(parsed, previous_parsed)
-        if switch_profile:
-            self.__switch_profile(uri)
         self.stop_snapshot()
         self.stop_favicon()
+        if switch_profile:
+            self.__switch_profile(uri)
         self.__previous_uri = uri
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
