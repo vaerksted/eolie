@@ -18,6 +18,7 @@ from time import time
 from eolie.define import App, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
 from eolie.define import COOKIES_PATH
 from eolie.utils import get_ftp_cmd
+from eolie.logger import Logger
 
 
 class WebViewNavigation:
@@ -188,26 +189,27 @@ class WebViewNavigation:
                     from datetime import datetime
                     (valid, tls, errors) = webview.get_tls_info()
                     if tls is not None:
-                        print("***************************************"
-                              "***************************************")
+                        Logger.info("***************************************"
+                                    "***************************************")
                         cert_pem = tls.get_property("certificate-pem")
                         cert = crypto.load_certificate(crypto.FILETYPE_PEM,
                                                        cert_pem)
                         subject = cert.get_subject()
-                        print("CN: %s" % subject.CN)
+                        Logger.info("CN: %s", subject.CN)
                         start_bytes = cert.get_notBefore()
                         end_bytes = cert.get_notAfter()
                         start = datetime.strptime(start_bytes.decode("utf-8"),
                                                   "%Y%m%d%H%M%SZ")
                         end = datetime.strptime(end_bytes.decode("utf-8"),
                                                 "%Y%m%d%H%M%SZ")
-                        print("Valid from %s to %s" % (start, end))
-                        print("Serial number: %s" % cert.get_serial_number())
-                        print(cert_pem)
-                        print("***************************************"
-                              "***************************************")
+                        Logger.info("Valid from %s to %s", (start, end))
+                        Logger.info("Serial number: %s",
+                                    cert.get_serial_number())
+                        Logger.info(cert_pem)
+                        Logger.info("***************************************"
+                                    "***************************************")
                 except Exception as e:
-                    print("Please install OpenSSL python support:", e)
+                    Logger.info("Please install OpenSSL python support: %s", e)
 
 #######################
 # PRIVATE             #
@@ -275,9 +277,7 @@ class WebViewNavigation:
         return False
 
     def __on_run_as_modal(self, webview):
-        """
-        """
-        print("WebView::__on_run_as_modal(): TODO")
+        Logger.info("WebView::__on_run_as_modal(): TODO")
 
     def __on_insecure_content_detected(self, webview, event):
         """
@@ -379,7 +379,8 @@ class WebViewNavigation:
                                                uri,
                                                Gtk.get_current_event_time())
                     except Exception as e:
-                        print("WebViewNavigation::__on_decide_policy()", e)
+                        Logger.error("""WebViewNavigation::
+                                        __on_decide_policy(): %s""", e)
                     decision.ignore()
                 else:
                     decision.use()
@@ -401,7 +402,7 @@ class WebViewNavigation:
                                        self._navigation_uri,
                                        Gtk.get_current_event_time())
             except Exception as e:
-                print("WebViewNavigation::__on_decide_policy()", e)
+                Logger.error("WebViewNavigation::__on_decide_policy(): %s", e)
             decision.ignore()
         elif mouse_button == 0:
             # Prevent opening empty pages

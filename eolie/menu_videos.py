@@ -16,6 +16,7 @@ from hashlib import sha256
 from gettext import gettext as _
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class VideosMenu(Gio.Menu):
@@ -77,7 +78,7 @@ class VideosMenu(Gio.Menu):
             else:
                 self.__add_action(_("No videos"), "")
         except Exception as e:
-            print("VideosMenu::__on_get_videos()", e)
+            Logger.error("VideosMenu::__on_get_videos()", e)
 
     def __on_action_clicked(self, action, variant, uri):
         """

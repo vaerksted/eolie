@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from gettext import gettext as _
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class ImportBookmarksDialog:
@@ -46,7 +47,7 @@ class ImportBookmarksDialog:
             BeautifulSoup
             items.append(_("Others"))
         except Exception as e:
-            print("ImportBookmarksDialog::__init__():", e)
+            Logger.error("ImportBookmarksDialog::__init__(): %s", e)
         for item in items:
             label = Gtk.Label.new(item)
             label.show()

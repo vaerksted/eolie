@@ -23,7 +23,8 @@ from threading import Lock
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS
-from eolie.utils import debug, remove_www
+from eolie.utils import remove_www
+from eolie.logger import Logger
 
 
 class DatabaseAdblock:
@@ -189,7 +190,7 @@ class DatabaseAdblock:
                     sql.execute("PRAGMA schema_version=%s" %
                                 self.__SCHEMA_VERSION)
             except Exception as e:
-                print("DatabaseAdblock::__init__(): %s" % e)
+                Logger.error("DatabaseAdblock::__init__(): %s", e)
 
     def update(self):
         """
@@ -200,7 +201,7 @@ class DatabaseAdblock:
         # Update adblock_js repo
         git = GLib.find_program_in_path("git")
         if git is None:
-            print(_("For stronger ad blocking, install git command"))
+            Logger.info(_("For stronger ad blocking, install git command"))
         else:
             if GLib.file_test(ADBLOCK_JS, GLib.FileTest.IS_DIR):
                 argv = [git,
@@ -294,7 +295,7 @@ class DatabaseAdblock:
                 v = result.fetchone()
                 return v is not None
         except Exception as e:
-            print("DatabaseAdblock::is_netloc_blocked():", e)
+            Logger.error("DatabaseAdblock::is_netloc_blocked(): %s", e)
             return False
 
     def is_uri_blocked(self, uri, netloc):
@@ -362,7 +363,7 @@ class DatabaseAdblock:
             c = sqlite3.connect(self.__DB_PATH, 600.0)
             return c
         except Exception as e:
-            print(e)
+            Logger.error("DatabaseAdblock::get_cursor(): %s", e)
             exit(-1)
 
 #######################
@@ -464,7 +465,7 @@ class DatabaseAdblock:
             rule = re.sub("(\|)[^$]", r"\|", rule)
             return rule
         except Exception as e:
-            print("DatabaseAdblock::__rule_to_regex()", e)
+            Logger.error("DatabaseAdblock::__rule_to_regex(): %s", e)
             return None
 
     def __save_rules(self, rules):
@@ -490,7 +491,7 @@ class DatabaseAdblock:
                                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
             if netloc != "localhost":
-                debug("Add filter: %s" % netloc)
+                Logger.debug("Add filter: %s", netloc)
                 self.__add_netloc(netloc)
             count += 1
             if count == 1000:
@@ -623,7 +624,7 @@ class DatabaseAdblock:
                 self.__save_abp_rule(line[2:], True)
             else:
                 self.__save_abp_rule(line, False)
-            debug("Add abp filter: %s" % line)
+            Logger.debug("Add abp filter: %s", line)
             count += 1
             if count == 1000:
                 SqlCursor.commit(self)
@@ -669,7 +670,7 @@ class DatabaseAdblock:
             @param content as bytes
             @param uris as [str]
         """
-        debug("DatabaseAdblock::__on_load_uri_content(): %s" % uri)
+        Logger.debug("DatabaseAdblock::__on_load_uri_content(): %s", uri)
         if status:
             if uri in self.__URIS:
                 self.__task_helper.run(self.__save_rules, content,

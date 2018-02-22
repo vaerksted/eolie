@@ -18,6 +18,7 @@ from threading import Lock
 
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
+from eolie.logger import Logger
 
 
 class DatabaseExceptions:
@@ -52,7 +53,7 @@ class DatabaseExceptions:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_exceptions)
             except Exception as e:
-                print("DatabaseExceptions::__init__(): %s" % e)
+                Logger.error("DatabaseExceptions::__init__(): %s", e)
 
     def add_exception(self, value, domain=""):
         """
@@ -126,5 +127,5 @@ class DatabaseExceptions:
             c = sqlite3.connect(self.__DB_PATH, 600.0)
             return c
         except Exception as e:
-            print(e)
+            Logger.error("DatabaseExceptions::get_cursor(): %s", e)
             exit(-1)

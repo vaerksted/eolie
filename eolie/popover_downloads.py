@@ -16,6 +16,7 @@ from time import time
 from gettext import gettext as _
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class DownloadRow(Gtk.ListBoxRow):
@@ -251,7 +252,7 @@ class DownloadRow(Gtk.ListBoxRow):
                 self.__download_previous_time = new_time
             self.__progress.set_fraction(download.get_estimated_progress())
         except Exception as e:
-            print("DownloadPopover::__on_received_data():", e)
+            Logger.error("DownloadPopover::__on_received_data(): %s", e)
 
     def __on_finished(self, download):
         """

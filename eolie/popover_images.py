@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_CACHE_PATH, ArtSize, App
+from eolie.logger import Logger
 
 
 class Image(Gtk.FlowBoxChild):
@@ -195,7 +196,7 @@ class ImagesPopover(Gtk.Popover):
                 try:
                     s.move(d, Gio.FileCopyFlags.OVERWRITE, None, None, None)
                 except Exception as e:
-                    print("ImagesPopover::__move_images()", e)
+                    Logger.error("ImagesPopover::__move_images(): %s", e)
         GLib.idle_add(self.hide)
 
     def __clean_cache(self):
@@ -210,7 +211,7 @@ class ImagesPopover(Gtk.Popover):
                 if f.query_exists():
                     f.delete()
             except Exception as e:
-                print("ImagesPopover::__clean_cache():", e)
+                Logger.error("ImagesPopover::__clean_cache(): %s", e)
 
     def __on_write_all_async(self, stream, result, uri):
         """
@@ -224,7 +225,7 @@ class ImagesPopover(Gtk.Popover):
             self.__add_image(uri)
             self.__cache_uris.append(uri)
         except Exception as e:
-            print("ImagesPopover::__on_write_all_async()", e)
+            Logger.error("ImagesPopover::__on_write_all_async(): %s", e)
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """
@@ -263,7 +264,7 @@ class ImagesPopover(Gtk.Popover):
         try:
             uris = source.call_finish(result)[0]
         except Exception as e:
-            print("ImagesPopover::__on_get_images()", e)
+            Logger.error("ImagesPopover::__on_get_images(): %s", e)
         self.__cancellable.reset()
         self.__on_load_uri_content(None, False, b"", uris)
 

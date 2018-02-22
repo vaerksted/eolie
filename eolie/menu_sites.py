@@ -16,6 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class SitesMenu(Gtk.Grid):
@@ -132,7 +133,7 @@ class SitesMenu(Gtk.Grid):
             webview.stop_loading()
             webview.load_uri(uri)
         except Exception as e:
-            print("SitesMenu::__on_profiles_activate:", e)
+            Logger.error("SitesMenu::__on_profiles_activate: %s", e)
 
     def __on_close_activate(self, action, param):
         """

@@ -16,6 +16,7 @@ from gettext import gettext as _
 import json
 
 from eolie.define import App, EOLIE_DATA_PATH
+from eolie.logger import Logger
 
 
 class ProfilesMenu(Gtk.Grid):
@@ -76,7 +77,7 @@ class ProfilesMenu(Gtk.Grid):
                 if profile == key:
                     action.change_state(GLib.Variant("s", profile))
         except Exception as e:
-            print("ProfilesMenu::__init__():", e)
+            Logger.error("ProfilesMenu::__init__(): %s", e)
 
         # Edit button
         item = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
@@ -130,4 +131,4 @@ class ProfilesMenu(Gtk.Grid):
             webview.load_uri("about:blank")
             webview.load_uri(uri)
         except Exception as e:
-            print("ProfilesMenu::__on_profiles_activate:", e)
+            Logger.error("ProfilesMenu::__on_profiles_activate: %s", e)

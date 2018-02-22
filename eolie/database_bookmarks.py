@@ -21,6 +21,7 @@ from eolie.utils import noaccents, get_random_string
 from eolie.define import EOLIE_DATA_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
+from eolie.logger import Logger
 
 
 class DatabaseBookmarks:
@@ -75,7 +76,7 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_bookmarks_tags)
                     sql.execute(self.__create_parents)
             except Exception as e:
-                print("DatabaseBookmarks::__init__(): %s" % e)
+                Logger.error("DatabaseBookmarks::__init__(): %s", e)
 
     def add(self, title, uri, guid, tags, atime=0):
         """
@@ -768,7 +769,7 @@ class DatabaseBookmarks:
                             position += 1
             SqlCursor.remove(self)
         except Exception as e:
-            print("DatabaseBookmarks::import_html:", e)
+            Logger.error("DatabaseBookmarks::import_html(): %s", e)
 
     def import_chromium(self, chrome):
         """
@@ -824,7 +825,7 @@ class DatabaseBookmarks:
                             position += 1
                 SqlCursor.remove(self)
         except Exception as e:
-            print("DatabaseBookmarks::import_chromium:", e)
+            Logger.error("DatabaseBookmarks::import_chromium(): %s", e)
 
     def import_firefox(self):
         """
@@ -891,7 +892,7 @@ class DatabaseBookmarks:
                         self.set_position(bookmark_id, position, False)
             SqlCursor.remove(self)
         except Exception as e:
-            print("DatabaseBookmarks::import_firefox:", e)
+            Logger.error("DatabaseBookmarks::import_firefox(): %s", e)
 
     def exists_guid(self, guid):
         """
@@ -992,7 +993,8 @@ class DatabaseBookmarks:
             c.create_collation('LOCALIZED', LocalizedCollation())
             c.create_function("noaccents", 1, noaccents)
             return c
-        except:
+        except Exception as e:
+            Logger.error("DatabaseBookmarks::get_cursor(): %s", e)
             exit(-1)
 
 #######################

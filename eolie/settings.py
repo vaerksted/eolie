@@ -21,6 +21,7 @@ from eolie.define import App
 from eolie.utils import get_current_monitor_model
 from eolie.helper_task import TaskHelper
 from eolie.helper_passwords import PasswordsHelper
+from eolie.logger import Logger
 
 
 class Settings(Gio.Settings):
@@ -294,7 +295,7 @@ class SettingsDialog:
             for window in App().windows:
                 window.update_zoom_level(True)
         except Exception as e:
-            print("SettingsDialog::_on_default_zoom_changed():", e)
+            Logger.error("SettingsDialog::_on_default_zoom_changed(): %s", e)
 
     def _on_min_font_size_changed(self, button):
         """
@@ -535,7 +536,7 @@ class SettingsDialog:
             App().sync_worker.login({"login": username}, password)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
-            print("SettingsDialog::__connect_mozilla_sync():", e)
+            Logger.error("SettingsDialog::__connect_mozilla_sync(): %s", e)
             GLib.idle_add(self.__sync_button.set_sensitive, True)
             if str(e) == "Unverified account":
                 GLib.timeout_add(500, self.__settings_dialog.destroy)
@@ -565,4 +566,4 @@ class SettingsDialog:
             self.__login_entry.set_text(attributes["login"])
             self.__password_entry.set_text(password)
         except Exception as e:
-            print("SettingsDialog::__on_get_sync()", e)
+            Logger.error("SettingsDialog::__on_get_sync(): %s", e)

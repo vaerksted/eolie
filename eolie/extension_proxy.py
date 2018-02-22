@@ -19,6 +19,7 @@ from uuid import uuid4
 from eolie.define import PROXY_BUS, PROXY_PATH, Type
 from eolie.list import LinkedList
 from eolie.helper_passwords import PasswordsHelper
+from eolie.logger import Logger
 
 
 class Server:
@@ -236,7 +237,7 @@ class ProxyExtensionServer(Server):
                                     uuid,
                                     None)
         except Exception as e:
-            print("ProxyExtension::SaveCredentials():", e)
+            Logger.error("ProxyExtension::SaveCredentials(): %s", e)
 
     def SetAuthForms(self, userform, username):
         """
@@ -260,7 +261,7 @@ class ProxyExtensionServer(Server):
                                       username)
                     return
         except Exception as e:
-            print("ProxyExtension::SetAuthForms():", e)
+            Logger.error("ProxyExtension::SetAuthForms(): %s", e)
 
     def GetScripts(self):
         """
@@ -270,7 +271,7 @@ class ProxyExtensionServer(Server):
         try:
             return self.__jsblock_extension.scripts
         except Exception as e:
-            print("ProxyExtension::GetScripts():", e)
+            Logger.error("ProxyExtension::GetScripts(): %s", e)
         return []
 
     def GetImages(self):
@@ -290,7 +291,7 @@ class ProxyExtensionServer(Server):
                     uris.append(uri)
             return uris
         except Exception as e:
-            print("ProxyExtension::GetImages():", e)
+            Logger.error("ProxyExtension::GetImages(): %s", e)
         return []
 
     def GetVideos(self):
@@ -340,7 +341,7 @@ class ProxyExtensionServer(Server):
                     uris.append(uri)
             return uris
         except Exception as e:
-            print("ProxyExtension::GetImagesLinks():", e)
+            Logger.error("ProxyExtension::GetImagesLinks(): %s", e)
         return []
 
     def GetSelection(self):
@@ -390,7 +391,7 @@ class ProxyExtensionServer(Server):
                 self.__elements_history[self.__focused] = current
                 self.__focused.set_value("")
         except Exception as e:
-            print("ProxyExtension::SetPreviousForm():", e)
+            Logger.error("ProxyExtension::SetPreviousForm(): %s", e)
 
     def SetNextElementValue(self):
         """
@@ -405,7 +406,7 @@ class ProxyExtensionServer(Server):
                     self.__elements_history[self.__focused] = current.next
                     self.__focused.set_value(current.next.value)
         except Exception as e:
-            print("ProxyExtension::SetNextForm():", e)
+            Logger.error("ProxyExtension::SetNextForm(): %s", e)
 
 #######################
 # PRIVATE             #

@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from eolie.search import Search
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class Item(GObject.GObject):
@@ -309,4 +310,4 @@ class SearchEngineDialog:
                 child.show()
                 self.__listbox.add(child)
         except Exception as e:
-            print("DialogSearchEngine::__populate():", e)
+            Logger.error("DialogSearchEngine::__populate(): %s", e)

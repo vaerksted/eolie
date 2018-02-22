@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from eolie.define import EOLIE_CACHE_PATH
 from eolie.utils import remove_www
+from eolie.logger import Logger
 
 
 class Art:
@@ -54,7 +55,7 @@ class Art:
                                                  surface.get_height())
             pixbuf.savev(filepath, "png", [None], [None])
         except Exception as e:
-            print("Art::save_artwork():", e)
+            Logger.error("Art::save_artwork(): %s", e)
 
     def get_artwork(self, uri, suffix, scale_factor, width, heigth):
         """
@@ -168,7 +169,7 @@ class Art:
                     if current_time - mtime > 2592000:
                         f.delete()
         except Exception as e:
-            print("Art::vacuum():", e)
+            Logger.error("Art::vacuum(): %s", e)
 
     @property
     def base_uri(self):
@@ -193,4 +194,4 @@ class Art:
             try:
                 GLib.mkdir_with_parents(EOLIE_CACHE_PATH, 0o0750)
             except Exception as e:
-                print("Art::__create_cache():", e)
+                Logger.error("Art::__create_cache(): %s", e)

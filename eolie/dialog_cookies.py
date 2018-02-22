@@ -16,6 +16,7 @@ import json
 import sqlite3
 
 from eolie.define import App, EOLIE_DATA_PATH, COOKIES_PATH
+from eolie.logger import Logger
 
 
 class Profile(GObject.GObject):
@@ -238,7 +239,7 @@ class CookiesDialog:
                 sql.execute(request, filters)
                 sql.commit()
         except Exception as e:
-            print("CookiesDialog::_on_dialog_response():", e)
+            Logger.error("CookiesDialog::_on_dialog_response(): %s", e)
         App().set_profiles()
 
     def _on_entry_changed(self, entry):
@@ -286,7 +287,8 @@ class CookiesDialog:
                 if f.query_exists():
                     f.trash()
             except Exception as e:
-                print("DialogSearchEngine::_on_remove_button_clicked():", e)
+                Logger.error("""DialogSearchEngine::
+                             _on_remove_button_clicked(): %s""", e)
             row.destroy()
             for child in self.__cookies.get_children():
                 GLib.idle_add(child.destroy)
@@ -331,7 +333,8 @@ class CookiesDialog:
                                           FROM moz_cookies")
                     self.__add_cookies(list(result))
                 except Exception as e:
-                    print("DialogCookies::_on_profile_selected():", e)
+                    Logger.error("""DialogCookies::
+                                 _on_profile_selected(): %s""", e)
 
 #######################
 # PRIVATE             #
@@ -388,7 +391,7 @@ class CookiesDialog:
         try:
             self.__add_profiles(App().profiles)
         except Exception as e:
-            print("DialogSearchEngine::__populate():", e)
+            Logger.error("DialogSearchEngine::__populate(): %s", e)
 
     def __get_index(self, name):
         """

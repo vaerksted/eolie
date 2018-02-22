@@ -43,6 +43,7 @@ from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import is_unity, wanted_loading_type, set_proxy_from_gnome
+from eolie.logger import Logger
 
 
 class Application(Gtk.Application):
@@ -149,10 +150,6 @@ class Application(Gtk.Application):
         shortcuts_action.connect("activate", self.__on_shortcuts_activate)
         self.add_action(shortcuts_action)
 
-        # help_action = Gio.SimpleAction.new('help', None)
-        # help_action.connect('activate', self.__on_help_activate)
-        # self.add_action(help_action)
-
         quit_action = Gio.SimpleAction.new("quit", None)
         quit_action.connect("activate", lambda x, y: self.quit())
         self.add_action(quit_action)
@@ -244,7 +241,7 @@ class Application(Gtk.Application):
                                    None)
                 self.__profiles = PROFILES
         except Exception as e:
-            print("Application::set_profiles():", e)
+            Logger.error("Application::set_profiles(): %s", e)
 
     def quit(self, vacuum=False):
         """
@@ -410,7 +407,7 @@ class Application(Gtk.Application):
         # Check MOZ_PLUGIN_PATH
         if self.settings.get_value('enable-plugins') and\
                 not GLib.getenv("MOZ_PLUGIN_PATH"):
-            print("You need to set MOZ_PLUGIN_PATH to use plugins")
+            Logger.info("You need to set MOZ_PLUGIN_PATH to use plugins")
 
         # https://wiki.ubuntu.com/Unity/LauncherAPI
         self.__unity = None
@@ -505,7 +502,7 @@ class Application(Gtk.Application):
                 sql.execute("VACUUM")
                 sql.isolation_level = ""
         except Exception as e:
-            print("Application::__vacuum(): ", e)
+            Logger.error("Application::__vacuum(): %s ", e)
         self.art.vacuum()
 
     def __get_state(self, window):
@@ -560,7 +557,7 @@ class Application(Gtk.Application):
             dump(window_states,
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
         except Exception as e:
-            print("Application::__save_state()", e)
+            Logger.error("Application::__save_state(): %s", e)
 
     def __clean_state_cache(self, window_id):
         """
@@ -602,7 +599,7 @@ class Application(Gtk.Application):
                     size = windows[0]["size"]
                     maximized = windows[0]["maximized"]
         except Exception as e:
-            print("Application::__create_initial_windows()", e)
+            Logger.error("Application::__create_initial_windows(): %s", e)
         if not self.get_windows():
             self.get_new_window(size, maximized)
 
@@ -613,7 +610,7 @@ class Application(Gtk.Application):
             @param options as GLib.VariantDict
         """
         if options.contains("version"):
-            print("Eolie %s" % self.__version)
+            Logger.info("Eolie %s", self.__version)
             return 0
         return -1
 
@@ -737,7 +734,7 @@ class Application(Gtk.Application):
                     self.__close_window(window)
         except Exception as e:
             self.__close_window(window)
-            print("Application::__on_forms_filled():", e)
+            Logger.error("Application::__on_forms_filled(): %s", e)
 
     def __on_get_plugins(self, source, result, data):
         """
@@ -748,9 +745,10 @@ class Application(Gtk.Application):
         """
         plugins = source.get_plugins_finish(result)
         for plugin in plugins:
-            print(plugin.get_name(),
-                  plugin.get_description(),
-                  plugin.get_path())
+            Logger.info("%s, %s, %s",
+                        plugin.get_name(),
+                        plugin.get_description(),
+                        plugin.get_path())
 
     def __on_delete_event(self, window, event):
         """
@@ -824,17 +822,6 @@ class Application(Gtk.Application):
         if window is not None:
             shortcuts.set_transient_for(window)
         shortcuts.show()
-
-    def __on_help_activate(self, action, param):
-        """
-            Show help in yelp
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        try:
-            Gtk.show_uri(None, "help:eolie", Gtk.get_current_event_time())
-        except:
-            print(_("Eolie: You need to install yelp."))
 
     def __on_about_activate_response(self, dialog, response_id):
         """

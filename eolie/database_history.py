@@ -21,6 +21,7 @@ from eolie.utils import noaccents, get_random_string
 from eolie.define import EOLIE_DATA_PATH
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
+from eolie.logger import Logger
 
 
 class DatabaseHistory:
@@ -73,7 +74,7 @@ class DatabaseHistory:
                     sql.execute(self.__create_history_atime)
                     sql.execute("PRAGMA user_version=%s" % new_version)
             except Exception as e:
-                print("DatabaseHistory::__init__(): %s" % e)
+                Logger.error("DatabaseHistory::__init__(): %s", e)
         # DB upgrade, TODO Make it generic between class
         version = 0
         with SqlCursor(self) as sql:
@@ -86,7 +87,7 @@ class DatabaseHistory:
                     try:
                         sql.execute(self.__UPGRADES[i])
                     except:
-                        print("History DB upgrade %s failed" % i)
+                        Logger.error("History DB upgrade %s failed", i)
                 sql.execute("PRAGMA user_version=%s" % new_version)
 
     def add(self, title, uri, mtime, guid=None, atimes=[]):
@@ -571,7 +572,8 @@ class DatabaseHistory:
             c.create_collation('LOCALIZED', LocalizedCollation())
             c.create_function("noaccents", 1, noaccents)
             return c
-        except:
+        except Exception as e:
+            Logger.error("DatabaseHistory::get_cursor(): %s", e)
             exit(-1)
 
 #######################

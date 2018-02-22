@@ -16,13 +16,13 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App, Indicator, LoadingType
-from eolie.utils import debug
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
 from eolie.context import Context
 from eolie.list import LinkedList
+from eolie.logger import Logger
 
 
 class WebView(WebKit2.WebView):
@@ -98,8 +98,8 @@ class WebView(WebKit2.WebView):
                 if window is not None and hasattr(window, "zoom_level"):
                     zoom_level *= window.zoom_level
         except Exception as e:
-            print("WebView::update_zoom_level()", e)
-        debug("Update zoom level: %s" % zoom_level)
+            Logger.error("WebView::update_zoom_level(): %s", e)
+        Logger.debug("Update zoom level: %s", zoom_level)
         self.set_zoom_level(zoom_level / 100)
 
     def print(self):

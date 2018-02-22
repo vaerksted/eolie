@@ -20,6 +20,7 @@ from threading import Lock
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
+from eolie.logger import Logger
 
 
 class DatabasePhishing:
@@ -55,7 +56,7 @@ class DatabasePhishing:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_phishing)
             except Exception as e:
-                print("DatabasePhishing::__init__(): %s" % e)
+                Logger.error("DatabasePhishing::__init__(): %s", e)
 
     def update(self):
         """
@@ -92,7 +93,7 @@ class DatabasePhishing:
                 v = result.fetchone()
                 return v is not None
         except Exception as e:
-            print("DatabasePhishing::is_phishing():", e)
+            Logger.error("DatabasePhishing::is_phishing(): %s", e)
             return False
 
     def stop(self):
@@ -110,7 +111,7 @@ class DatabasePhishing:
             c = sqlite3.connect(self.DB_PATH, 600.0)
             return c
         except Exception as e:
-            print(e)
+            Logger.error("DatabasePhishing::get_cursor(): %s", e)
             exit(-1)
 
 #######################

@@ -16,6 +16,7 @@ from hashlib import sha256
 from urllib.parse import urlparse
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class BlockMenu(Gtk.Bin):
@@ -328,4 +329,4 @@ class JSBlockMenu(BlockMenu):
                 button.show()
                 self.__submenu.add(button)
         except Exception as e:
-            print("JSBlockMenu::__on_get_scripts()", e)
+            Logger.error("JSBlockMenu::__on_get_scripts(): %s", e)

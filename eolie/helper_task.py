@@ -16,6 +16,8 @@ from gi.repository import GLib, Soup
 
 from threading import Thread
 
+from eolie.logger import Logger
+
 
 class TaskHelper:
     """
@@ -72,7 +74,7 @@ class TaskHelper:
                                uri,
                                *args)
         except Exception as e:
-            print("HelperTask::load_uri_content():",  e, uri)
+            Logger.error("HelperTask::load_uri_content(): %s, %s:",  e, uri)
             callback(None, False, b"", *args)
 
 #######################
@@ -92,7 +94,7 @@ class TaskHelper:
                 if callback is not None:
                     GLib.idle_add(callback, result, *callback_args)
         except Exception as e:
-            print("TaskHelper::__run():", e, command, kwd)
+            Logger.error("TaskHelper::__run(): %s, %s, %s", e, command, kwd)
 
     def __on_read_bytes_async(self, stream, result, content,
                               cancellable, callback, uri, *args):
@@ -118,7 +120,7 @@ class TaskHelper:
             else:
                 callback(uri, True, bytes(content), *args)
         except Exception as e:
-            print("TaskHelper::__on_read_bytes_async():", e)
+            Logger.error("TaskHelper::__on_read_bytes_async(): %s", e)
             callback(uri, False, b"", *args)
 
     def __on_request_send_async(self, source, result, callback,
@@ -139,5 +141,5 @@ class TaskHelper:
                                     bytearray(0), cancellable, callback, uri,
                                     *args)
         except Exception as e:
-            print("TaskHelper::__on_soup_msg_finished():",  e)
+            Logger.error("TaskHelper::__on_soup_msg_finished(): %s",  e)
             callback(uri, False, b"", *args)

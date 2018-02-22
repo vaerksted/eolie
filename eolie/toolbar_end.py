@@ -18,6 +18,7 @@ from gettext import gettext as _
 from eolie.define import App
 from eolie.popover_downloads import DownloadsPopover
 from eolie.helper_passwords import PasswordsHelper
+from eolie.logger import Logger
 
 
 class ProgressBar(Gtk.ProgressBar):
@@ -405,5 +406,5 @@ class ToolbarEnd(Gtk.Bin):
             App().sync_worker.new_session()
             App().sync_worker.login(attributes, password)
         except Exception as e:
-            print("ToolbarEnd::__on_get_sync()", e)
+            Logger.error("ToolbarEnd::__on_get_sync(): %s", e)
             self.__sync_button.show()

@@ -15,6 +15,7 @@ from gi.repository import Gtk, GLib, WebKit2
 from gettext import gettext as _
 
 from eolie.define import TimeSpanValues
+from eolie.logger import Logger
 
 
 class ClearDataDialog:
@@ -313,4 +314,4 @@ class ClearDataDialog:
             items = data_manager.fetch_finish(result)
             self.__add_items(items)
         except Exception as e:
-            print("ClearDataDialog::__on_data_manager_fetch():", e)
+            Logger.error("ClearDataDialog::__on_data_manager_fetch(): %s", e)

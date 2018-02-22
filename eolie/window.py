@@ -17,6 +17,7 @@ from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model, name_from_profile_id
 from eolie.helper_task import TaskHelper
+from eolie.logger import Logger
 
 
 class Window(Gtk.ApplicationWindow):
@@ -286,7 +287,7 @@ class Window(Gtk.ApplicationWindow):
             if maximized:
                 self.maximize()
         except Exception as e:
-            print("Window::__setup_window():", e)
+            Logger.error("Window::__setup_window(): %s", e)
 
     def __on_configure_event(self, window, event):
         """
@@ -319,7 +320,7 @@ class Window(Gtk.ApplicationWindow):
             appinfo = Gio.app_info_get_default_for_type("text/plain", False)
             appinfo.launch([tmp], None)
         except Exception as e:
-            print("Window::__on_source_loaded():", e)
+            Logger.error("Window::__on_source_loaded(): %s", e)
 
     def __on_configure_timeout(self):
         """

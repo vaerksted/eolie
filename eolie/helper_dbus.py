@@ -13,6 +13,7 @@
 from gi.repository import Gio
 
 from eolie.define import PROXY_BUS, PROXY_PATH, PROXY_INTERFACE, App
+from eolie.logger import Logger
 
 
 class DBusHelper:
@@ -41,7 +42,7 @@ class DBusHelper:
                               self.__on_get_proxy,
                               call, dbus_args, callback, *args)
         except Exception as e:
-            print("DBusHelper::call():", e)
+            Logger.error("DBusHelper::call(): %s", e)
 
     def connect(self, signal, callback, page_id):
         """
@@ -59,7 +60,7 @@ class DBusHelper:
                                                 callback)
             self.__signals[page_id] = (bus, subscribe_id)
         except Exception as e:
-            print("DBusHelper::connect():", e)
+            Logger.error("DBusHelper::connect(): %s", e)
 
     def disconnect(self, page_id):
         """
@@ -88,5 +89,5 @@ class DBusHelper:
             proxy.call(call, dbus_args, Gio.DBusCallFlags.NO_AUTO_START,
                        1000, None, callback, *args)
         except Exception as e:
-            print("DBusHelper::__on_get_proxy():", e)
+            Logger.error("DBusHelper::__on_get_proxy(): %s", e)
             callback(None, None, *args)

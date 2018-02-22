@@ -19,6 +19,7 @@ from time import time
 from eolie.define import App, LoadingType
 from eolie.utils import get_snapshot
 from eolie.search import Search
+from eolie.logger import Logger
 
 
 class WebViewMenuSignals:
@@ -281,7 +282,7 @@ class WebViewMenuSignals:
         try:
             self.get_context().download_uri(uri)
         except Exception as e:
-            print("WebViewMenuSignals::__on_download_activate():", e)
+            Logger.error("WebViewMenuSignals::__on_download_activate(): %s", e)
 
     def __on_save_images_activate(self, action, variant):
         """
@@ -330,7 +331,8 @@ class WebViewMenuSignals:
             webview.load_uri(uri)
             webview.connect("load-changed", self.__on_load_changed, uri)
         except Exception as e:
-            print("WebViewMenuSignals::__on_reload_preview_activate():", e)
+            Logger.error("""WebViewMenuSignals::
+                            __on_reload_preview_activate(): %s""", e)
 
     def __on_load_changed(self, webview, event, uri):
         """
@@ -394,7 +396,7 @@ class WebViewMenuSignals:
                                    "file:///tmp/eolie_snapshot.png",
                                    Gtk.get_current_event_time())
         except Exception as e:
-            print("WebView::__on_snapshot():", e)
+            Logger.error("WebView::__on_snapshot(): %s", e)
             # The 32767 limit on the width/height dimensions
             # of an image surface is new in cairo 1.10,
             # try with WebKit2.SnapshotRegion.VISIBLE

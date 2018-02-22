@@ -18,6 +18,7 @@ import json
 
 from eolie.helper_task import TaskHelper
 from eolie.define import App, EOLIE_DATA_PATH
+from eolie.logger import Logger
 
 
 class Search:
@@ -96,7 +97,7 @@ class Search:
                                Gio.FileCreateFlags.REPLACE_DESTINATION,
                                None)
         except Exception as e:
-            print("Search::save_engines():", e)
+            Logger.error("Search::save_engines(): %s", e)
 
     def update_default_engine(self):
         """
@@ -143,7 +144,7 @@ class Search:
             task_helper.load_uri_content(uri, cancellable,
                                          callback, self.__encoding, value)
         except Exception as e:
-            print("Search::search_suggestions():", e)
+            Logger.error("Search::search_suggestions(): %s", e)
 
     def install_engine(self, uri, window):
         """
@@ -183,7 +184,7 @@ class Search:
                     (status, contents, tag) = f.load_contents(None)
                     self.__engines.update(json.loads(contents.decode("utf-8")))
             except Exception as e:
-                print("Search::engines():", e)
+                Logger.error("Search::engines(): %s", e)
             if not self.__engines:
                 self.__engines = self.__ENGINES
         return self.__engines
@@ -257,7 +258,7 @@ class Search:
             popover.set_relative_to(window.toolbar.title)
             popover.popup()
         except Exception as e:
-            print("Search::__on_engine_loaded()", e)
+            Logger.error("Search::__on_engine_loaded(): %s", e)
 
     def __on_message_popover_ok(self, name, search, suggest, encoding):
         """

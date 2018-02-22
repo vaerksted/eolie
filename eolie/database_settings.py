@@ -18,6 +18,7 @@ from threading import Lock
 
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
+from eolie.logger import Logger
 
 
 class DatabaseSettings:
@@ -62,7 +63,7 @@ class DatabaseSettings:
                     sql.execute(self.__create_settings)
                     sql.execute("PRAGMA user_version=%s" % new_version)
             except Exception as e:
-                print("DatabaseSettings::__init__(): %s" % e)
+                Logger.error("DatabaseSettings::__init__(): %s", e)
         # DB upgrade, TODO Make it generic between class
         version = 0
         with SqlCursor(self) as sql:
@@ -75,7 +76,7 @@ class DatabaseSettings:
                     try:
                         sql.execute(self.__UPGRADES[i])
                     except:
-                        print("Settings DB upgrade %s failed" % i)
+                        Logger.error("Settings DB upgrade %s failed", i)
                 sql.execute("PRAGMA user_version=%s" % new_version)
 
     def set_chooser_uri(self, chooseruri, uri):
@@ -102,7 +103,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            chooseruri))
         except Exception as e:
-            print("DatabaseSettings::set_chooser_uri():", e)
+            Logger.error("DatabaseSettings::set_chooser_uri(): %s", e)
 
     def get_chooser_uri(self, uri):
         """
@@ -142,7 +143,7 @@ class DatabaseSettings:
                                           (uri, geolocation)\
                                           VALUES (?, ?)", (b, parsed.netloc))
         except Exception as e:
-            print("DatabaseSettings::allow_geolocation():", e)
+            Logger.error("DatabaseSettings::allow_geolocation(): %s", e)
 
     def allowed_geolocation(self, uri):
         """
@@ -183,7 +184,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            accept))
         except Exception as e:
-            print("DatabaseSettings::set_accept_tls():", e)
+            Logger.error("DatabaseSettings::set_accept_tls(): %s", e)
 
     def get_accept_tls(self, uri):
         """
@@ -224,7 +225,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            zoom))
         except Exception as e:
-            print("DatabaseSettings::set_zoom():", e)
+            Logger.error("DatabaseSettings::set_zoom(): %s", e)
 
     def get_zoom(self, uri):
         """
@@ -265,7 +266,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            user_agent))
         except Exception as e:
-            print("DatabaseSettings::set_user_agent():", e)
+            Logger.error("DatabaseSettings::set_user_agent(): %s", e)
 
     def get_user_agent(self, uri):
         """
@@ -306,7 +307,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            profile))
         except Exception as e:
-            print("DatabaseSettings::set_profile():", e)
+            Logger.error("DatabaseSettings::set_profile(): %s", e)
 
     def get_profile(self, uri):
         """
@@ -378,7 +379,7 @@ class DatabaseSettings:
                                           VALUES (?, ?)", (parsed.netloc,
                                                            code))
         except Exception as e:
-            print("DatabaseSettings::add_language():", e)
+            Logger.error("DatabaseSettings::add_language(): %s", e)
 
     def remove_language(self, code, uri):
         """
@@ -404,5 +405,5 @@ class DatabaseSettings:
             c = sqlite3.connect(self.__DB_PATH, 600.0)
             return c
         except Exception as e:
-            print(e)
+            Logger.error("DatabaseSettings::get_cursor(): %s", e)
             exit(-1)

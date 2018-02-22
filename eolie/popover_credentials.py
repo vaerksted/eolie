@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class CredentialsPopover(Gtk.Popover):
@@ -99,7 +100,7 @@ class CredentialsPopover(Gtk.Popover):
                                                 attributes["formSubmitURL"],
                                                 attributes["uuid"])
         except Exception as e:
-            print("CredentialsPopover::__on_get_password():", e)
+            Logger.error("CredentialsPopover::__on_get_password(): %s", e)
 
     def __on_save_credentials(self, source, result, form_uri,
                               user_form_name, pass_form_name):

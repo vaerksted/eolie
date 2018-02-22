@@ -14,7 +14,7 @@ import gi
 gi.require_version('Secret', '1')
 from gi.repository import Secret, GLib
 
-from eolie.utils import debug
+from eolie.logger import Logger
 
 
 class PasswordsHelper:
@@ -55,7 +55,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            debug("PasswordsHelper::get_all(): %s" % e)
+            Logger.debug("PasswordsHelper::get_all(): %s", e)
 
     def get(self, form_uri, userform, passform, callback, *args):
         """
@@ -94,7 +94,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            debug("PasswordsHelper::get(): %s" % e)
+            Logger.debug("PasswordsHelper::get(): %s", e)
 
     def get_sync(self, callback, *args):
         """
@@ -120,7 +120,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            debug("PasswordsHelper::get_sync(): %s" % e)
+            Logger.debug("PasswordsHelper::get_sync(): %s", e)
 
     def store(self, user_form_name, user_form_value, pass_form_name,
               pass_form_value, hostname_uri, form_uri, uuid, callback, *args):
@@ -180,7 +180,7 @@ class PasswordsHelper:
                                   None,
                                   callback)
         except Exception as e:
-            debug("PasswordsHelper::store(): %s" % e)
+            Logger.debug("PasswordsHelper::store(): %s", e)
 
     def store_sync(self, login, password, uid,
                    token, keyB, callback=None, *args):
@@ -228,7 +228,7 @@ class PasswordsHelper:
                                   callback,
                                   *args)
         except Exception as e:
-            debug("PasswordsHelper::store_sync(): %s" % e)
+            Logger.debug("PasswordsHelper::store_sync(): %s", e)
 
     def clear(self, uuid, callback=None, *args):
         """
@@ -257,7 +257,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            debug("PasswordsHelper::clear(): %s" % e)
+            Logger.debug("PasswordsHelper::clear(): %s", e)
 
     def clear_sync(self, callback, *args):
         """
@@ -282,7 +282,7 @@ class PasswordsHelper:
                                  callback,
                                  *args)
         except Exception as e:
-            debug("PasswordsHelper::clear_sync(): %s" % e)
+            Logger.debug("PasswordsHelper::clear_sync(): %s", e)
 
     def clear_all(self):
         """
@@ -305,7 +305,7 @@ class PasswordsHelper:
                                  None,
                                  self.__on_clear_search)
         except Exception as e:
-            debug("PasswordsHelper::clear_all(): %s" % e)
+            Logger.debug("PasswordsHelper::clear_all(): %s", e)
 
 #######################
 # PRIVATE             #
@@ -367,7 +367,7 @@ class PasswordsHelper:
             if callback is not None:
                 callback(*args)
         except Exception as e:
-            debug("PasswordsHelper::__on_clear_search(): %s" % e)
+            Logger.debug("PasswordsHelper::__on_clear_search(): %s", e)
 
     def __on_secret_search(self, source, result, form_uri, callback, *args):
         """
@@ -397,7 +397,7 @@ class PasswordsHelper:
             else:
                 callback(None, None, form_uri, 0, 0, *args)
         except Exception as e:
-            debug("PasswordsHelper::__on_secret_search(): %s" % e)
+            Logger.debug("PasswordsHelper::__on_secret_search(): %s", e)
             callback(None, None, form_uri, 0, 0, *args)
 
     def __on_get_secret(self, source, result):
@@ -410,4 +410,4 @@ class PasswordsHelper:
             self.__secret = Secret.Service.get_finish(result)
         except Exception as e:
             self.__secret = -1
-            debug("PasswordsHelper::__on_get_secret(): %s" % e)
+            Logger.debug("PasswordsHelper::__on_get_secret(): %s", e)

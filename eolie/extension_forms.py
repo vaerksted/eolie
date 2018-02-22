@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.define import Type
 from eolie.helper_passwords import PasswordsHelper
+from eolie.logger import Logger
 
 
 class FormsExtension(GObject.Object):
@@ -89,7 +90,7 @@ class FormsExtension(GObject.Object):
             form["username"].set_value(attributes["login"])
             form["password"].set_value(password)
         except Exception as e:
-            print("FormsExtension::set_input_forms()", e)
+            Logger.error("FormsExtension::set_input_forms(): %s", e)
 
     def get_elements(self, elements):
         """
@@ -157,7 +158,7 @@ class FormsExtension(GObject.Object):
                               hostname_uri,
                               self.__page_id)
         except Exception as e:
-            print("FormsExtension::on_form_submit():", e)
+            Logger.error("FormsExtension::on_form_submit(): %s", e)
 
     def get_hostname_uri(self, page):
         """
@@ -258,7 +259,7 @@ class FormsExtension(GObject.Object):
                                                                   args))
                     self.emit("submit-form", variant)
         except Exception as e:
-            print("FormsExtension::__on_get_password()", e)
+            Logger.error("FormsExtension::__on_get_password(): %s", e)
 
     def __on_page_created(self, extension, webpage):
         """

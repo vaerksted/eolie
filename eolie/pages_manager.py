@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk
 
 from eolie.pages_manager_child import PagesManagerChild
 from eolie.utils import get_safe_netloc
+from eolie.logger import Logger
 
 
 class PagesManager(Gtk.EventBox):
@@ -277,7 +278,7 @@ class PagesManager(Gtk.EventBox):
             else:
                 return row2.view.webview.atime > row1.view.webview.atime
         except Exception as e:
-            print("PagesManager::__sort_func():", e)
+            Logger.error("PagesManager::__sort_func(): %s", e)
 
     def __filter_func(self, row):
         """

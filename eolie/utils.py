@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
 
+from eolie.logger import Logger
 from eolie.define import App, ArtSize, LoadingType
 
 
@@ -51,7 +52,7 @@ def set_proxy_from_gnome():
                 if hs != "" and ps != 0:
                     GLib.setenv("https_proxy", "http://%s:%s" % (hs, ps), True)
     except Exception as e:
-        print("set_proxy_from_gnome()", e)
+        Logger.error("set_proxy_from_gnome(): %s", e)
 
 
 def name_from_profile_id(id):
@@ -192,7 +193,7 @@ def get_snapshot(webview, result, callback, *args):
         context.paint()
         callback(surface, *args)
     except Exception as e:
-        print("get_snapshot():", e)
+        Logger.error("get_snapshot(): %s", e)
         callback(None, *args)
 
 
@@ -241,12 +242,3 @@ def get_ftp_cmd():
         cmd = GLib.find_program_in_path(app)
         if cmd is not None:
             return cmd
-
-
-def debug(str):
-    """
-        Print debug
-        @param debug as str
-    """
-    if App().debug is True:
-        print(str)

@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
 from eolie.utils import remove_www
+from eolie.logger import Logger
 
 
 class PageChildRow(Gtk.ListBoxRow):
@@ -376,7 +377,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 popover.show()
                 return True
         except Exception as e:
-            print("SitesManagerChild::_on_button_press_event:", e)
+            Logger.error("SitesManagerChild::_on_button_press_event:", e)
 
 #######################
 # PRIVATE             #
