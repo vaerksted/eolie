@@ -6,7 +6,7 @@ Eolie is a new GNOME web browser.
 
 - Adblock helpers (please contribute): https://github.com/gnumdk/eolie-adblock
 
-- For users: http://gnumdk.github.io/eolie-web
+- For users: https://wiki.gnome.org/Apps/Eolie
 
 - FAQ: https://github.com/gnumdk/eolie/wiki
 

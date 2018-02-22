@@ -71,22 +71,21 @@ class Row(Gtk.ListBoxRow):
         uri = item.get_property("uri")
         title = item.get_property("title")
         grid = Gtk.Grid()
+        grid.set_margin_start(5)
+        grid.set_margin_end(15)
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             favicon = Gtk.Image()
-            favicon.set_margin_start(2)
             self.__set_favicon(favicon)
         elif item_type == Type.SUGGESTION:
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
-            favicon.set_margin_start(2)
             favicon.show()
         elif item_type == Type.VIEW:
             favicon = Gtk.Image.new_from_icon_name("view-paged-symbolic",
                                                    Gtk.IconSize.MENU)
-            favicon.set_margin_start(2)
             favicon.show()
         if favicon is not None:
             grid.attach(favicon, 0, 0, 1, 2)
