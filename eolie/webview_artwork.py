@@ -116,11 +116,9 @@ class WebViewArtwork:
             # Read result
             surface = self.get_favicon()
             # Resize surface and set favicon
-            if surface is not None:
-                size = surface.get_width()
+            if surface is not None and surface.get_width() >= ArtSize.FAVICON:
                 resized = resize_favicon(surface)
             else:
-                size = ArtSize.FAVICON
                 # Check for already cached favicon
                 # We do not want to show a favicon_alt if a favicon is cached
                 # so check for favicon too
@@ -128,8 +126,8 @@ class WebViewArtwork:
                     resized = App().art.get_artwork(netloc,
                                                     favicon,
                                                     self.get_scale_factor(),
-                                                    size,
-                                                    size)
+                                                    ArtSize.FAVICON,
+                                                    ArtSize.FAVICON)
                     if resized is not None:
                         favicon_type = favicon
                         break
@@ -137,7 +135,6 @@ class WebViewArtwork:
                     resized = get_char_surface(netloc[0])
                     favicon_type = "favicon_alt"
 
-            # Only set favicon if minimal size is ok
             if not self.ephemeral:
                 self.emit("favicon-changed", resized, None)
                 # Save favicon for URI if needed
