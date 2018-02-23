@@ -314,7 +314,8 @@ class SyncWorker:
                 # Unlock file
                 flock(f, LOCK_UN)
         except Exception as e:
-            Logger.error("SyncWorker::__update_state(): %s", e)
+            # Not an error, just the lock exception
+            Logger.info("SyncWorker::__update_state(): %s", e)
 
     def __push_history(self, history_ids):
         """
