@@ -72,7 +72,7 @@ class Row(Gtk.ListBoxRow):
         title = item.get_property("title")
         grid = Gtk.Grid()
         grid.set_margin_start(5)
-        grid.set_margin_end(15)
+        grid.set_margin_end(5)
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
@@ -125,6 +125,7 @@ class Row(Gtk.ListBoxRow):
                                                      "user-trash-symbolic",
                                                      Gtk.IconSize.MENU)
             delete_button.get_image().set_opacity(0.5)
+            delete_button.set_margin_end(5)
             delete_button.set_property("valign", Gtk.Align.CENTER)
             delete_button.connect("clicked", self.__on_delete_clicked)
             delete_button.get_style_context().add_class("overlay-button")
@@ -136,6 +137,7 @@ class Row(Gtk.ListBoxRow):
                                                      "document-edit-symbolic",
                                                      Gtk.IconSize.MENU)
             edit_button.get_image().set_opacity(0.5)
+            edit_button.set_margin_end(5)
             edit_button.connect("clicked", self.__on_edit_clicked)
             edit_button.get_style_context().add_class("overlay-button")
             edit_button.set_property("valign", Gtk.Align.CENTER)
