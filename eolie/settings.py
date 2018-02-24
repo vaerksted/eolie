@@ -143,7 +143,9 @@ class SettingsDialog:
         except:
             pass
         default_zoom_level = builder.get_object("default_zoom_level")
-        default_zoom_level.set_value(float(wanted_zoom_level))
+        percent_zoom = int(wanted_zoom_level * 100)
+        default_zoom_level.set_value(percent_zoom)
+        default_zoom_level.set_text("{} %".format(percent_zoom))
 
         cookies_combo = builder.get_object("cookies_combo")
         storage = App().settings.get_enum("cookie-storage")
@@ -276,6 +278,7 @@ class SettingsDialog:
             Save size
             @param button as Gtk.SpinButton
         """
+        button.set_text("{} %".format(int(button.get_value())))
         monitor_model = get_current_monitor_model(
                                     self.__settings_dialog.get_transient_for())
         try:
@@ -289,7 +292,8 @@ class SettingsDialog:
                     zoom_levels.append("%s@%s" % (zoom_splited[0],
                                                   zoom_splited[1]))
             # Add new zoom value for monitor model
-            zoom_levels.append("%s@%s" % (monitor_model, button.get_value()))
+            zoom_levels.append("%s@%s" % (monitor_model,
+                                          button.get_value() / 100))
             App().settings.set_value("default-zoom-level",
                                      GLib.Variant("as", zoom_levels))
             for window in App().windows:
