@@ -228,7 +228,7 @@ class WebViewNavigation:
             Disable hw acceleration for blacklist
             @param netloc as str
         """
-        blacklist = ["plus.google.com"]
+        blacklist = []
         if netloc in blacklist:
             policy = WebKit2.HardwareAccelerationPolicy.NEVER
         else:
