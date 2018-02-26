@@ -62,6 +62,15 @@ class Logger:
             Logger.get_default().debug(msg, *args)
 
     @staticmethod
+    def sync_debug(msg, *args):
+        """
+            Log debug sync message
+            @parma msg as str
+        """
+        if App().sync_debug:
+            Logger.get_default().debug(msg, *args)
+
+    @staticmethod
     def info(msg, *args):
         """
             Log info message

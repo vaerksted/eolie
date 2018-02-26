@@ -338,13 +338,13 @@ class SyncWorker:
                     for atime in atimes:
                         record["visits"].append({"date": atime*1000000,
                                                  "type": 1})
-                    Logger.debug("pushing %s", record)
+                    Logger.sync_debug("pushing %s", record)
                     self.__mozilla_sync.add(record, "history", bulk_keys)
                 else:
                     record["id"] = guid
                     record["type"] = "item"
                     record["deleted"] = True
-                    Logger.debug("deleting %s", record)
+                    Logger.sync_debug("deleting %s", record)
                     self.__mozilla_sync.add(record, "history", bulk_keys)
                 self.__update_state()
         except Exception as e:
@@ -376,7 +376,7 @@ class SyncWorker:
             mtime = int(time()*1000)
             record["timeCreated"] = mtime
             record["timePasswordChanged"] = mtime
-            Logger.debug("pushing %s", record)
+            Logger.sync_debug("pushing %s", record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
             self.__update_state()
         except Exception as e:
@@ -394,11 +394,11 @@ class SyncWorker:
             record["id"] = guid
             record["type"] = "item"
             record["deleted"] = True
-            Logger.debug("deleting %s", record)
+            Logger.sync_debug("deleting %s", record)
             self.__mozilla_sync.add(record, "history", bulk_keys)
             self.__update_state()
         except Exception as e:
-            Logger.debug("SyncWorker::__remove_from_history(): %s", e)
+            Logger.sync_debug("SyncWorker::__remove_from_history(): %s", e)
 
     def __remove_from_bookmarks(self, guid):
         """
@@ -412,11 +412,11 @@ class SyncWorker:
             record["id"] = guid
             record["type"] = "bookmark"
             record["deleted"] = True
-            Logger.debug("deleting %s", record)
+            Logger.sync_debug("deleting %s", record)
             self.__mozilla_sync.add(record, "bookmark", bulk_keys)
             self.__update_state()
         except Exception as e:
-            Logger.debug("SyncWorker::__remove_from_bookmarks(): %s", e)
+            Logger.sync_debug("SyncWorker::__remove_from_bookmarks(): %s", e)
 
     def __remove_from_passwords(self, uuid):
         """
@@ -429,18 +429,18 @@ class SyncWorker:
             record = {}
             record["id"] = uuid
             record["deleted"] = True
-            Logger.debug("deleting %s", record)
+            Logger.sync_debug("deleting %s", record)
             self.__mozilla_sync.add(record, "passwords", bulk_keys)
             self.__update_state()
         except Exception as e:
-            Logger.debug("SyncWorker::__remove_from_passwords(): %s", e)
+            Logger.sync_debug("SyncWorker::__remove_from_passwords(): %s", e)
 
     def __sync(self, first_sync):
         """
             Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
             @param first_sync as bool
         """
-        Logger.debug("Start syncing")
+        Logger.sync_debug("Start syncing")
         self.__syncing = True
         self.__sync_cancellable.reset()
         try:
@@ -461,9 +461,9 @@ class SyncWorker:
             # Passwords Management #
             ########################
             try:
-                Logger.debug("local passwords: %s, remote passwords: %s",
-                             self.__mtimes["passwords"],
-                             new_mtimes["passwords"])
+                Logger.sync_debug("local passwords: %s, remote passwords: %s",
+                                  self.__mtimes["passwords"],
+                                  new_mtimes["passwords"])
                 # Only pull if something new available
                 if self.__mtimes["passwords"] != new_mtimes["passwords"]:
                     self.__pull_passwords(bulk_keys)
@@ -475,8 +475,9 @@ class SyncWorker:
             # History Management #
             ######################
             try:
-                Logger.debug("local history: %s, remote history: %s",
-                             self.__mtimes["history"], new_mtimes["history"])
+                Logger.sync_debug("local history: %s, remote history: %s",
+                                  self.__mtimes["history"],
+                                  new_mtimes["history"])
                 # Only pull if something new available
                 if self.__mtimes["history"] != new_mtimes["history"]:
                     self.__pull_history(bulk_keys)
@@ -488,9 +489,9 @@ class SyncWorker:
             # Bookmarks Management #
             ########################
             try:
-                Logger.debug("local bookmarks: %s, remote bookmarks: %s",
-                             self.__mtimes["bookmarks"],
-                             new_mtimes["bookmarks"])
+                Logger.sync_debug("local bookmarks: %s, remote bookmarks: %s",
+                                  self.__mtimes["bookmarks"],
+                                  new_mtimes["bookmarks"])
                 # Push new bookmarks
                 self.__push_bookmarks(bulk_keys)
             except:
@@ -502,7 +503,7 @@ class SyncWorker:
             # Update last sync mtime
             self.__syncing = False
             self.__update_state()
-            Logger.debug("Stop syncing")
+            Logger.sync_debug("Stop syncing")
         except Exception as e:
             Logger.error("SyncWorker::__sync(): %s", e)
             if str(e) == "The authentication token could not be found":
@@ -516,7 +517,7 @@ class SyncWorker:
             @param start time as float
             @raise StopIteration
         """
-        Logger.debug("push bookmarks")
+        Logger.sync_debug("push bookmarks")
         parents = []
         for bookmark_id in App().bookmarks.get_ids_for_mtime(
                                                    self.__mtimes["bookmarks"]):
@@ -537,7 +538,7 @@ class SyncWorker:
             record["parentid"] = parent_guid
             record["parentName"] = App().bookmarks.get_parent_name(bookmark_id)
             record["type"] = "bookmark"
-            Logger.debug("pushing %s", record)
+            Logger.sync_debug("pushing %s", record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         # Del old bookmarks
         for bookmark_id in App().bookmarks.get_deleted_ids():
@@ -551,7 +552,7 @@ class SyncWorker:
             record["id"] = App().bookmarks.get_guid(bookmark_id)
             record["type"] = "bookmark"
             record["deleted"] = True
-            Logger.debug("deleting %s", record)
+            Logger.sync_debug("deleting %s", record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
             App().bookmarks.remove(bookmark_id)
         # Push parents in this order, parents near root are handled later
@@ -571,7 +572,7 @@ class SyncWorker:
             # Handle children first
             if found:
                 parents.append(parent_id)
-                Logger.debug("later: %s", parent_name)
+                Logger.sync_debug("later: %s", parent_name)
                 continue
             record = {}
             record["id"] = parent_guid
@@ -585,7 +586,7 @@ class SyncWorker:
             record["parentName"] = App().bookmarks.get_parent_name(parent_id)
             record["title"] = parent_name
             record["children"] = children
-            Logger.debug("pushing parent %s", record)
+            Logger.sync_debug("pushing parent %s", record)
             self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
         App().bookmarks.clean_tags()
 
@@ -596,7 +597,7 @@ class SyncWorker:
             @param first_sync as bool
             @raise StopIteration
         """
-        Logger.debug("pull bookmarks")
+        Logger.sync_debug("pull bookmarks")
         SqlCursor.add(App().bookmarks)
         records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
         children_array = []
@@ -610,7 +611,7 @@ class SyncWorker:
             # Nothing to apply, continue
             if App().bookmarks.get_mtime(bookmark_id) >= record["modified"]:
                 continue
-            Logger.debug("pulling %s", record)
+            Logger.sync_debug("pulling %s", record)
             # Deleted bookmark
             if "deleted" in bookmark.keys():
                 App().bookmarks.remove(bookmark_id)
@@ -695,14 +696,14 @@ class SyncWorker:
             @param bulk_keys as KeyBundle
             @raise StopIteration
         """
-        Logger.debug("pull passwords")
+        Logger.sync_debug("pull passwords")
         records = self.__mozilla_sync.get_records("passwords", bulk_keys)
         for record in records:
             self.__check_worker()
             if record["modified"] < self.__mtimes["passwords"]:
                 continue
             sleep(0.01)
-            Logger.debug("pulling %s", record)
+            Logger.sync_debug("pulling %s", record)
             password = record["payload"]
             password_id = password["id"].strip("{}")
             if "formSubmitURL" in password.keys():
@@ -725,7 +726,7 @@ class SyncWorker:
             @param bulk_keys as KeyBundle
             @raise StopIteration
         """
-        Logger.debug("pull history")
+        Logger.sync_debug("pull history")
         records = self.__mozilla_sync.get_records("history", bulk_keys)
         for record in records:
             self.__check_worker()
@@ -747,7 +748,7 @@ class SyncWorker:
                         atimes.append(round(int(visit["date"]) / 1000000, 2))
                 except:
                     continue
-                Logger.debug("pulling %s", record)
+                Logger.sync_debug("pulling %s", record)
                 title = history["title"].rstrip().lstrip()
                 history_id = App().history.add(title,
                                                history["histUri"],

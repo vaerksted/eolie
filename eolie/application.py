@@ -94,12 +94,15 @@ class Application(Gtk.Application):
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
         self.debug = False
+        self.sync_debug = False
         self.show_tls = False
         self.cursors = {}
         GLib.set_application_name('Eolie')
         GLib.set_prgname('org.gnome.Eolie')
         self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Debug Eolie", None)
+        self.add_main_option("sync-debug", b's', GLib.OptionFlags.NONE,
+                             GLib.OptionArg.NONE, "Debug Mozilla sync", None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
                              None)
@@ -110,7 +113,7 @@ class Application(Gtk.Application):
                              GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Do not use cache for art",
                              None)
-        self.add_main_option("show-tls", b's', GLib.OptionFlags.NONE,
+        self.add_main_option("show-tls", b't', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
         self.connect("activate", self.__on_activate)
@@ -626,6 +629,8 @@ class Application(Gtk.Application):
         if options.contains("debug"):
             GLib.setenv("WEBKIT_DEBUG", "network", True)
             self.debug = True
+        if options.contains("sync-debug"):
+            self.sync_debug = True
         if options.contains("show-tls"):
             self.show_tls = True
         if options.contains("disable-artwork-cache"):
