@@ -21,14 +21,12 @@ class JSblockExtension:
         Handle jsblocking
     """
 
-    def __init__(self, extension, settings):
+    def __init__(self, extension):
         """
             Connect wanted signal
             @param extension as WebKit2WebExtension
-            @param settings as Settings
         """
         self.__webpage = None
-        self.__settings = settings
         self.__document = None
         self.__scripts = None
         self.__whitelist = []
@@ -60,7 +58,7 @@ class JSblockExtension:
                 parsed_script = urlparse(script_uri)
                 netloc_script = parsed_script.netloc.split(".")[-2:]
                 if netloc == netloc_script and\
-                        self.__settings.get_value("trust-websites-js"):
+                        App().settings.get_value("trust-websites-js"):
                     continue
                 if parsed_script.netloc and\
                         parsed_script.netloc not in script_uris:
@@ -98,9 +96,9 @@ class JSblockExtension:
             self.__scripts = \
                 document.get_elements_by_tag_name_as_html_collection("script")
         if netloc == netloc_request and\
-                self.__settings.get_value("trust-websites-js"):
+                App().settings.get_value("trust-websites-js"):
             return False
-        if self.__settings.get_value("jsblock") and\
+        if App().settings.get_value("jsblock") and\
                 parsed.netloc not in self.__whitelist:
             if parsed_request.scheme in ["http", "https"] and\
                     not App().js_exceptions.find(parsed_request.netloc,
@@ -108,6 +106,6 @@ class JSblockExtension:
                 for i in range(0, self.__scripts.get_length()):
                     script = self.__scripts.item(i)
                     if script.get_src() == request_uri:
-                        Logger.debug("JSblockExtension: blocking %s",
-                                     request_uri)
+                        Logger.debug("JSblockExtension: blocking %s -> %s",
+                                     request_uri, uri)
                         return True

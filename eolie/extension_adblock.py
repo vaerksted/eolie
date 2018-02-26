@@ -22,13 +22,11 @@ class AdblockExtension:
         Handle adblocking
     """
 
-    def __init__(self, extension, settings):
+    def __init__(self, extension):
         """
             Connect wanted signal
             @param extension as WebKit2WebExtension
-            @param settings as Settings
         """
-        self.__settings = settings
         self.__adblock = DatabaseAdblock()
         extension.connect("page-created", self.__on_page_created)
 
@@ -57,17 +55,18 @@ class AdblockExtension:
         netloc = parsed.netloc.split(".")[-2:]
         netloc_request = parsed_request.netloc.split(".")[-2:]
         if netloc == netloc_request and\
-                self.__settings.get_value("trust-websites-adblock"):
+                App().settings.get_value("trust-websites-adblock"):
             pass
-        elif self.__settings.get_value("adblock") and\
+        elif App().settings.get_value("adblock") and\
                 parsed_request.scheme in ["http", "https"] and\
                 not App().adblock_exceptions.find_parsed(parsed_request):
             if self.__adblock.is_netloc_blocked(parsed_request.netloc) or\
                     self.__adblock.is_uri_blocked(request_uri,
                                                   parsed_request.netloc):
-                Logger.debug("AdblockExtension: blocking %s", request_uri)
+                Logger.debug("AdblockExtension: blocking %s ->%s",
+                             request_uri, uri)
                 return True
-        if self.__settings.get_value("do-not-track"):
+        if App().settings.get_value("do-not-track"):
             headers = request.get_http_headers()
             if headers is not None:
                 headers.append("DNT", "1")

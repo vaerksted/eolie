@@ -14,7 +14,7 @@ from gi.repository import WebKit2WebExtension, GLib, GObject
 
 from urllib.parse import urlparse
 
-from eolie.define import Type
+from eolie.define import Type, App
 from eolie.helper_passwords import PasswordsHelper
 from eolie.logger import Logger
 
@@ -28,16 +28,14 @@ class FormsExtension(GObject.Object):
         'submit-form': (GObject.SignalFlags.RUN_FIRST, None, (GLib.Variant,))
     }
 
-    def __init__(self, extension, settings):
+    def __init__(self, extension):
         """
             Connect wanted signal
             @param extension as WebKit2WebExtension
-            @param settings as Settings
         """
         GObject.Object.__init__(self)
         self.__helper = PasswordsHelper()
         self.__extension = extension
-        self.__settings = settings
         self.__elements_uri = None
         self.__pending_credentials = None
         self.__page_id = None
@@ -49,7 +47,7 @@ class FormsExtension(GObject.Object):
             @param form as {}
             @param webpage as WebKit2WebExtension.WebPage
         """
-        if self.__settings.get_value("remember-passwords"):
+        if App().settings.get_value("remember-passwords"):
             form_input_username = form["username"].get_name()
             form_input_password = form["password"].get_name()
             if form_input_username is not None and\

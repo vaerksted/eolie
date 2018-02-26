@@ -34,6 +34,7 @@ class Application(Gio.Application):
         app = Gio.Application.new(None, Gio.ApplicationFlags.IS_SERVICE)
         app.__class__ = Application
         app.cursors = {}
+        app.settings = Settings.new()
         app.adblock_exceptions = DatabaseExceptions("adblock")
         app.js_exceptions = DatabaseExceptions("js")
         return app
@@ -47,8 +48,7 @@ def initialize(extension, arguments):
         Connect to page created
         @param extension as WebKit2WebExtension.WebExtension
     """
-    settings = Settings.new()
-    AdblockExtension(extension, settings)
-    jsblock = JSblockExtension(extension, settings)
-    forms = FormsExtension(extension, settings)
+    AdblockExtension(extension)
+    jsblock = JSblockExtension(extension)
+    forms = FormsExtension(extension)
     ProxyExtension(extension, forms, jsblock)
