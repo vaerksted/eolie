@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 
 from eolie.define import App
 from eolie.database_adblock import DatabaseAdblock
+from eolie.logger import Logger
 
 
 class AdblockExtension:
@@ -62,7 +63,9 @@ class AdblockExtension:
                 parsed_request.scheme in ["http", "https"] and\
                 not App().adblock_exceptions.find_parsed(parsed_request):
             if self.__adblock.is_netloc_blocked(parsed_request.netloc) or\
-                    self.__adblock.is_uri_blocked(uri, parsed_request.netloc):
+                    self.__adblock.is_uri_blocked(request_uri,
+                                                  parsed_request.netloc):
+                Logger.debug("AdblockExtension: blocking %s", request_uri)
                 return True
         if self.__settings.get_value("do-not-track"):
             headers = request.get_http_headers()

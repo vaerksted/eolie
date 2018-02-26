@@ -13,6 +13,7 @@
 from urllib.parse import urlparse
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class JSblockExtension:
@@ -107,4 +108,6 @@ class JSblockExtension:
                 for i in range(0, self.__scripts.get_length()):
                     script = self.__scripts.item(i)
                     if script.get_src() == request_uri:
+                        Logger.debug("JSblockExtension: blocking %s",
+                                     request_uri)
                         return True
