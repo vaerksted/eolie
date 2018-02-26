@@ -34,7 +34,6 @@ class Application(Gio.Application):
         app = Gio.Application.new(None, Gio.ApplicationFlags.IS_SERVICE)
         app.__class__ = Application
         app.cursors = {}
-        app.debug = False
         app.adblock_exceptions = DatabaseExceptions("adblock")
         app.js_exceptions = DatabaseExceptions("js")
         return app

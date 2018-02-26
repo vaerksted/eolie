@@ -58,7 +58,7 @@ class Logger:
             Log debug message
             @parma msg as str
         """
-        if App().debug:
+        if App().settings.get_value("debug"):
             Logger.get_default().debug(msg, *args)
 
     @staticmethod
@@ -67,7 +67,7 @@ class Logger:
             Log debug sync message
             @parma msg as str
         """
-        if App().sync_debug:
+        if App().settings.get_value("debug-sync"):
             Logger.get_default().debug(msg, *args)
 
     @staticmethod

@@ -93,16 +93,10 @@ class Application(Gtk.Application):
                     break
         self.sync_worker = None  # Not initialised
         self.__extension_dir = extension_dir
-        self.debug = False
-        self.sync_debug = False
         self.show_tls = False
         self.cursors = {}
         GLib.set_application_name('Eolie')
         GLib.set_prgname('org.gnome.Eolie')
-        self.add_main_option("debug", b'd', GLib.OptionFlags.NONE,
-                             GLib.OptionArg.NONE, "Debug Eolie", None)
-        self.add_main_option("sync-debug", b's', GLib.OptionFlags.NONE,
-                             GLib.OptionArg.NONE, "Debug Mozilla sync", None)
         self.add_main_option("private", b'p', GLib.OptionFlags.NONE,
                              GLib.OptionArg.NONE, "Add a private page",
                              None)
@@ -626,11 +620,6 @@ class Application(Gtk.Application):
         self.__externals_count = 0
         args = app_cmd_line.get_arguments()
         options = app_cmd_line.get_options_dict()
-        if options.contains("debug"):
-            GLib.setenv("WEBKIT_DEBUG", "network", True)
-            self.debug = True
-        if options.contains("sync-debug"):
-            self.sync_debug = True
         if options.contains("show-tls"):
             self.show_tls = True
         if options.contains("disable-artwork-cache"):
@@ -664,7 +653,7 @@ class Application(Gtk.Application):
             active_window.container.add_webview(self.start_page,
                                                 LoadingType.FOREGROUND,
                                                 ephemeral)
-        if self.debug:
+        if self.settings.get_value("debug"):
             WebKit2.WebContext.get_default().get_plugins(None,
                                                          self.__on_get_plugins,
                                                          None)

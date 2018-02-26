@@ -14,6 +14,16 @@
       <value nick="never" value="6" />
    </enum>
    <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
+      <key type="b" name="debug">
+         <default>false</default>
+         <summary>Show debug messages</summary>
+         <description />
+      </key>
+      <key type="b" name="debug-sync">
+         <default>false</default>
+         <summary>Show Mozilla sync debug messages</summary>
+         <description />
+      </key>
       <key type="b" name="show-sidebar">
          <default>true</default>
          <summary>Show sidebar(sites manager)</summary>
