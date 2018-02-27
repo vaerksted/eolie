@@ -130,16 +130,16 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.set_uri(uri)
             accept_tls = App().websettings.get_accept_tls(uri)
             self.toolbar.end.show_tls_button(accept_tls)
-        self.toolbar.title.update_load_indicator(webview)
         if webview.popups:
             self.toolbar.title.show_indicator(Indicator.POPUPS)
         else:
             self.toolbar.title.show_indicator(Indicator.NONE)
         if webview.is_loading():
-            self.toolbar.title.show_spinner(True)
+            self.toolbar.title.set_loading(True)
             self.toolbar.title.progress.show()
         else:
             self.toolbar.title.progress.hide()
+            self.toolbar.title.set_loading(False)
             readable_content = webview.readable_content
             self.toolbar.title.show_readable_button(readable_content != "")
         profile = name_from_profile_id(webview.profile)

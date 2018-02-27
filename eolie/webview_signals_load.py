@@ -118,7 +118,6 @@ class WebViewLoadSignals:
             Update toolbar content with on self
             @param event as WebKit2.LoadEvent
         """
-        self._window.toolbar.title.update_load_indicator(self)
         parsed = urlparse(self.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
@@ -127,7 +126,7 @@ class WebViewLoadSignals:
             self._window.toolbar.title.set_title("%s%s" % (profile, self.uri))
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
-                self._window.toolbar.title.show_spinner(True)
+                self._window.toolbar.title.set_loading(True)
             else:
                 # Give focus to url bar
                 self._window.toolbar.title.start_search()
@@ -140,7 +139,7 @@ class WebViewLoadSignals:
             profile = name_from_profile_id(self.profile)
             self._window.toolbar.title.set_title("%s%s" % (profile, self.uri))
         elif event == WebKit2.LoadEvent.FINISHED:
-            self._window.toolbar.title.show_spinner(False)
+            self._window.toolbar.title.set_loading(False)
             self._window.toolbar.title.progress.set_fraction(1.0)
             # Give focus to webview
             if wanted_scheme:

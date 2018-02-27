@@ -161,18 +161,22 @@ class ToolbarTitle(Gtk.Bin):
         else:
             child.get_style_context().remove_class("selected")
 
-    def show_spinner(self, b):
+    def set_loading(self, b):
         """
-            Show/hide spinner
+            Mark current view as loading
             @param b as bool
         """
         if b:
             self.__indicator_stack.set_visible_child_name("spinner")
             self.__indicator_stack.get_visible_child().start()
             self.__indicator_stack.show()
+            self.__action_image1.set_from_icon_name('process-stop-symbolic',
+                                                    Gtk.IconSize.MENU)
         elif self.__indicator_stack.get_visible_child_name() == "spinner":
             self.__indicator_stack.get_visible_child().stop()
             self.__indicator_stack.hide()
+            self.__action_image1.set_from_icon_name('view-refresh-symbolic',
+                                                    Gtk.IconSize.MENU)
 
     def do_get_preferred_width(self):
         """
@@ -386,18 +390,6 @@ class ToolbarTitle(Gtk.Bin):
         self.get_toplevel().set_focus(self.__entry)
         if not self.__popover.is_visible():
             self.__popover.popup(child)
-
-    def update_load_indicator(self, view):
-        """
-            Update loading indicator
-            @param view as WebView
-        """
-        if view.is_loading():
-            self.__action_image1.set_from_icon_name('process-stop-symbolic',
-                                                    Gtk.IconSize.MENU)
-        else:
-            self.__action_image1.set_from_icon_name('view-refresh-symbolic',
-                                                    Gtk.IconSize.MENU)
 
     def start_search(self):
         """
