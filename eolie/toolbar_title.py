@@ -144,6 +144,8 @@ class ToolbarTitle(Gtk.Bin):
         # Used for popups and geolocation
         self.__indicator2 = builder.get_object("indicator2")
         self.__indicator2_image = builder.get_object("indicator2_image")
+        # Spinner
+        self.__spinner = builder.get_object("spinner")
 
         self.__placeholder = builder.get_object("placeholder")
         self.__signal_id = self.__entry.connect("changed",
@@ -168,12 +170,12 @@ class ToolbarTitle(Gtk.Bin):
         """
         if b:
             self.__indicator_stack.set_visible_child_name("spinner")
-            self.__indicator_stack.get_visible_child().start()
+            self.__spinner.start()
             self.__indicator_stack.show()
             self.__action_image1.set_from_icon_name('process-stop-symbolic',
                                                     Gtk.IconSize.MENU)
-        elif self.__indicator_stack.get_visible_child_name() == "spinner":
-            self.__indicator_stack.get_visible_child().stop()
+        else:
+            self.__spinner.stop()
             self.__indicator_stack.hide()
             self.__action_image1.set_from_icon_name('view-refresh-symbolic',
                                                     Gtk.IconSize.MENU)
