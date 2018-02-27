@@ -107,6 +107,9 @@ class WebViewLoadSignals:
                 for popup in self.__popups:
                     popup.destroy()
                 self.__popups = []
+            elif event == WebKit2.LoadEvent.FINISHED:
+                self.run_javascript_from_gresource(
+                                 "/org/gnome/Eolie/Readability.js", None, None)
             if webview.get_mapped():
                 self.__update_toolbars(event)
 

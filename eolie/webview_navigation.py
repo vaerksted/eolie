@@ -37,7 +37,6 @@ class WebViewNavigation:
             @param related_view as WebView
         """
         self.__load_event_started_uri = None
-        self.__js_timeout = None
         self.__related_view = related_view
         if related_view is None:
             self.__profile = None
@@ -305,7 +304,7 @@ class WebViewNavigation:
 
     def __on_uri_changed(self, webview, param):
         """
-            Clear readable context and title
+            Stop running background task and update favicon
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
@@ -325,16 +324,9 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        if self.__js_timeout is not None:
-            GLib.source_remove(self.__js_timeout)
-            self.__js_timeout = None
         title = webview.get_property(param.name)
         if title:
             self.emit("title-changed", title)
-            self.__js_timeout = GLib.timeout_add(
-                                 2000,
-                                 self.__on_js_timeout,
-                                 "/org/gnome/Eolie/Readability.js")
 
     def __on_notify_favicon(self, webview, favicon):
         """
@@ -343,14 +335,6 @@ class WebViewNavigation:
             @param favicon as GObject.ParamSpec
         """
         self.set_favicon(True)
-
-    def __on_js_timeout(self, path):
-        """
-            Run js
-            @param path as str
-        """
-        self.__js_timeout = None
-        self.run_javascript_from_gresource(path, None, None)
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """
