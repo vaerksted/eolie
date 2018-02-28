@@ -291,6 +291,7 @@ class DownloadsPopover(Gtk.Popover):
             @param window as Window
         """
         Gtk.Popover.__init__(self)
+        self.__window = window
         self.set_modal(False)
         window.register(self)
         builder = Gtk.Builder()
@@ -319,7 +320,9 @@ class DownloadsPopover(Gtk.Popover):
             directory = GLib.get_user_special_dir(
                                          GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             directory_uri = GLib.filename_to_uri(directory, None)
-        Gtk.show_uri(None, directory_uri, int(time()))
+        Gtk.show_uri_on_window(self.__window,
+                               directory_uri,
+                               int(GLib.get_real_time() / 1000000))
         self.hide()
 
     def _on_clear_clicked(self, button):
