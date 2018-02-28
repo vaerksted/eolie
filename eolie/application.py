@@ -475,6 +475,8 @@ class Application(Gtk.Application):
                                    ["<Control>KP_Subtract", "<Control>minus"])
         self.set_accels_for_action("win.shortcut::zoom_default",
                                    ["<Control>KP_0", "<Control>0"])
+        self.set_accels_for_action("win.shortcut::mse_disabled",
+                                   ["<Control>m"])
 
     def __vacuum(self):
         """
