@@ -481,9 +481,9 @@ class Window(Gtk.ApplicationWindow):
             value = App().settings.get_value("show-sidebar")
             App().settings.set_value("show-sidebar",
                                      GLib.Variant("b", not value))
-        elif string == "mse_disabled":
+        elif string == "mse_enabled":
             self.container.current.webview.set_setting("enable-mediasource",
-                                                       False)
+                                                       True)
             self.container.current.webview.reload()
 
     def __on_js_enabled(self, proxy, task, webview):

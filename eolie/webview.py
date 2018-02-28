@@ -492,7 +492,7 @@ class WebView(WebKit2.WebView):
         settings.set_property("allow-file-access-from-file-urls", False)
         settings.set_property("enable-javascript", True)
         settings.set_property("enable-media-stream", True)
-        settings.set_property("enable-mediasource", True)
+        settings.set_property("enable-mediasource", False)
         settings.set_property("enable-developer-extras",
                               App().settings.get_value("developer-extras"))
         settings.set_property("enable-offline-web-application-cache", True)
