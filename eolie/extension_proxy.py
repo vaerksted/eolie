@@ -149,6 +149,7 @@ class ProxyExtensionServer(Server):
         self.__page = page
         self.__form_extension = form_extension
         self.__jsblock_extension = jsblock_extension
+        self.__focus_element = None
         self.__mouse_down_element = None
         self.__on_input_timeout_id = None
         self.__elements_history = {}
@@ -375,22 +376,22 @@ class ProxyExtensionServer(Server):
         """
             Set focused form to previous value
         """
-        if self.__mouse_down_element is None:
+        if self.__focus_element is None:
             return
         try:
-            value = self.__mouse_down_element.get_value().rstrip(" ")
-            if self.__mouse_down_element in self.__elements_history.keys():
-                current = self.__elements_history[self.__mouse_down_element]
+            value = self.__focus_element.get_value().rstrip(" ")
+            if self.__focus_element in self.__elements_history.keys():
+                current = self.__elements_history[self.__focus_element]
                 if current.prev is not None:
-                    self.__elements_history[self.__mouse_down_element] =\
+                    self.__elements_history[self.__focus_element] =\
                         current.prev
-                    self.__mouse_down_element.set_value(current.prev.value)
+                    self.__focus_element.set_value(current.prev.value)
             elif value:
                 next = LinkedList(value, None, None)
                 current = LinkedList("", next, None)
                 next.set_prev(current)
-                self.__elements_history[self.__mouse_down_element] = current
-                self.__mouse_down_element.set_value("")
+                self.__elements_history[self.__focus_element] = current
+                self.__focus_element.set_value("")
         except Exception as e:
             Logger.error("ProxyExtension::SetPreviousForm(): %s", e)
 
@@ -398,15 +399,15 @@ class ProxyExtensionServer(Server):
         """
             Set focused form to next value
         """
-        if self.__mouse_down_element is None:
+        if self.__focus_element is None:
             return
         try:
-            if self.__mouse_down_element in self.__elements_history.keys():
-                current = self.__elements_history[self.__mouse_down_element]
+            if self.__focus_element in self.__elements_history.keys():
+                current = self.__elements_history[self.__focus_element]
                 if current.next is not None:
-                    self.__elements_history[self.__mouse_down_element] =\
+                    self.__elements_history[self.__focus_element] =\
                         current.next
-                    self.__mouse_down_element.set_value(current.next.value)
+                    self.__focus_element.set_value(current.next.value)
         except Exception as e:
             Logger.error("ProxyExtension::SetNextForm(): %s", e)
 
@@ -421,6 +422,7 @@ class ProxyExtensionServer(Server):
             @param webpage as WebKit2WebExtension.WebPage
         """
         self.__mouse_down_element = None
+        self.__focus_element = None
         self.__elements_history = {}
 
         parsed = urlparse(webpage.get_uri())
@@ -465,10 +467,12 @@ class ProxyExtensionServer(Server):
 
     def __on_focus(self, element, event):
         """
-            Warn user about a password form on an http page
+            Warn user about a password form on an http page and
+            update focused element
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
+        self.__focus_element = element
         if isinstance(element, WebKit2WebExtension.DOMHTMLInputElement):
             if element.get_input_type() == "password" and\
                     self.__bus is not None:
@@ -487,6 +491,8 @@ class ProxyExtensionServer(Server):
         """
         if self.__mouse_down_element == element:
             self.__mouse_down_element = None
+        if self.__focus_element == element:
+            self.__focus_element = None
 
     def __on_mouse_down(self, element, event):
         """
