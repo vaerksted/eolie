@@ -44,8 +44,7 @@ class Window(Gtk.ApplicationWindow):
         self.__window_state = 0
         self.__timeout_configure = None
         self.__setup_content()
-        self.__setup_window(size, maximized)
-        self.connect("realize", self.__on_realize)
+        self.connect("realize", self.__on_realize, size, maximized)
         self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
@@ -361,11 +360,14 @@ class Window(Gtk.ApplicationWindow):
             if not lock:
                 self.__fullscreen_revealer.set_reveal_child(False)
 
-    def __on_realize(self, widget):
+    def __on_realize(self, widget, size, maximized):
         """
             Update zoom level
             @param widget as Gtk.Widget
+            @param size as (int, int)
+            @param maximized as bool
         """
+        self.__setup_window(size, maximized)
         self.update_zoom_level(False)
 
     def __on_key_press_event(self, window, event):

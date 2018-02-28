@@ -673,7 +673,6 @@ class Application(Gtk.Application):
             GLib.timeout_add(25000, self.__clean_state_cache, state["id"])
             window.destroy()
         else:
-            window.hide()
             self.quit(True)
 
     def __try_closing(self, window, views):
