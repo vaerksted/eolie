@@ -42,7 +42,6 @@ class WebViewNavigation:
             self.__profile = None
         else:
             self.__profile = related_view.profile
-        self.__previous_uri = ""
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -241,38 +240,14 @@ class WebViewNavigation:
         """
         if self.ephemeral or self.__related_view is not None:
             return
-        parsed = urlparse(uri)
-        # Only switch profile if domain changed
-        previous_parsed = urlparse(self.__previous_uri)
-        switch_profile = not self.__same_domain(parsed, previous_parsed)
-        if switch_profile:
-            profile = App().websettings.get_profile(uri)
-            if self.__profile != profile:
-                self.__profile = profile
-                cookie_manager = self.get_context().get_cookie_manager()
-                path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-                cookie_manager.set_persistent_storage(
-                                        path,
-                                        WebKit2.CookiePersistentStorage.SQLITE)
-        self.__previous_uri = uri
-
-    def __same_domain(self, parsed1, parsed2):
-        """
-            True if uri1 domain == uri2 domain
-            @param parsed1 as UrlParse
-            @param parsed2 as UrlParse
-            @return bool
-        """
-        # Profile management
-        # If root domain does not change, keep current profile
-        # Useful for auth scenario like with accounts.google.com
-        parsed_split1 = parsed1.netloc.split(".")
-        parsed_split2 = parsed2.netloc.split(".")
-        if len(parsed_split1) > 1 and\
-                len(parsed_split2) > 1 and\
-                parsed_split1[-2] == parsed_split2[-2]:
-            return True
-        return False
+        profile = App().websettings.get_profile(uri)
+        if self.__profile != profile:
+            self.__profile = profile
+            cookie_manager = self.get_context().get_cookie_manager()
+            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
+            cookie_manager.set_persistent_storage(
+                                    path,
+                                    WebKit2.CookiePersistentStorage.SQLITE)
 
     def __on_run_as_modal(self, webview):
         Logger.info("WebView::__on_run_as_modal(): TODO")

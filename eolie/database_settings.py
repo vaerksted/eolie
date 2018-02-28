@@ -316,9 +316,14 @@ class DatabaseSettings:
             @return user_agent as str
         """
         parsed = urlparse(uri)
+        if parsed.netloc:
+            domain = ".".join(parsed.netloc.split(".")[-2:])
+        else:
+            return "default"
         with SqlCursor(self) as sql:
+            filter = ("%" + domain + "%",)
             result = sql.execute("SELECT profile FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
+                                  WHERE uri LIKE ?", filter)
             v = result.fetchone()
             if v is not None:
                 return v[0] or "default"
