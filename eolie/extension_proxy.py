@@ -149,7 +149,7 @@ class ProxyExtensionServer(Server):
         self.__page = page
         self.__form_extension = form_extension
         self.__jsblock_extension = jsblock_extension
-        self.__focused = None
+        self.__mouse_down_element = None
         self.__on_input_timeout_id = None
         self.__elements_history = {}
         self.__send_requests = []
@@ -375,21 +375,22 @@ class ProxyExtensionServer(Server):
         """
             Set focused form to previous value
         """
-        if self.__focused is None:
+        if self.__mouse_down_element is None:
             return
         try:
-            value = self.__focused.get_value().rstrip(" ")
-            if self.__focused in self.__elements_history.keys():
-                current = self.__elements_history[self.__focused]
+            value = self.__mouse_down_element.get_value().rstrip(" ")
+            if self.__mouse_down_element in self.__elements_history.keys():
+                current = self.__elements_history[self.__mouse_down_element]
                 if current.prev is not None:
-                    self.__elements_history[self.__focused] = current.prev
-                    self.__focused.set_value(current.prev.value)
+                    self.__elements_history[self.__mouse_down_element] =\
+                        current.prev
+                    self.__mouse_down_element.set_value(current.prev.value)
             elif value:
                 next = LinkedList(value, None, None)
                 current = LinkedList("", next, None)
                 next.set_prev(current)
-                self.__elements_history[self.__focused] = current
-                self.__focused.set_value("")
+                self.__elements_history[self.__mouse_down_element] = current
+                self.__mouse_down_element.set_value("")
         except Exception as e:
             Logger.error("ProxyExtension::SetPreviousForm(): %s", e)
 
@@ -397,14 +398,15 @@ class ProxyExtensionServer(Server):
         """
             Set focused form to next value
         """
-        if self.__focused is None:
+        if self.__mouse_down_element is None:
             return
         try:
-            if self.__focused in self.__elements_history.keys():
-                current = self.__elements_history[self.__focused]
+            if self.__mouse_down_element in self.__elements_history.keys():
+                current = self.__elements_history[self.__mouse_down_element]
                 if current.next is not None:
-                    self.__elements_history[self.__focused] = current.next
-                    self.__focused.set_value(current.next.value)
+                    self.__elements_history[self.__mouse_down_element] =\
+                        current.next
+                    self.__mouse_down_element.set_value(current.next.value)
         except Exception as e:
             Logger.error("ProxyExtension::SetNextForm(): %s", e)
 
@@ -418,7 +420,7 @@ class ProxyExtensionServer(Server):
             @param textareas as [WebKit2WebExtension.DOMHTMLTextAreaElement]
             @param webpage as WebKit2WebExtension.WebPage
         """
-        self.__focused = None
+        self.__mouse_down_element = None
         self.__elements_history = {}
 
         parsed = urlparse(webpage.get_uri())
@@ -463,7 +465,7 @@ class ProxyExtensionServer(Server):
 
     def __on_focus(self, element, event):
         """
-            Keep last focused form
+            Warn user about a password form on an http page
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
@@ -476,16 +478,15 @@ class ProxyExtensionServer(Server):
                               self.__proxy_bus,
                               "UnsecureFormFocused",
                               None)
-        self.__focused = element
 
     def __on_blur(self, element, event):
         """
-            Reset focus
+            Loose focus so reset mouse down element
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
-        if self.__focused == element:
-            self.__focused = None
+        if self.__mouse_down_element == element:
+            self.__mouse_down_element = None
 
     def __on_mouse_down(self, element, event):
         """
@@ -495,7 +496,7 @@ class ProxyExtensionServer(Server):
         """
         if element.get_name() is None:
             return
-        if self.__focused != element and\
+        if self.__mouse_down_element != element and\
                 self.__bus is not None:
             form_uri = element.get_form().get_action()
             parsed_form_uri = urlparse(form_uri)
@@ -508,6 +509,7 @@ class ProxyExtensionServer(Server):
                               self.__proxy_bus,
                               "ShowCredentials",
                               args)
+        self.__mouse_down_element = element
 
     def __on_input(self, element, event):
         """
