@@ -670,7 +670,7 @@ class Application(Gtk.Application):
         if len(self.get_windows()) > 1:
             state = self.__get_state(window)
             self.__state_cache.append(state)
-            GLib.timeout_add(25000, self.__clean_state_cache, state["id"])
+            GLib.timeout_add(10000, self.__clean_state_cache, state["id"])
             window.destroy()
         else:
             self.quit(True)
