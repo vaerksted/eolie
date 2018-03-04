@@ -111,7 +111,6 @@ class Application(Gtk.Application):
                              GLib.OptionArg.NONE, "Show TLS info",
                              None)
         self.connect("activate", self.__on_activate)
-        self.connect("shutdown", lambda a: self.__save_state())
         self.connect("handle-local-options", self.__on_handle_local_options)
         self.connect("command-line", self.__on_command_line)
         self.register(None)
@@ -245,6 +244,9 @@ class Application(Gtk.Application):
             Quit application
             @param vacuum as bool
         """
+        self.__save_state()
+        for window in self.windows:
+            window.hide()
         # Stop pending tasks
         self.download_manager.cancel()
         self.adblock.stop()
