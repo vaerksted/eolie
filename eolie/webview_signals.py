@@ -81,7 +81,13 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._last_click_event_x = event.x
         self._last_click_event_y = event.y
         self._last_click_time = time()
-        if self.get_ancestor(Gtk.Popover) is None:
+        if event.button == 8:
+            self.go_back()
+            return True
+        elif event.button == 9:
+            self.go_forward()
+            return True
+        elif self.get_ancestor(Gtk.Popover) is None:
             return self._window.close_popovers()
 
     def _on_map(self, webview):
