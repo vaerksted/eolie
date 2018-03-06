@@ -21,36 +21,24 @@ function generate_resource()
     echo '</gresources>'
 }
 
-function generate_pot()
-{
-    echo '[encoding: UTF-8]'
-    for file in data/*.xml data/*.in eolie/*.py
-    do
-        echo $file
-    done
-    for file in data/*.ui data/AboutDialog.ui.in
-    do
-        echo -n '[type: gettext/glade]'
-        echo $file
-    done
-}
-
 function generate_po()
 {
     cd po
     git pull https://hosted.weblate.org/git/gnumdk/eolie
-    intltool-update --pot
-    mv -f untitled.pot eolie.pot
-    >LINGUAS
-    for file in *.po
+    >eolie.pot
+    for file in ../data/org.gnome.Eolie.gschema.xml ../data/*.in ../data/*.ui ../eolie/*.py
     do
-	po=${file%.po}
-	echo $po >> LINGUAS
-        intltool-update $po
+        xgettext --from-code=UTF-8 -j $file -o eolie.pot
     done
-    cd -
+    >LINGUAS
+    for po in *.po
+    do
+        msgmerge -N $po eolie.pot > /tmp/$$language_new.po
+        mv /tmp/$$language_new.po $po
+        language=${po%.po}
+        echo $language >>LINGUAS
+    done
 }
 
 generate_resource > data/eolie.gresource.xml
-generate_pot > po/POTFILES.in
 generate_po

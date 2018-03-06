@@ -1,7 +1,9 @@
 [Desktop Entry]
+# Translators: Do NOT translate or transliterate this text
 Name=Eolie
 GenericName=Web browser
 Comment=Web browser
+# Translators: Do NOT translate or transliterate this text (this is an icon file name)!
 Icon=org.gnome.Eolie
 Exec=eolie %U
 Terminal=false
