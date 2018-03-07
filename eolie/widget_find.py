@@ -142,6 +142,8 @@ class FindWidget(Gtk.SearchBar):
             @param action as Gio.SimpleAction/None
             @param param as GLib.Variant
         """
+        if self.__count == 0:
+            return
         string = param.get_string()
         if string == "next":
             self.__current += 1
