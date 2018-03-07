@@ -349,27 +349,27 @@ class WebViewNavigation:
             return False
 
         navigation_action = decision.get_navigation_action()
-        self._navigation_uri = navigation_action.get_request().get_uri()
+        navigation_uri = navigation_action.get_request().get_uri()
         mouse_button = navigation_action.get_mouse_button()
-        parsed_navigation = urlparse(self._navigation_uri)
+        parsed_navigation = urlparse(navigation_uri)
         self.clear_text_entry()
         if parsed_navigation.scheme not in ["http", "https", "file", "about",
                                             "populars", "accept"]:
             try:
                 Gtk.show_uri_on_window(self._window,
-                                       self._navigation_uri,
+                                       navigation_uri,
                                        Gtk.get_current_event_time())
             except Exception as e:
                 Logger.error("WebViewNavigation::__on_decide_policy(): %s", e)
             decision.ignore()
         elif mouse_button == 0:
             # Prevent opening empty pages
-            if self._navigation_uri == "about:blank":
+            if navigation_uri == "about:blank":
                 self.reset_last_click_event()
                 decision.use()
                 return True
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.new_page(LoadingType.FOREGROUND)
+                self.new_page(navigation_uri, LoadingType.FOREGROUND)
                 decision.ignore()
                 return True
             else:
@@ -382,24 +382,24 @@ class WebViewNavigation:
                     loading_type = LoadingType.POPOVER
                 else:
                     loading_type = LoadingType.FOREGROUND
-                self.new_page(loading_type)
+                self.new_page(navigation_uri, loading_type)
                 decision.ignore()
                 return True
             elif self._window.modifiers & Gdk.ModifierType.CONTROL_MASK:
-                self.new_page(LoadingType.BACKGROUND)
+                self.new_page(navigation_uri, LoadingType.BACKGROUND)
                 decision.ignore()
                 return True
             elif self._window.modifiers & Gdk.ModifierType.SHIFT_MASK:
-                self.new_page(LoadingType.POPOVER)
+                self.new_page(navigation_uri, LoadingType.POPOVER)
                 decision.ignore()
                 return True
             else:
-                App().history.set_page_state(self._navigation_uri)
-                self.__switch_profile(self._navigation_uri)
+                App().history.set_page_state(navigation_uri)
+                self.__switch_profile(navigation_uri)
                 self._error = False
                 decision.use()
                 return False
         else:
-            self.new_page(LoadingType.BACKGROUND)
+            self.new_page(navigation_uri, LoadingType.BACKGROUND)
             decision.ignore()
             return True

@@ -13,7 +13,6 @@
 from urllib.parse import urlparse
 
 from eolie.define import App
-from eolie.database_adblock import DatabaseAdblock
 from eolie.logger import Logger
 
 
@@ -27,7 +26,6 @@ class AdblockExtension:
             Connect wanted signal
             @param extension as WebKit2WebExtension
         """
-        self.__adblock = DatabaseAdblock()
         extension.connect("page-created", self.__on_page_created)
 
 #######################
@@ -60,9 +58,9 @@ class AdblockExtension:
         elif App().settings.get_value("adblock") and\
                 parsed_request.scheme in ["http", "https"] and\
                 not App().adblock_exceptions.find_parsed(parsed_request):
-            if self.__adblock.is_netloc_blocked(parsed_request.netloc) or\
-                    self.__adblock.is_uri_blocked(request_uri,
-                                                  parsed_request.netloc):
+            if App().adblock.is_netloc_blocked(parsed_request.netloc) or\
+                    App().adblock.is_uri_blocked(request_uri,
+                                                 parsed_request.netloc):
                 Logger.debug("AdblockExtension: blocking %s ->%s",
                              request_uri, uri)
                 return True

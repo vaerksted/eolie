@@ -236,22 +236,33 @@ class WebView(WebKit2.WebView):
         self._cancelled = True
         WebKit2.WebView.stop_loading(self)
 
-    def new_page(self, loading_type):
+    def new_page(self, uri, loading_type):
         """
             Open a new page
+            @param uri as uri
             @param loading_type as Gdk.LoadingType
         """
+        parsed = urlparse(uri)
+        if App().settings.get_value("adblock") and\
+                parsed.scheme in ["http", "https"] and\
+                not App().adblock_exceptions.find_parsed(parsed):
+            if App().adblock.is_netloc_blocked(parsed.netloc) or\
+                    App().adblock.is_uri_blocked(uri,
+                                                 parsed.netloc):
+                Logger.debug("AdblockWebView: blocking %s ->%s",
+                             uri, self.uri)
+                return True
         if loading_type == LoadingType.POPOVER:
             if self.ephemeral:
                 webview = WebView.new_ephemeral(self._window, None)
             else:
                 webview = WebView.new(self._window, None)
             self._window.container.popup_webview(webview, True)
-            GLib.idle_add(webview.load_uri, self._navigation_uri)
+            GLib.idle_add(webview.load_uri, uri)
         else:
             self._new_pages_opened += 1
             webview = self._window.container.add_webview(
-                                                        self._navigation_uri,
+                                                        uri,
                                                         loading_type,
                                                         self.ephemeral,
                                                         None,
