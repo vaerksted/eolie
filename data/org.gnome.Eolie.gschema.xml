@@ -134,11 +134,6 @@
          <summary>Popular items shown</summary>
          <description />
       </key>
-        <key type="i" name="preloaded-webviews">
-         <default>2</default>
-         <summary>Webviews preloaded per window</summary>
-         <description>Restart needed</description>
-      </key>
       <key type="as" name="default-zoom-level">
          <default>[]</default>
          <summary>Default zoom level</summary>

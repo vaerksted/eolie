@@ -72,8 +72,6 @@ class Container(Gtk.Overlay):
         Main Eolie view
     """
 
-    __PRELOADED = 2
-
     def __init__(self, window):
         """
             Ini.container
@@ -85,12 +83,7 @@ class Container(Gtk.Overlay):
         self.__current = None
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
-        self.__preload_timeout_id = None
-        self.__preloaded = []
         self.__pending_items = []
-
-        self.__preloaded_max = App().settings.get_value(
-                                              "preloaded-webviews").get_int32()
 
         self.__stack = DelayedStack()
         self.__stack.set_hexpand(True)
@@ -135,7 +128,7 @@ class Container(Gtk.Overlay):
             @param atime as int
             @return WebView
         """
-        webview = self.__get_webview(ephemeral)
+        webview = View.get_new_webview(ephemeral, self.__window)
         if atime is not None:
             webview.set_atime(atime)
         if state is not None:
@@ -147,10 +140,6 @@ class Container(Gtk.Overlay):
             elif loading_type in [LoadingType.OFFLOAD, LoadingType.FOREGROUND]:
                 webview.set_uri(uri)
         self.add_webview_with_new_view(webview, loading_type)
-        if self.__preload_timeout_id is not None:
-            GLib.source_remove(self.__preload_timeout_id)
-        self.__preload_timeout_id = GLib.timeout_add(2000,
-                                                     self.__preload_webviews)
         return webview
 
     def add_webviews(self, items):
@@ -368,14 +357,6 @@ class Container(Gtk.Overlay):
             # We are last row, add a new one
             self.add_webview(App().start_page, LoadingType.FOREGROUND)
 
-    def stop_preloading(self):
-        """
-            Stop webview preloading
-        """
-        if self.__preload_timeout_id is not None:
-            GLib.source_remove(self.__preload_timeout_id)
-            self.__preload_timeout_id = None
-
     def next(self):
         """
             Show next view
@@ -487,31 +468,6 @@ class Container(Gtk.Overlay):
                 self.__stack.set_visible_child(self.__current)
             self.__expose_stack.set_visible_child_name("stack")
             self.__pages_manager.update_visible_child()
-
-    def __get_webview(self, ephemeral):
-        """
-            Get a new webview
-            @param ephemeral as bool
-            @return WebView
-        """
-        if self.__preloaded and not ephemeral:
-            webview = self.__preloaded.pop(0)
-        else:
-            webview = View.get_new_webview(ephemeral, self.__window)
-        return webview
-
-    def __preload_webviews(self):
-        """
-            Preload some webviews
-        """
-        self.__preload_timeout_id = None
-        # Ignore stupid values
-        if self.__preloaded_max < 1 or self.__preloaded_max > 20:
-            return
-        webview = View.get_new_webview(False, self.__window)
-        self.__preloaded.append(webview)
-        if len(self.__preloaded) < self.__preloaded_max:
-            return True
 
     def __get_new_view(self, webview):
         """
