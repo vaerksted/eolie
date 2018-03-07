@@ -116,7 +116,8 @@ class WebViewArtwork:
             # Read result
             surface = self.get_favicon()
             # Resize surface and set favicon
-            if surface is not None and surface.get_width() >= ArtSize.FAVICON:
+            if surface is not None and\
+                    surface.get_width() >= ArtSize.FAVICON_MIN:
                 resized = resize_favicon(surface)
             else:
                 # Check for already cached favicon
