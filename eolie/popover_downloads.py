@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, WebKit2
+from gi.repository import Gtk, GLib, Gio, WebKit2, Gdk
 
 from time import time
 from gettext import gettext as _
@@ -252,7 +252,7 @@ class DownloadRow(Gtk.ListBoxRow):
                 self.__download_previous_time = new_time
             self.__progress.set_fraction(download.get_estimated_progress())
         except Exception as e:
-            Logger.error("DownloadPopover::__on_received_data(): %s", e)
+            Logger.error("DownloadRow::__on_received_data(): %s", e)
 
     def __on_finished(self, download):
         """
@@ -322,7 +322,7 @@ class DownloadsPopover(Gtk.Popover):
             directory_uri = GLib.filename_to_uri(directory, None)
         Gtk.show_uri_on_window(self.__window,
                                directory_uri,
-                               int(GLib.get_real_time() / 1000000))
+                               Gdk.CURRENT_TIME)
         self.hide()
 
     def _on_clear_clicked(self, button):
@@ -389,10 +389,12 @@ class DownloadsPopover(Gtk.Popover):
         """
         try:
             if row.finished:
-                Gtk.show_uri(None, row.download.get_destination(), int(time()))
+                Gtk.show_uri_on_window(self.__window,
+                                       row.download.get_destination(),
+                                       Gdk.CURRENT_TIME)
                 self.hide()
-        except:  # Destination not found
-            pass
+        except Exception as e:
+            Logger.error("DownloadsPopover::__on_row_activated(): %s", e)
 
     def __on_map(self, widget):
         """
