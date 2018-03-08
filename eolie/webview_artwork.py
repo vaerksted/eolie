@@ -63,26 +63,17 @@ class WebViewArtwork:
         """
         if self.ephemeral or self._error or self.uri is None:
             return
-        parsed = urlparse(self.uri)
-        if parsed.scheme in ["http", "https"]:
-            surface = self.get_favicon()
-            # Save webview favicon
-            if surface is not None:
-                if surface.get_width() >= self.__favicon_width:
-                    self.stop_favicon()
-                self.__favicon_width = surface.get_width()
-                self.__favicon_timeout_id = GLib.timeout_add(
-                                                 1000,
-                                                 self.__set_favicon,
-                                                 surface,
-                                                 self.uri)
-        else:
-            # Get symbolic favicon for icon theme
-            icon_theme_artwork = App().art.get_icon_theme_artwork(
-                                                              self.uri,
-                                                              self.ephemeral)
-            if icon_theme_artwork is not None:
-                self.emit("favicon-changed", None, icon_theme_artwork)
+        surface = self.get_favicon()
+        # Save webview favicon
+        if surface is not None:
+            if surface.get_width() >= self.__favicon_width:
+                self.stop_favicon()
+            self.__favicon_width = surface.get_width()
+            self.__favicon_timeout_id = GLib.timeout_add(
+                                             1000,
+                                             self.__set_favicon,
+                                             surface,
+                                             self.uri)
 
     def set_builtin_favicon(self):
         """
@@ -116,6 +107,22 @@ class WebViewArtwork:
         if event == WebKit2.LoadEvent.STARTED:
             self.__initial_uri = uri.rstrip('/')
             self.__favicon_width = 0
+            surface = App().art.get_favicon(self.uri,
+                                            self.get_scale_factor())
+            if surface is not None:
+                self.emit("favicon-changed", surface, None)
+            else:
+                # Get symbolic favicon for icon theme
+                icon_theme_artwork = App().art.get_icon_theme_artwork(
+                                                              self.uri,
+                                                              self.ephemeral)
+                if icon_theme_artwork is not None:
+                    self.emit("favicon-changed", None, icon_theme_artwork)
+                else:
+                    self.emit("favicon-changed", None, "applications-internet")
+        elif event == WebKit2.LoadEvent.FINISHED:
+            if self.get_favicon() is None:
+                self.set_builtin_favicon()
 
 #######################
 # PRIVATE             #

@@ -107,10 +107,6 @@ class WebViewLoadSignals:
                 for popup in self.__popups:
                     popup.destroy()
                 self.__popups = []
-                surface = App().art.get_favicon(self.uri,
-                                                self.get_scale_factor())
-                if surface is not None:
-                    self.emit("favicon-changed", surface, None)
             elif event == WebKit2.LoadEvent.FINISHED:
                 self.run_javascript_from_gresource(
                                  "/org/gnome/Eolie/Readability.js", None, None)
