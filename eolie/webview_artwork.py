@@ -161,10 +161,8 @@ class WebViewArtwork:
         self.__favicon_timeout_id = None
         if surface.get_width() >= ArtSize.FAVICON:
             favicon_type = "favicon_hd"
-        elif not App().art.exists(uri, "favicon_hd"):
-            favicon_type = "favicon"
         else:
-            return
+            favicon_type = "favicon"
         resized = resize_favicon(surface)
         self.emit("favicon-changed", resized, None)
         self.__save_favicon_to_cache(resized, uri, favicon_type)
