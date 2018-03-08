@@ -16,7 +16,7 @@ from hashlib import sha256
 from time import time
 from urllib.parse import urlparse
 
-from eolie.define import EOLIE_CACHE_PATH
+from eolie.define import EOLIE_CACHE_PATH, ArtSize
 from eolie.utils import remove_www
 from eolie.logger import Logger
 
@@ -83,6 +83,31 @@ class Art:
             pass
         return None
 
+    def get_favicon(self, uri, scale_factor):
+        """
+            @param uri as str
+            @param suffix as str
+            @param scale factor as int
+            @return cairo.surface
+        """
+        if uri is None:
+            return None
+        filepath = self.get_favicon_path(uri)
+        try:
+            if GLib.file_test(filepath, GLib.FileTest.IS_REGULAR):
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                                                               filepath,
+                                                               ArtSize.FAVICON,
+                                                               ArtSize.FAVICON,
+                                                               True)
+                surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
+                                                               scale_factor,
+                                                               None)
+                return surface
+        except Exception as e:
+            Logger.debug("Art::get_favicon(): %s", e)
+        return None
+
     def get_icon_theme_artwork(self, uri, ephemeral):
         """
             Get artwork from icon theme
@@ -107,7 +132,7 @@ class Art:
         """
         if uri is None:
             return None
-        for favicon_type in ["favicon", "favicon_alt"]:
+        for favicon_type in ["favicon_hd", "favicon", "favicon_alt"]:
             favicon_path = self.get_path(uri, favicon_type)
             if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
                 return favicon_path

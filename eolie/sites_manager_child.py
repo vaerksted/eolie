@@ -14,7 +14,6 @@ from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
-from eolie.utils import remove_www
 from eolie.logger import Logger
 
 
@@ -170,7 +169,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
         self.__image.set_property("pixel-size", ArtSize.FAVICON)
-        self.__set_artwork()
         self.add(widget)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
@@ -266,7 +264,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
-            self.__set_artwork()
+            if self.__views:
+                self.__set_artwork(self.__views[0].webview)
             self.__netloc_label.set_text(self.__netloc)
 
     def update_label(self):
@@ -394,18 +393,18 @@ class SitesManagerChild(Gtk.ListBoxRow):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __set_artwork(self):
+    def __set_artwork(self, webview):
         """
             Set initial artwork on widget
+            @param webview as WebView
         """
-        artwork = App().art.get_icon_theme_artwork(remove_www(self.__netloc),
+        artwork = App().art.get_icon_theme_artwork(webview.uri,
                                                    self.__ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
         else:
-            netloc = remove_www(self.__netloc)
-            favicon_path = App().art.get_favicon_path(netloc)
+            favicon_path = App().art.get_favicon_path(webview.uri)
             if favicon_path is not None:
                 self.__image.set_from_file(favicon_path)
             else:
@@ -526,3 +525,4 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Update indicataor
         """
         self.__indicator_label.mark_shown(webview)
+        self.__set_artwork(webview)

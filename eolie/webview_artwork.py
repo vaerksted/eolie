@@ -31,7 +31,6 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.__favicon_timeout_id = None
         self.__favicon_width = 0
-        self.__favicon_cached = False
         self.__initial_uri = None
 
     def set_snapshot(self):
@@ -70,53 +69,36 @@ class WebViewArtwork:
         if icon_theme_artwork is not None:
             self.emit("favicon-changed", None, icon_theme_artwork)
         else:
-            parsed = urlparse(self.uri)
-            netloc = remove_www(parsed.netloc)
-            if not netloc:
-                return
             surface = self.get_favicon()
-            if surface is None:
-                width = -1
-            else:
-                width = surface.get_width()
-            # Better favicon, stop any running __set_favicon()
-            if width > self.__favicon_width:
-                self.stop_favicon()
-                # Uncache any previously cached favicon (with wrong width)
-                if self.__favicon_cached:
-                    self.__favicon_cached = False
-                    App().art.uncache(self.uri, "favicon")
-                    App().art.uncache(self.uri, "favicon_alt")
-            # Uglier favicon, return
-            elif surface is not None and width < self.__favicon_width:
-                return
-            # Save current width
-            if width > 0:
-                self.__favicon_width = width
-            # Check any favicon in cache
-            if surface is None:
-                for favicon in ["favicon", "favicon_alt"]:
-                    surface = App().art.get_artwork(netloc,
-                                                    favicon,
-                                                    self.get_scale_factor(),
-                                                    ArtSize.FAVICON,
-                                                    ArtSize.FAVICON)
-                    if surface is not None:
-                        self.emit("favicon-changed", surface, None)
-                        break
-            # Get builtin favicon
-            if surface is None:
-                self.__favicon_timeout_id = GLib.timeout_add(
-                                                 1000,
-                                                 self.__set_builtin_favicon,
-                                                 netloc)
-            # Get webview favicon
-            else:
+            # Save webview favicon
+            if surface is not None:
+                if surface.get_width() >= self.__favicon_width:
+                    self.stop_favicon()
+                self.__favicon_width = surface.get_width()
                 self.__favicon_timeout_id = GLib.timeout_add(
                                                  1000,
                                                  self.__set_favicon,
                                                  surface,
-                                                 netloc)
+                                                 self.uri)
+
+    def set_builtin_favicon(self):
+        """
+            Set builting favicon
+        """
+        if self.ephemeral or self._error or self.uri is None:
+            return
+        parsed = urlparse(self.uri)
+        if parsed.scheme in ["http", "https"]:
+            self.__favicon_width = 0
+            surface = App().art.get_favicon(self.uri,
+                                            self.get_scale_factor())
+            if surface is None:
+                self.__favicon_timeout_id = GLib.timeout_add(
+                                             2000,
+                                             self.__set_builtin_favicon,
+                                             self.uri)
+            else:
+                self.emit("favicon-changed", surface, None)
 
 #######################
 # PROTECTED           #
@@ -131,7 +113,6 @@ class WebViewArtwork:
         if event == WebKit2.LoadEvent.STARTED:
             self.__initial_uri = uri.rstrip('/')
             self.__favicon_width = 0
-            self.__favicon_cached = False
 
 #######################
 # PRIVATE             #
@@ -148,38 +129,45 @@ class WebViewArtwork:
                           self.__on_snapshot,
                           True)
 
-    def __set_builtin_favicon(self, netloc):
+    def __set_builtin_favicon(self, uri):
         """
             Build favicon and cache it
-            @param netloc as str
+            @param uri as str
         """
         self.__favicon_timeout_id = None
-        surface = get_char_surface(netloc[0])
-        self.emit("favicon-changed", surface, None)
-        self.__save_favicon_to_cache(surface, netloc, "favicon_alt")
+        netloc = urlparse(uri).netloc
+        if netloc:
+            surface = get_char_surface(remove_www(netloc[0]))
+            self.emit("favicon-changed", surface, None)
+            self.__save_favicon_to_cache(surface, uri, "favicon_alt")
 
-    def __set_favicon(self, surface, netloc):
+    def __set_favicon(self, surface, uri):
         """
             Cache favicon and emit signal
             @param surface as cairo.Surface
-            @param netloc as str
+            @param uri as str
             @param safe as bool
         """
         self.__favicon_timeout_id = None
+        if surface.get_width() >= ArtSize.FAVICON:
+            favicon_type = "favicon_hd"
+        elif not App().art.exists(uri, "favicon_hd"):
+            favicon_type = "favicon"
+        else:
+            return
         resized = resize_favicon(surface)
         self.emit("favicon-changed", resized, None)
-        self.__save_favicon_to_cache(resized, netloc, "favicon")
+        self.__save_favicon_to_cache(resized, uri, favicon_type)
 
-    def __save_favicon_to_cache(self, surface, netloc, favicon_type):
+    def __save_favicon_to_cache(self, surface, uri, favicon_type):
         """
             Save favicon to cache
             @param surface as cairo.Surface
-            @parma netloc as str
+            @parma uri as str
             @param favicon_type as str
         """
         exists = App().art.exists(self.uri, favicon_type)
         if not exists:
-            self.__favicon_cached = True
             App().art.save_artwork(self.uri, surface, favicon_type)
             # Save favicon for initial URI
             striped_uri = self.uri.rstrip("/")
@@ -187,11 +175,10 @@ class WebViewArtwork:
                 App().art.save_artwork(self.__initial_uri,
                                        surface,
                                        favicon_type)
-        # Save favicon for netloc
-        exists = App().art.exists(netloc, favicon_type)
+        # Save favicon for uri
+        exists = App().art.exists(uri, favicon_type)
         if not exists:
-            self.__favicon_cached = True
-            App().art.save_artwork(netloc, surface, favicon_type)
+            App().art.save_artwork(uri, surface, favicon_type)
 
     def __on_snapshot(self, surface, first_pass):
         """
