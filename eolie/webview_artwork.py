@@ -111,6 +111,7 @@ class WebViewArtwork:
         """
         if event == WebKit2.LoadEvent.STARTED:
             self.stop_favicon_saving()
+            self.stop_favicon_loading()
             self.__save_best_favicon_to_cache()
             self.__initial_uri = webview.uri.rstrip('/')
             self.__favicon_width = 0
@@ -118,7 +119,8 @@ class WebViewArtwork:
                                             self.get_scale_factor())
             if surface is not None:
                 self.emit("favicon-changed", surface, None)
-            elif self.__current_netloc not in webview.uri:
+            elif self.__current_netloc is None or\
+                    self.__current_netloc not in webview.uri:
                 # Get symbolic favicon for icon theme
                 icon_theme_artwork = App().art.get_icon_theme_artwork(
                                                               webview.uri,
@@ -133,7 +135,7 @@ class WebViewArtwork:
             if self.get_favicon() is None:
                 self.set_builtin_favicon()
             parsed = urlparse(webview.uri)
-            self.__current_netloc = parsed.netloc
+            self.__current_netloc = parsed.netloc or None
 
 #######################
 # PRIVATE             #
