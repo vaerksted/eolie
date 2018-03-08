@@ -63,12 +63,8 @@ class WebViewArtwork:
         """
         if self.ephemeral or self._error or self.uri is None:
             return
-        # Get symbolic favicon for icon theme
-        icon_theme_artwork = App().art.get_icon_theme_artwork(self.uri,
-                                                              self.ephemeral)
-        if icon_theme_artwork is not None:
-            self.emit("favicon-changed", None, icon_theme_artwork)
-        else:
+        parsed = urlparse(self.uri)
+        if parsed.scheme in ["http", "https"]:
             surface = self.get_favicon()
             # Save webview favicon
             if surface is not None:
@@ -80,6 +76,13 @@ class WebViewArtwork:
                                                  self.__set_favicon,
                                                  surface,
                                                  self.uri)
+        else:
+            # Get symbolic favicon for icon theme
+            icon_theme_artwork = App().art.get_icon_theme_artwork(
+                                                              self.uri,
+                                                              self.ephemeral)
+            if icon_theme_artwork is not None:
+                self.emit("favicon-changed", None, icon_theme_artwork)
 
     def set_builtin_favicon(self):
         """
