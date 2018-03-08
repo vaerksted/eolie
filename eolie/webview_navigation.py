@@ -175,6 +175,8 @@ class WebViewNavigation:
                                 self.run_javascript(js, None, None)
                                 break
         elif event == WebKit2.LoadEvent.FINISHED:
+            if self.get_favicon() is None:
+                self.set_favicon()
             self.run_javascript_from_gresource(
                                   "/org/gnome/Eolie/Extensions.js", None, None)
             if parsed.scheme != "populars":
