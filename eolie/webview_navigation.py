@@ -177,7 +177,6 @@ class WebViewNavigation:
         elif event == WebKit2.LoadEvent.FINISHED:
             self.run_javascript_from_gresource(
                                   "/org/gnome/Eolie/Extensions.js", None, None)
-            self.set_favicon(False)
             if parsed.scheme != "populars":
                 self.set_snapshot()
             self.update_spell_checking()
@@ -290,7 +289,7 @@ class WebViewNavigation:
             self.emit("uri-changed", uri)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
-            self.set_favicon(False)
+            self.set_favicon()
 
     def __on_title_changed(self, webview, param):
         """
@@ -308,7 +307,7 @@ class WebViewNavigation:
             @param webview as WebView
             @param favicon as GObject.ParamSpec
         """
-        self.set_favicon(True)
+        self.set_favicon()
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """

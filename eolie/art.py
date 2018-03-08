@@ -131,12 +131,24 @@ class Art:
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
+    def uncache(self, uri, suffix):
+        """
+            Remove from cache
+            @param uri as str
+            @param suffix as str
+        """
+        try:
+            f = Gio.File.new_for_path(self.get_path(uri, suffix))
+            f.delete()
+        except Exception as e:
+            Logger.debug("Art::uncache(): %s", e)
+
     def exists(self, uri, suffix):
         """
             Check if file exists and is cached
             @param uri as str
             @param suffix as str
-            @return (exists as bool, cached as bool)
+            @return exists as bool
         """
         f = Gio.File.new_for_path(self.get_path(uri, suffix))
         exists = f.query_exists()
@@ -145,9 +157,9 @@ class Art:
                                 Gio.FileQueryInfoFlags.NONE,
                                 None)
             mtime = int(info.get_attribute_as_string('time::modified'))
-            return (True, time() - mtime < self.__CACHE_DELTA)
+            return time() - mtime < self.__CACHE_DELTA
         else:
-            return (False, False)
+            return False
 
     def vacuum(self):
         """
