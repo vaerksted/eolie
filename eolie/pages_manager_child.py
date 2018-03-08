@@ -345,9 +345,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         uri = webview.uri
         if event == WebKit2.LoadEvent.STARTED:
             self.__favicon = None
-            self.__close_button.get_image().set_from_icon_name(
-                                                  "applications-internet",
-                                                  Gtk.IconSize.INVALID)
             self.__image.clear()
             self.__audio_indicator.hide()
             self.__spinner.start()
