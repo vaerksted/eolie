@@ -73,7 +73,11 @@ class WebViewArtwork:
         """
             Set favicon
         """
-        if self.ephemeral or self._error or self.uri is None:
+        parsed = urlparse(self.uri)
+        if self.ephemeral or\
+                self._error or\
+                not parsed.netloc or\
+                parsed.scheme not in ["http", "https"]:
             return
         surface = self.get_favicon()
         # Save webview favicon
