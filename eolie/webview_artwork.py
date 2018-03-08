@@ -156,9 +156,9 @@ class WebViewArtwork:
             @param uri as str
         """
         self.__favicon_timeout_id = None
-        netloc = urlparse(uri).netloc
+        netloc = remove_www(urlparse(uri).netloc)
         if netloc:
-            surface = get_char_surface(remove_www(netloc[0]))
+            surface = get_char_surface(netloc[0])
             self.emit("favicon-changed", surface, None)
             self.__save_favicon_to_cache(surface, uri, "favicon_alt")
 
