@@ -283,7 +283,7 @@ class WebViewNavigation:
         """
         uri = webview.get_property(param.name)
         self.stop_snapshot()
-        self.stop_favicon()
+        self.stop_favicon_loading()
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)

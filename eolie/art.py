@@ -132,7 +132,7 @@ class Art:
         """
         if uri is None:
             return None
-        for favicon_type in ["favicon_hd", "favicon", "favicon_alt"]:
+        for favicon_type in ["favicon", "favicon_alt"]:
             favicon_path = self.get_path(uri, favicon_type)
             if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
                 return favicon_path
