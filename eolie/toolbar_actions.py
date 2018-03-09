@@ -161,7 +161,7 @@ class ToolbarActions(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.container.add_webview(App().start_page,
-                                            LoadingType.BACKGROUND)
+                                            LoadingType.FOREGROUND)
         self.__window.close_popovers()
 
     def _on_pages_button_toggled(self, button):
