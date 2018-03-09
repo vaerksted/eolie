@@ -49,11 +49,13 @@ class Art:
             @param suffix as str
         """
         try:
-            filepath = self.get_path(uri, suffix)
-            pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
-                                                 surface.get_width(),
-                                                 surface.get_height())
-            pixbuf.savev(filepath, "png", [None], [None])
+            parsed = urlparse(uri)
+            if parsed.scheme in ["http", "https"]:
+                filepath = self.get_path(uri, suffix)
+                pixbuf = Gdk.pixbuf_get_from_surface(surface, 0, 0,
+                                                     surface.get_width(),
+                                                     surface.get_height())
+                pixbuf.savev(filepath, "png", [None], [None])
         except Exception as e:
             Logger.error("Art::save_artwork(): %s", e)
 
