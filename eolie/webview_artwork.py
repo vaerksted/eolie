@@ -127,11 +127,11 @@ class WebViewArtwork:
         """
         self.__save_favicon_timeout_id = None
         self.__helper.run(App().art.save_artwork,
-                          self.uri,
+                          uri,
                           surface,
                           favicon_type)
         # Save favicon for initial URI
-        striped_uri = self.uri.rstrip("/")
+        striped_uri = uri.rstrip("/")
         if self.__initial_uri != striped_uri:
             self.__helper.run(App().art.save_artwork,
                               self.__initial_uri,
