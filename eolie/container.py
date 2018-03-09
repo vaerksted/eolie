@@ -135,7 +135,7 @@ class Container(Gtk.Overlay):
             webview.restore_session_state(state)
         if uri is not None:
             # Force loading
-            if loading_type == LoadingType.BACKGROUND:
+            if loading_type == LoadingType.BACKGROUND or self.in_expose:
                 webview.load_uri(uri)
             elif loading_type in [LoadingType.OFFLOAD, LoadingType.FOREGROUND]:
                 webview.set_uri(uri)
