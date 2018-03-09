@@ -159,7 +159,7 @@ class PagesMenu(Gio.Menu):
             @param GVariant
         """
         App().active_window.container.add_webview(App().start_page,
-                                                  LoadingType.FOREGROUND,
+                                                  LoadingType.BACKGROUND,
                                                   True)
 
     def __on_openall_clicked(self, action, variant):
