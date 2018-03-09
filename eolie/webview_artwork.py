@@ -141,8 +141,7 @@ class WebViewArtwork:
         """
         try:
             surface = favicon_db.get_favicon_finish(result)
-        except Exception as e:
-            print(e)
+        except:
             surface = None
         # Save webview favicon
         if surface is not None:
