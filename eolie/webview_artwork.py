@@ -33,6 +33,7 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.__initial_uri = None
         self.__favicon_width = 0
+        self.__save_favicon_timeout_id = None
         self.__current_netloc = None
 
     def set_snapshot(self):
@@ -124,13 +125,18 @@ class WebViewArtwork:
             @parma uri as str
             @param favicon_type as str
         """
-        App().art.save_artwork(self.uri, surface, favicon_type)
+        self.__save_favicon_timeout_id = None
+        self.__helper.run(App().art.save_artwork,
+                          self.uri,
+                          surface,
+                          favicon_type)
         # Save favicon for initial URI
         striped_uri = self.uri.rstrip("/")
         if self.__initial_uri != striped_uri:
-            App().art.save_artwork(self.__initial_uri,
-                                   surface,
-                                   favicon_type)
+            self.__helper.run(App().art.save_artwork,
+                              self.__initial_uri,
+                              surface,
+                              favicon_type)
 
     def __on_get_favicon(self, favicon_db, result, builtin=False):
         """
@@ -147,18 +153,27 @@ class WebViewArtwork:
         if surface is not None:
             favicon_width = surface.get_width()
             if favicon_width >= self.__favicon_width:
+                if self.__save_favicon_timeout_id is not None:
+                    GLib.source_remove(self.__save_favicon_timeout_id)
+                    self.__save_favicon_timeout_id = None
                 self.__favicon_width = favicon_width
                 resized = resize_favicon(surface)
                 self.emit("favicon-changed", resized, None)
-                self.__helper.run(self.__save_favicon_to_cache,
-                                  resized, self.uri, "favicon")
+                if not App().art.exists(self.uri, "favicon"):
+                    # We wait for a better favicon
+                    self.__save_favicon_timeout_id = GLib.timeout_add(
+                                      2000,
+                                      self.__save_favicon_to_cache,
+                                      surface, self.uri, "favicon")
         elif builtin:
             netloc = remove_www(urlparse(self.uri).netloc)
             if netloc:
                 surface = get_char_surface(netloc[0])
                 self.emit("favicon-changed", surface, None)
-                self.__helper.run(self.__save_favicon_to_cache,
-                                  surface, self.uri, "favicon_alt")
+                if not App().art.exists(self.uri, "favicon_alt"):
+                    self.__save_favicon_to_cache(surface,
+                                                 self.uri,
+                                                 "favicon_alt")
 
     def __on_snapshot(self, surface, first_pass):
         """
