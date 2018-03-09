@@ -15,6 +15,7 @@ from gi.repository import GLib, WebKit2
 from urllib.parse import urlparse
 
 from eolie.define import App
+from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_char_surface
 from eolie.utils import remove_www
 
@@ -28,13 +29,10 @@ class WebViewArtwork:
         """
             Init class
         """
+        self.__helper = TaskHelper()
         self.__snapshot_id = None
-        self.__favicon_timeout_id = None
-        self.__save_favicon_timeout_id = None
-        # We keep favicons to save one with best size
-        self.__favicons_uri = None
-        self.__favicons = {}
         self.__initial_uri = None
+        self.__favicon_width = 0
         self.__current_netloc = None
 
     def set_snapshot(self):
@@ -53,56 +51,18 @@ class WebViewArtwork:
             GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = None
 
-    def stop_favicon_loading(self):
-        """
-            Stop pending favicon loading
-        """
-        if self.__favicon_timeout_id is not None:
-            GLib.source_remove(self.__favicon_timeout_id)
-            self.__favicon_timeout_id = None
-
-    def stop_favicon_saving(self):
-        """
-            Stop pending favicon saving
-        """
-        if self.__save_favicon_timeout_id is not None:
-            GLib.source_remove(self.__save_favicon_timeout_id)
-            self.__save_favicon_timeout_id = None
-
     def set_favicon(self):
         """
             Set favicon
         """
-        parsed = urlparse(self.uri)
-        if self.ephemeral or\
-                self._error or\
-                not parsed.netloc or\
-                parsed.scheme not in ["http", "https"]:
-            return
-        surface = self.get_favicon()
-        # Save webview favicon
-        if surface is not None:
-            self.stop_favicon_loading()
-            GLib.timeout_add(1000, self.__set_favicon, surface, self.uri)
-
-    def set_builtin_favicon(self):
-        """
-            Set builting favicon
-        """
-        if self.ephemeral or self._error or self.uri is None:
+        if self.ephemeral or self._error:
             return
         parsed = urlparse(self.uri)
         if parsed.scheme in ["http", "https"]:
-            self.__favicon_width = 0
-            surface = App().art.get_favicon(self.uri,
-                                            self.get_scale_factor())
-            if surface is None:
-                self.__favicon_timeout_id = GLib.timeout_add(
-                                             1000,
-                                             self.__set_builtin_favicon,
-                                             self.uri)
-            else:
-                self.emit("favicon-changed", surface, None)
+            self.context.get_favicon_database().get_favicon(
+                                                        self.uri,
+                                                        self._cancellable,
+                                                        self.__on_get_favicon)
 
 #######################
 # PROTECTED           #
@@ -114,11 +74,8 @@ class WebViewArtwork:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
-            self.stop_favicon_saving()
-            self.stop_favicon_loading()
-            self.__save_best_favicon_to_cache()
-            self.__initial_uri = webview.uri.rstrip('/')
             self.__favicon_width = 0
+            self.__initial_uri = webview.uri.rstrip('/')
             surface = App().art.get_favicon(webview.uri,
                                             self.get_scale_factor())
             if surface is not None:
@@ -133,12 +90,16 @@ class WebViewArtwork:
                     self.emit("favicon-changed", None, icon_theme_artwork)
                 else:
                     self.emit("favicon-changed", None, "applications-internet")
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__favicons_uri = webview.uri
         elif event == WebKit2.LoadEvent.FINISHED:
-            if self.get_favicon() is None:
-                self.set_builtin_favicon()
             parsed = urlparse(webview.uri)
+            if parsed.scheme in ["http", "https"]:
+                favicon_database = self.context.get_favicon_database()
+                GLib.timeout_add(2000,
+                                 favicon_database.get_favicon,
+                                 webview.uri,
+                                 self._cancellable,
+                                 self.__on_get_favicon,
+                                 True)
             self.__current_netloc = parsed.netloc or None
 
 #######################
@@ -156,37 +117,6 @@ class WebViewArtwork:
                           self.__on_snapshot,
                           True)
 
-    def __set_builtin_favicon(self, uri):
-        """
-            Build favicon and cache it
-            @param uri as str
-        """
-        self.__favicon_timeout_id = None
-        netloc = remove_www(urlparse(uri).netloc)
-        if netloc:
-            surface = get_char_surface(netloc[0])
-            self.emit("favicon-changed", surface, None)
-            self.__save_favicon_to_cache(surface, uri, "favicon_alt")
-
-    def __set_favicon(self, surface, uri):
-        """
-            Cache favicon and emit signal
-            @param surface as cairo.Surface
-            @param uri as str
-            @param safe as bool
-        """
-        self.__favicon_timeout_id = None
-        sorted_favicons_width = sorted(self.__favicons.keys(), reverse=True)
-        if not sorted_favicons_width or\
-                surface.get_width() >= sorted_favicons_width[0]:
-            self.stop_favicon_saving()
-            resized = resize_favicon(surface)
-            self.emit("favicon-changed", resized, None)
-            self.__favicons[surface.get_width()] = resized
-            self.__save_favicon_timeout_id = GLib.timeout_add(
-                                          2000,
-                                          self.__save_best_favicon_to_cache)
-
     def __save_favicon_to_cache(self, surface, uri, favicon_type):
         """
             Save favicon to cache
@@ -194,34 +124,42 @@ class WebViewArtwork:
             @parma uri as str
             @param favicon_type as str
         """
-        exists = App().art.exists(self.uri, favicon_type)
-        if not exists:
-            App().art.save_artwork(self.uri, surface, favicon_type)
-            # Save favicon for initial URI
-            striped_uri = self.uri.rstrip("/")
-            if self.__initial_uri != striped_uri:
-                App().art.save_artwork(self.__initial_uri,
-                                       surface,
-                                       favicon_type)
-        # Save favicon for uri
-        exists = App().art.exists(uri, favicon_type)
-        if not exists:
-            App().art.save_artwork(uri, surface, favicon_type)
+        App().art.save_artwork(self.uri, surface, favicon_type)
+        # Save favicon for initial URI
+        striped_uri = self.uri.rstrip("/")
+        if self.__initial_uri != striped_uri:
+            App().art.save_artwork(self.__initial_uri,
+                                   surface,
+                                   favicon_type)
 
-    def __save_best_favicon_to_cache(self):
+    def __on_get_favicon(self, favicon_db, result, builtin=False):
         """
-            Save best favicon for current favicon uri
+            Read favicon
+            @param favicon_db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+            @param builtin as bool
         """
-        self.__save_favicon_timeout_id = None
-        if self.__favicons_uri is None:
-            return
-        for key in sorted(self.__favicons.keys(), reverse=True):
-            self.__save_favicon_to_cache(self.__favicons[key],
-                                         self.__favicons_uri,
-                                         "favicon")
-            break
-        self.__favicons_uri = None
-        self.__favicons = {}
+        try:
+            surface = favicon_db.get_favicon_finish(result)
+        except Exception as e:
+            print(e)
+            surface = None
+        # Save webview favicon
+        if surface is not None:
+            favicon_width = surface.get_width()
+            if favicon_width >= self.__favicon_width:
+                self.__favicon_width = favicon_width
+                resized = resize_favicon(surface)
+                self.emit("favicon-changed", resized, None)
+                self.__helper.run(self.__save_favicon_to_cache,
+                                  resized, self.uri, "favicon")
+        elif builtin:
+            netloc = remove_www(urlparse(self.uri).netloc)
+            if netloc:
+                surface = get_char_surface(netloc[0])
+                self.emit("favicon-changed", surface, None)
+                self.__helper.run(self.__save_favicon_to_cache,
+                                  surface, self.uri, "favicon_alt")
 
     def __on_snapshot(self, surface, first_pass):
         """
