@@ -164,7 +164,7 @@ class WebViewArtwork:
                     self.__save_favicon_timeout_id = GLib.timeout_add(
                                       2000,
                                       self.__save_favicon_to_cache,
-                                      surface, self.uri, "favicon")
+                                      resized, self.uri, "favicon")
         elif builtin:
             netloc = remove_www(urlparse(self.uri).netloc)
             if netloc:
