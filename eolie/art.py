@@ -68,7 +68,7 @@ class Art:
             @param height as int
             @return cairo.surface
         """
-        if uri is None:
+        if not uri:
             return None
         filepath = self.get_path(uri, suffix)
         try:
@@ -92,7 +92,7 @@ class Art:
             @param scale factor as int
             @return cairo.surface
         """
-        if uri is None:
+        if not uri:
             return None
         filepath = self.get_favicon_path(uri)
         try:
@@ -136,7 +136,8 @@ class Art:
             return None
         for favicon_type in ["favicon", "favicon_alt"]:
             favicon_path = self.get_path(uri, favicon_type)
-            if GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+            if favicon_path is not None and\
+                    GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
                 return favicon_path
         return None
 
@@ -147,12 +148,13 @@ class Art:
             @param suffix as str
             @return str/None
         """
-        if uri is None:
-            return None
         parsed = urlparse(uri)
+        if uri is None or not parsed.netloc:
+            return None
         cached_uri = remove_www(parsed.netloc)
         cached_path = parsed.path.rstrip("/")
-        if cached_path:
+        # favicon_alt is only based on netloc
+        if cached_path and suffix != "favicon_alt":
             cached_uri += cached_path
         encoded = sha256(cached_uri.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)

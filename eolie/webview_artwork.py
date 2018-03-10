@@ -168,12 +168,14 @@ class WebViewArtwork:
         elif builtin:
             netloc = remove_www(urlparse(self.uri).netloc)
             if netloc:
-                surface = get_char_surface(netloc[0])
-                self.emit("favicon-changed", surface, None)
-                if not App().art.exists(self.uri, "favicon_alt"):
+                surface = App().art.get_favicon(self.uri,
+                                                self.get_scale_factor())
+                if surface is None:
+                    surface = get_char_surface(netloc[0])
                     self.__save_favicon_to_cache(surface,
                                                  self.uri,
                                                  "favicon_alt")
+                self.emit("favicon-changed", surface, None)
 
     def __on_snapshot(self, surface, first_pass):
         """
