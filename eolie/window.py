@@ -49,7 +49,6 @@ class Window(Gtk.ApplicationWindow):
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
-
         # Set window actions
         shortcut_action = Gio.SimpleAction.new("shortcut",
                                                GLib.VariantType.new("s"))
