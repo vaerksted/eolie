@@ -136,7 +136,8 @@ class WebViewArtwork:
                               surface,
                               favicon_type)
         # Save favicon for initial URI
-        if not App().art.exists(self.__initial_uri, "favicon"):
+        if self.__initial_uri is not None and\
+                not App().art.exists(self.__initial_uri, "favicon"):
             striped_uri = uri.rstrip("/")
             if self.__initial_uri != striped_uri:
                 self.__helper.run(App().art.save_artwork,
