@@ -175,11 +175,12 @@ class Art:
     def exists(self, uri, suffix):
         """
             Check if file exists and is cached
-            @param uri as str
+            @param uri as str (raise exception if None)
             @param suffix as str
             @return exists as bool
         """
-        f = Gio.File.new_for_path(self.get_path(uri, suffix))
+        filepath = self.get_path(uri, suffix)
+        f = Gio.File.new_for_path(filepath)
         exists = f.query_exists()
         if exists and self.__use_cache:
             info = f.query_info('time::modified',

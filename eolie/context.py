@@ -104,7 +104,8 @@ class Context:
             if count == 1:  # No navigation for one page
                 netloc = uri
             path = App().art.get_path(uri, "start")
-            if not GLib.file_test(path, GLib.FileTest.IS_REGULAR):
+            if path is None or\
+                    not GLib.file_test(path, GLib.FileTest.IS_REGULAR):
                 continue
             favicon_path = App().art.get_favicon_path(netloc)
             if favicon_path is not None:
