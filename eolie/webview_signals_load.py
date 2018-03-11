@@ -126,7 +126,7 @@ class WebViewLoadSignals:
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
             profile = name_from_profile_id(self.profile)
-            self._window.toolbar.title.set_title("%s%s" % (profile, self.uri))
+            self._window.toolbar.title.set_title(profile, self.uri)
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.set_loading(True)
@@ -140,7 +140,7 @@ class WebViewLoadSignals:
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             profile = name_from_profile_id(self.profile)
-            self._window.toolbar.title.set_title("%s%s" % (profile, self.uri))
+            self._window.toolbar.title.set_title(profile, self.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.set_loading(False)
             self._window.toolbar.title.progress.set_fraction(1.0)
@@ -156,7 +156,7 @@ class WebViewLoadSignals:
         """
         if webview.get_mapped():
             profile = name_from_profile_id(self.profile)
-            self._window.toolbar.title.set_title("%s%s" % (profile, title))
+            self._window.toolbar.title.set_title(profile, title)
         self._window.container.sites_manager.update_label(self.view)
 
     def __on_uri_changed(self, webview, uri):

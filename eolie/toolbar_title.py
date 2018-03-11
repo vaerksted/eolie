@@ -102,7 +102,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__width = -1
         self.__uri = ""
         self.__cancellable = Gio.Cancellable.new()
-
         self.__dns_suffixes = ["com", "org"]
         for string in reversed(GLib.get_language_names()):
             if len(string) == 2:
@@ -243,18 +242,28 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
 
-    def set_title(self, title):
+    def set_title(self, profile, title):
         """
             Show title instead of uri
+            @param profile as str
+            @param title as str
         """
         self.__window.set_title(title)
+        markup = False
+        if profile:
+            markup = True
+            title = "<b>%s</b>%s" % (GLib.markup_escape_text(profile),
+                                     GLib.markup_escape_text(title))
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
             return
         if title:
-            self.__placeholder.set_text(title)
+            if markup:
+                self.__placeholder.set_markup(title)
+            else:
+                self.__placeholder.set_text(title)
         else:
             self.__placeholder.set_text(self.__uri)
         if not self.__popover.is_visible():
