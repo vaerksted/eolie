@@ -92,11 +92,12 @@ class Art:
             @param scale factor as int
             @return cairo.surface
         """
-        if not uri:
-            return None
-        filepath = self.get_favicon_path(uri)
         try:
-            if GLib.file_test(filepath, GLib.FileTest.IS_REGULAR):
+            if not uri:
+                return None
+            filepath = self.get_favicon_path(uri)
+            if filepath is not None and\
+                    GLib.file_test(filepath, GLib.FileTest.IS_REGULAR):
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
                                                                filepath,
                                                                ArtSize.FAVICON,
@@ -180,6 +181,8 @@ class Art:
             @return exists as bool
         """
         filepath = self.get_path(uri, suffix)
+        if filepath is None:
+            return True  # Because we know Lollypop will do nothing on True
         f = Gio.File.new_for_path(filepath)
         exists = f.query_exists()
         if exists and self.__use_cache:
