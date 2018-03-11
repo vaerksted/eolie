@@ -76,9 +76,13 @@ class WebViewArtwork:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        parsed = urlparse(webview.uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.__favicon_width = 0
-            self.__initial_uri = webview.uri.rstrip('/')
+            if parsed.scheme in ["http", "https"]:
+                self.__initial_uri = webview.uri.rstrip('/')
+            else:
+                self.__initial_uri = None
             surface = App().art.get_favicon(webview.uri,
                                             self.get_scale_factor())
             if surface is not None:
@@ -94,7 +98,6 @@ class WebViewArtwork:
                 else:
                     self.emit("favicon-changed", None, "applications-internet")
         elif event == WebKit2.LoadEvent.FINISHED:
-            parsed = urlparse(webview.uri)
             if parsed.scheme in ["http", "https"]:
                 favicon_database = self.context.get_favicon_database()
                 GLib.timeout_add(2000,
