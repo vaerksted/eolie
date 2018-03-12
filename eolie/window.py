@@ -55,6 +55,7 @@ class Window(Gtk.ApplicationWindow):
                                                GLib.VariantType.new("s"))
         shortcut_action.connect("activate", self.__on_shortcut_action)
         self.add_action(shortcut_action)
+        self.set_auto_startup_notification(False)
 
     def update_zoom_level(self, force):
         """
