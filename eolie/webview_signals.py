@@ -53,7 +53,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         WebViewDBusSignals.__init__(self)
         WebViewLoadSignals.__init__(self)
         self.reset_last_click_event()
-        self._cancellable = Gio.Cancellable()
+        self.__cancellable = Gio.Cancellable()
         self.connect("map", self._on_map)
         self.connect("unmap", self._on_unmap)
         self.connect("uri-changed", self.__on_uri_changed)
@@ -187,8 +187,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
             @param uri as str
         """
-        self._cancellable.cancel()
-        self._cancellable.reset()
+        self.__cancellable.cancel()
+        self.__cancellable.reset()
 
     def __on_title_changed(self, webview, title):
         """

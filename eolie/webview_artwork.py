@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, WebKit2
+from gi.repository import GLib, WebKit2, Gio
 
 from urllib.parse import urlparse
 
@@ -31,8 +31,9 @@ class WebViewArtwork:
         """
         self.__helper = TaskHelper()
         self.__snapshot_id = None
+        self.__cancellable = Gio.Cancellable()
         self.__initial_uri = None
-        self.__favicon_width = 0
+        self.__favicon_width = {}
         self.__save_favicon_timeout_id = None
         self.__current_netloc = None
 
@@ -62,9 +63,10 @@ class WebViewArtwork:
         if parsed.scheme in ["http", "https"]:
             self.context.get_favicon_database().get_favicon(
                                                         self.uri,
-                                                        self._cancellable,
+                                                        None,
                                                         self.__on_get_favicon,
                                                         self.uri,
+                                                        self.__initial_uri,
                                                         False)
 
 #######################
@@ -78,7 +80,8 @@ class WebViewArtwork:
         """
         parsed = urlparse(webview.uri)
         if event == WebKit2.LoadEvent.STARTED:
-            self.__favicon_width = 0
+            self.__cancellable.cancel()
+            self.__cancellable.reset()
             if parsed.scheme in ["http", "https"]:
                 self.__initial_uri = webview.uri.rstrip('/')
             else:
@@ -100,13 +103,12 @@ class WebViewArtwork:
         elif event == WebKit2.LoadEvent.FINISHED:
             if parsed.scheme in ["http", "https"]:
                 favicon_database = self.context.get_favicon_database()
-                GLib.timeout_add(2000,
-                                 favicon_database.get_favicon,
-                                 webview.uri,
-                                 self._cancellable,
-                                 self.__on_get_favicon,
-                                 webview.uri,
-                                 True)
+                favicon_database.get_favicon(webview.uri,
+                                             None,
+                                             self.__on_get_favicon,
+                                             webview.uri,
+                                             self.__initial_uri,
+                                             True)
             self.__current_netloc = parsed.netloc or None
 
 #######################
@@ -119,16 +121,17 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                           WebKit2.SnapshotOptions.NONE,
-                          self._cancellable,
+                          self.__cancellable,
                           get_snapshot,
                           self.__on_snapshot,
                           True)
 
-    def __save_favicon_to_cache(self, surface, uri, favicon_type):
+    def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
         """
             Save favicon to cache
             @param surface as cairo.Surface
-            @parma uri as str
+            @param uri as str
+            @param initial_uri as str
             @param favicon_type as str
         """
         self.__save_favicon_timeout_id = None
@@ -139,21 +142,22 @@ class WebViewArtwork:
                               surface,
                               favicon_type)
         # Save favicon for initial URI
-        if self.__initial_uri is not None and\
-                not App().art.exists(self.__initial_uri, "favicon"):
+        if initial_uri is not None and\
+                not App().art.exists(initial_uri, "favicon"):
             striped_uri = uri.rstrip("/")
-            if self.__initial_uri != striped_uri:
+            if initial_uri != striped_uri:
                 self.__helper.run(App().art.save_artwork,
-                                  self.__initial_uri,
+                                  initial_uri,
                                   surface,
                                   favicon_type)
 
-    def __on_get_favicon(self, favicon_db, result, uri, builtin):
+    def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
         """
             Read favicon
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
+            @param initial_uri as str
             @param builtin as bool
         """
         resized = None
@@ -164,17 +168,21 @@ class WebViewArtwork:
         # Save webview favicon
         if surface is not None:
             favicon_width = surface.get_width()
-            if favicon_width >= self.__favicon_width:
+            if uri not in self.__favicon_width.keys() or\
+                    favicon_width >= self.__favicon_width[uri]:
                 if self.__save_favicon_timeout_id is not None:
                     GLib.source_remove(self.__save_favicon_timeout_id)
                     self.__save_favicon_timeout_id = None
-                self.__favicon_width = favicon_width
+                self.__favicon_width[uri] = favicon_width
                 resized = resize_favicon(surface)
                 # We wait for a better favicon
                 self.__save_favicon_timeout_id = GLib.timeout_add(
                                   2000,
                                   self.__save_favicon_to_cache,
-                                  resized, uri, "favicon")
+                                  resized,
+                                  uri,
+                                  initial_uri,
+                                  "favicon")
         elif builtin:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
@@ -182,8 +190,9 @@ class WebViewArtwork:
                                                 self.get_scale_factor())
                 if resized is None:
                     resized = get_char_surface(netloc[0])
-                    self.__save_favicon_to_cache(surface,
+                    self.__save_favicon_to_cache(resized,
                                                  uri,
+                                                 initial_uri,
                                                  "favicon_alt")
         if resized is not None and uri == self.uri:
             self.emit("favicon-changed", resized, None)
@@ -202,7 +211,7 @@ class WebViewArtwork:
             if first_pass:
                 self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                                   WebKit2.SnapshotOptions.NONE,
-                                  self._cancellable,
+                                  self.__cancellable,
                                   get_snapshot,
                                   self.__on_snapshot,
                                   False)
