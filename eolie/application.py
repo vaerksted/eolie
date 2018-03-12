@@ -113,6 +113,7 @@ class Application(Gtk.Application):
         self.connect("activate", self.__on_activate)
         self.connect("handle-local-options", self.__on_handle_local_options)
         self.connect("command-line", self.__on_command_line)
+        Gdk.notify_startup_complete()
 
     def get_app_menu(self):
         """
