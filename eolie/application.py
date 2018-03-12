@@ -629,7 +629,8 @@ class Application(Gtk.Application):
         ephemeral = options.contains("private")
         if not self.get_windows():
             self.__create_initial_windows(len(args) < 2)
-        if options.contains("new"):
+            active_window = self.active_window
+        elif options.contains("new") or len(args) == 1:
             active_window = self.get_new_window()
         else:
             active_window = self.active_window
