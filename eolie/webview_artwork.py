@@ -103,12 +103,14 @@ class WebViewArtwork:
         elif event == WebKit2.LoadEvent.FINISHED:
             if parsed.scheme in ["http", "https"]:
                 favicon_database = self.context.get_favicon_database()
-                favicon_database.get_favicon(webview.uri,
-                                             None,
-                                             self.__on_get_favicon,
-                                             webview.uri,
-                                             self.__initial_uri,
-                                             True)
+                GLib.timeout_add(2000,
+                                 favicon_database.get_favicon,
+                                 webview.uri,
+                                 None,
+                                 self.__on_get_favicon,
+                                 webview.uri,
+                                 self.__initial_uri,
+                                 True)
             self.__current_netloc = parsed.netloc or None
 
 #######################
