@@ -220,6 +220,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
                     if child.view == view:
                         self.__pages_listbox.remove(child)
                         break
+        if self.__views:
+            self.__set_artwork(self.__views[0].webview)
 
     def set_minimal(self, minimal):
         """
