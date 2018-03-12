@@ -156,6 +156,7 @@ class WebViewArtwork:
             @param uri as str
             @param builtin as bool
         """
+        resized = None
         try:
             surface = favicon_db.get_favicon_finish(result)
         except:
@@ -169,7 +170,6 @@ class WebViewArtwork:
                     self.__save_favicon_timeout_id = None
                 self.__favicon_width = favicon_width
                 resized = resize_favicon(surface)
-                self.emit("favicon-changed", resized, None)
                 # We wait for a better favicon
                 self.__save_favicon_timeout_id = GLib.timeout_add(
                                   2000,
@@ -178,14 +178,15 @@ class WebViewArtwork:
         elif builtin:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
-                surface = App().art.get_favicon(uri,
+                resized = App().art.get_favicon(uri,
                                                 self.get_scale_factor())
-                if surface is None:
-                    surface = get_char_surface(netloc[0])
+                if resized is None:
+                    resized = get_char_surface(netloc[0])
                     self.__save_favicon_to_cache(surface,
                                                  uri,
                                                  "favicon_alt")
-                self.emit("favicon-changed", surface, None)
+        if resized is not None and uri == self.uri:
+            self.emit("favicon-changed", resized, None)
 
     def __on_snapshot(self, surface, first_pass):
         """
