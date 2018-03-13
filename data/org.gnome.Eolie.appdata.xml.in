@@ -8,7 +8,7 @@
 	Eolie is a new GNOME web browser.
  </description>
  <screenshots>
-    <screenshot type="default">https://raw.githubusercontent.com/gnumdk/eolie-web/master/screenshot.jpg</screenshot>
+    <screenshot type="default">https://raw.githubusercontent.com/gnumdk/eolie-web/master/images/screenshot.jpg</screenshot>
  </screenshots>
  <url type="homepage">https://github.com/gnumdk/eolie</url>
  <updatecontact>cedric.bellegarde@adishatz.org</updatecontact>
