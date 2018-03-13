@@ -38,19 +38,19 @@ class View(Gtk.Overlay):
         else:
             return WebView.new(window, None)
 
-    def __init__(self, webview, window, subsurface=False):
+    def __init__(self, webview, window, popover=False):
         """
             Init view
             @param webview as WebView
             @param window as window
-            @param subsurface as bool
+            @param popover as bool
         """
         Gtk.Overlay.__init__(self)
         self.__reading_view = None
         self.__destroying = False
         self.__window = window
         self.__webview = webview
-        self.__subsurface = subsurface
+        self.__popover = popover
         webview.set_view(self)
         self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
@@ -148,12 +148,12 @@ class View(Gtk.Overlay):
         return self.__destroying
 
     @property
-    def subsurface(self):
+    def popover(self):
         """
-            True if subsurface
+            True if popover
             @return bool
         """
-        return self.__subsurface
+        return self.__popover
 
     @property
     def reading(self):

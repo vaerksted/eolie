@@ -69,7 +69,7 @@ class WebViewLoadSignals:
             Connect all signals
             @param webview as WebView
         """
-        if not self.view.subsurface:
+        if not self.view.popover:
             self.connect("title-changed", self.__on_title_changed)
             self.connect("uri-changed", self.__on_uri_changed)
             self.connect("notify::estimated-load-progress",
@@ -84,7 +84,7 @@ class WebViewLoadSignals:
             Disconnect all signals
             @param webview as WebView
         """
-        if not self.view.subsurface:
+        if not self.view.popover:
             self.disconnect_by_func(self.__on_title_changed)
             self.disconnect_by_func(self.__on_uri_changed)
             self.disconnect_by_func(self.__on_estimated_load_progress)
@@ -100,7 +100,7 @@ class WebViewLoadSignals:
         self.__current_event = event
         # Load event may happen before a related webview is ready-to-show and
         # so before a view is associated
-        if self.view is not None and not self.view.subsurface:
+        if self.view is not None and not self.view.popover:
             if event == WebKit2.LoadEvent.STARTED:
                 self._new_pages_opened = 0
                 # Destroy current popups
@@ -110,7 +110,7 @@ class WebViewLoadSignals:
             elif event == WebKit2.LoadEvent.FINISHED:
                 self.run_javascript_from_gresource(
                                  "/org/gnome/Eolie/Readability.js", None, None)
-            if webview.get_mapped():
+            if webview.get_mapped() and not webview.view.popover:
                 self.__update_toolbars(event)
 
 #######################

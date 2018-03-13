@@ -104,7 +104,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._shown = True
         self.emit("shown")
         self.set_atime(int(time()))
-        if webview.get_ancestor(Gtk.Popover) is None:
+        if not webview.view.popover:
             self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
