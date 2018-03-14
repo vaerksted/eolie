@@ -74,7 +74,7 @@ This will allow you to uninstall eolie as a package, for example with `apt-get u
 ```
 $ git clone https://github.com/gnumdk/eolie.git
 $ cd eolie
-$ sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel gtkspell3 python3-dateutil
+$ sudo dnf install autoconf glib2-devel intltool yelp-tools gtk3-devel gobject-introspection-devel python3 itstool pygobject3-devel python3-devel webkitgtk4-devel gtkspell3 python3-dateutil meson
 $ meson build
 $ sudo ninja -C build install
 ```
