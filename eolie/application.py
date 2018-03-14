@@ -73,7 +73,6 @@ class Application(Gtk.Application):
                             self,
                             application_id="org.gnome.Eolie",
                             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
-        self.set_property("register-session", True)
         # Fix proxy for python
         proxy = GLib.environ_getenv(GLib.get_environ(), "all_proxy")
         if proxy is not None and proxy.startswith("socks://"):
@@ -113,7 +112,9 @@ class Application(Gtk.Application):
         self.connect("activate", self.__on_activate)
         self.connect("handle-local-options", self.__on_handle_local_options)
         self.connect("command-line", self.__on_command_line)
-        Gdk.notify_startup_complete()
+        self.register(None)
+        if self.get_is_remote():
+            Gdk.notify_startup_complete()
 
     def get_app_menu(self):
         """
@@ -660,6 +661,7 @@ class Application(Gtk.Application):
             WebKit2.WebContext.get_default().get_plugins(None,
                                                          self.__on_get_plugins,
                                                          None)
+        Gdk.notify_startup_complete()
         return 0
 
     def __close_window(self, window):
