@@ -195,7 +195,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                  self.__on_webview_favicon_changed)
             self.update_label()
             self.__indicator_label.update_count(True)
-            if not view.webview.shown:
+            if view.webview.shown:
+                self.__set_artwork(view.webview)
+            else:
                 self.__indicator_label.mark_unshown(view.webview)
             if self.__pages_listbox is not None:
                 child = PageChildRow(view, self.__window)
