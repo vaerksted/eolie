@@ -114,6 +114,7 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         if event == WebKit2.LoadEvent.STARTED:
+            self.update_spell_checking()
             self.__load_event_started_uri = uri
             self.__update_bookmark_metadata(uri)
             # Setup image blocker
@@ -122,6 +123,8 @@ class WebViewNavigation:
                 not App().image_exceptions.find_parsed(parsed)
             self.set_setting("auto-load-images", not block_image)
             self._cancelled = False
+        elif event == WebKit2.LoadEvent.REDIRECTED:
+            self.update_spell_checking()
         elif event == WebKit2.LoadEvent.COMMITTED:
             if uri != self.__load_event_started_uri:
                 self.__update_bookmark_metadata(uri)
@@ -179,7 +182,6 @@ class WebViewNavigation:
                                   "/org/gnome/Eolie/Extensions.js", None, None)
             if parsed.scheme != "populars":
                 self.set_snapshot()
-            self.update_spell_checking()
             if App().show_tls:
                 try:
                     from OpenSSL import crypto
