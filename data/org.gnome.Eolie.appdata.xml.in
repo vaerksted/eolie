@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
- <id>org.gnome.Eolie.desktop</id>
+ <id>org.gnome.Eolie</id>
+ <launchable type="desktop-id">org.gnome.Eolie.desktop</launchable>
  <licence>CC0</licence>
  <_name>Eolie</_name>
  <_summary>Web browser</_summary>
  <description>
 	Eolie is a new GNOME web browser.
  </description>
+ <releases>
+    <release version="0.9.19" date="2018-03-13">
+      <description>
+        <ul>
+          <li>Enhanced adblock support</li>
+          <li>Enhanced JS block support</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  <categories>
+    <category>Web</category>
+  </categories>
  <screenshots>
     <screenshot type="default">https://raw.githubusercontent.com/gnumdk/eolie-web/master/images/screenshot.jpg</screenshot>
  </screenshots>
