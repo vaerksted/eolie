@@ -165,7 +165,7 @@ class DatabaseAdblock:
             with SqlCursor(self) as sql:
                 result = sql.execute("PRAGMA schema_version")
                 v = result.fetchone()
-                if v is None or v[0] == self.__SCHEMA_VERSION:
+                if v is None or v[0] != self.__SCHEMA_VERSION:
                     f = Gio.File.new_for_path(self.__DB_PATH)
                     f.delete()
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):

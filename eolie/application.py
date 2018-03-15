@@ -383,6 +383,7 @@ class Application(Gtk.Application):
         self.adblock.create_db()
         self.adblock.update()
         self.phishing = DatabasePhishing()
+        self.phishing.create_db()
         self.adblock_exceptions = DatabaseExceptions("adblock")
         # Do not remove this!
         self.update_default_style_sheet()

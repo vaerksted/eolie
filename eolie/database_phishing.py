@@ -13,7 +13,7 @@
 from gi.repository import Gio, GLib
 
 import sqlite3
-from time import time
+from time import time, sleep
 import json
 from threading import Lock
 
@@ -27,8 +27,10 @@ class DatabasePhishing:
     """
         Phishing database
     """
-    DB_PATH = "%s/phishing.db" % EOLIE_DATA_PATH
+    __DB_PATH = "%s/phishing.db" % EOLIE_DATA_PATH
     __URI = "http://data.phishtank.com/data/online-valid.json"
+    __SCHEMA_VERSION = 0
+    __UPDATE = 172800
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
@@ -39,6 +41,8 @@ class DatabasePhishing:
                                                uri TEXT NOT NULL,
                                                mtime INT NOT NULL
                                                )'''
+    __create_phishing_idx = """CREATE UNIQUE INDEX idx_phishing ON phishing(
+                                               uri)"""
 
     def __init__(self):
         """
@@ -47,14 +51,31 @@ class DatabasePhishing:
         self.thread_lock = Lock()
         self.__cancellable = Gio.Cancellable.new()
         self.__task_helper = TaskHelper()
-        # Lazy loading if not empty
-        if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
+        self.__phishing_mtime = int(time())
+        self.__regex = None
+
+    def create_db(self):
+        """
+            Create databse
+        """
+        if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
+            GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
+        # If DB schema changed, remove it
+        if GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
+            with SqlCursor(self) as sql:
+                result = sql.execute("PRAGMA schema_version")
+                v = result.fetchone()
+                if v is None or v[0] != self.__SCHEMA_VERSION:
+                    f = Gio.File.new_for_path(self.__DB_PATH)
+                    f.delete()
+        if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
-                if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
-                    GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_phishing)
+                    sql.execute(self.__create_phishing_idx)
+                    sql.execute("PRAGMA schema_version=%s" %
+                                self.__SCHEMA_VERSION)
             except Exception as e:
                 Logger.error("DatabasePhishing::__init__(): %s", e)
 
@@ -64,20 +85,16 @@ class DatabasePhishing:
         """
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
-        # Get in db mtime
-        # Only update if filters older than one day
-        mtime = 0
+        # DB version is last successful sync mtime
+        version = 0
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT mtime FROM phishing LIMIT 1")
+            result = sql.execute("PRAGMA user_version")
             v = result.fetchone()
             if v is not None:
-                mtime = v[0]
-        self.__mtime = int(time())
-        if self.__mtime - mtime < 86400:
-            return
-        # Update phishing db
+                version = v[0]
         self.__cancellable.reset()
-        self.__on_load_uri_content(None, False, b"", [self.__URI])
+        if self.__phishing_mtime - version > self.__UPDATE:
+            self.__on_load_uri_content(None, False, b"", [self.__URI])
 
     def is_phishing(self, uri):
         """
@@ -108,7 +125,7 @@ class DatabasePhishing:
             Return a new sqlite cursor
         """
         try:
-            c = sqlite3.connect(self.DB_PATH, 600.0)
+            c = sqlite3.connect(self.__DB_PATH, 600.0)
             return c
         except Exception as e:
             Logger.error("DatabasePhishing::get_cursor(): %s", e)
@@ -131,19 +148,28 @@ class DatabasePhishing:
             for item in j:
                 if self.__cancellable.is_cancelled():
                     raise IOError("Cancelled")
-                sql.execute("INSERT INTO phishing\
-                             (uri, mtime) VALUES (?, ?)",
-                            (item["url"].rstrip("/"), self.__mtime))
+                uri = item["url"].rstrip("/")
+                try:
+                    sql.execute("INSERT INTO phishing\
+                                 (uri, mtime) VALUES (?, ?)",
+                                (uri, self.__phishing_mtime))
+                except:
+                    sql.execute("UPDATE phishing set mtime=?\
+                                 WHERE uri=?",
+                                (self.__phishing_mtime, uri))
                 count += 1
                 if count == 1000:
-                    sql.commit()
+                    SqlCursor.commit(self)
+                    # Do not flood sqlite, this allow webkit extension to run
+                    sleep(0.1)
                     count = 0
         # We are the last call to save_rules()?
         # Delete removed entries and commit
         if not uris:
             with SqlCursor(self) as sql:
                 sql.execute("DELETE FROM phishing\
-                             WHERE mtime!=?", (self.__mtime,))
+                             WHERE mtime!=?", (self.__phishing_mtime,))
+                sql.execute("PRAGMA user_version=%s" % self.__phishing_mtime)
         SqlCursor.remove(self)
 
     def __on_load_uri_content(self, uri, status, content, uris):
