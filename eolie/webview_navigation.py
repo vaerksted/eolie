@@ -89,7 +89,7 @@ class WebViewNavigation:
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
             self.stop_loading()
-            self.__switch_profile(uri)
+            self.__update_settings_for_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
     @property
@@ -112,7 +112,24 @@ class WebViewNavigation:
         uri = webview.uri
         parsed = urlparse(uri)
         if event == WebKit2.LoadEvent.COMMITTED:
+            http_scheme = parsed.scheme in ["http", "https"]
             self.update_zoom_level()
+            # Setup eolie internal adblocker
+            if App().settings.get_value("adblock") and\
+                    http_scheme:
+                exception = App().adblock_exceptions.find_parsed(parsed)
+                if not exception:
+                    noext = ".".join(parsed.netloc.split(".")[:-1])
+                    javascripts = ["adblock_%s.js" % parsed.netloc,
+                                   "adblock_%s.js" % noext]
+                    for javascript in javascripts:
+                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
+                                                             javascript))
+                        if f.query_exists():
+                            (status, content, tag) = f.load_contents(None)
+                            js = content.decode("utf-8")
+                            self.run_javascript(js, None, None)
+                            break
         elif event == WebKit2.LoadEvent.FINISHED:
             self.run_javascript_from_gresource(
                                   "/org/gnome/Eolie/Extensions.js", None, None)
@@ -154,6 +171,9 @@ class WebViewNavigation:
             Update internal settings for URI
             @param uri as str
         """
+        if App().phishing.is_phishing(uri):
+            self._show_phishing_error(uri)
+            return
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         App().history.set_page_state(uri)
@@ -162,57 +182,33 @@ class WebViewNavigation:
         self.__update_bookmark_metadata(uri)
         self.__hw_acceleration_policy(parsed.netloc)
         self.content_manager.remove_all_style_sheets()
+        # Can't find a way to block content for ephemeral views
+        if App().settings.get_value("adblock") and\
+                not App().adblock_exceptions.find_parsed(parsed) and\
+                http_scheme and\
+                self.content_manager is not None:
+            self.content_manager.add_style_sheet(
+                                             App().default_style_sheet)
+            rules = App().adblock.get_css_rules(uri)
+            user_style_sheet = WebKit2.UserStyleSheet(
+                         rules,
+                         WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                         WebKit2.UserStyleLevel.USER,
+                         None,
+                         None)
+            self.content_manager.add_style_sheet(user_style_sheet)
+        user_agent = App().websettings.get_user_agent(uri)
+        settings = self.get_settings()
+        if user_agent:
+            settings.set_user_agent(user_agent)
+        else:
+            settings.set_user_agent_with_application_details("Eolie",
+                                                             None)
         # Setup image blocker
         block_image = http_scheme and\
             App().settings.get_value("imageblock") and\
             not App().image_exceptions.find_parsed(parsed)
         self.set_setting("auto-load-images", not block_image)
-        if App().phishing.is_phishing(uri):
-            self._show_phishing_error(uri)
-        else:
-            # Can't find a way to block content for ephemeral views
-            if App().settings.get_value("adblock") and\
-                    not App().adblock_exceptions.find_parsed(parsed) and\
-                    http_scheme and\
-                    self.content_manager is not None:
-                self.content_manager.add_style_sheet(
-                                                 App().default_style_sheet)
-                rules = App().adblock.get_css_rules(uri)
-                user_style_sheet = WebKit2.UserStyleSheet(
-                             rules,
-                             WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                             WebKit2.UserStyleLevel.USER,
-                             None,
-                             None)
-                self.content_manager.add_style_sheet(user_style_sheet)
-            user_agent = App().websettings.get_user_agent(uri)
-            settings = self.get_settings()
-            if user_agent:
-                settings.set_user_agent(user_agent)
-            else:
-                settings.set_user_agent_with_application_details("Eolie",
-                                                                 None)
-            # Setup image blocker
-            block_image = http_scheme and\
-                App().settings.get_value("imageblock") and\
-                not App().image_exceptions.find_parsed(parsed)
-            self.set_setting("auto-load-images", not block_image)
-            # Setup eolie internal adblocker
-            if App().settings.get_value("adblock") and\
-                    http_scheme:
-                exception = App().adblock_exceptions.find_parsed(parsed)
-                if not exception:
-                    noext = ".".join(parsed.netloc.split(".")[:-1])
-                    javascripts = ["adblock_%s.js" % parsed.netloc,
-                                   "adblock_%s.js" % noext]
-                    for javascript in javascripts:
-                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
-                                                             javascript))
-                        if f.query_exists():
-                            (status, content, tag) = f.load_contents(None)
-                            js = content.decode("utf-8")
-                            self.run_javascript(js, None, None)
-                            break
 
     def __update_bookmark_metadata(self, uri):
         """
