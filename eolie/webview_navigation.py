@@ -56,6 +56,9 @@ class WebViewNavigation:
             Load uri
             @param uri as str
         """
+        if App().phishing.is_phishing(uri):
+            self._show_phishing_error(uri)
+            return
         self._error = False
         # If not an URI, start a search
         parsed = urlparse(uri)
@@ -171,9 +174,6 @@ class WebViewNavigation:
             Update internal settings for URI
             @param uri as str
         """
-        if App().phishing.is_phishing(uri):
-            self._show_phishing_error(uri)
-            return
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         App().history.set_page_state(uri)
@@ -392,9 +392,14 @@ class WebViewNavigation:
                 return True
             else:
                 self.__update_settings_for_uri(navigation_uri)
-                self._error = False
-                decision.use()
-                return False
+                if App().phishing.is_phishing(uri):
+                    self._show_phishing_error(uri)
+                    decision.ignore()
+                    return True
+                else:
+                    self._error = False
+                    decision.use()
+                    return False
         else:
             self.new_page(navigation_uri, LoadingType.BACKGROUND)
             decision.ignore()
