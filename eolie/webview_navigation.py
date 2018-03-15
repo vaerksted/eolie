@@ -392,8 +392,8 @@ class WebViewNavigation:
                 return True
             else:
                 self.__update_settings_for_uri(navigation_uri)
-                if App().phishing.is_phishing(uri):
-                    self._show_phishing_error(uri)
+                if App().phishing.is_phishing(navigation_uri):
+                    self._show_phishing_error(navigation_uri)
                     decision.ignore()
                     return True
                 else:
