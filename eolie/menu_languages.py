@@ -79,7 +79,8 @@ class LanguageRow(Gtk.EventBox):
             App().websettings.add_language(self.__code, self.__uri)
         else:
             App().websettings.remove_language(self.__code, self.__uri)
-        App().active_window.container.current.webview.update_spell_checking()
+        App().active_window.container.current.webview.update_spell_checking(
+                                                                    self.__uri)
 
 
 class LanguagesMenu(Gtk.Bin):

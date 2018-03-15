@@ -162,11 +162,11 @@ class WebView(WebKit2.WebView):
         self._uri = uri
         self.emit("uri-changed", uri)
 
-    def update_spell_checking(self):
+    def update_spell_checking(self, uri):
         """
             Update spell checking
         """
-        codes = App().websettings.get_languages(self.uri)
+        codes = App().websettings.get_languages(uri)
         # If None, default user language
         if codes is not None:
             self.get_context().set_spell_checking_languages(codes)
@@ -228,13 +228,6 @@ class WebView(WebKit2.WebView):
             if next is not None:
                 self.__text_entry = self.__text_entry.next
         return next
-
-    def stop_loading(self):
-        """
-            Keep stop loading state
-        """
-        self._cancelled = True
-        WebKit2.WebView.stop_loading(self)
 
     def new_page(self, uri, loading_type):
         """
@@ -371,14 +364,6 @@ class WebView(WebKit2.WebView):
         return self._shown
 
     @property
-    def cancelled(self):
-        """
-            True if last loading was cancelled
-            @return bool
-        """
-        return self._cancelled
-
-    @property
     def title(self):
         """
             Get title (loaded or unloaded)
@@ -468,7 +453,6 @@ class WebView(WebKit2.WebView):
         self._title = None
         self._navigation_uri = None
         self.__related_view = related_view
-        self._cancelled = False
         self._shown = False
         self.set_hexpand(True)
         self.set_vexpand(True)
