@@ -518,7 +518,7 @@ class UriPopover(Gtk.Popover):
                 item.set_property("score", -1)
                 child = Row(item, self.__window)
                 child.show()
-                self.__search_box.insert(child, 0)
+                self.__search_box.insert(child, 6)
 
     def forward_event(self, event):
         """
