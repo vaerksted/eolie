@@ -39,7 +39,7 @@ class Search:
                 _("https://www.google.com"),
                 _("https://www.google.com") + '/search?q=%s&ie=utf-8&oe=utf-8',
                 'https://www.google.com/complete/search?client=firefox&q=%s',
-                'unicode_escape',
+                'utf-8',
                 'g'
                 ],
             'DuckDuckGo': [
