@@ -931,7 +931,7 @@ class ToolbarTitle(Gtk.Bin):
         if App().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
             self.__suggestion_id = GLib.timeout_add(
-                                                500,
+                                                50,
                                                 self.__on_suggestion_timeout,
                                                 value)
         task_helper.run(self.__search_in_current_views, value)
