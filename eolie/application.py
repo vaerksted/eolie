@@ -73,6 +73,7 @@ class Application(Gtk.Application):
                             self,
                             application_id="org.gnome.Eolie",
                             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        self.set_property("register-session", True)
         # Fix proxy for python
         proxy = GLib.environ_getenv(GLib.get_environ(), "all_proxy")
         if proxy is not None and proxy.startswith("socks://"):
