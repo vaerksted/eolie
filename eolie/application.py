@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 from getpass import getuser
 from time import time
 import json
+from signal import signal, SIGINT, SIGTERM
 
 from eolie.settings import Settings, SettingsDialog
 from eolie.window import Window
@@ -61,6 +62,8 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        signal(SIGINT, lambda a, b: self.quit())
+        signal(SIGTERM, lambda a, b: self.quit())
         # Set main thread name
         # We force it to current python 3.6 name, to be sure in case of
         # change in python
