@@ -18,10 +18,11 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH, Type
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 from eolie.logger import Logger
+from eolie.database_upgrade import DatabaseUpgrade
 
 
 class DatabaseHistory:
@@ -62,7 +63,7 @@ class DatabaseHistory:
         """
             Create database tables or manage update if needed
         """
-        new_version = len(self.__UPGRADES)
+        upgrade = DatabaseUpgrade(Type.HISTORY)
         self.thread_lock = Lock()
         if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
@@ -72,23 +73,11 @@ class DatabaseHistory:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_history)
                     sql.execute(self.__create_history_atime)
-                    sql.execute("PRAGMA user_version=%s" % new_version)
+                    sql.execute("PRAGMA user_version=%s" % upgrade.version)
             except Exception as e:
                 Logger.error("DatabaseHistory::__init__(): %s", e)
-        # DB upgrade, TODO Make it generic between class
-        version = 0
-        with SqlCursor(self) as sql:
-            result = sql.execute("PRAGMA user_version")
-            v = result.fetchone()
-            if v is not None:
-                version = v[0]
-            if version < new_version:
-                for i in range(version+1, new_version + 1):
-                    try:
-                        sql.execute(self.__UPGRADES[i])
-                    except:
-                        Logger.error("History DB upgrade %s failed", i)
-                sql.execute("PRAGMA user_version=%s" % new_version)
+        else:
+            upgrade.upgrade(self)
 
     def add(self, title, uri, mtime, guid=None, atimes=[]):
         """

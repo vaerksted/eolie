@@ -18,10 +18,11 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
-from eolie.define import EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH, Type
 from eolie.localized import LocalizedCollation
 from eolie.sqlcursor import SqlCursor
 from eolie.logger import Logger
+from eolie.database_upgrade import DatabaseUpgrade
 
 
 class DatabaseBookmarks:
@@ -64,6 +65,7 @@ class DatabaseBookmarks:
         """
             Create database tables or manage update if needed
         """
+        upgrade = DatabaseUpgrade(Type.BOOKMARK)
         self.thread_lock = Lock()
         if not GLib.file_test(self.DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
@@ -75,8 +77,11 @@ class DatabaseBookmarks:
                     sql.execute(self.__create_tags)
                     sql.execute(self.__create_bookmarks_tags)
                     sql.execute(self.__create_parents)
+                    sql.execute("PRAGMA user_version=%s" % upgrade.version)
             except Exception as e:
                 Logger.error("DatabaseBookmarks::__init__(): %s", e)
+        else:
+            upgrade.upgrade(self)
 
     def add(self, title, uri, guid, tags, atime=0):
         """
