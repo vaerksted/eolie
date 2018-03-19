@@ -134,6 +134,7 @@ class WebViewNavigation:
                             self.run_javascript(js, None, None)
                             break
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.update_spell_checking(uri)
             self.run_javascript_from_gresource(
                                   "/org/gnome/Eolie/Extensions.js", None, None)
             if parsed.scheme in ["http", "https"]:
@@ -178,7 +179,6 @@ class WebViewNavigation:
         http_scheme = parsed.scheme in ["http", "https"]
         App().history.set_page_state(uri)
         self.__switch_profile(uri)
-        self.update_spell_checking(uri)
         self.__update_bookmark_metadata(uri)
         self.__hw_acceleration_policy(parsed.netloc)
         self.content_manager.remove_all_style_sheets()
