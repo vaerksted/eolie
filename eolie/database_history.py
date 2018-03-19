@@ -139,6 +139,8 @@ class DatabaseHistory:
         with SqlCursor(self) as sql:
             sql.execute("DELETE from history\
                          WHERE rowid=?", (history_id,))
+            sql.execute("DELETE from history_atime\
+                         WHERE history_id=?", (history_id,))
 
     def clear_from(self, atime):
         """
