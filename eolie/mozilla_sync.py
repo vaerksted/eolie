@@ -545,14 +545,13 @@ class SyncWorker:
                     self.__pull_bookmarks(bulk_keys)
             except:
                 pass
-            self.__syncing = False
             self.__update_state()
             Logger.sync_debug("Stop syncing")
         except Exception as e:
             Logger.error("SyncWorker::__sync(): %s", e)
             if str(e) == "The authentication token could not be found":
                 self.set_credentials()
-            self.__syncing = False
+        self.__syncing = False
 
     def __pull_bookmarks(self, bulk_keys):
         """
