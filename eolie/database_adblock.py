@@ -15,6 +15,7 @@ from gi.repository import Gio, GLib
 from urllib.parse import urlparse
 import sqlite3
 import itertools
+from pickle import dump, load
 import re
 from gettext import gettext as _
 from time import time, sleep
@@ -163,7 +164,7 @@ class DatabaseAdblock:
         # If DB schema changed, remove it
         if GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             with SqlCursor(self) as sql:
-                result = sql.execute("PRAGMA schema_version")
+                result = sql.execute("PRAGMA user_version")
                 v = result.fetchone()
                 if v is None or v[0] != self.__SCHEMA_VERSION:
                     f = Gio.File.new_for_path(self.__DB_PATH)
@@ -187,7 +188,7 @@ class DatabaseAdblock:
                     sql.execute(self.__create_adblock_css_black_idx)
                     sql.execute(self.__create_adblock_css_white_idx)
                     sql.execute(self.__create_adblock_cache_idx)
-                    sql.execute("PRAGMA schema_version=%s" %
+                    sql.execute("PRAGMA user_version=%s" %
                                 self.__SCHEMA_VERSION)
             except Exception as e:
                 Logger.error("DatabaseAdblock::__init__(): %s", e)
@@ -220,12 +221,10 @@ class DatabaseAdblock:
             GLib.spawn_close_pid(pid)
 
         # DB version is last successful sync mtime
-        version = 0
-        with SqlCursor(self) as sql:
-            result = sql.execute("PRAGMA user_version")
-            v = result.fetchone()
-            if v is not None:
-                version = v[0]
+        try:
+            version = load(open(EOLIE_DATA_PATH + "/adblock.bin", "rb"))
+        except:
+            version = 0
         self.__cancellable.reset()
         if self.__adblock_mtime - version > self.__UPDATE:
             # Update host rules
@@ -660,7 +659,11 @@ class DatabaseAdblock:
                 sql.execute("DELETE FROM adblock_css\
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_cache")
-                sql.execute("PRAGMA user_version=%s" % self.__adblock_mtime)
+                try:
+                    dump(self.__adblock_mtime,
+                         open(EOLIE_DATA_PATH + "/adblock.bin", "wb"))
+                except Exception as e:
+                    Logger.error("DatabaseAdblock::__on_save_rules(): %s", e)
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """
