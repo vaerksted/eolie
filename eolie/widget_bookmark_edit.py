@@ -141,20 +141,16 @@ class TagWidget(Gtk.FlowBoxChild):
         tag_id = App().bookmarks.get_tag_id(title)
         if tag_id is not None:
             return
+        App().bookmarks.rename_tag(previous, title)
         # Update mtime for all tagged bookmarks
         if App().sync_worker is not None:
-            mtimes = App().sync_worker.mtimes
-            if mtimes["bookmarks"] == 0:
-                mtime = round(time(), 2)
-            else:
-                mtime = mtimes["bookmarks"]
-            tag_id = App().bookmarks.get_tag_id(previous)
-            if tag_id is None:
-                return
-            for (bookmark_id, bookmark_uri, bookmark_title) in\
-                    App().bookmarks.get_bookmarks(tag_id):
-                App().bookmarks.set_mtime(bookmark_id, mtime + 1)
-        App().bookmarks.rename_tag(previous, title)
+            mtime = round(time(), 2)
+            tag_id = App().bookmarks.get_tag_id(title)
+            if tag_id is not None:
+                for (bookmark_id, bookmark_uri, bookmark_title) in\
+                        App().bookmarks.get_bookmarks(tag_id):
+                    App().bookmarks.set_mtime(bookmark_id, mtime + 1)
+                    App().sync_worker.push_bookmark(bookmark_id)
         self.__label.set_text(title)
         self.__stack.set_visible_child(self.__label)
 
@@ -209,6 +205,7 @@ class BookmarkEditWidget(Gtk.Bin):
         widget.attach(bookmark_rating, 4, 1, 1, 1)
         self.add(widget)
         self.connect("unmap", self.__on_unmap)
+        self.__updated = False
 
 #######################
 # PROTECTED           #
@@ -218,26 +215,8 @@ class BookmarkEditWidget(Gtk.Bin):
             Destroy self
             @param button as Gtk.Button
         """
-        self.disconnect_by_func(self.__on_unmap)
-        App().bookmarks.set_title(self.__bookmark_id,
-                                  self.__title_entry.get_text())
-        App().bookmarks.set_uri(self.__bookmark_id,
-                                self.__uri_entry.get_text())
-        self.get_parent().set_visible_child_name("bookmarks")
-        if App().sync_worker is not None:
-            mtimes = App().sync_worker.mtimes
-            if mtimes["bookmarks"] == 0:
-                App().bookmarks.set_mtime(self.__bookmark_id,
-                                          round(time(), 2) + 1)
-            else:
-                App().bookmarks.set_mtime(self.__bookmark_id,
-                                          mtimes["bookmarks"] + 1)
-            App().bookmarks.clean_tags()
-            if App().sync_worker is not None:
-                App().sync_worker.stop()
-                # To be sure stop is done
-                GLib.timeout_add(1000, App().sync_worker.sync)
-        GLib.timeout_add(1000, self.destroy)
+        GLib.idle_add(self.hide)
+        GLib.timeout_add(2000, self.destroy)
 
     def _on_del_clicked(self, button):
         """
@@ -248,7 +227,7 @@ class BookmarkEditWidget(Gtk.Bin):
         if App().sync_worker is not None:
             guid = App().bookmarks.get_guid(self.__bookmark_id)
             App().sync_worker.remove_from_bookmarks(guid)
-        App().bookmarks.delete(self.__bookmark_id)
+        App().bookmarks.remove(self.__bookmark_id)
         if isinstance(self.get_parent(), Gtk.Popover):
             self.get_parent().hide()
         else:
@@ -283,6 +262,13 @@ class BookmarkEditWidget(Gtk.Bin):
             height = 300
         scrolled.set_size_request(-1, height)
 
+    def _on_entry_changed(self, entry):
+        """
+            Mark bookmark as updated
+            @param entry as Gtk.Entry
+        """
+        self.__updated = True
+
 #######################
 # PRIVATE             #
 #######################
@@ -299,20 +285,13 @@ class BookmarkEditWidget(Gtk.Bin):
             Save uri and title
             @param widget as Gtk.Widget
         """
-        App().bookmarks.set_title(self.__bookmark_id,
-                                  self.__title_entry.get_text())
-        App().bookmarks.set_uri(self.__bookmark_id,
-                                self.__uri_entry.get_text())
-        if App().sync_worker is not None:
-            mtimes = App().sync_worker.mtimes
-            if mtimes["bookmarks"] == 0:
-                App().bookmarks.set_mtime(self.__bookmark_id,
-                                          round(time(), 2) + 1)
-            else:
-                App().bookmarks.set_mtime(self.__bookmark_id,
-                                          mtimes["bookmarks"] + 1)
+        if self.__updated:
+            App().bookmarks.set_title(self.__bookmark_id,
+                                      self.__title_entry.get_text())
+            App().bookmarks.set_uri(self.__bookmark_id,
+                                    self.__uri_entry.get_text())
             App().bookmarks.clean_tags()
             if App().sync_worker is not None:
-                App().sync_worker.stop()
-                # To be sure stop is done
-                GLib.timeout_add(1000, App().sync_worker.sync)
+                App().bookmarks.set_mtime(self.__bookmark_id,
+                                          round(time(), 2) + 1)
+                App().sync_worker.push_bookmark(self.__bookmark_id)

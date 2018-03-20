@@ -675,17 +675,18 @@ class UriPopover(Gtk.Popover):
 
     def _on_remove_button_clicked(self, button):
         """
-            Save bookmarks to tag
+            Remove bookmarks
             @param button as Gtk.Button
         """
         for row in self.__bookmarks_box.get_selected_rows():
+            if App().sync_worker is not None:
+                guid = App().bookmarks.get_guid(self.__bookmark_id)
+                App().sync_worker.remove_from_bookmarks(guid)
             item_id = row.item.get_property("id")
-            App().bookmarks.delete(item_id)
+            App().bookmarks.remove(item_id)
             self.__bookmarks_box.remove(row)
             self.__remove_button.hide()
         App().bookmarks.clean_tags()
-        if App().sync_worker is not None:
-            App().sync_worker.sync()
 
     def _on_tag_entry_enter_notify(self, entry, event):
         """
@@ -880,14 +881,11 @@ class UriPopover(Gtk.Popover):
             @param atime as double
             @thread safe
         """
-        history_ids = App().history.get_from_atime(atime)
         App().history.clear_from(atime)
         GLib.idle_add(self._on_day_selected, self.__calendar)
-        if App().sync_worker is None:
+        if App().sync_worker is not None:
             for history_id in App().history.get_empties():
                 App().history.remove(history_id)
-        else:
-            App().sync_worker.push_history(history_ids)
 
     def __check_sync_timer(self):
         """

@@ -141,35 +141,40 @@ class DatabasePhishing:
             @param uris as [str]
         """
         SqlCursor.add(self)
-        result = rules.decode('utf-8')
-        j = json.loads(result)
-        with SqlCursor(self) as sql:
-            count = 0
-            for item in j:
-                if self.__cancellable.is_cancelled():
-                    raise IOError("Cancelled")
-                uri = item["url"].rstrip("/")
-                try:
-                    sql.execute("INSERT INTO phishing\
-                                 (uri, mtime) VALUES (?, ?)",
-                                (uri, self.__phishing_mtime))
-                except:
-                    sql.execute("UPDATE phishing set mtime=?\
-                                 WHERE uri=?",
-                                (self.__phishing_mtime, uri))
-                count += 1
-                if count == 1000:
-                    SqlCursor.commit(self)
-                    # Do not flood sqlite, this allow webkit extension to run
-                    sleep(0.1)
-                    count = 0
-        # We are the last call to save_rules()?
-        # Delete removed entries and commit
-        if not uris:
+        try:
+            result = rules.decode('utf-8')
+            j = json.loads(result)
             with SqlCursor(self) as sql:
-                sql.execute("DELETE FROM phishing\
-                             WHERE mtime!=?", (self.__phishing_mtime,))
-                sql.execute("PRAGMA user_version=%s" % self.__phishing_mtime)
+                count = 0
+                for item in j:
+                    if self.__cancellable.is_cancelled():
+                        raise IOError("Cancelled")
+                    uri = item["url"].rstrip("/")
+                    try:
+                        sql.execute("INSERT INTO phishing\
+                                     (uri, mtime) VALUES (?, ?)",
+                                    (uri, self.__phishing_mtime))
+                    except:
+                        sql.execute("UPDATE phishing set mtime=?\
+                                     WHERE uri=?",
+                                    (self.__phishing_mtime, uri))
+                    count += 1
+                    if count == 1000:
+                        SqlCursor.commit(self)
+                        # Do not flood sqlite
+                        # this allow webkit extension to run
+                        sleep(0.1)
+                        count = 0
+            # We are the last call to save_rules()?
+            # Delete removed entries and commit
+            if not uris:
+                with SqlCursor(self) as sql:
+                    sql.execute("DELETE FROM phishing\
+                                 WHERE mtime!=?", (self.__phishing_mtime,))
+                    sql.execute("PRAGMA user_version=%s" %
+                                self.__phishing_mtime)
+        except Exception as e:
+            Logger.error("DatabasePhishing::__save_rules():%s -> %s", e, rules)
         SqlCursor.remove(self)
 
     def __on_load_uri_content(self, uri, status, content, uris):

@@ -260,11 +260,12 @@ class Application(Gtk.Application):
             if active_id != TimeSpan.NEVER:
                 atime -= TimeSpanValues[active_id]/1000000
             self.history.clear_to(int(atime))
-        # If sync is running, to avoid DB lock, we do not vacuum
-        if self.sync_worker is not None and self.sync_worker.syncing:
-            self.sync_worker.stop()
-            Gio.Application.quit(self)
-        elif vacuum:
+
+        if self.sync_worker is not None:
+            if self.sync_worker.syncing:
+                self.sync_worker.stop()
+            self.sync_worker.save_pendings()
+        if vacuum:
             task_helper = TaskHelper()
             task_helper.run(self.__vacuum,
                             callback=(lambda x: Gio.Application.quit(self),))
@@ -359,14 +360,7 @@ class Application(Gtk.Application):
         from eolie.mozilla_sync import SyncWorker
         if SyncWorker.check_modules():
             self.sync_worker = SyncWorker()
-            # Run a first sync in 10 seconds, speed up app start
-            GLib.timeout_add_seconds(10,
-                                     self.sync_worker.sync,
-                                     False)
-            # Then run a sync every hour
-            GLib.timeout_add_seconds(3600,
-                                     self.sync_worker.sync,
-                                     True)
+            self.sync_worker.sync_loop()
         else:
             self.sync_worker = None
         if self.prefers_app_menu():

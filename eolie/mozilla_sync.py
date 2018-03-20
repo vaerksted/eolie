@@ -60,12 +60,20 @@ class SyncWorker:
         self.__token = ""
         self.__uid = ""
         self.__keyB = b""
-        self.__mtimes = {"bookmarks": 0.1, "history": 0.1}
+        self.__mtimes = {"bookmarks": 0.1, "history": 0.1, "passwords": 0.1}
         # We do not create this here because it's slow down Eolie startup
         # See __mozilla_sync property
         self.__mz = None
         self.__state_lock = True
         self.__session = None
+        try:
+            self.__pending_records = load(open(EOLIE_DATA_PATH +
+                                               "/mozilla_sync_pendings.bin",
+                                               "rb"))
+        except:
+            self.__pending_records = {"history": [],
+                                      "passwords": [],
+                                      "bookmarks": []}
         self.__helper = PasswordsHelper()
         self.set_credentials()
 
@@ -125,27 +133,42 @@ class SyncWorker:
         """
         self.__helper.get_sync(self.__set_credentials)
 
-    def sync(self, loop=False, first_sync=False):
+    def sync_loop(self):
         """
-            Start syncing, you need to check sync_status property
-            @param loop as bool -> for GLib.timeout_add()
-            @param first_sync as bool
+            Start syncing every hours
+        """
+        def loop():
+            self.sync()
+            return True
+        self.sync()
+        GLib.timeout_add_seconds(3600, loop)
+
+    def sync(self):
+        """
+            Start syncing
         """
         if Gio.NetworkMonitor.get_default().get_network_available() and\
                 self.__username and self.__password and not self.syncing:
             task_helper = TaskHelper()
-            task_helper.run(self.__sync, first_sync)
-        return loop
+            task_helper.run(self.__sync)
 
-    def push_history(self, history_ids):
+    def push_history(self, history_id):
         """
-            Push history ids
-            @param history_ids as [int]
+            Push history id
+            @param history_id as int
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password:
+        if self.__username and self.__password:
             task_helper = TaskHelper()
-            task_helper.run(self.__push_history, history_ids)
+            task_helper.run(self.__push_history, history_id)
+
+    def push_bookmark(self, bookmark_id):
+        """
+            Push bookmark id
+            @param bookmark_id as int
+        """
+        if self.__username and self.__password:
+            task_helper = TaskHelper()
+            task_helper.run(self.__push_bookmark, bookmark_id)
 
     def push_password(self, user_form_name, user_form_value, pass_form_name,
                       pass_form_value, uri, form_uri, uuid):
@@ -159,8 +182,7 @@ class SyncWorker:
             @param form_uri as str
             @param uuid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password:
+        if self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
                             user_form_name, user_form_value, pass_form_name,
@@ -171,8 +193,7 @@ class SyncWorker:
             Remove history guid from remote history
             @param guid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password:
+        if self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_history, guid)
 
@@ -181,8 +202,7 @@ class SyncWorker:
             Remove bookmark guid from remote bookmarks
             @param guid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password:
+        if self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_bookmarks, guid)
 
@@ -191,8 +211,7 @@ class SyncWorker:
             Remove password from passwords collection
             @param uuid as str
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password:
+        if self.__username and self.__password:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_passwords, uuid)
 
@@ -215,6 +234,16 @@ class SyncWorker:
         if force:
             self.__session = None
 
+    def save_pendings(self):
+        """
+            Save pending records
+        """
+        try:
+            dump(self.__pending_records,
+                 open(EOLIE_DATA_PATH + "/mozilla_sync_pendings.bin", "wb"))
+        except Exception as e:
+            Logger.Error("SyncWorker::save_pendings(): %s", e)
+
     def on_password_stored(self, secret, result, sync):
         """
             Update credentials
@@ -223,17 +252,6 @@ class SyncWorker:
             @param sync as bool
         """
         self.set_credentials()
-        if sync:
-            # Wait for credentials (server side)
-            GLib.timeout_add(10, self.sync, True)
-
-    @property
-    def mtimes(self):
-        """
-            Sync engine modification times
-            @return {}
-        """
-        return self.__mtimes
 
     @property
     def syncing(self):
@@ -304,51 +322,94 @@ class SyncWorker:
             Update state file
         """
         try:
-            # If syncing, state will be written by self.__sync()
-            if not self.syncing:
-                f = open(EOLIE_DATA_PATH + "/mozilla_sync.bin", "wb")
-                # Lock file
-                flock(f, LOCK_EX | LOCK_NB)
-                self.__mtimes = self.__mozilla_sync.client.info_collections()
-                dump(self.__mtimes, f)
-                # Unlock file
-                flock(f, LOCK_UN)
+            f = open(EOLIE_DATA_PATH + "/mozilla_sync.bin", "wb")
+            # Lock file
+            flock(f, LOCK_EX | LOCK_NB)
+            self.__mtimes = self.__mozilla_sync.client.info_collections()
+            dump(self.__mtimes, f)
+            # Unlock file
+            flock(f, LOCK_UN)
         except Exception as e:
             # Not an error, just the lock exception
             Logger.info("SyncWorker::__update_state(): %s", e)
 
-    def __push_history(self, history_ids):
+    def __sync_pendings(self):
         """
-            Push history ids if atime is available, else, ask to remove
-            @param history ids as [int]
+            Sync pendings record
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username and self.__password and not self.syncing:
+            self.__syncing = True
+            self.__check_worker()
+            bulk_keys = self.__get_session_bulk_keys()
+            for key in self.__pending_records.keys():
+                while self.__pending_records[key]:
+                    record = self.__pending_records[key].pop(0)
+                    Logger.sync_debug("syncing %s", record)
+                    self.__mozilla_sync.add(record, key, bulk_keys)
+            self.__syncing = False
+            self.__update_state()
+
+    def __push_history(self, history_id):
+        """
+            Push history item
+            @param history is as int
         """
         try:
-            bulk_keys = self.__get_session_bulk_keys()
-            for history_id in history_ids:
-                self.__check_worker()
-                sleep(0.01)
-                record = {}
-                atimes = App().history.get_atimes(history_id)
-                guid = App().history.get_guid(history_id)
-                if atimes:
-                    record["histUri"] = App().history.get_uri(history_id)
-                    record["id"] = guid
-                    record["title"] = App().history.get_title(history_id)
-                    record["visits"] = []
-                    for atime in atimes:
-                        record["visits"].append({"date": atime*1000000,
-                                                 "type": 1})
-                    Logger.sync_debug("pushing %s", record)
-                    self.__mozilla_sync.add(record, "history", bulk_keys)
-                else:
-                    record["id"] = guid
-                    record["type"] = "item"
-                    record["deleted"] = True
-                    Logger.sync_debug("deleting %s", record)
-                    self.__mozilla_sync.add(record, "history", bulk_keys)
-                self.__update_state()
+            record = {}
+            atimes = App().history.get_atimes(history_id)
+            guid = App().history.get_guid(history_id)
+            record["histUri"] = App().history.get_uri(history_id)
+            record["id"] = guid
+            record["title"] = App().history.get_title(history_id)
+            record["visits"] = []
+            for atime in atimes:
+                record["visits"].append({"date": atime*1000000,
+                                         "type": 1})
+            self.__pending_records["history"].append(record)
+            self.__sync_pendings()
         except Exception as e:
             Logger.error("SyncWorker::__push_history(): %s", e)
+
+    def __push_bookmark(self, bookmark_id):
+        """
+            Push bookmark
+            @param bookmark_id as in
+        """
+        try:
+            parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
+            # No parent, move it to unfiled
+            if parent_guid is None:
+                parent_guid = "unfiled"
+            parent_id = App().bookmarks.get_id_by_guid(parent_guid)
+            record = {}
+            record["bmkUri"] = App().bookmarks.get_uri(bookmark_id)
+            record["id"] = App().bookmarks.get_guid(bookmark_id)
+            record["title"] = App().bookmarks.get_title(bookmark_id)
+            record["tags"] = App().bookmarks.get_tags(bookmark_id)
+            record["parentid"] = parent_guid
+            record["parentName"] = App().bookmarks.get_parent_name(bookmark_id)
+            record["type"] = "bookmark"
+            self.__pending_records["bookmarks"].append(record)
+            parent_guid = App().bookmarks.get_guid(parent_id)
+            parent_name = App().bookmarks.get_title(parent_id)
+            children = App().bookmarks.get_children(parent_guid)
+            record = {}
+            record["id"] = parent_guid
+            record["type"] = "folder"
+            # A parent with parent as unfiled needs to be moved to places
+            # Firefox internal
+            grand_parent_guid = App().bookmarks.get_parent_guid(parent_id)
+            if grand_parent_guid == "unfiled":
+                grand_parent_guid = "places"
+            record["parentid"] = grand_parent_guid
+            record["parentName"] = App().bookmarks.get_parent_name(parent_id)
+            record["title"] = parent_name
+            record["children"] = children
+            self.__pending_records["bookmarks"].append(record)
+            self.__sync_pendings()
+        except Exception as e:
+            Logger.error("SyncWorker::__push_bookmark(): %s", e)
 
     def __push_password(self, user_form_name, user_form_value, pass_form_name,
                         pass_form_value, uri, form_uri, uuid):
@@ -362,8 +423,6 @@ class SyncWorker:
             @param uuid as str
         """
         try:
-            self.__check_worker()
-            bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = "{%s}" % uuid
             record["hostname"] = uri
@@ -376,9 +435,8 @@ class SyncWorker:
             mtime = int(time()*1000)
             record["timeCreated"] = mtime
             record["timePasswordChanged"] = mtime
-            Logger.sync_debug("pushing %s", record)
-            self.__mozilla_sync.add(record, "passwords", bulk_keys)
-            self.__update_state()
+            self.__pending_records["passwords"].append(record)
+            self.__sync_pendings()
         except Exception as e:
             Logger.error("SyncWorker::__push_password(): %s", e)
 
@@ -388,15 +446,12 @@ class SyncWorker:
             @param guid as str
         """
         try:
-            self.__check_worker()
-            bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = guid
             record["type"] = "item"
             record["deleted"] = True
-            Logger.sync_debug("deleting %s", record)
-            self.__mozilla_sync.add(record, "history", bulk_keys)
-            self.__update_state()
+            self.__pending_records["history"].append(record)
+            self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_history(): %s", e)
 
@@ -406,15 +461,12 @@ class SyncWorker:
             @param guid as str
         """
         try:
-            self.__check_worker()
-            bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = guid
             record["type"] = "bookmark"
             record["deleted"] = True
-            Logger.sync_debug("deleting %s", record)
-            self.__mozilla_sync.add(record, "bookmark", bulk_keys)
-            self.__update_state()
+            self.__pending_records["bookmarks"].append(record)
+            self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_bookmarks(): %s", e)
 
@@ -424,21 +476,17 @@ class SyncWorker:
             @param uuid as str
         """
         try:
-            self.__check_worker()
-            bulk_keys = self.__get_session_bulk_keys()
             record = {}
             record["id"] = uuid
             record["deleted"] = True
-            Logger.sync_debug("deleting %s", record)
-            self.__mozilla_sync.add(record, "passwords", bulk_keys)
-            self.__update_state()
+            self.__pending_records["passwords"].append(record)
+            self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_passwords(): %s", e)
 
-    def __sync(self, first_sync):
+    def __sync(self):
         """
             Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
-            @param first_sync as bool
         """
         Logger.sync_debug("Start syncing")
         self.__syncing = True
@@ -482,7 +530,7 @@ class SyncWorker:
                 if self.__mtimes["history"] != new_mtimes["history"]:
                     self.__pull_history(bulk_keys)
             except:
-                pass  # No history in sync
+                pass
 
             self.__check_worker()
             ########################
@@ -492,15 +540,11 @@ class SyncWorker:
                 Logger.sync_debug("local bookmarks: %s, remote bookmarks: %s",
                                   self.__mtimes["bookmarks"],
                                   new_mtimes["bookmarks"])
-                # Push new bookmarks
-                self.__push_bookmarks(bulk_keys)
+                # Only pull if something new available
+                if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
+                    self.__pull_bookmarks(bulk_keys)
             except:
-                pass  # No bookmarks in sync
-            self.__check_worker()
-            # Only pull if something new available
-            if self.__mtimes["bookmarks"] != new_mtimes["bookmarks"]:
-                self.__pull_bookmarks(bulk_keys, first_sync)
-            # Update last sync mtime
+                pass
             self.__syncing = False
             self.__update_state()
             Logger.sync_debug("Stop syncing")
@@ -510,91 +554,10 @@ class SyncWorker:
                 self.set_credentials()
             self.__syncing = False
 
-    def __push_bookmarks(self, bulk_keys):
-        """
-            Push to bookmarks
-            @param bulk keys as KeyBundle
-            @param start time as float
-            @raise StopIteration
-        """
-        Logger.sync_debug("push bookmarks")
-        parents = []
-        for bookmark_id in App().bookmarks.get_ids_for_mtime(
-                                                   self.__mtimes["bookmarks"]):
-            self.__check_worker()
-            sleep(0.01)
-            parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
-            # No parent, move it to unfiled
-            if parent_guid is None:
-                parent_guid = "unfiled"
-            parent_id = App().bookmarks.get_id_by_guid(parent_guid)
-            if parent_id not in parents:
-                parents.append(parent_id)
-            record = {}
-            record["bmkUri"] = App().bookmarks.get_uri(bookmark_id)
-            record["id"] = App().bookmarks.get_guid(bookmark_id)
-            record["title"] = App().bookmarks.get_title(bookmark_id)
-            record["tags"] = App().bookmarks.get_tags(bookmark_id)
-            record["parentid"] = parent_guid
-            record["parentName"] = App().bookmarks.get_parent_name(bookmark_id)
-            record["type"] = "bookmark"
-            Logger.sync_debug("pushing %s", record)
-            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
-        # Del old bookmarks
-        for bookmark_id in App().bookmarks.get_deleted_ids():
-            self.__check_worker()
-            sleep(0.01)
-            parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
-            parent_id = App().bookmarks.get_id_by_guid(parent_guid)
-            if parent_id not in parents:
-                parents.append(parent_id)
-            record = {}
-            record["id"] = App().bookmarks.get_guid(bookmark_id)
-            record["type"] = "bookmark"
-            record["deleted"] = True
-            Logger.sync_debug("deleting %s", record)
-            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
-            App().bookmarks.remove(bookmark_id)
-        # Push parents in this order, parents near root are handled later
-        # Otherwise, order will be broken by new children updates
-        while parents:
-            parent_id = parents.pop(0)
-            parent_guid = App().bookmarks.get_guid(parent_id)
-            parent_name = App().bookmarks.get_title(parent_id)
-            children = App().bookmarks.get_children(parent_guid)
-            # So search if children in parents
-            found = False
-            for child_guid in children:
-                child_id = App().bookmarks.get_id_by_guid(child_guid)
-                if child_id in parents:
-                    found = True
-                    break
-            # Handle children first
-            if found:
-                parents.append(parent_id)
-                Logger.sync_debug("later: %s", parent_name)
-                continue
-            record = {}
-            record["id"] = parent_guid
-            record["type"] = "folder"
-            # A parent with parent as unfiled needs to be moved to places
-            # Firefox internal
-            grand_parent_guid = App().bookmarks.get_parent_guid(parent_id)
-            if grand_parent_guid == "unfiled":
-                grand_parent_guid = "places"
-            record["parentid"] = grand_parent_guid
-            record["parentName"] = App().bookmarks.get_parent_name(parent_id)
-            record["title"] = parent_name
-            record["children"] = children
-            Logger.sync_debug("pushing parent %s", record)
-            self.__mozilla_sync.add(record, "bookmarks", bulk_keys)
-        App().bookmarks.clean_tags()
-
-    def __pull_bookmarks(self, bulk_keys, first_sync):
+    def __pull_bookmarks(self, bulk_keys):
         """
             Pull from bookmarks
             @param bulk_keys as KeyBundle
-            @param first_sync as bool
             @raise StopIteration
         """
         Logger.sync_debug("pull bookmarks")
@@ -781,6 +744,7 @@ class SyncWorker:
             # Force login if no token
             if not self.__token:
                 self.login(attributes, password)
+            self.sync()
         except Exception as e:
             Logger.error("SyncWorker::__set_credentials(): %s" % e)
 

@@ -45,8 +45,7 @@ class DatabaseBookmarks:
                                                atime REAL NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
-                                               position INT DEFAULT 0,
-                                               del INT DEFAULT 0
+                                               position INT DEFAULT 0
                                                )'''
     __create_tags = '''CREATE TABLE tags (id INTEGER PRIMARY KEY,
                                           title TEXT NOT NULL)'''
@@ -116,17 +115,6 @@ class DatabaseBookmarks:
                              (bookmark_id, tag_id) VALUES (?, ?)",
                             (bookmarks_id, tag_id))
             return bookmarks_id
-
-    def delete(self, bookmark_id, delete=True):
-        """
-            Mark bookmark as deleted
-            @param bookmark id as int
-            @param delete as bool
-        """
-        with SqlCursor(self) as sql:
-            sql.execute("UPDATE bookmarks\
-                         SET del=?\
-                         WHERE rowid=?", (delete, bookmark_id))
 
     def remove(self, bookmark_id):
         """
@@ -222,8 +210,7 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE uri=?\
-                                  AND del=0", (uri.rstrip('/'),))
+                                  WHERE uri=?", (uri.rstrip('/'),))
             v = result.fetchone()
             if v is not None:
                 return v[0]
@@ -254,19 +241,7 @@ class DatabaseBookmarks:
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
                                   WHERE mtime > ?\
-                                  AND uri != guid\
-                                  AND del=0", (mtime,))
-            return list(itertools.chain(*result))
-
-    def get_deleted_ids(self):
-        """
-            Get ids that need to be synced related to mtime
-            @return [int]
-        """
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT rowid\
-                                  FROM bookmarks\
-                                  WHERE del=1")
+                                  AND uri != guid", (mtime,))
             return list(itertools.chain(*result))
 
     def get_parent_guid(self, bookmark_id):
@@ -453,7 +428,6 @@ class DatabaseBookmarks:
                             WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
                             AND bookmarks_tags.tag_id=?\
                             AND bookmarks.guid != bookmarks.uri\
-                            AND bookmarks.del=0\
                             ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
 
@@ -469,8 +443,7 @@ class DatabaseBookmarks:
                                    bookmarks.uri,\
                                    bookmarks.title\
                             FROM bookmarks\
-                            WHERE bookmarks.del=0\
-                            AND popularity!=0\
+                            WHERE popularity!=0\
                             AND bookmarks.guid != bookmarks.uri\
                             ORDER BY bookmarks.popularity DESC,\
                             bookmarks.atime DESC\
@@ -491,7 +464,6 @@ class DatabaseBookmarks:
                             WHERE NOT EXISTS (\
                                 SELECT bookmark_id FROM bookmarks_tags\
                                 WHERE bookmark_id=bookmarks.rowid)\
-                            AND bookmarks.del=0\
                             AND bookmarks.guid != bookmarks.uri\
                             ORDER BY bookmarks.popularity DESC")
             return list(result)
@@ -506,7 +478,6 @@ class DatabaseBookmarks:
                                   bookmarks.uri,\
                                   bookmarks.title\
                                   FROM bookmarks\
-                                  WHERE bookmarks.del=0\
                                   AND bookmarks.guid != bookmarks.uri\
                                   ORDER BY bookmarks.mtime DESC")
             return list(result)
@@ -702,8 +673,7 @@ class DatabaseBookmarks:
                             SELECT bookmarks_tags.rowid\
                             FROM bookmarks, bookmarks_tags\
                             WHERE tags.rowid = bookmarks_tags.tag_id\
-                            AND bookmarks.rowid = bookmarks_tags.bookmark_id\
-                            AND bookmarks.del!=1)")
+                            AND bookmarks.rowid = bookmarks_tags.bookmark_id)")
 
     def reset_popularity(self, uri):
         """

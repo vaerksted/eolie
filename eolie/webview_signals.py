@@ -206,7 +206,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         history_id = App().history.add(title, webview.uri, mtime)
         App().history.set_page_state(webview.uri, mtime)
         if App().sync_worker is not None:
-            App().sync_worker.push_history([history_id])
+            App().sync_worker.push_history(history_id)
 
     def __on_enter_fullscreen(self, webview):
         """

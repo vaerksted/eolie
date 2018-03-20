@@ -28,6 +28,7 @@ class DatabaseUpgrade:
         # value is sql request
         if t == Type.BOOKMARK:
             self.__UPGRADES = {
+                1: self.__upgrade_bookmarks_1
             }
         elif t == Type.HISTORY:
             self.__UPGRADES = {
@@ -57,7 +58,7 @@ class DatabaseUpgrade:
                         else:
                             self.__UPGRADES[i](db)
                     except Exception as e:
-                        print("History DB upgrade %s failed: %s" % (i, e))
+                        print("DatabaseUpgrade %s failed: %s" % (i, e))
                 sql.execute("PRAGMA user_version=%s" % self.version)
 
     @property
@@ -70,3 +71,26 @@ class DatabaseUpgrade:
 #######################
 # PRIVATE             #
 #######################
+    def __upgrade_bookmarks_1(self, db):
+        """
+            Remove del column
+            @param db as BookmarksDatabase
+        """
+        create_bookmarks = '''CREATE TABLE bookmarks (
+                                           id INTEGER PRIMARY KEY,
+                                           title TEXT NOT NULL,
+                                           uri TEXT NOT NULL,
+                                           popularity INT NOT NULL,
+                                           atime REAL NOT NULL,
+                                           guid TEXT NOT NULL,
+                                           mtime REAL NOT NULL,
+                                           position INT DEFAULT 0
+                                           )'''
+        with SqlCursor(db) as sql:
+            sql.execute("ALTER TABLE bookmarks RENAME TO _bookmarks")
+            sql.execute(create_bookmarks)
+            sql.execute("""INSERT INTO bookmarks (id, title, uri,
+                            popularity, atime, guid, mtime, position)
+                           SELECT id, title, uri, popularity, atime, guid,
+                            mtime, position FROM _bookmarks""")
+            sql.execute("DROP TABLE _bookmarks")
