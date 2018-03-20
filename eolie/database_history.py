@@ -460,41 +460,36 @@ class DatabaseHistory:
             for word in words:
                 filters += ("%" + word + "%", "%" + word + "%")
             filters += (limit,)
-            request = "SELECT rowid, title, uri\
-                       FROM history"
+            request = "SELECT rowid, title, uri FROM\
+                       (SELECT rowid, netloc, title, uri\
+                        FROM history"
             if words:
                 request += " WHERE"
-            else:
-                request += " ORDER BY popularity DESC, mtime DESC"
-            words_copy = list(words)
-            while words_copy:
-                word = words_copy.pop(0)
-                request += " (title LIKE ? OR uri LIKE ?)"
-                if words_copy:
-                    request += " AND "
-            if words:
-                request += " ORDER BY length(uri) ASC"
-            request += " LIMIT ?"
-
+                words_copy = list(words)
+                while words_copy:
+                    word = words_copy.pop(0)
+                    request += " (title LIKE ? OR uri LIKE ?)"
+                    if words_copy:
+                        request += " AND "
+            request += "ORDER BY popularity DESC, mtime DESC) AS sub\
+                        GROUP BY sub.netloc LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
 
             # And then search containing one item
-            request = "SELECT rowid, title, uri\
-                       FROM history"
+            request = "SELECT rowid, title, uri FROM\
+                       (SELECT rowid, netloc, title, uri\
+                        FROM history"
             if words:
                 request += " WHERE"
-            else:
-                request += " ORDER BY popularity DESC, mtime DESC"
-            words_copy = list(words)
-            while words_copy:
-                word = words_copy.pop(0)
-                request += " (title LIKE ? OR uri LIKE ?)"
-                if words_copy:
-                    request += " OR "
-            if words:
-                request += " ORDER BY length(uri) ASC"
-            request += " LIMIT ?"
+                words_copy = list(words)
+                while words_copy:
+                    word = words_copy.pop(0)
+                    request += " (title LIKE ? OR uri LIKE ?)"
+                    if words_copy:
+                        request += " OR "
+            request += "ORDER BY popularity DESC, mtime DESC) AS sub\
+                        GROUP BY sub.netloc LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
         # Do some scoring calculation on items

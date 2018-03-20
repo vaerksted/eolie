@@ -907,8 +907,7 @@ class DatabaseBookmarks:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += "ORDER BY length(uri) ASC,\
-                        popularity DESC, mtime DESC LIMIT ?"
+            request += "ORDER BY popularity DESC, mtime DESC LIMIT ?"
 
             result = sql.execute(request, filters)
             items += list(result)
@@ -924,8 +923,7 @@ class DatabaseBookmarks:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
-            request += "ORDER BY length(uri) ASC,\
-                        popularity DESC, mtime DESC LIMIT ?"
+            request += "ORDER BY popularity DESC, mtime DESC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
         # Do some scoring calculation on items
