@@ -899,7 +899,7 @@ class DatabaseBookmarks:
             # Search items matching all words
             request = "SELECT rowid, title, uri\
                        FROM bookmarks WHERE\
-                       bookmarks.guid != bookmarks.uri AND "
+                       guid != uri AND "
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -915,7 +915,7 @@ class DatabaseBookmarks:
             # Search items matching any word
             request = "SELECT rowid, title, uri\
                        FROM bookmarks WHERE\
-                       bookmarks.guid != bookmarks.uri AND "
+                       guid != uri AND ("
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
@@ -923,7 +923,7 @@ class DatabaseBookmarks:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
-            request += "ORDER BY popularity DESC, mtime DESC LIMIT ?"
+            request += ") ORDER BY popularity DESC, mtime DESC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
         # Do some scoring calculation on items
