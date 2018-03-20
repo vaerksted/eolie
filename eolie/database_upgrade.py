@@ -37,6 +37,8 @@ class DatabaseUpgrade:
                 3: "DELETE FROM history WHERE popularity=0",
                 4: "DELETE FROM history_atime WHERE NOT EXISTS (SELECT * FROM\
                     history WHERE history.rowid=history_atime.history_id)",
+                5: "CREATE INDEX idx_orderby ON history(mtime, popularity)",
+                6: "CREATE INDEX idx_where ON history(uri, title)"
             }
 
     def upgrade(self, db):

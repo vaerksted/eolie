@@ -60,6 +60,13 @@ class DatabaseHistory:
                                                 atime REAL NOT NULL
                                                )'''
 
+    __create_history_orderby_idx = """CREATE INDEX
+                                               idx_orderby ON history(
+                                               mtime, popularity)"""
+    __create_history_where_idx = """CREATE INDEX
+                                               idx_where ON history(
+                                               uri, title)"""
+
     def __init__(self):
         """
             Create database tables or manage update if needed
@@ -74,6 +81,8 @@ class DatabaseHistory:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_history)
                     sql.execute(self.__create_history_atime)
+                    sql.execute(self.__create_history_orderby_idx)
+                    sql.execute(self.__create_history_where_idx)
                     sql.execute("PRAGMA user_version=%s" % upgrade.version)
             except Exception as e:
                 Logger.error("DatabaseHistory::__init__(): %s", e)
