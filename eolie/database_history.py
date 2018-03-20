@@ -16,6 +16,7 @@ import sqlite3
 import itertools
 from urllib.parse import urlparse
 from threading import Lock
+from re import sub
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import EOLIE_DATA_PATH, Type
@@ -452,10 +453,7 @@ class DatabaseHistory:
             @param limit as int
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
-        words = search.split(" ")
-        # Remove empty items
-        words = [value.strip() for value in words]
-        words = list(filter(lambda x: x != '', words))
+        words = sub("[^\w]", " ",  search.lower()).split()
         items = []
         with SqlCursor(self) as sql:
             filters = ()
