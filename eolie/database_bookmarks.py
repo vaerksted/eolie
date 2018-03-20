@@ -893,8 +893,6 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             filters = ()
             for word in words:
-                if not word:
-                    continue
                 filters += ("%" + word + "%", "%" + word + "%")
             filters += (limit,)
 
