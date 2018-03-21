@@ -275,7 +275,7 @@ class SitesManager(Gtk.EventBox):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event != WebKit2.LoadEvent.FINISHED:
+        if event in [WebKit2.LoadEvent.STARTED, WebKit2.LoadEvent.COMMITTED]:
             self.__loaded_uri(webview, webview.uri)
 
     def __on_row_activated(self, listbox, child):
