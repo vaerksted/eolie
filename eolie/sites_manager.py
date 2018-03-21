@@ -75,16 +75,6 @@ class SitesManager(Gtk.EventBox):
         view.disconnect_by_func(self.__on_view_destroying)
         self.__on_view_destroying(view)
 
-    def set_favicon(self, view, surface):
-        """
-            Set favicon for webview
-            @param webview as WebView
-            @param surface as cairo.Surface
-        """
-        for child in self.__box.get_children():
-            if view in child.views:
-                child.set_favicon(surface)
-
     def set_minimal(self, minimal):
         """
             Set all children as minimal

@@ -423,8 +423,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param favicon as cairo.Surface
             @param icon_theme_artwork as str
         """
-        if not webview.get_mapped():
-            return
         if favicon is not None:
             self.__image.set_from_surface(favicon)
         elif icon_theme_artwork is not None:
