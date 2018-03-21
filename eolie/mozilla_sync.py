@@ -344,9 +344,12 @@ class SyncWorker:
             bulk_keys = self.__get_session_bulk_keys()
             for key in self.__pending_records.keys():
                 while self.__pending_records[key]:
-                    record = self.__pending_records[key].pop(0)
-                    Logger.sync_debug("syncing %s", record)
-                    self.__mozilla_sync.add(record, key, bulk_keys)
+                    try:
+                        record = self.__pending_records[key].pop(0)
+                        Logger.sync_debug("syncing %s", record)
+                        self.__mozilla_sync.add(record, key, bulk_keys)
+                    except:
+                        self.__pending_records[key].append(record)
             self.__syncing = False
             self.__update_state()
 
