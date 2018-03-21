@@ -482,8 +482,12 @@ class DatabaseHistory:
                         request += " AND "
             request += " ORDER BY popularity DESC, mtime DESC) AS sub\
                         GROUP BY sub.netloc LIMIT ?"
-            result = sql.execute(request, filters)
-            items += list(result)
+            try:
+                result = sql.execute(request, filters)
+                items += list(result)
+            except:
+                Logger.error("DatabaseHistory::search(): %s -> %s",
+                             (request, filters))
 
             # And then search containing one item
             request = "SELECT rowid, title, uri FROM\
@@ -499,8 +503,13 @@ class DatabaseHistory:
                         request += " OR "
             request += " ORDER BY popularity DESC, mtime DESC) AS sub\
                         GROUP BY sub.netloc LIMIT ?"
-            result = sql.execute(request, filters)
-            items += list(result)
+            try:
+                result = sql.execute(request, filters)
+                items += list(result)
+            except:
+                Logger.error("DatabaseHistory::search(): %s -> %s",
+                             (request, filters))
+
         # Do some scoring calculation on items
         scored_items = []
         uris = []
