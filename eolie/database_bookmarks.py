@@ -930,21 +930,24 @@ class DatabaseBookmarks:
         scored_items = []
         uris = []
         for item in items:
-            score = -len(item[2])
+            score = 0
             for word in words:
+                lower_word = word.lower()
                 # Title match
-                if item[1].find(word) != -1:
+                if item[1].lower().find(lower_word) != -1:
                     score += 1
                 # URI match
-                elif item[2].find(word) != -1:
+                elif item[2].find(lower_word) != -1:
                     score += 1
                     parsed = urlparse(item[2])
                     # If netloc match word, +1
-                    if parsed.netloc.find(word + "."):
+                    if parsed.netloc.find(lower_word + "."):
                         score += 1
                     # If root +1
                     if not parsed.path:
-                        score += 1
+                        score += 2
+                    if not parsed.query:
+                        score += 2
             scored_item = (item[0], item[1], item[2], score)
             if item[2] not in uris:
                 scored_items.append(scored_item)

@@ -514,18 +514,16 @@ class DatabaseHistory:
         scored_items = []
         uris = []
         for item in items:
-            score = -len(item[2])
+            score = 0
             for word in words:
                 lower_word = word.lower()
-                title = item[1].lower()
-                uri = item[2].lower()
                 # Title match
-                if title.find(lower_word) != -1:
+                if item[1].lower().find(lower_word) != -1:
                     score += 1
                 # URI match
-                if uri.find(lower_word) != -1:
+                if item[2].find(lower_word) != -1:
                     score += 1
-                    parsed = urlparse(uri)
+                    parsed = urlparse(item[2])
                     # If netloc match word, +1
                     if parsed.netloc.find(lower_word + "."):
                         score += 1
