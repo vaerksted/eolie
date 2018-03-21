@@ -930,7 +930,7 @@ class DatabaseBookmarks:
         scored_items = []
         uris = []
         for item in items:
-            score = 0
+            score = -len(item[2])
             for word in words:
                 # Title match
                 if item[1].find(word) != -1:

@@ -922,12 +922,7 @@ class UriPopover(Gtk.Popover):
         """
         pos1 = row1.item.get_property("score")
         pos2 = row2.item.get_property("score")
-        if pos2 < 0:
-            return True
-        elif pos1 < 0:
-            return False
-        else:
-            return pos2 > pos1
+        return pos2 > pos1
 
     def __sort_tags(self, row1, row2):
         """

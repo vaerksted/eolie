@@ -514,7 +514,7 @@ class DatabaseHistory:
         scored_items = []
         uris = []
         for item in items:
-            score = 0
+            score = -len(item[2])
             for word in words:
                 lower_word = word.lower()
                 title = item[1].lower()
