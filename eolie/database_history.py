@@ -480,7 +480,7 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += " ORDER BY popularity DESC, mtime DESC) AS sub\
+            request += " ORDER BY mtime DESC, popularity DESC) AS sub\
                         GROUP BY sub.netloc LIMIT ?"
             try:
                 result = sql.execute(request, filters)
@@ -501,7 +501,7 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
-            request += " ORDER BY popularity DESC, mtime DESC) AS sub\
+            request += " ORDER BY mtime DESC, popularity DESC) AS sub\
                         GROUP BY sub.netloc LIMIT ?"
             try:
                 result = sql.execute(request, filters)
