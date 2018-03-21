@@ -3,10 +3,10 @@
  <id>org.gnome.Eolie</id>
  <launchable type="desktop-id">org.gnome.Eolie.desktop</launchable>
  <licence>CC0</licence>
- <_name>Eolie</_name>
- <_summary>Web browser</_summary>
+ <name>Eolie</name>
+ <summary>Web browser</summary>
  <description>
-	Eolie is a new GNOME web browser.
+	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
     <release version="0.9.20" date="2018-03-19">
