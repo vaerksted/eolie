@@ -522,7 +522,7 @@ class DatabaseHistory:
                 lower_word = word.lower()
                 # If netloc match word, +1
                 if parsed.netloc.find(lower_word) != -1:
-                    score += len(lower_word)
+                    score += len(lower_word) * 2
                 # URI match
                 elif uri.find(lower_word) != -1:
                     score += len(lower_word)
