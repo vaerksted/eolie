@@ -469,9 +469,7 @@ class DatabaseHistory:
             for word in words:
                 filters += ("%" + word + "%", "%" + word + "%")
             filters += (limit,)
-            request = "SELECT rowid, title, uri FROM\
-                       (SELECT rowid, netloc, title, uri\
-                        FROM history"
+            request = "SELECT rowid, title, uri FROM history"
             if words:
                 request += " WHERE"
                 words_copy = list(words)
@@ -480,8 +478,7 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += " ORDER BY mtime DESC, popularity DESC) AS sub\
-                        GROUP BY sub.netloc LIMIT ?"
+            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
             try:
                 result = sql.execute(request, filters)
                 items += list(result)
@@ -490,9 +487,7 @@ class DatabaseHistory:
                              (request, filters))
 
             # And then search containing one item
-            request = "SELECT rowid, title, uri FROM\
-                       (SELECT rowid, netloc, title, uri\
-                        FROM history"
+            request = "SELECT rowid, title, uri FROM history"
             if words:
                 request += " WHERE"
                 words_copy = list(words)
@@ -501,8 +496,7 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " OR "
-            request += " ORDER BY mtime DESC, popularity DESC) AS sub\
-                        GROUP BY sub.netloc LIMIT ?"
+            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
             try:
                 result = sql.execute(request, filters)
                 items += list(result)
