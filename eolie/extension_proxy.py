@@ -523,6 +523,8 @@ class ProxyExtensionServer(Server):
             @param element as WebKit2WebExtension.DOMElement
             @param event as WebKit2WebExtension.DOMUIEvent
         """
+        # input signal does not always work
+        self.__focus_element = element
         if self.__on_input_timeout_id is not None:
             GLib.source_remove(self.__on_input_timeout_id)
         self.__on_input_timeout_id = GLib.timeout_add(500,
