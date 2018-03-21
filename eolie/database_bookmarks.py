@@ -926,32 +926,34 @@ class DatabaseBookmarks:
             request += ") ORDER BY mtime DESC, popularity DESC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
+
         # Do some scoring calculation on items
         scored_items = []
         uris = []
         for item in items:
+            uri = item[2]
+            if uri in uris:
+                continue
             score = 0
+            title = item[1].lower()
+            parsed = urlparse(uri)
+            if not parsed.path:
+                score += 2
+            elif not parsed.query:
+                score += 2
             for word in words:
                 lower_word = word.lower()
-                # Title match
-                if item[1].lower().find(lower_word) != -1:
-                    score += 1
+                # If netloc match word, +1
+                if parsed.netloc.find(lower_word) != -1:
+                    score += len(lower_word)
                 # URI match
-                elif item[2].find(lower_word) != -1:
-                    score += 1
-                    parsed = urlparse(item[2])
-                    # If netloc match word, +1
-                    if parsed.netloc.find(lower_word + "."):
-                        score += 1
-                    # If root +1
-                    if not parsed.path:
-                        score += 2
-                    if not parsed.query:
-                        score += 2
-            scored_item = (item[0], item[1], item[2], score)
-            if item[2] not in uris:
-                scored_items.append(scored_item)
-                uris.append(item[2])
+                elif uri.find(lower_word) != -1:
+                    score += len(lower_word)
+                # Title match
+                elif title.find(lower_word) != -1:
+                    score += len(lower_word) * 2
+            scored_items.append((item[0], item[1], item[2], score))
+            uris.append(uri)
         return scored_items
 
     def get_cursor(self):
