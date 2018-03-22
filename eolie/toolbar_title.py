@@ -123,7 +123,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__entry.set_completion(self.__completion)
 
         self.__popover = UriPopover(window)
-        self.__popover.set_relative_to(self)
+        self.__popover.set_relative_to(self.__entry)
         self.__popover.connect("closed", self.__on_popover_closed)
         # Reload/Stop
         self.__action_image1 = builder.get_object("action_image1")
