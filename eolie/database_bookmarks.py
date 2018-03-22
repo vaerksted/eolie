@@ -479,7 +479,7 @@ class DatabaseBookmarks:
                                   bookmarks.uri,\
                                   bookmarks.title\
                                   FROM bookmarks\
-                                  AND bookmarks.guid != bookmarks.uri\
+                                  WHERE bookmarks.guid != bookmarks.uri\
                                   ORDER BY bookmarks.mtime DESC")
             return list(result)
 
