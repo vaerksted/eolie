@@ -627,6 +627,7 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        self._uri = webview.get_uri()
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)

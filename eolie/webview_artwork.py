@@ -78,23 +78,23 @@ class WebViewArtwork:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(webview.uri)
+        parsed = urlparse(self._uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.__cancellable.cancel()
             self.__cancellable.reset()
             if parsed.scheme in ["http", "https"]:
-                self.__initial_uri = webview.uri.rstrip('/')
+                self.__initial_uri = self._uri.rstrip('/')
             else:
                 self.__initial_uri = None
-            surface = App().art.get_favicon(webview.uri,
+            surface = App().art.get_favicon(self._uri,
                                             self.get_scale_factor())
             if surface is not None:
                 self.emit("favicon-changed", surface, None)
             elif self.__current_netloc is None or\
-                    self.__current_netloc not in webview.uri:
+                    self.__current_netloc not in self._uri:
                 # Get symbolic favicon for icon theme
                 icon_theme_artwork = App().art.get_icon_theme_artwork(
-                                                              webview.uri,
+                                                              self._uri,
                                                               self.ephemeral)
                 if icon_theme_artwork is not None:
                     self.emit("favicon-changed", None, icon_theme_artwork)
@@ -105,10 +105,10 @@ class WebViewArtwork:
                 favicon_database = self.context.get_favicon_database()
                 GLib.timeout_add(2000,
                                  favicon_database.get_favicon,
-                                 webview.uri,
+                                 self._uri,
                                  None,
                                  self.__on_get_favicon,
-                                 webview.uri,
+                                 self._uri,
                                  self.__initial_uri,
                                  True)
             self.__current_netloc = parsed.netloc or None

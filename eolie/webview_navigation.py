@@ -112,8 +112,7 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        uri = webview.uri
-        parsed = urlparse(uri)
+        parsed = urlparse(self._uri)
         if event == WebKit2.LoadEvent.COMMITTED:
             http_scheme = parsed.scheme in ["http", "https"]
             self.update_zoom_level()
@@ -134,7 +133,7 @@ class WebViewNavigation:
                             self.run_javascript(js, None, None)
                             break
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.update_spell_checking(uri)
+            self.update_spell_checking(self._uri)
             self.run_javascript_from_gresource(
                                   "/org/gnome/Eolie/Extensions.js", None, None)
             if parsed.scheme in ["http", "https"]:
