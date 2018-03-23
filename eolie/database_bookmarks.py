@@ -898,16 +898,14 @@ class DatabaseBookmarks:
 
             # Search items matching all words
             request = "SELECT rowid, title, uri\
-                       FROM bookmarks WHERE\
-                       guid != uri AND "
+                       FROM bookmarks WHERE "
             words_copy = list(words)
             while words_copy:
                 word = words_copy.pop(0)
                 if word:
-                    request += " (title LIKE ? OR uri LIKE ?)"
-                    if words_copy:
-                        request += " AND "
-            request += "ORDER BY mtime DESC, popularity DESC LIMIT ?"
+                    request += " (title LIKE ? OR uri LIKE ?) AND"
+            request += " guid != uri ORDER BY mtime DESC,\
+                        popularity DESC LIMIT ?"
 
             result = sql.execute(request, filters)
             items += list(result)
@@ -915,15 +913,19 @@ class DatabaseBookmarks:
             # Search items matching any word
             request = "SELECT rowid, title, uri\
                        FROM bookmarks WHERE\
-                       guid != uri AND ("
+                       guid != uri"
             words_copy = list(words)
+            if words:
+                request += " AND ("
             while words_copy:
                 word = words_copy.pop(0)
                 if word:
-                    request += " (title LIKE ? OR uri LIKE ?)"
+                    request += "title LIKE ? OR uri LIKE ?"
                     if words_copy:
                         request += " OR "
-            request += ") ORDER BY mtime DESC, popularity DESC LIMIT ?"
+            if words:
+                request += ")"
+            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
 

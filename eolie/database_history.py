@@ -493,7 +493,7 @@ class DatabaseHistory:
                 words_copy = list(words)
                 while words_copy:
                     word = words_copy.pop(0)
-                    request += " (title LIKE ? OR uri LIKE ?)"
+                    request += " title LIKE ? OR uri LIKE ?"
                     if words_copy:
                         request += " OR "
             request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
