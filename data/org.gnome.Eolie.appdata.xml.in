@@ -9,6 +9,13 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
+    <release version="0.9.23" date="2018-03-23">
+      <description>
+        <ul>
+          <li>Fix a crash</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.9.22" date="2018-03-22">
       <description>
         <ul>
@@ -23,14 +30,6 @@
           <li>Mozilla sync reworked</li>
           <li>Adblock fixes</li>
           <li>Faster/Smarter search</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.20" date="2018-03-19">
-      <description>
-        <ul>
-          <li>Fix Google suggestions</li>
-          <li>Workaround WebkitGTK segfaults</li>
         </ul>
       </description>
     </release>
