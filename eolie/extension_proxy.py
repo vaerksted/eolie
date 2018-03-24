@@ -538,6 +538,8 @@ class ProxyExtensionServer(Server):
         """
         self.__on_input_timeout_id = None
         new_value = element.get_value()
+        if new_value is None:
+            return
         item = LinkedList("", None, None)
         if element in self.__elements_history.keys():
             item = self.__elements_history[element]
