@@ -105,6 +105,7 @@ class DownloadRow(Gtk.ListBoxRow):
         """
             Convert bytes per seconds to human visible string
             @param bytes_per_sec as float
+            @return str
         """
         prefix = _("Download speed:")
         if bytes_per_sec < 1024:
