@@ -21,7 +21,7 @@
       </key>
       <key type="b" name="debug-sync">
          <default>false</default>
-         <summary>Show Mozilla sync debug messages</summary>
+         <summary>Show Firefox Sync debug messages</summary>
          <description />
       </key>
       <key type="b" name="show-sidebar">
