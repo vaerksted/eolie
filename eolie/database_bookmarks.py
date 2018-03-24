@@ -739,7 +739,7 @@ class DatabaseBookmarks:
                                 tags = [parent_name]
                             # Add bookmark
                             bookmark_id = self.add(title, uri, None,
-                                                   tags, 0, False)
+                                                   tags, 0)
                             # Set position
                             self.set_position(bookmark_id, position, False)
                             position += 1
@@ -795,7 +795,7 @@ class DatabaseBookmarks:
                         if rowid is None:
                             # Add bookmark
                             bookmark_id = self.add(title, uri, None,
-                                                   tags, 0, False)
+                                                   tags, 0)
                             # Set position
                             self.set_position(bookmark_id, position, False)
                             position += 1
@@ -844,7 +844,7 @@ class DatabaseBookmarks:
                             tags = [parent_name]
                         # Bookmarks and folder
                         bookmark_id = self.add(title, uri, bookmark_guid,
-                                               tags, 0, False)
+                                               tags, 0)
                         self.set_parent(bookmark_id, parent_guid,
                                         parent_name, False)
                         self.set_position(bookmark_id, position, False)
@@ -862,7 +862,7 @@ class DatabaseBookmarks:
                     if rowid is None:
                         # Bookmarks and folder
                         bookmark_id = self.add(title, uri, bookmark_guid,
-                                               [], 0, False)
+                                               [], 0)
                         self.set_parent(bookmark_id, parent_guid,
                                         parent_name, False)
                         self.set_position(bookmark_id, position, False)
