@@ -185,7 +185,7 @@ class PasswordsHelper:
     def store_sync(self, login, password, uid,
                    token, keyB, callback=None, *args):
         """
-            Store Mozilla Sync password
+            Store Firefox Sync password
             @param login as str
             @param password as str
             @param uid as str

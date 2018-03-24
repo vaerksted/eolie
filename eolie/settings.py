@@ -447,7 +447,7 @@ class SettingsDialog:
 
     def _on_sync_button_clicked(self, button):
         """
-            Connect to Mozilla Sync to get tokens
+            Connect to Firefox Sync to get tokens
             @param button as Gtk.Button
         """
         icon_name = self.__result_image.get_icon_name()[0]
@@ -463,7 +463,7 @@ class SettingsDialog:
             self.__result_image.set_from_icon_name("content-loading-symbolic",
                                                    Gtk.IconSize.MENU)
             task_helper = TaskHelper()
-            task_helper.run(self.__connect_mozilla_sync,
+            task_helper.run(self.__connect_firefox_sync,
                             self.__login_entry.get_text(),
                             self.__password_entry.get_text())
 
@@ -519,7 +519,7 @@ class SettingsDialog:
         """
             Show a message about missing fxa module
         """
-        from eolie.mozilla_sync import SyncWorker
+        from eolie.firefox_sync import SyncWorker
         if not SyncWorker.check_modules():
             cmd = "<b>$ pip3 install requests-hawk\n"\
                   "PyFxA pycrypto cryptography</b>"
@@ -528,9 +528,9 @@ class SettingsDialog:
                     " on your computer:\n %s") % cmd)
             self.__sync_button.set_sensitive(False)
 
-    def __connect_mozilla_sync(self, username, password):
+    def __connect_firefox_sync(self, username, password):
         """
-            Connect to mozilla sync
+            Connect to firefox sync
             @param username as str
             @param password as str
             @thread safe
@@ -540,7 +540,7 @@ class SettingsDialog:
             App().sync_worker.login({"login": username}, password)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
-            Logger.error("SettingsDialog::__connect_mozilla_sync(): %s", e)
+            Logger.error("SettingsDialog::__connect_firefox_sync(): %s", e)
             GLib.idle_add(self.__sync_button.set_sensitive, True)
             if str(e) == "Unverified account":
                 GLib.timeout_add(500, self.__settings_dialog.destroy)

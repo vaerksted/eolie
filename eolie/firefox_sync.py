@@ -1,5 +1,5 @@
 # Copyright (c) 2017-2018 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
-# Fork of https://github.com/mozilla-services/syncclient
+# Fork of https://github.com/firefox-services/syncclient
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -27,12 +27,12 @@ from eolie.logger import Logger
 
 
 TOKENSERVER_URL = "https://token.services.mozilla.com/"
-FXA_SERVER_URL = "https://api.accounts.firefox.com"
+FXA_SERVER_URL = "https://api.accounts.mozilla.com"
 
 
 class SyncWorker:
     """
-       Manage sync with mozilla server, will start syncing on init
+       Manage sync with firefox server, will start syncing on init
     """
 
     def check_modules():
@@ -62,13 +62,13 @@ class SyncWorker:
         self.__keyB = b""
         self.__mtimes = {"bookmarks": 0.1, "history": 0.1, "passwords": 0.1}
         # We do not create this here because it's slow down Eolie startup
-        # See __mozilla_sync property
+        # See __firefox_sync property
         self.__mz = None
         self.__state_lock = True
         self.__session = None
         try:
             self.__pending_records = load(open(EOLIE_DATA_PATH +
-                                               "/mozilla_sync_pendings.bin",
+                                               "/firefox_sync_pendings.bin",
                                                "rb"))
         except:
             self.__pending_records = {"history": [],
@@ -96,10 +96,10 @@ class SyncWorker:
         session = None
         self.__username = attributes["login"]
         self.__password = password
-        # Connect to mozilla sync
+        # Connect to firefox sync
         try:
-            session = self.__mozilla_sync.login(self.__username, password)
-            bid_assertion, key = self.__mozilla_sync.\
+            session = self.__firefox_sync.login(self.__username, password)
+            bid_assertion, key = self.__firefox_sync.\
                 get_browserid_assertion(session)
             self.__token = session.token
             self.__uid = session.uid
@@ -240,7 +240,7 @@ class SyncWorker:
         """
         try:
             dump(self.__pending_records,
-                 open(EOLIE_DATA_PATH + "/mozilla_sync_pendings.bin", "wb"))
+                 open(EOLIE_DATA_PATH + "/firefox_sync_pendings.bin", "wb"))
         except Exception as e:
             Logger.Error("SyncWorker::save_pendings(): %s", e)
 
@@ -270,7 +270,7 @@ class SyncWorker:
         try:
             if self.__username:
                 self.__get_session_bulk_keys()
-                self.__mozilla_sync.client.info_collections()
+                self.__firefox_sync.client.info_collections()
                 return True
         except Exception as e:
             Logger.error("SyncWorker::status(): %s", e)
@@ -287,12 +287,12 @@ class SyncWorker:
 # PRIVATE             #
 #######################
     @property
-    def __mozilla_sync(self):
+    def __firefox_sync(self):
         """
-            Get mozilla sync, create if None
+            Get firefox sync, create if None
         """
         if self.__mz is None:
-            self.__mz = MozillaSync()
+            self.__mz = FirefoxSync()
         return self.__mz
 
     def __get_session_bulk_keys(self):
@@ -303,7 +303,7 @@ class SyncWorker:
         if self.__session is None:
             from fxa.core import Session as FxASession
             from fxa.crypto import quick_stretch_password
-            self.__session = FxASession(self.__mozilla_sync.fxa_client,
+            self.__session = FxASession(self.__firefox_sync.fxa_client,
                                         self.__username,
                                         quick_stretch_password(
                                                         self.__username,
@@ -312,9 +312,9 @@ class SyncWorker:
                                         self.__token)
             self.__session.keys = [b"", self.__keyB]
         self.__session.check_session_status()
-        bid_assertion, key = self.__mozilla_sync.get_browserid_assertion(
+        bid_assertion, key = self.__firefox_sync.get_browserid_assertion(
                                                                 self.__session)
-        bulk_keys = self.__mozilla_sync.connect(bid_assertion, key)
+        bulk_keys = self.__firefox_sync.connect(bid_assertion, key)
         return bulk_keys
 
     def __update_state(self):
@@ -322,10 +322,10 @@ class SyncWorker:
             Update state file
         """
         try:
-            f = open(EOLIE_DATA_PATH + "/mozilla_sync.bin", "wb")
+            f = open(EOLIE_DATA_PATH + "/firefox_sync.bin", "wb")
             # Lock file
             flock(f, LOCK_EX | LOCK_NB)
-            self.__mtimes = self.__mozilla_sync.client.info_collections()
+            self.__mtimes = self.__firefox_sync.client.info_collections()
             dump(self.__mtimes, f)
             # Unlock file
             flock(f, LOCK_UN)
@@ -347,7 +347,7 @@ class SyncWorker:
                     try:
                         record = self.__pending_records[key].pop(0)
                         Logger.sync_debug("syncing %s", record)
-                        self.__mozilla_sync.add(record, key, bulk_keys)
+                        self.__firefox_sync.add(record, key, bulk_keys)
                     except:
                         self.__pending_records[key].append(record)
             self.__syncing = False
@@ -489,13 +489,13 @@ class SyncWorker:
 
     def __sync(self):
         """
-            Sync Eolie objects (bookmarks, history, ...) with Mozilla Sync
+            Sync Eolie objects (bookmarks, history, ...) with Firefox Sync
         """
         Logger.sync_debug("Start syncing")
         self.__syncing = True
         self.__sync_cancellable.reset()
         try:
-            self.__mtimes = load(open(EOLIE_DATA_PATH + "/mozilla_sync.bin",
+            self.__mtimes = load(open(EOLIE_DATA_PATH + "/firefox_sync.bin",
                                  "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1,
@@ -505,7 +505,7 @@ class SyncWorker:
             self.__check_worker()
 
             bulk_keys = self.__get_session_bulk_keys()
-            new_mtimes = self.__mozilla_sync.client.info_collections()
+            new_mtimes = self.__firefox_sync.client.info_collections()
 
             self.__check_worker()
             ########################
@@ -564,7 +564,7 @@ class SyncWorker:
         """
         Logger.sync_debug("pull bookmarks")
         SqlCursor.add(App().bookmarks)
-        records = self.__mozilla_sync.get_records("bookmarks", bulk_keys)
+        records = self.__firefox_sync.get_records("bookmarks", bulk_keys)
         children_array = []
         for record in records:
             self.__check_worker()
@@ -662,7 +662,7 @@ class SyncWorker:
             @raise StopIteration
         """
         Logger.sync_debug("pull passwords")
-        records = self.__mozilla_sync.get_records("passwords", bulk_keys)
+        records = self.__firefox_sync.get_records("passwords", bulk_keys)
         for record in records:
             self.__check_worker()
             if record["modified"] < self.__mtimes["passwords"]:
@@ -692,7 +692,7 @@ class SyncWorker:
             @raise StopIteration
         """
         Logger.sync_debug("pull history")
-        records = self.__mozilla_sync.get_records("history", bulk_keys)
+        records = self.__firefox_sync.get_records("history", bulk_keys)
         for record in records:
             self.__check_worker()
             if record["modified"] < self.__mtimes["history"]:
@@ -764,7 +764,7 @@ class SyncWorker:
             raise StopIteration("SyncWorker: missing token")
 
 
-class MozillaSync(object):
+class FirefoxSync(object):
     """
         Sync client
     """

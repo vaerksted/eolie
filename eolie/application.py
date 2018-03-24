@@ -357,7 +357,7 @@ class Application(Gtk.Application):
         # Add a global DBus helper
         self.helper = DBusHelper()
         # First init sync worker
-        from eolie.mozilla_sync import SyncWorker
+        from eolie.firefox_sync import SyncWorker
         if SyncWorker.check_modules():
             self.sync_worker = SyncWorker()
             self.sync_worker.sync_loop()

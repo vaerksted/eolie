@@ -657,7 +657,7 @@ class UriPopover(Gtk.Popover):
 
     def _on_sync_button_clicked(self, button):
         """
-            Sync with Mozilla Sync
+            Sync with Firefox Sync
             @param button as Gtk.Button
         """
         App().sync_worker.sync()
@@ -665,7 +665,7 @@ class UriPopover(Gtk.Popover):
 
     def _on_import_button_clicked(self, button):
         """
-            Sync with Mozilla Sync
+            Sync with Firefox Sync
             @param button as Gtk.Button
         """
         self.hide()
