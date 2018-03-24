@@ -110,7 +110,7 @@ class DownloadManager(GObject.GObject):
         directory_uri = App().settings.get_value('download-uri').get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
-                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+                GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             directory_uri = GLib.filename_to_uri(directory, None)
         destination_uri = "%s/%s" % (directory_uri,
                                      GLib.uri_escape_string(filename,
@@ -126,9 +126,9 @@ class DownloadManager(GObject.GObject):
                     new_filename = "%s_%s.%s" % (extension_less, i, extension)
                     destination_uri = "%s/%s" % (directory_uri,
                                                  GLib.uri_escape_string(
-                                                            new_filename,
-                                                            None,
-                                                            False))
+                                                     new_filename,
+                                                     None,
+                                                     False))
                 else:
                     not_ok = False
                 i += 1
@@ -136,9 +136,9 @@ class DownloadManager(GObject.GObject):
             # Fallback to be sure
             destination_uri = "%s/@@%s" % (directory_uri,
                                            GLib.uri_escape_string(
-                                                            filename,
-                                                            None,
-                                                            False))
+                                               filename,
+                                               None,
+                                               False))
 
         webkit_uri = GLib.uri_unescape_string(destination_uri, None)
         download.set_destination(webkit_uri)

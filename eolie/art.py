@@ -99,10 +99,10 @@ class Art:
             if filepath is not None and\
                     GLib.file_test(filepath, GLib.FileTest.IS_REGULAR):
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                                                               filepath,
-                                                               ArtSize.FAVICON,
-                                                               ArtSize.FAVICON,
-                                                               True)
+                    filepath,
+                    ArtSize.FAVICON,
+                    ArtSize.FAVICON,
+                    True)
                 surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
                                                                scale_factor,
                                                                None)

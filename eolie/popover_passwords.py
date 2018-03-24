@@ -57,8 +57,8 @@ class Row(Gtk.ListBoxRow):
         uri.set_max_width_chars(40)
         uri.show()
         delete_button = Gtk.Button.new_from_icon_name(
-                                                     "user-trash-symbolic",
-                                                     Gtk.IconSize.MENU)
+            "user-trash-symbolic",
+            Gtk.IconSize.MENU)
         delete_button.get_image().set_opacity(0.5)
         delete_button.connect("clicked", self.__on_delete_clicked)
         delete_button.get_style_context().add_class("overlay-button")

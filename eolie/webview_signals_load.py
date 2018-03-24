@@ -75,9 +75,9 @@ class WebViewLoadSignals:
             self.connect("notify::estimated-load-progress",
                          self.__on_estimated_load_progress)
             self.get_back_forward_list().connect(
-                                 "changed",
-                                 self.__on_back_forward_list_changed,
-                                 webview)
+                "changed",
+                self.__on_back_forward_list_changed,
+                webview)
 
     def _on_unmap(self, webview):
         """
@@ -89,7 +89,7 @@ class WebViewLoadSignals:
             self.disconnect_by_func(self.__on_uri_changed)
             self.disconnect_by_func(self.__on_estimated_load_progress)
             self.get_back_forward_list().disconnect_by_func(
-                                         self.__on_back_forward_list_changed)
+                self.__on_back_forward_list_changed)
 
     def _on_load_changed(self, webview, event):
         """
@@ -109,7 +109,7 @@ class WebViewLoadSignals:
                 self.__popups = []
             elif event == WebKit2.LoadEvent.FINISHED:
                 self.run_javascript_from_gresource(
-                                 "/org/gnome/Eolie/Readability.js", None, None)
+                    "/org/gnome/Eolie/Readability.js", None, None)
             if webview.get_mapped() and not webview.view.popover:
                 self.__update_toolbars(event)
 

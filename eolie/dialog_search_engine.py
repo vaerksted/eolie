@@ -164,7 +164,7 @@ class SearchEngineDialog:
                 return
 
         item = Item()
-        item.set_property("name",  _("New engine"))
+        item.set_property("name", _("New engine"))
         item.set_property("uri", "")
         item.set_property("search", "")
         item.set_property("bang", "")
@@ -204,7 +204,7 @@ class SearchEngineDialog:
         self.__search_entry.set_text(row.item.get_property("search"))
         self.__bang_entry.set_text(row.item.get_property("bang"))
         default_search_engine = App().settings.get_value(
-                                                  "search-engine").get_string()
+            "search-engine").get_string()
         self.__default_switch.set_active(default_search_engine ==
                                          row.item.get_property("name"))
 

@@ -82,10 +82,10 @@ class ImportBookmarksDialog:
             App().bookmarks.import_chromium(False)
         else:
             dialog = Gtk.FileChooserDialog(
-                                   _("Import HTML bookmarks"), self.__window,
-                                   Gtk.FileChooserAction.OPEN,
-                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                _("Import HTML bookmarks"), self.__window,
+                Gtk.FileChooserAction.OPEN,
+                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                 Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
             dialog.connect("response", self.__on_file_chooser_response)
             dialog.run()
             dialog.destroy()

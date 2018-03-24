@@ -216,8 +216,8 @@ class DatabaseAdblock:
                         "https://gitlab.gnome.org/gnumdk/eolie-adblock.git",
                         ADBLOCK_JS]
             (pid, a1, a2, a3) = GLib.spawn_async(
-                                    argv,
-                                    flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
+                argv,
+                flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
             GLib.spawn_close_pid(pid)
 
         # DB version is last successful sync mtime
@@ -233,7 +233,7 @@ class DatabaseAdblock:
             user_locale = locales[0].split("_")[0]
             try:
                 uris += self.__CSS_URIS +\
-                        [self.__CSS_LOCALIZED_URIS[user_locale]]
+                    [self.__CSS_LOCALIZED_URIS[user_locale]]
             except:
                 uris += self.__CSS_URIS
             uri = uris.pop(0)
@@ -483,11 +483,11 @@ class DatabaseAdblock:
             if line.startswith('#'):
                 continue
             array = line.replace(
-                         ' ', '\t', 1).replace('\t', '@', 1).split('@')
+                ' ', '\t', 1).replace('\t', '@', 1).split('@')
             if len(array) <= 1:
                 continue
             netloc = array[1].replace(
-                               ' ', '').replace('\r', '').split('#')[0]
+                ' ', '').replace('\r', '').split('#')[0]
             # Update entry if exists, create else
             if netloc != "localhost":
                 Logger.debug("Add filter: %s", netloc)

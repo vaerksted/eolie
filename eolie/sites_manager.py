@@ -115,7 +115,7 @@ class SitesManager(Gtk.EventBox):
                 self.__window.container.set_expose(False)
             else:
                 self.__window.container.pages_manager.set_filter(
-                                                               next_row.netloc)
+                    next_row.netloc)
                 self.__window.container.set_expose(True)
 
     def previous(self):
@@ -140,7 +140,7 @@ class SitesManager(Gtk.EventBox):
                 self.__window.container.set_expose(False)
             else:
                 self.__window.container.pages_manager.set_filter(
-                                                               next_row.netloc)
+                    next_row.netloc)
                 self.__window.container.set_expose(True)
 
     def update_visible_child(self):
@@ -208,7 +208,7 @@ class SitesManager(Gtk.EventBox):
                                           webview.ephemeral)
                 child.connect("moved", self.__on_moved)
                 position = App().settings.get_value(
-                                                "sidebar-position").get_int32()
+                    "sidebar-position").get_int32()
                 child.set_minimal(position < 80)
                 child.show()
                 child.add_view(webview.view)

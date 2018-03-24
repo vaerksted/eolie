@@ -135,7 +135,7 @@ class WebViewNavigation:
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self._uri)
             self.run_javascript_from_gresource(
-                                  "/org/gnome/Eolie/Extensions.js", None, None)
+                "/org/gnome/Eolie/Extensions.js", None, None)
             if parsed.scheme in ["http", "https"]:
                 self.set_snapshot()
             if App().show_tls:
@@ -187,14 +187,14 @@ class WebViewNavigation:
                 http_scheme and\
                 self.content_manager is not None:
             self.content_manager.add_style_sheet(
-                                             App().default_style_sheet)
+                App().default_style_sheet)
             rules = App().adblock.get_css_rules(uri)
             user_style_sheet = WebKit2.UserStyleSheet(
-                         rules,
-                         WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                         WebKit2.UserStyleLevel.USER,
-                         None,
-                         None)
+                rules,
+                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                WebKit2.UserStyleLevel.USER,
+                None,
+                None)
             self.content_manager.add_style_sheet(user_style_sheet)
         user_agent = App().websettings.get_user_agent(uri)
         settings = self.get_settings()
@@ -243,8 +243,8 @@ class WebViewNavigation:
             cookie_manager = self.get_context().get_cookie_manager()
             path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
             cookie_manager.set_persistent_storage(
-                                    path,
-                                    WebKit2.CookiePersistentStorage.SQLITE)
+                path,
+                WebKit2.CookiePersistentStorage.SQLITE)
 
     def __on_run_as_modal(self, webview):
         Logger.info("WebView::__on_run_as_modal(): TODO")

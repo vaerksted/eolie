@@ -276,11 +276,11 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__secure_content = False
         self.__entry.set_icon_tooltip_text(
-                                  Gtk.EntryIconPosition.PRIMARY,
-                                  _("This page contains insecure content"))
+            Gtk.EntryIconPosition.PRIMARY,
+            _("This page contains insecure content"))
         self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        "channel-insecure-symbolic")
+            Gtk.EntryIconPosition.PRIMARY,
+            "channel-insecure-symbolic")
 
     def show_javascript(self, dialog):
         """
@@ -331,9 +331,9 @@ class ToolbarTitle(Gtk.Bin):
             return
         self.__input_warning_shown = True
         self.show_message(_(
-                "Heads-up: this page is not secure.\n"
-                "If you type your password,\n it will be "
-                "visible to cybercriminals!"))
+            "Heads-up: this page is not secure.\n"
+            "If you type your password,\n it will be "
+            "visible to cybercriminals!"))
 
     def show_readable_button(self, b):
         """
@@ -369,7 +369,7 @@ class ToolbarTitle(Gtk.Bin):
                                      self.__window)
         popover.set_relative_to(self.__entry)
         popover.set_pointing_to(self.__entry.get_icon_area(
-                                                Gtk.EntryIconPosition.PRIMARY))
+            Gtk.EntryIconPosition.PRIMARY))
         popover.connect("closed", self.__on_popover_closed)
         popover.popup()
 
@@ -382,14 +382,14 @@ class ToolbarTitle(Gtk.Bin):
             self.__indicator2.show()
             self.__indicator2.set_tooltip_text(_("Disallow geolocation"))
             self.__indicator2_image.set_from_icon_name(
-                                                    "mark-location-symbolic",
-                                                    Gtk.IconSize.MENU)
+                "mark-location-symbolic",
+                Gtk.IconSize.MENU)
         elif indicator == Indicator.POPUPS:
             self.__indicator2.show()
             self.__indicator2.set_tooltip_text(_("Blocked popups"))
             self.__indicator2_image.set_from_icon_name(
-                                                    "focus-windows-symbolic",
-                                                    Gtk.IconSize.MENU)
+                "focus-windows-symbolic",
+                Gtk.IconSize.MENU)
         else:
             self.__indicator2.hide()
 
@@ -439,8 +439,8 @@ class ToolbarTitle(Gtk.Bin):
         if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
                 "edit-copy-symbolic":
             Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(
-                                                       self.__entry.get_text(),
-                                                       -1)
+                self.__entry.get_text(),
+                -1)
 
     def _on_enter_notify(self, widget, event):
         """
@@ -670,7 +670,7 @@ class ToolbarTitle(Gtk.Bin):
             popover.connect("closed", self.__on_popover_closed)
             popover.connect("closed",
                             lambda x: self._on_entry_focus_out(
-                                                       self.__entry, None))
+                                self.__entry, None))
             popover.add(widget)
             popover.popup()
         return True
@@ -704,9 +704,9 @@ class ToolbarTitle(Gtk.Bin):
             self.__on_size_allocation_timeout(allocation)
         else:
             self.__size_allocation_timeout = GLib.timeout_add(
-                                             250,
-                                             self.__on_size_allocation_timeout,
-                                             allocation)
+                250,
+                self.__on_size_allocation_timeout,
+                allocation)
 
 #######################
 # PRIVATE             #
@@ -764,14 +764,14 @@ class ToolbarTitle(Gtk.Bin):
         if (parsed.scheme == "https" and self.__secure_content) or\
                 parsed.scheme == "file":
             self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        "channel-secure-symbolic")
+                Gtk.EntryIconPosition.PRIMARY,
+                "channel-secure-symbolic")
         elif parsed.scheme in ["http", "https"]:
             self.set_insecure_content()
         else:
             self.__entry.set_icon_from_icon_name(
-                                        Gtk.EntryIconPosition.PRIMARY,
-                                        "system-search-symbolic")
+                Gtk.EntryIconPosition.PRIMARY,
+                "system-search-symbolic")
 
     def __on_search_suggestion(self, uri, status, content, encoding, value):
         """
@@ -822,7 +822,7 @@ class ToolbarTitle(Gtk.Bin):
                         lookup = "%s%s.%s" % (prefix, uri, suffix)
                         gethostbyname(lookup)
                         self.__completion_model.append(
-                                          [lookup.replace("www.", "")])
+                            [lookup.replace("www.", "")])
                         return
                     except:
                         if self.__cancellable.is_cancelled():
@@ -893,10 +893,10 @@ class ToolbarTitle(Gtk.Bin):
         if self.__entry_changed_id is not None:
             GLib.source_remove(self.__entry_changed_id)
         self.__entry_changed_id = GLib.timeout_add(
-                                               100,
-                                               self.__on_entry_changed_timeout,
-                                               entry,
-                                               value)
+            100,
+            self.__on_entry_changed_timeout,
+            entry,
+            value)
 
     def __on_entry_changed_timeout(self, entry, value):
         """
@@ -931,9 +931,9 @@ class ToolbarTitle(Gtk.Bin):
         if App().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
             self.__suggestion_id = GLib.timeout_add(
-                                                50,
-                                                self.__on_suggestion_timeout,
-                                                value)
+                50,
+                self.__on_suggestion_timeout,
+                value)
         task_helper.run(self.__search_in_current_views, value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")

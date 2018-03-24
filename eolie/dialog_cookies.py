@@ -120,7 +120,7 @@ class Row(Gtk.ListBoxRow):
             @param time as int
         """
         height = self.get_allocated_height()
-        if y > height/2:
+        if y > height / 2:
             up = False
         else:
             up = True
@@ -140,7 +140,7 @@ class Row(Gtk.ListBoxRow):
             @param time as int
         """
         height = self.get_allocated_height()
-        if y > height/2:
+        if y > height / 2:
             self.get_style_context().add_class("drag-up")
             self.get_style_context().remove_class("drag-down")
         else:
@@ -261,7 +261,7 @@ class CookiesDialog:
                 return
 
         item = Profile()
-        item.set_property("name",  text)
+        item.set_property("name", text)
         item.set_property("profile", GLib.uri_escape_string(text.lower(),
                                                             None,
                                                             True))

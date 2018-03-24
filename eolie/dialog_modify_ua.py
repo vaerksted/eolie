@@ -19,6 +19,7 @@ class ModifyUADialog:
     """
         Modify user agent for uri
     """
+
     def __init__(self, uri, window):
         """
             Init widget

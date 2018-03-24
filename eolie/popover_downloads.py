@@ -23,6 +23,7 @@ class DownloadRow(Gtk.ListBoxRow):
     """
         A Download row row
     """
+
     def __init__(self, download, finished):
         """
             Init row
@@ -232,10 +233,10 @@ class DownloadRow(Gtk.ListBoxRow):
                 # Update every 1 seconds
                 if delta > 1:
                     bytes_per_second = 1 * self.__download_bytes /\
-                                        delta
+                        delta
                     self.__avg_download_rates.append(bytes_per_second)
                     self.set_tooltip_text(self.__human_bytes_per_sec(
-                                                             bytes_per_second))
+                        bytes_per_second))
                     # Calculate average for last 10 rates
                     avg = 0
                     for rate in self.__avg_download_rates:
@@ -246,7 +247,7 @@ class DownloadRow(Gtk.ListBoxRow):
                     if incoming > 0:
                         seconds = incoming / avg
                         self.__sublabel.set_label(
-                                            self.__human_seconds(int(seconds)))
+                            self.__human_seconds(int(seconds)))
                     self.__download_bytes = 0
                     self.__download_previous_time = new_time
             else:
@@ -319,7 +320,7 @@ class DownloadsPopover(Gtk.Popover):
         directory_uri = App().settings.get_value("download-uri").get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
-                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+                GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             directory_uri = GLib.filename_to_uri(directory, None)
         Gtk.show_uri_on_window(self.__window,
                                directory_uri,

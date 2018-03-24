@@ -306,14 +306,14 @@ class SyncWorker:
             self.__session = FxASession(self.__firefox_sync.fxa_client,
                                         self.__username,
                                         quick_stretch_password(
-                                                        self.__username,
-                                                        self.__password),
+                                            self.__username,
+                                            self.__password),
                                         self.__uid,
                                         self.__token)
             self.__session.keys = [b"", self.__keyB]
         self.__session.check_session_status()
         bid_assertion, key = self.__firefox_sync.get_browserid_assertion(
-                                                                self.__session)
+            self.__session)
         bulk_keys = self.__firefox_sync.connect(bid_assertion, key)
         return bulk_keys
 
@@ -367,7 +367,7 @@ class SyncWorker:
             record["title"] = App().history.get_title(history_id)
             record["visits"] = []
             for atime in atimes:
-                record["visits"].append({"date": atime*1000000,
+                record["visits"].append({"date": atime * 1000000,
                                          "type": 1})
             self.__pending_records["history"].append(record)
             self.__sync_pendings()
@@ -435,7 +435,7 @@ class SyncWorker:
             record["password"] = pass_form_value
             record["usernameField"] = user_form_name
             record["passwordField"] = pass_form_name
-            mtime = int(time()*1000)
+            mtime = int(time() * 1000)
             record["timeCreated"] = mtime
             record["timePasswordChanged"] = mtime
             self.__pending_records["passwords"].append(record)
@@ -496,7 +496,7 @@ class SyncWorker:
         self.__sync_cancellable.reset()
         try:
             self.__mtimes = load(open(EOLIE_DATA_PATH + "/firefox_sync.bin",
-                                 "rb"))
+                                      "rb"))
         except:
             self.__mtimes = {"bookmarks": 0.1,
                              "history": 0.1,
@@ -768,6 +768,7 @@ class FirefoxSync(object):
     """
         Sync client
     """
+
     def __init__(self):
         """
             Init client
@@ -798,8 +799,8 @@ class FirefoxSync(object):
             state = hexlify(sha256(key).digest()[0:16])
         self.__client = SyncClient(bid_assertion, state)
         sync_keys = KeyBundle.fromMasterKey(
-                                        key,
-                                        "identity.mozilla.com/picl/v1/oldsync")
+            key,
+            "identity.mozilla.com/picl/v1/oldsync")
 
         # Fetch the sync bundle keys out of storage.
         # They're encrypted with the account-level key.
@@ -932,6 +933,7 @@ class KeyBundle:
     """
         RFC-5869
     """
+
     def __init__(self, encryption_key, hmac_key):
         self.encryption_key = encryption_key
         self.hmac_key = hmac_key
@@ -988,6 +990,7 @@ class TokenserverClient(object):
     """
         Client for the Firefox Sync Token Server.
     """
+
     def __init__(self, bid_assertion, client_state,
                  server_url=TOKENSERVER_URL):
         """
@@ -1026,6 +1029,7 @@ class SyncClient(object):
     """
         Client for the Firefox Sync server.
     """
+
     def __init__(self, bid_assertion=None, client_state=None,
                  credentials={}, tokenserver_url=TOKENSERVER_URL):
         """

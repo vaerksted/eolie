@@ -89,15 +89,15 @@ class WebViewJsSignals:
         elif self.__js_blocker_count > 5:
             self.__js_blocker_count = 0
             self._window.toolbar.title.show_message(
-                   _("Eolie is going to close this page because it is broken"))
+                _("Eolie is going to close this page because it is broken"))
             self._window.container.close_view(self.view)
         # Webpage message
         else:
             self._window.toolbar.title.show_javascript(dialog)
             self.__js_blocker_count += 1
             self.__js_blocker_timeout_id = GLib.timeout_add(
-                                                       1000,
-                                                       self.__reset_js_blocker)
+                1000,
+                self.__reset_js_blocker)
         return True
 
     def __on_resource_load_started(self, webview, resource, request):

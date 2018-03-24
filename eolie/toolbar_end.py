@@ -25,6 +25,7 @@ class ProgressBar(Gtk.ProgressBar):
     """
         Simple progress bar with width contraint
     """
+
     def __init__(self):
         Gtk.ProgressBar.__init__(self)
         self.set_property("valign", Gtk.Align.END)
@@ -311,10 +312,10 @@ class ToolbarEnd(Gtk.Bin):
         """
         if response_id == Gtk.ResponseType.ACCEPT:
             self.__window.container.current.webview.save_to_file(
-                                    dialog.get_file(),
-                                    WebKit2.SaveMode.MHTML,
-                                    None,
-                                    None)
+                dialog.get_file(),
+                WebKit2.SaveMode.MHTML,
+                None,
+                None)
 
     def __on_action_change_state(self, action, param, option):
         """

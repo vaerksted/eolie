@@ -96,7 +96,7 @@ class Container(Gtk.Overlay):
         self.__expose_stack.set_hexpand(True)
         self.__expose_stack.set_vexpand(True)
         self.__expose_stack.set_transition_type(
-                                       Gtk.StackTransitionType.CROSSFADE)
+            Gtk.StackTransitionType.CROSSFADE)
         self.__expose_stack.set_transition_duration(150)
         self.__expose_stack.show()
         self.__pages_manager = PagesManager(self.__window)
@@ -317,7 +317,7 @@ class Container(Gtk.Overlay):
         if views_count:
             App().update_unity_badge()
             self.__window.toolbar.actions.count_label.set_text(
-                                                       str(views_count))
+                str(views_count))
         # Nothing to do if was not current page
         if not was_current:
             return False
@@ -363,9 +363,9 @@ class Container(Gtk.Overlay):
         if self.__next_timeout_id is None and\
                 self.__next_timeout_id != -1:
             self.__next_timeout_id = GLib.timeout_add(
-                                                   100,
-                                                   self.__on_prev_next_timeout,
-                                                   self.__pages_manager.next)
+                100,
+                self.__on_prev_next_timeout,
+                self.__pages_manager.next)
         else:
             self.__pages_manager.next()
 
@@ -376,9 +376,9 @@ class Container(Gtk.Overlay):
         if self.__previous_timeout_id is None and\
                 self.__previous_timeout_id != -1:
             self.__previous_timeout_id = GLib.timeout_add(
-                                                 100,
-                                                 self.__on_prev_next_timeout,
-                                                 self.__pages_manager.previous)
+                100,
+                self.__on_prev_next_timeout,
+                self.__pages_manager.previous)
         else:
             self.__pages_manager.previous()
 
@@ -506,7 +506,7 @@ class Container(Gtk.Overlay):
         """
         position = paned.get_position()
         saved_position = App().settings.get_value(
-                                                "sidebar-position").get_int32()
+            "sidebar-position").get_int32()
         # We do not want to keep minimal mode changes
         if position >= 80 or saved_position > position:
             App().settings.set_value("sidebar-position",

@@ -115,7 +115,7 @@ class DatabaseHistory:
                              SET uri=?, netloc=?, mtime=?,\
                                  title=?, guid=?, popularity=?\
                              WHERE rowid=?", (uri, parsed.netloc, mtime, title,
-                                              guid, v[1]+1, history_id))
+                                              guid, v[1] + 1, history_id))
             # Add a new item
             else:
                 # Find an uniq guid
@@ -462,7 +462,7 @@ class DatabaseHistory:
             @param limit as int
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
-        words = sub("[^\w]", " ",  search.lower()).split()
+        words = sub("[^\w]", " ", search.lower()).split()
         items = []
         with SqlCursor(self) as sql:
             filters = ()

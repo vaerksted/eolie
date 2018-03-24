@@ -74,7 +74,7 @@ class SettingsDialog:
         dir_uri = App().settings.get_value("download-uri").get_string()
         if not dir_uri:
             directory = GLib.get_user_special_dir(
-                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+                GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             if directory is not None:
                 dir_uri = GLib.filename_to_uri(directory, None)
         if dir_uri:
@@ -84,7 +84,7 @@ class SettingsDialog:
 
         open_downloads = builder.get_object("open_downloads_check")
         open_downloads.set_active(
-                                App().settings.get_value("open-downloads"))
+            App().settings.get_value("open-downloads"))
 
         self.__start_page_uri = builder.get_object("start_page_uri")
         combo_start = builder.get_object("combo_start")
@@ -98,39 +98,39 @@ class SettingsDialog:
 
         remember_session = builder.get_object("remember_sessions_check")
         remember_session.set_active(
-                                App().settings.get_value("remember-session"))
+            App().settings.get_value("remember-session"))
 
         suggestions = builder.get_object("suggestions_check")
         suggestions.set_active(App().settings.get_value("enable-suggestions"))
 
         enable_dev_tools = builder.get_object("dev_tools_check")
         enable_dev_tools.set_active(
-                                App().settings.get_value("developer-extras"))
+            App().settings.get_value("developer-extras"))
 
         enable_plugins = builder.get_object("plugins_check")
         enable_plugins.set_active(
-                                App().settings.get_value("enable-plugins"))
+            App().settings.get_value("enable-plugins"))
 
         self.__fonts_grid = builder.get_object("fonts_grid")
         use_system_fonts = builder.get_object("system_fonts_check")
         use_system_fonts.set_active(
-                                App().settings.get_value("use-system-fonts"))
+            App().settings.get_value("use-system-fonts"))
         self.__fonts_grid.set_sensitive(
-                            not App().settings.get_value("use-system-fonts"))
+            not App().settings.get_value("use-system-fonts"))
 
         sans_serif_button = builder.get_object("sans_serif_button")
         sans_serif_button.set_font_name(
-                      App().settings.get_value("font-sans-serif").get_string())
+            App().settings.get_value("font-sans-serif").get_string())
         serif_button = builder.get_object("serif_button")
         serif_button.set_font_name(
-                       App().settings.get_value("font-serif").get_string())
+            App().settings.get_value("font-serif").get_string())
         monospace_button = builder.get_object("monospace_button")
         monospace_button.set_font_name(
-                       App().settings.get_value("font-monospace").get_string())
+            App().settings.get_value("font-monospace").get_string())
 
         min_font_size_spin = builder.get_object("min_font_size_spin")
         min_font_size_spin.set_value(
-                       App().settings.get_value("min-font-size").get_int32())
+            App().settings.get_value("min-font-size").get_int32())
 
         monitor_model = get_current_monitor_model(window)
         zoom_levels = App().settings.get_value("default-zoom-level")
@@ -159,18 +159,18 @@ class SettingsDialog:
         if start_page in ["popular_book", "popular_hist"]:
             self.__populars_count.show()
         max_popular_items = App().settings.get_value(
-                                              "max-popular-items").get_int32()
+            "max-popular-items").get_int32()
         builder.get_object("popular_spin_button").set_value(max_popular_items)
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
-                                App().settings.get_value("remember-passwords"))
+            App().settings.get_value("remember-passwords"))
 
         dns_prediction_check = builder.get_object("dns_prediction_check")
         dns_prediction_check.set_active(
-                                App().settings.get_value("dns-prediction"))
+            App().settings.get_value("dns-prediction"))
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
-                                App().settings.get_value("do-not-track"))
+            App().settings.get_value("do-not-track"))
         self.__result_label = builder.get_object("result_label")
         self.__sync_button = builder.get_object("sync_button")
         self.__login_entry = builder.get_object("login_entry")
@@ -264,7 +264,7 @@ class SettingsDialog:
                 context = view.webview.get_context()
                 cookie_manager = context.get_cookie_manager()
                 cookie_manager.set_accept_policy(
-                                     App().settings.get_enum("cookie-storage"))
+                    App().settings.get_enum("cookie-storage"))
 
     def _on_history_changed(self, combo):
         """
@@ -280,7 +280,7 @@ class SettingsDialog:
         """
         button.set_text("{} %".format(int(button.get_value())))
         monitor_model = get_current_monitor_model(
-                                    self.__settings_dialog.get_transient_for())
+            self.__settings_dialog.get_transient_for())
         try:
             # Add current value less monitor model
             zoom_levels = []
@@ -488,32 +488,32 @@ class SettingsDialog:
         """
         self.__sync_button.set_sensitive(True)
         self.__sync_button.get_style_context().remove_class(
-                                                          "destructive-action")
+            "destructive-action")
         self.__sync_button.get_style_context().remove_class(
-                                                          "suggested-action")
+            "suggested-action")
         if status:
             self.__result_label.set_text(_("Synchronization is working"))
             self.__result_image.set_from_icon_name(
-                                     "network-transmit-receive-symbolic",
-                                     Gtk.IconSize.MENU)
+                "network-transmit-receive-symbolic",
+                Gtk.IconSize.MENU)
             self.__sync_button.get_style_context().add_class(
-                                                      "destructive-action")
+                "destructive-action")
             self.__sync_button.set_label(_("Cancel synchronization"))
         elif self.__login_entry.get_text() and\
                 self.__password_entry.get_text():
             self.__sync_button.get_style_context().add_class(
-                                                      "suggested-action")
+                "suggested-action")
             self.__sync_button.set_label(_("Start synchronization"))
             self.__result_label.set_text("")
         else:
             self.__sync_button.get_style_context().add_class(
-                                                      "suggested-action")
+                "suggested-action")
             self.__sync_button.set_label(_("Allow synchronization"))
             self.__result_image.set_from_icon_name(
-                                 "computer-fail-symbolic",
-                                 Gtk.IconSize.MENU)
+                "computer-fail-symbolic",
+                Gtk.IconSize.MENU)
             self.__result_label.set_text(
-                                   _("Synchronization is not working"))
+                _("Synchronization is not working"))
 
     def __missing_fxa(self):
         """
@@ -524,7 +524,7 @@ class SettingsDialog:
             cmd = "<b>$ pip3 install requests-hawk\n"\
                   "PyFxA pycrypto cryptography</b>"
             self.__result_label.set_markup(
-                  _("Synchronization is not available"
+                _("Synchronization is not available"
                     " on your computer:\n %s") % cmd)
             self.__sync_button.set_sensitive(False)
 

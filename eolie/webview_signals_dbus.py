@@ -68,13 +68,13 @@ class WebViewDBusSignals:
              pass_form_name, uri, form_uri) = params[0]
             self._window.close_popovers()
             self._window.toolbar.title.show_password(
-                                             uuid,
-                                             user_form_name,
-                                             user_form_value,
-                                             pass_form_name,
-                                             uri,
-                                             form_uri,
-                                             self.get_page_id())
+                uuid,
+                user_form_name,
+                user_form_value,
+                pass_form_name,
+                uri,
+                form_uri,
+                self.get_page_id())
         elif signal == "ShowCredentials":
             (userform, form_uri) = params
             model = FormMenu(self.get_page_id(), self._window)

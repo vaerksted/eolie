@@ -88,7 +88,7 @@ class View(Gtk.Overlay):
         """
         system = Gio.Settings.new("org.gnome.desktop.interface")
         document_font_name = system.get_value("document-font-name").get_string(
-                                                                              )
+        )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
         if self.__reading_view is None:
             self.__reading_view = WebKit2.WebView.new()

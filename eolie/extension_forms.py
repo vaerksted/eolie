@@ -120,8 +120,8 @@ class FormsExtension(GObject.Object):
                                 element.get_name() is not None:
                             form["username"] = element
                     elif isinstance(
-                                   element,
-                                   WebKit2WebExtension.DOMHTMLTextAreaElement):
+                            element,
+                            WebKit2WebExtension.DOMHTMLTextAreaElement):
                         textareas.append(element)
                     h += 1
                 keys = form.keys()

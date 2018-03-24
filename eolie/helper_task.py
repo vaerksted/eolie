@@ -74,7 +74,7 @@ class TaskHelper:
                                uri,
                                *args)
         except Exception as e:
-            Logger.error("HelperTask::load_uri_content(): %s, %s:",  e, uri)
+            Logger.error("HelperTask::load_uri_content(): %s, %s:", e, uri)
             callback(None, False, b"", *args)
 
 #######################
@@ -141,5 +141,5 @@ class TaskHelper:
                                     bytearray(0), cancellable, callback, uri,
                                     *args)
         except Exception as e:
-            Logger.error("TaskHelper::__on_soup_msg_finished(): %s",  e)
+            Logger.error("TaskHelper::__on_soup_msg_finished(): %s", e)
             callback(uri, False, b"", *args)

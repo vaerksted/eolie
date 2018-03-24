@@ -72,7 +72,7 @@ class DatabaseSettings:
             if v is not None:
                 version = v[0]
             if version < new_version:
-                for i in range(version+1, new_version + 1):
+                for i in range(version + 1, new_version + 1):
                     try:
                         sql.execute(self.__UPGRADES[i])
                     except:
@@ -347,17 +347,17 @@ class DatabaseSettings:
         """
         parsed = urlparse(uri)
         with SqlCursor(self) as sql:
-                result = sql.execute("SELECT languages FROM settings\
+            result = sql.execute("SELECT languages FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    languages = v[0]
-                    if languages:
-                        return languages.split(";")
-                    else:
-                        return []
+            v = result.fetchone()
+            if v is not None:
+                languages = v[0]
+                if languages:
+                    return languages.split(";")
                 else:
-                    return None
+                    return []
+            else:
+                return None
 
     def add_language(self, code, uri):
         """

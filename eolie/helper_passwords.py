@@ -214,11 +214,11 @@ class PasswordsHelper:
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
             SecretAttributes = {
-                    "sync": "mozilla",
-                    "login": login,
-                    "uid": uid,
-                    "token": token,
-                    "keyB": keyB
+                "sync": "mozilla",
+                "login": login,
+                "uid": uid,
+                "token": token,
+                "keyB": keyB
             }
             Secret.password_store(schema, SecretAttributes,
                                   Secret.COLLECTION_DEFAULT,

@@ -40,9 +40,9 @@ class BlockMenu(Gtk.Bin):
         # Enable blocking
         option_value = App().settings.get_value(self._option_block)
         action = Gio.SimpleAction.new_stateful(
-               self._option_block,
-               None,
-               GLib.Variant.new_boolean(option_value))
+            self._option_block,
+            None,
+            GLib.Variant.new_boolean(option_value))
         action.connect("change-state",
                        self.__on_action_change_state,
                        self._option_block)
@@ -52,9 +52,9 @@ class BlockMenu(Gtk.Bin):
         if trust:
             option_value = App().settings.get_value(self._option_trust)
             action = Gio.SimpleAction.new_stateful(
-                   self._option_trust,
-                   None,
-                   GLib.Variant.new_boolean(option_value))
+                self._option_trust,
+                None,
+                GLib.Variant.new_boolean(option_value))
             action.connect("change-state",
                            self.__on_action_change_state,
                            self._option_trust)
@@ -112,6 +112,7 @@ class ExceptionBlockMenu(BlockMenu):
     """
         Menu for policy management with exceptions
     """
+
     def __init__(self, uri, window, trust, exception, database):
         """
             Init menu
@@ -124,9 +125,9 @@ class ExceptionBlockMenu(BlockMenu):
         BlockMenu.__init__(self, uri, window, trust)
         self.__database = database
         self.__action = Gio.SimpleAction.new_stateful(
-                                                   exception,
-                                                   GLib.VariantType.new("s"),
-                                                   GLib.Variant("s", "none"))
+            exception,
+            GLib.VariantType.new("s"),
+            GLib.Variant("s", "none"))
         self.__action.connect("activate", self.__on_action_change_state)
         window.add_action(self.__action)
 
@@ -318,9 +319,9 @@ class JSBlockMenu(BlockMenu):
                 button.set_action_name("win.%s" % encoded)
                 active = not App().js_exceptions.find(uri, parsed.netloc)
                 action = Gio.SimpleAction.new_stateful(
-                                              encoded,
-                                              None,
-                                              GLib.Variant.new_boolean(active))
+                    encoded,
+                    None,
+                    GLib.Variant.new_boolean(active))
                 action.connect("change-state",
                                self.__on_action_change_state,
                                uri)

@@ -102,7 +102,7 @@ class WebViewErrors:
             return False
         self._error = True
         network_available = Gio.NetworkMonitor.get_default(
-                                                      ).get_network_available()
+        ).get_network_available()
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
@@ -173,7 +173,7 @@ class WebViewErrors:
                           " a weak signature algorithm")
             elif errors == Gio.TlsCertificateFlags.NOT_ACTIVATED:
                 error = _(
-                      "The certificate activation time is still in the future")
+                    "The certificate activation time is still in the future")
             else:
                 error = _("The identity of this website has not been verified")
             html = html % (_("Connection is not secure"),

@@ -48,8 +48,8 @@ class FindWidget(Gtk.SearchBar):
         backward_button.connect("clicked",
                                 lambda x:
                                 self.__on_shortcut_action(
-                                                  None,
-                                                  GLib.Variant("s", "prev")))
+                                    None,
+                                    GLib.Variant("s", "prev")))
         backward_button.show()
         forward_button = Gtk.Button.new_from_icon_name("go-down-symbolic",
                                                        Gtk.IconSize.BUTTON)
@@ -57,8 +57,8 @@ class FindWidget(Gtk.SearchBar):
         forward_button.connect("clicked",
                                lambda x:
                                self.__on_shortcut_action(
-                                                  None,
-                                                  GLib.Variant("s", "next")))
+                                   None,
+                                   GLib.Variant("s", "next")))
         forward_button.show()
 
         self.__label = Gtk.Label()
@@ -170,13 +170,13 @@ class FindWidget(Gtk.SearchBar):
         self.__current = 0
         # FIXME Can't understand what is max count :/
         self.__find_controller.count_matches(
-                                text,
-                                WebKit2.FindOptions.CASE_INSENSITIVE,
-                                100)
+            text,
+            WebKit2.FindOptions.CASE_INSENSITIVE,
+            100)
         self.__find_controller.search(
-                                text,
-                                WebKit2.FindOptions.CASE_INSENSITIVE,
-                                100)
+            text,
+            WebKit2.FindOptions.CASE_INSENSITIVE,
+            100)
 
     def __on_get_selection(self, source, result):
         """

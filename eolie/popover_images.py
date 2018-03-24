@@ -24,6 +24,7 @@ class Image(Gtk.FlowBoxChild):
     """
         An image
     """
+
     def __init__(self, uri):
         """
             Create image
@@ -34,14 +35,14 @@ class Image(Gtk.FlowBoxChild):
             encoded = sha256(uri.encode("utf-8")).hexdigest()
             filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                                                       filepath,
-                                                       ArtSize.START_HEIGHT,
-                                                       ArtSize.START_HEIGHT,
-                                                       True)
+                filepath,
+                ArtSize.START_HEIGHT,
+                ArtSize.START_HEIGHT,
+                True)
             surface = Gdk.cairo_surface_create_from_pixbuf(
-                                                       pixbuf,
-                                                       self.get_scale_factor(),
-                                                       None)
+                pixbuf,
+                self.get_scale_factor(),
+                None)
             image = Gtk.Image.new_from_surface(surface)
             image.set_size_request(ArtSize.START_HEIGHT, ArtSize.START_HEIGHT)
             image.show()
@@ -177,7 +178,7 @@ class ImagesPopover(Gtk.Popover):
         directory_uri = App().settings.get_value('download-uri').get_string()
         if not directory_uri:
             directory = GLib.get_user_special_dir(
-                                         GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+                GLib.UserDirectory.DIRECTORY_DOWNLOAD)
             directory_uri = GLib.filename_to_uri(directory, None)
         destination_uri = "%s/%s" % (directory_uri, parsed.netloc)
         directory = Gio.File.new_for_uri(destination_uri)

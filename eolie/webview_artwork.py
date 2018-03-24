@@ -62,12 +62,12 @@ class WebViewArtwork:
         parsed = urlparse(self.uri)
         if parsed.scheme in ["http", "https"]:
             self.context.get_favicon_database().get_favicon(
-                                                        self.uri,
-                                                        None,
-                                                        self.__on_get_favicon,
-                                                        self.uri,
-                                                        self.__initial_uri,
-                                                        False)
+                self.uri,
+                None,
+                self.__on_get_favicon,
+                self.uri,
+                self.__initial_uri,
+                False)
 
 #######################
 # PROTECTED           #
@@ -94,8 +94,8 @@ class WebViewArtwork:
                     self.__current_netloc not in self._uri:
                 # Get symbolic favicon for icon theme
                 icon_theme_artwork = App().art.get_icon_theme_artwork(
-                                                              self._uri,
-                                                              self.ephemeral)
+                    self._uri,
+                    self.ephemeral)
                 if icon_theme_artwork is not None:
                     self.emit("favicon-changed", None, icon_theme_artwork)
                 else:
@@ -179,12 +179,12 @@ class WebViewArtwork:
                 resized = resize_favicon(surface)
                 # We wait for a better favicon
                 self.__save_favicon_timeout_id = GLib.timeout_add(
-                                  2000,
-                                  self.__save_favicon_to_cache,
-                                  resized,
-                                  uri,
-                                  initial_uri,
-                                  "favicon")
+                    2000,
+                    self.__save_favicon_to_cache,
+                    resized,
+                    uri,
+                    initial_uri,
+                    "favicon")
         elif builtin:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:

@@ -23,6 +23,7 @@ from eolie.logger import Logger
 
 
 class Server:
+
     def __init__(self, con, path):
         method_outargs = {}
         method_inargs = {}
@@ -32,7 +33,7 @@ class Server:
                 method_outargs[method.name] = '(' + ''.join(
                               [arg.signature for arg in method.out_args]) + ')'
                 method_inargs[method.name] = tuple(
-                                       arg.signature for arg in method.in_args)
+                    arg.signature for arg in method.in_args)
 
             con.register_object(object_path=path,
                                 interface_info=interface,
@@ -159,12 +160,12 @@ class ProxyExtensionServer(Server):
         addr = Gio.dbus_address_get_for_bus_sync(Gio.BusType.SESSION, None)
         self.__bus = None
         Gio.DBusConnection.new_for_address(
-                               addr,
-                               Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
-                               Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
-                               None,
-                               None,
-                               self.__on_bus_new_for_address)
+            addr,
+            Gio.DBusConnectionFlags.AUTHENTICATION_CLIENT |
+            Gio.DBusConnectionFlags.MESSAGE_BUS_CONNECTION,
+            None,
+            None,
+            self.__on_bus_new_for_address)
         form_extension.connect("submit-form", self.__on_submit_form)
         page.connect("send-request", self.__on_send_request)
         page.connect("context-menu", self.__on_context_menu)
@@ -477,11 +478,11 @@ class ProxyExtensionServer(Server):
             if element.get_input_type() == "password" and\
                     self.__bus is not None:
                 self.__bus.emit_signal(
-                              None,
-                              PROXY_PATH,
-                              self.__proxy_bus,
-                              "UnsecureFormFocused",
-                              None)
+                    None,
+                    PROXY_PATH,
+                    self.__proxy_bus,
+                    "UnsecureFormFocused",
+                    None)
 
     def __on_blur(self, element, event):
         """
@@ -510,11 +511,11 @@ class ProxyExtensionServer(Server):
                                     parsed_form_uri.netloc)
             args = GLib.Variant("(ss)", (element.get_name(), form_uri))
             self.__bus.emit_signal(
-                              None,
-                              PROXY_PATH,
-                              self.__proxy_bus,
-                              "ShowCredentials",
-                              args)
+                None,
+                PROXY_PATH,
+                self.__proxy_bus,
+                "ShowCredentials",
+                args)
         self.__mouse_down_element = element
 
     def __on_input(self, element, event):
@@ -558,9 +559,9 @@ class ProxyExtensionServer(Server):
         self.__add_event_listeners(forms, textareas, webpage)
         for form in forms:
             form["element"].add_event_listener(
-                                          "submit",
-                                          self.__form_extension.on_form_submit,
-                                          False)
+                "submit",
+                self.__form_extension.on_form_submit,
+                False)
             self.__form_extension.set_credentials(form, webpage)
 
     def __on_context_menu(self, webpage, context_menu, hit):
@@ -581,11 +582,11 @@ class ProxyExtensionServer(Server):
         """
         if self.__bus is not None:
             self.__bus.emit_signal(
-                                  None,
-                                  PROXY_PATH,
-                                  self.__proxy_bus,
-                                  "AskSaveCredentials",
-                                  variant)
+                None,
+                PROXY_PATH,
+                self.__proxy_bus,
+                "AskSaveCredentials",
+                variant)
 
     def __on_notify_uri(self, webpage, param):
         """

@@ -487,7 +487,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param time as int
         """
         height = self.get_allocated_height()
-        if y > height/2:
+        if y > height / 2:
             up = False
         else:
             up = True
@@ -507,7 +507,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param time as int
         """
         height = self.get_allocated_height()
-        if y > height/2:
+        if y > height / 2:
             self.get_style_context().add_class("drag-up")
             self.get_style_context().remove_class("drag-down")
         else:

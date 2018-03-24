@@ -638,7 +638,7 @@ class DatabaseBookmarks:
             v = result.fetchone()
             if v is not None:
                 sql.execute("UPDATE bookmarks set popularity=?\
-                             WHERE uri=?", (v[0]+1, uri))
+                             WHERE uri=?", (v[0] + 1, uri))
 
     def add_tag_to(self, tag_id, bookmark_id):
         """
@@ -782,7 +782,7 @@ class DatabaseBookmarks:
                             parents.append((child["name"], child["children"]))
                         elif child["type"] == "url":
                             bookmarks.append((child["name"],
-                                             child["url"]))
+                                              child["url"]))
                     position = 0
                     for bookmark in bookmarks:
                         tags = [parent_name]
@@ -828,7 +828,7 @@ class DatabaseBookmarks:
                 c = sqlite3.connect(sqlite_path, 600.0)
                 # Add bookmarks
                 bookmarks = self.__get_firefox_bookmarks(c)
-                for (title, uri,  parent_name, bookmark_guid,
+                for (title, uri, parent_name, bookmark_guid,
                      parent_guid, position) in bookmarks:
                     tags = self.__get_tags_for_firefox_bookmark(c,
                                                                 bookmark_guid)
@@ -888,7 +888,7 @@ class DatabaseBookmarks:
             @param limit as int
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
-        words = sub("[^\w]", " ",  search.lower()).split()
+        words = sub("[^\w]", " ", search.lower()).split()
         items = []
         with SqlCursor(self) as sql:
             filters = ()

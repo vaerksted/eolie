@@ -53,7 +53,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
         if current is None:
             current = 100
         builder.get_object("default_zoom_button").set_label(
-                                                        "{} %".format(current))
+            "{} %".format(current))
         adblock_menu = AdblockMenu(uri, self.__window)
         adblock_menu.show()
         js_block_menu = JSBlockMenu(uri, self.__window)

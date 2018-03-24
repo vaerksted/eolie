@@ -73,9 +73,9 @@ class Application(Gtk.Application):
         if WebKit2.MINOR_VERSION < 18:
             exit("You need WebKit2GTK >= 2.18")
         Gtk.Application.__init__(
-                            self,
-                            application_id="org.gnome.Eolie",
-                            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+            self,
+            application_id="org.gnome.Eolie",
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.set_property("register-session", True)
         # Fix proxy for python
         proxy = GLib.environ_getenv(GLib.get_environ(), "all_proxy")
@@ -139,9 +139,9 @@ class Application(Gtk.Application):
 
         show_sidebar = self.settings.get_value("show-sidebar")
         sidebar_action = Gio.SimpleAction.new_stateful(
-                                       "sidebar",
-                                       None,
-                                       GLib.Variant.new_boolean(show_sidebar))
+            "sidebar",
+            None,
+            GLib.Variant.new_boolean(show_sidebar))
         sidebar_action.connect("change-state", self.__on_sidebar_change_state)
         self.add_action(sidebar_action)
 
@@ -160,11 +160,11 @@ class Application(Gtk.Application):
         """
         rules = self.adblock.get_default_css_rules()
         self.__default_style_sheet = WebKit2.UserStyleSheet(
-                                 rules,
-                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                                 WebKit2.UserStyleLevel.USER,
-                                 None,
-                                 None)
+            rules,
+            WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+            WebKit2.UserStyleLevel.USER,
+            None,
+            None)
 
     def do_startup(self):
         """
@@ -258,7 +258,7 @@ class Application(Gtk.Application):
         if active_id != TimeSpan.FOREVER:
             atime = time()
             if active_id != TimeSpan.NEVER:
-                atime -= TimeSpanValues[active_id]/1000000
+                atime -= TimeSpanValues[active_id] / 1000000
             self.history.clear_to(int(atime))
 
         if self.sync_worker is not None:
@@ -367,7 +367,7 @@ class Application(Gtk.Application):
             menu = self.get_app_menu()
             self.set_app_menu(menu)
         cssProviderFile = Gio.File.new_for_uri(
-                'resource:///org/gnome/Eolie/application.css')
+            'resource:///org/gnome/Eolie/application.css')
         cssProvider = Gtk.CssProvider()
         cssProvider.load_from_file(cssProviderFile)
         screen = Gdk.Screen.get_default()
@@ -413,7 +413,7 @@ class Application(Gtk.Application):
                 gi.require_version('Unity', '7.0')
                 from gi.repository import Unity
                 self.__unity = Unity.LauncherEntry.get_for_desktop_id(
-                                                     "org.gnome.Eolie.desktop")
+                    "org.gnome.Eolie.desktop")
             except:
                 pass
 
@@ -589,14 +589,14 @@ class Application(Gtk.Application):
                          ephemeral, state) in window["states"]:
                         loading_type = wanted_loading_type(i)
                         webkit_state = WebKit2.WebViewSessionState(
-                                                         GLib.Bytes.new(state))
+                            GLib.Bytes.new(state))
                         items.append((uri, title, atime, ephemeral,
                                       webkit_state, loading_type))
                         i += 1
                     new_window.container.add_webviews(items)
             elif windows:
-                    size = windows[0]["size"]
-                    maximized = windows[0]["maximized"]
+                size = windows[0]["size"]
+                maximized = windows[0]["maximized"]
         except Exception as e:
             Logger.error("Application::__create_initial_windows(): %s", e)
         if not self.get_windows():

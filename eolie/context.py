@@ -35,12 +35,12 @@ class Context:
             context.set_favicon_database_directory(App().favicons_path)
             cookie_manager = context.get_cookie_manager()
             cookie_manager.set_accept_policy(
-                                     App().settings.get_enum("cookie-storage"))
+                App().settings.get_enum("cookie-storage"))
         context.set_web_extensions_directory(App().extension_dir)
         context.set_process_model(
-                            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
+            WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_spell_checking_enabled(
-                                App().settings.get_value("enable-spell-check"))
+            App().settings.get_value("enable-spell-check"))
         locales = GLib.get_language_names()
         try:
             user_locale = locales[0].split(".")[0]
@@ -77,8 +77,8 @@ class Context:
             reset_function = "reset_history"
             for (item_id, uri,
                  netloc, title, count) in App().history.get_populars(
-                                                                parsed.netloc,
-                                                                wanted):
+                    parsed.netloc,
+                    wanted):
                 items.append((title, uri, netloc, count))
         start = Gio.File.new_for_uri("resource:///org/gnome/Eolie/start.html")
         end = Gio.File.new_for_uri("resource:///org/gnome/Eolie/end.html")
@@ -120,10 +120,10 @@ class Context:
                                 class="close_button">\
                            <img class="favicon" src="%s">\
                            </img></img></div></a>' % (
-                                          element_id, title, netloc, path,
-                                          title, reset_function,
-                                          "'%s'" % netloc,
-                                          "'%s'" % element_id, favicon_uri)
+                element_id, title, netloc, path,
+                title, reset_function,
+                "'%s'" % netloc,
+                "'%s'" % element_id, favicon_uri)
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
@@ -142,9 +142,9 @@ class Context:
                                 None)
             if info.get_file_type() == Gio.FileType.DIRECTORY:
                 start = Gio.File.new_for_uri(
-                                "resource:///org/gnome/Eolie/start_file.html")
+                    "resource:///org/gnome/Eolie/start_file.html")
                 end = Gio.File.new_for_uri(
-                                "resource:///org/gnome/Eolie/end_file.html")
+                    "resource:///org/gnome/Eolie/end_file.html")
                 (status, start_content, tag) = start.load_contents(None)
                 (status, end_content, tag) = end.load_contents(None)
                 html_start = start_content.decode("utf-8")
@@ -158,13 +158,13 @@ class Context:
                                   '<td><a class="dir" href="%s">%s</a></td>'\
                                   '<td></td>'\
                                   '<td></td></tr>' % (
-                                   parent, "..")
+                                      parent, "..")
                 try:
                     infos = f.enumerate_children(
-                                    "standard::name,standard::size,"
-                                    "standard::type,time::modified",
-                                    Gio.FileQueryInfoFlags.NONE,
-                                    None)
+                        "standard::name,standard::size,"
+                        "standard::type,time::modified",
+                        Gio.FileQueryInfoFlags.NONE,
+                        None)
                     dirs = {}
                     files = {}
                     for info in infos:
@@ -177,7 +177,7 @@ class Context:
                         mtime = info.get_attribute_uint64("time::modified")
                         size = round((info.get_size() / 1024), 2)
                         date_str = datetime.fromtimestamp(mtime).strftime(
-                                                           "%Y-%m-%d %H:%M:%S")
+                            "%Y-%m-%d %H:%M:%S")
                         if info.get_file_type() == Gio.FileType.DIRECTORY:
                             dirs[uri] = (name, size, date_str)
                         else:
@@ -188,14 +188,14 @@ class Context:
                                       '%s</a></td>'\
                                       '<td>%s KB</td>'\
                                       '<td>%s</td></tr>' % (
-                                       uri, name, size, date_str)
+                                          uri, name, size, date_str)
                     for uri, (name, size, date_str) in sorted(files.items()):
                         html_start += '<tr>'\
                                       '<td><a class="file" href="%s">'\
                                       '%s</a></td>'\
                                       '<td>%s KB</td>'\
                                       '<td>%s</td></tr>' % (
-                                       uri, name, size, date_str)
+                                          uri, name, size, date_str)
                 except Exception as e:
                     infos = []
                     html_start += '<tr>'\
@@ -221,8 +221,8 @@ class Context:
         # We use internal:// because resource:// is already used by WebKit2
         icon_name = request.get_uri().replace("internal://", "")
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
-                                            icon_name, Gtk.IconSize.BUTTON,
-                                            Gtk.IconLookupFlags.FORCE_SVG)
+            icon_name, Gtk.IconSize.BUTTON,
+            Gtk.IconLookupFlags.FORCE_SVG)
         filename = icon_info.get_filename()
         if filename.endswith(".png"):
             mime = "image/png"
@@ -245,9 +245,9 @@ class Context:
         if not App().websettings.get_accept_tls(uri):
             App().websettings.set_accept_tls(uri, True)
         self.__context.allow_tls_certificate_for_host(
-                                                view.bad_tls,
-                                                # Remove port
-                                                parsed.netloc.split(":")[0])
+            view.bad_tls,
+            # Remove port
+            parsed.netloc.split(":")[0])
         view.load_uri(uri)
 
     def __on_download_started(self, context, download):

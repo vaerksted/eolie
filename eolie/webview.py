@@ -255,12 +255,12 @@ class WebView(WebKit2.WebView):
         else:
             self._new_pages_opened += 1
             webview = self._window.container.add_webview(
-                                                        uri,
-                                                        loading_type,
-                                                        self.ephemeral,
-                                                        None,
-                                                        self.atime -
-                                                        self._new_pages_opened)
+                uri,
+                loading_type,
+                self.ephemeral,
+                None,
+                self.atime -
+                self._new_pages_opened)
             webview.set_parent(self)
             self.add_child(webview)
 
@@ -467,19 +467,19 @@ class WebView(WebKit2.WebView):
                               App().settings.get_value('enable-plugins'))
         settings.set_property("minimum-font-size",
                               App().settings.get_value(
-                                "min-font-size").get_int32())
+                                  "min-font-size").get_int32())
         if App().settings.get_value("use-system-fonts"):
             self.__set_system_fonts(settings, system)
         else:
             settings.set_property("monospace-font-family",
                                   App().settings.get_value(
-                                    "font-monospace").get_string())
+                                      "font-monospace").get_string())
             settings.set_property("sans-serif-font-family",
                                   App().settings.get_value(
-                                    "font-sans-serif").get_string())
+                                      "font-sans-serif").get_string())
             settings.set_property("serif-font-family",
                                   App().settings.get_value(
-                                    "font-serif").get_string())
+                                      "font-serif").get_string())
         settings.set_property("auto-load-images", True)
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-site-specific-quirks", True)
@@ -512,14 +512,14 @@ class WebView(WebKit2.WebView):
         if system is None:
             system = Gio.Settings.new("org.gnome.desktop.interface")
         settings.set_property(
-                        "monospace-font-family",
-                        system.get_value("monospace-font-name").get_string())
+            "monospace-font-family",
+            system.get_value("monospace-font-name").get_string())
         settings.set_property(
-                        "sans-serif-font-family",
-                        system.get_value("document-font-name").get_string())
+            "sans-serif-font-family",
+            system.get_value("document-font-name").get_string())
         settings.set_property(
-                        "serif-font-family",
-                        system.get_value("font-name").get_string())
+            "serif-font-family",
+            system.get_value("font-name").get_string())
 
     def __on_create(self, related, navigation_action):
         """
@@ -582,22 +582,22 @@ class WebView(WebKit2.WebView):
 
         if not exception and popup_block and\
                 navigation_action.get_navigation_type() in [
-                               WebKit2.NavigationType.OTHER,
-                               WebKit2.NavigationType.RELOAD,
-                               WebKit2.NavigationType.BACK_FORWARD]:
+                    WebKit2.NavigationType.OTHER,
+                    WebKit2.NavigationType.RELOAD,
+                    WebKit2.NavigationType.BACK_FORWARD]:
             related.add_popup(webview)
             webview.connect("close", self.__on_popup_close, related)
             if related == self._window.container.current.webview:
                 self._window.toolbar.title.show_indicator(
-                                                        Indicator.POPUPS)
+                    Indicator.POPUPS)
             return
         properties = webview.get_window_properties()
         if (properties.get_toolbar_visible() or
                 properties.get_scrollbars_visible()) and\
                 not self._window.modifiers & Gdk.ModifierType.SHIFT_MASK:
             self._window.container.add_webview_with_new_view(
-                                            webview,
-                                            LoadingType.FOREGROUND)
+                webview,
+                LoadingType.FOREGROUND)
         else:
             self._window.container.popup_webview(webview, True)
 
@@ -615,6 +615,7 @@ class WebView(WebKit2.WebView):
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
                   WebViewSignals, WebViewArtwork):
+
     def __init__(self):
         pass
 

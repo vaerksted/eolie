@@ -41,21 +41,21 @@ class Search:
                 'https://www.google.com/complete/search?client=firefox&q=%s',
                 'utf-8',
                 'g'
-                ],
+            ],
             'DuckDuckGo': [
                 'https://duckduckgo.com',
                 'https://duckduckgo.com/?q=%s',
                 'https://ac.duckduckgo.com/ac/?q=%s&type=list',
                 'utf-8',
                 'd'
-                ],
+            ],
             'Qwant': [
                 'https://www.qwant.com',
                 'https://www.qwant.com/?q=%s',
                 'https://api.qwant.com/api/suggest/?q=%s&client=opensearch',
                 'utf-8',
                 'q'
-                ],
+            ],
             'Yahoo': [
                 # Translators: Yahoo url for your country
                 _("https://www.yahoo.com"),
@@ -65,15 +65,15 @@ class Search:
                 'command=%s&output=fxjson&appid=fd',
                 'utf-8',
                 'y'
-                ],
+            ],
             'Bing': [
                 'https://www.bing.com',
                 'https://www.bing.com/search?q=%s',
                 'https://www.bing.com/osjson.aspx?query=%s&form=OSDJAS',
                 'utf-8',
                 'b'
-                ]
-            }
+            ]
+        }
 
         self.__engines = {}
         self.__uri = ""

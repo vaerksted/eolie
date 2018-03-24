@@ -23,6 +23,7 @@ class MyEntry(Gtk.Entry):
     """
         Limited width Gtk Entry
     """
+
     def __init__(self):
         """
             Init entry

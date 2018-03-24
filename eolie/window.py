@@ -116,9 +116,9 @@ class Window(Gtk.ApplicationWindow):
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
         self.__container.current.webview.run_javascript(
-                                        "document.webkitExitFullscreen();",
-                                        None,
-                                        None)
+            "document.webkitExitFullscreen();",
+            None,
+            None)
 
     def update(self, webview):
         """
@@ -250,7 +250,7 @@ class Window(Gtk.ApplicationWindow):
         """
         monitor_model = get_current_monitor_model(self)
         zoom_levels = App().settings.get_value(
-                                         "default-zoom-level")
+            "default-zoom-level")
         user_zoom_level = False
         for zoom_level in zoom_levels:
             zoom_splited = zoom_level.split("@")
@@ -298,13 +298,13 @@ class Window(Gtk.ApplicationWindow):
         size = window.get_size()
         # Allow respecting GNOME IHM, should tile on screen == 1280px
         self.toolbar.end.move_control_in_menu(size[0] < 700)
-        self.toolbar.title.set_width(size[0]/3)
+        self.toolbar.title.set_width(size[0] / 3)
         if self.__timeout_configure:
             GLib.source_remove(self.__timeout_configure)
             self.__timeout_configure = None
         self.__timeout_configure = GLib.timeout_add(
-                                               250,
-                                               self.__on_configure_timeout)
+            250,
+            self.__on_configure_timeout)
 
     def __on_source_loaded(self, uri, status, content):
         """
@@ -338,7 +338,7 @@ class Window(Gtk.ApplicationWindow):
         if event.changed_mask & Gdk.WindowState.MAXIMIZED:
             size = widget.get_size()
             self.toolbar.end.move_control_in_menu(size[0] < 700)
-            self.toolbar.title.set_width(size[0]/3)
+            self.toolbar.title.set_width(size[0] / 3)
         self.__window_state = event.new_window_state
 
     def __on_motion_notify_event(self, widget, event):

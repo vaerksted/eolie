@@ -116,8 +116,8 @@ class PagesMenu(Gio.Menu):
             App().remove_action(encoded)
             for i in range(0, self.__closed_section.get_n_items() - 1):
                 attribute = self.__closed_section.get_item_attribute_value(
-                                                                         i,
-                                                                         "uri")
+                    i,
+                    "uri")
                 if attribute is None:
                     continue
                 _uri = attribute.get_string()
@@ -145,7 +145,7 @@ class PagesMenu(Gio.Menu):
         """
         if self.__closed_section.get_n_items() > 21:
             uri = self.__closed_section.get_item_attribute_value(
-                                                         0, "uri").get_string()
+                0, "uri").get_string()
             encoded = sha256(uri.encode("utf-8")).hexdigest()
             action = App().lookup_action(encoded)
             if action is not None:
@@ -173,8 +173,8 @@ class PagesMenu(Gio.Menu):
             uri_attr = self.__closed_section.get_item_attribute_value(i,
                                                                       "uri")
             title_attr = self.__closed_section.get_item_attribute_value(
-                                                                       i,
-                                                                       "label")
+                i,
+                "label")
             if uri_attr is None or title_attr is None:
                 continue
             uri = uri_attr.get_string()

@@ -122,8 +122,8 @@ class Row(Gtk.ListBoxRow):
 
         if item_type in [Type.HISTORY, Type.SEARCH]:
             delete_button = Gtk.Button.new_from_icon_name(
-                                                     "user-trash-symbolic",
-                                                     Gtk.IconSize.MENU)
+                "user-trash-symbolic",
+                Gtk.IconSize.MENU)
             delete_button.get_image().set_opacity(0.5)
             delete_button.set_margin_end(5)
             delete_button.set_property("valign", Gtk.Align.CENTER)
@@ -134,8 +134,8 @@ class Row(Gtk.ListBoxRow):
             grid.attach(delete_button, 3, 0, 1, 2)
         elif item_type == Type.BOOKMARK:
             edit_button = Gtk.Button.new_from_icon_name(
-                                                     "document-edit-symbolic",
-                                                     Gtk.IconSize.MENU)
+                "document-edit-symbolic",
+                Gtk.IconSize.MENU)
             edit_button.get_image().set_opacity(0.5)
             edit_button.set_margin_end(5)
             edit_button.connect("clicked", self.__on_edit_clicked)
@@ -154,8 +154,8 @@ class Row(Gtk.ListBoxRow):
             else:
                 icon_name = "folder-symbolic"
             open_button = Gtk.Button.new_from_icon_name(
-                                                     icon_name,
-                                                     Gtk.IconSize.MENU)
+                icon_name,
+                Gtk.IconSize.MENU)
             open_button.connect("clicked", self.__on_open_clicked)
             open_button.get_style_context().add_class("overlay-button2")
             open_button.set_tooltip_text(_("Open all pages for this tag"))
@@ -788,7 +788,7 @@ class UriPopover(Gtk.Popover):
                    # Translators: Plural
                    _("Recent")),
                   (Type.UNCLASSIFIED,
-                  _("Unclassified"))]
+                   _("Unclassified"))]
         self.__add_tags(static + App().bookmarks.get_all_tags(), current)
 
     def _on_day_selected(self, calendar):
@@ -835,9 +835,9 @@ class UriPopover(Gtk.Popover):
                 (year, month, day) = self.__calendar.get_date()
                 date = "%02d/%02d/%s" % (day, month + 1, year)
                 atime = mktime(
-                           datetime.strptime(date, "%d/%m/%Y").timetuple())
+                    datetime.strptime(date, "%d/%m/%Y").timetuple())
             else:
-                atime = int(time() - TimeSpanValues[active_id]/1000000)
+                atime = int(time() - TimeSpanValues[active_id] / 1000000)
             task_helper = TaskHelper()
             task_helper.run(self.__clear_history, atime)
         infobar.hide()

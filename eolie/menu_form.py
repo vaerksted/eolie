@@ -42,7 +42,7 @@ class FormMenu(Gio.Menu):
             @param uri as str
         """
         encoded = "FORM_" + sha256(
-                               attributes["login"].encode("utf-8")).hexdigest()
+            attributes["login"].encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
         App().add_action(action)
         self.__actions.append(encoded)

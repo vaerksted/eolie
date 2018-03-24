@@ -152,7 +152,7 @@ class ClearDataDialog:
             for item in self.__filter:
                 if item[self.__ModelColumn.TOGGLE]:
                     types |= WebKit2.WebsiteDataTypes(
-                                               item[self.__ModelColumn.TYPE])
+                        item[self.__ModelColumn.TYPE])
             data_manager.clear(types, self.__timespan_value, None, None)
 
 #######################
@@ -253,12 +253,12 @@ class ClearDataDialog:
             for t in self.__get_types(item.get_types()):
                 if t not in self.__parent_iters.keys():
                     self.__parent_iters[t] = self.__model.append(
-                                                        None,
-                                                        (False,
-                                                         t,
-                                                         self.__get_name(t),
-                                                         None,
-                                                         False))
+                        None,
+                        (False,
+                         t,
+                         self.__get_name(t),
+                         None,
+                         False))
                 name = item.get_name()
                 self.__model.append(self.__parent_iters[t],
                                     (False, t, name, item, False))
