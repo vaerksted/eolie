@@ -650,7 +650,9 @@ class Application(Gtk.Application):
                 items.append((uri, uri, 0, ephemeral, None, loading_type))
                 i += 1
             active_window.container.add_webviews(items)
-            active_window.present()
+            # https://bugzilla.gnome.org/show_bug.cgi?id=766284
+            monotonic_time = int(GLib.get_monotonic_time() / 1000)
+            active_window.present_with_time(monotonic_time)
         # Add default start page
         if not active_window.container.views:
             active_window.container.add_webview(self.start_page,
@@ -843,7 +845,9 @@ class Application(Gtk.Application):
             @param application as Gio.Application
         """
         if self.get_windows():
-            self.active_window.present()
+            # https://bugzilla.gnome.org/show_bug.cgi?id=766284
+            monotonic_time = int(GLib.get_monotonic_time() / 1000)
+            self.active_window.present_with_time(monotonic_time)
 
     def __on_shortcut_action(self, action, param):
         """
