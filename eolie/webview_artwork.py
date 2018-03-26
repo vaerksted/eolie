@@ -55,7 +55,7 @@ class WebViewArtwork:
 
     def set_favicon(self):
         """
-            Set favicon
+            Set favicon based on WebKit2 favicon database
         """
         if self.ephemeral or self._error:
             return
@@ -68,6 +68,17 @@ class WebViewArtwork:
                 self.uri,
                 self.__initial_uri,
                 False)
+
+    def set_current_favicon(self):
+        """
+            Set favicon based on current webview favicon
+            Use this when you know URI may not be in favicon database
+        """
+        self.__set_favicon_from_surface(
+            self.get_favicon(),
+            self.uri,
+            None,
+            True)
 
 #######################
 # PROTECTED           #
@@ -128,34 +139,9 @@ class WebViewArtwork:
                           self.__on_snapshot,
                           True)
 
-    def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
+    def __set_favicon_from_surface(self, surface, uri, initial_uri, builtin):
         """
-            Save favicon to cache
-            @param surface as cairo.Surface
-            @param uri as str
-            @param initial_uri as str
-            @param favicon_type as str
-        """
-        self.__save_favicon_timeout_id = None
-        # Save favicon for URI
-        if not App().art.exists(uri, "favicon"):
-            self.__helper.run(App().art.save_artwork,
-                              uri,
-                              surface,
-                              favicon_type)
-        # Save favicon for initial URI
-        if initial_uri is not None and\
-                not App().art.exists(initial_uri, "favicon"):
-            striped_uri = uri.rstrip("/")
-            if initial_uri != striped_uri:
-                self.__helper.run(App().art.save_artwork,
-                                  initial_uri,
-                                  surface,
-                                  favicon_type)
-
-    def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
-        """
-            Read favicon
+            Set favicon for surface
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
@@ -163,10 +149,6 @@ class WebViewArtwork:
             @param builtin as bool
         """
         resized = None
-        try:
-            surface = favicon_db.get_favicon_finish(result)
-        except:
-            surface = None
         # Save webview favicon
         if surface is not None:
             favicon_width = surface.get_width()
@@ -198,6 +180,46 @@ class WebViewArtwork:
                                                  "favicon_alt")
         if resized is not None and uri == self.uri:
             self.emit("favicon-changed", resized, None)
+
+    def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
+        """
+            Save favicon to cache
+            @param surface as cairo.Surface
+            @param uri as str
+            @param initial_uri as str
+            @param favicon_type as str
+        """
+        self.__save_favicon_timeout_id = None
+        # Save favicon for URI
+        if not App().art.exists(uri, "favicon"):
+            self.__helper.run(App().art.save_artwork,
+                              uri,
+                              surface,
+                              favicon_type)
+        # Save favicon for initial URI
+        if initial_uri is not None and\
+                not App().art.exists(initial_uri, "favicon"):
+            striped_uri = uri.rstrip("/")
+            if initial_uri != striped_uri:
+                self.__helper.run(App().art.save_artwork,
+                                  initial_uri,
+                                  surface,
+                                  favicon_type)
+
+    def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
+        """
+            Read favicon and set it
+            @param favicon_db as WebKit2.FaviconDatabase
+            @param result as Gio.AsyncResult
+            @param uri as str
+            @param initial_uri as str
+            @param builtin as bool
+        """
+        try:
+            surface = favicon_db.get_favicon_finish(result)
+        except:
+            surface = None
+        self.__set_favicon_from_surface(surface, uri, initial_uri, builtin)
 
     def __on_snapshot(self, surface, first_pass):
         """

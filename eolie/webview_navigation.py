@@ -286,7 +286,7 @@ class WebViewNavigation:
             self.emit("uri-changed", uri)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
-            self.set_favicon()
+            self.set_current_favicon()
 
     def __on_title_changed(self, webview, param):
         """
