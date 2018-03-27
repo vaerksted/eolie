@@ -810,7 +810,7 @@ class Application(Gtk.Application):
 
     def __on_shortcuts_activate(self, action, param):
         """
-            Show help in yelp
+            Show shortcuts
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
