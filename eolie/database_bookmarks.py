@@ -741,7 +741,7 @@ class DatabaseBookmarks:
                             bookmark_id = self.add(title, uri, None,
                                                    tags, 0)
                             # Set position
-                            self.set_position(bookmark_id, position, False)
+                            self.set_position(bookmark_id, position)
                             position += 1
             SqlCursor.remove(self)
         except Exception as e:
@@ -797,7 +797,7 @@ class DatabaseBookmarks:
                             bookmark_id = self.add(title, uri, None,
                                                    tags, 0)
                             # Set position
-                            self.set_position(bookmark_id, position, False)
+                            self.set_position(bookmark_id, position)
                             position += 1
                 SqlCursor.remove(self)
         except Exception as e:
@@ -846,8 +846,8 @@ class DatabaseBookmarks:
                         bookmark_id = self.add(title, uri, bookmark_guid,
                                                tags, 0)
                         self.set_parent(bookmark_id, parent_guid,
-                                        parent_name, False)
-                        self.set_position(bookmark_id, position, False)
+                                        parent_name)
+                        self.set_position(bookmark_id, position)
                 # Add folders, we need to get them
                 # as Firefox needs children order
                 parents = self.__get_firefox_parents(c)
@@ -864,8 +864,8 @@ class DatabaseBookmarks:
                         bookmark_id = self.add(title, uri, bookmark_guid,
                                                [], 0)
                         self.set_parent(bookmark_id, parent_guid,
-                                        parent_name, False)
-                        self.set_position(bookmark_id, position, False)
+                                        parent_name)
+                        self.set_position(bookmark_id, position)
             SqlCursor.remove(self)
         except Exception as e:
             Logger.error("DatabaseBookmarks::import_firefox(): %s", e)
