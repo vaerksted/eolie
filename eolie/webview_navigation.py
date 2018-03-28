@@ -92,8 +92,48 @@ class WebViewNavigation:
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
             self.stop_loading()
-            self.__update_settings_for_uri(uri)
+            self.update_settings_for_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
+
+    def update_settings_for_uri(self, uri):
+        """
+            Update internal settings for URI
+            @param uri as str
+        """
+        parsed = urlparse(uri)
+        http_scheme = parsed.scheme in ["http", "https"]
+        App().history.set_page_state(uri)
+        self.__switch_profile(uri)
+        self.__update_bookmark_metadata(uri)
+        self.__hw_acceleration_policy(parsed.netloc)
+        self.content_manager.remove_all_style_sheets()
+        # Can't find a way to block content for ephemeral views
+        if App().settings.get_value("adblock") and\
+                not App().adblock_exceptions.find_parsed(parsed) and\
+                http_scheme and\
+                self.content_manager is not None:
+            self.content_manager.add_style_sheet(
+                App().default_style_sheet)
+            rules = App().adblock.get_css_rules(uri)
+            user_style_sheet = WebKit2.UserStyleSheet(
+                rules,
+                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                WebKit2.UserStyleLevel.USER,
+                None,
+                None)
+            self.content_manager.add_style_sheet(user_style_sheet)
+        user_agent = App().websettings.get_user_agent(uri)
+        settings = self.get_settings()
+        if user_agent:
+            settings.set_user_agent(user_agent)
+        else:
+            settings.set_user_agent_with_application_details("Eolie",
+                                                             None)
+        # Setup image blocker
+        block_image = http_scheme and\
+            App().settings.get_value("imageblock") and\
+            not App().image_exceptions.find_parsed(parsed)
+        self.set_setting("auto-load-images", not block_image)
 
     @property
     def profile(self):
@@ -169,46 +209,6 @@ class WebViewNavigation:
 #######################
 # PRIVATE             #
 #######################
-    def __update_settings_for_uri(self, uri):
-        """
-            Update internal settings for URI
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        http_scheme = parsed.scheme in ["http", "https"]
-        App().history.set_page_state(uri)
-        self.__switch_profile(uri)
-        self.__update_bookmark_metadata(uri)
-        self.__hw_acceleration_policy(parsed.netloc)
-        self.content_manager.remove_all_style_sheets()
-        # Can't find a way to block content for ephemeral views
-        if App().settings.get_value("adblock") and\
-                not App().adblock_exceptions.find_parsed(parsed) and\
-                http_scheme and\
-                self.content_manager is not None:
-            self.content_manager.add_style_sheet(
-                App().default_style_sheet)
-            rules = App().adblock.get_css_rules(uri)
-            user_style_sheet = WebKit2.UserStyleSheet(
-                rules,
-                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                WebKit2.UserStyleLevel.USER,
-                None,
-                None)
-            self.content_manager.add_style_sheet(user_style_sheet)
-        user_agent = App().websettings.get_user_agent(uri)
-        settings = self.get_settings()
-        if user_agent:
-            settings.set_user_agent(user_agent)
-        else:
-            settings.set_user_agent_with_application_details("Eolie",
-                                                             None)
-        # Setup image blocker
-        block_image = http_scheme and\
-            App().settings.get_value("imageblock") and\
-            not App().image_exceptions.find_parsed(parsed)
-        self.set_setting("auto-load-images", not block_image)
-
     def __update_bookmark_metadata(self, uri):
         """
             Update bookmark access time/popularity
@@ -390,7 +390,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                self.__update_settings_for_uri(navigation_uri)
+                self.update_settings_for_uri(navigation_uri)
                 if App().phishing.is_phishing(navigation_uri):
                     self._show_phishing_error(navigation_uri)
                     decision.ignore()
