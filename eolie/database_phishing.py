@@ -171,7 +171,7 @@ class DatabasePhishing:
                     sql.execute("DELETE FROM phishing\
                                  WHERE mtime!=?", (self.__phishing_mtime,))
                     try:
-                        dump(self.__adblock_mtime,
+                        dump(self.__phishing_mtime,
                              open(EOLIE_DATA_PATH + "/phishing.bin", "wb"))
                     except Exception as e:
                         Logger.error("DatabasePhishing::__save_rules(): %s", e)
