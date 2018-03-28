@@ -16,6 +16,7 @@ import sqlite3
 from time import time, sleep
 import json
 from threading import Lock
+from pickle import dump, load
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
@@ -63,7 +64,7 @@ class DatabasePhishing:
         # If DB schema changed, remove it
         if GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             with SqlCursor(self) as sql:
-                result = sql.execute("PRAGMA schema_version")
+                result = sql.execute("PRAGMA user_version")
                 v = result.fetchone()
                 if v is None or v[0] != self.__SCHEMA_VERSION:
                     f = Gio.File.new_for_path(self.__DB_PATH)
@@ -74,7 +75,7 @@ class DatabasePhishing:
                 with SqlCursor(self) as sql:
                     sql.execute(self.__create_phishing)
                     sql.execute(self.__create_phishing_idx)
-                    sql.execute("PRAGMA schema_version=%s" %
+                    sql.execute("PRAGMA user_version=%s" %
                                 self.__SCHEMA_VERSION)
             except Exception as e:
                 Logger.error("DatabasePhishing::__init__(): %s", e)
@@ -86,12 +87,10 @@ class DatabasePhishing:
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
         # DB version is last successful sync mtime
-        version = 0
-        with SqlCursor(self) as sql:
-            result = sql.execute("PRAGMA user_version")
-            v = result.fetchone()
-            if v is not None:
-                version = v[0]
+        try:
+            version = load(open(EOLIE_DATA_PATH + "/phishing.bin", "rb"))
+        except:
+            version = 0
         self.__cancellable.reset()
         if self.__phishing_mtime - version > self.__UPDATE:
             self.__on_load_uri_content(None, False, b"", [self.__URI])
@@ -171,8 +170,11 @@ class DatabasePhishing:
                 with SqlCursor(self) as sql:
                     sql.execute("DELETE FROM phishing\
                                  WHERE mtime!=?", (self.__phishing_mtime,))
-                    sql.execute("PRAGMA user_version=%s" %
-                                self.__phishing_mtime)
+                    try:
+                        dump(self.__adblock_mtime,
+                             open(EOLIE_DATA_PATH + "/phishing.bin", "wb"))
+                    except Exception as e:
+                        Logger.error("DatabasePhishing::__save_rules(): %s", e)
         except Exception as e:
             Logger.error("DatabasePhishing::__save_rules():%s -> %s", e, rules)
         SqlCursor.remove(self)
