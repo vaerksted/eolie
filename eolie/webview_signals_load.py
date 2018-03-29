@@ -88,6 +88,7 @@ class WebViewLoadSignals:
             self.disconnect_by_func(self.__on_title_changed)
             self.disconnect_by_func(self.__on_uri_changed)
             self.disconnect_by_func(self.__on_estimated_load_progress)
+            self._window.toolbar.title.progress.set_fraction(0)
             self.get_back_forward_list().disconnect_by_func(
                 self.__on_back_forward_list_changed)
 
