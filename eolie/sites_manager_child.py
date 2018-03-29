@@ -196,7 +196,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.update_label()
             self.__indicator_label.update_count(True)
             if view.webview.shown:
-                self.__set_artwork(view.webview)
+                self.__on_webview_favicon_changed(view.webview)
             else:
                 self.__indicator_label.mark_unshown(view.webview)
             if self.__pages_listbox is not None:
@@ -223,7 +223,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                         self.__pages_listbox.remove(child)
                         break
         if self.__views:
-            self.__set_artwork(self.__views[0].webview)
+            self.__on_webview_favicon_changed(self.__views[0].webview)
 
     def set_minimal(self, minimal):
         """
@@ -269,7 +269,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if netloc != self.__netloc:
             self.__netloc = netloc
             if self.__views:
-                self.__set_artwork(self.__views[0].webview)
+                self.__set_favicon(self.__views[0].webview)
             self.__netloc_label.set_text(self.__netloc)
 
     def update_label(self):
@@ -397,37 +397,30 @@ class SitesManagerChild(Gtk.ListBoxRow):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __set_artwork(self, webview):
-        """
-            Set initial artwork on widget
-            @param webview as WebView
-        """
-        artwork = App().art.get_icon_theme_artwork(webview.uri,
-                                                   self.__ephemeral)
-        if artwork is not None:
-            self.__image.set_from_icon_name(artwork,
-                                            Gtk.IconSize.INVALID)
-        else:
-            favicon_path = App().art.get_favicon_path(webview.uri)
-            if favicon_path is not None:
-                self.__image.set_from_file(favicon_path)
-            else:
-                self.__image.set_from_icon_name("applications-internet",
-                                                Gtk.IconSize.INVALID)
-
-    def __on_webview_favicon_changed(self, webview, favicon,
-                                     icon_theme_artwork):
+    def __on_webview_favicon_changed(self, webview, surface=None):
         """
             Set favicon
             @param webview as WebView
-            @param favicon as cairo.Surface
-            @param icon_theme_artwork as str
+            @param surface as cairo.Surface
         """
-        if favicon is not None:
-            self.__image.set_from_surface(favicon)
-        elif icon_theme_artwork is not None:
-            self.__image.set_from_icon_name(icon_theme_artwork,
+        if surface is not None:
+            self.__image.set_from_surface(surface)
+            return
+
+        favicon_path = App().art.get_favicon_path(webview.uri)
+        if favicon_path is not None:
+            self.__image.set_from_file(favicon_path)
+            return
+
+        artwork = App().art.get_icon_theme_artwork(webview.uri,
+                                                   webview.ephemeral)
+        if artwork is not None:
+            self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
+            return
+
+        self.__image.set_from_icon_name("applications-internet",
+                                        Gtk.IconSize.INVALID)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -529,4 +522,4 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Update indicataor
         """
         self.__indicator_label.mark_shown(webview)
-        self.__set_artwork(webview)
+        self.__on_webview_favicon_changed(webview)

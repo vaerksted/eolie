@@ -50,9 +50,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         builder.get_object("grid").attach(self.__indicator_label, 0, 0, 1, 1)
         self.__image = builder.get_object("image")
         self.__close_button = builder.get_object("close_button")
-        self.__audio_indicator = builder.get_object("audio_indicator")
-        if view.webview.is_playing_audio():
-            self.__audio_indicator.show()
         self.__close_button.get_image().set_from_icon_name(
             "window-close-symbolic",
             Gtk.IconSize.INVALID)
@@ -98,12 +95,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__connected_signals.append(
             self.__view.webview.connect("shown",
                                         self.__on_webview_shown))
-        self.__set_favicon_artwork()
-        if self.__view.webview.uri is not None:
-            artwork_path = App().art.get_path(self.__view.webview.uri, "start")
-            if artwork_path is not None and\
-                    GLib.file_test(artwork_path, GLib.FileTest.IS_REGULAR):
-                self.__image.set_from_file(artwork_path)
+        self.__on_webview_favicon_changed(self.__view.webview)
 
     def destroy(self):
         """
@@ -181,7 +173,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
-            self.__set_favicon_artwork()
+            self.__on_webview_favicon_changed(self.__view.webview)
 
 #######################
 # PRIVATE             #
@@ -197,31 +189,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
-
-    def __set_favicon_artwork(self):
-        """
-            Set favicon artwork
-        """
-        if self.__view.webview.ephemeral:
-            return
-        image = self.__close_button.get_image()
-        if self.__favicon is not None:
-            image.set_from_surface(self.__favicon)
-        else:
-            uri = self.__view.webview.uri
-            artwork = App().art.get_icon_theme_artwork(
-                uri,
-                self.view.webview.ephemeral)
-            if artwork is not None:
-                image.set_from_icon_name(artwork,
-                                         Gtk.IconSize.INVALID)
-            else:
-                favicon_path = App().art.get_favicon_path(uri)
-                if favicon_path is not None:
-                    image.set_from_file(favicon_path)
-                else:
-                    image.set_from_icon_name("applications-internet",
-                                             Gtk.IconSize.INVALID)
 
     def __set_snapshot(self):
         """
@@ -273,32 +240,42 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.destroy()
 
-    def __on_webview_favicon_changed(self, webview, favicon,
-                                     icon_theme_artwork):
-        """
-            Set favicon
-            @param webview as WebView
-            @param favicon as cairo.Surface
-            @param icon_theme_artwork as str
-        """
-        if favicon is not None:
-            self.__favicon = favicon
-            self.__close_button.get_image().set_from_surface(favicon)
-        elif icon_theme_artwork is not None:
-            self.__close_button.get_image().set_from_icon_name(
-                icon_theme_artwork,
-                Gtk.IconSize.INVALID)
-
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
-            Update status
+            Update favicon
             @param webview as WebView
             @param playing as bool
         """
-        if not webview.is_loading() and webview.is_playing_audio():
-            self.__audio_indicator.show()
-        else:
-            self.__audio_indicator.hide()
+        self.__on_webview_favicon_changed(webview)
+
+    def __on_webview_favicon_changed(self, webview, surface=None):
+        """
+            Set favicon
+            @param webview as WebView
+            @param surface as cairo.Surface
+        """
+        image = self.__close_button.get_image()
+        if webview.is_playing_audio():
+            image.set_from_icon_name("audio-speakers-symbolic",
+                                     Gtk.IconSize.INVALID)
+            return
+
+        if surface is not None:
+            image.set_from_surface(surface)
+            return
+
+        favicon_path = App().art.get_favicon_path(webview.uri)
+        if favicon_path is not None:
+            image.set_from_file(favicon_path)
+            return
+
+        artwork = App().art.get_icon_theme_artwork(webview.uri,
+                                                   webview.ephemeral)
+        if artwork is not None:
+            image.set_from_icon_name(artwork, Gtk.IconSize.INVALID)
+            return
+
+        image.set_from_icon_name("applications-internet", Gtk.IconSize.INVALID)
 
     def __on_webview_scroll_event(self, webview, event):
         """
@@ -346,15 +323,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         if event == WebKit2.LoadEvent.STARTED:
             self.__favicon = None
             self.__image.clear()
-            self.__audio_indicator.hide()
             self.__spinner.start()
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            if webview.is_playing_audio():
-                self.__audio_indicator.show()
             GLib.timeout_add(500, self.__set_snapshot)
 
     def __on_webview_shown(self, webview):

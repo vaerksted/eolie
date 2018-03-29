@@ -103,17 +103,10 @@ class WebViewArtwork:
             surface = App().art.get_favicon(self._uri,
                                             self.get_scale_factor())
             if surface is not None:
-                self.emit("favicon-changed", surface, None)
+                self.emit("favicon-changed", surface)
             elif self.__current_netloc is None or\
                     self.__current_netloc not in self._uri:
-                # Get symbolic favicon for icon theme
-                icon_theme_artwork = App().art.get_icon_theme_artwork(
-                    self._uri,
-                    self.ephemeral)
-                if icon_theme_artwork is not None:
-                    self.emit("favicon-changed", None, icon_theme_artwork)
-                else:
-                    self.emit("favicon-changed", None, "applications-internet")
+                self.emit("favicon-changed", None)
         elif event == WebKit2.LoadEvent.FINISHED:
             if parsed.scheme in ["http", "https"]:
                 favicon_database = self.context.get_favicon_database()
@@ -182,7 +175,7 @@ class WebViewArtwork:
                                                  initial_uri,
                                                  "favicon_alt")
         if resized is not None and uri == self.uri:
-            self.emit("favicon-changed", resized, None)
+            self.emit("favicon-changed", resized)
 
     def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
         """
