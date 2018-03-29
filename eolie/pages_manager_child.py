@@ -329,7 +329,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            GLib.timeout_add(500, self.__set_snapshot)
+            GLib.idle_add(self.__set_snapshot)
 
     def __on_webview_shown(self, webview):
         """
