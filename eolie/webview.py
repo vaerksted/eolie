@@ -166,10 +166,12 @@ class WebView(WebKit2.WebView):
         """
             Update spell checking
         """
+        context = self.get_context()
         codes = App().websettings.get_languages(uri)
         # If None, default user language
-        if codes is not None:
-            self.get_context().set_spell_checking_languages(codes)
+        if codes is not None and\
+                context.get_spell_checking_languages() != codes:
+            context.set_spell_checking_languages(codes)
 
     def add_text_entry(self, text):
         """
