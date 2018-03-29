@@ -57,7 +57,10 @@ class WebViewArtwork:
         """
             Set favicon based on WebKit2 favicon database
         """
-        if self.ephemeral or self._error:
+        if self.ephemeral or\
+                self._error or\
+                self._current_event not in [WebKit2.LoadEvent.COMMITTED,
+                                            WebKit2.LoadEvent.FINISHED]:
             return
         parsed = urlparse(self.uri)
         if parsed.scheme in ["http", "https"]:
