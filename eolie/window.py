@@ -285,7 +285,8 @@ class Window(Gtk.ApplicationWindow):
             if size is not None:
                 self.resize(size[0], size[1])
             if maximized:
-                self.maximize()
+                # Lets resize happen
+                GLib.idle_add(self.maximize)
         except Exception as e:
             Logger.error("Window::__setup_window(): %s", e)
 
