@@ -14,7 +14,6 @@ from gi.repository import Gtk, GLib, WebKit2, Pango
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
-from eolie.utils import get_snapshot
 
 
 class PagesManagerChild(Gtk.FlowBoxChild):
@@ -72,38 +71,19 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
         view.connect("destroying", self.__on_view_destroying)
-        self.__connected_signals = []
-        self.__connected_signals.append(
-            self.__view.webview.connect("favicon-changed",
-                                        self.__on_webview_favicon_changed))
-        self.__connected_signals.append(
-            self.__view.webview.connect(
-                "notify::is-playing-audio",
-                self.__on_webview_notify_is_playing_audio))
-        self.__connected_signals.append(
-            self.__view.webview.connect("uri-changed",
-                                        self.__on_webview_uri_changed))
-        self.__connected_signals.append(
-            self.__view.webview.connect("title-changed",
-                                        self.__on_webview_title_changed))
-        self.__connected_signals.append(
-            self.__view.webview.connect("scroll-event",
-                                        self.__on_webview_scroll_event))
-        self.__connected_signals.append(
-            self.__view.webview.connect("load-changed",
-                                        self.__on_webview_load_changed))
-        self.__connected_signals.append(
-            self.__view.webview.connect("shown",
-                                        self.__on_webview_shown))
+        self.__view.webview.connect("snapshot-changed",
+                                    self.__on_webview_snapshot_changed)
+        self.__view.webview.connect("favicon-changed",
+                                    self.__on_webview_favicon_changed)
+        self.__view.webview.connect("notify::is-playing-audio",
+                                    self.__on_webview_notify_is_playing_audio)
+        self.__view.webview.connect("title-changed",
+                                    self.__on_webview_title_changed)
+        self.__view.webview.connect("load-changed",
+                                    self.__on_webview_load_changed)
+        self.__view.webview.connect("shown",
+                                    self.__on_webview_shown)
         self.__on_webview_favicon_changed(self.__view.webview)
-
-    def destroy(self):
-        """
-            Disconnect signals and destroy self
-        """
-        for signal_id in self.__connected_signals:
-            self.__view.webview.disconnect(signal_id)
-        Gtk.FlowBoxChild.destroy(self)
 
     @property
     def view(self):
@@ -190,29 +170,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __set_snapshot(self):
-        """
-            Set webpage preview
-        """
-        if self.__view.webview.ephemeral:
-            self.__image.set_from_icon_name(
-                "user-not-tracked-symbolic",
-                Gtk.IconSize.DIALOG)
-        else:
-            self.__view.webview.get_snapshot(
-                WebKit2.SnapshotRegion.VISIBLE,
-                WebKit2.SnapshotOptions.NONE,
-                None,
-                get_snapshot,
-                self.__on_snapshot)
-
-    def __on_scroll_timeout(self):
-        """
-            Update snapshot
-        """
-        self.__scroll_timeout_id = None
-        self.__set_snapshot()
-
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
             Show tooltip if needed
@@ -277,34 +234,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
 
         image.set_from_icon_name("applications-internet", Gtk.IconSize.INVALID)
 
-    def __on_webview_scroll_event(self, webview, event):
-        """
-            Update snapshot
-            @param webview as WebView
-            @param event as Gdk.EventScroll
-        """
-        if self.__scroll_timeout_id is not None:
-            GLib.source_remove(self.__scroll_timeout_id)
-        self.__scroll_timeout_id = GLib.timeout_add(250,
-                                                    self.__on_scroll_timeout)
-
-    def __on_snapshot(self, surface):
-        """
-            Set snapshot
-            @param surface as cairo.Surface
-        """
-        self.__image.set_from_surface(surface)
-
-    def __on_webview_uri_changed(self, webview, uri):
-        """
-            Update uri
-            @param webview as WebView
-            @param uri as str
-        """
-        # Js change, update snapshot
-        if not webview.is_loading() and not webview.ephemeral:
-            GLib.timeout_add(500, self.__set_snapshot)
-
     def __on_webview_title_changed(self, webview, title):
         """
             Update title
@@ -329,7 +258,19 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
-            GLib.idle_add(self.__set_snapshot)
+
+    def __on_webview_snapshot_changed(self, webview, surface):
+        """
+            Update preview with surface
+            @param webview as WebView
+            @param surface as cairo.surface
+        """
+        if self.__view.webview.ephemeral:
+            self.__image.set_from_icon_name(
+                "user-not-tracked-symbolic",
+                Gtk.IconSize.DIALOG)
+        else:
+            self.__image.set_from_surface(surface)
 
     def __on_webview_shown(self, webview):
         """

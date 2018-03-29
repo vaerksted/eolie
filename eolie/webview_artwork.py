@@ -31,27 +31,14 @@ class WebViewArtwork:
         """
         self.__helper = TaskHelper()
         self.__snapshot_id = None
+        self.__scroll_timeout_id = None
+        self.__save_favicon_timeout_id = None
         self.__cancellable = Gio.Cancellable()
         self.__initial_uri = None
         self.__favicon_width = {}
-        self.__save_favicon_timeout_id = None
         self.__current_netloc = None
-
-    def set_snapshot(self):
-        """
-            Set webpage preview
-        """
-        self.stop_snapshot()
-        if not self.ephemeral and not self._error:
-            self.__snapshot_id = GLib.timeout_add(3000, self.__set_snapshot)
-
-    def stop_snapshot(self):
-        """
-            Stop pending snapshot loading
-        """
-        if self.__snapshot_id is not None:
-            GLib.source_remove(self.__snapshot_id)
-            self.__snapshot_id = None
+        self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("scroll-event", self.__on_webview_scroll_event)
 
     def set_favicon(self):
         """
@@ -108,7 +95,9 @@ class WebViewArtwork:
                     self.__current_netloc not in self._uri:
                 self.emit("favicon-changed", None)
         elif event == WebKit2.LoadEvent.FINISHED:
-            if parsed.scheme in ["http", "https"]:
+            is_http = parsed.scheme in ["http", "https"]
+            GLib.idle_add(self.__set_snapshot, is_http)
+            if is_http:
                 favicon_database = self.context.get_favicon_database()
                 GLib.timeout_add(2000,
                                  favicon_database.get_favicon,
@@ -123,9 +112,10 @@ class WebViewArtwork:
 #######################
 # PRIVATE             #
 #######################
-    def __set_snapshot(self):
+    def __set_snapshot(self, save):
         """
             Set webpage preview
+            @param save as bool
         """
         self.__snapshot_id = None
         self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
@@ -133,6 +123,7 @@ class WebViewArtwork:
                           self.__cancellable,
                           get_snapshot,
                           self.__on_snapshot,
+                          save,
                           True)
 
     def __set_favicon_from_surface(self, surface, uri, initial_uri, builtin):
@@ -202,6 +193,15 @@ class WebViewArtwork:
                                   surface,
                                   favicon_type)
 
+    def __on_uri_changed(self, webview, param):
+        """
+            Handle JS updates
+            @param webview as WebKit2.WebView
+            @param param as GObject.ParamSpec
+        """
+        if not webview.is_loading() and not webview.ephemeral:
+            GLib.timeout_add(500, self.__set_snapshot, True)
+
     def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
         """
             Read favicon and set it
@@ -217,11 +217,30 @@ class WebViewArtwork:
             surface = None
         self.__set_favicon_from_surface(surface, uri, initial_uri, builtin)
 
-    def __on_snapshot(self, surface, first_pass):
+    def __on_scroll_timeout(self):
+        """
+            Update snapshot
+        """
+        self.__scroll_timeout_id = None
+        self.__set_snapshot(False)
+
+    def __on_webview_scroll_event(self, webview, event):
+        """
+            Update snapshot
+            @param webview as WebView
+            @param event as Gdk.EventScroll
+        """
+        if self.__scroll_timeout_id is not None:
+            GLib.source_remove(self.__scroll_timeout_id)
+        self.__scroll_timeout_id = GLib.timeout_add(250,
+                                                    self.__on_scroll_timeout)
+
+    def __on_snapshot(self, surface, save, first_pass):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param uri as str
+            @param save as bool
             @param first_pass as bool
         """
         # The 32767 limit on the width/height dimensions
@@ -234,7 +253,11 @@ class WebViewArtwork:
                                   self.__cancellable,
                                   get_snapshot,
                                   self.__on_snapshot,
+                                  save,
                                   False)
+            return
+        self.emit("snapshot-changed", surface)
+        if not save:
             return
         uri = self.uri
         # We also cache initial URI

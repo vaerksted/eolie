@@ -36,6 +36,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "favicon-changed": (GObject.SignalFlags.RUN_FIRST, None,
                             (GObject.TYPE_PYOBJECT,)),
+        "snapshot-changed": (GObject.SignalFlags.RUN_FIRST, None,
+                             (GObject.TYPE_PYOBJECT,)),
     }
 
     for signal in gsignals:

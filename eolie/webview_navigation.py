@@ -176,8 +176,6 @@ class WebViewNavigation:
             self.update_spell_checking(self._uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
-            if parsed.scheme in ["http", "https"]:
-                self.set_snapshot()
             if App().show_tls:
                 try:
                     from OpenSSL import crypto
@@ -275,12 +273,11 @@ class WebViewNavigation:
 
     def __on_uri_changed(self, webview, param):
         """
-            Stop running background task and update favicon
+            Handle JS updates
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
         uri = webview.get_property(param.name)
-        self.stop_snapshot()
         # JS bookmark (Bookmarklet)
         if not uri.startswith("javascript:"):
             self.emit("uri-changed", uri)
