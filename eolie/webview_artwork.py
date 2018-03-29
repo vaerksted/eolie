@@ -31,14 +31,12 @@ class WebViewArtwork:
         """
         self.__helper = TaskHelper()
         self.__snapshot_id = None
-        self.__scroll_timeout_id = None
         self.__save_favicon_timeout_id = None
         self.__cancellable = Gio.Cancellable()
         self.__initial_uri = None
         self.__favicon_width = {}
         self.__current_netloc = None
         self.connect("notify::uri", self.__on_uri_changed)
-        self.connect("scroll-event", self.__on_webview_scroll_event)
 
     def set_favicon(self):
         """
@@ -216,24 +214,6 @@ class WebViewArtwork:
         except:
             surface = None
         self.__set_favicon_from_surface(surface, uri, initial_uri, builtin)
-
-    def __on_scroll_timeout(self):
-        """
-            Update snapshot
-        """
-        self.__scroll_timeout_id = None
-        self.__set_snapshot(False)
-
-    def __on_webview_scroll_event(self, webview, event):
-        """
-            Update snapshot
-            @param webview as WebView
-            @param event as Gdk.EventScroll
-        """
-        if self.__scroll_timeout_id is not None:
-            GLib.source_remove(self.__scroll_timeout_id)
-        self.__scroll_timeout_id = GLib.timeout_add(250,
-                                                    self.__on_scroll_timeout)
 
     def __on_snapshot(self, surface, save, first_pass):
         """
