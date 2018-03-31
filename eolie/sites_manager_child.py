@@ -332,18 +332,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PROTECTED           #
 #######################
-    def _on_scroll_event(self, eventbox, event):
-        """
-            Switch between children
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if event.direction == Gdk.ScrollDirection.UP:
-            self.__window.container.pages_manager.previous()
-        elif event.direction == Gdk.ScrollDirection.DOWN:
-            self.__window.container.pages_manager.next()
-        self.__window.container.ctrl_released()
-
     def _on_button_press_event(self, eventbox, event):
         """
             Hide popover or close view
