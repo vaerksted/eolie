@@ -399,8 +399,7 @@ class ToolbarTitle(Gtk.Bin):
             @param child as str
         """
         self.get_toplevel().set_focus(self.__entry)
-        if not self.__popover.is_visible():
-            self.__popover.popup(child)
+        self.__popover.popup(child)
 
     def start_search(self):
         """
