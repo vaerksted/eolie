@@ -540,6 +540,7 @@ class Application(Gtk.Application):
                 if state is not None:
                     session_states.append(state)
         window_state["states"] = session_states
+        window_state["sites"] = window.container.sites_manager.get_sort()
         return window_state
 
     def __save_state(self):
@@ -579,8 +580,6 @@ class Application(Gtk.Application):
             windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
             if self.settings.get_value("remember-session"):
                 for window in windows:
-                    if not window["states"]:
-                        continue
                     new_window = self.get_new_window(window["size"],
                                                      window["maximized"])
                     items = []
@@ -593,7 +592,13 @@ class Application(Gtk.Application):
                         items.append((uri, title, atime, ephemeral,
                                       webkit_state, loading_type))
                         i += 1
-                    new_window.container.add_webviews(items)
+                    if window["states"]:
+                        new_window.container.add_webviews(items)
+                    else:
+                        new_window.container.add_webview(
+                            self.start_page,
+                            LoadingType.FOREGROUND,
+                            False)
             elif windows:
                 size = windows[0]["size"]
                 maximized = windows[0]["maximized"]
