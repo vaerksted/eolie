@@ -45,6 +45,6 @@
  <screenshots>
     <screenshot type="default">https://raw.githubusercontent.com/gnumdk/eolie-web/master/images/screenshot.jpg</screenshot>
  </screenshots>
- <url type="homepage">https://github.com/gnumdk/eolie</url>
+ <url type="homepage">https://gitlab.gnome.org/gnumdk/eolie</url>
  <updatecontact>cedric.bellegarde@adishatz.org</updatecontact>
 </component>
