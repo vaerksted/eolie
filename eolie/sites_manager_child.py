@@ -268,8 +268,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
-            if self.__views:
-                self.__set_favicon(self.__views[0].webview)
             self.__netloc_label.set_text(self.__netloc)
 
     def update_label(self):
