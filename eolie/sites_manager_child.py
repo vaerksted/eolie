@@ -148,6 +148,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__window = window
         self.__netloc = netloc
         self.__minimal = None
+        self.__current_child = None
         self.__ephemeral = ephemeral
         self.__views = []
         self.__connected_ids = []
@@ -246,6 +247,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__grid.remove(self.__indicator_label)
             self.__grid.attach(self.__netloc_label, 1, 0, 1, 1)
             self.__pages_listbox = Gtk.ListBox.new()
+            self.__pages_listbox.set_sort_func(self.__sort_func)
             self.__pages_listbox.show()
             self.__separator.show()
             self.__grid.attach(self.__pages_listbox, 0, 2, 2, 1)
@@ -292,8 +294,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 for child in self.__pages_listbox.get_children():
                     if child.view == current:
                         self.__pages_listbox.select_row(child)
+                        self.__current_child = child
             else:
                 self.__pages_listbox.unselect_all()
+                self.__current_child = None
+            self.__pages_listbox.invalidate_sort()
 
     @property
     def empty(self):
@@ -371,6 +376,21 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __sort_func(self, row1, row2):
+        """
+            Sort pages
+            @param row1 as PageChildRow
+            @param row2 as PageChildRow
+        """
+        # Always show current first
+        if self.__current_child in [row1, row2]:
+            return self.__current_child == row2
+        # Unshown first
+        elif not row2.view.webview.shown and row1.view.webview.shown:
+            return True
+        else:
+            return row2.view.webview.atime > row1.view.webview.atime
+
     def __update_popover_internals(self, widget):
         """
             Little hack to manage Gtk.ModelButton text
