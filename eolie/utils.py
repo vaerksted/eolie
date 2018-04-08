@@ -103,7 +103,7 @@ def wanted_loading_type(index):
     """
     if index == 0:
         return LoadingType.FOREGROUND
-    elif index < 3:
+    elif index == 1:
         return LoadingType.BACKGROUND
     else:
         return LoadingType.OFFLOAD
