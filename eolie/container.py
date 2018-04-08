@@ -497,6 +497,8 @@ class Container(Gtk.Overlay):
             webview.set_title(title)
             webview.set_atime(atime)
             GLib.idle_add(self.__add_pending_items)
+        else:
+            self.sites_manager.set_initial_sort(None)
 
     def __on_paned_notify_position(self, paned, ignore):
         """

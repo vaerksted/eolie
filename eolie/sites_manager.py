@@ -29,6 +29,7 @@ class SitesManager(Gtk.EventBox):
         """
         Gtk.EventBox.__init__(self)
         self.__window = window
+        self.__initial_sort = []
         self.set_property("width-request", 50)
         self.connect("button-press-event", self.__on_button_press)
         self.get_style_context().add_class("sidebar")
@@ -157,7 +158,19 @@ class SitesManager(Gtk.EventBox):
             else:
                 child.set_selected(False)
 
-    def get_sort(self):
+    def set_initial_sort(self, sort):
+        """
+            Set initial site sort
+            @param sort as [str]
+        """
+        if sort:
+            self.__box.set_sort_func(self.__sort_func)
+        else:
+            self.__box.set_sort_func(None)
+        self.__initial_sort = sort
+
+    @property
+    def sort(self):
         """
             Get current sort
             @return [str]
@@ -175,6 +188,19 @@ class SitesManager(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
+    def __sort_func(self, row1, row2):
+        """
+            Sort rows based on inital sort
+            @param row1 as Gtk.ListBoxRow
+            @param row2 as Gtk.ListBoxRow
+        """
+        try:
+            index1 = self.__initial_sort.index(row1.netloc)
+            index2 = self.__initial_sort.index(row2.netloc)
+            return index1 > index2
+        except:
+            return False
+
     def __loaded_uri(self, webview, uri):
         """
             Update children based on webview and uri

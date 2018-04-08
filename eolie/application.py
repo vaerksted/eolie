@@ -540,7 +540,7 @@ class Application(Gtk.Application):
                 if state is not None:
                     session_states.append(state)
         window_state["states"] = session_states
-        window_state["sites"] = window.container.sites_manager.get_sort()
+        window_state["sites"] = window.container.sites_manager.sort
         return window_state
 
     def __save_state(self):
@@ -577,31 +577,34 @@ class Application(Gtk.Application):
         size = (800, 600)
         maximized = False
         try:
-            windows = load(open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
+            window_states = load(
+                open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
             if self.settings.get_value("remember-session"):
-                for window in windows:
-                    new_window = self.get_new_window(window["size"],
-                                                     window["maximized"])
+                for window_state in window_states:
+                    window = self.get_new_window(window_state["size"],
+                                                 window_state["maximized"])
+                    window.container.sites_manager.set_initial_sort(
+                        window_state["sites"])
                     items = []
                     i = 0 if foreground else 1
                     for (uri, title, atime,
-                         ephemeral, state) in window["states"]:
+                         ephemeral, state) in window_state["states"]:
                         loading_type = wanted_loading_type(i)
                         webkit_state = WebKit2.WebViewSessionState(
                             GLib.Bytes.new(state))
                         items.append((uri, title, atime, ephemeral,
                                       webkit_state, loading_type))
                         i += 1
-                    if window["states"]:
-                        new_window.container.add_webviews(items)
+                    if window_state["states"]:
+                        window.container.add_webviews(items)
                     else:
-                        new_window.container.add_webview(
+                        window.container.add_webview(
                             self.start_page,
                             LoadingType.FOREGROUND,
                             False)
-            elif windows:
-                size = windows[0]["size"]
-                maximized = windows[0]["maximized"]
+            elif window_states:
+                size = window_states[0]["size"]
+                maximized = window_states[0]["maximized"]
         except Exception as e:
             Logger.error("Application::__create_initial_windows(): %s", e)
         if not self.get_windows():
