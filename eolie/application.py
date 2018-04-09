@@ -43,7 +43,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
-from eolie.utils import is_unity, wanted_loading_type, set_proxy_from_gnome
+from eolie.utils import is_unity, wanted_loading_type
 from eolie.logger import Logger
 
 
@@ -68,7 +68,6 @@ class Application(Gtk.Application):
         # We force it to current python 3.6 name, to be sure in case of
         # change in python
         current_thread().setName("MainThread")
-        set_proxy_from_gnome()
         # First check WebKit2 version
         if WebKit2.MINOR_VERSION < 18:
             exit("You need WebKit2GTK >= 2.18")
