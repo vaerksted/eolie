@@ -195,6 +195,18 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param view as View
         """
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_snapshot_changed)
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_favicon_changed)
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_notify_is_playing_audio)
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_title_changed)
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_load_changed)
+        self.__view.webview.disconnect_by_func(
+                                    self.__on_webview_shown)
         self.destroy()
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
