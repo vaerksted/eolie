@@ -229,7 +229,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             if self.__pages_listbox is not None:
                 for child in self.__pages_listbox.get_children():
                     if child.view == view:
-                        self.__pages_listbox.remove(child)
+                        child.destroy()
                         break
         if self.__views:
             self.__on_webview_favicon_changed(self.__views[0].webview)
