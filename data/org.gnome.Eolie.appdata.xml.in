@@ -9,6 +9,13 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
+    <release version="0.9.27" date="2018-04-09">
+      <description>
+        <ul>
+          <li>Fix a segfault</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.9.26" date="2018-04-09">
       <description>
         <ul>
@@ -21,13 +28,6 @@
       <description>
         <ul>
           <li>Another fix for bookmarks import</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.24" date="2018-03-24">
-      <description>
-        <ul>
-          <li>Fix bookmarks import</li>
         </ul>
       </description>
     </release>
