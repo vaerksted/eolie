@@ -476,7 +476,7 @@ class DatabaseAdblock:
         result = rules.decode('utf-8')
         count = 0
         for line in result.split('\n'):
-            SqlCursor.allow_main_thread_execution(self)
+            SqlCursor.allow_thread_execution(self)
             if self.__cancellable.is_cancelled():
                 SqlCursor.remove(self)
                 raise Exception("Cancelled")
@@ -607,7 +607,7 @@ class DatabaseAdblock:
         result = rules.decode("utf-8")
         count = 0
         for line in result.split('\n'):
-            SqlCursor.allow_main_thread_execution(self)
+            SqlCursor.allow_thread_execution(self)
             if self.__cancellable.is_cancelled():
                 SqlCursor.remove(self)
                 raise Exception("Cancelled")
