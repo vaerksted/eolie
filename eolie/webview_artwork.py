@@ -237,7 +237,7 @@ class WebViewArtwork:
                                   False)
             return
         self.emit("snapshot-changed", surface)
-        if not save:
+        if not save or self._error:
             return
         uri = self.uri
         # We also cache initial URI
