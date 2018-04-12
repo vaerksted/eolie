@@ -53,7 +53,7 @@ class SqlCursor:
             Release thread lock allowing others threads execution
         """
         name = current_thread().getName() + obj.__class__.__name__
-        if name in App().cursors.keys():
+        if name in App().cursors.keys() and len(App().cursors.keys()) > 1:
             obj.thread_lock.release()
             sleep(0.01)
             obj.thread_lock.acquire()
