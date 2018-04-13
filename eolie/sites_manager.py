@@ -181,11 +181,6 @@ class SitesManager(Gtk.EventBox):
         return sort
 
 #######################
-# PROTECTED           #
-#######################
-
-
-#######################
 # PRIVATE             #
 #######################
     def __sort_func(self, row1, row2):

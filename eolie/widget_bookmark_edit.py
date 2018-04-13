@@ -125,7 +125,6 @@ class TagWidget(Gtk.FlowBoxChild):
             eventbox.get_style_context().remove_class("tag-hover")
             self.__close_button.set_opacity(0.2)
 
-
 #######################
 # PRIVATE             #
 #######################
