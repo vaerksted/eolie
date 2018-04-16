@@ -44,7 +44,10 @@ class FormsExtension(GObject.Object):
     def set_credentials(self, form, webpage):
         """
             Set credentials on page
-            @param form as {}
+            @param form as {
+                           "element":WebKit2WebExtension.DOMHTMLFormElement,
+                           "username": WebKit2WebExtension.DOMHTMLInputElement,
+                           "password": WebKit2WebExtension.DOMHTMLInputElement}
             @param webpage as WebKit2WebExtension.WebPage
         """
         if App().settings.get_value("remember-passwords"):
@@ -52,7 +55,8 @@ class FormsExtension(GObject.Object):
             form_input_password = form["password"].get_name()
             if form_input_username is not None and\
                     form_input_password is not None:
-                self.__helper.get(self.get_form_uri(form),
+                print(form_input_username, form_input_password)
+                self.__helper.get(self.get_form_uri(form["element"]),
                                   form_input_username,
                                   form_input_password,
                                   self.set_input_forms,
@@ -69,7 +73,10 @@ class FormsExtension(GObject.Object):
             @param index as int
             @param count as int
             @param webpage as WebKit2WebExtension.WebPage
-            @param form as {}
+            @param form as {
+                           "element":WebKit2WebExtension.DOMHTMLFormElement,
+                           "username": WebKit2WebExtension.DOMHTMLInputElement,
+                           "password": WebKit2WebExtension.DOMHTMLInputElement}
             @param username as str
         """
         if attributes is None:
@@ -77,7 +84,7 @@ class FormsExtension(GObject.Object):
         # We only set first available password
         if (index != 0 or count > 1) and username is None:
             return
-        parsed = urlparse(self.get_form_uri(form))
+        parsed = urlparse(self.get_form_uri(form["element"]))
         # Allow unsecure completion if wanted by user
         if parsed.scheme != "https" and username is None:
             return
@@ -94,8 +101,11 @@ class FormsExtension(GObject.Object):
         """
             Get forms as dict and textareas for elements
             @param elements as [WebKit2WebExtension.DOMElement]
-            @return elements as ([{}],
-                                 [WebKit2WebExtension.DOMHTMLTextAreaElement])
+            @return elements as
+                ([{"element":WebKit2WebExtension.DOMHTMLFormElement,
+                   "username": WebKit2WebExtension.DOMHTMLInputElement,
+                   "password": WebKit2WebExtension.DOMHTMLInputElement}],
+                 [WebKit2WebExtension.DOMHTMLTextAreaElement])
         """
         forms = []
         textareas = []
@@ -109,6 +119,10 @@ class FormsExtension(GObject.Object):
                 h = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
+                    # Ignore hidden elements
+                    if element.get_client_top() == 0:
+                        h += 1
+                        continue
                     if isinstance(element,
                                   WebKit2WebExtension.DOMHTMLInputElement):
                         if element.get_input_type() == "password" and\
@@ -128,35 +142,6 @@ class FormsExtension(GObject.Object):
                 if "username" in keys and "password" in keys:
                     forms.append(form)
         return (forms, textareas)
-
-    def on_form_submit(self, element, event):
-        """
-            Ask user for saving credentials
-            @param element as WebKit2WebExtension.DOMElement
-            @param event as WebKit2WebExtension.DOMUIEvent
-        """
-        page = self.__extension.get_page(self.__page_id)
-        if page is None:
-            return
-        (forms, textareas) = self.get_elements([element])
-        if not forms or not forms[0]["password"].get_value():
-            return
-        try:
-            form = forms[0]
-            hostname_uri = self.get_hostname_uri(page)
-            form_uri = self.get_form_uri(form)
-            user_form_name = form["username"].get_name()
-            user_form_value = form["username"].get_value()
-            pass_form_name = form["password"].get_name()
-            pass_form_value = form["password"].get_value()
-            self.__helper.get(form_uri, user_form_name,
-                              pass_form_name, self.__on_get_password,
-                              user_form_name, user_form_value,
-                              pass_form_name, pass_form_value,
-                              hostname_uri,
-                              self.__page_id)
-        except Exception as e:
-            Logger.error("FormsExtension::on_form_submit(): %s", e)
 
     def get_hostname_uri(self, page):
         """
@@ -178,7 +163,7 @@ class FormsExtension(GObject.Object):
             @param form as {}
             @return str
         """
-        form_uri = form["element"].get_action()
+        form_uri = form.get_action()
         if form_uri is None:
             page = self.__extension.get_page(self.__page_id)
             return self.get_hostname_uri(page)
@@ -259,6 +244,33 @@ class FormsExtension(GObject.Object):
         except Exception as e:
             Logger.error("FormsExtension::__on_get_password(): %s", e)
 
+    def __on_will_submit_form(self, webpage, form, step,
+                              source, target, names, values):
+        """
+            @param webpage as WebKit2WebExtension.WebPage
+            @param form as WebKit2WebExtension.DOMElement
+            @param step as WebKit2WebExtension.FormSubmissionStep
+            @param source as WebKit2WebExtension.Frame
+            @param target as WebKit2WebExtension.Frame
+            @param names as [str]
+            @param values as [str]
+        """
+        if step != WebKit2WebExtension.FormSubmissionStep.\
+                WEBKIT_FORM_SUBMISSION_WILL_SEND_DOM_EVENT:
+            return
+        hostname_uri = self.get_hostname_uri(webpage)
+        form_uri = self.get_form_uri(form)
+        user_form_name = names[0]
+        user_form_value = values[0]
+        pass_form_name = names[1]
+        pass_form_value = values[1]
+        self.__helper.get(form_uri, user_form_name,
+                          pass_form_name, self.__on_get_password,
+                          user_form_name, user_form_value,
+                          pass_form_name, pass_form_value,
+                          hostname_uri,
+                          self.__page_id)
+
     def __on_page_created(self, extension, webpage):
         """
             Connect to send request
@@ -266,3 +278,4 @@ class FormsExtension(GObject.Object):
             @param webpage as WebKit2WebExtension.WebPage
         """
         self.__page_id = webpage.get_id()
+        webpage.connect("will-submit-form", self.__on_will_submit_form)

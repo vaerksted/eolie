@@ -558,10 +558,6 @@ class ProxyExtensionServer(Server):
         (forms, textareas) = self.__form_extension.get_elements(elements)
         self.__add_event_listeners(forms, textareas, webpage)
         for form in forms:
-            form["element"].add_event_listener(
-                "submit",
-                self.__form_extension.on_form_submit,
-                False)
             self.__form_extension.set_credentials(form, webpage)
 
     def __on_context_menu(self, webpage, context_menu, hit):
