@@ -254,7 +254,8 @@ class FormsExtension(GObject.Object):
             @param names as [str]
             @param values as [str]
         """
-        if step != WebKit2WebExtension.FormSubmissionStep.SEND_DOM_EVENT:
+        if step != WebKit2WebExtension.FormSubmissionStep.SEND_DOM_EVENT or\
+                not names or not values:
             return
         try:
             hostname_uri = self.get_hostname_uri(webpage)
