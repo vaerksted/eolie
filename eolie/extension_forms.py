@@ -55,7 +55,6 @@ class FormsExtension(GObject.Object):
             form_input_password = form["password"].get_name()
             if form_input_username is not None and\
                     form_input_password is not None:
-                print(form_input_username, form_input_password)
                 self.__helper.get(self.get_form_uri(form["element"]),
                                   form_input_username,
                                   form_input_password,
@@ -257,18 +256,21 @@ class FormsExtension(GObject.Object):
         """
         if step != WebKit2WebExtension.FormSubmissionStep.SEND_DOM_EVENT:
             return
-        hostname_uri = self.get_hostname_uri(webpage)
-        form_uri = self.get_form_uri(form)
-        user_form_name = names[0]
-        user_form_value = values[0]
-        pass_form_name = names[1]
-        pass_form_value = values[1]
-        self.__helper.get(form_uri, user_form_name,
-                          pass_form_name, self.__on_get_password,
-                          user_form_name, user_form_value,
-                          pass_form_name, pass_form_value,
-                          hostname_uri,
-                          self.__page_id)
+        try:
+            hostname_uri = self.get_hostname_uri(webpage)
+            form_uri = self.get_form_uri(form)
+            user_form_name = names[0]
+            user_form_value = values[0]
+            pass_form_name = names[1]
+            pass_form_value = values[1]
+            self.__helper.get(form_uri, user_form_name,
+                              pass_form_name, self.__on_get_password,
+                              user_form_name, user_form_value,
+                              pass_form_name, pass_form_value,
+                              hostname_uri,
+                              self.__page_id)
+        except Exception as e:
+            print("FormsExtension::__on_will_submit_form():", e)
 
     def __on_page_created(self, extension, webpage):
         """
