@@ -255,8 +255,7 @@ class FormsExtension(GObject.Object):
             @param names as [str]
             @param values as [str]
         """
-        if step != WebKit2WebExtension.FormSubmissionStep.\
-                WEBKIT_FORM_SUBMISSION_WILL_SEND_DOM_EVENT:
+        if step != WebKit2WebExtension.FormSubmissionStep.SEND_DOM_EVENT:
             return
         hostname_uri = self.get_hostname_uri(webpage)
         form_uri = self.get_form_uri(form)
