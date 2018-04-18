@@ -105,7 +105,6 @@ class WebViewNavigation:
         App().history.set_page_state(uri)
         self.__switch_profile(uri)
         self.__update_bookmark_metadata(uri)
-        self.__hw_acceleration_policy(parsed.netloc)
         self.content_manager.remove_all_style_sheets()
         # Can't find a way to block content for ephemeral views
         if App().settings.get_value("adblock") and\
@@ -215,18 +214,6 @@ class WebViewNavigation:
         if App().bookmarks.get_id(uri) is not None:
             App().bookmarks.set_access_time(uri, round(time(), 2))
             App().bookmarks.set_more_popular(uri)
-
-    def __hw_acceleration_policy(self, netloc):
-        """
-            Disable hw acceleration for blacklist
-            @param netloc as str
-        """
-        blacklist = ["plus.google.com"]
-        if netloc in blacklist:
-            policy = WebKit2.HardwareAccelerationPolicy.NEVER
-        else:
-            policy = WebKit2.HardwareAccelerationPolicy.ON_DEMAND
-        self.get_settings().set_hardware_acceleration_policy(policy)
 
     def __switch_profile(self, uri):
         """
