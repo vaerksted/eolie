@@ -69,8 +69,8 @@ class Application(Gtk.Application):
         # change in python
         current_thread().setName("MainThread")
         # First check WebKit2 version
-        if WebKit2.MINOR_VERSION < 18:
-            exit("You need WebKit2GTK >= 2.18")
+        if WebKit2.MINOR_VERSION < 20:
+            exit("You need WebKit2GTK >= 2.20")
         Gtk.Application.__init__(
             self,
             application_id="org.gnome.Eolie",
