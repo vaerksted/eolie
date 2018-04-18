@@ -159,7 +159,7 @@ class FormsExtension(GObject.Object):
     def get_form_uri(self, form):
         """
             Get form uri for form
-            @param form as {}
+            @param form as WebKit2WebExtension.DOMHTMLFormElement
             @return str
         """
         form_uri = form.get_action()
@@ -247,7 +247,7 @@ class FormsExtension(GObject.Object):
                               source, target, names, values):
         """
             @param webpage as WebKit2WebExtension.WebPage
-            @param form as WebKit2WebExtension.DOMElement
+            @param form as WebKit2WebExtension.DOMHTMLFormElement
             @param step as WebKit2WebExtension.FormSubmissionStep
             @param source as WebKit2WebExtension.Frame
             @param target as WebKit2WebExtension.Frame
@@ -258,18 +258,43 @@ class FormsExtension(GObject.Object):
                 not names or not values:
             return
         try:
-            hostname_uri = self.get_hostname_uri(webpage)
-            form_uri = self.get_form_uri(form)
-            user_form_name = names[0]
-            user_form_value = values[0]
-            pass_form_name = names[1]
-            pass_form_value = values[1]
-            self.__helper.get(form_uri, user_form_name,
-                              pass_form_name, self.__on_get_password,
-                              user_form_name, user_form_value,
-                              pass_form_name, pass_form_value,
-                              hostname_uri,
-                              self.__page_id)
+            # Check elements
+            document = webpage.get_dom_document()
+            username_idx = None
+            password_idx = None
+            idx = 0
+            for name in names:
+                if username_idx is not None and password_idx is not None:
+                    break
+                elements = document.get_elements_by_name(name)
+                for elements_idx in range(0, elements.get_length()):
+                    element = elements.item(elements_idx)
+                    if isinstance(element,
+                                  WebKit2WebExtension.DOMHTMLInputElement):
+                        if element.get_input_type() == "password" and\
+                                element.get_name() is not None:
+                            password_idx = idx
+                            break
+                        elif element.get_input_type() in ["text",
+                                                          "email",
+                                                          "search"] and\
+                                element.get_name() is not None:
+                            username_idx = idx
+                            break
+                idx += 1
+            if username_idx is not None and password_idx is not None:
+                hostname_uri = self.get_hostname_uri(webpage)
+                form_uri = self.get_form_uri(form)
+                user_form_name = names[username_idx]
+                user_form_value = values[username_idx]
+                pass_form_name = names[password_idx]
+                pass_form_value = values[password_idx]
+                self.__helper.get(form_uri, user_form_name,
+                                  pass_form_name, self.__on_get_password,
+                                  user_form_name, user_form_value,
+                                  pass_form_name, pass_form_value,
+                                  hostname_uri,
+                                  self.__page_id)
         except Exception as e:
             print("FormsExtension::__on_will_submit_form():", e)
 
