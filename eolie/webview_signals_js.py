@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, WebKit2
+from gi.repository import GLib
 
 from gettext import gettext as _
 
@@ -34,20 +34,6 @@ class WebViewJsSignals:
 #######################
 # PROTECTED           #
 #######################
-    def _on_map(self, webview):
-        """
-            Connect all signals
-            @param webview as WebView
-        """
-        self.connect("resource-load-started",
-                     self.__on_resource_load_started)
-
-    def _on_unmap(self, webview):
-        """
-            Disconnect all signals
-            @param webview as WebView
-        """
-        self.disconnect_by_func(self.__on_resource_load_started)
 
 #######################
 # PRIVATE             #
@@ -99,30 +85,6 @@ class WebViewJsSignals:
                 1000,
                 self.__reset_js_blocker)
         return True
-
-    def __on_resource_load_started(self, webview, resource, request):
-        """
-            Listen to off loading events
-            @param webview as WebView
-            @param resource WebKit2.WebResource
-            @param request as WebKit2.URIRequest
-        """
-        # Javascript execution happened
-        if self.current_event == WebKit2.LoadEvent.FINISHED:
-            # Special google notifications fix
-            # https://bugs.webkit.org/show_bug.cgi?id=175189
-            # https://bugzilla.gnome.org/show_bug.cgi?id=792130
-            # TODO Remove this, fixed soon in libsoup
-            storage = App().settings.get_enum("cookie-storage")
-            # WebKit2.CookieAcceptPolicy.NO_THIRD_PARTY
-            if storage == 2:
-                uri = resource.get_uri()
-                if uri.startswith("https://notifications.google.com/"):
-                    self.__google_fix_count += 1
-                    resource.connect("finished",
-                                     self.__on_resource_load_finished)
-                    cookie_manager = self.get_context().get_cookie_manager()
-                    cookie_manager.set_accept_policy(0)
 
     def __on_resource_load_finished(self, resource):
         """
