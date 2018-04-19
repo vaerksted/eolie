@@ -152,7 +152,12 @@ class WebViewNavigation:
             @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(self._uri)
-        if event == WebKit2.LoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.STARTED:
+            self.emit("uri-changed", self._uri)
+        elif event == WebKit2.LoadEvent.REDIRECTED:
+            pass
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            self.emit("uri-changed", self._uri)
             http_scheme = parsed.scheme in ["http", "https"]
             self.update_zoom_level()
             # Setup eolie internal adblocker
@@ -264,13 +269,13 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        uri = webview.get_property(param.name)
-        # JS bookmark (Bookmarklet)
-        if not uri.startswith("javascript:"):
-            self.emit("uri-changed", uri)
         # Js update, force favicon caching for current uri
         if not self.is_loading():
-            self.set_current_favicon()
+            uri = webview.get_property(param.name)
+            # JS bookmark (Bookmarklet)
+            if not uri.startswith("javascript:"):
+                self.emit("uri-changed", uri)
+                self.set_current_favicon()
 
     def __on_title_changed(self, webview, param):
         """
@@ -352,9 +357,13 @@ class WebViewNavigation:
                 self.new_page(navigation_uri, LoadingType.FOREGROUND)
                 decision.ignore()
                 return True
+            elif App().phishing.is_phishing(navigation_uri):
+                self._show_phishing_error(navigation_uri)
+                decision.ignore()
+                return True
             else:
-                decision.use()
                 self._error = False
+                decision.use()
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
@@ -373,16 +382,15 @@ class WebViewNavigation:
                 self.new_page(navigation_uri, LoadingType.POPOVER)
                 decision.ignore()
                 return True
+            elif App().phishing.is_phishing(navigation_uri):
+                self._show_phishing_error(navigation_uri)
+                decision.ignore()
+                return True
             else:
                 self.update_settings_for_uri(navigation_uri)
-                if App().phishing.is_phishing(navigation_uri):
-                    self._show_phishing_error(navigation_uri)
-                    decision.ignore()
-                    return True
-                else:
-                    self._error = False
-                    decision.use()
-                    return False
+                self._error = False
+                decision.use()
+                return False
         else:
             self.new_page(navigation_uri, LoadingType.BACKGROUND)
             decision.ignore()
