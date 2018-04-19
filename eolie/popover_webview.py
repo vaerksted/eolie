@@ -47,9 +47,6 @@ class WebViewPopover(Gtk.Popover):
             @param view as View
             @param destroy webview as bool
         """
-        size = self.__window.get_size()
-        width = min(800, size[0])
-        height = min(800, size[1] * 0.9)
         position = len(self.__stack.get_children())
         self.__stack.add(view)
         self.__stack.set_visible_child(view)
@@ -59,20 +56,10 @@ class WebViewPopover(Gtk.Popover):
         title = view.webview.title or view.webview.uri or ""
         self.__combobox.append(str(view), title)
 
-        # Setup widget size request
-        properties = view.webview.get_window_properties()
-        geometry = properties.get_geometry()
-        current_width = self.__stack.get_allocated_width()
-        current_height = self.__stack.get_allocated_height()
-        if geometry.width and current_width < geometry.width:
-            current_width = min(width, geometry.width + 50)
-        elif current_width < 100:
-            current_width = width
-        if geometry.height and current_height < geometry.height:
-            current_height = min(height, geometry.height + 50)
-        elif current_height < 100:
-            current_height = height
-        self.__stack.set_size_request(current_width, current_height)
+        size = self.__window.get_size()
+        width = min(800, size[0] * 0.8)
+        height = min(800, size[1] * 0.6)
+        self.set_size_request(width, height)
 
         if position == 0:
             self.__label.set_text(title)
@@ -84,13 +71,6 @@ class WebViewPopover(Gtk.Popover):
             self.__combobox.show()
         if destroy:
             self.__to_destroy.append(view.webview)
-
-    def do_get_preferred_width(self):
-        """
-            Only accept min width to ellipsize label
-        """
-        (min, nat) = Gtk.Popover.do_get_preferred_width(self)
-        return (min, min)
 
 #######################
 # PROTECTED           #
