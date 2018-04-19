@@ -67,7 +67,9 @@ class WebView(WebKit2.WebView):
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        webview.__init(related, related.context,
+        context = WebKit2.WebContext.new_ephemeral()
+        Context(context)
+        webview.__init(related, context,
                        related.content_manager, window, None)
         return webview
 
