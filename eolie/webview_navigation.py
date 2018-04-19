@@ -153,7 +153,7 @@ class WebViewNavigation:
         """
         parsed = urlparse(self._uri)
         if event == WebKit2.LoadEvent.STARTED:
-            pass
+            self.emit("uri-changed", self._uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
             pass
         elif event == WebKit2.LoadEvent.COMMITTED:
