@@ -94,7 +94,7 @@ class WebViewArtwork:
                 self.emit("favicon-changed", None)
         elif event == WebKit2.LoadEvent.FINISHED:
             is_http = parsed.scheme in ["http", "https"]
-            GLib.idle_add(self.__set_snapshot, is_http)
+            GLib.timeout_add(500, self.__set_snapshot, is_http)
             if is_http:
                 favicon_database = self.context.get_favicon_database()
                 GLib.timeout_add(2000,
