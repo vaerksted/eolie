@@ -94,7 +94,7 @@ class WebViewArtwork:
                 self.emit("favicon-changed", None)
         elif event == WebKit2.LoadEvent.FINISHED:
             is_http = parsed.scheme in ["http", "https"]
-            GLib.timeout_add(500, self.__set_snapshot, is_http)
+            GLib.timeout_add(1000, self.__set_snapshot, is_http)
             if is_http:
                 favicon_database = self.context.get_favicon_database()
                 GLib.timeout_add(2000,
@@ -198,7 +198,7 @@ class WebViewArtwork:
             @param param as GObject.ParamSpec
         """
         if not webview.is_loading() and not webview.ephemeral:
-            GLib.timeout_add(500, self.__set_snapshot, True)
+            GLib.timeout_add(1000, self.__set_snapshot, True)
 
     def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
         """
