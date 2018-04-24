@@ -67,9 +67,9 @@ class WebView(WebKit2.WebView):
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        context = WebKit2.WebContext.new()
-        Context(context)
-        webview.__init(related, context,
+        # Related view are linked to related context, can't do anything about
+        # this
+        webview.__init(related, related.context,
                        related.content_manager, window, None)
         return webview
 
