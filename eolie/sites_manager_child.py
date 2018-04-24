@@ -417,6 +417,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param surface as cairo.Surface
         """
+        if len(self.__views) > 1 and\
+                webview.view != self.__window.container.current:
+            return
         if surface is not None:
             self.__image.set_from_surface(surface)
             return
@@ -533,7 +536,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
 
     def __on_webview_shown(self, webview):
         """
-            Update indicataor
+            Update indicator
         """
         self.__indicator_label.mark_shown(webview)
         self.__on_webview_favicon_changed(webview)
