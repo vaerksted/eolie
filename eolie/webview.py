@@ -552,33 +552,6 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        GLib.idle_add(self.__wait_for_uri, webview, related, navigation_action)
-
-    def __wait_for_uri(self, webview, related, navigation_action):
-        """
-            Add a new webview with related as soon an URI is available
-            @param webview as WebView
-            @param related as WebView
-            @param navigation_action as WebKit2.NavigationAction
-        """
-        uri = webview.uri
-        # We need an URI for adblocking
-        if not webview.uri:
-            GLib.idle_add(self.__wait_for_uri, webview,
-                          related, navigation_action)
-            return
-        # Block ads
-        parsed = urlparse(uri)
-        if App().settings.get_value("adblock") and\
-                parsed.scheme in ["http", "https"] and\
-                not App().adblock_exceptions.find_parsed(parsed):
-            if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                    App().adblock.is_uri_blocked(uri,
-                                                 parsed.netloc):
-                Logger.debug("WebView::__wait_for_uri(): blocking %s ->%s",
-                             uri, self.uri)
-                webview.destroy()
-                return
         popup_block = App().settings.get_value("popupblock")
         if related.uri is not None:
             parsed_related = urlparse(related.uri)
