@@ -155,7 +155,19 @@ class WebViewNavigation:
         if event == WebKit2.LoadEvent.STARTED:
             self.emit("uri-changed", self._uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
-            pass
+            # Block ads
+            if App().settings.get_value("adblock") and\
+                    webview.__related_view is not None and\
+                    parsed.scheme in ["http", "https"] and\
+                    not App().adblock_exceptions.find_parsed(parsed):
+                if App().adblock.is_netloc_blocked(parsed.netloc) or\
+                        App().adblock.is_uri_blocked(self._uri,
+                                                     parsed.netloc):
+                    Logger.debug("WebView::__wait_for_uri(): blocking %s",
+                                 self._uri)
+                    webview.stop_loading()
+                    self._window.container.close_view(self.view)
+                    return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self._uri)
             http_scheme = parsed.scheme in ["http", "https"]
