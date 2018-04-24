@@ -348,14 +348,14 @@ class DatabaseSettings:
         parsed = urlparse(uri)
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT languages FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
+                                  WHERE uri=?", (parsed.netloc,))
             v = result.fetchone()
             if v is not None:
                 languages = v[0]
                 if languages:
                     return languages.split(";")
                 else:
-                    return []
+                    return None
             else:
                 return None
 

@@ -41,12 +41,6 @@ class Context:
             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_spell_checking_enabled(
             App().settings.get_value("enable-spell-check"))
-        locales = GLib.get_language_names()
-        try:
-            user_locale = locales[0].split(".")[0]
-            context.set_spell_checking_languages([user_locale])
-        except:
-            pass
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)

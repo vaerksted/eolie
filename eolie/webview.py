@@ -171,8 +171,13 @@ class WebView(WebKit2.WebView):
         context = self.get_context()
         codes = App().websettings.get_languages(uri)
         # If None, default user language
-        if codes is not None and\
-                context.get_spell_checking_languages() != codes:
+        if codes is None:
+            locales = GLib.get_language_names()
+            try:
+                codes = [locales[0].split(".")[0]]
+            except:
+                codes = None
+        if context.get_spell_checking_languages() != codes:
             context.set_spell_checking_languages(codes)
 
     def add_text_entry(self, text):
