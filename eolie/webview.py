@@ -50,7 +50,7 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        context = WebKit2.WebContext.new_ephemeral()
+        context = WebKit2.WebContext.new()
         Context(context)
         webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
