@@ -231,8 +231,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
                     if child.view == view:
                         child.destroy()
                         break
-        if self.__views:
-            self.__on_webview_favicon_changed(self.__views[0].webview)
+            if self.__views:
+                self.__on_webview_favicon_changed(self.__views[0].webview)
 
     def set_minimal(self, minimal):
         """
