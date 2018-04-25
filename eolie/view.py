@@ -186,11 +186,11 @@ class View(Gtk.Overlay):
         """
             Destroy view and webview
         """
-        Gtk.Overlay.destroy(self)
         if self.__webview is not None:
             self.__webview.destroy()
         if self.__reading_view is not None:
             self.__reading_view.destroy()
+        Gtk.Overlay.destroy(self)
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """
