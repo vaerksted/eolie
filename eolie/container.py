@@ -10,9 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gdk
 
 from gettext import gettext as _
+from random import randint
 
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
@@ -116,6 +117,10 @@ class Container(Gtk.Overlay):
         self.__expose_stack.add_named(self.__stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
         self.add(paned)
+        # Show donation notification
+        if App().settings.get_value("show-donation"):
+            GLib.timeout_add_seconds(randint(10, 1000),
+                                     self.__show_donation)
 
     def add_webview(self, uri, loading_type, ephemeral=False,
                     state=None, atime=None):
@@ -499,6 +504,28 @@ class Container(Gtk.Overlay):
             GLib.idle_add(self.__add_pending_items)
         else:
             self.sites_manager.set_initial_sort(None)
+
+    def __show_donation(self):
+        """
+            Show a notification telling user to donate a little
+        """
+        from eolie.app_notification import AppNotification
+        notification = AppNotification(
+            _("Please consider a donation to the project"),
+            [_("Paypal"), _("Liberapay")],
+            [lambda: Gtk.show_uri_on_window(
+                App().active_window,
+                "https://www.paypal.me/lollypopgnome",
+                Gdk.CURRENT_TIME),
+             lambda: Gtk.show_uri_on_window(
+                App().active_window,
+                "https://liberapay.com/gnumdk",
+                Gdk.CURRENT_TIME)])
+        self.add_overlay(notification)
+        notification.show()
+        notification.set_reveal_child(True)
+        App().settings.set_value("show-donation",
+                                 GLib.Variant("b", False))
 
     def __on_paned_notify_position(self, paned, ignore):
         """
