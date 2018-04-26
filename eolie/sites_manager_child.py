@@ -420,6 +420,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if len(self.__views) > 1 and\
                 webview.view != self.__window.container.current:
             return
+        # Try to get it from webview, because cached one may not
+        # be identical
+        if surface is None:
+            surface = webview.get_favicon()
         if surface is not None:
             self.__image.set_from_surface(surface)
             return
