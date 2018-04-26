@@ -119,7 +119,7 @@ class Container(Gtk.Overlay):
         self.add(paned)
         # Show donation notification
         if App().settings.get_value("show-donation"):
-            GLib.timeout_add_seconds(randint(10, 1000),
+            GLib.timeout_add_seconds(randint(3600, 7200),
                                      self.__show_donation)
 
     def add_webview(self, uri, loading_type, ephemeral=False,
