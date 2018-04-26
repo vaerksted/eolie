@@ -9,6 +9,13 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
+    <release version="0.9.31" date="2018-04-26">
+      <description>
+        <ul>
+          <li>Fix a crash when closing a website</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.9.30" date="2018-04-26">
       <description>
         <ul>
