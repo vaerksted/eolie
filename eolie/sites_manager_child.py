@@ -61,14 +61,6 @@ class PageChildRow(Gtk.ListBoxRow):
         view.webview.connect("title-changed", self.__on_webview_title_changed)
         eventbox.connect("button-press-event", self.__on_button_press_event)
 
-    def destroy(self):
-        """
-            Disconnect and destroy
-        """
-        self.__view.webview.disconnect_by_func(self.__on_webview_load_changed)
-        self.__view.webview.disconnect_by_func(self.__on_webview_title_changed)
-        Gtk.ListBoxRow.destroy(self)
-
     @property
     def view(self):
         """
