@@ -512,7 +512,7 @@ class Container(Gtk.Overlay):
         from eolie.app_notification import AppNotification
         notification = AppNotification(
             _("Please consider a donation to the project"),
-            [_("Paypal"), _("Liberapay")],
+            [_("PayPal"), _("Liberapay")],
             [lambda: Gtk.show_uri_on_window(
                 App().active_window,
                 "https://www.paypal.me/lollypopgnome",
