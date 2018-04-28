@@ -285,7 +285,7 @@ class WebViewNavigation:
         if not self.is_loading():
             uri = webview.get_property(param.name)
             # JS bookmark (Bookmarklet)
-            if not uri.startswith("javascript:"):
+            if not uri.startswith("javascript:") and not self._error:
                 self.emit("uri-changed", uri)
                 self.set_current_favicon()
 
