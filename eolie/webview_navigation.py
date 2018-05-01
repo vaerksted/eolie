@@ -323,6 +323,7 @@ class WebViewNavigation:
             parsed = urlparse(uri)
             if mime_type in self.__MIMES:
                 decision.use()
+                return False
             elif parsed.scheme == "file":
                 f = Gio.File.new_for_uri(uri)
                 info = f.query_info("standard::type",
@@ -337,13 +338,16 @@ class WebViewNavigation:
                         Logger.error("""WebViewNavigation::
                                         __on_decide_policy(): %s""", e)
                     decision.ignore()
+                    return True
                 else:
                     decision.use()
+                    return False
             elif self.can_show_mime_type(mime_type):
                 decision.use()
+                return False
             else:
                 decision.download()
-            return False
+                return True
 
         navigation_action = decision.get_navigation_action()
         navigation_uri = navigation_action.get_request().get_uri()
