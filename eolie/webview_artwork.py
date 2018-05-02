@@ -121,14 +121,7 @@ class WebViewArtwork:
                     self.__save_favicon_timeout_id = None
                 self.__favicon_width[uri] = favicon_width
                 resized = resize_favicon(surface)
-                # We wait for a better favicon
-                self.__save_favicon_timeout_id = GLib.timeout_add(
-                    2000,
-                    self.__save_favicon_to_cache,
-                    resized,
-                    uri,
-                    initial_uri,
-                    "favicon")
+                favicon_type = "favicon"
         else:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
@@ -136,12 +129,17 @@ class WebViewArtwork:
                                                 self.get_scale_factor())
                 if resized is None:
                     resized = get_char_surface(netloc[0])
-                    self.__save_favicon_to_cache(resized,
-                                                 uri,
-                                                 initial_uri,
-                                                 "favicon_alt")
+                favicon_type = "favicon_alt"
+
+        # We wait for a better favicon
         if resized is not None and uri == self.uri:
-            self.emit("favicon-changed", resized)
+            self.__save_favicon_timeout_id = GLib.timeout_add(
+                500,
+                self.__save_favicon_to_cache,
+                resized,
+                uri,
+                initial_uri,
+                favicon_type)
 
     def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
         """
@@ -152,6 +150,7 @@ class WebViewArtwork:
             @param favicon_type as str
         """
         self.__save_favicon_timeout_id = None
+        self.emit("favicon-changed", surface)
         # Save favicon for URI
         if not App().art.exists(uri, favicon_type):
             self.__helper.run(App().art.save_artwork,
