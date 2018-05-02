@@ -460,7 +460,6 @@ class WebView(WebKit2.WebView):
         self._readable_content = ""
         self._uri = None
         self._title = None
-        self._current_event = WebKit2.LoadEvent.FINISHED
         self.__related_view = related_view
         self._shown = False
         self.set_hexpand(True)
@@ -609,7 +608,6 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param event as WebKit2.LoadEvent
         """
         self._uri = webview.get_uri()
-        self._current_event = event
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)

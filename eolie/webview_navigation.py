@@ -59,7 +59,7 @@ class WebViewNavigation:
         if App().phishing.is_phishing(uri):
             self._show_phishing_error(uri)
             return
-        self._error = False
+        self.discard_error()
         # If not an URI, start a search
         parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
@@ -285,7 +285,7 @@ class WebViewNavigation:
         if not self.is_loading():
             uri = webview.get_property(param.name)
             # JS bookmark (Bookmarklet)
-            if not uri.startswith("javascript:") and not self._error:
+            if not uri.startswith("javascript:") and not self.error:
                 self.emit("uri-changed", uri)
                 self.set_current_favicon()
 
@@ -378,7 +378,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                self._error = False
+                self.discard_error()
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -404,7 +404,7 @@ class WebViewNavigation:
                 return True
             else:
                 self.update_settings_for_uri(navigation_uri)
-                self._error = False
+                self.discard_error()
                 decision.use()
                 return False
         else:

@@ -40,32 +40,27 @@ class WebViewArtwork:
 
     def set_favicon(self):
         """
-            Set favicon based on WebKit2 favicon database
+            Set favicon based on current webview favicon
         """
         if self.ephemeral or\
-                self._error or\
-                self._current_event != WebKit2.LoadEvent.FINISHED:
+                self.error or\
+                self.current_event != WebKit2.LoadEvent.FINISHED:
             return
-        parsed = urlparse(self.uri)
-        if parsed.scheme in ["http", "https"]:
-            self.context.get_favicon_database().get_favicon(
-                self.uri,
-                None,
-                self.__on_get_favicon,
-                self.uri,
-                self.__initial_uri,
-                False)
+
+        self.__set_favicon_from_surface(
+            self.get_favicon(),
+            self.uri,
+            self.__initial_uri)
 
     def set_current_favicon(self):
         """
             Set favicon based on current webview favicon
-            Use this when you know URI may not be in favicon database
+            Use this for JS update (do not update initial uri)
         """
         self.__set_favicon_from_surface(
             self.get_favicon(),
             self.uri,
-            None,
-            True)
+            None)
 
 #######################
 # PROTECTED           #
@@ -84,26 +79,10 @@ class WebViewArtwork:
                 self.__initial_uri = self._uri.rstrip('/')
             else:
                 self.__initial_uri = None
-            surface = App().art.get_favicon(self._uri,
-                                            self.get_scale_factor())
-            if surface is not None:
-                self.emit("favicon-changed", surface)
-            elif self.__current_netloc is None or\
-                    self.__current_netloc not in self._uri:
-                self.emit("favicon-changed", None)
         elif event == WebKit2.LoadEvent.FINISHED:
             is_http = parsed.scheme in ["http", "https"]
             GLib.timeout_add(1000, self.__set_snapshot, is_http)
-            if is_http:
-                favicon_database = self.context.get_favicon_database()
-                GLib.timeout_add(2000,
-                                 favicon_database.get_favicon,
-                                 self._uri,
-                                 None,
-                                 self.__on_get_favicon,
-                                 self._uri,
-                                 self.__initial_uri,
-                                 True)
+            self.set_favicon()
             self.__current_netloc = parsed.netloc or None
 
 #######################
@@ -123,14 +102,13 @@ class WebViewArtwork:
                           save,
                           True)
 
-    def __set_favicon_from_surface(self, surface, uri, initial_uri, builtin):
+    def __set_favicon_from_surface(self, surface, uri, initial_uri):
         """
             Set favicon for surface
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
             @param initial_uri as str
-            @param builtin as bool
         """
         resized = None
         # Save webview favicon
@@ -151,7 +129,7 @@ class WebViewArtwork:
                     uri,
                     initial_uri,
                     "favicon")
-        elif builtin:
+        else:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
                 resized = App().art.get_favicon(uri,
@@ -199,21 +177,6 @@ class WebViewArtwork:
         if not webview.is_loading() and not webview.ephemeral:
             GLib.timeout_add(1000, self.__set_snapshot, True)
 
-    def __on_get_favicon(self, favicon_db, result, uri, initial_uri, builtin):
-        """
-            Read favicon and set it
-            @param favicon_db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param uri as str
-            @param initial_uri as str
-            @param builtin as bool
-        """
-        try:
-            surface = favicon_db.get_favicon_finish(result)
-        except:
-            surface = None
-        self.__set_favicon_from_surface(surface, uri, initial_uri, builtin)
-
     def __on_snapshot(self, surface, save, first_pass):
         """
             Cache snapshot
@@ -236,7 +199,7 @@ class WebViewArtwork:
                                   False)
             return
         self.emit("snapshot-changed", surface)
-        if not save or self._error:
+        if not save or self.error:
             return
         uri = self.uri
         # We also cache initial URI

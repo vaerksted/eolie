@@ -27,7 +27,7 @@ class WebViewErrors:
             Init errors
         """
         self.__bad_tls = None  # Keep invalid TLS certificate
-        self._error = False
+        self.__error = False
         self.connect("load-failed", self.__on_load_failed)
         self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
         self.connect("web-process-crashed", self.__on_web_process_crashed)
@@ -38,10 +38,25 @@ class WebViewErrors:
         """
         self.__bad_tls = None
 
+    def discard_error(self):
+        """
+            Discard current error status
+        """
+        self.__error = False
+
+    @property
+    def error(self):
+        """
+            Is webview in error
+            @return bool
+        """
+        return self.__error
+
     @property
     def bad_tls(self):
         """
             Get invalid certificate
+            @return Gio.TlsCertificate
         """
         return self.__bad_tls
 

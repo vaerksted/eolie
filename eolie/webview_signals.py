@@ -198,7 +198,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param title as str
         """
         parsed = urlparse(webview.uri)
-        if self._error or\
+        if self.error or\
                 webview.ephemeral or\
                 parsed.scheme not in ["http", "https"]:
             return
