@@ -438,7 +438,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
                 "edit-copy-symbolic":
             Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(
-                self.__entry.get_text(),
+                self.__uri,
                 -1)
 
     def _on_enter_notify(self, widget, event):
