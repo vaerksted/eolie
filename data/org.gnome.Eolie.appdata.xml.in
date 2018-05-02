@@ -9,48 +9,10 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
-    <release version="0.9.31" date="2018-04-26">
+    <release version="0.9.32" date="2018-05-02">
       <description>
         <ul>
-          <li>Fix a crash when closing a website</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.30" date="2018-04-26">
-      <description>
-        <ul>
-          <li>Fix WebView popover</li>
-          <li>Fix somes crashes (webkit segfaults)</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.29" date="2018-04-18">
-      <description>
-        <ul>
-          <li>Fix an issue with youtube</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.28" date="2018-04-12">
-      <description>
-        <ul>
-          <li>Do not cache snapshots on error</li>
-          <li>Faster adblock updater</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.27" date="2018-04-09">
-      <description>
-        <ul>
-          <li>Fix a segfault</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.9.26" date="2018-04-09">
-      <description>
-        <ul>
-          <li>Enhanced websites sort</li>
-          <li>Allow keyboard shortcuts in URI popover</li>
+          <li>Better favicon handler</li>
         </ul>
       </description>
     </release>
