@@ -103,7 +103,6 @@ class WebViewLoadSignals:
         # so before a view is associated
         if self.view is not None and not self.view.popover:
             if event == WebKit2.LoadEvent.STARTED:
-                self._new_pages_opened = 0
                 # Destroy current popups
                 for popup in self.__popups:
                     popup.destroy()

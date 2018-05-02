@@ -151,9 +151,9 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(self._uri)
+        parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
-            self.emit("uri-changed", self._uri)
+            self.emit("uri-changed", self.uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
             # Block ads
             if App().settings.get_value("adblock") and\
@@ -161,15 +161,15 @@ class WebViewNavigation:
                     parsed.scheme in ["http", "https"] and\
                     not App().adblock_exceptions.find_parsed(parsed):
                 if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                        App().adblock.is_uri_blocked(self._uri,
+                        App().adblock.is_uri_blocked(self.uri,
                                                      parsed.netloc):
                     Logger.debug("WebView::__wait_for_uri(): blocking %s",
-                                 self._uri)
+                                 self.uri)
                     webview.stop_loading()
                     self._window.container.close_view(self.view)
                     return
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.emit("uri-changed", self._uri)
+            self.emit("uri-changed", self.uri)
             http_scheme = parsed.scheme in ["http", "https"]
             self.update_zoom_level()
             # Setup eolie internal adblocker
@@ -189,7 +189,7 @@ class WebViewNavigation:
                             self.run_javascript(js, None, None)
                             break
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.update_spell_checking(self._uri)
+            self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
             if App().show_tls:

@@ -71,12 +71,12 @@ class WebViewArtwork:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(self._uri)
+        parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.__cancellable.cancel()
             self.__cancellable.reset()
             if parsed.scheme in ["http", "https"]:
-                self.__initial_uri = self._uri.rstrip('/')
+                self.__initial_uri = self.uri.rstrip('/')
             else:
                 self.__initial_uri = None
         elif event == WebKit2.LoadEvent.FINISHED:

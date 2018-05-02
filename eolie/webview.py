@@ -161,7 +161,7 @@ class WebView(WebKit2.WebView):
             Set delayed uri
             @param uri as str
         """
-        self._uri = uri
+        self.__uri = uri
         self.emit("uri-changed", uri)
 
     def update_spell_checking(self, uri):
@@ -262,14 +262,14 @@ class WebView(WebKit2.WebView):
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, uri)
         else:
-            self._new_pages_opened += 1
+            self.__new_pages_opened += 1
             webview = self._window.container.add_webview(
                 uri,
                 loading_type,
                 self.ephemeral,
                 None,
                 self.atime -
-                self._new_pages_opened)
+                self.__new_pages_opened)
             webview.set_parent(self)
             self.add_child(webview)
 
@@ -393,7 +393,7 @@ class WebView(WebKit2.WebView):
         """
         uri = self.get_uri()
         if uri is None:
-            uri = self._uri
+            uri = self.__uri
         return uri
 
     @property
@@ -453,12 +453,12 @@ class WebView(WebKit2.WebView):
         self.__atime = 0
         self.__children = []
         self.__parent = None
-        self._new_pages_opened = 0
+        self.__new_pages_opened = 0
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readable_content = ""
-        self._uri = None
+        self.__uri = None
         self._title = None
         self.__related_view = related_view
         self._shown = False
@@ -607,7 +607,9 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self._uri = webview.get_uri()
+        self.__uri = webview.get_uri()
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__new_pages_opened = 0
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
