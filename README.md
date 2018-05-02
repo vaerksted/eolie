@@ -22,8 +22,7 @@ It provides:
 - gtk3 >= 3.22
 - gobject-introspection
 - python3
-- intltool (make)
-- itstool (make)
+- meson >= 0.40
 - python (make)
 - python-cairo
 - python-dateutil
