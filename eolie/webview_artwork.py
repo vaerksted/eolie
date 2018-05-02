@@ -44,8 +44,7 @@ class WebViewArtwork:
         """
         if self.ephemeral or\
                 self._error or\
-                self._current_event not in [WebKit2.LoadEvent.COMMITTED,
-                                            WebKit2.LoadEvent.FINISHED]:
+                self._current_event != WebKit2.LoadEvent.FINISHED:
             return
         parsed = urlparse(self.uri)
         if parsed.scheme in ["http", "https"]:
