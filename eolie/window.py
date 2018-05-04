@@ -481,7 +481,7 @@ class Window(Gtk.ApplicationWindow):
                               GLib.Variant("(s)", (current_webview.netloc,)),
                               self.__on_js_enabled,
                               current_webview)
-        elif string == "show_left_panel":
+        elif string == "show_sidebar":
             value = App().settings.get_value("show-sidebar")
             App().settings.set_value("show-sidebar",
                                      GLib.Variant("b", not value))

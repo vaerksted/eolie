@@ -426,7 +426,7 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::expose", ["<Alt>e"])
         self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
         self.set_accels_for_action("win.shortcut::jsblock", ["<Control>j"])
-        self.set_accels_for_action("win.shortcut::show_left_panel", ["F9"])
+        self.set_accels_for_action("win.shortcut::show_sidebar", ["F9"])
         self.set_accels_for_action("win.shortcut::uri",
                                    ["<Control>l", "<Control>b"])
         self.set_accels_for_action("win.shortcut::new_page", ["<Control>t"])
