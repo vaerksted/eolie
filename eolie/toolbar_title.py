@@ -114,6 +114,8 @@ class ToolbarTitle(Gtk.Bin):
 
         self.__entry = builder.get_object("entry")
         # Inline completion
+        self.__completion_model_append_timeout_id = None
+        self.__completion_model_clear_timeout_id = None
         self.__completion_model = Gtk.ListStore(str)
         self.__completion = Gtk.EntryCompletion.new()
         self.__completion.set_model(self.__completion_model)
@@ -792,8 +794,29 @@ class ToolbarTitle(Gtk.Bin):
             @param uri as str
             @thread safe
         """
-        if self.__entry.get_text() == uri:
+        # Thread handling
+        def model_append_timeout(array):
+            self.__completion_model_append_timeout_id = None
+            self.__completion_model.append(array)
+
+        def model_clear_timeout():
+            self.__completion_model_clear_timeout_id = None
             self.__completion_model.clear()
+
+        def model_append(array):
+            if self.__completion_model_append_timeout_id is not None:
+                GLib.source_remove(self.__completion_model_append_timeout_id)
+            self.__completion_model_append_timeout_id = \
+                GLib.timeout_add(250, model_append_timeout, array)
+
+        def model_clear():
+            if self.__completion_model_clear_timeout_id is not None:
+                GLib.source_remove(self.__completion_model_clear_timeout_id)
+            self.__completion_model_clear_timeout_id = \
+                GLib.timeout_add(1000, model_clear_timeout)
+
+        if self.__entry.get_text() == uri:
+            model_clear()
             # Look for a match in history
             match = App().history.get_match(uri)
             if match is not None:
@@ -803,10 +826,9 @@ class ToolbarTitle(Gtk.Bin):
                 netloc = match_parsed.netloc.replace("www.", "")
                 if netloc.find(uri) == 0:
                     if match_parsed.path.find(uri.split("/")[-1]) != -1:
-                        self.__completion_model.append([netloc +
-                                                        match_parsed.path])
+                        model_append([netloc + match_parsed.path])
                     else:
-                        self.__completion_model.append([netloc])
+                        model_append([netloc])
 
             if not App().settings.get_value("dns-prediction"):
                 return
@@ -820,8 +842,7 @@ class ToolbarTitle(Gtk.Bin):
                     try:
                         lookup = "%s%s.%s" % (prefix, uri, suffix)
                         gethostbyname(lookup)
-                        self.__completion_model.append(
-                            [lookup.replace("www.", "")])
+                        model_append([lookup.replace("www.", "")])
                         return
                     except:
                         if self.__cancellable.is_cancelled():
