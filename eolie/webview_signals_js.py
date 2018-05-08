@@ -26,7 +26,6 @@ class WebViewJsSignals:
         """
             Init class
         """
-        self.__google_fix_count = 0
         self.__js_blocker_count = 0
         self.__js_blocker_timeout_id = None
         self.connect("script-dialog", self.__on_script_dialog)
