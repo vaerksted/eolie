@@ -85,14 +85,3 @@ class WebViewJsSignals:
                 1000,
                 self.__reset_js_blocker)
         return True
-
-    def __on_resource_load_finished(self, resource):
-        """
-            Restore cookie storage default behaviour
-            @param resource as WebKit2.WebResource
-        """
-        self.__google_fix_count -= 1
-        if self.__google_fix_count == 0:
-            cookie_manager = self.get_context().get_cookie_manager()
-            storage = App().settings.get_enum("cookie-storage")
-            cookie_manager.set_accept_policy(storage)
