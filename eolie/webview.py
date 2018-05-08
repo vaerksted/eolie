@@ -553,6 +553,9 @@ class WebView(WebKit2.WebView):
         """
         def on_load_changed(webview, event):
             parsed = urlparse(webview.uri)
+            # First, adblocking
+            if not parsed.netloc:
+                return
             if App().settings.get_value("adblock") and\
                     parsed.scheme in ["http", "https"] and\
                     not App().adblock_exceptions.find_parsed(parsed):
@@ -561,10 +564,12 @@ class WebView(WebKit2.WebView):
                                                      parsed.netloc):
                     webview.destroy()
                     return
-            elif event != WebKit2.LoadEvent.FINISHED:
+            if event != WebKit2.LoadEvent.FINISHED:
                 return
             else:
                 webview.disconnect_by_func(on_load_changed)
+
+            # Then popup blocking
             popup_block = App().settings.get_value("popupblock")
             if related.uri is not None:
                 parsed_related = urlparse(related.uri)
