@@ -536,20 +536,23 @@ class WebView(WebKit2.WebView):
         """
         webview = WebView.new_with_related_view(related, self._window)
         webview.set_atime(related.atime - 1)
+        elapsed = time() - related._last_click_time
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,
-                        navigation_action)
+                        navigation_action,
+                        elapsed)
         webview.set_parent(self)
         self.add_child(webview)
         return webview
 
-    def __on_ready_to_show(self, webview, related, navigation_action):
+    def __on_ready_to_show(self, webview, related, navigation_action, elapsed):
         """
             Add a new webview with related
             @param webview as WebView
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
+            @param elapsed as float
         """
         def on_load_changed(webview, event):
             parsed = urlparse(webview.uri)
@@ -573,7 +576,6 @@ class WebView(WebKit2.WebView):
             popup_block = App().settings.get_value("popupblock")
             if related.uri is not None:
                 parsed_related = urlparse(related.uri)
-                elapsed = time() - related._last_click_time
                 exception = elapsed < 1.0 or\
                     App().popup_exceptions.find_parsed(parsed_related)
             else:
