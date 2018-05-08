@@ -804,6 +804,8 @@ class ToolbarTitle(Gtk.Bin):
             self.__completion_model.clear()
 
         def model_append(array):
+            if self.__completion_model_clear_timeout_id is not None:
+                GLib.source_remove(self.__completion_model_clear_timeout_id)
             if self.__completion_model_append_timeout_id is not None:
                 GLib.source_remove(self.__completion_model_append_timeout_id)
             self.__completion_model_append_timeout_id = \
@@ -816,7 +818,6 @@ class ToolbarTitle(Gtk.Bin):
                 GLib.timeout_add(1000, model_clear_timeout)
 
         if self.__entry.get_text() == uri:
-            model_clear()
             # Look for a match in history
             match = App().history.get_match(uri)
             if match is not None:
@@ -829,24 +830,25 @@ class ToolbarTitle(Gtk.Bin):
                         model_append([netloc + match_parsed.path])
                     else:
                         model_append([netloc])
-
-            if not App().settings.get_value("dns-prediction"):
-                return
-            # Try some DNS request, FIXME Better list?
-            from socket import gethostbyname
-            parsed = urlparse(uri)
-            if parsed.netloc:
-                uri = parsed.netloc
-            for suffix in self.__dns_suffixes:
-                for prefix in ["www.", ""]:
-                    try:
-                        lookup = "%s%s.%s" % (prefix, uri, suffix)
-                        gethostbyname(lookup)
-                        model_append([lookup.replace("www.", "")])
-                        return
-                    except:
-                        if self.__cancellable.is_cancelled():
+                    return
+            if App().settings.get_value("dns-prediction"):
+                # Try some DNS request, FIXME Better list?
+                from socket import gethostbyname
+                parsed = urlparse(uri)
+                if parsed.netloc:
+                    uri = parsed.netloc
+                for suffix in self.__dns_suffixes:
+                    for prefix in ["www.", ""]:
+                        try:
+                            lookup = "%s%s.%s" % (prefix, uri, suffix)
+                            gethostbyname(lookup)
+                            model_append([lookup.replace("www.", "")])
                             return
+                        except:
+                            if self.__cancellable.is_cancelled():
+                                return
+            # Only happen if nothing matched
+            model_clear()
 
     def __search_in_current_views(self, value):
         """
@@ -871,6 +873,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__cancellable.cancel()
         self.__cancellable.reset()
+        self.__completion_model.clear()
         webview = self.__window.container.current.webview
         if popover == self.__popover:
             webview.grab_focus()
