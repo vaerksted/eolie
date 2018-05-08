@@ -555,7 +555,7 @@ class WebView(WebKit2.WebView):
         if related.uri is not None:
             parsed_related = urlparse(related.uri)
             elapsed = time() - related._last_click_time
-            exception = elapsed < 0.5 or\
+            exception = elapsed < 1.0 or\
                 App().popup_exceptions.find_parsed(parsed_related)
         else:
             exception = False
