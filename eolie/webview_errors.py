@@ -69,7 +69,7 @@ class WebViewErrors:
             @param uri as str
         """
         self.stop_loading()
-        self._error = True
+        self.__error = True
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
@@ -115,7 +115,7 @@ class WebViewErrors:
         # Ignore HTTP errors
         if error.code > 101:
             return False
-        self._error = True
+        self.__error = True
         network_available = Gio.NetworkMonitor.get_default(
         ).get_network_available()
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
@@ -161,7 +161,7 @@ class WebViewErrors:
             @param certificate as Gio.TlsCertificate
             @parma errors as Gio.TlsCertificateFlags
         """
-        self._error = True
+        self.__error = True
         self.__bad_tls = certificate
         accept_uri = uri.replace("https://", "accept://")
         if App().websettings.get_accept_tls(uri):
@@ -212,7 +212,7 @@ class WebViewErrors:
             We just crashed :-(
             @param webview as WebKit2.WebView
         """
-        self._error = True
+        self.__error = True
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")
