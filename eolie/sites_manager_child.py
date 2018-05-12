@@ -295,10 +295,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
                     if child.view == current:
                         self.__pages_listbox.select_row(child)
                         self.__current_child = child
+                self.__pages_listbox.invalidate_sort()
             else:
                 self.__pages_listbox.unselect_all()
                 self.__current_child = None
-            self.__pages_listbox.invalidate_sort()
 
     @property
     def empty(self):
