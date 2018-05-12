@@ -20,13 +20,20 @@ class LabelIndicator(Gtk.Label):
         Label with an indicator
     """
 
-    def __init__(self):
+    def __init__(self, is_count):
         """
             Init label
+            @param count as bool
         """
         Gtk.Label.__init__(self)
+        if is_count:
+            self.__margin = 0
+            self.get_style_context().add_class("font-small")
+            self.get_style_context().add_class("font-monospace")
+        else:
+            self.__margin = 10
         self.set_xalign(0.0)
-        self.set_yalign(0.80)
+        self.set_yalign(1)
         self.__count = 0
         self.__unshown = []
 
@@ -39,7 +46,11 @@ class LabelIndicator(Gtk.Label):
             self.__count += 1
         else:
             self.__count -= 1
-        self.set_text(str(max(1, self.__count)))
+        count = max(1, self.__count)
+        if count == 1:
+            self.set_text(" ")
+        else:
+            self.set_text(str(count))
 
     def mark_unshown(self, webview):
         """
@@ -64,7 +75,7 @@ class LabelIndicator(Gtk.Label):
             Add circle width
         """
         (min, nat) = Gtk.Label.do_get_preferred_width(self)
-        return (min + 12, nat + 12)
+        return (min + self.__margin, nat + self.__margin)
 
     def do_draw(self, cr):
         """
@@ -75,10 +86,10 @@ class LabelIndicator(Gtk.Label):
         if self.__unshown:
             w = self.get_allocated_width()
             cr.stroke()
-            cr.translate(w - 5, 5)
+            cr.translate(w - 4, 3)
             cr.set_line_width(1)
             Gdk.cairo_set_source_color(cr, Gdk.Color.parse("red")[1])
-            cr.arc(0, 0, 4, 0, 2 * pi)
+            cr.arc(0, 0, 2, 0, 2 * pi)
             cr.stroke_preserve()
             Gdk.cairo_set_source_color(cr, Gdk.Color.parse("red")[1])
             cr.fill()

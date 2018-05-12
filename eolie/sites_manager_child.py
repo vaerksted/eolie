@@ -161,7 +161,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
-        self.__indicator_label = LabelIndicator()
+        self.__indicator_label = LabelIndicator(True)
         self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_label.show()
         self.__separator = builder.get_object("separator")

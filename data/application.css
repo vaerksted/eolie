@@ -58,6 +58,18 @@
     border-radius: 2px;
 }
 
+.font-monospace {
+    font-family: Monospace;
+}
+
+.font-small {
+    font-size: 80%;
+}
+
+.bold {
+    font-weight: bold;
+}
+
 .sidebar-item-title {
     padding: 0px;
     box-shadow: 1px 1px 3px 3px alpha(shade(@theme_bg_color, 1.7), 0.85);
@@ -136,14 +148,6 @@
     background-color: alpha(red, 0.5);
 }
 
-.indicator-button {
-    border: 2px solid white;
-    background-color: black;
-    color: white;
-    padding: 0px;
-    border-radius: 16px;
-}
-
 .tag-base {
     box-shadow: none;
 	background-image: none;
@@ -191,10 +195,6 @@
 
 .selected {
     color: @theme_selected_bg_color;
-}
-
-.bold {
-    font-weight: bold;
 }
 
 .download-button {

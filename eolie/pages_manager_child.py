@@ -36,7 +36,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/PagesManagerChild.ui")
         builder.connect_signals(self)
-        self.__indicator_label = LabelIndicator()
+        self.__indicator_label = LabelIndicator(False)
         self.__indicator_label.mark_unshown(view.webview)
         self.__indicator_label.set_hexpand(True)
         self.__indicator_label.set_margin_right(4)
