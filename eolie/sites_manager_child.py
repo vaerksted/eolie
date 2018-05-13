@@ -409,7 +409,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param surface as cairo.Surface
         """
-        if len(self.__views) > 1 and\
+        if self.get_style_context().has_class("item-selected") and\
+                len(self.__views) > 1 and\
                 webview.view != self.__window.container.current:
             return
         if surface is not None:
