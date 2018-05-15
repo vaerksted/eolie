@@ -193,7 +193,7 @@ class SearchEolieService(Server, Gio.Application):
         search = " ".join(terms)
         try:
             # Search for bookmarks
-            for (title, uri, score) in self.bookmarks.search(search, 20):
+            for (id, title, uri, score) in self.bookmarks.search(search, 20):
                 ids.append(str(self.bookmarks.get_id(uri)))
         except Exception as e:
             print(e)
