@@ -15,6 +15,7 @@
     <property name="website">@PACKAGE_URL@</property>
     <property name="website_label" translatable="yes">Visit Eolie website</property>
     <property name="authors">Cédric Bellegarde &lt;cedric.bellegarde@adishatz.org&gt;
+Bilal Elmoussaoui
 </property>
     <property name="translator_credits" translatable="yes" context="Translation credits here, put your name here!" comments="Replace me with your names">Cédric Bellegarde &lt;cedric.bellegarde@adishatz.org&gt;</property>
     <property name="artists">
