@@ -378,7 +378,7 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval == Gdk.KEY_Shift_L:
+        if event.keyval in [Gdk.KEY_Shift_L, Gdk.KEY_Control_L]:
             self.__modifiers = event.keyval
         if event.state & Gdk.ModifierType.CONTROL_MASK and\
                 event.keyval == Gdk.KEY_Tab:
@@ -474,6 +474,9 @@ class Window(Gtk.ApplicationWindow):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
+        elif string == "add_dot_com":
+            print("plop")
+            self.toolbar.title.add_dot_com()
         elif string == "jsblock":
             current_webview = self.container.current.webview
             App().helper.call("EnableJS",

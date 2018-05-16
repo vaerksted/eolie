@@ -594,7 +594,7 @@ class WebView(WebKit2.WebView):
                         Indicator.POPUPS)
             elif (properties.get_toolbar_visible() or
                     properties.get_scrollbars_visible()) and\
-                    not self._window.modifiers & Gdk.ModifierType.SHIFT_MASK:
+                    not self._window.modifiers == Gdk.KEY_Shift_L:
                 self._window.container.add_webview_with_new_view(
                     webview,
                     LoadingType.FOREGROUND)

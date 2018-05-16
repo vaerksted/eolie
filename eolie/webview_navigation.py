@@ -383,18 +383,18 @@ class WebViewNavigation:
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                if self._window.modifiers & Gdk.ModifierType.SHIFT_MASK:
+                if self._window.modifiers == Gdk.KEY_Shift_L:
                     loading_type = LoadingType.POPOVER
                 else:
                     loading_type = LoadingType.FOREGROUND
                 self.new_page(navigation_uri, loading_type)
                 decision.ignore()
                 return True
-            elif self._window.modifiers & Gdk.ModifierType.CONTROL_MASK:
+            elif self._window.modifiers == Gdk.KEY_Control_L:
                 self.new_page(navigation_uri, LoadingType.BACKGROUND)
                 decision.ignore()
                 return True
-            elif self._window.modifiers & Gdk.ModifierType.SHIFT_MASK:
+            elif self._window.modifiers == Gdk.KEY_Shift_L:
                 self.new_page(navigation_uri, LoadingType.POPOVER)
                 decision.ignore()
                 return True
