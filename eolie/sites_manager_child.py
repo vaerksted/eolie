@@ -413,24 +413,24 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 len(self.__views) > 1 and\
                 webview.view != self.__window.container.current:
             return
-        if surface is not None:
-            self.__image.set_from_surface(surface)
-            return
 
-        favicon_path = App().art.get_favicon_path(webview.uri)
-        if favicon_path is not None:
-            self.__image.set_from_file(favicon_path)
-            return
+        if not webview.ephemeral:
+            if surface is not None:
+                self.__image.set_from_surface(surface)
+                return
+            favicon_path = App().art.get_favicon_path(webview.uri)
+            if favicon_path is not None:
+                self.__image.set_from_file(favicon_path)
+                return
 
         artwork = App().art.get_icon_theme_artwork(webview.uri,
                                                    webview.ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(artwork,
                                             Gtk.IconSize.INVALID)
-            return
-
-        self.__image.set_from_icon_name("applications-internet",
-                                        Gtk.IconSize.INVALID)
+        else:
+            self.__image.set_from_icon_name("applications-internet",
+                                            Gtk.IconSize.INVALID)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
