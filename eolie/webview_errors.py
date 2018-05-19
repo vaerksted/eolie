@@ -178,7 +178,7 @@ class WebViewErrors:
             elif errors == Gio.TlsCertificateFlags.EXPIRED:
                 error = _("The certificate has expired")
             elif errors == Gio.TlsCertificateFlags.UNKNOWN_CA:
-                error = _("The signing certificate authority is not known")
+                error = _("The signing certificate authority is unknown")
             elif errors == Gio.TlsCertificateFlags.GENERIC_ERROR:
                 error = _("The certificate contains errors")
             elif errors == Gio.TlsCertificateFlags.REVOKED:
@@ -199,7 +199,7 @@ class WebViewErrors:
                            error,
                            _("This does not look like the real %s.<br/>"
                              "Attackers might be trying to steal or alter"
-                             " information going to or from this site"
+                             " info going to or coming from this site"
                              " (for example, private messages, credit card"
                              " information, or passwords).") % uri,
                            "destructive-action",
@@ -228,7 +228,7 @@ class WebViewErrors:
                        "",
                        _("The webpage was terminated unexpectedly."
                          "To continue, reload or go to another page.<br/><br/>"
-                         "If problem persist, you can report a bug :)<br/>"
+                         "If the problem persists, you can report a bug :)<br/>"
                          "Use <b>'Webkit Gtk'</b> as component.<br/>"
                          "Set <b>[GTK]</b> as subject prefix."),
                        "suggested-action",
