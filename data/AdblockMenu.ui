@@ -90,7 +90,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.adblock</property>
-        <property name="tooltip-text" translatable="yes">Enable adblock</property>
+        <property name="tooltip-text" translatable="yes">Enable adblocking</property>
         <property name="text" translatable="yes" context="Adblock">Enabled</property>
       </object>
       <packing>
