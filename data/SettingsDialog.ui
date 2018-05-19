@@ -247,7 +247,7 @@
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">Configure engines</property>
+                <property name="label" translatable="yes">Configure search engines</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
