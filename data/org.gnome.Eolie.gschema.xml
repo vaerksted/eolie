@@ -41,12 +41,12 @@
       </key>
       <key type="b" name="trust-websites-adblock">
          <default>true</default>
-         <summary>Trust websites: No adblock for internal URIs</summary>
+         <summary>Trust websites: No adblocking of internal URIs</summary>
          <description />
       </key>
       <key type="b" name="trust-websites-js">
          <default>true</default>
-         <summary>Trust websites: No JavaScript blocking for internal URIs</summary>
+         <summary>Trust websites: No JavaScript blocking of internal URIs</summary>
          <description />
       </key>
       <key type="b" name="popupblock">
