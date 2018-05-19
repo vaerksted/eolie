@@ -202,7 +202,7 @@ class DatabaseAdblock:
         # Update adblock_js repo
         git = GLib.find_program_in_path("Git")
         if git is None:
-            Logger.info(_("For stronger ad blocking, install Git command"))
+            Logger.info(_("For stronger adblocking, install this, using Git command"))
         else:
             if GLib.file_test(ADBLOCK_JS, GLib.FileTest.IS_DIR):
                 argv = [git,
