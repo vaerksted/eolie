@@ -12,7 +12,7 @@
         <property name="receives_default">True</property>
         <property name="tooltip_text" translatable="yes">Do not filter current website content</property>
         <property name="action_name">win.trust-websites-js</property>
-        <property name="text" translatable="yes" context="Trust web sites">Trust web sites</property>
+        <property name="text" translatable="yes" context="Trust web sites">Trust websites</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -25,7 +25,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="hexpand">True</property>
-        <property name="text" translatable="yes">JavaScript block</property>
+        <property name="text" translatable="yes">JavaScript blocker</property>
         <property name="menu_name">main</property>
         <property name="inverted">True</property>
         <property name="centered">True</property>
