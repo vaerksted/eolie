@@ -229,7 +229,7 @@ class WebViewErrors:
                        _("The webpage was terminated unexpectedly."
                          " To continue, reload or go to another page.<br/><br/>"
                          "If the problem persists, you can report a bug :)<br/>"
-                         "Use <b>'Webkit Gtk'</b> as component.<br/>"
+                         "Use <b>'WebKit GTK+'</b> as component.<br/>"
                          "Set <b>[GTK]</b> as subject prefix."),
                        "suggested-action",
                        _("Report a bug now"))
