@@ -42,7 +42,7 @@ class GeolocationPopover(Gtk.Popover):
         self.__switch = builder.get_object("switch")
         widget = builder.get_object("widget")
         label = builder.get_object("label")
-        label.set_text(_("Allow this page to get your location?"))
+        label.set_text(_("Grant this page access to your location?"))
         self.add(widget)
 
 #######################
