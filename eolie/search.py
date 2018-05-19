@@ -244,7 +244,7 @@ class Search:
                     encoding = child.text
             if name is not None and search is not None:
                 message = _("Do you want to install\n"
-                            "%s search engine ?") % name
+                            "the %s search engine ?") % name
                 callback = self.__on_message_popover_ok
             else:
                 message = _("Unsupported search engine")
