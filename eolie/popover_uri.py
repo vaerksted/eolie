@@ -210,7 +210,7 @@ class Row(Gtk.ListBoxRow):
             @param favicon as Gtk.Image
             @param uri as str
         """
-        uri = self.__item.get_property("URI")
+        uri = self.__item.get_property("uri")
         favicon_path = App().art.get_favicon_path(uri)
         if favicon_path is not None:
             favicon.set_from_file(favicon_path)
