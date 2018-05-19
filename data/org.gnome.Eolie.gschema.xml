@@ -41,27 +41,27 @@
       </key>
       <key type="b" name="trust-websites-adblock">
          <default>true</default>
-         <summary>Trust websites: no adblock for internal URIs</summary>
+         <summary>Trust websites: No adblock for internal URIs</summary>
          <description />
       </key>
       <key type="b" name="trust-websites-js">
          <default>true</default>
-         <summary>Trust websites: no JavaScript blocking for internal URIs</summary>
+         <summary>Trust websites: No JavaScript blocking for internal URIs</summary>
          <description />
       </key>
       <key type="b" name="popupblock">
          <default>true</default>
-         <summary>Block unwanted popups on pages</summary>
+         <summary>Block all unwanted popups</summary>
          <description />
       </key>
       <key type="b" name="imageblock">
          <default>false</default>
-         <summary>Block images on page</summary>
+         <summary>Block all images</summary>
          <description />
       </key>
       <key type="b" name="jsblock">
          <default>false</default>
-         <summary>Block JavaScript on pages</summary>
+         <summary>Block all JavaScript</summary>
          <description />
       </key>
       <key type="s" name="download-uri">
