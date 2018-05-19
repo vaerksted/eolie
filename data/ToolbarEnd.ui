@@ -66,7 +66,7 @@
       <object class="GtkButton" id="tls_button">
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="tooltip_text" translatable="yes">Disallow access to this site</property>
+        <property name="tooltip_text" translatable="yes">Deny this site access</property>
         <property name="image">image5</property>
         <signal name="clicked" handler="_on_tls_button_clicked" swapped="no"/>
         <style>
