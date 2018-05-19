@@ -393,7 +393,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if indicator == Indicator.GEOLOCATION:
             self.__indicator2.show()
-            self.__indicator2.set_tooltip_text(_("Disallow geolocation"))
+            self.__indicator2.set_tooltip_text(_("Deny geolocation"))
             self.__indicator2_image.set_from_icon_name(
                 "mark-location-symbolic",
                 Gtk.IconSize.MENU)
