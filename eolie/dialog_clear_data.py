@@ -183,7 +183,7 @@ class ClearDataDialog:
         elif data_type == WebKit2.WebsiteDataTypes.OFFLINE_APPLICATION_CACHE:
             name = _("Offline web application cache")
         elif data_type == WebKit2.WebsiteDataTypes.SESSION_STORAGE:
-            name = _("Session storage data")
+            name = _("Stored session data")
         elif data_type == WebKit2.WebsiteDataTypes.LOCAL_STORAGE:
             name = _("Local storage data")
         elif data_type == WebKit2.WebsiteDataTypes.WEBSQL_DATABASES:
@@ -191,7 +191,7 @@ class ClearDataDialog:
         elif data_type == WebKit2.WebsiteDataTypes.INDEXEDDB_DATABASES:
             name = _("IndexedDB databases")
         elif data_type == WebKit2.WebsiteDataTypes.PLUGIN_DATA:
-            name = _("Plugins data")
+            name = _("Plugin files")
         elif data_type == WebKit2.WebsiteDataTypes.COOKIES:
             name = _("Cookies")
         return name
