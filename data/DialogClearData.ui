@@ -80,7 +80,7 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">You can select a timeframe to clear all website data during that period. If you start from the beginning, you can pick which websites to clear.</property>
+                <property name="label" translatable="yes">You can select a period of time to clear data for all websites modified in that period. If you choose from the beginning of time, then you can also clear data only for particular websites</property>
                 <property name="wrap">True</property>
                 <property name="max_width_chars">50</property>
               </object>
