@@ -200,7 +200,7 @@ class DatabaseAdblock:
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
         # Update adblock_js repo
-        git = GLib.find_program_in_path("Git")
+        git = GLib.find_program_in_path("git")
         if git is None:
             Logger.info(_("For stronger ad blocking, install git command"))
         else:
