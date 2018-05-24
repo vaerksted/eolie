@@ -227,7 +227,7 @@ class SearchEngineDialog:
 
     def _on_uri_entry_changed(self, entry):
         """
-            Update search engine uri
+            Update search engine URI
             @param entry as Gtk.Entry
         """
         uri = entry.get_text()
@@ -243,7 +243,7 @@ class SearchEngineDialog:
 
     def _on_search_entry_changed(self, entry):
         """
-            Update search engine search uri
+            Update search engine search URI
             @param entry as Gtk.Entry
         """
         search = entry.get_text()

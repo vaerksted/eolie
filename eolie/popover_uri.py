@@ -158,7 +158,7 @@ class Row(Gtk.ListBoxRow):
                 Gtk.IconSize.MENU)
             open_button.connect("clicked", self.__on_open_clicked)
             open_button.get_style_context().add_class("overlay-button2")
-            open_button.set_tooltip_text(_("Open all pages for this tag"))
+            open_button.set_tooltip_text(_("Open all pages with this tag"))
             open_button.show()
             grid.attach(open_button, 0, 0, 1, 1)
         grid.show()
@@ -206,7 +206,7 @@ class Row(Gtk.ListBoxRow):
 #######################
     def __set_favicon(self, favicon):
         """
-            Try to get a favicon for current uri
+            Try to get a favicon for current URI
             @param favicon as Gtk.Image
             @param uri as str
         """

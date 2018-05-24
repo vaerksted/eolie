@@ -194,14 +194,14 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Temporarily enable JavaScript for current site</property>
+                <property name="title" translatable="yes" context="shortcut window">Enable JavaScript for current site temporarily</property>
                 <property name="accelerator">&lt;Primary&gt;j</property>
               </object>
             </child>
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
-                <property name="title" translatable="yes" context="shortcut window">Temporarily enable "Media Source Extension"</property>
+                <property name="title" translatable="yes" context="shortcut window">Enable "Media Source Extension" temporarily</property>
                 <property name="accelerator">&lt;Primary&gt;m</property>
               </object>
             </child>

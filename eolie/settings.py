@@ -492,28 +492,28 @@ class SettingsDialog:
         self.__sync_button.get_style_context().remove_class(
             "suggested-action")
         if status:
-            self.__result_label.set_text(_("Synchronization is working"))
+            self.__result_label.set_text(_("Syncing operational"))
             self.__result_image.set_from_icon_name(
                 "network-transmit-receive-symbolic",
                 Gtk.IconSize.MENU)
             self.__sync_button.get_style_context().add_class(
                 "destructive-action")
-            self.__sync_button.set_label(_("Cancel synchronization"))
+            self.__sync_button.set_label(_("Cancel syncing"))
         elif self.__login_entry.get_text() and\
                 self.__password_entry.get_text():
             self.__sync_button.get_style_context().add_class(
                 "suggested-action")
-            self.__sync_button.set_label(_("Start synchronization"))
+            self.__sync_button.set_label(_("Start syncing"))
             self.__result_label.set_text("")
         else:
             self.__sync_button.get_style_context().add_class(
                 "suggested-action")
-            self.__sync_button.set_label(_("Allow synchronization"))
+            self.__sync_button.set_label(_("Allow syncing"))
             self.__result_image.set_from_icon_name(
                 "computer-fail-symbolic",
                 Gtk.IconSize.MENU)
             self.__result_label.set_text(
-                _("Synchronization is not working"))
+                _("Syncing is not working"))
 
     def __missing_fxa(self):
         """
@@ -524,8 +524,8 @@ class SettingsDialog:
             cmd = "<b>$ pip3 install requests-hawk\n"\
                   "PyFxA pycrypto cryptography</b>"
             self.__result_label.set_markup(
-                _("Synchronization is not available"
-                    " on your computer:\n %s") % cmd)
+                _("Syncing is not available"
+                    " on your computer:\n%s") % cmd)
             self.__sync_button.set_sensitive(False)
 
     def __connect_firefox_sync(self, username, password):
@@ -548,7 +548,7 @@ class SettingsDialog:
                 GLib.idle_add(
                     App().active_window.toolbar.title.show_message,
                     _("You've received an email"
-                      " to validate synchronization"))
+                      " to validate syncing"))
             else:
                 GLib.idle_add(self.__result_label.set_text, str(e))
                 GLib.idle_add(self.__result_image.set_from_icon_name,

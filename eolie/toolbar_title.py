@@ -337,15 +337,15 @@ class ToolbarTitle(Gtk.Bin):
 
     def show_input_warning(self, webview):
         """
-            Show a message to user about password input field over http
+            Show a message to user about password input field over HTTP
             @param webview as WebView
         """
         if self.__input_warning_shown:
             return
         self.__input_warning_shown = True
         self.show_message(_(
-            "Heads-up: this page is not secure.\n"
-            "If you type your password,\n it will be "
+            "Heads-up: This page is insecure.\n"
+            "If you type your password,\nit will be "
             "visible to cybercriminals!"))
 
     def show_readable_button(self, b):
@@ -393,7 +393,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if indicator == Indicator.GEOLOCATION:
             self.__indicator2.show()
-            self.__indicator2.set_tooltip_text(_("Disallow geolocation"))
+            self.__indicator2.set_tooltip_text(_("Deny geolocation"))
             self.__indicator2_image.set_from_icon_name(
                 "mark-location-symbolic",
                 Gtk.IconSize.MENU)

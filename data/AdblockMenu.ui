@@ -90,7 +90,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.adblock</property>
-        <property name="tooltip-text" translatable="yes">Enable adblock</property>
+        <property name="tooltip-text" translatable="yes">Enable adblocking</property>
         <property name="text" translatable="yes" context="Adblock">Enabled</property>
       </object>
       <packing>
@@ -120,8 +120,8 @@
         <property name="receives_default">True</property>
         <property name="action_name">win.adblock_exceptions</property>
         <property name="action_target">"site"</property>
-        <property name="tooltip-text" translatable="yes">Do not block ads for this site</property>
-        <property name="text" translatable="yes">Not for this site</property>
+        <property name="tooltip-text" translatable="yes">Do not block ads on this site</property>
+        <property name="text" translatable="yes">Not on this site</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -134,9 +134,9 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.adblock_exceptions</property>
-        <property name="tooltip-text" translatable="yes">Do not block ads for this page</property>
+        <property name="tooltip-text" translatable="yes">Do not block ads on this page</property>
         <property name="action_target">"page"</property>
-        <property name="text" translatable="yes">Not for this page</property>
+        <property name="text" translatable="yes">Not on this page</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
