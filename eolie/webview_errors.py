@@ -226,10 +226,10 @@ class WebViewErrors:
                        "internal://help-faq-symbolic",
                        _("WebKit web engine crashed"),
                        "",
-                       _("The webpage was terminated unexpectedly."
-                         " To continue, reload or go to another page.<br/><br/>"
+                       _("The webpage was terminated unexpectedly. "
+                         "To continue, reload or go to another page.<br/><br/>"
                          "If problem persists, you can report a bug :)<br/>"
-                         "Use <b>'WebKit GTK+'</b> as component.<br/>"
+                         "Use <b>'WebKit Gtk'</b> as component.<br/>"
                          "Set <b>[GTK]</b> as subject prefix."),
                        "suggested-action",
                        _("Report a bug now"))
