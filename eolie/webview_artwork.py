@@ -178,6 +178,7 @@ class WebViewArtwork:
             @param param as GObject.ParamSpec
         """
         if not webview.is_loading() and not webview.ephemeral:
+            self.__initial_uri = None
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
