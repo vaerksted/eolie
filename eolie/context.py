@@ -46,7 +46,6 @@ class Context:
         context.register_uri_scheme("accept", self.__on_accept_scheme)
         context.register_uri_scheme("file", self.__on_file_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
-        context.get_security_manager().register_uri_scheme_as_local("file")
         # We allow DownloadPopover to connect before default context
         context.connect_after("download-started", self.__on_download_started)
 
