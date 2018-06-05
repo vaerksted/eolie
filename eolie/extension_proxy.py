@@ -72,7 +72,7 @@ class Server:
                 invocation.return_value(variant)
             else:
                 invocation.return_value(None)
-        except Exception as e:
+        except:
             pass
 
 
