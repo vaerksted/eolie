@@ -21,7 +21,6 @@ PROXY_INTERFACE = 'org.gnome.Eolie.Proxy'
 # Setup common paths
 EOLIE_DATA_PATH = GLib.get_user_data_dir() + "/eolie"
 EOLIE_CACHE_PATH = GLib.get_user_cache_dir() + "/eolie"
-ADBLOCK_JS = "%s/adblock_js" % EOLIE_DATA_PATH
 
 COOKIES_PATH = "%s/cookies_%s.db"
 

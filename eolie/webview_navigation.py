@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, ADBLOCK_JS, LoadingType, EOLIE_DATA_PATH
+from eolie.define import App, LoadingType, EOLIE_DATA_PATH
 from eolie.define import COOKIES_PATH
 from eolie.utils import get_ftp_cmd
 from eolie.logger import Logger
@@ -170,24 +170,7 @@ class WebViewNavigation:
                     return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
-            http_scheme = parsed.scheme in ["http", "https"]
             self.update_zoom_level()
-            # Setup eolie internal adblocker
-            if App().settings.get_value("adblock") and\
-                    http_scheme:
-                exception = App().adblock_exceptions.find_parsed(parsed)
-                if not exception:
-                    noext = ".".join(parsed.netloc.split(".")[:-1])
-                    javascripts = ["adblock_%s.js" % parsed.netloc,
-                                   "adblock_%s.js" % noext]
-                    for javascript in javascripts:
-                        f = Gio.File.new_for_path("%s/%s" % (ADBLOCK_JS,
-                                                             javascript))
-                        if f.query_exists():
-                            (status, content, tag) = f.load_contents(None)
-                            js = content.decode("utf-8")
-                            self.run_javascript(js, None, None)
-                            break
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(

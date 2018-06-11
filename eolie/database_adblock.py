@@ -17,13 +17,12 @@ import sqlite3
 import itertools
 from pickle import dump, load
 import re
-from gettext import gettext as _
 from time import time, sleep
 from threading import Lock
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_DATA_PATH, ADBLOCK_JS
+from eolie.define import EOLIE_DATA_PATH
 from eolie.utils import remove_www
 from eolie.logger import Logger
 
@@ -199,27 +198,6 @@ class DatabaseAdblock:
         """
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
-        # Update adblock_js repo
-        git = GLib.find_program_in_path("git")
-        if git is None:
-            Logger.info(_("For stronger ad blocking, install git command"))
-        else:
-            if GLib.file_test(ADBLOCK_JS, GLib.FileTest.IS_DIR):
-                argv = [git,
-                        "-C",
-                        ADBLOCK_JS,
-                        "pull",
-                        "https://gitlab.gnome.org/gnumdk/eolie-adblock.git"]
-            else:
-                argv = [git,
-                        "clone",
-                        "https://gitlab.gnome.org/gnumdk/eolie-adblock.git",
-                        ADBLOCK_JS]
-            (pid, a1, a2, a3) = GLib.spawn_async(
-                argv,
-                flags=GLib.SpawnFlags.STDOUT_TO_DEV_NULL)
-            GLib.spawn_close_pid(pid)
-
         # DB version is last successful sync mtime
         try:
             version = load(open(EOLIE_DATA_PATH + "/adblock.bin", "rb"))
