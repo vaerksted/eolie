@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkImage" id="image1">
@@ -17,15 +17,15 @@
     <property name="can_focus">False</property>
     <property name="icon_name">gedit-symbolic</property>
   </object>
-  <object class="GtkImage" id="image40">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">view-fullscreen-symbolic</property>
-  </object>
   <object class="GtkImage" id="image4">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">zoom-out-symbolic</property>
+  </object>
+  <object class="GtkImage" id="image40">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">view-fullscreen-symbolic</property>
   </object>
   <object class="GtkImage" id="image5">
     <property name="visible">True</property>
@@ -41,6 +41,11 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">folder-download-symbolic</property>
+  </object>
+  <object class="GtkImage" id="image8">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">org.gnome.Eolie-symbolic</property>
   </object>
   <object class="GtkGrid" id="widget">
     <property name="visible">True</property>
@@ -112,11 +117,11 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">0</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
       <object class="GtkBox" id="toolbar_items">
-        <property name="visible">False</property>
         <property name="can_focus">False</property>
         <child>
           <object class="GtkButton" id="home_button">
@@ -159,6 +164,7 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">1</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -219,6 +225,7 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">2</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -226,12 +233,13 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="menu_name">adblock_menu</property>
         <property name="text" translatable="yes">Block ads</property>
+        <property name="menu_name">adblock_menu</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">3</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -239,12 +247,13 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="menu_name">js_block_menu</property>
         <property name="text" translatable="yes">Block JavaScript</property>
+        <property name="menu_name">js_block_menu</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">4</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -252,12 +261,13 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="menu_name">popup_block_menu</property>
         <property name="text" translatable="yes">Block popups</property>
+        <property name="menu_name">popup_block_menu</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">5</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -265,12 +275,13 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="menu_name">image_block_menu</property>
         <property name="text" translatable="yes">Block images</property>
+        <property name="menu_name">image_block_menu</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">6</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -320,6 +331,7 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">2</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -332,7 +344,93 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
+        <property name="top_attach">7</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">app.settings</property>
+        <property name="text" translatable="yes">_Preferences</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">9</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
         <property name="top_attach">8</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">app.sidebar</property>
+        <property name="text" translatable="yes">_Sidebar</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">10</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">app.shortcuts</property>
+        <property name="text" translatable="yes">_Keyboard Shortcuts</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">11</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="hexpand">True</property>
+        <property name="action_name">app.quit</property>
+        <property name="text" translatable="yes">_Quit</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">12</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">end</property>
+        <property name="action_name">app.about</property>
+        <property name="image">image8</property>
+        <property name="relief">none</property>
+        <style>
+          <class name="overlay-button2"/>
+        </style>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">12</property>
       </packing>
     </child>
   </object>

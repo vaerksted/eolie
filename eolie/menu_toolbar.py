@@ -10,12 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio, GLib
 
 from gettext import gettext as _
 
 from eolie.menu_languages import LanguagesMenu
 from eolie.menu_block import JSBlockMenu, AdblockMenu
+from eolie.settings import SettingsDialog
 from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
 from eolie.define import App
 
@@ -64,6 +65,8 @@ class ToolbarMenu(Gtk.PopoverMenu):
         image_block_menu.show()
         languages_menu = LanguagesMenu(uri)
         languages_menu.show()
+
+        # Add items
         self.add(widget)
         self.add(adblock_menu)
         self.add(popup_block_menu)
@@ -77,22 +80,31 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.child_set_property(image_block_menu,
                                 "submenu", "image_block_menu")
         self.child_set_property(languages_menu, "submenu", "languages")
-        # Merge appmenu, we assume we only have one level (section -> items)
-        if not App().prefers_app_menu():
-            separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
-            separator.show()
-            widget.add(separator)
-            menu = App().get_app_menu()
-            for i in range(0, menu.get_n_items()):
-                section = menu.get_item_link(i, "section")
-                for y in range(0, section.get_n_items()):
-                    label = section.get_item_attribute_value(y, "label")
-                    action = section.get_item_attribute_value(y, "action")
-                    item = Gtk.ModelButton.new()
-                    item.set_property("text", label.get_string())
-                    item.set_action_name(action.get_string())
-                    item.show()
-                    widget.add(item)
+
+        # Add old «Application Menu»
+        settings_action = Gio.SimpleAction.new("settings", None)
+        settings_action.connect("activate", self.__on_settings_activate)
+        App().add_action(settings_action)
+
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.__on_about_activate)
+        App().add_action(about_action)
+
+        show_sidebar = App().settings.get_value("show-sidebar")
+        sidebar_action = Gio.SimpleAction.new_stateful(
+            "sidebar",
+            None,
+            GLib.Variant.new_boolean(show_sidebar))
+        sidebar_action.connect("change-state", self.__on_sidebar_change_state)
+        App().add_action(sidebar_action)
+
+        shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
+        shortcuts_action.connect("activate", self.__on_shortcuts_activate)
+        App().add_action(shortcuts_action)
+
+        quit_action = Gio.SimpleAction.new("quit", None)
+        quit_action.connect("activate", lambda x, y: App().quit())
+        App().add_action(quit_action)
 
 #######################
 # PROTECTED           #
@@ -169,3 +181,53 @@ class ToolbarMenu(Gtk.PopoverMenu):
 #######################
 # PRIVATE             #
 #######################
+    def __on_settings_activate(self, action, param):
+        """
+            Show settings dialog
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        dialog = SettingsDialog(self.__window)
+        dialog.show()
+
+    def __on_about_activate(self, action, param):
+        """
+            Setup about dialog
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        builder = Gtk.Builder()
+        builder.add_from_resource('/org/gnome/Eolie/AboutDialog.ui')
+        about = builder.get_object('about_dialog')
+        about.set_transient_for(self.__window)
+        about.connect("response", self.__on_about_activate_response)
+        about.show()
+
+    def __on_shortcuts_activate(self, action, param):
+        """
+            Show shortcuts
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+        """
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/Shortcuts.ui")
+        shortcuts = builder.get_object("shortcuts")
+        shortcuts.set_transient_for(self.__window)
+        shortcuts.show()
+
+    def __on_about_activate_response(self, dialog, response_id):
+        """
+            Destroy about dialog when closed
+            @param dialog as Gtk.Dialog
+            @param response ID as int
+        """
+        dialog.destroy()
+
+    def __on_sidebar_change_state(self, action, value):
+        """
+            Show/hide sidebar
+            @param action as Gio.SimpleAction
+            @param value as bool
+        """
+        action.set_state(value)
+        App().settings.set_value("show-sidebar", GLib.Variant("b", value))

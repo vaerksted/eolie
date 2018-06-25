@@ -27,7 +27,7 @@ from time import time
 import json
 from signal import signal, SIGINT, SIGTERM
 
-from eolie.settings import Settings, SettingsDialog
+from eolie.settings import Settings
 from eolie.window import Window
 from eolie.art import Art
 from eolie.database_history import DatabaseHistory
@@ -118,40 +118,6 @@ class Application(Gtk.Application):
         self.register(None)
         if self.get_is_remote():
             Gdk.notify_startup_complete()
-
-    def get_app_menu(self):
-        """
-            Setup application menu
-            @return menu as Gio.Menu
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/Appmenu.ui")
-        menu = builder.get_object("app-menu")
-
-        settings_action = Gio.SimpleAction.new("settings", None)
-        settings_action.connect("activate", self.__on_settings_activate)
-        self.add_action(settings_action)
-
-        about_action = Gio.SimpleAction.new("about", None)
-        about_action.connect("activate", self.__on_about_activate)
-        self.add_action(about_action)
-
-        show_sidebar = self.settings.get_value("show-sidebar")
-        sidebar_action = Gio.SimpleAction.new_stateful(
-            "sidebar",
-            None,
-            GLib.Variant.new_boolean(show_sidebar))
-        sidebar_action.connect("change-state", self.__on_sidebar_change_state)
-        self.add_action(sidebar_action)
-
-        shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
-        shortcuts_action.connect("activate", self.__on_shortcuts_activate)
-        self.add_action(shortcuts_action)
-
-        quit_action = Gio.SimpleAction.new("quit", None)
-        quit_action.connect("activate", lambda x, y: self.quit())
-        self.add_action(quit_action)
-        return menu
 
     def update_default_style_sheet(self):
         """
@@ -362,9 +328,6 @@ class Application(Gtk.Application):
             self.sync_worker.sync_loop()
         else:
             self.sync_worker = None
-        if self.prefers_app_menu():
-            menu = self.get_app_menu()
-            self.set_app_menu(menu)
         cssProviderFile = Gio.File.new_for_uri(
             'resource:///org/gnome/Eolie/application.css')
         cssProvider = Gtk.CssProvider()
@@ -792,61 +755,6 @@ class Application(Gtk.Application):
         else:
             self.__try_closing(window, window.container.views)
         return True
-
-    def __on_settings_activate(self, action, param):
-        """
-            Show settings dialog
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        dialog = SettingsDialog(self.active_window)
-        dialog.show()
-
-    def __on_about_activate(self, action, param):
-        """
-            Setup about dialog
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/AboutDialog.ui')
-        about = builder.get_object('about_dialog')
-        window = self.active_window
-        if window is not None:
-            about.set_transient_for(window)
-        about.connect("response", self.__on_about_activate_response)
-        about.show()
-
-    def __on_shortcuts_activate(self, action, param):
-        """
-            Show shortcuts
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/Shortcuts.ui")
-        shortcuts = builder.get_object("shortcuts")
-        window = self.active_window
-        if window is not None:
-            shortcuts.set_transient_for(window)
-        shortcuts.show()
-
-    def __on_about_activate_response(self, dialog, response_id):
-        """
-            Destroy about dialog when closed
-            @param dialog as Gtk.Dialog
-            @param response ID as int
-        """
-        dialog.destroy()
-
-    def __on_sidebar_change_state(self, action, value):
-        """
-            Show/hide sidebar
-            @param action as Gio.SimpleAction
-            @param value as bool
-        """
-        action.set_state(value)
-        self.settings.set_value("show-sidebar", GLib.Variant("b", value))
 
     def __on_activate(self, application):
         """

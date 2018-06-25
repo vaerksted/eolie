@@ -11,7 +11,6 @@
     <file compressed="true">Extensions.js</file>
     <file compressed="true">Readability.js</file>
      <file compressed="true" preprocess="xml-stripblanks">AdblockMenu.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">Appmenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>
