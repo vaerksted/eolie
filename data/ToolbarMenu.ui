@@ -42,11 +42,6 @@
     <property name="can_focus">False</property>
     <property name="icon_name">folder-download-symbolic</property>
   </object>
-  <object class="GtkImage" id="image8">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">org.gnome.Eolie-symbolic</property>
-  </object>
   <object class="GtkGrid" id="widget">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -117,7 +112,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">0</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -164,7 +158,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">1</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -225,7 +218,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">2</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -239,7 +231,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">3</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -253,7 +244,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">4</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -267,7 +257,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">5</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -281,7 +270,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">6</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -331,7 +319,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">2</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -345,7 +332,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">7</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -359,7 +345,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">9</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -370,7 +355,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">8</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -384,7 +368,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">10</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -398,7 +381,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">11</property>
-        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -412,24 +394,19 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">12</property>
+        <property name="top_attach">13</property>
       </packing>
     </child>
     <child>
-      <object class="GtkButton">
+      <object class="GtkModelButton">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="halign">end</property>
         <property name="action_name">app.about</property>
-        <property name="image">image8</property>
-        <property name="relief">none</property>
-        <style>
-          <class name="overlay-button"/>
-        </style>
+        <property name="text" translatable="yes">_About</property>
       </object>
       <packing>
-        <property name="left_attach">1</property>
+        <property name="left_attach">0</property>
         <property name="top_attach">12</property>
       </packing>
     </child>
