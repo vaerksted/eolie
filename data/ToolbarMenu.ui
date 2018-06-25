@@ -425,7 +425,7 @@
         <property name="image">image8</property>
         <property name="relief">none</property>
         <style>
-          <class name="overlay-button2"/>
+          <class name="overlay-button"/>
         </style>
       </object>
       <packing>
