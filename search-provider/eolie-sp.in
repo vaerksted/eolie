@@ -164,7 +164,7 @@ class SearchEolieService(Server, Gio.Application):
             for bookmark_id in ids:
                 title = self.bookmarks.get_title(bookmark_id)
                 uri = self.bookmarks.get_uri(bookmark_id)
-                art = self.art.get_path(uri, "start")
+                art = self.art.get_path(uri, "favicon")
                 d = { 'id': GLib.Variant('s', bookmark_id),
                       'description': GLib.Variant('s', uri),
                       'name': GLib.Variant('s', title),
