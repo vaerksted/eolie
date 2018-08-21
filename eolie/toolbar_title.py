@@ -794,10 +794,14 @@ class ToolbarTitle(Gtk.Bin):
             @param encoding as str
             @param value as str
         """
-        if status and value == self.__entry.get_text():
+        current_text = self.__entry.get_text()
+        if status and value == current_text:
             string = content.decode(encoding)
             # format: '["{"words"}",["result1","result2"]]'
-            sgs = string.replace('[', '').replace(']', '').split(',')[1:]
+            sgs = string.replace('[', '')\
+                        .replace(']', '')\
+                        .replace('"', '')\
+                        .split(',')[1:]
             self.__popover.add_suggestions(sgs)
 
     def __populate_completion(self, uri):
@@ -948,9 +952,9 @@ class ToolbarTitle(Gtk.Bin):
 
         self.__cancellable.cancel()
         self.__cancellable.reset()
-        parsed = urlparse(value)
 
         network = Gio.NetworkMonitor.get_default().get_network_available()
+        parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
             self.__popover.set_search_text(parsed.netloc + parsed.path)

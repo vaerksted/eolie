@@ -476,8 +476,8 @@ class UriPopover(Gtk.Popover):
             Set search model
             @param search as str
         """
-        self.__search_state = 0
         self.__set_search_text(search)
+        self.add_suggestions([search], Type.SEARCH, True)
         self.__stack.set_visible_child_name("search")
 
     def add_views(self, views):
@@ -493,32 +493,36 @@ class UriPopover(Gtk.Popover):
             item.set_property("title", view.webview.title)
             item.set_property("uri", view.webview.uri)
             item.set_property("search", self.__search)
-            item.set_property("score", -1)
+            item.set_property("score", Type.VIEW)
             child = Row(item, self.__window)
             child.show()
-            self.__search_box.add(child)
-        self.__search_state += Type.VIEW
-        self.__do_sort_search()
+            self.__search_box.insert(child, 0)
 
-    def add_suggestions(self, suggestions):
+    def add_suggestions(self, suggestions, score=Type.SUGGESTION, force=False):
         """
             Add suggestion to search
             @param suggestion as [str]
+            @param score as int
+            @param force as bool
         """
         if self.__stack.get_visible_child_name() != "search":
             return
         for suggestion in suggestions[:2]:
-            if suggestion:
-                value = suggestion.replace('"', '')
+            if suggestion and (suggestion != self.__search or force):
                 item = Item()
                 item.set_property("type", Type.SUGGESTION)
-                item.set_property("title", value)
-                item.set_property("uri", App().search.get_search_uri(value))
+                item.set_property("title", suggestion)
+                item.set_property("uri",
+                                  App().search.get_search_uri(suggestion))
                 item.set_property("search", self.__search)
-                item.set_property("score", -1)
+                item.set_property("score", score)
                 child = Row(item, self.__window)
                 child.show()
-                self.__search_box.insert(child, 0)
+                self.__search_box.insert(child, 1)
+                # We do not need to sort Type.SUGGESTION score because
+                # this happend at the end
+                if score == Type.SEARCH:
+                    self.__do_sort_search()
 
     def forward_event(self, event):
         """
@@ -725,13 +729,17 @@ class UriPopover(Gtk.Popover):
             return
 
         # Update titlebar
-        uri = row.item.get_property("uri")
-        if not uri:
-            return
-        parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https", "file"]:
-            uri = ""
-        self.__window.toolbar.title.set_text_entry(uri)
+        if row.item.get_property("type") == Type.SUGGESTION:
+            title = row.item.get_property("title")
+            self.__window.toolbar.title.set_text_entry(title)
+        else:
+            uri = row.item.get_property("uri")
+            if not uri:
+                return
+            parsed = urlparse(uri)
+            if parsed.scheme not in ["http", "https", "file"]:
+                uri = ""
+            self.__window.toolbar.title.set_text_entry(uri)
         # Scroll to row
         scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
         if scrolled is None:
@@ -906,13 +914,12 @@ class UriPopover(Gtk.Popover):
             Run a new sort after cleaning obsolete results
             @param force as bool
         """
-        if self.__search_state == Type.SEARCH + Type.VIEW:
-            for child in self.__search_box.get_children():
-                if child.item.get_property("search") != self.__search:
-                    child.destroy()
-            self.__search_box.set_sort_func(self.__sort_search)
-            self.__search_box.invalidate_sort()
-            self.__search_box.set_sort_func(None)
+        for child in self.__search_box.get_children():
+            if child.item.get_property("search") != self.__search:
+                child.destroy()
+        self.__search_box.set_sort_func(self.__sort_search)
+        self.__search_box.invalidate_sort()
+        self.__search_box.set_sort_func(None)
 
     def __sort_search(self, row1, row2):
         """
@@ -922,7 +929,7 @@ class UriPopover(Gtk.Popover):
         """
         pos1 = row1.item.get_property("score")
         pos2 = row2.item.get_property("score")
-        return pos2 > pos1
+        return pos2 > pos1 or pos2 == Type.SEARCH
 
     def __sort_tags(self, row1, row2):
         """
@@ -964,7 +971,6 @@ class UriPopover(Gtk.Popover):
             self.__search_box.add(child)
             GLib.idle_add(self.__add_searches, searches, search)
         else:
-            self.__search_state += Type.SEARCH
             self.__do_sort_search()
 
     def __add_bookmarks(self, bookmarks):
