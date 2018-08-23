@@ -174,6 +174,14 @@ class ToolbarEnd(Gtk.Bin):
             self.set_hexpand(True)
 
     @property
+    def home_button(self):
+        """
+            Get home button
+            @return Gtk.ToogleButton
+        """
+        return self.__home_button
+
+    @property
     def menu_button(self):
         """
             Get download button
