@@ -43,8 +43,10 @@ class Window(Gtk.ApplicationWindow):
         self.__modifiers = 0
         self.__window_state = 0
         self.__timeout_configure = None
+        self.__size = size
+        self.set_default_size(size[0], size[1])
         self.__setup_content()
-        self.connect("realize", self.__on_realize, size, maximized)
+        self.connect("realize", self.__on_realize, maximized)
         self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
@@ -241,6 +243,14 @@ class Window(Gtk.ApplicationWindow):
         # https://bugs.webkit.org/show_bug.cgi?id=181041
         return self.__modifiers
 
+    @property
+    def size(self):
+        """
+            Unmaximized window size
+            return (int, int)
+        """
+        return self.__size
+
 ############
 # Private  #
 ############
@@ -275,15 +285,12 @@ class Window(Gtk.ApplicationWindow):
         self.__toolbar.headerbar.set_show_close_button(True)
         self.add(self.__container)
 
-    def __setup_window(self, size, maximized):
+    def __setup_window(self, maximized):
         """
             Set window
-            @param size as (int, int)
             @param maximized as bool
         """
         try:
-            if size is not None:
-                self.resize(size[0], size[1])
             if maximized:
                 # Lets resize happen
                 GLib.idle_add(self.maximize)
@@ -329,6 +336,8 @@ class Window(Gtk.ApplicationWindow):
         """
         self.__timeout_configure = None
         self.update_zoom_level(False)
+        if not self.is_maximized():
+            self.__size = self.get_size()
 
     def __on_window_state_event(self, widget, event):
         """
@@ -362,14 +371,13 @@ class Window(Gtk.ApplicationWindow):
             if not lock:
                 self.__fullscreen_revealer.set_reveal_child(False)
 
-    def __on_realize(self, widget, size, maximized):
+    def __on_realize(self, widget, maximized):
         """
             Update zoom level
             @param widget as Gtk.Widget
-            @param size as (int, int)
             @param maximized as bool
         """
-        self.__setup_window(size, maximized)
+        self.__setup_window(maximized)
         self.update_zoom_level(False)
 
     def __on_key_press_event(self, window, event):

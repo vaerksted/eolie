@@ -147,7 +147,7 @@ class Application(Gtk.Application):
         windows = self.get_windows()
         if windows and size is None:
             active_window = self.active_window
-            size = active_window.get_size()
+            size = active_window.size
             maximized = active_window.is_maximized()
         window = Window(self, size, maximized)
         window.connect('delete-event', self.__on_delete_event)
@@ -487,7 +487,7 @@ class Application(Gtk.Application):
 
         window_state = {}
         window_state["id"] = str(window)
-        window_state["size"] = window.get_size()
+        window_state["size"] = window.size
         window_state["maximized"] = window.is_maximized()
         session_states = []
         if self.settings.get_value("remember-session"):
