@@ -135,7 +135,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Show download popover
             @param button as Gtk.Button
         """
-        self.__toolbar._on_download_button_toggled(button)
+        self.__toolbar._on_download_button_toggled(self.__toolbar.menu_button)
 
     def _on_zoom_button_clicked(self, button):
         """

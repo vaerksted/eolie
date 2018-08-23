@@ -332,12 +332,8 @@ class DownloadsPopover(Gtk.Popover):
             Clear finished downloads
             @param button as Gtk.button
         """
-        self.__clear_button.set_sensitive(False)
-        for child in self.__listbox.get_children():
-            if isinstance(child, DownloadRow):
-                if child.finished:
-                    App().download_manager.remove(child.download)
-                    child.destroy()
+        self.popdown()
+        self.__window.toolbar.end.download_button.hide()
 
 #######################
 # PRIVATE             #

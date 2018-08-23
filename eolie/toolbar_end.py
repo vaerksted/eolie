@@ -167,13 +167,19 @@ class ToolbarEnd(Gtk.Bin):
             @param b as bool
         """
         if b:
-            self.__download_button.hide()
             self.__home_button.hide()
             self.set_hexpand(False)
         else:
-            self.__download_button.show()
             self.__home_button.show()
             self.set_hexpand(True)
+
+    @property
+    def menu_button(self):
+        """
+            Get download button
+            @return Gtk.ToogleButton
+        """
+        return self.__menu_button
 
     @property
     def download_button(self):
@@ -192,11 +198,11 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.close_popovers()
-        if not button.get_active():
+        if button == self.__download_button and not button.get_active():
             return
         popover = DownloadsPopover(self.__window)
         # We are relative to toolbar button, button can be in menu
-        popover.set_relative_to(self.__download_button)
+        popover.set_relative_to(button)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.set_modal(False)
         self.__window.register(popover)
@@ -369,6 +375,10 @@ class ToolbarEnd(Gtk.Bin):
             @param name as str (do not use this)
         """
         if download_manager.active:
+            # Show button if needed
+            if not self.__download_button.is_visible() and\
+                    self.__home_button.is_visible():
+                self.__download_button.show()
             if self.__timeout_id is None:
                 self.__progress.show()
                 self.__timeout_id = GLib.timeout_add(1000,
