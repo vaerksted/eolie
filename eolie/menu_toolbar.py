@@ -39,7 +39,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.__toolbar = toolbar
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarMenu.ui")
-        if not toolbar.download_button.is_visible():
+        if not toolbar.home_button.is_visible():
             builder.get_object("toolbar_items").show()
         fullscreen_button = builder.get_object("fullscreen_button")
         if self.__window.is_fullscreen:
