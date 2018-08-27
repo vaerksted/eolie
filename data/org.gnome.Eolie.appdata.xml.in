@@ -23,6 +23,10 @@
  <screenshots>
     <screenshot type="default">https://adishatz.org/eolie.jpg</screenshot>
  </screenshots>
- <url type="homepage">https://gitlab.gnome.org/gnumdk/eolie</url>
+  <url type="homepage">https://wiki.gnome.org/Apps/Eolie</url>
+  <url type="bugtracker">https://gitlab.gnome.org/gnumdk/eolie/issues</url>
+  <url type="donation">https://www.paypal.me/lollypopgnome</url>
+  <url type="translate">https://hosted.weblate.org/projects/gnumdk/</url>
+  <content_rating type="oars-1.1" />
  <updatecontact>cedric.bellegarde@adishatz.org</updatecontact>
 </component>
