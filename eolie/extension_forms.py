@@ -118,10 +118,13 @@ class FormsExtension(GObject.Object):
                 h = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
+                    # TODO rework this
+                    # Not ok because block elements hidden like
+                    # on webkit bugzilla
                     # Ignore hidden elements
-                    if element.get_client_top() == 0:
-                        h += 1
-                        continue
+                    # if element.get_offset_parent() is None:
+                    #    h += 1
+                    #    continue
                     if isinstance(element,
                                   WebKit2WebExtension.DOMHTMLInputElement):
                         if element.get_input_type() == "password" and\
