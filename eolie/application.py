@@ -305,10 +305,6 @@ class Application(Gtk.Application):
             new_path = new_path + ':' + current_path
         GLib.setenv("PYTHONPATH", new_path, True)
 
-        # Create favicon path
-        if not GLib.file_test(self.__FAVICONS_PATH, GLib.FileTest.IS_DIR):
-            GLib.mkdir_with_parents(self.__FAVICONS_PATH, 0o0750)
-
         # Add a global DBus helper
         self.helper = DBusHelper()
         # First init sync worker
