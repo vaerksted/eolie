@@ -53,6 +53,7 @@ class FormsExtension(GObject.Object):
         if App().settings.get_value("remember-passwords"):
             form_input_username = form["username"].get_name()
             form_input_password = form["password"].get_name()
+            print(form_input_username, form_input_password)
             if form_input_username is not None and\
                     form_input_password is not None:
                 self.__helper.get(self.get_form_uri(form["element"]),
@@ -118,22 +119,17 @@ class FormsExtension(GObject.Object):
                 h = 0
                 while h < elements_collection.get_length():
                     element = elements_collection.item(h)
-                    # TODO rework this
-                    # Not ok because block elements hidden like
-                    # on webkit bugzilla
-                    # Ignore hidden elements
-                    # if element.get_offset_parent() is None:
-                    #    h += 1
-                    #    continue
                     if isinstance(element,
                                   WebKit2WebExtension.DOMHTMLInputElement):
                         if element.get_input_type() == "password" and\
-                                element.get_name() is not None:
+                                element.get_name() is not None and\
+                                "password" not in form.keys():
                             form["password"] = element
                         elif element.get_input_type() in ["text",
                                                           "email",
                                                           "search"] and\
-                                element.get_name() is not None:
+                                element.get_name() is not None and\
+                                "username" not in form.keys():
                             form["username"] = element
                     elif isinstance(
                             element,
