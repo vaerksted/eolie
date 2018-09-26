@@ -483,7 +483,6 @@ class Window(Gtk.ApplicationWindow):
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
         elif string == "add_dot_com":
-            print("plop")
             self.toolbar.title.add_dot_com()
         elif string == "jsblock":
             current_webview = self.container.current.webview

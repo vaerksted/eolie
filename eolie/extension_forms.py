@@ -53,7 +53,6 @@ class FormsExtension(GObject.Object):
         if App().settings.get_value("remember-passwords"):
             form_input_username = form["username"].get_name()
             form_input_password = form["password"].get_name()
-            print(form_input_username, form_input_password)
             if form_input_username is not None and\
                     form_input_password is not None:
                 self.__helper.get(self.get_form_uri(form["element"]),
@@ -295,7 +294,7 @@ class FormsExtension(GObject.Object):
                                   hostname_uri,
                                   self.__page_id)
         except Exception as e:
-            print("FormsExtension::__on_will_submit_form():", e)
+            Logger.error("FormsExtension::__on_will_submit_form(): %s" % e)
 
     def __on_page_created(self, extension, webpage):
         """
