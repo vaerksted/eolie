@@ -20,7 +20,6 @@ from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
-from eolie.context import Context
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -36,8 +35,9 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        context = WebKit2.WebContext.new()
-        Context(context)
+        # context = WebKit2.WebContext.new()
+        # Context(context)
+        context = WebKit2.WebContext.get_default()
         webview = WebKit2.WebView.new_with_context(context)
         content_manager = webview.get_property("user-content-manager")
         webview.__class__ = WebViewMeta
@@ -50,8 +50,9 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        context = WebKit2.WebContext.new_ephemeral()
-        Context(context)
+        # context = WebKit2.WebContext.new_ephemeral()
+        # Context(context)
+        context = App().ephemeral_context
         webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
         content_manager = webview.get_property("user-content-manager")

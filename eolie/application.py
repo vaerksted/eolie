@@ -36,6 +36,7 @@ from eolie.database_exceptions import DatabaseExceptions
 from eolie.database_settings import DatabaseSettings
 from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
+from eolie.context import Context
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
@@ -59,6 +60,7 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        self.__ephemeral_context = None
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
         # Set main thread name
@@ -258,6 +260,17 @@ class Application(Gtk.Application):
         return value
 
     @property
+    def ephemeral_context(self):
+        """
+            Return ephemeral context
+            @return WebKit2.WebContext
+        """
+        if self.__ephemeral_context is None:
+            self.__ephemeral_context = WebKit2.WebContext.new_ephemeral()
+            Context(self.__ephemeral_context)
+        return self.__ephemeral_context
+
+    @property
     def default_style_sheet(self):
         """
             Get default style sheet
@@ -367,6 +380,8 @@ class Application(Gtk.Application):
 
         # Init profiles
         self.set_profiles()
+        # Init default context
+        Context(WebKit2.WebContext().get_default())
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))

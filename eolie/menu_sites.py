@@ -13,7 +13,7 @@
 from gi.repository import Gio, GLib, Gtk
 
 from gettext import gettext as _
-from urllib.parse import urlparse
+# from urllib.parse import urlparse
 
 from eolie.define import App
 from eolie.logger import Logger
@@ -61,15 +61,15 @@ class SitesMenu(Gtk.Grid):
         separator.show()
         self.add(separator)
         # Profiles switcher
-        webview = views[0].webview
-        if not webview.ephemeral:
-            parsed = urlparse(webview.uri)
-            if parsed.scheme in ["http", "https"]:
-                item = Gtk.ModelButton.new()
-                item.set_property("text", _("Profiles"))
-                item.set_property("menu-name", "profiles")
-                item.show()
-                self.add(item)
+        # webview = views[0].webview
+        # if not webview.ephemeral:
+        #    parsed = urlparse(webview.uri)
+        #    if parsed.scheme in ["http", "https"]:
+        #        item = Gtk.ModelButton.new()
+        #        item.set_property("text", _("Profiles"))
+        #        item.set_property("menu-name", "profiles")
+        #        item.show()
+        #        self.add(item)
         # Move to
         item = Gtk.ModelButton.new()
         item.set_property("text", _("Move to"))

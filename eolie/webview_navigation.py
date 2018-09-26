@@ -220,6 +220,7 @@ class WebViewNavigation:
             Handle cookies manager
             @param uri as str
         """
+        return
         if self.ephemeral or self.__related_view is not None:
             return
         profile = App().websettings.get_profile(uri)

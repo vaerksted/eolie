@@ -348,21 +348,21 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 return True
             elif event.button == 3:
                 from eolie.menu_sites import SitesMenu
-                from eolie.menu_profiles import ProfilesMenu
+                # from eolie.menu_profiles import ProfilesMenu
                 from eolie.menu_move_to import MoveToMenu
                 sites_menu = SitesMenu(self.__views, self.__window)
                 sites_menu.show()
-                webview = self.__views[0].webview
-                profiles_menu = ProfilesMenu(webview, self.__window)
-                profiles_menu.show()
+                # webview = self.__views[0].webview
+                # profiles_menu = ProfilesMenu(webview, self.__window)
+                # profiles_menu.show()
                 moveto_menu = MoveToMenu(self.__views, self.__window)
                 moveto_menu.show()
                 popover = Gtk.PopoverMenu.new()
                 popover.add(sites_menu)
-                popover.add(profiles_menu)
+                # popover.add(profiles_menu)
                 popover.add(moveto_menu)
-                popover.child_set_property(profiles_menu,
-                                           "submenu", "profiles")
+                # popover.child_set_property(profiles_menu,
+                #                           "submenu", "profiles")
                 popover.child_set_property(moveto_menu,
                                            "submenu", "moveto")
                 popover.set_relative_to(eventbox)
