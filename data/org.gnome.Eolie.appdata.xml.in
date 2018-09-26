@@ -9,10 +9,10 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
-    <release version="0.9.37" date="2018-09-16">
+    <release version="0.9.38" date="2018-09-26">
       <description>
         <ul>
-          <li>Fix a bug making WebkitGTK to segfault</li>
+          <li>Remove profiles feature</li>
         </ul>
       </description>
     </release>
