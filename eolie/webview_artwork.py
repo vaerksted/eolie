@@ -117,9 +117,12 @@ class WebViewArtwork:
         resized = None
         # Save webview favicon
         if surface is not None:
+            cached = App().art.get_favicon(uri, self.get_scale_factor())
+            cached_width = cached.get_width() if cached is not None else 0
             favicon_width = surface.get_width()
-            if uri not in self.__favicon_width.keys() or\
-                    favicon_width >= self.__favicon_width[uri]:
+            if uri not in self.__favicon_width.keys() or (
+                    favicon_width >= self.__favicon_width[uri] and
+                    cached_width >= self.__favicon_width[uri]):
                 if self.__save_favicon_timeout_id is not None:
                     GLib.source_remove(self.__save_favicon_timeout_id)
                     self.__save_favicon_timeout_id = None
