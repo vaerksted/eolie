@@ -36,6 +36,7 @@ class Context:
             cookie_manager.set_accept_policy(
                 App().settings.get_enum("cookie-storage"))
         context.set_web_extensions_directory(App().extension_dir)
+        context.set_favicon_database_directory(None)
         context.set_process_model(
             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_spell_checking_enabled(
