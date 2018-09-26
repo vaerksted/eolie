@@ -51,6 +51,8 @@ class WebViewNavigation:
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
 
+        self.__switch_profile(None)
+
     def load_uri(self, uri):
         """
             Load uri
@@ -103,7 +105,7 @@ class WebViewNavigation:
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         App().history.set_page_state(uri)
-        self.__switch_profile(uri)
+        # self.__switch_profile(uri)
         self.__update_bookmark_metadata(uri)
         self.content_manager.remove_all_style_sheets()
         # Can't find a way to block content for ephemeral views
@@ -220,10 +222,10 @@ class WebViewNavigation:
             Handle cookies manager
             @param uri as str
         """
-        return
         if self.ephemeral or self.__related_view is not None:
             return
-        profile = App().websettings.get_profile(uri)
+        # profile = App().websettings.get_profile(uri)
+        profile = "default"
         if self.__profile != profile:
             self.__profile = profile
             cookie_manager = self.get_context().get_cookie_manager()
