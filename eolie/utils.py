@@ -104,6 +104,7 @@ def get_char_surface(char):
         @param char as str
         @return cairo surface
     """
+    size = ArtSize.FAVICON - 1
     colors = [[0.102, 0.737, 0.612],                 # Turquoise
               [0.204, 0.596, 0.859],                 # Peterriver
               [0.608, 0.349, 0.714],                 # Amethyst
@@ -118,19 +119,19 @@ def get_char_surface(char):
               [0.498, 0.549, 0.553]                  # Asbestos
               ]
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                 ArtSize.FAVICON,
-                                 ArtSize.FAVICON)
+                                 size,
+                                 size)
     context = cairo.Context(surface)
     color = choice(colors)
     context.set_source_rgb(color[0], color[1], color[2])
     context.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                              cairo.FONT_WEIGHT_BOLD)
-    context.set_font_size(ArtSize.FAVICON)
+    context.set_font_size(size)
     (xbearing, ybearing,
      width, height,
      xadvance, yadvance) = context.text_extents(char)
-    context.move_to(ArtSize.FAVICON / 2 - (xadvance + xbearing) / 2,
-                    ArtSize.FAVICON / 2 - ybearing - height / 2)
+    context.move_to(size / 2 - (xadvance + xbearing) / 2,
+                    size / 2 - ybearing - height / 2)
     context.show_text(char)
     context.stroke()
     return surface
