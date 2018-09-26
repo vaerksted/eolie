@@ -117,12 +117,16 @@ class WebViewArtwork:
         resized = None
         # Save webview favicon
         if surface is not None:
-            cached = App().art.get_favicon(uri, self.get_scale_factor())
-            cached_width = cached.get_width() if cached is not None else 0
+            cache_exists = App().art.exists(uri, "favicon")
+            if cache_exists:
+                cached = App().art.get_favicon(uri, self.get_scale_factor())
+                cached_width = cached.get_width()
+            else:
+                cached_width = 0
             favicon_width = surface.get_width()
             if uri not in self.__favicon_width.keys() or (
                     favicon_width >= self.__favicon_width[uri] and
-                    cached_width >= self.__favicon_width[uri]):
+                    favicon_width >= cached_width):
                 if self.__save_favicon_timeout_id is not None:
                     GLib.source_remove(self.__save_favicon_timeout_id)
                     self.__save_favicon_timeout_id = None
@@ -132,11 +136,12 @@ class WebViewArtwork:
         else:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
-                resized = App().art.get_favicon(uri,
-                                                self.get_scale_factor())
-                if resized is None:
+                resized = None
+                cached = App().art.get_favicon(uri,
+                                               self.get_scale_factor())
+                if cached is None:
                     resized = get_char_surface(netloc[0])
-                favicon_type = "favicon_alt"
+                    favicon_type = "favicon_alt"
 
         # We wait for a better favicon
         if resized is not None and uri == self.uri:
@@ -159,14 +164,12 @@ class WebViewArtwork:
         self.__save_favicon_timeout_id = None
         self.emit("favicon-changed", surface)
         # Save favicon for URI
-        if not App().art.exists(uri, favicon_type):
-            self.__helper.run(App().art.save_artwork,
-                              uri,
-                              surface,
-                              favicon_type)
+        self.__helper.run(App().art.save_artwork,
+                          uri,
+                          surface,
+                          favicon_type)
         # Save favicon for initial URI
-        if initial_uri is not None and\
-                not App().art.exists(initial_uri, favicon_type):
+        if initial_uri is not None:
             striped_uri = uri.rstrip("/")
             if initial_uri != striped_uri:
                 self.__helper.run(App().art.save_artwork,
