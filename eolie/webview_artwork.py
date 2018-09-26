@@ -57,6 +57,8 @@ class WebViewArtwork:
             Set favicon based on current webview favicon
             Use this for JS update (do not update initial uri)
         """
+        if self.ephemeral:
+            return
         self.__set_favicon_from_surface(
             self.get_favicon(),
             self.uri,
