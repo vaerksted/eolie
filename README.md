@@ -1,7 +1,5 @@
 # Eolie
 
-[![Join the chat at https://gitter.im/gnumdk/lollypop](https://badges.gitter.im/gnumdk/lollypop.svg)](https://gitter.im/gnumdk/lollypop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 Eolie is a new GNOME web browser.
 
 - For users: https://wiki.gnome.org/Apps/Eolie
