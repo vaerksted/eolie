@@ -193,7 +193,7 @@ class Application(Gtk.Application):
             Remove uri from pinned pages
             @param uri as str
         """
-        if uri not in self.__pinned:
+        if uri in self.__pinned:
             self.__pinned.remove(uri)
 
     def set_profiles(self):
