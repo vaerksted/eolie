@@ -120,11 +120,11 @@ class WebViewArtwork:
         # Save webview favicon
         if surface is not None:
             cache_exists = App().art.exists(uri, "favicon")
+            cached_width = 0
             if cache_exists:
                 cached = App().art.get_favicon(uri, self.get_scale_factor())
-                cached_width = cached.get_width()
-            else:
-                cached_width = 0
+                if cached is not None:
+                    cached_width = cached.get_width()
             favicon_width = surface.get_width()
             if uri not in self.__favicon_width.keys() or (
                     favicon_width >= self.__favicon_width[uri] and
