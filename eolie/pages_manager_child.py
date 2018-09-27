@@ -12,6 +12,8 @@
 
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
+from gettext import gettext as _
+
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
 
@@ -155,8 +157,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         if self.view.webview.uri in App().pinned:
             self.__pin_image.set_opacity(1)
+            self.__pin_button.set_tooltip_text(_("Unpin this page"))
         else:
             self.__pin_image.set_opacity(0.5)
+            self.__pin_button.set_tooltip_text(_("Pin this page"))
         self.__pin_button.set_opacity(1)
         self.__close_button.get_image().set_from_icon_name(
             "window-close-symbolic",
