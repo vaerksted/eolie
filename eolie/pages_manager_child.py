@@ -46,8 +46,10 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__indicator_label.show()
         if view.webview.title:
             self.__indicator_label.set_text(view.webview.title)
-        builder.get_object("grid").attach(self.__indicator_label, 0, 0, 1, 1)
+        builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__image = builder.get_object("image")
+        self.__pin_button = builder.get_object("pin_button")
+        self.__pin_image = builder.get_object("pin_image")
         self.__close_button = builder.get_object("close_button")
         self.__close_button.get_image().set_from_icon_name(
             "window-close-symbolic",
@@ -124,6 +126,19 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         pass
 
+    def _on_pin_button_clicked(self, button):
+        """
+            Pin/Unpin page
+            @param button as Gtk.Button
+        """
+        if self.view.webview.uri in App().pinned:
+            self.__pin_image.set_opacity(0.5)
+            App().remove_from_pinned(self.view.webview.uri)
+        else:
+            self.__pin_image.set_opacity(1)
+            App().add_to_pinned(self.view.webview.uri)
+        return True
+
     def _on_close_button_clicked(self, button):
         """
             Destroy self
@@ -138,6 +153,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
+        if self.view.webview.uri in App().pinned:
+            self.__pin_image.set_opacity(1)
+        else:
+            self.__pin_image.set_opacity(0.5)
+        self.__pin_button.set_opacity(1)
         self.__close_button.get_image().set_from_icon_name(
             "window-close-symbolic",
             Gtk.IconSize.INVALID)
@@ -153,6 +173,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.x >= allocation.width or\
            event.y <= 0 or\
            event.y >= allocation.height:
+            self.__pin_button.set_opacity(0)
             self.__on_webview_favicon_changed(self.__view.webview)
 
 #######################

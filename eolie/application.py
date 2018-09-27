@@ -60,6 +60,7 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        self.__pinned = []
         self.__ephemeral_context = None
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
@@ -179,6 +180,22 @@ class Application(Gtk.Application):
                 self.__unity.set_property("progress", fraction)
                 self.__unity.set_property("progress_visible", fraction != 1.0)
 
+    def add_to_pinned(self, uri):
+        """
+            Add uri to pinned pages
+            @param uri as str
+        """
+        if uri not in self.__pinned:
+            self.__pinned.append(uri)
+
+    def remove_from_pinned(self, uri):
+        """
+            Remove uri from pinned pages
+            @param uri as str
+        """
+        if uri not in self.__pinned:
+            self.__pinned.remove(uri)
+
     def set_profiles(self):
         """
             Set profiles
@@ -235,6 +252,14 @@ class Application(Gtk.Application):
                             callback=(lambda x: Gio.Application.quit(self),))
         else:
             Gio.Application.quit(self)
+
+    @property
+    def pinned(self):
+        """
+            Get pinned pages
+            @return [str]
+        """
+        return self.__pinned
 
     @property
     def profiles(self):
@@ -521,6 +546,8 @@ class Application(Gtk.Application):
                 window_states.append(window_state)
             dump(window_states,
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
+            dump(self.__pinned,
+                 open(EOLIE_DATA_PATH + "/pinned.bin", "wb"))
         except Exception as e:
             Logger.error("Application::__save_state(): %s", e)
 
@@ -541,7 +568,10 @@ class Application(Gtk.Application):
         """
         size = (800, 600)
         maximized = False
+        pinned = []
         try:
+            pinned = load(
+                open(EOLIE_DATA_PATH + "/pinned.bin", "rb"))
             window_states = load(
                 open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
             if self.settings.get_value("remember-session"):
@@ -554,6 +584,8 @@ class Application(Gtk.Application):
                     i = 0 if foreground else 1
                     for (uri, title, atime,
                          ephemeral, state) in window_state["states"]:
+                        if uri in pinned:
+                            pinned.remove(uri)
                         loading_type = wanted_loading_type(i)
                         webkit_state = WebKit2.WebViewSessionState(
                             GLib.Bytes.new(state))
@@ -572,8 +604,27 @@ class Application(Gtk.Application):
                 maximized = window_states[0]["maximized"]
         except Exception as e:
             Logger.error("Application::__create_initial_windows(): %s", e)
-        if not self.get_windows():
-            self.get_new_window(size, maximized)
+        # Create a window if None available and setup pinned pages
+        # We already removed saved states from pinned
+        windows = self.get_windows()
+        if windows:
+            window = windows[0]
+        else:
+            window = self.get_new_window(size, maximized)
+            window.container.add_webview(
+                            self.start_page,
+                            LoadingType.FOREGROUND,
+                            False)
+        for uri in pinned:
+            window.container.add_webview(uri,
+                                         LoadingType.BACKGROUND,
+                                         False)
+        # Really setup pinned
+        try:
+            self.__pinned = load(
+                    open(EOLIE_DATA_PATH + "/pinned.bin", "rb"))
+        except:
+            self.__pinned = []
 
     def __on_handle_local_options(self, app, options):
         """
