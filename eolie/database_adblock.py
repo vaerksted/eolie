@@ -638,8 +638,18 @@ class DatabaseAdblock:
                              WHERE mtime!=?", (self.__adblock_mtime,))
                 sql.execute("DELETE FROM adblock_cache")
                 try:
-                    dump(self.__adblock_mtime,
-                         open(EOLIE_DATA_PATH + "/adblock.bin", "wb"))
+                    r1 = sql.execute("SELECT COUNT(*) from adblock")
+                    r2 = sql.execute("SELECT COUNT(*) from adblock_css")
+                    v1 = r1.fetchone()
+                    v2 = r2.fetchone()
+                    c1 = c2 = 0
+                    if v1 is not None:
+                        c1 = v1[0]
+                    if v2 is not None:
+                        c2 = v2[0]
+                    if c1 != 0 and c2 != 0:
+                        dump(self.__adblock_mtime,
+                             open(EOLIE_DATA_PATH + "/adblock.bin", "wb"))
                 except Exception as e:
                     Logger.error("DatabaseAdblock::__on_save_rules(): %s", e)
 
@@ -661,3 +671,4 @@ class DatabaseAdblock:
                                        callback=(self.__on_save_rules, uris))
         else:
             self.__on_save_rules(None, uris)
+            Logger.error("DatabaseAdblock::__on_load_uri_content(): %s", uri)
