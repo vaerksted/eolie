@@ -102,4 +102,3 @@ class JavaScriptPopover(Gtk.Popover):
             @param popover as Gtk.Popover
         """
         self.__loop.quit()
-        self.__loop.unref()
