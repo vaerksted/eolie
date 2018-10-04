@@ -333,7 +333,8 @@ class DownloadsPopover(Gtk.Popover):
             @param button as Gtk.button
         """
         self.popdown()
-        self.__window.toolbar.end.download_button.hide()
+        if len(App().download_manager.get()) == 0:
+            self.__window.toolbar.end.download_button.hide()
 
 #######################
 # PRIVATE             #
