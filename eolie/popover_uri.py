@@ -656,7 +656,7 @@ class UriPopover(Gtk.Popover):
             @param widget as Gtk.Widget
             @param event as Gdk.EventButton
         """
-        # https://bugzilla.gnome.org/show_bug.cgi?id=733108
+        # https://gitlab.gnome.org/GNOME/gtk/issues/497
         self.__modifier = event.state
 
     def _on_sync_button_clicked(self, button):
