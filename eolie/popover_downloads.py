@@ -335,6 +335,8 @@ class DownloadsPopover(Gtk.Popover):
         self.popdown()
         if len(App().download_manager.get()) == 0:
             self.__window.toolbar.end.download_button.hide()
+        for download in App().download_manager.get_finished():
+            App().download_manager.remove(download)
 
 #######################
 # PRIVATE             #
