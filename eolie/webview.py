@@ -446,10 +446,10 @@ class WebView(WebKit2.WebView):
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self, related_view)
         WebViewSignals.__init__(self)
+        self.__context = context
         WebViewArtwork.__init__(self)
         self._window = window
         self.__view = view
-        self.__context = context
         self.__content_manager = content_manager
         self.__atime = 0
         self.__children = []
