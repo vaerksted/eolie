@@ -212,10 +212,8 @@ class WebViewArtwork:
         """
         if self.ephemeral:
             return
-        self.__cancellable.cancel()
-        self.__cancellable.reset()
         self.__favicon_db.get_favicon(uri,
-                                      self.__cancellable,
+                                      None,
                                       self.__on_get_favicon,
                                       uri,
                                       None)

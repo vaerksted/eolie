@@ -16,6 +16,7 @@ from gettext import gettext as _
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
+from eolie.utils import resize_favicon
 
 
 class PagesManagerChild(Gtk.FlowBoxChild):
@@ -77,7 +78,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         view.connect("destroying", self.__on_view_destroying)
         self.__view.webview.connect("snapshot-changed",
                                     self.__on_webview_snapshot_changed)
-        self.__view.webview.connect("favicon-changed",
+        self.__view.webview.connect("notify::favicon",
                                     self.__on_webview_favicon_changed)
         self.__view.webview.connect("notify::is-playing-audio",
                                     self.__on_webview_notify_is_playing_audio)
@@ -242,34 +243,27 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__on_webview_favicon_changed(webview)
 
-    def __on_webview_favicon_changed(self, webview, surface=None):
+    def __on_webview_favicon_changed(self, webview, *ignore):
         """
             Set favicon
             @param webview as WebView
-            @param surface as cairo.Surface
         """
         image = self.__close_button.get_image()
         if webview.is_playing_audio():
             image.set_from_icon_name("audio-speakers-symbolic",
                                      Gtk.IconSize.INVALID)
             return
-
-        if surface is not None:
-            image.set_from_surface(surface)
-            return
-
-        favicon_path = App().art.get_favicon_path(webview.uri)
-        if favicon_path is not None:
-            image.set_from_file(favicon_path)
-            return
-
         artwork = App().art.get_icon_theme_artwork(webview.uri,
                                                    webview.ephemeral)
         if artwork is not None:
             image.set_from_icon_name(artwork, Gtk.IconSize.INVALID)
-            return
-
-        image.set_from_icon_name("applications-internet", Gtk.IconSize.INVALID)
+        else:
+            surface = webview.get_favicon()
+            if surface is not None:
+                image.set_from_surface(resize_favicon(surface))
+            else:
+                image.set_from_icon_name("applications-internet",
+                                         Gtk.IconSize.INVALID)
 
     def __on_webview_title_changed(self, webview, title):
         """

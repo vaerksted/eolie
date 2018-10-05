@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
+from eolie.utils import resize_favicon
 from eolie.logger import Logger
 
 
@@ -192,7 +193,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view not in self.__views:
             self.__views.append(view)
             view.webview.connect("shown", self.__on_webview_shown)
-            view.webview.connect("favicon-changed",
+            view.webview.connect("notify::favicon",
                                  self.__on_webview_favicon_changed)
             self.update_label()
             self.__indicator_label.update_count(True)
@@ -414,23 +415,22 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 webview.view != self.__window.container.current:
             return
 
-        if not webview.ephemeral:
-            if surface is not None:
-                self.__image.set_from_surface(surface)
-                return
-            favicon_path = App().art.get_favicon_path(webview.uri)
-            if favicon_path is not None:
-                self.__image.set_from_file(favicon_path)
-                return
+        if webview.is_playing_audio():
+            self.__image.set_from_icon_name("audio-speakers-symbolic",
+                                            Gtk.IconSize.INVALID)
+            return
 
         artwork = App().art.get_icon_theme_artwork(webview.uri,
                                                    webview.ephemeral)
         if artwork is not None:
-            self.__image.set_from_icon_name(artwork,
-                                            Gtk.IconSize.INVALID)
+            self.__image.set_from_icon_name(artwork, Gtk.IconSize.INVALID)
         else:
-            self.__image.set_from_icon_name("applications-internet",
-                                            Gtk.IconSize.INVALID)
+            surface = webview.get_favicon()
+            if surface is not None:
+                self.__image.set_from_surface(resize_favicon(surface))
+            else:
+                self.__image.set_from_icon_name("applications-internet",
+                                                Gtk.IconSize.INVALID)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """

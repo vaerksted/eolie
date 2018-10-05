@@ -47,7 +47,6 @@ class WebViewNavigation:
                      self.__on_insecure_content_detected)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
-        self.connect("notify::favicon", self.__on_notify_favicon)
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
 
@@ -273,7 +272,6 @@ class WebViewNavigation:
             # JS bookmark (Bookmarklet)
             if not uri.startswith("javascript:") and not self.error:
                 self.emit("uri-changed", uri)
-                self.set_current_favicon()
 
     def __on_title_changed(self, webview, param):
         """
@@ -284,14 +282,6 @@ class WebViewNavigation:
         title = webview.get_property(param.name)
         if title:
             self.emit("title-changed", title)
-
-    def __on_notify_favicon(self, webview, favicon):
-        """
-            Set favicon
-            @param webview as WebView
-            @param favicon as GObject.ParamSpec
-        """
-        self.set_favicon()
 
     def __on_decide_policy(self, webview, decision, decision_type):
         """
