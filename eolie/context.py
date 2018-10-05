@@ -214,7 +214,7 @@ class Context:
         # We use internal:// because resource:// is already used by WebKit2
         icon_name = request.get_uri().replace("internal://", "")
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
-            icon_name, Gtk.IconSize.BUTTON,
+            icon_name, 22,
             Gtk.IconLookupFlags.FORCE_SVG)
         filename = icon_info.get_filename()
         if filename.endswith(".png"):
