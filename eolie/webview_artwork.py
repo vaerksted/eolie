@@ -121,24 +121,25 @@ class WebViewArtwork:
             @param uri as str
             @param initial_uri as str
         """
+        resized = None
         # Save webview favicon
         if surface is not None:
             exists = App().art.exists(uri, "favicon")
             if not exists:
                 if surface.get_width() > ArtSize.FAVICON:
-                    surface = resize_favicon(surface)
+                    resized = resize_favicon(surface)
             favicon_type = "favicon"
         else:
             netloc = remove_www(urlparse(uri).netloc)
             if netloc:
                 exists = App().art.exists(uri, "favicon_alt")
                 if not exists:
-                    surface = get_char_surface(netloc[0])
+                    resized = get_char_surface(netloc[0])
                     favicon_type = "favicon_alt"
 
         # We wait for a better favicon
-        if surface is not None:
-            self.__save_favicon_to_cache(surface,
+        if resized is not None:
+            self.__save_favicon_to_cache(resized,
                                          uri,
                                          initial_uri,
                                          favicon_type)
