@@ -128,6 +128,8 @@ class WebViewArtwork:
             if not exists:
                 if surface.get_width() > ArtSize.FAVICON:
                     resized = resize_favicon(surface)
+                else:
+                    resized = surface
             favicon_type = "favicon"
         else:
             netloc = remove_www(urlparse(uri).netloc)
