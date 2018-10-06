@@ -212,7 +212,7 @@ class WebViewArtwork:
                                       None,
                                       self.__on_get_favicon,
                                       uri,
-                                      None)
+                                      self.__initial_uri)
 
     def __on_snapshot(self, surface, save, first_pass):
         """
