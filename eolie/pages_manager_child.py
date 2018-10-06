@@ -33,7 +33,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         Gtk.FlowBoxChild.__init__(self)
         self.__view = view
         self.__window = window
-        self.__favicon = None
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         builder = Gtk.Builder()
@@ -249,11 +248,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
         """
         image = self.__close_button.get_image()
-        if webview.current_event == WebKit2.LoadEvent.STARTED:
-            image.set_from_icon_name("content-loading-symbolic",
-                                     Gtk.IconSize.INVALID)
-            return
-
         if webview.is_playing_audio():
             image.set_from_icon_name("audio-speakers-symbolic",
                                      Gtk.IconSize.INVALID)
@@ -286,13 +280,15 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         uri = webview.uri
         if event == WebKit2.LoadEvent.STARTED:
-            self.__favicon = None
-            self.__image.clear()
+            image = self.__close_button.get_image()
+            image.set_from_icon_name("content-loading-symbolic",
+                                     Gtk.IconSize.INVALID)
             self.__spinner.start()
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.__indicator_label.set_text(uri)
         elif event == WebKit2.LoadEvent.FINISHED:
+            self.__on_webview_favicon_changed(webview)
             self.__spinner.stop()
 
     def __on_webview_snapshot_changed(self, webview, surface):

@@ -193,6 +193,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if view not in self.__views:
             self.__views.append(view)
             view.webview.connect("shown", self.__on_webview_shown)
+            view.webview.connect("load-changed",
+                                 self.__on_webview_load_changed)
             view.webview.connect("notify::favicon",
                                  self.__on_webview_favicon_changed)
             self.update_label()
@@ -215,6 +217,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__views.remove(view)
             view.webview.disconnect_by_func(self.__on_webview_shown)
             view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
+            view.webview.disconnect_by_func(self.__on_webview_load_changed)
             self.update_label()
             self.__indicator_label.update_count(False)
             if not view.webview.shown:
@@ -414,11 +417,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 webview.view != self.__window.container.current:
             return
 
-        if webview.current_event == WebKit2.LoadEvent.STARTED:
-            self.__image.set_from_icon_name("content-loading-symbolic",
-                                            Gtk.IconSize.INVALID)
-            return
-
         if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
                                             Gtk.IconSize.INVALID)
@@ -537,3 +535,15 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         self.__indicator_label.mark_shown(webview)
         self.__on_webview_favicon_changed(webview)
+
+    def __on_webview_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__image.set_from_icon_name("content-loading-symbolic",
+                                            Gtk.IconSize.INVALID)
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.__on_webview_favicon_changed(webview)
