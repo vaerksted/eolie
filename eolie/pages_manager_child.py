@@ -247,6 +247,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Set favicon
             @param webview as WebView
         """
+        if webview.current_event == WebKit2.LoadEvent.STARTED:
+            return
         image = self.__close_button.get_image()
         if webview.is_playing_audio():
             image.set_from_icon_name("audio-speakers-symbolic",
