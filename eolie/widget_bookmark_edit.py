@@ -91,6 +91,7 @@ class TagWidget(Gtk.FlowBoxChild):
         tag_id = App().bookmarks.get_tag_id(tag_title)
         if tag_id is not None:
             App().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
+        App().bookmarks.clean_tags()
         self.destroy()
         return True
 
