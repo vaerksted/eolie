@@ -59,7 +59,8 @@ class Art:
                 pixbuf.savev(filepath, "png", [None], [None])
                 if not keep_in_cache:
                     f = Gio.File.new_for_path(filepath)
-                    f.set_attribute_uint64("time::modified", 0,
+                    mtime = time() - self.__CACHE_DELTA
+                    f.set_attribute_uint64("time::modified", mtime,
                                            Gio.FileQueryInfoFlags.NONE, None)
         except Exception as e:
             Logger.error("Art::save_artwork(): %s", e)
