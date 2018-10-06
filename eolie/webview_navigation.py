@@ -266,7 +266,7 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        # Js update, force favicon caching for current uri
+        # Js update
         if not self.is_loading():
             uri = webview.get_property(param.name)
             # JS bookmark (Bookmarklet)

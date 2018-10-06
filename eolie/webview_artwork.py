@@ -185,6 +185,7 @@ class WebViewArtwork:
             self.__snapshot_id = GLib.timeout_add(2500,
                                                   self.__set_snapshot,
                                                   True)
+            self.__on_favicon_changed(self.__favicon_db, webview.uri)
 
     def __on_get_favicon(self, favicon_db, result, uri, initial_uri):
         """
@@ -203,12 +204,11 @@ class WebViewArtwork:
         except Exception as e:
             Logger.error("WebViewArtwork::__on_get_favicon(): %s", e)
 
-    def __on_favicon_changed(self, favicon_db, uri, favicon_uri):
+    def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
             Reload favicon
             @param favicon_db as WebKit2.FaviconDatabase
             @param uri as str
-            @param initial_uri as str
         """
         if self.ephemeral:
             return
