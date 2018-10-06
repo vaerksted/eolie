@@ -77,32 +77,39 @@ class WebViewArtwork:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
+            parsed = urlparse(self.uri)
             self.__cancellable.cancel()
             self.__cancellable.reset()
+            if self.__snapshot_id is not None:
+                GLib.source_remove(self.__snapshot_id)
+                self.__snapshot_id = None
             if parsed.scheme in ["http", "https"]:
                 self.__initial_uri = self.uri.rstrip('/')
             else:
                 self.__initial_uri = None
         elif event == WebKit2.LoadEvent.FINISHED:
-            is_http = parsed.scheme in ["http", "https"]
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
-                                                  self.__set_snapshot,
-                                                  is_http)
+                                                  self.__set_snapshot)
             self.set_favicon()
 
 #######################
 # PRIVATE             #
 #######################
-    def __set_snapshot(self, save):
+    def __set_snapshot(self):
         """
             Set webpage preview
-            @param save as bool
         """
         self.__snapshot_id = None
+        # Only save http page if bookmarked
+        parsed = urlparse(self.uri)
+        save = parsed.scheme in ["http", "https"]
+        bookmark_id = App().bookmarks.get_id(self.uri)
+        ibookmark_id = App().bookmarks.get_id(self.__initial_uri)
+        if bookmark_id is None and ibookmark_id is None:
+            save = False
         self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
                           WebKit2.SnapshotOptions.NONE,
                           self.__cancellable,
@@ -169,8 +176,7 @@ class WebViewArtwork:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
-                                                  self.__set_snapshot,
-                                                  True)
+                                                  self.__set_snapshot)
             self.__on_favicon_changed(self.__favicon_db, webview.uri)
 
     def __on_get_favicon(self, favicon_db, result, uri, initial_uri):
