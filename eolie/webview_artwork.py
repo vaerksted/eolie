@@ -16,8 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.define import App, ArtSize
 from eolie.helper_task import TaskHelper
-from eolie.utils import get_snapshot, resize_favicon, get_char_surface
-from eolie.utils import remove_www
+from eolie.utils import get_snapshot, resize_favicon
 
 
 class WebViewArtwork:
@@ -130,14 +129,6 @@ class WebViewArtwork:
                     resized = resize_favicon(surface)
                 else:
                     resized = surface
-        else:
-            favicon_type = "favicon_alt"
-            netloc = remove_www(urlparse(uri).netloc)
-            if netloc:
-                exists = App().art.exists(uri, favicon_type)
-                if not exists:
-                    resized = get_char_surface(netloc[0])
-
         # We wait for a better favicon
         if resized is not None:
             self.__save_favicon_to_cache(resized,
