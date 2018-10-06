@@ -821,6 +821,7 @@ class ToolbarTitle(Gtk.Bin):
         def model_append(array):
             if self.__completion_model_clear_timeout_id is not None:
                 GLib.source_remove(self.__completion_model_clear_timeout_id)
+                self.__completion_model_clear_timeout_id = None
             if self.__completion_model_append_timeout_id is not None:
                 GLib.source_remove(self.__completion_model_append_timeout_id)
             self.__completion_model_append_timeout_id = \
