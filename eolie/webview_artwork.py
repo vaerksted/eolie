@@ -18,7 +18,6 @@ from eolie.define import App, ArtSize
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_char_surface
 from eolie.utils import remove_www
-from eolie.logger import Logger
 
 
 class WebViewArtwork:
@@ -197,8 +196,8 @@ class WebViewArtwork:
                                             uri,
                                             initial_uri)
 
-        except Exception as e:
-            Logger.error("WebViewArtwork::__on_get_favicon(): %s", e)
+        except:
+            pass
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
