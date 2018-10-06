@@ -49,7 +49,7 @@ class Art:
             @param suffix as str
         """
         try:
-            keep_in_cache = surface.get_width >= ArtSize.FAVICON
+            keep_in_cache = surface.get_width() >= ArtSize.FAVICON
             parsed = urlparse(uri)
             if parsed.scheme in ["http", "https"]:
                 filepath = self.get_path(uri, suffix)
