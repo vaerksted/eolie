@@ -202,7 +202,7 @@ class WebViewArtwork:
             @param favicon_db as WebKit2.FaviconDatabase
             @param uri as str
         """
-        if self.ephemeral:
+        if uri != self.uri and self.ephemeral:
             return
         self.__favicon_db.get_favicon(uri,
                                       None,
