@@ -249,6 +249,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
         """
         image = self.__close_button.get_image()
+        if webview.current_event == WebKit2.LoadEvent.STARTED:
+            image.set_from_icon_name("content-loading-symbolic",
+                                     Gtk.IconSize.INVALID)
+            return
+
         if webview.is_playing_audio():
             image.set_from_icon_name("audio-speakers-symbolic",
                                      Gtk.IconSize.INVALID)

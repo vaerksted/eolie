@@ -404,15 +404,19 @@ class SitesManagerChild(Gtk.ListBoxRow):
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
 
-    def __on_webview_favicon_changed(self, webview, surface=None):
+    def __on_webview_favicon_changed(self, webview, *ignore):
         """
             Set favicon
             @param webview as WebView
-            @param surface as cairo.Surface
         """
         if self.get_style_context().has_class("item-selected") and\
                 len(self.__views) > 1 and\
                 webview.view != self.__window.container.current:
+            return
+
+        if webview.current_event == WebKit2.LoadEvent.STARTED:
+            self.__image.set_from_icon_name("content-loading-symbolic",
+                                            Gtk.IconSize.INVALID)
             return
 
         if webview.is_playing_audio():
