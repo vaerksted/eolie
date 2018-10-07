@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2, Gio
 
 from urllib.parse import urlparse
 
-from eolie.define import App
+from eolie.define import App, ArtSize
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
 
@@ -129,7 +129,11 @@ class WebViewArtwork:
         resized = None
         # Save webview favicon
         if surface is not None:
-            favicon_type = "favicon"
+            if surface.get_width() >= ArtSize.FAVICON:
+                favicon_type = "favicon"
+            else:
+                # Low quality favicon
+                favicon_type = "favicon_alt"
             exists = App().art.exists(uri, favicon_type)
             if not exists:
                 resized = resize_favicon(surface)
