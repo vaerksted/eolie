@@ -15,6 +15,7 @@ from gi.repository import Gdk, GLib
 import unicodedata
 import string
 import cairo
+import sqlite3
 from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
@@ -79,6 +80,27 @@ def is_unity():
         Return True if desktop is Gnome
     """
     return GLib.getenv("XDG_CURRENT_DESKTOP") == "ubuntu:GNOME"
+
+
+def get_favicon_best_uri(favicons_path, uri):
+    """
+        Search in WebKit DB for best uri
+        @param favicons_path as str
+        @param uri as str
+        @return str
+    """
+    favicon_uri = uri
+    parsed = urlparse(uri)
+    for uri in [parsed.netloc + parsed.path, parsed.netloc]:
+        sql = sqlite3.connect(favicons_path, 600.0)
+        result = sql.execute("SELECT url\
+                              FROM PageURL\
+                              WHERE url LIKE ?", ("%{}%".format(uri),))
+        v = result.fetchone()
+        if v is not None:
+            favicon_uri = v[0]
+            break
+    return favicon_uri
 
 
 def resize_favicon(favicon):

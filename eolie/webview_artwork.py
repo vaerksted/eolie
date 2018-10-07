@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.define import App, ArtSize
 from eolie.helper_task import TaskHelper
-from eolie.utils import get_snapshot, resize_favicon
+from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
 
 
 class WebViewArtwork:
@@ -204,7 +204,10 @@ class WebViewArtwork:
         """
         if uri != self.uri or self.ephemeral:
             return
-        self.__favicon_db.get_favicon(uri,
+        favicons_dir = self.context.get_favicon_database_directory()
+        favicons_path = favicons_dir + "/WebpageIcons.db"
+        best_uri = get_favicon_best_uri(favicons_path, uri)
+        self.__favicon_db.get_favicon(best_uri,
                                       None,
                                       self.__on_get_favicon,
                                       uri,
