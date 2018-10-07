@@ -49,7 +49,6 @@ class Art:
             @param suffix as str
         """
         try:
-            keep_in_cache = surface.get_width() >= ArtSize.FAVICON
             parsed = urlparse(uri)
             if parsed.scheme in ["http", "https"]:
                 filepath = self.get_path(uri, suffix)
@@ -57,11 +56,6 @@ class Art:
                                                      surface.get_width(),
                                                      surface.get_height())
                 pixbuf.savev(filepath, "png", [None], [None])
-                if not keep_in_cache:
-                    f = Gio.File.new_for_path(filepath)
-                    mtime = time() - self.__CACHE_DELTA
-                    f.set_attribute_uint64("time::modified", mtime,
-                                           Gio.FileQueryInfoFlags.NONE, None)
         except Exception as e:
             Logger.error("Art::save_artwork(): %s", e)
 
