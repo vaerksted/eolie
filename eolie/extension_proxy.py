@@ -577,6 +577,7 @@ class ProxyExtensionServer(Server):
             @param forms as FormsExtension
             @param variant as GLib.Variant
         """
+        self.__elements_history = {}
         if self.__bus is not None:
             self.__bus.emit_signal(
                 None,
