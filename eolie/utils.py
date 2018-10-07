@@ -89,17 +89,22 @@ def get_favicon_best_uri(favicons_path, uri):
         @param uri as str
         @return str
     """
-    favicon_uri = uri
-    parsed = urlparse(uri)
-    for uri in [parsed.netloc + parsed.path, parsed.netloc]:
-        sql = sqlite3.connect(favicons_path, 600.0)
-        result = sql.execute("SELECT url\
-                              FROM PageURL\
-                              WHERE url LIKE ?", ("%{}%".format(uri),))
-        v = result.fetchone()
-        if v is not None:
-            favicon_uri = v[0]
-            break
+    favicon_uri = None
+    try:
+        parsed = urlparse(uri)
+        if parsed.path == "/":
+            return None
+        for uri in [parsed.netloc + parsed.path, parsed.netloc]:
+            sql = sqlite3.connect(favicons_path, 600.0)
+            result = sql.execute("SELECT url\
+                                  FROM PageURL\
+                                  WHERE url LIKE ?", ("%{}%".format(uri),))
+            v = result.fetchone()
+            if v is not None:
+                favicon_uri = v[0]
+                break
+    except Exception as e:
+        Logger.error("get_favicon_best_uri(): %s", e)
     return favicon_uri
 
 

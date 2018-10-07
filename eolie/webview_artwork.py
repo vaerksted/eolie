@@ -179,22 +179,33 @@ class WebViewArtwork:
                                                   self.__set_snapshot)
             self.__on_favicon_changed(self.__favicon_db, webview.uri)
 
-    def __on_get_favicon(self, favicon_db, result, uri, initial_uri):
+    def __on_get_favicon(self, favicon_db, result, uri,
+                         initial_uri, first=True):
         """
             Get result and set from it
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
             @param initial_uri as str
+            @internal first as bool
         """
         try:
             surface = favicon_db.get_favicon_finish(result)
             self.__set_favicon_from_surface(surface,
                                             uri,
                                             initial_uri)
-
         except:
-            pass
+            # Check with a subset of URI
+            favicons_dir = self.context.get_favicon_database_directory()
+            favicons_path = favicons_dir + "/WebpageIcons.db"
+            best_uri = get_favicon_best_uri(favicons_path, uri)
+            if best_uri is not None:
+                self.__favicon_db.get_favicon(best_uri,
+                                              None,
+                                              self.__on_get_favicon,
+                                              uri,
+                                              self.__initial_uri,
+                                              False)
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
@@ -204,10 +215,7 @@ class WebViewArtwork:
         """
         if uri != self.uri or self.ephemeral:
             return
-        favicons_dir = self.context.get_favicon_database_directory()
-        favicons_path = favicons_dir + "/WebpageIcons.db"
-        best_uri = get_favicon_best_uri(favicons_path, uri)
-        self.__favicon_db.get_favicon(best_uri,
+        self.__favicon_db.get_favicon(uri,
                                       None,
                                       self.__on_get_favicon,
                                       uri,
