@@ -227,9 +227,10 @@
 }
 
 .page-child-row:selected {
-    border-color: alpha(@theme_selected_bg_color, 0.8);
-    border-bottom-color:alpha(@theme_selected_bg_color, 0.9);
-    background-image: linear-gradient(to bottom, alpha(@theme_selected_bg_color, 0.2), alpha(@theme_selected_bg_color, 0.3), alpha(@theme_selected_bg_color, 0.4));
+    border: solid;
+    border-radius: 0px;
+    border-color: @theme_fg_color;
+    border-bottom-width: 1px;
 }
 
 .page-child-row:selected *{
