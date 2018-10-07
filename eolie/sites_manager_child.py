@@ -414,10 +414,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if webview.current_event == WebKit2.LoadEvent.STARTED:
             return
-        if self.get_style_context().has_class("item-selected") and\
-                len(self.__views) > 1 and\
-                webview.view != self.__window.container.current:
-            return
 
         if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
