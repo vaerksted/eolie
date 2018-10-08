@@ -195,6 +195,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             view.webview.connect("shown", self.__on_webview_shown)
             view.webview.connect("load-changed",
                                  self.__on_webview_load_changed)
+            view.webview.connect("notify::is-playing-audio",
+                                 self.__on_webview_notify_is_playing_audio)
             view.webview.connect("notify::favicon",
                                  self.__on_webview_favicon_changed)
             self.update_label()
@@ -218,6 +220,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             view.webview.disconnect_by_func(self.__on_webview_shown)
             view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
             view.webview.disconnect_by_func(self.__on_webview_load_changed)
+            view.webview.disconnect_by_func(
+                                    self.__on_webview_notify_is_playing_audio)
             self.update_label()
             self.__indicator_label.update_count(False)
             if not view.webview.shown:
@@ -406,6 +410,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
             widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
+
+    def __on_webview_notify_is_playing_audio(self, webview, playing):
+        """
+            Update favicon
+            @param webview as WebView
+            @param playing as bool
+        """
+        self.__on_webview_favicon_changed(webview)
 
     def __on_webview_favicon_changed(self, webview, *ignore):
         """
