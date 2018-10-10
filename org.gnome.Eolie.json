@@ -407,7 +407,7 @@
       "sources": [
         {
           "type": "git",
-          "url": "https://gitlab.gnome.org/World/eolie.git",
+          "url": "https://gitlab.gnome.org/World/eolie.git"
         }
       ]
     }
