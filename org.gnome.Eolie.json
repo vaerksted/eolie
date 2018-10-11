@@ -90,24 +90,6 @@
       ]
     },
     {
-      "name": "hunspell",
-      "buildsystem": "simple",
-      "build-commands": [
-        "autoreconf -vfi",
-        "./configure --prefix=/app --disable-static --with-ui --with-readline",
-        "make",
-        "make install"
-      ],
-      "cleanup": [],
-      "sources": [
-        {
-          "type": "archive",
-          "url": "https://github.com/hunspell/hunspell/archive/v1.6.2.tar.gz",
-          "sha256": "3cd9ceb062fe5814f668e4f22b2fa6e3ba0b339b921739541ce180cac4d6f4c4"
-        }
-      ]
-    },
-    {
       "name": "python-requests",
       "buildsystem": "simple",
       "build-commands": [
