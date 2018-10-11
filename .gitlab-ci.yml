@@ -1,0 +1,32 @@
+stages:
+  - flatpak
+
+variables:
+  BUNDLE: "eolie-git.flatpak"
+  GIT_SUBMODULE_STRATEGY: normal
+
+
+
+
+flatpak:
+    image: registry.gitlab.gnome.org/gnome/gnome-runtime-images/gnome:master
+    stage: flatpak
+    variables:
+        MANIFEST_PATH: "org.gnome.Eolie.json"
+        RUNTIME_REPO: "https://sdk.gnome.org/gnome-nightly.flatpakrepo"
+        FLATPAK_MODULE: "Eolie"
+    script:
+        - flatpak-builder --stop-at=${FLATPAK_MODULE} app ${MANIFEST_PATH}
+        - flatpak build app meson --prefix=/app ${MESON_ARGS} _build
+        - flatpak build app ninja -C _build install
+        - flatpak-builder --finish-only --repo=repo app ${MANIFEST_PATH}
+        - flatpak build-export repo app
+        - flatpak build-bundle repo ${BUNDLE} --runtime-repo=${RUNTIME_REPO} org.gnome.Eolie
+    artifacts:
+        paths:
+            - ${BUNDLE}
+            - _build/meson-logs/meson-log.txt
+        expire_in: 30 days
+    cache:
+        paths:
+             - .flatpak-builder/cache
