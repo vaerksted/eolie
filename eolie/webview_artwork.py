@@ -196,6 +196,8 @@ class WebViewArtwork:
                                             uri,
                                             initial_uri)
         except:
+            if not first:
+                return
             # Check with a subset of URI
             favicons_dir = self.context.get_favicon_database_directory()
             favicons_path = favicons_dir + "/WebpageIcons.db"
