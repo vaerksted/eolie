@@ -198,10 +198,7 @@ class WebViewArtwork:
         except:
             if not first:
                 return
-            # Check with a subset of URI
-            favicons_dir = self.context.get_favicon_database_directory()
-            favicons_path = favicons_dir + "/WebpageIcons.db"
-            best_uri = get_favicon_best_uri(favicons_path, uri)
+            best_uri = get_favicon_best_uri(App().favicons_path, uri)
             if best_uri is not None:
                 self.__favicon_db.get_favicon(best_uri,
                                               None,

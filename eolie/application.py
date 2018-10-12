@@ -23,6 +23,7 @@ from gettext import gettext as _
 from pickle import dump, load
 from urllib.parse import urlparse
 from time import time
+from getpass import getuser
 import json
 from signal import signal, SIGINT, SIGTERM
 
@@ -51,6 +52,8 @@ class Application(Gtk.Application):
     """
         Eolie application
     """
+
+    __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
     def __init__(self, version, extension_dir):
         """
@@ -326,6 +329,13 @@ class Application(Gtk.Application):
             @return str
         """
         return self.__extension_dir
+
+    @property
+    def favicons_path(self):
+        """
+            Cookies sqlite DB path
+        """
+        return self.__FAVICONS_PATH
 
 #######################
 # PRIVATE             #
