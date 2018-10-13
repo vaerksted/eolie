@@ -475,8 +475,6 @@ class Application(Gtk.Application):
                                    ["<Control>KP_0", "<Control>0"])
         self.set_accels_for_action("win.shortcut::mse_enabled",
                                    ["<Control>m"])
-        self.set_accels_for_action("win.shortcut::add_dot_com",
-                                   ["<Control>Return"])
 
     def __vacuum(self):
         """

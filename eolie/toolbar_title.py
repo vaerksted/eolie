@@ -224,17 +224,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def add_dot_com(self):
-        """
-            Add dot com to URI
-        """
-        bounds = self.__entry.get_selection_bounds()
-        if bounds:
-            current = self.__entry.get_text()[:bounds[0]]
-        else:
-            current = self.__entry.get_text()
-        self.set_text_entry(current + ".com")
-
     def set_uri(self, uri):
         """
             Update internal uri
@@ -565,6 +554,13 @@ class ToolbarTitle(Gtk.Bin):
                 value = webview.get_prev_text_entry(uri)
             elif event.keyval == Gdk.KEY_Z:
                 value = webview.get_next_text_entry()
+            elif event.keyval == Gdk.KEY_Return:
+                bounds = self.__entry.get_selection_bounds()
+                if bounds:
+                    current = self.__entry.get_text()[:bounds[0]]
+                else:
+                    current = self.__entry.get_text()
+                value = current + ".com"
             if value is not None:
                 self.set_text_entry(value)
                 self.__entry.emit("changed")

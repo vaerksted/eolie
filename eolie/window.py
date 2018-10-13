@@ -482,8 +482,6 @@ class Window(Gtk.ApplicationWindow):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
-        elif string == "add_dot_com":
-            self.toolbar.title.add_dot_com()
         elif string == "jsblock":
             current_webview = self.container.current.webview
             App().helper.call("EnableJS",
