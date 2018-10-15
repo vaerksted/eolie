@@ -46,19 +46,9 @@ class WebViewMenuSignals:
             @param event as Gdk.Event
             @param hit as WebKit2.HitTestResult
         """
-        # https://bugs.webkit.org/show_bug.cgi?id=181126
-        webview.get_inspector()
-        if hit.context_is_editable():
-            return
-        # HACK, don't know how to add web inspector
-        inspector_item = None
-        if App().settings.get_value("developer-extras"):
-            count = context_menu.get_n_items()
-            if count > 0:
-                inspector_item = context_menu.get_item_at_position(count - 1)
-        context_menu.remove_all()
         parsed = urlparse(webview.uri)
         if parsed.scheme == "populars":
+            context_menu.remove_all()
             if hit.context_is_link():
                 action = Gio.SimpleAction(name="reload_preview")
                 App().add_action(action)
@@ -71,70 +61,37 @@ class WebViewMenuSignals:
                     None)
                 context_menu.append(item)
                 return
+        position = 0
+        for item in context_menu.get_items():
+            action = item.get_stock_action()
+            if action == WebKit2.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW:
+                context_menu.remove(item)
+                action = Gio.SimpleAction(name="open_new_page")
+                App().add_action(action)
+                action.connect("activate",
+                               self.__on_open_new_page_activate,
+                               hit.get_link_uri(), False)
+                item = WebKit2.ContextMenuItem.new_from_gaction(
+                    action,
+                    _("Open link in a new page"),
+                    None)
+                context_menu.insert(item, position)
+                action = Gio.SimpleAction(name="open_new_private_page")
+                App().add_action(action)
+                action.connect("activate",
+                               self.__on_open_new_page_activate,
+                               hit.get_link_uri(), True)
+                item = WebKit2.ContextMenuItem.new_from_gaction(
+                    action,
+                    _("Open link in a new private page"),
+                    None)
+                context_menu.insert(item, position + 1)
+                break
         # Get current selection
         selection = ""
         user_data = context_menu.get_user_data()
         if user_data is not None and user_data.get_string():
             selection = user_data.get_string()
-        if hit.context_is_link():
-            action = Gio.SimpleAction(name="open_new_page")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_open_new_page_activate,
-                           hit.get_link_uri(), False)
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Open link in a new page"),
-                None)
-            context_menu.append(item)
-            action = Gio.SimpleAction(name="open_new_private_page")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_open_new_page_activate,
-                           hit.get_link_uri(), True)
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Open link in a new private page"),
-                None)
-            context_menu.append(item)
-            action = Gio.SimpleAction(name="open_new_window")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_open_new_window_activate,
-                           hit.get_link_uri())
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Open link in a new window"),
-                None)
-            context_menu.append(item)
-            item = WebKit2.ContextMenuItem.new_separator()
-            context_menu.append(item)
-        if selection:
-            action = Gio.SimpleAction(name="copy_text")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_copy_text_activate,
-                           selection)
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Copy"),
-                None)
-            context_menu.append(item)
-        if hit.context_is_link() or\
-                hit.context_is_image() or\
-                hit.context_is_media():
-            action = Gio.SimpleAction(name="copy_link_uri")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_copy_link_uri_activate,
-                           hit.get_link_uri() or
-                           hit.get_image_uri() or
-                           hit.get_media_uri())
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Copy link address"),
-                None)
-            context_menu.append(item)
         if selection and hit.context_is_selection():
             action = Gio.SimpleAction(name="search_words")
             App().add_action(action)
@@ -146,32 +103,7 @@ class WebViewMenuSignals:
                 _("Search on the Web"),
                 None)
             context_menu.append(item)
-        if hit.context_is_link() or\
-                hit.context_is_image() or\
-                hit.context_is_media():
-            # Download link if uri looks like a file
-            uri = hit.get_link_uri()
-            if not uri or not uri.split(".")[-1].isalnum():
-                if hit.get_image_uri():
-                    msg = _("Download this image")
-                    uri = hit.get_image_uri()
-                else:
-                    msg = _("Download this video")
-                    uri = hit.get_media_uri()
-            else:
-                msg = _("Download this file")
-            if uri:
-                action = Gio.SimpleAction(name="download")
-                App().add_action(action)
-                action.connect("activate",
-                               self.__on_download_activate,
-                               uri)
-                item = WebKit2.ContextMenuItem.new_from_gaction(
-                    action,
-                    msg,
-                    None)
-                context_menu.append(item)
-        elif parsed.scheme in ["http", "https"]:
+        if not hit.context_is_link() and parsed.scheme in ["http", "https"]:
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
             # Save all images
@@ -204,11 +136,6 @@ class WebViewMenuSignals:
                 _("Save page as image"),
                 None)
             context_menu.append(item)
-        # Dev tools
-        if inspector_item is not None:
-            item = WebKit2.ContextMenuItem.new_separator()
-            context_menu.append(item)
-            context_menu.append(inspector_item)
 
     def __on_context_menu_dismissed(self, webview):
         """
