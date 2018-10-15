@@ -64,7 +64,12 @@ class WebViewMenuSignals:
         position = 0
         for item in context_menu.get_items():
             action = item.get_stock_action()
-            if action == WebKit2.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW:
+            if action in [WebKit2.ContextMenuAction.OPEN_LINK,
+                          WebKit2.ContextMenuAction.OPEN_VIDEO_IN_NEW_WINDOW,
+                          WebKit2.ContextMenuAction.OPEN_AUDIO_IN_NEW_WINDOW,
+                          WebKit2.ContextMenuAction.OPEN_FRAME_IN_NEW_WINDOW]:
+                context_menu.remove(item)
+            elif action == WebKit2.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW:
                 context_menu.remove(item)
                 action = Gio.SimpleAction(name="open_new_page")
                 App().add_action(action)
@@ -86,7 +91,19 @@ class WebViewMenuSignals:
                     _("Open link in a new private page"),
                     None)
                 context_menu.insert(item, position + 1)
-                break
+                action = Gio.SimpleAction(name="open_new_window")
+                App().add_action(action)
+                action.connect("activate",
+                               self.__on_open_new_window_activate,
+                               hit.get_link_uri())
+                item = WebKit2.ContextMenuItem.new_from_gaction(
+                    action,
+                    _("Open link in a new window"),
+                    None)
+                context_menu.append(item)
+                item = WebKit2.ContextMenuItem.new_separator()
+                context_menu.insert(item, position + 2)
+
         # Get current selection
         selection = ""
         user_data = context_menu.get_user_data()
@@ -179,37 +196,6 @@ class WebViewMenuSignals:
         search = Search()
         uri = search.get_search_uri(selection)
         self._window.container.add_webview(uri, LoadingType.FOREGROUND)
-
-    def __on_copy_link_uri_activate(self, action, variant, uri):
-        """
-            Open link in a new page
-            @param action as Gio.SimpleAction
-            @param variant as GLib.Variant
-            @param selection as str
-        """
-        if uri is not None:
-            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
-
-    def __on_copy_text_activate(self, action, variant, selection):
-        """
-            Open link in a new page
-            @param action as Gio.SimpleAction
-            @param variant as GLib.Variant
-            @param selection as str
-        """
-        Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(selection, -1)
-
-    def __on_download_activate(self, action, variant, uri):
-        """
-            Download file
-            @param action as Gio.SimpleAction
-            @param variant as GLib.Variant
-            @param uri as str
-        """
-        try:
-            self.get_context().download_uri(uri)
-        except Exception as e:
-            Logger.error("WebViewMenuSignals::__on_download_activate(): %s", e)
 
     def __on_save_images_activate(self, action, variant):
         """
