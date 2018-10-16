@@ -171,6 +171,7 @@ class WebViewNavigation:
                     return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
+            self.update_settings_for_uri(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
