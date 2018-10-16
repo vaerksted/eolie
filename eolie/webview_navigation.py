@@ -93,7 +93,6 @@ class WebViewNavigation:
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
             self.stop_loading()
-            self.update_settings_for_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
     def update_settings_for_uri(self, uri):
@@ -171,7 +170,6 @@ class WebViewNavigation:
                     return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
-            self.update_settings_for_uri(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
@@ -356,6 +354,7 @@ class WebViewNavigation:
                 return True
             else:
                 self.discard_error()
+                self.update_settings_for_uri(navigation_uri)
                 decision.use()
                 return False
         elif mouse_button == 1:
