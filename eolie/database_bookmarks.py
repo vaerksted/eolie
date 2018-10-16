@@ -762,10 +762,10 @@ class DatabaseBookmarks:
                 path = homedir + "/.config/chrome/Default/Bookmarks"
             else:
                 path = homedir + "/.config/chromium/Default/Bookmarks"
+            status = False
             f = Gio.File.new_for_path(path)
-            if not f.query_exists():
-                return
-            (status, content, tag) = f.load_contents(None)
+            if f.query_exists():
+                (status, content, tag) = f.load_contents(None)
             if status:
                 data = content.decode("utf-8")
                 j = json.loads(data)
@@ -799,7 +799,7 @@ class DatabaseBookmarks:
                             # Set position
                             self.set_position(bookmark_id, position)
                             position += 1
-                SqlCursor.remove(self)
+            SqlCursor.remove(self)
         except Exception as e:
             Logger.error("DatabaseBookmarks::import_chromium(): %s", e)
 
