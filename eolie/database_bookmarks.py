@@ -803,29 +803,19 @@ class DatabaseBookmarks:
         except Exception as e:
             Logger.error("DatabaseBookmarks::import_chromium(): %s", e)
 
-    def import_firefox(self):
+    def import_firefox(self, profile):
         """
             Mozilla Firefox importer
+            @param profile as str
         """
         try:
             SqlCursor.add(self)
-            firefox_path = GLib.get_home_dir() + "/.mozilla/firefox/"
-            d = Gio.File.new_for_path(firefox_path)
-            infos = d.enumerate_children(
-                'standard::name,standard::type',
-                Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
-                None)
-            sqlite_path = None
-            for info in infos:
-                if info.get_file_type() == Gio.FileType.DIRECTORY:
-                    f = Gio.File.new_for_path(firefox_path +
-                                              info.get_name() +
-                                              "/places.sqlite")
-                    if f.query_exists():
-                        sqlite_path = f.get_path()
-                        break
-            if sqlite_path is not None:
-                c = sqlite3.connect(sqlite_path, 600.0)
+            path = "%s/.mozilla/firefox/%s/places.sqlite" % \
+                (GLib.get_home_dir(),
+                 profile)
+            f = Gio.File.new_for_path(path)
+            if f.query_exists():
+                c = sqlite3.connect(path, 600.0)
                 # Add bookmarks
                 bookmarks = self.__get_firefox_bookmarks(c)
                 for (title, uri, parent_name, bookmark_guid,
