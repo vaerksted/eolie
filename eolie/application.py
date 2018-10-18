@@ -682,7 +682,7 @@ class Application(Gtk.Application):
                 items.append((uri, uri, 0, ephemeral, None, loading_type))
                 i += 1
             active_window.container.add_webviews(items)
-            # https://bugzilla.gnome.org/show_bug.cgi?id=766284
+            # https://gitlab.gnome.org/GNOME/gtk/issues/624
             monotonic_time = int(GLib.get_monotonic_time() / 1000)
             active_window.present_with_time(monotonic_time)
         # Add default start page
