@@ -152,14 +152,6 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.set_title(profile, uri)
         self.toolbar.actions.set_actions(webview)
 
-    def hide(self):
-        """
-            Hide window, save sidebar width and clean up
-        """
-        self.disconnect_by_func(self.__on_window_state_event)
-        self.disconnect_by_func(self.__on_configure_event)
-        Gtk.ApplicationWindow.hide(self)
-
     def register(self, popover, monitor=True):
         """
             Add a popover to window
