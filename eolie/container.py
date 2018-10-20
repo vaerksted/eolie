@@ -498,9 +498,9 @@ class Container(Gtk.Overlay):
         if self.__pending_items:
             (uri, title, atime,
              ephemeral, state, loading_type) = self.__pending_items.pop(0)
-            webview = self.add_webview(uri, loading_type, ephemeral, state)
+            webview = self.add_webview(uri, loading_type,
+                                       ephemeral, state, atime)
             webview.set_title(title)
-            webview.set_atime(atime)
             GLib.idle_add(self.__add_pending_items)
         else:
             self.sites_manager.set_initial_sort(None)
