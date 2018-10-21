@@ -496,6 +496,9 @@ class WebView(WebKit2.WebView):
         settings.set_property("enable-javascript", True)
         settings.set_property("enable-media-stream", True)
         settings.set_property("enable-mediasource", False)
+        autoplay_videos = App().settings.get_value('autoplay-videos')
+        settings.set_property("media-playback-requires-user-gesture",
+                              not autoplay_videos)
         settings.set_property("enable-developer-extras",
                               App().settings.get_value("developer-extras"))
         settings.set_property("enable-offline-web-application-cache", True)

@@ -164,6 +164,11 @@
          <summary>DNS prediction</summary>
          <description />
       </key>
+      <key type="b" name="autoplay-videos">
+         <default>false</default>
+         <summary>Autoplay videos</summary>
+         <description />
+      </key>
       <key type="b" name="enable-suggestions">
          <default>true</default>
          <summary>Enable search suggestions</summary>

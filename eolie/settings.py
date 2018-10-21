@@ -168,6 +168,9 @@ class SettingsDialog:
         dns_prediction_check = builder.get_object("dns_prediction_check")
         dns_prediction_check.set_active(
             App().settings.get_value("dns-prediction"))
+        autoplay_check = builder.get_object("autoplay_check")
+        autoplay_check.set_active(
+            App().settings.get_value("autoplay-videos"))
         tracking_check = builder.get_object("tracking_check")
         tracking_check.set_active(
             App().settings.get_value("do-not-track"))
@@ -243,6 +246,14 @@ class SettingsDialog:
             @param button as Gtk.ToggleButton
         """
         App().settings.set_value("dns-prediction",
+                                 GLib.Variant("b", button.get_active()))
+
+    def _on_autoplay_toggled(self, button):
+        """
+            Save state
+            @param button as Gtk.ToggleButton
+        """
+        App().settings.set_value("autoplay-videos",
                                  GLib.Variant("b", button.get_active()))
 
     def _on_tracking_toggled(self, button):
