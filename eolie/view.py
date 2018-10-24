@@ -76,45 +76,8 @@ class View(Gtk.Overlay):
         # Connect signals
         self.connect("key-press-event", self.__on_key_press_event)
         webview.connect("mouse-target-changed", self.__on_mouse_target_changed)
-        webview.connect("readable", self.__on_readable)
+        webview.connect("readability-content", self.__on_readability_content)
         webview.connect("close", self.__on_close)
-
-    def switch_read_mode(self):
-        """
-            Show a readable version of page if available.
-            If in read mode, switch back to page
-            If force, always go in read mode
-            @param force as bool
-        """
-        system = Gio.Settings.new("org.gnome.desktop.interface")
-        document_font_name = system.get_value("document-font-name").get_string(
-        )
-        document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
-        if self.__reading_view is None:
-            self.__reading_view = WebKit2.WebView.new()
-            self.__reading_view.connect("decide-policy",
-                                        self.__on_decide_policy)
-            self.__reading_view.show()
-            self.add_overlay(self.__reading_view)
-            if self.__webview.readable_content:
-                self.__in_read_mode = True
-                html = "<html><head>\
-                        <style type='text/css'>\
-                        *:not(img) {font-size: %s;\
-                            background-color: #333333;\
-                            color: #e6e6e6;\
-                            margin-left: auto;\
-                            margin-right: auto;\
-                            width: %s}\
-                        </style></head>" % (document_font_size,
-                                            self.get_allocated_width() / 1.5)
-                html += "<title>%s</title>" % self.__webview.title
-                html += self.__webview.readable_content
-                html += "</html>"
-                GLib.idle_add(self.__reading_view.load_html, html, None)
-        else:
-            self.__reading_view.destroy()
-            self.__reading_view = None
 
     def free_webview(self):
         """
@@ -130,6 +93,13 @@ class View(Gtk.Overlay):
         self.__destroying = True
         self.emit("destroying")
         GLib.timeout_add(1000, self.__destroy)
+
+    def stop_reading(self):
+        """
+            Destroy reading view
+        """
+        self.__reading_view.destroy()
+        self.__reading_view = None
 
     def set_window(self, window):
         """
@@ -244,10 +214,33 @@ class View(Gtk.Overlay):
         else:
             self.__uri_label.hide()
 
-    def __on_readable(self, webview):
+    def __on_readability_content(self, webview, content):
         """
-            Show readable button in titlebar
+            Show reading view
             @param webview as WebView
+            @param content as str
         """
-        if webview.get_mapped():
-            self.__window.toolbar.title.show_readable_button(True)
+        system = Gio.Settings.new("org.gnome.desktop.interface")
+        document_font_name = system.get_value("document-font-name").get_string(
+        )
+        document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
+        if self.__reading_view is None:
+            self.__reading_view = WebKit2.WebView.new()
+            self.__reading_view.connect("decide-policy",
+                                        self.__on_decide_policy)
+            self.__reading_view.show()
+            self.add_overlay(self.__reading_view)
+            html = "<html><head>\
+                    <style type='text/css'>\
+                    *:not(img) {font-size: %s;\
+                        background-color: #333333;\
+                        color: #e6e6e6;\
+                        margin-left: auto;\
+                        margin-right: auto;\
+                        width: %s}\
+                    </style></head>" % (document_font_size,
+                                        self.get_allocated_width() / 1.5)
+            html += "<title>%s</title>" % self.__webview.title
+            html += content
+            html += "</html>"
+            self.__reading_view.load_html(html, None)

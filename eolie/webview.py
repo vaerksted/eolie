@@ -423,14 +423,6 @@ class WebView(WebKit2.WebView):
         """
         return self.__selection
 
-    @property
-    def readable_content(self):
-        """
-            Readable content
-            @return content as str
-        """
-        return self._readable_content
-
 #######################
 # PRIVATE             #
 #######################
@@ -458,7 +450,6 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
-        self._readable_content = ""
         self.__uri = None
         self._title = None
         self.__related_view = related_view

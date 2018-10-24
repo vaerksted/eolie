@@ -30,7 +30,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
     """
 
     gsignals = {
-        "readable": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "readability-content": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "shown": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),

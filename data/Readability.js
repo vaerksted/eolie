@@ -1837,15 +1837,21 @@ var uri = {
 };
 
 if (typeof document !== 'undefined') {
-    reader = new Readability(uri, document);
-    if (reader.isProbablyReaderable(false))
-        // Youtube fails if we do a document.cloneNode(), so only do this if isProbablyReaderable()
+    if (isProbablyReaderable == true) {
         var documentClone = document.cloneNode(true);
         reader = new Readability(uri, documentClone);
         article = reader.parse();
-        // BIG HACK but webkitgtk doesn't allow us to read result from js
-        // FIXME: webkitgtk allows js introspection since 2.20
         var previous_title = document.title;
         alert("@EOLIE_READER@".concat(article.content));
         document.title=previous_title;
+    }
+    else {
+        reader = new Readability(uri, document);
+        if (reader.isProbablyReaderable(false)) {
+            var isProbablyReaderable=true;
+            var previous_title = document.title;
+            alert("@EOLIE_READERABLE@");
+            document.title=previous_title;
+        }
+    }
 }

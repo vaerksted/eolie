@@ -152,14 +152,15 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def set_reading(self):
+    def set_readable_button_state(self, reading):
         """
             Mark readable button
+            @param reading as bool
         """
         if self.__indicator_stack.get_visible_child_name() != "image":
             return
         child = self.__indicator_stack.get_visible_child()
-        if self.__window.container.current.reading:
+        if reading:
             child.get_style_context().add_class("selected")
         else:
             child.get_style_context().remove_class("selected")
@@ -345,7 +346,7 @@ class ToolbarTitle(Gtk.Bin):
         if b:
             self.__indicator_stack.show()
             self.__indicator_stack.set_visible_child_name("image")
-            self.set_reading()
+            self.set_readable_button_state(False)
         else:
             self.__indicator_stack.hide()
 
@@ -607,8 +608,13 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        self.__window.container.current.switch_read_mode()
-        self.set_reading()
+        view = self.__window.container.current
+        self.set_readable_button_state(not view.reading)
+        if view.reading:
+            view.stop_reading()
+        else:
+            view.webview.run_javascript_from_gresource(
+                    "/org/gnome/Eolie/Readability.js", None, None)
         return True
 
     def _on_indicator2_press(self, eventbox, event):

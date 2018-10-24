@@ -142,8 +142,6 @@ class Window(Gtk.ApplicationWindow):
         else:
             self.toolbar.title.progress.hide()
             self.toolbar.title.set_loading(False)
-            readable_content = webview.readable_content
-            self.toolbar.title.show_readable_button(readable_content != "")
         profile = name_from_profile_id(webview.profile)
         title = webview.title
         if title:
