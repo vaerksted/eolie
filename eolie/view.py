@@ -98,8 +98,9 @@ class View(Gtk.Overlay):
         """
             Destroy reading view
         """
-        self.__reading_view.destroy()
-        self.__reading_view = None
+        if self.__reading_view is not None:
+            self.__reading_view.destroy()
+            self.__reading_view = None
 
     def set_window(self, window):
         """

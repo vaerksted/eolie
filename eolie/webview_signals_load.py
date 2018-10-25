@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, WebKit2
+from gi.repository import GLib, Gio, WebKit2
 
 from urllib.parse import urlparse
 
@@ -108,8 +108,14 @@ class WebViewLoadSignals:
                     popup.destroy()
                 self.__popups = []
             elif event == WebKit2.LoadEvent.FINISHED:
-                self.run_javascript_from_gresource(
-                    "/org/gnome/Eolie/Readability.js", None, None)
+                js1 = Gio.File.new_for_uri(
+                    "resource:///org/gnome/Eolie/Readability.js")
+                js2 = Gio.File.new_for_uri(
+                    "resource:///org/gnome/Eolie/Readability_check.js")
+                (status, content1, tags) = js1.load_contents()
+                (status, content2, tags) = js2.load_contents()
+                script = content1.decode("utf-8") + content2.decode("utf-8")
+                self.run_javascript(script, None, None)
             if webview.get_mapped() and not webview.view.popover:
                 self.__update_toolbars(event)
 
@@ -134,9 +140,8 @@ class WebViewLoadSignals:
                 # Give focus to url bar
                 self._window.toolbar.title.start_search()
             self._window.toolbar.title.show_indicator(Indicator.NONE)
-            # Turn off reading mode if needed
-            if self._window.container.current.reading:
-                self._window.container.current.switch_read_mode()
+            # Turn off reading mode
+            self._window.container.current.stop_reading()
             self._window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             profile = name_from_profile_id(self.profile)

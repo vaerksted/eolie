@@ -613,8 +613,14 @@ class ToolbarTitle(Gtk.Bin):
         if view.reading:
             view.stop_reading()
         else:
-            view.webview.run_javascript_from_gresource(
-                    "/org/gnome/Eolie/Readability.js", None, None)
+            js1 = Gio.File.new_for_uri(
+                "resource:///org/gnome/Eolie/Readability.js")
+            js2 = Gio.File.new_for_uri(
+                "resource:///org/gnome/Eolie/Readability_get.js")
+            (status, content1, tags) = js1.load_contents()
+            (status, content2, tags) = js2.load_contents()
+            script = content1.decode("utf-8") + content2.decode("utf-8")
+            view.webview.run_javascript(script, None, None)
         return True
 
     def _on_indicator2_press(self, eventbox, event):

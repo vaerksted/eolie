@@ -1835,23 +1835,3 @@ var uri = {
   scheme: loc.protocol.substr(0, loc.protocol.indexOf(":")),
   pathBase: loc.protocol + "//" + loc.host + loc.pathname.substr(0, loc.pathname.lastIndexOf("/") + 1)
 };
-
-if (typeof document !== 'undefined') {
-    if (isProbablyReaderable == true) {
-        var documentClone = document.cloneNode(true);
-        reader = new Readability(uri, documentClone);
-        article = reader.parse();
-        var previous_title = document.title;
-        alert("@EOLIE_READER@".concat(article.content));
-        document.title=previous_title;
-    }
-    else {
-        reader = new Readability(uri, document);
-        if (reader.isProbablyReaderable(false)) {
-            var isProbablyReaderable=true;
-            var previous_title = document.title;
-            alert("@EOLIE_READERABLE@");
-            document.title=previous_title;
-        }
-    }
-}
