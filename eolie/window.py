@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, Gio, Gdk
 from eolie.define import App, Indicator, LoadingType
 from eolie.toolbar import Toolbar
 from eolie.container import Container
-from eolie.utils import get_current_monitor_model, name_from_profile_id
+from eolie.utils import get_current_monitor_model
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
 
@@ -142,7 +142,9 @@ class Window(Gtk.ApplicationWindow):
         else:
             self.toolbar.title.progress.hide()
             self.toolbar.title.set_loading(False)
-        profile = name_from_profile_id(webview.profile)
+        self.toolbar.title.show_readable_button(webview.readable)
+        # profile = name_from_profile_id(webview.profile)
+        profile = ""
         title = webview.title
         if title:
             self.toolbar.title.set_title(profile, title)

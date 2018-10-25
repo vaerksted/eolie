@@ -199,6 +199,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             2000, title_changed_timeout)
         self.__cancellable.cancel()
         self.__cancellable.reset()
+        self._readable = False
 
     def __on_title_changed(self, webview, title):
         """

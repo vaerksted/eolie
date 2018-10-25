@@ -327,6 +327,14 @@ class WebView(WebKit2.WebView):
         return self.__content_manager
 
     @property
+    def readable(self):
+        """
+            True if webview readable
+            @return bool
+        """
+        return self._readable
+
+    @property
     def context(self):
         """
             Get context
@@ -450,6 +458,7 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
+        self._readable = False
         self.__uri = None
         self._title = None
         self.__related_view = related_view
