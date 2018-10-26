@@ -460,6 +460,7 @@ class WebView(WebKit2.WebView):
         self.__selection = ""
         self._readable = False
         self.__uri = None
+        self._initial_uri = None
         self._title = None
         self.__related_view = related_view
         self._shown = False

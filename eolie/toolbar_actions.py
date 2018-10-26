@@ -55,10 +55,6 @@ class ToolbarActions(Gtk.Bin):
             Click next
         """
         webview = self.__window.container.current.webview
-        back_list = webview.get_back_forward_list().get_back_list()
-        if back_list:
-            uri = back_list[0].get_uri()
-            webview.update_settings_for_uri(uri)
         webview.go_back()
 
     def forward(self):
@@ -66,10 +62,6 @@ class ToolbarActions(Gtk.Bin):
             Click previous
         """
         webview = self.__window.container.current.webview
-        forward_list = webview.get_back_forward_list().get_forward_list()
-        if forward_list:
-            uri = forward_list[0].get_uri()
-            webview.update_settings_for_uri(uri)
         webview.go_forward()
 
     @property

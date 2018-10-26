@@ -32,7 +32,6 @@ class WebViewArtwork:
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
         self.__cancellable = Gio.Cancellable()
-        self.__initial_uri = None
         self.__favicon_db = self.context.get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
@@ -50,7 +49,7 @@ class WebViewArtwork:
                                       self.__cancellable,
                                       self.__on_get_favicon,
                                       self.uri,
-                                      self.__initial_uri)
+                                      self._initial_uri)
 
     def set_current_favicon(self):
         """
@@ -78,16 +77,11 @@ class WebViewArtwork:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
-            parsed = urlparse(self.uri)
             self.__cancellable.cancel()
             self.__cancellable.reset()
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
                 self.__snapshot_id = None
-            if parsed.scheme in ["http", "https"]:
-                self.__initial_uri = self.uri.rstrip('/')
-            else:
-                self.__initial_uri = None
         elif event == WebKit2.LoadEvent.FINISHED:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
@@ -107,7 +101,7 @@ class WebViewArtwork:
         parsed = urlparse(self.uri)
         save = parsed.scheme in ["http", "https"]
         bookmark_id = App().bookmarks.get_id(self.uri)
-        ibookmark_id = App().bookmarks.get_id(self.__initial_uri)
+        ibookmark_id = App().bookmarks.get_id(self._initial_uri)
         if bookmark_id is None and ibookmark_id is None:
             save = False
         self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
@@ -173,7 +167,6 @@ class WebViewArtwork:
             @param param as GObject.ParamSpec
         """
         if not webview.is_loading() and not webview.ephemeral:
-            self.__initial_uri = None
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
@@ -205,7 +198,7 @@ class WebViewArtwork:
                                               None,
                                               self.__on_get_favicon,
                                               uri,
-                                              self.__initial_uri,
+                                              self._initial_uri,
                                               False)
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
@@ -220,7 +213,7 @@ class WebViewArtwork:
                                       None,
                                       self.__on_get_favicon,
                                       uri,
-                                      self.__initial_uri)
+                                      self._initial_uri)
 
     def __on_snapshot(self, surface, save, first_pass):
         """
@@ -249,9 +242,9 @@ class WebViewArtwork:
         uri = self.uri
         # We also cache initial URI
         uris = [uri.rstrip("/")]
-        if self.__initial_uri is not None and\
-                self.__initial_uri not in uris:
-            uris.append(self.__initial_uri)
+        if self._initial_uri is not None and\
+                self._initial_uri not in uris:
+            uris.append(self._initial_uri)
         for uri in uris:
             exists = App().art.exists(uri, "start")
             if not exists:

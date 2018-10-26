@@ -95,45 +95,6 @@ class WebViewNavigation:
             self.stop_loading()
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
-    def update_settings_for_uri(self, uri):
-        """
-            Update internal settings for URI
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        http_scheme = parsed.scheme in ["http", "https"]
-        App().history.set_page_state(uri)
-        # self.__switch_profile(uri)
-        self.__update_bookmark_metadata(uri)
-        self.content_manager.remove_all_style_sheets()
-        # Can't find a way to block content for ephemeral views
-        if App().settings.get_value("adblock") and\
-                not App().adblock_exceptions.find_parsed(parsed) and\
-                http_scheme and\
-                self.content_manager is not None:
-            self.content_manager.add_style_sheet(
-                App().default_style_sheet)
-            rules = App().adblock.get_css_rules(uri)
-            user_style_sheet = WebKit2.UserStyleSheet(
-                rules,
-                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                WebKit2.UserStyleLevel.USER,
-                None,
-                None)
-            self.content_manager.add_style_sheet(user_style_sheet)
-        user_agent = App().websettings.get_user_agent(uri)
-        settings = self.get_settings()
-        if user_agent:
-            settings.set_user_agent(user_agent)
-        else:
-            settings.set_user_agent_with_application_details("Eolie",
-                                                             None)
-        # Setup image blocker
-        block_image = http_scheme and\
-            App().settings.get_value("imageblock") and\
-            not App().image_exceptions.find_parsed(parsed)
-        self.set_setting("auto-load-images", not block_image)
-
     @property
     def profile(self):
         """
@@ -154,8 +115,14 @@ class WebViewNavigation:
         parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
             self.emit("uri-changed", self.uri)
+            if parsed.scheme in ["http", "https"]:
+                self._initial_uri = self.uri.rstrip('/')
+            else:
+                self._initial_uri = None
+            self.__update_bookmark_metadata(self.uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
-            # Block ads
+            self.__update_bookmark_metadata(self.uri)
+            # Block ads, useful for some site
             if App().settings.get_value("adblock") and\
                     webview.__related_view is not None and\
                     parsed.scheme in ["http", "https"] and\
@@ -170,6 +137,11 @@ class WebViewNavigation:
                     return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
+            App().history.set_page_state(self.uri)
+            if self._initial_uri != self.uri:
+                self.__update_bookmark_metadata(self.uri)
+            self.__set_imgblock(self.uri)
+            self.__set_adblock(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
@@ -232,6 +204,56 @@ class WebViewNavigation:
                 path,
                 WebKit2.CookiePersistentStorage.SQLITE)
 
+    def __set_adblock(self, uri):
+        """
+            Set adblocker
+            @param uri as str
+        """
+        parsed = urlparse(uri)
+        http_scheme = parsed.scheme in ["http", "https"]
+        self.content_manager.remove_all_style_sheets()
+        # Can't find a way to block content for ephemeral views
+        if App().settings.get_value("adblock") and\
+                not App().adblock_exceptions.find_parsed(parsed) and\
+                http_scheme and\
+                self.content_manager is not None:
+            self.content_manager.add_style_sheet(
+                App().default_style_sheet)
+            rules = App().adblock.get_css_rules(uri)
+            user_style_sheet = WebKit2.UserStyleSheet(
+                rules,
+                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                WebKit2.UserStyleLevel.USER,
+                None,
+                None)
+            self.content_manager.add_style_sheet(user_style_sheet)
+
+    def __set_user_agent(self, uri):
+        """
+            Set user agent for uri
+            @param uri as str
+        """
+        user_agent = App().websettings.get_user_agent(uri)
+        settings = self.get_settings()
+        if user_agent:
+            settings.set_user_agent(user_agent)
+        else:
+            settings.set_user_agent_with_application_details("Eolie",
+                                                             None)
+
+    def __set_imgblock(self, uri):
+        """
+            Set image blocker for uri
+            @param uri as str
+        """
+        parsed = urlparse(uri)
+        http_scheme = parsed.scheme in ["http", "https"]
+        # Setup image blocker
+        block_image = http_scheme and\
+            App().settings.get_value("imageblock") and\
+            not App().image_exceptions.find_parsed(parsed)
+        self.set_setting("auto-load-images", not block_image)
+
     def __on_run_as_modal(self, webview):
         Logger.info("WebView::__on_run_as_modal(): TODO")
 
@@ -267,6 +289,7 @@ class WebViewNavigation:
         """
         # Js update
         if not self.is_loading():
+            self._initial_uri = None
             uri = webview.get_property(param.name)
             # JS bookmark (Bookmarklet)
             if not uri.startswith("javascript:") and not self.error:
@@ -354,7 +377,7 @@ class WebViewNavigation:
                 return True
             else:
                 self.discard_error()
-                self.update_settings_for_uri(navigation_uri)
+                self.__set_user_agent(navigation_uri)
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -379,7 +402,7 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                self.update_settings_for_uri(navigation_uri)
+                self.__set_user_agent(navigation_uri)
                 self.discard_error()
                 decision.use()
                 return False
