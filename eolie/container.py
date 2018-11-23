@@ -73,6 +73,8 @@ class Container(Gtk.Overlay):
         Main Eolie view
     """
 
+    __DONATION = 1
+
     def __init__(self, window):
         """
             Ini.container
@@ -117,8 +119,8 @@ class Container(Gtk.Overlay):
         self.__expose_stack.add_named(self.__stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
         self.add(paned)
-        # Show donation notification
-        if App().settings.get_value("show-donation"):
+        # Show donation notification after one hour
+        if App().settings.get_value("donation").get_int32() != self.__DONATION:
             GLib.timeout_add_seconds(randint(3600, 7200),
                                      self.__show_donation)
 
@@ -524,8 +526,8 @@ class Container(Gtk.Overlay):
         self.add_overlay(notification)
         notification.show()
         notification.set_reveal_child(True)
-        App().settings.set_value("show-donation",
-                                 GLib.Variant("b", False))
+        App().settings.set_value("donation",
+                                 GLib.Variant("i", self.__DONATION))
 
     def __on_paned_notify_position(self, paned, ignore):
         """
