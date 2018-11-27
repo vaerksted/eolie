@@ -173,7 +173,7 @@ class FormsExtension(GObject.Object):
     def pending_credentials(self):
         """
             Get credentials
-            @return (str, str, str, str, str, str)/None/Type.NONE
+            @return (str, str, str, str, str, str) or None
         """
         return self.__pending_credentials
 
@@ -198,34 +198,40 @@ class FormsExtension(GObject.Object):
             @param page_id as int
         """
         try:
-            # If credentials not found (!=Type.NONE) and something new
-            # is submitted
-            if self.__pending_credentials != Type.NONE and (
-                    attributes is None or
-                    attributes["login"] != user_form_value or
-                    password != pass_form_value):
-                if attributes is None or\
-                        attributes["login"] != user_form_value:
+            uuid = None
+            # Check if login is the same and password changed
+            if attributes is not None:
+                # New username if nothing already set
+                if attributes["login"] != user_form_value and \
+                        self.__pending_credentials is None:
                     uuid = ""
-                else:
+                # New password
+                elif attributes["login"] == user_form_value and\
+                        password != pass_form_value:
                     uuid = attributes["uuid"]
-                self.__pending_credentials = (uuid,
+                # Nothing to do
+                elif attributes["login"] == user_form_value and\
+                        password == pass_form_value:
+                    self.__pending_credentials = Type.NONE
+                if uuid is not None and\
+                        self.__pending_credentials != Type.NONE:
+                    self.__pending_credentials = (
+                                              uuid,
                                               user_form_name,
                                               user_form_value,
                                               pass_form_name,
                                               pass_form_value,
                                               hostname_uri,
                                               form_uri)
-            else:
-                # Found, no more lookup
-                self.__pending_credentials = Type.NONE
             # Last found credentials
-            if count < 1 or index == count - 1:
-                # Reset pending
-                if self.__pending_credentials == Type.NONE:
-                    self.__pending_credentials = None
-                # Ask for user input
-                elif self.__pending_credentials not in [None, Type.NONE]:
+            if count == 0:
+                args = ("", user_form_name, user_form_value,
+                        pass_form_name, hostname_uri, form_uri)
+                variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
+                                                              args))
+                self.emit("submit-form", variant)
+            elif index == count - 1:
+                if self.__pending_credentials not in [None, Type.NONE]:
                     (uuid,
                      user_form_name,
                      user_form_value,
@@ -257,6 +263,7 @@ class FormsExtension(GObject.Object):
             return
         try:
             # Check elements
+            self.__pending_credentials = None
             document = webpage.get_dom_document()
             username_idx = None
             password_idx = None
