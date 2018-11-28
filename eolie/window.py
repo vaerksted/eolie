@@ -64,14 +64,17 @@ class Window(Gtk.ApplicationWindow):
             Update zoom level
             @param force as bool
         """
-        monitor_model = get_current_monitor_model(self)
-        if force or monitor_model != self.__monitor_model:
-            # Update window default zoom level
-            self.__update_zoom_level()
-            self.__monitor_model = monitor_model
-            # Update view zoom level
-            for view in self.__container.views:
-                view.webview.update_zoom_level()
+        try:
+            monitor_model = get_current_monitor_model(self)
+            if force or monitor_model != self.__monitor_model:
+                # Update window default zoom level
+                self.__update_zoom_level()
+                self.__monitor_model = monitor_model
+                # Update view zoom level
+                for view in self.__container.views:
+                    view.webview.update_zoom_level()
+        except Exception as e:
+            Logger.error("Window::update_zoom_level(): %s", e)
 
     def fullscreen(self, force=True):
         """
