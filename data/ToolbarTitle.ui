@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.1 -->
+<!-- Generated with glade 3.22.1 -->
 <interface domain="lollypop">
   <requires lib="gtk+" version="3.10"/>
   <object class="GtkEventBox" id="widget">
@@ -46,6 +46,8 @@
                   <object class="GtkSeparator">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
                     <property name="vexpand">True</property>
                     <property name="orientation">vertical</property>
                   </object>
@@ -127,14 +129,13 @@
                     <signal name="leave-notify-event" handler="_on_eventbox_leave_notify" swapped="no"/>
                     <child>
                       <object class="GtkStack" id="indicator_stack">
-                        <property name="visible">False</property>
                         <property name="can_focus">False</property>
                         <child>
                           <object class="GtkImage" id="indicator_image">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="icon_name">view-dual-symbolic</property>
                             <property name="margin_start">2</property>
+                            <property name="icon_name">view-dual-symbolic</property>
                           </object>
                           <packing>
                             <property name="name">image</property>
