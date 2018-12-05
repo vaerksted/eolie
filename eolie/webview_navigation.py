@@ -366,7 +366,7 @@ class WebViewNavigation:
             if navigation_uri == "about:blank":
                 self.reset_last_click_event()
                 decision.use()
-                return True
+                return False
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 self.new_page(navigation_uri, LoadingType.FOREGROUND)
                 decision.ignore()
