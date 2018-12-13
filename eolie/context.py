@@ -216,6 +216,8 @@ class Context:
         icon_info = Gtk.IconTheme.get_default().lookup_icon(
             icon_name, 22,
             Gtk.IconLookupFlags.FORCE_SVG)
+        if icon_info is None:
+            return
         filename = icon_info.get_filename()
         if filename.endswith(".png"):
             mime = "image/png"
