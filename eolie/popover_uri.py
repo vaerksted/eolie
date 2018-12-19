@@ -682,10 +682,10 @@ class UriPopover(Gtk.Popover):
             @param button as Gtk.Button
         """
         for row in self.__bookmarks_box.get_selected_rows():
-            if App().sync_worker is not None:
-                guid = App().bookmarks.get_guid(self.__bookmark_id)
-                App().sync_worker.remove_from_bookmarks(guid)
             item_id = row.item.get_property("id")
+            if App().sync_worker is not None:
+                guid = App().bookmarks.get_guid(item_id)
+                App().sync_worker.remove_from_bookmarks(guid)
             App().bookmarks.remove(item_id)
             self.__bookmarks_box.remove(row)
             self.__remove_button.hide()
