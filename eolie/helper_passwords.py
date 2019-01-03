@@ -149,6 +149,34 @@ class PasswordsHelper:
                                    uuid,
                                    callback,
                                    *args)
+            # Clear item if exists
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+                "login": Secret.SchemaAttributeType.STRING,
+                "hostname": Secret.SchemaAttributeType.STRING,
+                "formSubmitURL": Secret.SchemaAttributeType.STRING,
+                "userform": Secret.SchemaAttributeType.STRING,
+                "passform": Secret.SchemaAttributeType.STRING,
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+                "login": user_form_value,
+                "hostname": hostname_uri,
+                "formSubmitURL": form_uri,
+                "userform": user_form_name,
+                "passform": pass_form_name
+            }
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema,
+                                 SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_search_clear,
+                                 callback,
+                                 *args)
+
             schema_string = "org.gnome.Eolie: %s > %s" % (user_form_value,
                                                           hostname_uri)
             SecretSchema = {
@@ -253,7 +281,7 @@ class PasswordsHelper:
                                  SecretAttributes,
                                  Secret.SearchFlags.ALL,
                                  None,
-                                 self.__on_clear_search,
+                                 self.__on_search_clear,
                                  callback,
                                  *args)
         except Exception as e:
@@ -278,7 +306,7 @@ class PasswordsHelper:
                                  SecretAttributes,
                                  Secret.SearchFlags.ALL,
                                  None,
-                                 self.__on_clear_search,
+                                 self.__on_search_clear,
                                  callback,
                                  *args)
         except Exception as e:
@@ -303,7 +331,7 @@ class PasswordsHelper:
                                  SecretAttributes,
                                  Secret.SearchFlags.ALL,
                                  None,
-                                 self.__on_clear_search)
+                                 self.__on_search_clear)
         except Exception as e:
             Logger.debug("PasswordsHelper::clear_all(): %s", e)
 
@@ -353,7 +381,7 @@ class PasswordsHelper:
         else:
             callback(None, None, form_uri, 0, 0, *args)
 
-    def __on_clear_search(self, source, result, callback=None, *args):
+    def __on_search_clear(self, source, result, callback=None, *args):
         """
             Clear passwords
             @param source as GObject.Object
@@ -367,7 +395,7 @@ class PasswordsHelper:
             if callback is not None:
                 callback(*args)
         except Exception as e:
-            Logger.debug("PasswordsHelper::__on_clear_search(): %s", e)
+            Logger.debug("PasswordsHelper::__on_search_clear(): %s", e)
 
     def __on_secret_search(self, source, result, form_uri, callback, *args):
         """
