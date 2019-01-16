@@ -15,6 +15,6 @@ configure_file(
   install_dir: service_dir
 )
 install_data(
-  'eolie-search-provider.ini',
+  'org.gnome.Eolie.SearchProvider.ini',
   install_dir: serarch_provider_dir
 )
