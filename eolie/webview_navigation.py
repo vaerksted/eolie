@@ -368,9 +368,8 @@ class WebViewNavigation:
                 decision.use()
                 return False
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                self.new_page(navigation_uri, LoadingType.FOREGROUND)
-                decision.ignore()
-                return True
+                decision.use()
+                return False
             elif App().phishing.is_phishing(navigation_uri):
                 self._show_phishing_error(navigation_uri)
                 decision.ignore()
@@ -382,13 +381,8 @@ class WebViewNavigation:
                 return False
         elif mouse_button == 1:
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
-                if self._window.modifiers == Gdk.KEY_Shift_L:
-                    loading_type = LoadingType.POPOVER
-                else:
-                    loading_type = LoadingType.FOREGROUND
-                self.new_page(navigation_uri, loading_type)
-                decision.ignore()
-                return True
+                decision.use()
+                return False
             elif self._window.modifiers == Gdk.KEY_Control_L:
                 self.new_page(navigation_uri, LoadingType.BACKGROUND)
                 decision.ignore()
