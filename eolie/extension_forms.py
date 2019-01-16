@@ -14,7 +14,7 @@ from gi.repository import WebKit2WebExtension, GLib, GObject
 
 from urllib.parse import urlparse
 
-from eolie.define import Type, App
+from eolie.define import App
 from eolie.helper_passwords import PasswordsHelper
 from eolie.logger import Logger
 
@@ -198,52 +198,36 @@ class FormsExtension(GObject.Object):
             @param page_id as int
         """
         try:
-            uuid = None
-            # Check if login is the same and password changed
-            if attributes is not None:
-                # New username if nothing already set
-                if attributes["login"] != user_form_value and \
-                        self.__pending_credentials is None:
-                    uuid = ""
-                # New password
-                elif attributes["login"] == user_form_value and\
-                        password != pass_form_value:
-                    uuid = attributes["uuid"]
-                # Nothing to do
-                elif attributes["login"] == user_form_value and\
-                        password == pass_form_value:
-                    self.__pending_credentials = Type.NONE
-                if uuid is not None and\
-                        self.__pending_credentials != Type.NONE:
-                    self.__pending_credentials = (
-                                              uuid,
-                                              user_form_name,
-                                              user_form_value,
-                                              pass_form_name,
-                                              pass_form_value,
-                                              hostname_uri,
-                                              form_uri)
-            # Last found credentials
+            self.__pending_credentials = (user_form_name,
+                                          user_form_value,
+                                          pass_form_name,
+                                          pass_form_value,
+                                          hostname_uri,
+                                          form_uri)
+
+            # New credential
             if count == 0:
                 args = ("", user_form_name, user_form_value,
                         pass_form_name, hostname_uri, form_uri)
                 variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
                                                               args))
                 self.emit("submit-form", variant)
+            # Last credential
             elif index == count - 1:
-                if self.__pending_credentials not in [None, Type.NONE]:
-                    (uuid,
-                     user_form_name,
-                     user_form_value,
-                     pass_form_name,
-                     pass_form_value,
-                     hostname_uri,
-                     form_uri) = self.__pending_credentials
-                    args = (uuid, user_form_name, user_form_value,
-                            pass_form_name, hostname_uri, form_uri)
-                    variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
-                                                                  args))
-                    self.emit("submit-form", variant)
+                if attributes is not None:
+                    uuid = attributes["uuid"]
+                    # No password change
+                    if attributes["login"] == user_form_value and\
+                            password == pass_form_value:
+                        return
+                    # New password
+                    elif attributes["login"] != user_form_value:
+                        uuid = ""
+                args = (uuid, user_form_name, user_form_value,
+                        pass_form_name, hostname_uri, form_uri)
+                variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
+                                                              args))
+                self.emit("submit-form", variant)
         except Exception as e:
             Logger.error("FormsExtension::__on_get_password(): %s", e)
 
