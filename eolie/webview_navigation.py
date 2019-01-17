@@ -29,7 +29,8 @@ class WebViewNavigation:
 
     __MIMES = ["text/html", "text/xml", "application/xhtml+xml",
                "x-scheme-handler/http", "x-scheme-handler/https",
-               "multipart/related", "application/x-mimearchive"]
+               "multipart/related", "application/x-mimearchive",
+               "application/x-extension-html"]
 
     def __init__(self, related_view):
         """
