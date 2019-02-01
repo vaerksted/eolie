@@ -128,6 +128,6 @@ class ImportBookmarksDialog:
             @param dialog as GtkFileChooserDialog
             @param response_id as int
         """
-        if response_id == Gtk.ResponseType.OK:
+        if response_id == Gtk.ResponseType.ACCEPT:
             path = dialog.get_filename()
             App().bookmarks.import_html(path)
