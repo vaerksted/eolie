@@ -210,6 +210,7 @@ class WebViewNavigation:
             Set adblocker
             @param uri as str
         """
+        return
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         self.content_manager.remove_all_style_sheets()

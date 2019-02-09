@@ -282,55 +282,59 @@ class DatabaseAdblock:
             @param netloc as str
             @return bool
         """
-        # We cache result for allowed uris
-        # because regex are quite slow in python
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT allowed_uri\
-                                  FROM adblock_cache\
-                                  WHERE allowed_uri=?", (uri,))
-            v = result.fetchone()
-            if v is None:
-                # Search in main regexes
-                if self.__regex is None:
-                    request = "SELECT regex FROM adblock_re"
-                    result = sql.execute(request)
-                    rules = list(itertools.chain(*result))
-                    if rules:
-                        regexes = "|".join(regex for regex in rules)
-                        self.__regex = re.compile(regexes)
-                if self.__regex is not None:
-                    blocked_re = bool(self.__regex.search(uri))
-                else:
-                    blocked_re = False
-                # Find in domain regexes
-                request = "SELECT regex FROM adblock_re_domain\
-                           WHERE domain=?"
-                result = sql.execute(request, (netloc,))
-                rules = list(itertools.chain(*result))
-                if rules:
-                    regexes = "|".join(regex for regex in rules)
-                    blocked_re_domain = bool(re.search(regexes, uri))
-                else:
-                    blocked_re_domain = False
-                # If previous regexes blocked uri, check for an exception
-                if blocked_re_domain:
-                    request = "SELECT regex FROM adblock_re_domain_ex\
+        try:
+            # We cache result for allowed uris
+            # because regex are quite slow in python
+            with SqlCursor(self) as sql:
+                result = sql.execute("SELECT allowed_uri\
+                                      FROM adblock_cache\
+                                      WHERE allowed_uri=?", (uri,))
+                v = result.fetchone()
+                if v is None:
+                    # Search in main regexes
+                    if self.__regex is None:
+                        request = "SELECT regex FROM adblock_re"
+                        result = sql.execute(request)
+                        rules = list(itertools.chain(*result))
+                        if rules:
+                            regexes = "|".join(regex for regex in rules)
+                            self.__regex = re.compile(regexes)
+                    if self.__regex is not None:
+                        blocked_re = bool(self.__regex.search(uri))
+                    else:
+                        blocked_re = False
+                    # Find in domain regexes
+                    request = "SELECT regex FROM adblock_re_domain\
                                WHERE domain=?"
                     result = sql.execute(request, (netloc,))
                     rules = list(itertools.chain(*result))
                     if rules:
                         regexes = "|".join(regex for regex in rules)
-                        if bool(re.search(regexes, uri)):
-                            blocked_re_domain = False
-                if not blocked_re and not blocked_re_domain:
-                    sql.execute("INSERT INTO adblock_cache\
-                                (allowed_uri) VALUES (?)",
-                                (uri,))
-                    return False
+                        blocked_re_domain = bool(re.search(regexes, uri))
+                    else:
+                        blocked_re_domain = False
+                    # If previous regexes blocked uri, check for an exception
+                    if blocked_re_domain:
+                        request = "SELECT regex FROM adblock_re_domain_ex\
+                                   WHERE domain=?"
+                        result = sql.execute(request, (netloc,))
+                        rules = list(itertools.chain(*result))
+                        if rules:
+                            regexes = "|".join(regex for regex in rules)
+                            if bool(re.search(regexes, uri)):
+                                blocked_re_domain = False
+                    if not blocked_re and not blocked_re_domain:
+                        sql.execute("INSERT INTO adblock_cache\
+                                    (allowed_uri) VALUES (?)",
+                                    (uri,))
+                        return False
+                    else:
+                        return True
                 else:
-                    return True
-            else:
-                return False
+                    return False
+        except Exception as e:
+            Logger.error("DatabaseAdblock::is_uri_blocked(): %s", e)
+            return False
 
     def get_cursor(self):
         """
