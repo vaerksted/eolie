@@ -97,13 +97,14 @@ class WebView(WebKit2.WebView):
                 if window is not None and hasattr(window, "zoom_level"):
                     zoom_level = window.zoom_level
             else:
-                _zoom_level = App().websettings.get_zoom(self.uri) / 100
+                _zoom_level = App().websettings.get_zoom(self.uri)
                 if _zoom_level is not None:
-                    zoom_level = _zoom_level
+                    zoom_level = _zoom_level / 100
         except Exception as e:
             Logger.error("WebView::update_zoom_level(): %s", e)
         Logger.debug("Update zoom level: %s", zoom_level)
         self.set_zoom_level(zoom_level)
+        print(zoom_level)
 
     def print(self):
         """
