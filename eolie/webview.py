@@ -104,7 +104,6 @@ class WebView(WebKit2.WebView):
             Logger.error("WebView::update_zoom_level(): %s", e)
         Logger.debug("Update zoom level: %s", zoom_level)
         self.set_zoom_level(zoom_level)
-        print(zoom_level)
 
     def print(self):
         """
