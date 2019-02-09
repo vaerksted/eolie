@@ -527,6 +527,17 @@ class DatabaseBookmarks:
                 return v[0]
             return 5
 
+    def set_guid(self, bookmark_id, guid):
+        """
+            Set bookmark guid
+            @param bookmark_id as int
+            @param guid as str
+        """
+        with SqlCursor(self) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET guid=?\
+                         WHERE rowid=?", (bookmark_id, guid))
+
     def set_title(self, bookmark_id, title):
         """
             Set bookmark title

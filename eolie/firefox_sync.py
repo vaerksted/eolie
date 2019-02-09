@@ -597,23 +597,8 @@ class SyncWorker:
             elif "type" in bookmark.keys() and bookmark["type"] == "bookmark"\
                     and bookmark["id"] is not None\
                     and bookmark["title"]:
-                # Add a new bookmark
-                if bookmark_id is None:
-                    # Use parent name if no bookmarks tags
-                    if "tags" not in bookmark.keys() or\
-                            not bookmark["tags"]:
-                        if "parentName" in bookmark.keys() and\
-                                bookmark["parentName"]:
-                            bookmark["tags"] = [bookmark["parentName"]]
-                        else:
-                            bookmark["tags"] = []
-                    bookmark_id = App().bookmarks.add(bookmark["title"],
-                                                      bookmark["bmkUri"],
-                                                      bookmark["id"],
-                                                      bookmark["tags"],
-                                                      0)
                 # Update bookmark
-                else:
+                if bookmark_id is not None:
                     App().bookmarks.set_title(bookmark_id,
                                               bookmark["title"])
                     App().bookmarks.set_uri(bookmark_id,
@@ -637,6 +622,27 @@ class SyncWorker:
                                 tag_id = App().bookmarks.add_tag(tag)
                             App().bookmarks.add_tag_to(tag_id,
                                                        bookmark_id)
+                # Add a new bookmark
+                else:
+                    bookmark_id = App().bookmarks.get_id(bookmark["bmkUri"])
+                    # Add a new bookmark
+                    if bookmark_id is None:
+                        # Use parent name if no bookmarks tags
+                        if "tags" not in bookmark.keys() or\
+                                not bookmark["tags"]:
+                            if "parentName" in bookmark.keys() and\
+                                    bookmark["parentName"]:
+                                bookmark["tags"] = [bookmark["parentName"]]
+                            else:
+                                bookmark["tags"] = []
+                        bookmark_id = App().bookmarks.add(bookmark["title"],
+                                                          bookmark["bmkUri"],
+                                                          bookmark["id"],
+                                                          bookmark["tags"],
+                                                          0)
+                    else:
+                        # Update guid
+                        App().bookmarks.set_guid(bookmark_id, bookmark["id"])
             # Update parent name if available
             if bookmark_id is not None and "parentName" in bookmark.keys():
                 App().bookmarks.set_parent(bookmark_id,
