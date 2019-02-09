@@ -91,19 +91,19 @@ class WebView(WebKit2.WebView):
             Update zoom level
         """
         try:
-            zoom_level = App().websettings.get_zoom(self.uri)
-            if zoom_level is None:
-                zoom_level = 100
-            if self.__related_view is None:
-                zoom_level *= self._window.zoom_level
-            else:
+            zoom_level = self._window.zoom_level
+            if self.__related_view is not None:
                 window = self.__related_view.get_ancestor(Gtk.Window)
                 if window is not None and hasattr(window, "zoom_level"):
-                    zoom_level *= window.zoom_level
+                    zoom_level = window.zoom_level
+            else:
+                _zoom_level = App().websettings.get_zoom(self.uri) / 100
+                if _zoom_level is not None:
+                    zoom_level = _zoom_level
         except Exception as e:
             Logger.error("WebView::update_zoom_level(): %s", e)
         Logger.debug("Update zoom level: %s", zoom_level)
-        self.set_zoom_level(zoom_level / 100)
+        self.set_zoom_level(zoom_level)
 
     def print(self):
         """
@@ -119,7 +119,7 @@ class WebView(WebKit2.WebView):
         """
         current = App().websettings.get_zoom(self.uri)
         if current is None:
-            current = 100
+            current = int(self._window.zoom_level * 100)
         current += 10
         App().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
@@ -132,7 +132,7 @@ class WebView(WebKit2.WebView):
         """
         current = App().websettings.get_zoom(self.uri)
         if current is None:
-            current = 100
+            current = int(self._window.zoom_level * 100)
         current -= 10
         if current == 0:
             return 10
@@ -145,8 +145,10 @@ class WebView(WebKit2.WebView):
             Reset zoom level
             @return current zoom after zoom out
         """
-        App().websettings.set_zoom(100, self.uri)
+        current = int(self._window.zoom_level * 100)
+        App().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
+        return current
 
     def set_title(self, title):
         """

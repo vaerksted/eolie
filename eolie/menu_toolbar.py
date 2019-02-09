@@ -174,9 +174,8 @@ class ToolbarMenu(Gtk.PopoverMenu):
             @param button as Gtk.Button
         """
         webview = self.__window.container.current.webview
-        App().websettings.set_zoom(100, webview.uri)
-        webview.update_zoom_level()
-        button.set_label("100 %")
+        current = webview.zoom_default()
+        button.set_label("{} %".format(current))
 
 #######################
 # PRIVATE             #
