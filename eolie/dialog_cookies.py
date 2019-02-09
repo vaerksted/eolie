@@ -58,7 +58,7 @@ class Row(Gtk.ListBoxRow):
         self.__item = item
         value = GLib.uri_escape_string(item.get_property("value"), None, True)
         markup = "%s <b>%s</b>" % (item.get_property("name"), value)
-        self.__label = Gtk.Label()
+        self.__label = Gtk.Label.new()
         self.__label.set_markup(markup)
         self.__label.set_max_width_chars(20)
         self.__label.set_property("halign", Gtk.Align.START)

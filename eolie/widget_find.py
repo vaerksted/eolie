@@ -61,7 +61,7 @@ class FindWidget(Gtk.SearchBar):
                                    GLib.Variant("s", "next")))
         forward_button.show()
 
-        self.__label = Gtk.Label()
+        self.__label = Gtk.Label.new()
         self.__label.set_property("halign", Gtk.Align.START)
         self.__label.show()
 

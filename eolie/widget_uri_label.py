@@ -23,7 +23,7 @@ class UriLabelWidget(Gtk.EventBox):
             Init label
         """
         Gtk.EventBox.__init__(self)
-        self.__label = Gtk.Label()
+        self.__label = Gtk.Label.new()
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.get_style_context().add_class("urilabel")
         self.__label.show()
