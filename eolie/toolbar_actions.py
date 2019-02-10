@@ -163,6 +163,7 @@ class ToolbarActions(Gtk.Bin):
         self.__window.container.add_webview(App().start_page,
                                             LoadingType.FOREGROUND)
         self.__window.close_popovers()
+        self.__window.toolbar.title.start_search()
 
     def _on_pages_button_toggled(self, button):
         """
