@@ -446,7 +446,7 @@ class WebView(WebKit2.WebView):
             @param view as View
         """
         WebViewErrors.__init__(self)
-        WebViewNavigation.__init__(self, related_view)
+        WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
         self.__context = context
         WebViewArtwork.__init__(self)
@@ -469,51 +469,53 @@ class WebView(WebKit2.WebView):
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()
-        # Set settings
-        settings = self.get_settings()
-        system = Gio.Settings.new("org.gnome.desktop.interface")
-        animations = system.get_value("enable-animations")
-        settings.set_property("enable-java",
-                              App().settings.get_value('enable-plugins'))
-        settings.set_property("enable-plugins",
-                              App().settings.get_value('enable-plugins'))
-        settings.set_property("minimum-font-size",
-                              App().settings.get_value(
-                                  "min-font-size").get_int32())
-        if App().settings.get_value("use-system-fonts"):
-            self.__set_system_fonts(settings, system)
-        else:
-            settings.set_property("monospace-font-family",
+        if related_view is None:
+            # Set settings
+            settings = self.get_settings()
+            system = Gio.Settings.new("org.gnome.desktop.interface")
+            animations = system.get_value("enable-animations")
+            settings.set_property("enable-java",
+                                  App().settings.get_value('enable-plugins'))
+            settings.set_property("enable-plugins",
+                                  App().settings.get_value('enable-plugins'))
+            settings.set_property("minimum-font-size",
                                   App().settings.get_value(
-                                      "font-monospace").get_string())
-            settings.set_property("sans-serif-font-family",
-                                  App().settings.get_value(
-                                      "font-sans-serif").get_string())
-            settings.set_property("serif-font-family",
-                                  App().settings.get_value(
-                                      "font-serif").get_string())
-        settings.set_property("auto-load-images", True)
-        settings.set_property("enable-site-specific-quirks", True)
-        settings.set_property("allow-universal-access-from-file-urls", False)
-        settings.set_property("allow-file-access-from-file-urls", False)
-        settings.set_property("enable-javascript", True)
-        settings.set_property("enable-media-stream", True)
-        settings.set_property("enable-mediasource", False)
-        autoplay_videos = App().settings.get_value('autoplay-videos')
-        settings.set_property("media-playback-requires-user-gesture",
-                              not autoplay_videos)
-        settings.set_property("enable-developer-extras",
-                              App().settings.get_value("developer-extras"))
-        settings.set_property("enable-offline-web-application-cache", True)
-        settings.set_property("enable-page-cache", True)
-        settings.set_property("enable-resizable-text-areas", True)
-        settings.set_property("enable-smooth-scrolling", animations)
-        settings.set_property("enable-webaudio", True)
-        settings.set_property("enable-webgl", True)
-        settings.set_property("javascript-can-access-clipboard", True)
-        settings.set_property("javascript-can-open-windows-automatically",
-                              True)
-        settings.set_property("media-playback-allows-inline", True)
+                                      "min-font-size").get_int32())
+            if App().settings.get_value("use-system-fonts"):
+                self.__set_system_fonts(settings, system)
+            else:
+                settings.set_property("monospace-font-family",
+                                      App().settings.get_value(
+                                          "font-monospace").get_string())
+                settings.set_property("sans-serif-font-family",
+                                      App().settings.get_value(
+                                          "font-sans-serif").get_string())
+                settings.set_property("serif-font-family",
+                                      App().settings.get_value(
+                                          "font-serif").get_string())
+            settings.set_property("auto-load-images", True)
+            settings.set_property("enable-site-specific-quirks", True)
+            settings.set_property("allow-universal-access-from-file-urls",
+                                  False)
+            settings.set_property("allow-file-access-from-file-urls", False)
+            settings.set_property("enable-javascript", True)
+            settings.set_property("enable-media-stream", True)
+            settings.set_property("enable-mediasource", False)
+            autoplay_videos = App().settings.get_value('autoplay-videos')
+            settings.set_property("media-playback-requires-user-gesture",
+                                  not autoplay_videos)
+            settings.set_property("enable-developer-extras",
+                                  App().settings.get_value("developer-extras"))
+            settings.set_property("enable-offline-web-application-cache", True)
+            settings.set_property("enable-page-cache", True)
+            settings.set_property("enable-resizable-text-areas", True)
+            settings.set_property("enable-smooth-scrolling", animations)
+            settings.set_property("enable-webaudio", True)
+            settings.set_property("enable-webgl", True)
+            settings.set_property("javascript-can-access-clipboard", True)
+            settings.set_property("javascript-can-open-windows-automatically",
+                                  True)
+            settings.set_property("media-playback-allows-inline", True)
         self.connect("create", self.__on_create)
         self.connect("load-changed", self._on_load_changed)
 

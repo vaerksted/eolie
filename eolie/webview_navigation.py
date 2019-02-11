@@ -15,8 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType, EOLIE_DATA_PATH
-from eolie.define import COOKIES_PATH
+from eolie.define import App, LoadingType
 from eolie.utils import get_ftp_cmd
 from eolie.logger import Logger
 
@@ -32,16 +31,10 @@ class WebViewNavigation:
                "multipart/related", "application/x-mimearchive",
                "application/x-extension-html"]
 
-    def __init__(self, related_view):
+    def __init__(self):
         """
             Init navigation
-            @param related_view as WebView
         """
-        self.__related_view = related_view
-        if related_view is None:
-            self.__profile = None
-        else:
-            self.__profile = related_view.profile
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -50,8 +43,6 @@ class WebViewNavigation:
         self.connect("permission_request", self.__on_permission_request)
         self.connect("notify::title", self.__on_title_changed)
         self.connect("notify::uri", self.__on_uri_changed)
-
-        self.__switch_profile(None)
 
     def load_uri(self, uri):
         """
@@ -96,14 +87,6 @@ class WebViewNavigation:
             self.stop_loading()
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
-    @property
-    def profile(self):
-        """
-            Get profile
-            @return str
-        """
-        return self.__profile
-
 #######################
 # PROTECTED           #
 #######################
@@ -123,19 +106,6 @@ class WebViewNavigation:
             self.__update_bookmark_metadata(self.uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
             self.__update_bookmark_metadata(self.uri)
-            # Block ads, useful for some site
-            if App().settings.get_value("adblock") and\
-                    webview.__related_view is not None and\
-                    parsed.scheme in ["http", "https"] and\
-                    not App().adblock_exceptions.find_parsed(parsed):
-                if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                        App().adblock.is_uri_blocked(self.uri,
-                                                     parsed.netloc):
-                    Logger.debug("WebView::__wait_for_uri(): blocking %s",
-                                 self.uri)
-                    webview.stop_loading()
-                    self._window.container.close_view(self.view)
-                    return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
             App().history.set_page_state(self.uri)
@@ -188,29 +158,11 @@ class WebViewNavigation:
             App().bookmarks.set_access_time(uri, round(time(), 2))
             App().bookmarks.set_more_popular(uri)
 
-    def __switch_profile(self, uri):
-        """
-            Handle cookies manager
-            @param uri as str
-        """
-        if self.ephemeral or self.__related_view is not None:
-            return
-        # profile = App().websettings.get_profile(uri)
-        profile = "default"
-        if self.__profile != profile:
-            self.__profile = profile
-            cookie_manager = self.get_context().get_cookie_manager()
-            path = COOKIES_PATH % (EOLIE_DATA_PATH, profile)
-            cookie_manager.set_persistent_storage(
-                path,
-                WebKit2.CookiePersistentStorage.SQLITE)
-
     def __set_adblock(self, uri):
         """
             Set adblocker
             @param uri as str
         """
-        return
         parsed = urlparse(uri)
         http_scheme = parsed.scheme in ["http", "https"]
         self.content_manager.remove_all_style_sheets()
