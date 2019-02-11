@@ -355,7 +355,7 @@ class DatabaseSettings:
                 if languages:
                     return languages.split(";")
                 else:
-                    return None
+                    return []
             else:
                 return None
 
