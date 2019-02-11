@@ -21,19 +21,7 @@ from random import choice
 from base64 import b64encode
 
 from eolie.logger import Logger
-from eolie.define import App, ArtSize, LoadingType
-
-
-def name_from_profile_id(id):
-    """
-        Get profile name from id
-        @param id as str
-        @return str
-    """
-    if id in App().profiles.keys() and id != "default":
-        return "%s: " % App().profiles[id]
-    else:
-        return ""
+from eolie.define import ArtSize, LoadingType
 
 
 def get_safe_netloc(uri):

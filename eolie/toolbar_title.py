@@ -245,18 +245,13 @@ class ToolbarTitle(Gtk.Bin):
         self.__action_image2.set_from_icon_name(icon_name,
                                                 Gtk.IconSize.MENU)
 
-    def set_title(self, profile, title):
+    def set_title(self, title):
         """
             Show title instead of uri
-            @param profile as str
             @param title as str
         """
         self.__window.set_title(title)
         markup = False
-        if profile:
-            markup = True
-            title = "<b>%s</b>%s" % (GLib.markup_escape_text(profile),
-                                     GLib.markup_escape_text(title))
         # Do not show this in titlebar
         parsed = urlparse(self.__uri)
         if parsed.scheme in ["populars", "about"]:

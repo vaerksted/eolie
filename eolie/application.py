@@ -24,7 +24,6 @@ from pickle import dump, load
 from urllib.parse import urlparse
 from time import time
 from getpass import getuser
-import json
 from signal import signal, SIGINT, SIGTERM
 
 from eolie.settings import Settings
@@ -199,33 +198,6 @@ class Application(Gtk.Application):
         if uri in self.__pinned:
             self.__pinned.remove(uri)
 
-    def set_profiles(self):
-        """
-            Set profiles
-        """
-        try:
-            f = Gio.File.new_for_path(EOLIE_DATA_PATH + "/profiles.json")
-            if f.query_exists():
-                (status, contents, tag) = f.load_contents(None)
-                self.__profiles = json.loads(contents.decode("utf-8"))
-            else:
-                PROFILES = {"default": _("Default"),
-                            "social": _("Social networks"),
-                            "work": _("Work"),
-                            "shopping": _("Shopping"),
-                            "personal": _("Personal"),
-                            "finance": _("Finance"),
-                            "sport": _("Sport")}
-                content = json.dumps(PROFILES)
-                f.replace_contents(content.encode("utf-8"),
-                                   None,
-                                   False,
-                                   Gio.FileCreateFlags.REPLACE_DESTINATION,
-                                   None)
-                self.__profiles = PROFILES
-        except Exception as e:
-            Logger.error("Application::set_profiles(): %s", e)
-
     def quit(self, vacuum=False):
         """
             Quit application
@@ -263,14 +235,6 @@ class Application(Gtk.Application):
             @return [str]
         """
         return self.__pinned
-
-    @property
-    def profiles(self):
-        """
-            Get profiles
-            @return {}
-        """
-        return self.__profiles
 
     @property
     def start_page(self):
@@ -413,8 +377,6 @@ class Application(Gtk.Application):
             except:
                 pass
 
-        # Init profiles
-        self.set_profiles()
         # Init default context
         Context(WebKit2.WebContext().get_default())
 

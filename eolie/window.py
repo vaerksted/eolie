@@ -146,13 +146,11 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.progress.hide()
             self.toolbar.title.set_loading(False)
         self.toolbar.title.show_readable_button(webview.readable)
-        # profile = name_from_profile_id(webview.profile)
-        profile = ""
         title = webview.title
         if title:
-            self.toolbar.title.set_title(profile, title)
+            self.toolbar.title.set_title(title)
         elif uri:
-            self.toolbar.title.set_title(profile, uri)
+            self.toolbar.title.set_title(uri)
         self.toolbar.actions.set_actions(webview)
 
     def register(self, popover, monitor=True):

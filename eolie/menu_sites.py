@@ -13,10 +13,8 @@
 from gi.repository import Gio, GLib, Gtk
 
 from gettext import gettext as _
-# from urllib.parse import urlparse
 
 from eolie.define import App
-from eolie.logger import Logger
 
 
 class SitesMenu(Gtk.Grid):
@@ -60,16 +58,6 @@ class SitesMenu(Gtk.Grid):
         separator = Gtk.Separator.new(Gtk.Orientation.HORIZONTAL)
         separator.show()
         self.add(separator)
-        # Profiles switcher
-        # webview = views[0].webview
-        # if not webview.ephemeral:
-        #    parsed = urlparse(webview.uri)
-        #    if parsed.scheme in ["http", "https"]:
-        #        item = Gtk.ModelButton.new()
-        #        item.set_property("text", _("Profiles"))
-        #        item.set_property("menu-name", "profiles")
-        #        item.show()
-        #        self.add(item)
         # Move to
         item = Gtk.ModelButton.new()
         item.set_property("text", _("Move to"))
@@ -108,33 +96,6 @@ class SitesMenu(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
-    def __on_edit_profiles_activate(self, action, param):
-        """
-            Show edit cookies dialog
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        from eolie.dialog_cookies import CookiesDialog
-        dialog = CookiesDialog(True, self.__window)
-        dialog.run()
-
-    def __on_profiles_activate(self, action, param):
-        """
-            Change profile
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        try:
-            action.change_state(param)
-            # Get first view URI
-            webview = self.__views[0].webview
-            uri = webview.uri
-            App().websettings.set_profile(param.get_string(), uri)
-            webview.stop_loading()
-            webview.load_uri(uri)
-        except Exception as e:
-            Logger.error("SitesMenu::__on_profiles_activate: %s", e)
-
     def __on_close_activate(self, action, param):
         """
             Close wanted page
