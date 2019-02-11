@@ -106,6 +106,18 @@ class WebViewNavigation:
             self.__update_bookmark_metadata(self.uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
             self.__update_bookmark_metadata(self.uri)
+            # Block ads, useful for some site
+            if App().settings.get_value("adblock") and\
+                    parsed.scheme in ["http", "https"] and\
+                    not App().adblock_exceptions.find_parsed(parsed):
+                if App().adblock.is_netloc_blocked(parsed.netloc) or\
+                        App().adblock.is_uri_blocked(self.uri,
+                                                     parsed.netloc):
+                    Logger.debug("WebView::__wait_for_uri(): blocking %s",
+                                 self.uri)
+                    webview.stop_loading()
+                    self._window.container.close_view(self.view)
+                    return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
             App().history.set_page_state(self.uri)
