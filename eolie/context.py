@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from gettext import gettext as _
 from datetime import datetime
 
-from eolie.define import App
+from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
 
 
 class Context:
@@ -36,6 +36,10 @@ class Context:
             cookie_manager = context.get_cookie_manager()
             cookie_manager.set_accept_policy(
                 App().settings.get_enum("cookie-storage"))
+            path = COOKIES_PATH % (EOLIE_DATA_PATH, "default")
+            cookie_manager.set_persistent_storage(
+                path,
+                WebKit2.CookiePersistentStorage.SQLITE)
         context.set_web_extensions_directory(App().extension_dir)
         context.set_process_model(
             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
