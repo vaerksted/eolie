@@ -576,9 +576,7 @@ class WebView(WebKit2.WebView):
                                                      parsed.netloc):
                     webview.destroy()
                     return
-            if event != WebKit2.LoadEvent.FINISHED:
-                return
-            else:
+            if event == WebKit2.LoadEvent.FINISHED:
                 webview.disconnect_by_func(on_load_changed)
 
             # Then popup blocking
