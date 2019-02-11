@@ -165,7 +165,7 @@
          <description />
       </key>
       <key type="b" name="autoplay-videos">
-         <default>false</default>
+         <default>true</default>
          <summary>Autoplay videos</summary>
          <description />
       </key>

@@ -563,54 +563,29 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
             @param elapsed as float
         """
-        def on_load_changed(webview, event):
-            parsed = urlparse(webview.uri)
-            # First, adblocking
-            if not parsed.netloc:
-                return
-            if App().settings.get_value("adblock") and\
-                    parsed.scheme in ["http", "https"] and\
-                    not App().adblock_exceptions.find_parsed(parsed):
-                if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                        App().adblock.is_uri_blocked(webview.uri,
-                                                     parsed.netloc):
-                    webview.destroy()
-                    return
-            if event != WebKit2.LoadEvent.FINISHED:
-                return
-            else:
-                webview.disconnect_by_func(on_load_changed)
-
-            # Then popup blocking
-            popup_block = App().settings.get_value("popupblock")
-            if related.uri is not None:
-                parsed_related = urlparse(related.uri)
-                exception = elapsed < 1.0 or\
-                    App().popup_exceptions.find_parsed(parsed_related)
-            else:
-                exception = False
-
-            properties = webview.get_window_properties()
-            if not exception and popup_block and\
-                    navigation_action.get_navigation_type() in [
-                        WebKit2.NavigationType.OTHER,
-                        WebKit2.NavigationType.RELOAD,
-                        WebKit2.NavigationType.BACK_FORWARD]:
-                related.add_popup(webview)
-                webview.connect("close", self.__on_popup_close, related)
-                if related == self._window.container.current.webview:
-                    self._window.toolbar.title.show_indicator(
-                        Indicator.POPUPS)
-            elif (properties.get_toolbar_visible() or
-                    properties.get_scrollbars_visible()) and\
-                    not self._window.modifiers == Gdk.KEY_Shift_L:
-                self._window.container.add_webview_with_new_view(
-                    webview,
-                    LoadingType.FOREGROUND)
-            else:
-                self._window.container.popup_webview(webview, True)
-
-        webview.connect("load-changed", on_load_changed)
+        popup_block = App().settings.get_value("popupblock")
+        parsed = urlparse(webview.uri)
+        exception = elapsed < 1.0 or\
+            App().popup_exceptions.find_parsed(parsed)
+        properties = webview.get_window_properties()
+        if not exception and popup_block and\
+                navigation_action.get_navigation_type() in [
+                    WebKit2.NavigationType.OTHER,
+                    WebKit2.NavigationType.RELOAD,
+                    WebKit2.NavigationType.BACK_FORWARD]:
+            related.add_popup(webview)
+            webview.connect("close", self.__on_popup_close, related)
+            if related == self._window.container.current.webview:
+                self._window.toolbar.title.show_indicator(
+                    Indicator.POPUPS)
+        elif (properties.get_toolbar_visible() or
+                properties.get_scrollbars_visible()) and\
+                not self._window.modifiers == Gdk.KEY_Shift_L:
+            self._window.container.add_webview_with_new_view(
+                webview,
+                LoadingType.FOREGROUND)
+        else:
+            self._window.container.popup_webview(webview, True)
 
     def __on_popup_close(self, webview, related):
         """
