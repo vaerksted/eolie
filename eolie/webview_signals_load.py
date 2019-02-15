@@ -134,6 +134,9 @@ class WebViewLoadSignals:
             self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
                 self._window.toolbar.title.set_loading(True)
+            else:
+                # Give focus to url bar
+                self._window.toolbar.title.start_search()
             self._window.toolbar.title.show_indicator(Indicator.NONE)
             # Turn off reading mode
             self._window.container.current.stop_reading()
