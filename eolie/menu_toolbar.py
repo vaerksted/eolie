@@ -50,11 +50,8 @@ class ToolbarMenu(Gtk.PopoverMenu):
         builder.connect_signals(self)
         widget = builder.get_object("widget")
         webview = self.__window.container.current.webview
-        current = App().websettings.get_zoom(webview.uri)
-        if current is None:
-            current = 100
         builder.get_object("default_zoom_button").set_label(
-            "{} %".format(current))
+            "{} %".format(int(webview.get_zoom_level() * 100)))
         adblock_menu = AdblockMenu(uri, self.__window)
         adblock_menu.show()
         js_block_menu = JSBlockMenu(uri, self.__window)
