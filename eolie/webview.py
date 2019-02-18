@@ -146,7 +146,7 @@ class WebView(WebKit2.WebView):
             @return current zoom after zoom out
         """
         current = int(self._window.zoom_level * 100)
-        App().websettings.set_zoom(current, self.uri)
+        App().websettings.set_zoom(None, self.uri)
         self.update_zoom_level()
         return current
 
