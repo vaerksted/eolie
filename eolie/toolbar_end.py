@@ -137,19 +137,6 @@ class ToolbarEnd(Gtk.Bin):
         filechooser.connect("response", self.__on_save_response)
         filechooser.run()
 
-    def save_videos(self, page_id):
-        """
-            Show a popover with videos for page_id
-            @param page_id as int
-        """
-        from eolie.menu_videos import VideosMenu
-        menu = VideosMenu(page_id, self.__window)
-        popover = Gtk.Popover.new_from_model(self.__download_button, menu)
-        popover.set_modal(False)
-        self.__window.register(popover)
-        popover.connect("closed", self.__on_video_menu_popover_closed, menu)
-        popover.popup()
-
     def move_control_in_menu(self, b):
         """
             Move home and download buttons in menu
@@ -297,15 +284,6 @@ class ToolbarEnd(Gtk.Bin):
             self.__progress.set_fraction(value)
             App().update_unity_badge(value)
         return True
-
-    def __on_video_menu_popover_closed(self, popover, model):
-        """
-            Clean menu
-            @param popover as Gtk.Popover
-            @param model as Gio.Menu
-        """
-        # Let model activate actions, idle needed to action activate
-        GLib.idle_add(model.clean)
 
     def __on_save_response(self, dialog, response_id):
         """
