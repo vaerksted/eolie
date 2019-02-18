@@ -203,8 +203,11 @@ class WebViewMenuSignals:
             @param action as Gio.SimpleAction
             @param variant as GLib.Variant
         """
-        self._window.toolbar.end.save_images(self.uri,
-                                             self.get_page_id())
+        from eolie.popover_images import ImagesPopover
+        popover = ImagesPopover(self.uri, self.get_page_id(), self._window)
+        popover.set_relative_to(self._window.toolbar)
+        popover.set_position(Gtk.PositionType.BOTTOM)
+        popover.popup()
 
     def __on_save_videos_activate(self, action, variant):
         """

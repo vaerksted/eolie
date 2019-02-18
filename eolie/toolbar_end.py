@@ -137,17 +137,6 @@ class ToolbarEnd(Gtk.Bin):
         filechooser.connect("response", self.__on_save_response)
         filechooser.run()
 
-    def save_images(self, uri, page_id):
-        """
-            Show a popover with all images for page id
-            @param uri as str
-            @param page_id as int
-        """
-        from eolie.popover_images import ImagesPopover
-        popover = ImagesPopover(uri, page_id, self.__window)
-        popover.set_relative_to(self.__download_button)
-        popover.popup()
-
     def save_videos(self, page_id):
         """
             Show a popover with videos for page_id

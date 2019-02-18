@@ -128,8 +128,13 @@ class ImagesPopover(Gtk.Popover):
             Save visible images
             @param button as Gtk.Button
         """
+        children = self.__flowbox.get_selected_children() or\
+            self.__flowbox.get_children()
+        uris = []
+        for child in children:
+            uris.append(child.uri)
         task_helper = TaskHelper()
-        task_helper.run(self.__move_images)
+        task_helper.run(self.__move_images, uris)
         self.__spinner.start()
 
     def _on_button_toggled(self, button):
@@ -170,9 +175,10 @@ class ImagesPopover(Gtk.Popover):
         image.show()
         self.__flowbox.add(image)
 
-    def __move_images(self):
+    def __move_images(self, uris):
         """
             Move image to download directory
+            @param uris as [str]
         """
         parsed = urlparse(self.__uri)
         directory_uri = App().settings.get_value('download-uri').get_string()
@@ -184,16 +190,16 @@ class ImagesPopover(Gtk.Popover):
         directory = Gio.File.new_for_uri(destination_uri)
         if not directory.query_exists():
             directory.make_directory_with_parents()
-        for child in self.__flowbox.get_children():
-            if child.uri.find(self.__filter) != -1:
-                encoded = sha256(child.uri.encode("utf-8")).hexdigest()
-                child_basename = child.uri.split("/")[-1]
+        for uri in uris:
+            if uri.find(self.__filter) != -1:
+                encoded = sha256(uri.encode("utf-8")).hexdigest()
+                basename = uri.split("/")[-1]
                 filepath = "%s/%s" % (EOLIE_CACHE_PATH, encoded)
                 s = Gio.File.new_for_path(filepath)
                 if not s.query_exists():
                     continue
                 d = Gio.File.new_for_uri("%s/%s" % (destination_uri,
-                                                    child_basename))
+                                                    basename))
                 try:
                     s.move(d, Gio.FileCopyFlags.OVERWRITE, None, None, None)
                 except Exception as e:
@@ -253,7 +259,6 @@ class ImagesPopover(Gtk.Popover):
                                                 uris)
         else:
             self.__spinner.stop()
-            self.__button.set_sensitive(True)
 
     def __on_get_images(self, source, result):
         """
