@@ -346,7 +346,7 @@ class DownloadsPopover(Gtk.Popover):
             Populate listbox
         """
         clear = False
-        for download in App().download_manager.get():
+        for download in reversed(App().download_manager.get()):
             if download.get_destination() is None:
                 continue
             child = DownloadRow(download, False)
@@ -356,7 +356,7 @@ class DownloadsPopover(Gtk.Popover):
                           lambda x: self.__calculate_height())
             child.show()
             self.__listbox.add(child)
-        for download in App().download_manager.get_finished():
+        for download in reversed(App().download_manager.get_finished()):
             if download.get_destination() is None:
                 continue
             child = DownloadRow(download, True)
