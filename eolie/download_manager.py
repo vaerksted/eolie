@@ -15,7 +15,6 @@ from gi.repository import GObject, GLib, Gio, Gtk
 from time import time
 
 from eolie.define import App
-from eolie.logger import Logger
 
 
 class DownloadManager(GObject.GObject):
@@ -166,4 +165,5 @@ class DownloadManager(GObject.GObject):
             @param download as WebKit2.Download
             @param error as GLib.Error
         """
-        Logger.error("DownloadManager::__on_failed: %s", error)
+        self.remove(download)
+        self.__finished.append(download)
