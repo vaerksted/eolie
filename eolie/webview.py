@@ -518,6 +518,9 @@ class WebView(WebKit2.WebView):
             settings.set_property("javascript-can-open-windows-automatically",
                                   True)
             settings.set_property("media-playback-allows-inline", True)
+            if WebKit2.get_minor_version() > 22:
+                settings.set_property(
+                    "enable-back-forward-navigation-gestures", True)
         self.connect("create", self.__on_create)
         self.connect("load-changed", self._on_load_changed)
 
