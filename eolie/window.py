@@ -228,15 +228,6 @@ class Window(Gtk.ApplicationWindow):
         return self.__window_state & Gdk.WindowState.FULLSCREEN
 
     @property
-    def modifiers(self):
-        """
-            Get modifier
-            return int
-        """
-        # https://bugs.webkit.org/show_bug.cgi?id=181041
-        return self.__modifiers
-
-    @property
     def size(self):
         """
             Unmaximized window size
@@ -379,8 +370,6 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        if event.keyval in [Gdk.KEY_Shift_L, Gdk.KEY_Control_L]:
-            self.__modifiers = event.keyval
         if event.state & Gdk.ModifierType.CONTROL_MASK and\
                 event.keyval == Gdk.KEY_Tab:
             if not self.container.in_expose:
@@ -392,7 +381,6 @@ class Window(Gtk.ApplicationWindow):
             @param window as Window
             @param event as Gdk.EventKey
         """
-        self.__modifiers = 0
         if event.keyval == Gdk.KEY_Control_L:
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:

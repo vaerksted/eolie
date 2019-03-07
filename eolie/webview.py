@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, Gio, Gdk, GLib
+from gi.repository import WebKit2, Gtk, Gio, GLib
 
 from urllib.parse import urlparse
 from time import time
@@ -584,8 +584,7 @@ class WebView(WebKit2.WebView):
                 self._window.toolbar.title.show_indicator(
                     Indicator.POPUPS)
         elif (properties.get_toolbar_visible() or
-                properties.get_scrollbars_visible()) and\
-                not self._window.modifiers == Gdk.KEY_Shift_L:
+                properties.get_scrollbars_visible()):
             self._window.container.add_webview_with_new_view(
                 webview,
                 LoadingType.FOREGROUND)

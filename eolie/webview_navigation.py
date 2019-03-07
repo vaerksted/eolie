@@ -346,14 +346,15 @@ class WebViewNavigation:
                 decision.use()
                 return False
         elif mouse_button == 1:
+            modifiers = navigation_action.get_modifiers()
             if decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 decision.use()
                 return False
-            elif self._window.modifiers == Gdk.KEY_Control_L:
+            elif modifiers == Gdk.ModifierType.CONTROL_MASK:
                 self.new_page(navigation_uri, LoadingType.BACKGROUND)
                 decision.ignore()
                 return True
-            elif self._window.modifiers == Gdk.KEY_Shift_L:
+            elif modifiers == Gdk.ModifierType.SHIFT_MASK:
                 self.new_page(navigation_uri, LoadingType.POPOVER)
                 decision.ignore()
                 return True
