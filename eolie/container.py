@@ -22,52 +22,6 @@ from eolie.sites_manager import SitesManager
 from eolie.define import App, LoadingType
 
 
-class DelayedStack(Gtk.Stack):
-    """
-        Gtk.Stack not mapping widgets on add()
-    """
-
-    def __init__(self):
-        """
-            Init widget
-        """
-        Gtk.Stack.__init__(self)
-        self.__pending_widget = []
-
-    def add(self, widget):
-        """
-            Add widget to stack
-            @param widget as Gtk.Widget
-        """
-        self.__pending_widget.append(widget)
-
-    def remove(self, widget):
-        """
-            Remove widget from stack
-            @param widget as Gtk.Widget
-        """
-        if widget in self.__pending_widget:
-            self.__pending_widget.remove(widget)
-        else:
-            Gtk.Stack.remove(self, widget)
-
-    def set_visible_child(self, widget):
-        """
-            Set widget visible
-        """
-        if widget in self.__pending_widget:
-            self.__pending_widget.remove(widget)
-            Gtk.Stack.add(self, widget)
-        Gtk.Stack.set_visible_child(self, widget)
-
-    def get_children(self):
-        """
-            Return stack children
-            @return [Gtk.Widget]
-        """
-        return Gtk.Stack.get_children(self) + self.__pending_widget
-
-
 class Container(Gtk.Overlay):
     """
         Main Eolie view
@@ -88,7 +42,7 @@ class Container(Gtk.Overlay):
         self.__previous_timeout_id = None
         self.__pending_items = []
 
-        self.__stack = DelayedStack()
+        self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
         self.__stack.set_vexpand(True)
         self.__stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
@@ -179,8 +133,7 @@ class Container(Gtk.Overlay):
             self.__stack.set_visible_child(view)
         elif loading_type in [LoadingType.BACKGROUND, LoadingType.OFFLOAD] or\
                 self.in_expose:
-            # Little hack, we force webview to be shown (offscreen)
-            # This allow getting snapshots from webkit
+            # This allow us to get real size snapshot
             window = Gtk.OffscreenWindow.new()
             view.set_size_request(self.get_allocated_width(),
                                   self.get_allocated_height())
