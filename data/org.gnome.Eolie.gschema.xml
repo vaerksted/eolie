@@ -49,6 +49,11 @@
          <summary>Trust websites: No JavaScript blocking of internal URIs</summary>
          <description />
       </key>
+      <key type="b" name="enable-smooth-scrolling">
+         <default>true</default>
+         <summary>Enable smooth scrolling</summary>
+         <description />
+      </key>
       <key type="b" name="popupblock">
          <default>true</default>
          <summary>Block all unwanted popups</summary>

@@ -472,8 +472,6 @@ class WebView(WebKit2.WebView):
         if related_view is None:
             # Set settings
             settings = self.get_settings()
-            system = Gio.Settings.new("org.gnome.desktop.interface")
-            animations = system.get_value("enable-animations")
             settings.set_property("enable-java",
                                   App().settings.get_value('enable-plugins'))
             settings.set_property("enable-plugins",
@@ -482,7 +480,7 @@ class WebView(WebKit2.WebView):
                                   App().settings.get_value(
                                       "min-font-size").get_int32())
             if App().settings.get_value("use-system-fonts"):
-                self.__set_system_fonts(settings, system)
+                self.__set_system_fonts(settings)
             else:
                 settings.set_property("monospace-font-family",
                                       App().settings.get_value(
@@ -511,7 +509,9 @@ class WebView(WebKit2.WebView):
             settings.set_property("enable-offline-web-application-cache", True)
             settings.set_property("enable-page-cache", True)
             settings.set_property("enable-resizable-text-areas", True)
-            settings.set_property("enable-smooth-scrolling", animations)
+            settings.set_property(
+                "enable-smooth-scrolling",
+                App().settings.get_value("enable-smooth-scrolling"))
             settings.set_property("enable-webaudio", True)
             settings.set_property("enable-webgl", True)
             settings.set_property("javascript-can-access-clipboard", True)
@@ -524,14 +524,13 @@ class WebView(WebKit2.WebView):
         self.connect("create", self.__on_create)
         self.connect("load-changed", self._on_load_changed)
 
-    def __set_system_fonts(self, settings, system=None):
+    def __set_system_fonts(self, settings):
         """
             Set system font
             @param settings as WebKit2.Settings
             @param system as Gio.Settings("org.gnome.desktop.interface")
         """
-        if system is None:
-            system = Gio.Settings.new("org.gnome.desktop.interface")
+        system = Gio.Settings.new("org.gnome.desktop.interface")
         settings.set_property(
             "monospace-font-family",
             system.get_value("monospace-font-name").get_string())
