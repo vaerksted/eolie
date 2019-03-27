@@ -10,8 +10,12 @@ Type=Application
 Categories=Network;GNOME;GTK;WebBrowser;
 MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;multipart/related;application/x-mimearchive
 StartupNotify=true
-Actions=Private
+Actions=new-window;private-page
 
-[Desktop Action Private]
+[Desktop Action new-window] 
+Name=New window
+Exec=eolie -n
+
+[Desktop Action private-page]
 Name=New private page
 Exec=eolie -p
