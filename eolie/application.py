@@ -538,6 +538,7 @@ class Application(Gtk.Application):
         """
         size = (800, 600)
         maximized = False
+        i = 0
         pinned = []
         try:
             pinned = load(
@@ -551,7 +552,6 @@ class Application(Gtk.Application):
                     window.container.sites_manager.set_initial_sort(
                         window_state["sites"])
                     items = []
-                    i = 0
                     for (uri, title, atime,
                          ephemeral, state) in window_state["states"]:
                         if uri in pinned:
@@ -581,9 +581,11 @@ class Application(Gtk.Application):
         else:
             window = self.get_new_window(size, maximized)
         for uri in pinned:
+            loading_type = wanted_loading_type(i)
             window.container.add_webview(uri,
-                                         LoadingType.BACKGROUND,
+                                         loading_type,
                                          False)
+            i += 1
         # Really setup pinned
         try:
             self.__pinned = load(
