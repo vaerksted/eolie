@@ -620,7 +620,7 @@ class Application(Gtk.Application):
             self.art.disable_cache()
         ephemeral = options.contains("private")
 
-        active_window = None
+        active_window = self.active_window
         # Handle initial windows
         if not self.windows:
             active_window = self.__create_initial_windows()
