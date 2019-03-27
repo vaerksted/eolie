@@ -509,7 +509,7 @@ class Application(Gtk.Application):
         """
         try:
             window_states = []
-            for window in self.get_windows():
+            for window in self.windows:
                 window_state = self.__get_state(window)
                 window_states.append(window_state)
             for window_state in self.__state_cache:
@@ -531,10 +531,10 @@ class Application(Gtk.Application):
                 self.__state_cache.remove(state)
                 break
 
-    def __create_initial_windows(self, foreground):
+    def __create_initial_windows(self):
         """
             Create initial windows based on saved session
-            @param foreground  as bool if foreground loading allowed
+            @return active window as Window
         """
         size = (800, 600)
         maximized = False
@@ -551,7 +551,7 @@ class Application(Gtk.Application):
                     window.container.sites_manager.set_initial_sort(
                         window_state["sites"])
                     items = []
-                    i = 0 if foreground else 1
+                    i = 0
                     for (uri, title, atime,
                          ephemeral, state) in window_state["states"]:
                         if uri in pinned:
@@ -576,15 +576,10 @@ class Application(Gtk.Application):
             Logger.error("Application::__create_initial_windows(): %s", e)
         # Create a window if None available and setup pinned pages
         # We already removed saved states from pinned
-        windows = self.get_windows()
-        if windows:
-            window = windows[0]
+        if self.windows:
+            window = self.windows[0]
         else:
             window = self.get_new_window(size, maximized)
-            window.container.add_webview(
-                            self.start_page,
-                            LoadingType.FOREGROUND,
-                            False)
         for uri in pinned:
             window.container.add_webview(uri,
                                          LoadingType.BACKGROUND,
@@ -595,6 +590,7 @@ class Application(Gtk.Application):
                     open(EOLIE_DATA_PATH + "/pinned.bin", "rb"))
         except:
             self.__pinned = []
+        return window
 
     def __on_handle_local_options(self, app, options):
         """
@@ -621,30 +617,31 @@ class Application(Gtk.Application):
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
         ephemeral = options.contains("private")
-        if not self.get_windows():
-            self.__create_initial_windows(len(args) < 2)
-            active_window = self.active_window
+
+        active_window = None
+        # Handle initial windows
+        if not self.windows:
+            active_window = self.__create_initial_windows()
         elif options.contains("new") or len(args) == 1:
             active_window = self.get_new_window()
-        else:
-            active_window = self.active_window
+
         # Open command line args
-        if len(args) > 1:
-            items = []
-            i = 0
-            for uri in args[1:]:
-                # Transform path to uri
-                parsed = urlparse(uri)
-                if not parsed.scheme:
-                    if uri.startswith('/'):
-                        uri = "file://%s" % uri
-                    else:
-                        uri = "http://%s" % uri
-                loading_type = wanted_loading_type(i)
-                items.append((uri, uri, None, ephemeral, None, loading_type))
-                i += 1
+        items = []
+        i = 0
+        for uri in args[1:]:
+            # Transform path to uri
+            parsed = urlparse(uri)
+            if not parsed.scheme:
+                if uri.startswith('/'):
+                    uri = "file://%s" % uri
+                else:
+                    uri = "http://%s" % uri
+            loading_type = wanted_loading_type(i)
+            items.append((uri, uri, None, ephemeral, None, loading_type))
+            i += 1
+        if items:
             active_window.container.add_webviews(items)
-            active_window.present()
+
         # Add default start page
         if not active_window.container.views:
             active_window.container.add_webview(self.start_page,
@@ -655,6 +652,7 @@ class Application(Gtk.Application):
                                                          self.__on_get_plugins,
                                                          None)
         Gdk.notify_startup_complete()
+        active_window.present()
         return 0
 
     def __close_window(self, window):
