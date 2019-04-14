@@ -85,6 +85,7 @@ class WebViewNavigation:
                 self.reset_bad_tls()
                 self.__insecure_content_detected = False
             self.stop_loading()
+            self.set_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
 #######################
