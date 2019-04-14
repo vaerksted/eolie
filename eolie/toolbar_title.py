@@ -100,7 +100,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__secure_content = True
         self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
-        self.__uri = ""
         self.__cancellable = Gio.Cancellable.new()
         self.__dns_suffixes = ["com", "org"]
         for string in reversed(GLib.get_language_names()):
@@ -225,14 +224,12 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def set_uri(self, uri):
+    def update(self):
         """
-            Update internal uri
+            Update toolbar based on current webview
             @param text as str
         """
-        if uri == self.__uri:
-            return
-        self.__uri = uri
+        uri = self.__window.container.current.webview.uri
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
@@ -253,7 +250,8 @@ class ToolbarTitle(Gtk.Bin):
         self.__window.set_title(title)
         markup = False
         # Do not show this in titlebar
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
             return
@@ -263,7 +261,7 @@ class ToolbarTitle(Gtk.Bin):
             else:
                 self.__placeholder.set_text(title)
         else:
-            self.__placeholder.set_text(self.__uri)
+            self.__placeholder.set_text(uri)
         if not self.__popover.is_visible():
             self.__placeholder.set_opacity(0.8)
             self.set_text_entry("")
@@ -408,14 +406,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__entry.grab_focus()
 
     @property
-    def uri(self):
-        """
-            Get current uri
-            @return str
-        """
-        return self.__uri
-
-    @property
     def progress(self):
         """
             Get progress bar
@@ -435,9 +425,8 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
                 "edit-copy-symbolic":
-            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(
-                self.__uri,
-                -1)
+            uri = self.__window.container.current.webview.uri
+            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
 
     def _on_enter_notify(self, widget, event):
         """
@@ -447,13 +436,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__popover.is_visible():
             return
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                                  "edit-copy-symbolic")
             self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                                _("Copy address"))
-            self.set_text_entry(self.__uri)
+            self.set_text_entry(uri)
         else:
             self.__set_default_placeholder()
 
@@ -483,12 +473,13 @@ class ToolbarTitle(Gtk.Bin):
         webview = self.__window.container.current.webview
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         value = webview.get_current_text_entry()
         if value:
             self.set_text_entry(value)
         elif parsed.scheme in ["http", "https", "file"]:
-            self.set_text_entry(self.__uri)
+            self.set_text_entry(uri)
             self.__placeholder.set_opacity(0)
         else:
             self.__set_default_placeholder()
@@ -751,7 +742,8 @@ class ToolbarTitle(Gtk.Bin):
         """
         self.__update_secure_content_indicator()
         self.__placeholder.set_opacity(0.8)
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.set_text_entry("")
         else:
@@ -775,7 +767,8 @@ class ToolbarTitle(Gtk.Bin):
         """
             Update PRIMARY icon, Gtk.Entry should be set
         """
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         if (parsed.scheme == "https" and self.__secure_content) or\
                 parsed.scheme == "file":
             self.__entry.set_icon_from_icon_name(
@@ -924,7 +917,8 @@ class ToolbarTitle(Gtk.Bin):
                 return
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
-        parsed = urlparse(self.__uri)
+        uri = self.__window.container.current.webview.uri
+        parsed = urlparse(uri)
         if value:
             self.__placeholder.set_opacity(0)
             # We are doing a search, show popover

@@ -132,7 +132,7 @@ class Window(Gtk.ApplicationWindow):
         """
         uri = webview.uri
         if uri is not None:
-            self.toolbar.title.set_uri(uri)
+            self.toolbar.title.update()
             accept_tls = App().websettings.get_accept_tls(uri)
             self.toolbar.end.show_tls_button(accept_tls)
         if webview.popups:

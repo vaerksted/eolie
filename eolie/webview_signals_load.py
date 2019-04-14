@@ -127,7 +127,7 @@ class WebViewLoadSignals:
             @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(self.uri)
-        self._window.toolbar.title.set_uri(self.uri)
+        self._window.toolbar.title.update()
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.container.current.find_widget.set_search_mode(False)
@@ -170,7 +170,7 @@ class WebViewLoadSignals:
         if webview.get_mapped():
             accept_tls = App().websettings.get_accept_tls(uri)
             self._window.toolbar.end.show_tls_button(accept_tls)
-            self._window.toolbar.title.set_uri(uri)
+            self._window.toolbar.title.update()
 
     def __on_estimated_load_progress(self, webview, value):
         """
