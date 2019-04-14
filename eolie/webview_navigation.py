@@ -98,7 +98,6 @@ class WebViewNavigation:
         """
         parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
-            self.emit("uri-changed", self.uri)
             if parsed.scheme in ["http", "https"]:
                 self._initial_uri = self.uri.rstrip('/')
             else:
@@ -366,6 +365,7 @@ class WebViewNavigation:
                 self.__set_user_agent(navigation_uri)
                 self.discard_error()
                 decision.use()
+                self._uri = navigation_uri
                 return False
         else:
             self.new_page(navigation_uri, LoadingType.BACKGROUND)

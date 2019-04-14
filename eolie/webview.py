@@ -164,7 +164,7 @@ class WebView(WebKit2.WebView):
             Set delayed uri
             @param uri as str
         """
-        self.__uri = uri
+        self._uri = uri
         self.emit("uri-changed", uri)
 
     def update_spell_checking(self, uri):
@@ -402,10 +402,7 @@ class WebView(WebKit2.WebView):
             Get uri (loaded or unloaded)
             @return str
         """
-        uri = self.get_uri()
-        if uri is None:
-            uri = self.__uri
-        return uri
+        return self._uri
 
     @property
     def netloc(self):
@@ -461,7 +458,7 @@ class WebView(WebKit2.WebView):
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readable = False
-        self.__uri = None
+        self._uri = None
         self._initial_uri = None
         self._title = None
         self.__related_view = related_view
@@ -617,9 +614,10 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        self.__uri = webview.get_uri()
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__new_pages_opened = 0
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__new_pages_opened = 0
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            self._uri = webview.get_uri()
