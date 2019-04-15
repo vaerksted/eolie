@@ -547,11 +547,13 @@ class WebView(WebKit2.WebView):
         webview = WebView.new_with_related_view(related, self._window)
         webview.set_atime(related.atime - 1)
         elapsed = time() - related._last_click_time
+        uri = navigation_action.get_request().get_uri()
         webview.connect("ready-to-show",
                         self.__on_ready_to_show,
                         related,
                         navigation_action,
                         elapsed)
+        webview.set_uri(uri)
         webview.set_parent(self)
         self.add_child(webview)
         return webview
