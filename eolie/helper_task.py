@@ -141,5 +141,5 @@ class TaskHelper:
                                     bytearray(0), cancellable, callback, uri,
                                     *args)
         except Exception as e:
-            Logger.error("TaskHelper::__on_soup_msg_finished(): %s", e)
+            Logger.warning("TaskHelper::__on_request_send_async(): %s", e)
             callback(uri, False, b"", *args)
