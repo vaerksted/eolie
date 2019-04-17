@@ -203,7 +203,7 @@ class DatabaseAdblock:
             version = load(open(EOLIE_DATA_PATH + "/adblock.bin", "rb"))
         except:
             version = 0
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable.new()
         if self.__adblock_mtime - version > self.__UPDATE:
             # Update host rules
             uris = list(self.__URIS)

@@ -91,7 +91,7 @@ class DatabasePhishing:
             version = load(open(EOLIE_DATA_PATH + "/phishing.bin", "rb"))
         except:
             version = 0
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable.new()
         if self.__phishing_mtime - version > self.__UPDATE:
             self.__on_load_uri_content(None, False, b"", [self.__URI])
 

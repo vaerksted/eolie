@@ -222,7 +222,7 @@ class SyncWorker:
         self.__username = ""
         self.__password = ""
         self.__session = None
-        self.__sync_cancellable.reset()
+        self.__sync_cancellable = Gio.Cancellable()
         self.__helper.clear_sync(None)
 
     def stop(self, force=False):
@@ -493,7 +493,7 @@ class SyncWorker:
         """
         Logger.sync_debug("Start syncing")
         self.__syncing = True
-        self.__sync_cancellable.reset()
+        self.__sync_cancellable = Gio.Cancellable()
         try:
             self.__mtimes = load(open(EOLIE_DATA_PATH + "/firefox_sync.bin",
                                       "rb"))

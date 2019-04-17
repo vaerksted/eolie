@@ -198,7 +198,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.__title_changed_timeout_id = GLib.timeout_add(
             2000, title_changed_timeout)
         self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable()
         self._readable = False
 
     def __on_title_changed(self, webview, title):

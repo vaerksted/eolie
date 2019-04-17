@@ -884,7 +884,7 @@ class ToolbarTitle(Gtk.Bin):
             @param popover as Gtk.popover
         """
         self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable.new()
         self.__completion_model.clear()
         webview = self.__window.container.current.webview
         if popover == self.__popover:
@@ -949,7 +949,7 @@ class ToolbarTitle(Gtk.Bin):
         task_helper.run(self.__populate_completion, value)
 
         self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable.new()
 
         network = Gio.NetworkMonitor.get_default().get_network_available()
         parsed = urlparse(value)

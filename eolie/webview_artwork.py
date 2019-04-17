@@ -31,7 +31,6 @@ class WebViewArtwork:
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
-        self.__cancellable = Gio.Cancellable()
         self.__favicon_db = self.context.get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
@@ -44,7 +43,7 @@ class WebViewArtwork:
         if self.ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable()
         self.__favicon_db.get_favicon(self.uri,
                                       self.__cancellable,
                                       self.__on_get_favicon,
@@ -60,7 +59,7 @@ class WebViewArtwork:
         if self.ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable()
         self.__favicon_db.get_favicon(self.uri,
                                       self.__cancellable,
                                       self.__on_get_favicon,
@@ -78,7 +77,7 @@ class WebViewArtwork:
         """
         if event == WebKit2.LoadEvent.STARTED:
             self.__cancellable.cancel()
-            self.__cancellable.reset()
+            self.__cancellable = Gio.Cancellable()
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
                 self.__snapshot_id = None

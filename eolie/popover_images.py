@@ -271,7 +271,7 @@ class ImagesPopover(Gtk.Popover):
             uris = source.call_finish(result)[0]
         except Exception as e:
             Logger.error("ImagesPopover::__on_get_images(): %s", e)
-        self.__cancellable.reset()
+        self.__cancellable = Gio.Cancellable()
         self.__on_load_uri_content(None, False, b"", uris)
 
     def __on_closed(self, popover):
