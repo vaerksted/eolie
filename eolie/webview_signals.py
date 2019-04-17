@@ -100,7 +100,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         if self._window != self.get_toplevel():
             return
         # URI set but not loaded
-        if webview.get_uri() != webview.uri:
+        if webview.get_uri() is None and webview.uri is not None:
             webview.load_uri(webview.uri)
         self._shown = True
         self.emit("shown")
