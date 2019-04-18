@@ -92,8 +92,8 @@ class WebView(WebKit2.WebView):
         """
         try:
             zoom_level = self._window.zoom_level
-            if self.__related_view is not None:
-                window = self.__related_view.get_ancestor(Gtk.Window)
+            if self._related_view is not None:
+                window = self._related_view.get_ancestor(Gtk.Window)
                 if window is not None and hasattr(window, "zoom_level"):
                     zoom_level = window.zoom_level
             else:
@@ -461,7 +461,7 @@ class WebView(WebKit2.WebView):
         self._uri = None
         self._initial_uri = None
         self._title = None
-        self.__related_view = related_view
+        self._related_view = related_view
         self._shown = False
         self.set_hexpand(True)
         self.set_vexpand(True)
