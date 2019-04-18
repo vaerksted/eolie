@@ -210,15 +210,11 @@ class PasswordsHelper:
         except Exception as e:
             Logger.debug("PasswordsHelper::store(): %s", e)
 
-    def store_sync(self, login, password, uid,
-                   token, keyB, callback=None, *args):
+    def store_sync(self, login, password, callback=None, *args):
         """
             Store Firefox Sync password
             @param login as str
             @param password as str
-            @param uid as str
-            @param token as str
-            @param keyB as str
             @param callback as function
             @param data
         """
@@ -226,17 +222,11 @@ class PasswordsHelper:
             self.__wait_for_secret(self.store_sync,
                                    login,
                                    password,
-                                   uid,
-                                   token,
-                                   keyB,
                                    callback)
             schema_string = "org.gnome.Eolie.sync"
             SecretSchema = {
                 "sync": Secret.SchemaAttributeType.STRING,
                 "login": Secret.SchemaAttributeType.STRING,
-                "uid": Secret.SchemaAttributeType.STRING,
-                "token": Secret.SchemaAttributeType.STRING,
-                "keyB": Secret.SchemaAttributeType.STRING
             }
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
@@ -244,9 +234,6 @@ class PasswordsHelper:
             SecretAttributes = {
                 "sync": "mozilla",
                 "login": login,
-                "uid": uid,
-                "token": token,
-                "keyB": keyB
             }
             Secret.password_store(schema, SecretAttributes,
                                   Secret.COLLECTION_DEFAULT,

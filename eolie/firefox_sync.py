@@ -93,33 +93,25 @@ class SyncWorker:
             Logger.warning("SyncWorker::login(): %s", attributes)
             return
         from base64 import b64encode
+        import json
         session = None
         self.__username = attributes["login"]
         self.__password = password
         # Connect to firefox sync
-        try:
-            session = self.__firefox_sync.login(
-                self.__username, password, code)
-            bid_assertion, key = self.__firefox_sync.\
-                get_browserid_assertion(session)
-            self.__token = session.token
-            self.__uid = session.uid
-            self.__keyB = session.keys[1]
-            keyB_encoded = b64encode(self.__keyB).decode("utf-8")
-            self.__helper.clear_sync(self.__helper.store_sync,
-                                     self.__username,
-                                     "",
-                                     self.__uid,
-                                     self.__token,
-                                     keyB_encoded,
-                                     self.on_password_stored,
-                                     True)
-        except Exception as e:
-            self.__helper.clear_sync(self.__helper.store_sync,
-                                     attributes["login"],
-                                     password,
-                                     "", "", "")
-            raise e
+        session = self.__firefox_sync.login(
+            self.__username, password, code)
+        bid_assertion, key = self.__firefox_sync.\
+            get_browserid_assertion(session)
+        self.__token = session.token
+        self.__uid = session.uid
+        self.__keyB = session.keys[1]
+        keyB_encoded = b64encode(self.__keyB).decode("utf-8")
+        record = {"uid": self.__uid,
+                  "token": self.__token,
+                  "keyB": keyB_encoded}
+        self.__helper.clear_sync(self.__helper.store_sync,
+                                 self.__username,
+                                 json.dumps(record))
 
     def new_session(self):
         """
@@ -149,7 +141,7 @@ class SyncWorker:
             Start syncing
         """
         if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password and not self.syncing:
+                self.__username and not self.syncing:
             task_helper = TaskHelper()
             task_helper.run(self.__sync)
 
@@ -158,7 +150,7 @@ class SyncWorker:
             Push history id
             @param history_id as int
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__push_history, history_id)
 
@@ -167,7 +159,7 @@ class SyncWorker:
             Push bookmark id
             @param bookmark_id as int
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__push_bookmark, bookmark_id)
 
@@ -183,7 +175,7 @@ class SyncWorker:
             @param form_uri as str
             @param uuid as str
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__push_password,
                             user_form_name, user_form_value, pass_form_name,
@@ -194,7 +186,7 @@ class SyncWorker:
             Remove history guid from remote history
             @param guid as str
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_history, guid)
 
@@ -203,7 +195,7 @@ class SyncWorker:
             Remove bookmark guid from remote bookmarks
             @param guid as str
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_bookmarks, guid)
 
@@ -212,7 +204,7 @@ class SyncWorker:
             Remove password from passwords collection
             @param uuid as str
         """
-        if self.__username and self.__password:
+        if self.__username:
             task_helper = TaskHelper()
             task_helper.run(self.__remove_from_passwords, uuid)
 
@@ -244,15 +236,6 @@ class SyncWorker:
                  open(EOLIE_DATA_PATH + "/firefox_sync_pendings.bin", "wb"))
         except Exception as e:
             Logger.Error("SyncWorker::save_pendings(): %s", e)
-
-    def on_password_stored(self, secret, result, sync):
-        """
-            Update credentials
-            @param secret as Secret
-            @param result as Gio.AsyncResult
-            @param sync as bool
-        """
-        self.set_credentials()
 
     @property
     def syncing(self):
@@ -339,7 +322,7 @@ class SyncWorker:
             Sync pendings record
         """
         if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and self.__password and not self.syncing:
+                self.__username and not self.syncing:
             self.__syncing = True
             self.__check_worker()
             bulk_keys = self.__get_session_bulk_keys()
@@ -742,12 +725,13 @@ class SyncWorker:
         if attributes is None:
             return
         from base64 import b64decode
+        import json
         try:
             self.__username = attributes["login"]
-            self.__password = password
-            self.__token = attributes["token"]
-            self.__uid = attributes["uid"]
-            self.__keyB = b64decode(attributes["keyB"])
+            record = json.loads(password)
+            self.__token = record["token"]
+            self.__uid = record["uid"]
+            self.__keyB = b64decode(record["keyB"])
             self.sync()
         except Exception as e:
             Logger.error("SyncWorker::__set_credentials(): %s" % e)
@@ -760,8 +744,6 @@ class SyncWorker:
             raise StopIteration("SyncWorker: cancelled")
         elif not self.__username:
             raise StopIteration("SyncWorker: missing username")
-        elif not self.__password:
-            raise StopIteration("SyncWorker: missing password")
         elif not self.__token:
             raise StopIteration("SyncWorker: missing token")
 
@@ -787,7 +769,8 @@ class FirefoxSync(object):
             @return fxaSession
         """
         fxaSession = self.__fxa_client.login(login, password, keys=True)
-        fxaSession.totp_verify(code)
+        if code:
+            fxaSession.totp_verify(code)
         fxaSession.fetch_keys()
         return fxaSession
 

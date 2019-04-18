@@ -574,6 +574,5 @@ class SettingsDialog:
             return
         try:
             self.__login_entry.set_text(attributes["login"])
-            self.__password_entry.set_text(password)
         except Exception as e:
             Logger.error("SettingsDialog::__on_get_sync(): %s", e)
