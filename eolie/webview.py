@@ -585,7 +585,7 @@ class WebView(WebKit2.WebView):
                 properties.get_scrollbars_visible()):
             self._window.container.add_webview_with_new_view(
                 webview,
-                LoadingType.WORKAROUND_194663)
+                LoadingType.FOREGROUND)
         else:
             self._window.container.popup_webview(webview, True)
 

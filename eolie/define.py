@@ -67,8 +67,6 @@ class LoadingType:
     BACKGROUND = 1
     OFFLOAD = 2
     POPOVER = 3
-    # https://bugs.webkit.org/show_bug.cgi?id=194663
-    WORKAROUND_194663 = 4
 
 
 class Type:
