@@ -9,9 +9,9 @@
     <file compressed="true">application.css</file>
     <file compressed="true">error.css</file>
     <file compressed="true">Extensions.js</file>
-    <file compressed="true">Readability.js</file>
     <file compressed="true">Readability_check.js</file>
     <file compressed="true">Readability_get.js</file>
+    <file compressed="true">Readability.js</file>
      <file compressed="true" preprocess="xml-stripblanks">AdblockMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
@@ -44,6 +44,7 @@
      <file compressed="true" preprocess="xml-stripblanks">ToolbarActions.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarEnd.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarMenu.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">ToolbarPageMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarTitle.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">AboutDialog.ui</file>
   </gresource>
