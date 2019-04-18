@@ -411,8 +411,8 @@ class Application(Gtk.Application):
         self.set_accels_for_action("win.shortcut::history", ["<Control>h"])
         self.set_accels_for_action("win.shortcut::search", ["<Control>k"])
         self.set_accels_for_action("win.shortcut::fullscreen", ["F11"])
-        self.set_accels_for_action("app.settings",
-                                   ["<Control>s"])
+        self.set_accels_for_action("win.shortcut::settings",
+                                   ["<Control>comma"])
         self.set_accels_for_action("win.shortcut::backward",
                                    ["<Alt>Left", "Back"])
         self.set_accels_for_action("win.shortcut::forward",

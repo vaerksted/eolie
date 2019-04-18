@@ -22,7 +22,7 @@
               <object class="GtkShortcutsShortcut">
                 <property name="visible">True</property>
                 <property name="title" translatable="yes" context="shortcut window">Settings</property>
-                <property name="accelerator">&lt;Primary&gt;s</property>
+                <property name="accelerator">&lt;Primary&gt;comma</property>
               </object>
             </child>
             <child>

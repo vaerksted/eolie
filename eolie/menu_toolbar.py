@@ -16,7 +16,6 @@ from gettext import gettext as _
 
 from eolie.menu_languages import LanguagesMenu
 from eolie.menu_block import JSBlockMenu, AdblockMenu
-from eolie.settings import SettingsDialog
 from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
 from eolie.define import App
 
@@ -183,6 +182,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
+        from eolie.settings import SettingsDialog
         dialog = SettingsDialog(self.__window)
         dialog.show()
 

@@ -419,6 +419,11 @@ class Window(Gtk.ApplicationWindow):
             self.__container.try_close_view(self.container.current)
         elif string == "reload":
             self.container.current.webview.reload()
+        elif string == "settings":
+            # Rework all this code to use actions like in Lollypop
+            from eolie.settings import SettingsDialog
+            dialog = SettingsDialog(self)
+            dialog.show()
         elif string == "home":
             self.container.current.webview.load_uri(App().start_page)
         elif string == "source":
