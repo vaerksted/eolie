@@ -556,10 +556,18 @@ class SettingsDialog:
         except Exception as e:
             Logger.error("SettingsDialog::__connect_firefox_sync(): %s", e)
             GLib.idle_add(self.__sync_button.set_sensitive, True)
-            GLib.idle_add(self.__result_label.set_text, str(e))
-            GLib.idle_add(self.__result_image.set_from_icon_name,
-                          "computer-fail-symbolic",
-                          Gtk.IconSize.MENU)
+            if not code and str(e) == "Unverified account":
+                GLib.timeout_add(500, self.__settings_dialog.destroy)
+                self.__window.toolbar.end.show_sync_button()
+                GLib.idle_add(
+                    App().active_window.toolbar.title.show_message,
+                    _("You've received an email"
+                      " to validate syncing"))
+            else:
+                GLib.idle_add(self.__result_label.set_text, str(e))
+                GLib.idle_add(self.__result_image.set_from_icon_name,
+                              "computer-fail-symbolic",
+                              Gtk.IconSize.MENU)
 
     def __on_get_sync(self, attributes, password, uri, index, count):
         """

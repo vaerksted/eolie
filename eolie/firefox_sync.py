@@ -98,20 +98,26 @@ class SyncWorker:
         self.__username = attributes["login"]
         self.__password = password
         # Connect to firefox sync
-        session = self.__firefox_sync.login(
-            self.__username, password, code)
-        bid_assertion, key = self.__firefox_sync.\
-            get_browserid_assertion(session)
-        self.__token = session.token
-        self.__uid = session.uid
-        self.__keyB = session.keys[1]
-        keyB_encoded = b64encode(self.__keyB).decode("utf-8")
-        record = {"uid": self.__uid,
-                  "token": self.__token,
-                  "keyB": keyB_encoded}
-        self.__helper.clear_sync(self.__helper.store_sync,
-                                 self.__username,
-                                 json.dumps(record))
+        try:
+            session = self.__firefox_sync.login(
+                self.__username, password, code)
+            bid_assertion, key = self.__firefox_sync.\
+                get_browserid_assertion(session)
+            self.__token = session.token
+            self.__uid = session.uid
+            self.__keyB = session.keys[1]
+            keyB_encoded = b64encode(self.__keyB).decode("utf-8")
+            record = {"uid": self.__uid,
+                      "token": self.__token,
+                      "keyB": keyB_encoded}
+            self.__helper.clear_sync(self.__helper.store_sync,
+                                     self.__username,
+                                     json.dumps(record))
+        except Exception as e:
+            self.__helper.clear_sync(self.__helper.store_sync,
+                                     self.__username,
+                                     "")
+            raise(e)
 
     def new_session(self):
         """
