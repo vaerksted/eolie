@@ -495,7 +495,7 @@ class WebView(WebKit2.WebView):
             settings.set_property("allow-file-access-from-file-urls", False)
             settings.set_property("enable-javascript", True)
             settings.set_property("enable-media-stream", True)
-            settings.set_property("enable-mediasource", False)
+            settings.set_property("enable-mediasource", True)
             autoplay_videos = App().settings.get_value('autoplay-videos')
             # Setting option to False make video playback buggy
             if not autoplay_videos:
