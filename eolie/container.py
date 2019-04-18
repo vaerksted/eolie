@@ -123,9 +123,21 @@ class Container(Gtk.Overlay):
         view.show()
         self.__pages_manager.add_view(view)
         self.__sites_manager.add_view(view)
+        if loading_type == LoadingType.WORKAROUND_194663:
+            removed = []
+            for child in self.__stack.get_children():
+                removed.append(child)
+                self.__stack.remove(child)
+            self.__current = view
+            self.__stack.add(view)
+            self.__pages_manager.update_visible_child()
+            self.__sites_manager.update_visible_child()
+            self.__stack.set_visible_child(view)
+            for child in removed:
+                self.__stack.add(child)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
-        if loading_type == LoadingType.FOREGROUND and not self.in_expose:
+        elif loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
