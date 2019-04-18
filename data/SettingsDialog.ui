@@ -926,7 +926,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Login:</property>
+                <property name="label" translatable="yes">Login :</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -948,7 +948,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Password:</property>
+                <property name="label" translatable="yes">Password :</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -981,7 +981,7 @@ on all your devices running Eolie or Firefox</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">4</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -991,7 +991,7 @@ on all your devices running Eolie or Firefox</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">5</property>
+                <property name="top_attach">6</property>
               </packing>
             </child>
             <child>
@@ -1001,7 +1001,7 @@ on all your devices running Eolie or Firefox</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">5</property>
+                <property name="top_attach">6</property>
               </packing>
             </child>
             <child>
@@ -1018,6 +1018,30 @@ on all your devices running Eolie or Firefox</property>
                 <property name="left_attach">0</property>
                 <property name="top_attach">1</property>
                 <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Code :</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="code_entry">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="tooltip_text" translatable="yes">You need to enable Two Factor Authentication</property>
+                <property name="placeholder_text" translatable="yes">You need to enable Two Factor Authentication</property>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
             <child>

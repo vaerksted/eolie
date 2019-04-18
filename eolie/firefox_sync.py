@@ -77,12 +77,12 @@ class SyncWorker:
         self.__helper = PasswordsHelper()
         self.set_credentials()
 
-    def login(self, attributes, password):
+    def login(self, attributes, password, code):
         """
             Login to service
             @param attributes as {}
             @param password as str
-            @raise exceptions
+            @param code as str
         """
         self.__username = ""
         self.__password = ""
@@ -98,7 +98,8 @@ class SyncWorker:
         self.__password = password
         # Connect to firefox sync
         try:
-            session = self.__firefox_sync.login(self.__username, password)
+            session = self.__firefox_sync.login(
+                self.__username, password, code)
             bid_assertion, key = self.__firefox_sync.\
                 get_browserid_assertion(session)
             self.__token = session.token
@@ -107,7 +108,7 @@ class SyncWorker:
             keyB_encoded = b64encode(self.__keyB).decode("utf-8")
             self.__helper.clear_sync(self.__helper.store_sync,
                                      self.__username,
-                                     password,
+                                     "",
                                      self.__uid,
                                      self.__token,
                                      keyB_encoded,
@@ -552,8 +553,6 @@ class SyncWorker:
             Logger.sync_debug("Stop syncing")
         except Exception as e:
             Logger.error("SyncWorker::__sync(): %s", e)
-            if str(e) == "The authentication token could not be found":
-                self.set_credentials()
         self.__syncing = False
 
     def __pull_bookmarks(self, bulk_keys):
@@ -749,9 +748,6 @@ class SyncWorker:
             self.__token = attributes["token"]
             self.__uid = attributes["uid"]
             self.__keyB = b64decode(attributes["keyB"])
-            # Force login if no token
-            if not self.__token:
-                self.login(attributes, password)
             self.sync()
         except Exception as e:
             Logger.error("SyncWorker::__set_credentials(): %s" % e)
@@ -782,14 +778,16 @@ class FirefoxSync(object):
         from fxa.core import Client as FxAClient
         self.__fxa_client = FxAClient()
 
-    def login(self, login, password):
+    def login(self, login, password, code):
         """
             Login to FxA and get the keys.
             @param login as str
             @param password as str
+            @param code as str
             @return fxaSession
         """
         fxaSession = self.__fxa_client.login(login, password, keys=True)
+        fxaSession.totp_verify(code)
         fxaSession.fetch_keys()
         return fxaSession
 

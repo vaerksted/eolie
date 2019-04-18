@@ -178,6 +178,7 @@ class SettingsDialog:
         self.__sync_button = builder.get_object("sync_button")
         self.__login_entry = builder.get_object("login_entry")
         self.__password_entry = builder.get_object("password_entry")
+        self.__code_entry = builder.get_object("code_entry")
         self.__result_image = builder.get_object("result_image")
         builder.connect_signals(self)
         self.__helper.get_sync(self.__on_get_sync)
@@ -476,7 +477,8 @@ class SettingsDialog:
             task_helper = TaskHelper()
             task_helper.run(self.__connect_firefox_sync,
                             self.__login_entry.get_text(),
-                            self.__password_entry.get_text())
+                            self.__password_entry.get_text(),
+                            self.__code_entry.get_text())
 
 #######################
 # PRIVATE             #
@@ -539,32 +541,25 @@ class SettingsDialog:
                     " on your computer:\n%s") % cmd)
             self.__sync_button.set_sensitive(False)
 
-    def __connect_firefox_sync(self, username, password):
+    def __connect_firefox_sync(self, username, password, code):
         """
             Connect to firefox sync
             @param username as str
             @param password as str
+            @param code as str
             @thread safe
         """
         try:
             App().sync_worker.new_session()
-            App().sync_worker.login({"login": username}, password)
+            App().sync_worker.login({"login": username}, password, code)
             GLib.idle_add(self.__setup_sync_button, True)
         except Exception as e:
             Logger.error("SettingsDialog::__connect_firefox_sync(): %s", e)
             GLib.idle_add(self.__sync_button.set_sensitive, True)
-            if str(e) == "Unverified account":
-                GLib.timeout_add(500, self.__settings_dialog.destroy)
-                self.__window.toolbar.end.show_sync_button()
-                GLib.idle_add(
-                    App().active_window.toolbar.title.show_message,
-                    _("You've received an email"
-                      " to validate syncing"))
-            else:
-                GLib.idle_add(self.__result_label.set_text, str(e))
-                GLib.idle_add(self.__result_image.set_from_icon_name,
-                              "computer-fail-symbolic",
-                              Gtk.IconSize.MENU)
+            GLib.idle_add(self.__result_label.set_text, str(e))
+            GLib.idle_add(self.__result_image.set_from_icon_name,
+                          "computer-fail-symbolic",
+                          Gtk.IconSize.MENU)
 
     def __on_get_sync(self, attributes, password, uri, index, count):
         """
