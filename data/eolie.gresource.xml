@@ -44,7 +44,6 @@
      <file compressed="true" preprocess="xml-stripblanks">ToolbarActions.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarEnd.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarMenu.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">ToolbarPageMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ToolbarTitle.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">AboutDialog.ui</file>
   </gresource>
