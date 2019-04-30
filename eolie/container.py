@@ -126,11 +126,16 @@ class Container(Gtk.Overlay):
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
+            previous = self.current
+            if previous is not None:
+                self.__stack.remove(previous)
             self.__current = view
             self.__stack.add(view)
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
+            if previous is not None:
+                self.__stack.add(previous)
         elif loading_type in [LoadingType.BACKGROUND, LoadingType.OFFLOAD] or\
                 self.in_expose:
             # This allow us to get real size snapshot
