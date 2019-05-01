@@ -10,10 +10,11 @@
 	<p>Eolie is a new GNOME web browser.</p>
  </description>
  <releases>
-    <release version="0.9.60" date="2019-03-21">
+    <release version="0.9.61" date="2019-05-01">
       <description>
         <ul>
-          <li></li>
+          <li>Enable 2 factor auth for Firefox sync</li>
+          <li>Disable hw acceleration (like in Epiphany)</li>
         </ul>
       </description>
     </release>
