@@ -571,14 +571,17 @@ class ToolbarTitle(Gtk.Bin):
                 parsed = urlparse(uri)
                 # Search a missing scheme
                 if uri.find(".") != -1 and not parsed.scheme:
-                    db_uri = App().history.get_match(uri)
-                    if db_uri is not None:
-                        db_parsed = urlparse(db_uri)
-                        if db_parsed.netloc.startswith("www.") and\
-                                not parsed.netloc.startswith("www."):
-                            uri = "%s://www.%s" % (db_parsed.scheme, uri)
-                        else:
-                            uri = "%s://%s" % (db_parsed.scheme, uri)
+                    # Add missing www.
+                    if not uri.startswith("www."):
+                        db_uri = App().history.get_match("://www." + uri)
+                        if db_uri is not None:
+                            uri = "www." + uri
+                    # Add missing scheme
+                    db_uri = App().history.get_match("https://" + uri)
+                    if db_uri is None:
+                        uri = "http://" + uri
+                    else:
+                        uri = "https://" + uri
                 self.__window.container.load_uri(uri)
                 self.__window.container.set_expose(False)
                 if self.__entry_changed_id is not None:
