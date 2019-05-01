@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 from eolie.define import PROXY_BUS, PROXY_PATH, PROXY_INTERFACE, App
 from eolie.logger import Logger
@@ -35,14 +35,17 @@ class DBusHelper:
         try:
             bus = App().get_dbus_connection()
             proxy_bus = PROXY_BUS % page_id
+            cancellable = Gio.Cancellable()
+            GLib.timeout_add(2000, cancellable.cancel)
             Gio.DBusProxy.new(bus, Gio.DBusProxyFlags.NONE, None,
                               proxy_bus,
                               PROXY_PATH,
-                              PROXY_INTERFACE, None,
+                              PROXY_INTERFACE, cancellable,
                               self.__on_get_proxy,
                               call, dbus_args, callback, *args)
         except Exception as e:
             Logger.error("DBusHelper::call(): %s", e)
+            callback(None, None, *args)
 
     def connect(self, signal, callback, page_id):
         """
