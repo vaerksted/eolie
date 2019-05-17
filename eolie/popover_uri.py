@@ -89,24 +89,21 @@ class Row(Gtk.ListBoxRow):
         if favicon is not None:
             grid.attach(favicon, 0, 0, 1, 2)
 
-        self.__title = Gtk.Label.new(title)
+        uri = item.get_property("uri")
+        self.__title = Gtk.Label.new()
         self.__title.set_ellipsize(Pango.EllipsizeMode.END)
         self.__title.set_property("halign", Gtk.Align.START)
         self.__title.set_hexpand(True)
         self.__title.set_property('has-tooltip', True)
         self.__title.connect('query-tooltip', self.__on_query_tooltip)
         self.__title.show()
-        grid.attach(self.__title, 1, 0, 1, 1)
-
-        if favicon is not None:
-            uri = Gtk.Label.new(item.get_property("uri"))
-            uri.set_ellipsize(Pango.EllipsizeMode.END)
-            uri.set_property("halign", Gtk.Align.START)
-            uri.get_style_context().add_class("dim-label")
-            uri.set_property('has-tooltip', True)
-            uri.connect('query-tooltip', self.__on_query_tooltip)
-            uri.show()
-            grid.attach(uri, 1, 1, 1, 1)
+        if uri:
+            self.__title.set_markup("%s\n<span alpha='40000'>%s</span>" %
+                                    (GLib.markup_escape_text(title),
+                                     GLib.markup_escape_text(uri)))
+        else:
+            self.__title.set_text(title)
+        grid.attach(self.__title, 1, 0, 1, 2)
 
         if item_type == Type.HISTORY:
             dt = datetime.fromtimestamp(item.get_property("atime"))
