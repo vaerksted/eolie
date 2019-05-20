@@ -118,7 +118,9 @@ class PageChildRow(Gtk.ListBoxRow):
         """
         if event in [WebKit2.LoadEvent.STARTED,
                      WebKit2.LoadEvent.COMMITTED]:
-            self.__label.set_text(webview.get_uri())
+            uri = webview.get_uri()
+            if uri is not None:
+                self.__label.set_text(uri)
 
     def __on_webview_title_changed(self, webview, title):
         """
