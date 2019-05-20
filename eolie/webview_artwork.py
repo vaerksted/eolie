@@ -119,7 +119,6 @@ class WebViewArtwork:
             @param uri as str
             @param initial_uri as str
         """
-        resized = None
         # Save webview favicon
         if surface is not None:
             if surface.get_width() >= ArtSize.FAVICON:
@@ -130,12 +129,10 @@ class WebViewArtwork:
             exists = App().art.exists(uri, favicon_type)
             if not exists:
                 resized = resize_favicon(surface)
-        # We wait for a better favicon
-        if resized is not None:
-            self.__save_favicon_to_cache(resized,
-                                         uri,
-                                         initial_uri,
-                                         favicon_type)
+                self.__save_favicon_to_cache(resized,
+                                             uri,
+                                             initial_uri,
+                                             favicon_type)
 
     def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
         """

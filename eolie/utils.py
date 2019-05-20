@@ -80,8 +80,6 @@ def get_favicon_best_uri(favicons_path, uri):
     favicon_uri = None
     try:
         parsed = urlparse(uri)
-        if parsed.path == "/":
-            return None
         for uri in [parsed.netloc + parsed.path, parsed.netloc]:
             sql = sqlite3.connect(favicons_path, 600.0)
             result = sql.execute("SELECT url\
