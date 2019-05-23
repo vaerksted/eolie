@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">user-trash-symbolic</property>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">view-refresh-symbolic</property>
   </object>
   <object class="GtkImage" id="image3">
     <property name="visible">True</property>
@@ -143,48 +138,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkStack" id="sync_stack">
-                    <property name="can_focus">False</property>
-                    <property name="margin_start">1</property>
-                    <property name="margin_end">1</property>
-                    <property name="margin_top">1</property>
-                    <property name="margin_bottom">1</property>
-                    <child>
-                      <object class="GtkButton" id="reload_bookmarks">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="tooltip_text" translatable="yes">Sync bookmarks</property>
-                        <property name="image">image2</property>
-                        <property name="relief">none</property>
-                        <signal name="clicked" handler="_on_sync_button_clicked" swapped="no"/>
-                        <style>
-                          <class name="small-padding"/>
-                        </style>
-                      </object>
-                      <packing>
-                        <property name="name">sync</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSpinner">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="halign">center</property>
-                        <property name="valign">center</property>
-                      </object>
-                      <packing>
-                        <property name="name">spinner</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">3</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkButton" id="import_button">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -201,6 +154,9 @@
                     <property name="left_attach">4</property>
                     <property name="top_attach">0</property>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
                 <child>
                   <placeholder/>

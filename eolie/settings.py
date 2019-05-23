@@ -180,6 +180,7 @@ class SettingsDialog:
         self.__password_entry = builder.get_object("password_entry")
         self.__code_entry = builder.get_object("code_entry")
         self.__result_image = builder.get_object("result_image")
+        self.__sync_buttons = builder.get_object("sync_buttons")
         builder.connect_signals(self)
         self.__helper.get_sync(self.__on_get_sync)
 
@@ -480,6 +481,20 @@ class SettingsDialog:
                             self.__password_entry.get_text(),
                             self.__code_entry.get_text())
 
+    def _on_pull_button_clicked(self, button):
+        """
+            Sync all from Firefox Sync
+            @param button as Gtk.Button
+        """
+        App().sync_worker.pull(True)
+
+    def _on_push_button_clicked(self, button):
+        """
+            Sync all to Firefox Sync
+            @param button as Gtk.Button
+        """
+        App().sync_worker.push()
+
 #######################
 # PRIVATE             #
 #######################
@@ -504,6 +519,7 @@ class SettingsDialog:
             "destructive-action")
         self.__sync_button.get_style_context().remove_class(
             "suggested-action")
+        self.__sync_buttons.set_sensitive(status)
         if status:
             self.__result_label.set_text(_("Syncing operational"))
             self.__result_image.set_from_icon_name(

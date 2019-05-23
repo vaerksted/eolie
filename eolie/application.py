@@ -78,13 +78,6 @@ class Application(Gtk.Application):
             application_id="org.gnome.Eolie",
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.set_property("register-session", True)
-        # Fix proxy for python
-        proxy = GLib.environ_getenv(GLib.get_environ(), "all_proxy")
-        if proxy is not None and proxy.startswith("socks://"):
-            proxy = proxy.replace("socks://", "socks4://")
-            from os import environ
-            environ["all_proxy"] = proxy
-            environ["ALL_PROXY"] = proxy
         # Ideally, we will be able to delete this once Flatpak has a solution
         # for SSL certificate management inside of applications.
         if GLib.file_test("/app", GLib.FileTest.EXISTS):
@@ -218,8 +211,7 @@ class Application(Gtk.Application):
             self.history.clear_to(int(atime))
 
         if self.sync_worker is not None:
-            if self.sync_worker.syncing:
-                self.sync_worker.stop()
+            self.sync_worker.stop()
             self.sync_worker.save_pendings()
         if vacuum:
             task_helper = TaskHelper()
@@ -323,7 +315,7 @@ class Application(Gtk.Application):
         from eolie.firefox_sync import SyncWorker
         if SyncWorker.check_modules():
             self.sync_worker = SyncWorker()
-            self.sync_worker.sync_loop()
+            self.sync_worker.pull_loop()
         else:
             self.sync_worker = None
         cssProviderFile = Gio.File.new_for_uri(

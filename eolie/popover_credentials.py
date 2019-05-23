@@ -41,7 +41,6 @@ class CredentialsPopover(Gtk.Popover):
         Gtk.Popover.__init__(self)
         self.set_modal(False)
         window.register(self)
-        self.__helper = PasswordsHelper()
         self.__user_form_name = user_form_name
         self.__user_form_value = user_form_value
         self.__pass_form_name = pass_form_name

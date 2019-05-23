@@ -38,6 +38,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.__toolbar = toolbar
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarMenu.ui")
+        self.__spinner = builder.get_object("spinner")
         if not toolbar.home_button.is_visible():
             builder.get_object("toolbar_items").show()
         fullscreen_button = builder.get_object("fullscreen_button")
@@ -101,6 +102,9 @@ class ToolbarMenu(Gtk.PopoverMenu):
         quit_action = Gio.SimpleAction.new("quit", None)
         quit_action.connect("activate", lambda x, y: App().quit())
         App().add_action(quit_action)
+
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
 
 #######################
 # PROTECTED           #
@@ -227,3 +231,31 @@ class ToolbarMenu(Gtk.PopoverMenu):
         """
         action.set_state(value)
         App().settings.set_value("show-sidebar", GLib.Variant("b", value))
+
+    def __on_worker_syncing(self, worker, status):
+        """
+            Update sync status
+            @param worker as SyncWorker
+            @param status as bool
+        """
+        if status:
+            self.__spinner.start()
+        else:
+            self.__spinner.stop()
+
+    def __on_map(self, widget):
+        """
+            Connect signals and update sync status
+        """
+        if App().sync_worker is not None:
+            App().sync_worker.connect("syncing", self.__on_worker_syncing)
+            if App().sync_worker.syncing:
+                self.__spinner.start()
+
+    def __on_unmap(self, widget):
+        """
+            Disconnect signals and update sync status
+        """
+        self.__spinner.stop()
+        if App().sync_worker is not None:
+            App().sync_worker.disconnect_by_func(self.__on_worker_syncing)

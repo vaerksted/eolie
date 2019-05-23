@@ -436,9 +436,6 @@ class UriPopover(Gtk.Popover):
         self.__bookmarks_box.bind_model(self.__bookmarks_model,
                                         self.__on_item_create)
         self.__calendar = builder.get_object("calendar")
-        if App().sync_worker is not None:
-            self.__sync_stack = builder.get_object("sync_stack")
-            self.__sync_stack.show()
         self.add(builder.get_object("widget"))
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
@@ -654,14 +651,6 @@ class UriPopover(Gtk.Popover):
         """
         # https://gitlab.gnome.org/GNOME/gtk/issues/497
         self.__modifier = event.state
-
-    def _on_sync_button_clicked(self, button):
-        """
-            Sync with Firefox Sync
-            @param button as Gtk.Button
-        """
-        App().sync_worker.sync()
-        GLib.timeout_add(1000, self.__check_sync_timer)
 
     def _on_import_button_clicked(self, button):
         """
@@ -890,20 +879,6 @@ class UriPopover(Gtk.Popover):
         if App().sync_worker is not None:
             for history_id in App().history.get_empties():
                 App().history.remove(history_id)
-
-    def __check_sync_timer(self):
-        """
-            Check sync status, if sync, show spinner and reload
-            else show sync button and quit
-        """
-        if App().sync_worker.syncing:
-            self.__sync_stack.set_visible_child_name("spinner")
-            self.__sync_stack.get_visible_child().start()
-            return True
-        elif self.__sync_stack.get_visible_child_name() == "spinner":
-            self.__sync_stack.get_visible_child().stop()
-            self.__sync_stack.set_visible_child_name("sync")
-            self._on_bookmarks_map(None)
 
     def __do_sort_search(self):
         """
@@ -1156,7 +1131,7 @@ class UriPopover(Gtk.Popover):
         self.__on_row_activated(tag_row)
         App().bookmarks.clean_tags()
         if App().sync_worker is not None:
-            App().sync_worker.sync()
+            App().sync_worker.push_bookmark(item[0])
 
     def __on_row_edited(self, row):
         """

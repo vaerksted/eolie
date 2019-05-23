@@ -414,22 +414,31 @@ class DatabaseBookmarks:
                                   ORDER BY title COLLATE LOCALIZED")
             return list(result)
 
-    def get_bookmarks(self, tag_id):
+    def get_bookmarks(self, tag_id=None):
         """
             Get all bookmarks
             @param tag id as int
             @return [(id, title, uri)]
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("\
-                            SELECT bookmarks.rowid,\
-                                   bookmarks.uri,\
-                                   bookmarks.title\
-                            FROM bookmarks, bookmarks_tags\
-                            WHERE bookmarks.rowid=bookmarks_tags.bookmark_id\
-                            AND bookmarks_tags.tag_id=?\
-                            AND bookmarks.guid != bookmarks.uri\
-                            ORDER BY bookmarks.popularity DESC", (tag_id,))
+            if tag_id is None:
+                result = sql.execute("\
+                                SELECT bookmarks.rowid,\
+                                       bookmarks.uri,\
+                                       bookmarks.title\
+                                FROM bookmarks\
+                                ORDER BY bookmarks.popularity DESC")
+            else:
+                result = sql.execute("\
+                                SELECT bookmarks.rowid,\
+                                       bookmarks.uri,\
+                                       bookmarks.title\
+                                FROM bookmarks, bookmarks_tags\
+                                WHERE bookmarks.rowid=\
+                                      bookmarks_tags.bookmark_id\
+                                      AND bookmarks_tags.tag_id=?\
+                                      AND bookmarks.guid != bookmarks.uri\
+                                ORDER BY bookmarks.popularity DESC", (tag_id,))
             return list(result)
 
     def get_populars(self, limit):

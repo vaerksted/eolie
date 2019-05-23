@@ -11,7 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio, GLib, GObject
 
 from pickle import dump, load
 from hashlib import sha256
@@ -30,10 +30,14 @@ TOKENSERVER_URL = "https://token.services.mozilla.com/"
 FXA_SERVER_URL = "https://api.accounts.mozilla.com"
 
 
-class SyncWorker:
+class SyncWorker(GObject.Object):
     """
        Manage sync with firefox server, will start syncing on init
     """
+
+    __gsignals__ = {
+        'syncing': (GObject.SignalFlags.RUN_FIRST, None, (bool,))
+    }
 
     def check_modules():
         """
@@ -53,7 +57,7 @@ class SyncWorker:
         """
             Init worker
         """
-        self.__syncing = False
+        GObject.Object.__init__(self)
         self.__sync_cancellable = Gio.Cancellable()
         self.__username = ""
         self.__password = ""
@@ -66,10 +70,13 @@ class SyncWorker:
         self.__mz = None
         self.__state_lock = True
         self.__session = None
+        self.__syncing = False
+        self.__syncing_pendings = False
         try:
             self.__pending_records = load(open(EOLIE_DATA_PATH +
                                                "/firefox_sync_pendings.bin",
                                                "rb"))
+            self.__sync_pendings()
         except:
             self.__pending_records = {"history": [],
                                       "passwords": [],
@@ -132,24 +139,35 @@ class SyncWorker:
         """
         self.__helper.get_sync(self.__set_credentials)
 
-    def sync_loop(self):
+    def pull_loop(self):
         """
-            Start syncing every hours
+            Start pulling every hours
         """
         def loop():
-            self.sync()
+            self.pull()
             return True
-        self.sync()
+        self.pull()
         GLib.timeout_add_seconds(3600, loop)
 
-    def sync(self):
+    def pull(self, force=False):
         """
-            Start syncing
+            Start pulling from Firefox sync
+            @param force as bool
         """
         if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and not self.syncing:
+                self.__username:
             task_helper = TaskHelper()
-            task_helper.run(self.__sync)
+            task_helper.run(self.__pull, force)
+
+    def push(self):
+        """
+            Start pushing to Firefox sync
+            Will push all data
+        """
+        if Gio.NetworkMonitor.get_default().get_network_available() and\
+                self.__username:
+            task_helper = TaskHelper()
+            task_helper.run(self.__push,)
 
     def push_history(self, history_id):
         """
@@ -221,7 +239,6 @@ class SyncWorker:
         self.__username = ""
         self.__password = ""
         self.__session = None
-        self.__sync_cancellable = Gio.Cancellable()
         self.__helper.clear_sync(None)
 
     def stop(self, force=False):
@@ -230,6 +247,7 @@ class SyncWorker:
             @param force as bool
         """
         self.__sync_cancellable.cancel()
+        self.__sync_cancellable = Gio.Cancellable()
         if force:
             self.__session = None
 
@@ -246,7 +264,7 @@ class SyncWorker:
     @property
     def syncing(self):
         """
-            True if sync is running
+            True if syncing
             @return bool
         """
         return self.__syncing
@@ -327,26 +345,33 @@ class SyncWorker:
         """
             Sync pendings record
         """
-        if Gio.NetworkMonitor.get_default().get_network_available() and\
-                self.__username and not self.syncing:
-            self.__syncing = True
-            self.__check_worker()
-            bulk_keys = self.__get_session_bulk_keys()
-            for key in self.__pending_records.keys():
-                while self.__pending_records[key]:
-                    try:
-                        record = self.__pending_records[key].pop(0)
-                        Logger.sync_debug("syncing %s", record)
-                        self.__firefox_sync.add(record, key, bulk_keys)
-                    except:
-                        self.__pending_records[key].append(record)
-            self.__syncing = False
-            self.__update_state()
+        try:
+            if Gio.NetworkMonitor.get_default().get_network_available() and\
+                    self.__username and not self.__syncing_pendings:
+                self.__syncing_pendings = True
+                Logger.debug("Elements to push to Firefox sync: %s",
+                             self.__pending_records)
+                self.__check_worker()
+                bulk_keys = self.__get_session_bulk_keys()
+                for key in self.__pending_records.keys():
+                    while self.__pending_records[key]:
+                        try:
+                            record = self.__pending_records[key].pop(0)
+                            Logger.sync_debug("syncing %s", record)
+                            self.__firefox_sync.add(record, key, bulk_keys)
+                        except:
+                            self.__pending_records[key].append(record)
+                self.__update_state()
+                self.__syncing_pendings = False
+        except Exception as e:
+            Logger.error("SyncWorker::__sync_pendings(): %s", e)
+            self.__syncing_pendings = False
 
-    def __push_history(self, history_id):
+    def __push_history(self, history_id, sync=True):
         """
             Push history item
             @param history is as int
+            @param sync as bool
         """
         try:
             record = {}
@@ -360,14 +385,16 @@ class SyncWorker:
                 record["visits"].append({"date": atime * 1000000,
                                          "type": 1})
             self.__pending_records["history"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.error("SyncWorker::__push_history(): %s", e)
 
-    def __push_bookmark(self, bookmark_id):
+    def __push_bookmark(self, bookmark_id, sync=True):
         """
             Push bookmark
-            @param bookmark_id as in
+            @param bookmark_id as int
+            @param sync as bool
         """
         try:
             parent_guid = App().bookmarks.get_parent_guid(bookmark_id)
@@ -400,12 +427,13 @@ class SyncWorker:
             record["title"] = parent_name
             record["children"] = children
             self.__pending_records["bookmarks"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.error("SyncWorker::__push_bookmark(): %s", e)
 
     def __push_password(self, user_form_name, user_form_value, pass_form_name,
-                        pass_form_value, uri, form_uri, uuid):
+                        pass_form_value, uri, form_uri, uuid, sync=True):
         """
             Push password
             @param user_form_name as str
@@ -414,6 +442,7 @@ class SyncWorker:
             @param pass_form_value as str
             @param uri as str
             @param uuid as str
+            @param sync as bool
         """
         try:
             record = {}
@@ -429,14 +458,16 @@ class SyncWorker:
             record["timeCreated"] = mtime
             record["timePasswordChanged"] = mtime
             self.__pending_records["passwords"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.error("SyncWorker::__push_password(): %s", e)
 
-    def __remove_from_history(self, guid):
+    def __remove_from_history(self, guid, sync=True):
         """
             Remove from history
             @param guid as str
+            @param sync as bool
         """
         try:
             record = {}
@@ -444,14 +475,16 @@ class SyncWorker:
             record["type"] = "item"
             record["deleted"] = True
             self.__pending_records["history"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_history(): %s", e)
 
-    def __remove_from_bookmarks(self, guid):
+    def __remove_from_bookmarks(self, guid, sync=True):
         """
             Remove from history
             @param guid as str
+            @param sync as bool
         """
         try:
             record = {}
@@ -459,32 +492,42 @@ class SyncWorker:
             record["type"] = "bookmark"
             record["deleted"] = True
             self.__pending_records["bookmarks"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_bookmarks(): %s", e)
 
-    def __remove_from_passwords(self, uuid):
+    def __remove_from_passwords(self, uuid, sync=True):
         """
             Remove password from passwords collection
             @param uuid as str
+            @param sync as bool
         """
         try:
             record = {}
             record["id"] = uuid
             record["deleted"] = True
             self.__pending_records["passwords"].append(record)
-            self.__sync_pendings()
+            if sync:
+                self.__sync_pendings()
         except Exception as e:
             Logger.sync_debug("SyncWorker::__remove_from_passwords(): %s", e)
 
-    def __sync(self):
+    def __pull(self, force):
         """
-            Sync Eolie objects (bookmarks, history, ...) with Firefox Sync
+            Pull bookmarks, history, ... from Firefox Sync
+            @param force as bool
         """
-        Logger.sync_debug("Start syncing")
+        if self.__syncing:
+            return
+        Logger.sync_debug("Start pulling")
+        GLib.idle_add(self.emit, "syncing", True)
         self.__syncing = True
+        self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
         try:
+            if force:
+                raise
             self.__mtimes = load(open(EOLIE_DATA_PATH + "/firefox_sync.bin",
                                       "rb"))
         except:
@@ -539,9 +582,51 @@ class SyncWorker:
             except:
                 pass
             self.__update_state()
-            Logger.sync_debug("Stop syncing")
+            Logger.sync_debug("Stop pulling")
         except Exception as e:
-            Logger.error("SyncWorker::__sync(): %s", e)
+            Logger.error("SyncWorker::__pull(): %s", e)
+        GLib.idle_add(self.emit, "syncing", False)
+        self.__syncing = False
+
+    def __push(self):
+        """
+            Push bookmarks, history, ... to Firefox Sync
+            @param force as bool
+        """
+        if self.__syncing:
+            return
+        Logger.sync_debug("Start pushing")
+        GLib.idle_add(self.emit, "syncing", True)
+        self.__syncing = True
+        self.__sync_cancellable.cancel()
+        self.__sync_cancellable = Gio.Cancellable()
+        try:
+            self.__check_worker()
+
+            ########################
+            # Passwords Management #
+            ########################
+            self.__helper.get_all(self.__on_helper_get_all)
+
+            self.__check_worker()
+            ######################
+            # History Management #
+            ######################
+            for history_id in App().history.get_from_atime(0):
+                self.__push_history(history_id, False)
+
+            self.__check_worker()
+            ########################
+            # Bookmarks Management #
+            ########################
+            for (bookmark_id, title, uri) in App().bookmarks.get_bookmarks():
+                self.__push_bookmark(bookmark_id, False)
+            self.__check_worker()
+            self.__sync_pendings()
+            Logger.sync_debug("Stop pushing")
+        except Exception as e:
+            Logger.error("SyncWorker::__push(): %s", e)
+        GLib.idle_add(self.emit, "syncing", False)
         self.__syncing = False
 
     def __pull_bookmarks(self, bulk_keys):
@@ -738,7 +823,7 @@ class SyncWorker:
             self.__token = record["token"]
             self.__uid = record["uid"]
             self.__keyB = b64decode(record["keyB"])
-            self.sync()
+            self.pull()
         except Exception as e:
             Logger.error("SyncWorker::__set_credentials(): %s" % e)
 
@@ -752,6 +837,33 @@ class SyncWorker:
             raise StopIteration("SyncWorker: missing username")
         elif not self.__token:
             raise StopIteration("SyncWorker: missing token")
+
+    def __on_helper_get_all(self, attributes, password, uri, index, count):
+        """
+            Push password
+            @param attributes as {}
+            @param password as str
+            @param uri as None
+            @param index as int
+            @param count as int
+        """
+        if attributes is None:
+            return
+        try:
+            self.__check_worker()
+            user_form_name = attributes["login"]
+            user_form_value = attributes["userform"]
+            pass_form_name = attributes["passform"]
+            pass_form_value = password
+            uri = attributes["hostname"]
+            form_uri = attributes["formSubmitURL"]
+            uuid = attributes["uuid"]
+            task_helper = TaskHelper()
+            task_helper.run(self.__push_password,
+                            user_form_name, user_form_value, pass_form_name,
+                            pass_form_value, uri, form_uri, uuid, False)
+        except Exception as e:
+            Logger.error("SyncWorker::__on_helper_get_all(): %s" % e)
 
 
 class FirefoxSync(object):

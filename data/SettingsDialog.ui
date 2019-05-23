@@ -19,6 +19,21 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkHeaderBar" id="header_bar">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="show_close_button">True</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">go-down-symbolic</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">go-up-symbolic</property>
+  </object>
   <object class="GtkWindow" id="settings_dialog">
     <property name="width_request">700</property>
     <property name="can_focus">False</property>
@@ -974,6 +989,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="valign">start</property>
                 <signal name="clicked" handler="_on_sync_button_clicked" swapped="no"/>
                 <style>
                   <class name="suggested-action"/>
@@ -1045,7 +1061,48 @@ on all your devices running Eolie or Firefox</property>
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkBox" id="sync_buttons">
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkButton" id="pull_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Pull from Firefox sync</property>
+                    <property name="image">image1</property>
+                    <signal name="clicked" handler="_on_pull_button_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="push_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Push to Firefox sync</property>
+                    <property name="image">image2</property>
+                    <signal name="clicked" handler="_on_push_button_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <style>
+                  <class name="linked"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -1071,10 +1128,5 @@ on all your devices running Eolie or Firefox</property>
       <widget name="general"/>
       <widget name="appearance"/>
     </widgets>
-  </object>
-  <object class="GtkHeaderBar" id="header_bar">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="show_close_button">True</property>
   </object>
 </interface>
