@@ -126,13 +126,11 @@ class WebViewArtwork:
             else:
                 # Low quality favicon
                 favicon_type = "favicon_alt"
-            exists = App().art.exists(uri, favicon_type)
-            if not exists:
-                resized = resize_favicon(surface)
-                self.__save_favicon_to_cache(resized,
-                                             uri,
-                                             initial_uri,
-                                             favicon_type)
+            resized = resize_favicon(surface)
+            self.__save_favicon_to_cache(resized,
+                                         uri,
+                                         initial_uri,
+                                         favicon_type)
 
     def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
         """
