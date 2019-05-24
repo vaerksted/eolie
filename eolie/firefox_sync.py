@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2017-2019 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # Fork of https://github.com/firefox-services/syncclient
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
