@@ -851,8 +851,8 @@ class SyncWorker(GObject.Object):
             return
         try:
             self.__check_worker()
-            user_form_name = attributes["login"]
-            user_form_value = attributes["userform"]
+            user_form_name = attributes["userform"]
+            user_form_value = attributes["login"]
             pass_form_name = attributes["passform"]
             pass_form_value = password
             uri = attributes["hostname"]
