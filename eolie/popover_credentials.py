@@ -40,7 +40,6 @@ class CredentialsPopover(Gtk.Popover):
         """
         Gtk.Popover.__init__(self)
         self.set_modal(False)
-        window.register(self)
         self.__user_form_name = user_form_name
         self.__user_form_value = user_form_value
         self.__pass_form_name = pass_form_name
@@ -61,7 +60,14 @@ class CredentialsPopover(Gtk.Popover):
 #######################
 # PROTECTED           #
 #######################
-    def _on_save_clicked(self, button):
+    def _on_cancel_button_clicked(self, button):
+        """
+            Close popover
+            @param button as Gtk.Button
+        """
+        self.popdown()
+
+    def _on_save_button_clicked(self, button):
         """
             Save user_form_name and pass_form_name
             @param button as Gtk.Button

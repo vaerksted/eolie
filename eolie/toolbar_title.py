@@ -126,6 +126,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__popover = UriPopover(window)
         self.__popover.set_relative_to(self.__entry)
         self.__popover.connect("closed", self.__on_popover_closed)
+        self.__credentials_popover = None
         # Reload/Stop
         self.__action_image1 = builder.get_object("action_image1")
         # Bookmarks/Clear
@@ -356,18 +357,26 @@ class ToolbarTitle(Gtk.Bin):
             @param form_uri as str
             @param page_id as int
         """
+        def on_popover_closed(popover):
+            self.__credentials_popover = None
+
+        if self.__credentials_popover is not None:
+            return
         from eolie.popover_credentials import CredentialsPopover
-        popover = CredentialsPopover(uuid, user_form_name, user_form_value,
+        self.__credentials_popover = CredentialsPopover(
+                                     uuid,
+                                     user_form_name,
+                                     user_form_value,
                                      pass_form_name,
                                      uri,
                                      form_uri,
                                      page_id,
                                      self.__window)
-        popover.set_relative_to(self.__entry)
-        popover.set_pointing_to(self.__entry.get_icon_area(
+        self.__credentials_popover.set_relative_to(self.__entry)
+        self.__credentials_popover.set_pointing_to(self.__entry.get_icon_area(
             Gtk.EntryIconPosition.PRIMARY))
-        popover.connect("closed", self.__on_popover_closed)
-        popover.popup()
+        self.__credentials_popover.connect("closed", on_popover_closed)
+        self.__credentials_popover.popup()
 
     def show_indicator(self, indicator):
         """

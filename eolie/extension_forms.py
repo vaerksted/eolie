@@ -197,28 +197,35 @@ class FormsExtension(GObject.Object):
             @param hostname_uri as str
             @param page_id as int
         """
+        if self.__pending_credentials is not None:
+            return
         try:
-            self.__pending_credentials = (user_form_name,
-                                          user_form_value,
-                                          pass_form_name,
-                                          pass_form_value,
-                                          hostname_uri,
-                                          form_uri)
-
             # New credential
             if count == 0:
+                self.__pending_credentials = (user_form_name,
+                                              user_form_value,
+                                              pass_form_name,
+                                              pass_form_value,
+                                              hostname_uri,
+                                              form_uri)
                 args = ("", user_form_name, user_form_value,
                         pass_form_name, hostname_uri, form_uri)
                 variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
                                                               args))
                 self.emit("submit-form", variant)
-            # Last credential
-            elif index == count - 1:
+            else:
                 if attributes is not None:
                     uuid = attributes["uuid"]
                     # No password change
                     if attributes["login"] == user_form_value and\
                             password == pass_form_value:
+                        self.__pending_credentials = (
+                                          user_form_name,
+                                          user_form_value,
+                                          pass_form_name,
+                                          pass_form_value,
+                                          hostname_uri,
+                                          form_uri)
                         return
                     # New password
                     elif attributes["login"] != user_form_value:
@@ -227,6 +234,12 @@ class FormsExtension(GObject.Object):
                         pass_form_name, hostname_uri, form_uri)
                 variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",
                                                               args))
+                self.__pending_credentials = (user_form_name,
+                                              user_form_value,
+                                              pass_form_name,
+                                              pass_form_value,
+                                              hostname_uri,
+                                              form_uri)
                 self.emit("submit-form", variant)
         except Exception as e:
             Logger.error("FormsExtension::__on_get_password(): %s", e)
