@@ -123,26 +123,6 @@ class WebViewMenuSignals:
         if not hit.context_is_link() and parsed.scheme in ["http", "https"]:
             item = WebKit2.ContextMenuItem.new_separator()
             context_menu.append(item)
-            # Save all images
-            action = Gio.SimpleAction(name="save_imgs")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_save_images_activate)
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Save images"),
-                None)
-            context_menu.append(item)
-            # Save all videos
-            action = Gio.SimpleAction(name="save_videos")
-            App().add_action(action)
-            action.connect("activate",
-                           self.__on_save_videos_activate)
-            item = WebKit2.ContextMenuItem.new_from_gaction(
-                action,
-                _("Save videos"),
-                None)
-            context_menu.append(item)
             # Save page as image
             action = Gio.SimpleAction(name="save_as_image")
             App().add_action(action)
@@ -196,29 +176,6 @@ class WebViewMenuSignals:
         search = Search()
         uri = search.get_search_uri(selection)
         self._window.container.add_webview(uri, LoadingType.FOREGROUND)
-
-    def __on_save_images_activate(self, action, variant):
-        """
-            Show images filtering popover
-            @param action as Gio.SimpleAction
-            @param variant as GLib.Variant
-        """
-        from eolie.popover_images import ImagesPopover
-        popover = ImagesPopover(self.uri, self.get_page_id(), self._window)
-        popover.set_relative_to(self._window.toolbar)
-        popover.set_position(Gtk.PositionType.BOTTOM)
-        popover.popup()
-
-    def __on_save_videos_activate(self, action, variant):
-        """
-            Show videos download popover
-            @param action as Gio.SimpleAction
-            @param variant as GLib.Variant
-        """
-        from eolie.menu_videos import VideosMenu
-        menu = VideosMenu(self.get_page_id(), self._window)
-        popover = Gtk.Popover.new_from_model(self._window.toolbar, menu)
-        popover.popup()
 
     def __on_save_as_image_activate(self, action, variant):
         """
