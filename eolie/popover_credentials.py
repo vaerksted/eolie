@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk, GLib
 
-from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
@@ -53,8 +52,6 @@ class CredentialsPopover(Gtk.Popover):
         self.__label = builder.get_object('label')
         parsed = urlparse(uri)
         builder.get_object('uri').set_text(parsed.netloc)
-        if uuid:
-            self.__label.set_text(_("Do you want to modify this password?"))
         self.add(builder.get_object('widget'))
 
 #######################

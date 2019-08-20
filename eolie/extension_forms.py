@@ -227,9 +227,9 @@ class FormsExtension(GObject.Object):
                                           hostname_uri,
                                           form_uri)
                         return
-                    # New password
-                    elif attributes["login"] != user_form_value:
-                        uuid = ""
+                    # More passwords to come
+                    elif index + 1 != count:
+                        return
                 args = (uuid, user_form_name, user_form_value,
                         pass_form_name, hostname_uri, form_uri)
                 variant = GLib.Variant.new_tuple(GLib.Variant("(ssssss)",

@@ -97,6 +97,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = None
         self.__entry_changed_id = None
         self.__suggestion_id = None
+        self.__password_timeout_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = Type.NONE  # CSS update needed
         self.__width = -1
@@ -234,7 +235,8 @@ class ToolbarTitle(Gtk.Bin):
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
-        self.__update_secure_content_indicator()
+        if self.__password_timeout_id is None:
+            self.__update_secure_content_indicator()
         bookmark_id = App().bookmarks.get_id(uri)
         if bookmark_id is not None:
             icon_name = "starred-symbolic"
@@ -357,11 +359,16 @@ class ToolbarTitle(Gtk.Bin):
             @param form_uri as str
             @param page_id as int
         """
-        def on_popover_closed(popover):
-            self.__credentials_popover = None
-
+        if self.__password_timeout_id is not None:
+            GLib.source_remove(self.__password_timeout_id)
+        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
+                                             "dialog-password-symbolic")
+        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                           _("Save password for: %s") % uri)
+        self.__password_timeout_id = GLib.timeout_add(
+            10000, self.__update_secure_content_indicator)
         if self.__credentials_popover is not None:
-            return
+            self.__credentials_popover.destroy()
         from eolie.popover_credentials import CredentialsPopover
         self.__credentials_popover = CredentialsPopover(
                                      uuid,
@@ -372,11 +379,6 @@ class ToolbarTitle(Gtk.Bin):
                                      form_uri,
                                      page_id,
                                      self.__window)
-        self.__credentials_popover.set_relative_to(self.__entry)
-        self.__credentials_popover.set_pointing_to(self.__entry.get_icon_area(
-            Gtk.EntryIconPosition.PRIMARY))
-        self.__credentials_popover.connect("closed", on_popover_closed)
-        self.__credentials_popover.popup()
 
     def show_indicator(self, indicator):
         """
@@ -432,10 +434,17 @@ class ToolbarTitle(Gtk.Bin):
             @param icon_pos as Gtk.EntryIconPosition
             @param event as Gdk.Event
         """
+        def on_popover_closed(popover):
+            self.__credentials_popover = None
+
         if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
-                "edit-copy-symbolic":
-            uri = self.__window.container.current.webview.uri
-            Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).set_text(uri, -1)
+                "dialog-password-symbolic":
+            self.__update_secure_content_indicator()
+            self.__credentials_popover.set_relative_to(self.__entry)
+            self.__credentials_popover.set_pointing_to(
+                self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
+            self.__credentials_popover.connect("closed", on_popover_closed)
+            self.__credentials_popover.popup()
 
     def _on_enter_notify(self, widget, event):
         """
@@ -448,10 +457,6 @@ class ToolbarTitle(Gtk.Bin):
         uri = self.__window.container.current.webview.uri
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
-            self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                                 "edit-copy-symbolic")
-            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                               _("Copy address"))
             self.set_text_entry(uri)
         else:
             self.__set_default_placeholder()
@@ -739,7 +744,6 @@ class ToolbarTitle(Gtk.Bin):
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.set_text_entry("")
-        self.__update_secure_content_indicator()
         uri = view.webview.uri
         if uri is not None:
             bookmark_id = App().bookmarks.get_id(uri)
@@ -754,7 +758,6 @@ class ToolbarTitle(Gtk.Bin):
         """
             Leave widget
         """
-        self.__update_secure_content_indicator()
         self.__placeholder.set_opacity(0.8)
         uri = self.__window.container.current.webview.uri
         parsed = urlparse(uri)
@@ -781,6 +784,7 @@ class ToolbarTitle(Gtk.Bin):
         """
             Update PRIMARY icon, Gtk.Entry should be set
         """
+        self.__password_timeout_id = None
         uri = self.__window.container.current.webview.uri
         parsed = urlparse(uri)
         if (parsed.scheme == "https" and self.__secure_content) or\
