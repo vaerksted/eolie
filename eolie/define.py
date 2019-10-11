@@ -24,6 +24,9 @@ EOLIE_CACHE_PATH = GLib.get_user_cache_dir() + "/eolie"
 
 COOKIES_PATH = "%s/cookies_%s.db"
 
+PHISHTANK_KEY =\
+    "2eba68d50e3b974d6831c25e45d34f691056ef410a357c186d5cb94b7bf4048b"
+
 
 class TimeSpan:
     HOUR = "0"

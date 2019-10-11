@@ -20,7 +20,7 @@ from pickle import dump, load
 
 from eolie.helper_task import TaskHelper
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH, PHISHTANK_KEY
 from eolie.logger import Logger
 
 
@@ -29,7 +29,8 @@ class DatabasePhishing:
         Phishing database
     """
     __DB_PATH = "%s/phishing.db" % EOLIE_DATA_PATH
-    __URI = "http://data.phishtank.com/data/online-valid.json"
+    __URI = "http://data.phishtank.com/data/%s/online-valid.json" %\
+        PHISHTANK_KEY
     __SCHEMA_VERSION = 0
     __UPDATE = 172800
     # SQLite documentation:
