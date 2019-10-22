@@ -176,17 +176,18 @@ class WebViewArtwork:
                                             uri,
                                             initial_uri)
         except:
-            if not first:
-                return
-            favicons_path = App().favicons_path + "/WebpageIcons.db"
-            best_uri = get_favicon_best_uri(favicons_path, uri)
-            if best_uri is not None:
-                self.__favicon_db.get_favicon(best_uri,
-                                              None,
-                                              self.__on_get_favicon,
-                                              uri,
-                                              self._initial_uri,
-                                              False)
+            if first:
+                favicons_path = App().favicons_path + "/WebpageIcons.db"
+                best_uri = get_favicon_best_uri(favicons_path, uri)
+                if best_uri is not None:
+                    self.__favicon_db.get_favicon(best_uri,
+                                                  None,
+                                                  self.__on_get_favicon,
+                                                  uri,
+                                                  self._initial_uri,
+                                                  False)
+                else:
+                    App().art.uncache(uri, "favicon")
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
