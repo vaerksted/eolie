@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2, Gio
 
 from urllib.parse import urlparse
 
-from eolie.define import App, ArtSize
+from eolie.define import App
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
 
@@ -121,30 +121,23 @@ class WebViewArtwork:
         """
         # Save webview favicon
         if surface is not None:
-            if surface.get_width() >= ArtSize.FAVICON:
-                favicon_type = "favicon"
-            else:
-                # Low quality favicon
-                favicon_type = "favicon_alt"
             resized = resize_favicon(surface)
             self.__save_favicon_to_cache(resized,
                                          uri,
-                                         initial_uri,
-                                         favicon_type)
+                                         initial_uri)
 
-    def __save_favicon_to_cache(self, surface, uri, initial_uri, favicon_type):
+    def __save_favicon_to_cache(self, surface, uri, initial_uri):
         """
             Save favicon to cache
             @param surface as cairo.Surface
             @param uri as str
             @param initial_uri as str
-            @param favicon_type as str
         """
         # Save favicon for URI
         self.__helper.run(App().art.save_artwork,
                           uri,
                           surface,
-                          favicon_type)
+                          "favicon")
         # Save favicon for initial URI
         if initial_uri is not None:
             striped_uri = uri.rstrip("/")
@@ -152,7 +145,7 @@ class WebViewArtwork:
                 self.__helper.run(App().art.save_artwork,
                                   initial_uri,
                                   surface,
-                                  favicon_type)
+                                  "favicon")
 
     def __on_uri_changed(self, webview, param):
         """
@@ -240,6 +233,4 @@ class WebViewArtwork:
                 self._initial_uri not in uris:
             uris.append(self._initial_uri)
         for uri in uris:
-            exists = App().art.exists(uri, "start")
-            if not exists:
-                App().art.save_artwork(uri, surface, "start")
+            App().art.save_artwork(uri, surface, "start")

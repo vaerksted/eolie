@@ -135,11 +135,10 @@ class Art:
         """
         if uri is None:
             return None
-        for favicon_type in ["favicon", "favicon_alt"]:
-            favicon_path = self.get_path(uri, favicon_type)
-            if favicon_path is not None and\
-                    GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
-                return favicon_path
+        favicon_path = self.get_path(uri, "favicon")
+        if favicon_path is not None and\
+                GLib.file_test(favicon_path, GLib.FileTest.IS_REGULAR):
+            return favicon_path
         return None
 
     def get_path(self, uri, suffix):
@@ -154,8 +153,7 @@ class Art:
             return None
         cached_uri = remove_www(parsed.netloc)
         cached_path = parsed.path.rstrip("/")
-        # favicon_alt is only based on netloc
-        if cached_path and suffix != "favicon_alt":
+        if cached_path:
             cached_uri += cached_path
         encoded = sha256(cached_uri.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
