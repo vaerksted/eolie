@@ -947,7 +947,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__entry_changed_id is not None:
             GLib.source_remove(self.__entry_changed_id)
         self.__entry_changed_id = GLib.timeout_add(
-            100,
+            250,
             self.__on_entry_changed_timeout,
             entry,
             value)
