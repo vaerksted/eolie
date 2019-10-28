@@ -30,8 +30,6 @@ class AdblockExceptions:
         """
         try:
             self.__rules = []
-            if not GLib.file_test(self.__JSON_PATH, GLib.FileTest.IS_DIR):
-                GLib.mkdir_with_parents(self.__JSON_PATH, 0o0750)
             f = Gio.File.new_for_path("%s/exceptions.json" % self.__JSON_PATH)
             if f.query_exists():
                 (status, contents, tag) = f.load_contents(None)

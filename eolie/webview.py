@@ -36,9 +36,8 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        content_manager = WebKit2.UserContentManager.new()
         webview = WebKit2.WebView.new_with_user_content_manager(
-            content_manager)
+            App().content_manager)
         webview.__class__ = WebViewMeta
         webview.__init(None, window, view)
         return webview
@@ -67,23 +66,6 @@ class WebView(WebKit2.WebView):
         webview.__class__ = WebViewMeta
         webview.__init(related, window, None)
         return webview
-
-    def add_content_filters(self):
-        """
-            Add default content filters
-        """
-        if App().settings.get_value("adblock"):
-            content_manager = self.get_user_content_manager()
-            for f in App().adblock.filters:
-                content_manager.add_filter(f)
-
-    def add_content_filter(self, content_filter):
-        """
-            Add content filter to view if wanted
-            @param content_filter as WebKit2.UserContentFilter
-        """
-        content_manager = self.get_user_content_manager()
-        content_manager.add_filter(content_filter)
 
     def set_setting(self, key, value):
         """
@@ -263,7 +245,6 @@ class WebView(WebKit2.WebView):
                 webview = WebView.new_ephemeral(self._window, None)
             else:
                 webview = WebView.new(self._window, None)
-            webview.add_content_filters()
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, uri)
         else:

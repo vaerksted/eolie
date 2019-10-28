@@ -37,7 +37,6 @@ class View(Gtk.Overlay):
             webview = WebView.new_ephemeral(window, None)
         else:
             webview = WebView.new(window, None)
-        webview.add_content_filters()
         return webview
 
     def __init__(self, webview, window, popover=False):

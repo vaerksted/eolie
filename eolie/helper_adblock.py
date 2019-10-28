@@ -20,7 +20,7 @@ import json
 
 from eolie.helper_task import TaskHelper
 from eolie.exceptions_adblock import AdblockExceptions
-from eolie.define import EOLIE_DATA_PATH, ADBLOCK_URIS
+from eolie.define import EOLIE_DATA_PATH, ADBLOCK_URIS, App
 from eolie.logger import Logger
 
 SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
@@ -31,8 +31,8 @@ class AdblockHelper(GObject.Object):
     """
         Eolie adblock helper
     """
-    __DB_PATH = "%s/adblock" % EOLIE_DATA_PATH
-    __JSON_PATH = "%s/adblock_sources" % EOLIE_DATA_PATH
+    __DB_PATH = "%s/content_blocker" % EOLIE_DATA_PATH
+    __JSON_PATH = "%s/content_blocker_json" % EOLIE_DATA_PATH
     __UPDATE = 172800
     __gsignals__ = {
         "new-filter": (GObject.SignalFlags.RUN_FIRST, None,
@@ -45,15 +45,17 @@ class AdblockHelper(GObject.Object):
         """
         try:
             GObject.Object.__init__(self)
-            self.__filters = {}
+            self.__filter = None
             self.__cancellable = Gio.Cancellable.new()
             self.__task_helper = TaskHelper()
             self.__store = WebKit2.UserContentFilterStore.new(self.__DB_PATH)
             self.__exceptions = AdblockExceptions()
-            for uri in ADBLOCK_URIS:
-                encoded = sha256(uri.encode("utf-8")).hexdigest()
-                self.__store.load(encoded, self.__cancellable,
-                                  self.__on_store_load, encoded)
+            if not GLib.file_test(self.__JSON_PATH, GLib.FileTest.IS_DIR):
+                GLib.mkdir_with_parents(self.__JSON_PATH, 0o0750)
+            App().settings.connect("changed::adblock",
+                                   self.__on_adblock_changed)
+            self.__store.load("adblock", self.__cancellable,
+                              self.__on_store_load)
             self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
             Logger.error("AdblockHelper::__init__(): %s", e)
@@ -62,14 +64,12 @@ class AdblockHelper(GObject.Object):
         """
             Update current filters with new exceptions
         """
-        for uri in ADBLOCK_URIS:
-            encoded = sha256(uri.encode("utf-8")).hexdigest()
-            f = Gio.File.new_for_path(
-                "%s/%s.json" % (self.__JSON_PATH, encoded))
-            if f.query_exists():
-                (status, content, tag) = f.load_contents(None)
-                if status:
-                    self.__task_helper.run(self.__save_rules, uri, content)
+        encoded = sha256(uri.encode("utf-8")).hexdigest()
+        f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
+        if f.query_exists():
+            (status, content, tag) = f.load_contents(None)
+            if status:
+                self.__task_helper.run(self.__save_rules, content)
 
     def stop(self):
         """
@@ -87,12 +87,12 @@ class AdblockHelper(GObject.Object):
         return self.__exceptions
 
     @property
-    def filters(self):
+    def filter(self):
         """
             Get filters
-            return [WebKit2.UserContentFilter]
+            return WebKit2.UserContentFilter
         """
-        return list(self.__filters.values())
+        return self.__filter
 
 #######################
 # PRIVATE             #
@@ -111,23 +111,22 @@ class AdblockHelper(GObject.Object):
                                                 self.__on_load_uri_content,
                                                 uris)
 
-    def __save_rules(self, uri, rules):
+    def __save_rules(self, rules):
         """
             Save rules to file
             @param uri as str
             @param rules as bytes
         """
-        encoded = sha256(uri.encode("utf-8")).hexdigest()
         data = json.loads(rules.decode("utf-8"))
         data += self.__exceptions.rules
         rules = json.dumps(data).encode("utf-8")
         try:
-            self.__store.save(encoded, GLib.Bytes(rules), self.__cancellable,
-                              self.__on_store_save, encoded)
+            self.__store.save("adblock", GLib.Bytes(rules), self.__cancellable,
+                              self.__on_store_save)
         except Exception as e:
             Logger.error("AdblockHelper::__save_rules(): %s", e)
 
-    def __on_store_load(self, store, result, encoded):
+    def __on_store_load(self, store, result):
         """
             Notify for new filter
             @param store as WebKit2.UserContentFilterStore
@@ -135,23 +134,20 @@ class AdblockHelper(GObject.Object):
             @param encoded as str
         """
         try:
-            content_filter = store.save_finish(result)
-            self.__filters[encoded] = content_filter
-            self.emit("new-filter", content_filter)
+            self.__filter = store.save_finish(result)
+            self.emit("new-filter", self.__filter)
         except Exception as e:
             Logger.error("AdblockHelper::__on_store_load(): %s", e)
 
-    def __on_store_save(self, store, result, encoded):
+    def __on_store_save(self, store, result):
         """
             Notify for new filter
             @param store as WebKit2.UserContentFilterStore
             @param result as Gio.AsyncResult
-            @param encoded as str
         """
         try:
-            content_filter = store.load_finish(result)
-            self.__filters[encoded] = content_filter
-            self.emit("new-filter", content_filter)
+            self.__filter = store.load_finish(result)
+            self.emit("new-filter", self.__filter)
         except Exception as e:
             Logger.error("AdblockHelper::__on_store_save(): %s", e)
 
@@ -177,15 +173,28 @@ class AdblockHelper(GObject.Object):
         if status:
             encoded = sha256(uri.encode("utf-8")).hexdigest()
             # Save to sources
-            f = Gio.File.new_for_path(
-                "%s/%s.json" % (self.__JSON_PATH, encoded))
+            f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
             f.replace_contents(content,
                                None,
                                False,
                                Gio.FileCreateFlags.REPLACE_DESTINATION,
                                None)
-            self.__task_helper.run(self.__save_rules, uri, content,
+            self.__task_helper.run(self.__save_rules, content,
                                    callback=(self.__on_save_rules, uris))
         else:
             self.__on_save_rules(None, uris)
             Logger.error("AdblockHelper::__on_load_uri_content(): %s", uri)
+
+    def __on_adblock_changed(self, settings, value):
+        """
+            Enable disable filtering
+            @param settings as Gio.Settings
+            @param value as GLib.Variant
+        """
+        adblock = self.settings.get_value("adblock")
+        if adblock:
+            self.__store.load("adblock", self.__cancellable,
+                              self.__on_store_load)
+        else:
+            self.__store.save("adblock", GLib.Bytes(b""), self.__cancellable,
+                              self.__on_store_save)
