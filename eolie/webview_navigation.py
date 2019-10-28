@@ -53,11 +53,6 @@ class WebViewNavigation:
             self._show_phishing_error(uri)
             return
         parsed = urlparse(uri)
-        # Update content filtering
-        if App().adblock_exceptions.find_parsed(parsed):
-            self.get_user_content_manager().remove_all_filters()
-        else:
-            self.add_content_filters()
         self.discard_error()
         # If not an URI, start a search
         is_uri = parsed.scheme in ["about", "http",
@@ -116,7 +111,6 @@ class WebViewNavigation:
             App().history.set_page_state(self.uri)
             if self._initial_uri != self.uri:
                 self.__update_bookmark_metadata(self.uri)
-            self.__set_imgblock(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
@@ -174,19 +168,6 @@ class WebViewNavigation:
         else:
             settings.set_user_agent_with_application_details("Eolie",
                                                              None)
-
-    def __set_imgblock(self, uri):
-        """
-            Set image blocker for uri
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        http_scheme = parsed.scheme in ["http", "https"]
-        # Setup image blocker
-        block_image = http_scheme and\
-            App().settings.get_value("imageblock") and\
-            not App().image_exceptions.find_parsed(parsed)
-        self.set_setting("auto-load-images", not block_image)
 
     def __on_run_as_modal(self, webview):
         Logger.info("WebView::__on_run_as_modal(): TODO")

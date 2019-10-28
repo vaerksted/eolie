@@ -24,12 +24,11 @@ class BlockMenu(Gtk.Bin):
         Menu for block policy management
     """
 
-    def __init__(self, uri, window, trust):
+    def __init__(self, uri, window):
         """
             Init widget
             @param uri as str
             @param window as Window
-            @param trust a bool
         """
         Gtk.Bin.__init__(self)
         self._actions = []
@@ -47,18 +46,6 @@ class BlockMenu(Gtk.Bin):
                        self.__on_action_change_state,
                        self._option_block)
         window.add_action(action)
-
-        # Trust JS blocking
-        if trust:
-            option_value = App().settings.get_value(self._option_trust)
-            action = Gio.SimpleAction.new_stateful(
-                self._option_trust,
-                None,
-                GLib.Variant.new_boolean(option_value))
-            action.connect("change-state",
-                           self.__on_action_change_state,
-                           self._option_trust)
-            window.add_action(action)
 
     @property
     def window(self):
@@ -108,69 +95,7 @@ class BlockMenu(Gtk.Bin):
         self.window.container.current.webview.reload()
 
 
-class ExceptionBlockMenu(BlockMenu):
-    """
-        Menu for policy management with exceptions
-    """
-
-    def __init__(self, uri, window, trust, exception, database):
-        """
-            Init menu
-            @param uri as str
-            @param window as Window
-            @param trust as bool
-            @param exception as str
-            @param database as DatabaseExceptions
-        """
-        BlockMenu.__init__(self, uri, window, trust)
-        self.__database = database
-        self.__action = Gio.SimpleAction.new_stateful(
-            exception,
-            GLib.VariantType.new("s"),
-            GLib.Variant("s", "none"))
-        self.__action.connect("activate", self.__on_action_change_state)
-        window.add_action(self.__action)
-
-        parsed = urlparse(uri)
-        if parsed.scheme in ["http", "https"]:
-            page_ex = database.find(parsed.netloc + parsed.path)
-            site_ex = database.find(parsed.netloc)
-            if not page_ex and not site_ex:
-                self.__action.change_state(GLib.Variant("s", "none"))
-            elif site_ex:
-                self.__action.change_state(GLib.Variant("s", "site"))
-            else:
-                self.__action.change_state(GLib.Variant("s", "page"))
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_action_change_state(self, action, param):
-        """
-            Set option value
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        parsed = urlparse(self.uri)
-        page_ex = self.__database.find(parsed.netloc + parsed.path)
-        site_ex = self.__database.find(parsed.netloc)
-        # Clean previous exceptions
-        if param.get_string() in ["site", "none"]:
-            if page_ex:
-                self.__database.remove_exception(parsed.netloc + parsed.path)
-        if param.get_string() in ["page", "none"]:
-            if site_ex:
-                self.__database.remove_exception(parsed.netloc)
-        # Add new exceptions
-        if param.get_string() == "site":
-            self.__database.add_exception(parsed.netloc)
-        elif param.get_string() == "page":
-            self.__database.add_exception(parsed.netloc + parsed.path)
-        self.window.container.current.webview.reload()
-
-
-class AdblockMenu(ExceptionBlockMenu):
+class AdblockMenu(BlockMenu):
     """
         Menu for Adblock policy management
     """
@@ -182,18 +107,43 @@ class AdblockMenu(ExceptionBlockMenu):
             @param window as Window
         """
         self._option_block = "adblock"
-        self._option_trust = "trust-websites-adblock"
+        BlockMenu.__init__(self, uri, window)
+        # Exception
+        parsed = urlparse(uri)
+        exception = App().adblock.exceptions.is_domain_exception(parsed.netloc)
+        action = Gio.SimpleAction.new_stateful(
+            "adblock-exception",
+            None,
+            GLib.Variant.new_boolean(exception))
+        action.connect("change-state",
+                       self.__on_action_change_state,
+                       parsed.netloc)
+        window.add_action(action)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/AdblockMenu.ui")
         builder.connect_signals(self)
-        self.__submenu = builder.get_object("submenu")
-        ExceptionBlockMenu.__init__(self, uri, window, False,
-                                    "adblock_exceptions",
-                                    App().adblock_exceptions)
         self.add(builder.get_object("menu"))
 
+#######################
+# PRIVATE             #
+#######################
+    def __on_action_change_state(self, action, param, domain):
+        """
+            Set option value
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param domain as str
+        """
+        action.set_state(param)
+        if param:
+            App().adblock.exceptions.add_domain_exception(domain)
+        else:
+            App().adblock.exceptions.remove_domain_exception(domain)
+        App().adblock.exceptions.save()
+        App().adblock.update()
 
-class PopupBlockMenu(ExceptionBlockMenu):
+
+class PopupBlockMenu(BlockMenu):
     """
         Menu for Popup policy management
     """
@@ -210,13 +160,11 @@ class PopupBlockMenu(ExceptionBlockMenu):
         builder.add_from_resource("/org/gnome/Eolie/PopupBlockMenu.ui")
         builder.connect_signals(self)
         self.__submenu = builder.get_object("submenu")
-        ExceptionBlockMenu.__init__(self, uri, window, False,
-                                    "popup_exceptions",
-                                    App().popup_exceptions)
+        BlockMenu.__init__(self, uri, window)
         self.add(builder.get_object("menu"))
 
 
-class ImageBlockMenu(ExceptionBlockMenu):
+class ImageBlockMenu(BlockMenu):
     """
         Menu for Popup policy management
     """
@@ -233,9 +181,7 @@ class ImageBlockMenu(ExceptionBlockMenu):
         builder.add_from_resource("/org/gnome/Eolie/ImageBlockMenu.ui")
         builder.connect_signals(self)
         self.__submenu = builder.get_object("submenu")
-        ExceptionBlockMenu.__init__(self, uri, window, False,
-                                    "image_exceptions",
-                                    App().image_exceptions)
+        BlockMenu.__init__(self, uri, window)
         self.add(builder.get_object("menu"))
 
 

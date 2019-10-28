@@ -73,21 +73,17 @@ class WebView(WebKit2.WebView):
             Add default content filters
         """
         if App().settings.get_value("adblock"):
-            parsed = urlparse(self.uri)
-            if not App().adblock_exceptions.find_parsed(parsed):
-                content_manager = self.get_user_content_manager()
-                for f in App().adblock.filters:
-                    content_manager.add_filter(f)
+            content_manager = self.get_user_content_manager()
+            for f in App().adblock.filters:
+                content_manager.add_filter(f)
 
     def add_content_filter(self, content_filter):
         """
             Add content filter to view if wanted
             @param content_filter as WebKit2.UserContentFilter
         """
-        parsed = urlparse(self.uri)
-        if not App().adblock_exceptions.find_parsed(parsed):
-            content_manager = self.get_user_content_manager()
-            content_manager.add_filter(content_filter)
+        content_manager = self.get_user_content_manager()
+        content_manager.add_filter(content_filter)
 
     def set_setting(self, key, value):
         """
@@ -262,21 +258,12 @@ class WebView(WebKit2.WebView):
             @param uri as uri
             @param loading_type as Gdk.LoadingType
         """
-        parsed = urlparse(uri)
-        if App().settings.get_value("adblock") and\
-                parsed.scheme in ["http", "https"] and\
-                not App().adblock_exceptions.find_parsed(parsed):
-            if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                    App().adblock.is_uri_blocked(uri,
-                                                 parsed.netloc):
-                Logger.debug("WebView::new_page(): blocking %s ->%s",
-                             uri, self.uri)
-                return True
         if loading_type == LoadingType.POPOVER:
             if self.ephemeral:
                 webview = WebView.new_ephemeral(self._window, None)
             else:
                 webview = WebView.new(self._window, None)
+            webview.add_content_filters()
             self._window.container.popup_webview(webview, True)
             GLib.idle_add(webview.load_uri, uri)
         else:
@@ -564,11 +551,8 @@ class WebView(WebKit2.WebView):
             @param elapsed as float
         """
         popup_block = App().settings.get_value("popupblock")
-        parsed = urlparse(webview.uri)
-        exception = elapsed < 1.0 or\
-            App().popup_exceptions.find_parsed(parsed)
         properties = webview.get_window_properties()
-        if not exception and popup_block and\
+        if popup_block and\
                 navigation_action.get_navigation_type() in [
                     WebKit2.NavigationType.OTHER,
                     WebKit2.NavigationType.RELOAD,

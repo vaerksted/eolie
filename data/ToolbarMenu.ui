@@ -235,7 +235,7 @@
     </child>
     <child>
       <object class="GtkModelButton" id="js_block">
-        <property name="visible">True</property>
+        <property name="visible">False</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="text" translatable="yes">Block JavaScript</property>
@@ -248,7 +248,7 @@
     </child>
     <child>
       <object class="GtkModelButton" id="popup_block">
-        <property name="visible">True</property>
+        <property name="visible">False</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="text" translatable="yes">Block popups</property>
@@ -261,7 +261,7 @@
     </child>
     <child>
       <object class="GtkModelButton" id="images_block">
-        <property name="visible">True</property>
+        <property name="visible">False</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="text" translatable="yes">Block images</property>

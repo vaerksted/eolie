@@ -470,12 +470,7 @@ class Window(Gtk.ApplicationWindow):
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
         elif string == "jsblock":
-            current_webview = self.container.current.webview
-            App().helper.call("EnableJS",
-                              current_webview.get_page_id(),
-                              GLib.Variant("(s)", (current_webview.netloc,)),
-                              self.__on_js_enabled,
-                              current_webview)
+            pass
         elif string == "show_sidebar":
             value = App().settings.get_value("show-sidebar")
             App().settings.set_value("show-sidebar",

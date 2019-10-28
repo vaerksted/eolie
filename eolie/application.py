@@ -32,7 +32,6 @@ from eolie.art import Art
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.helper_adblock import AdblockHelper
-from eolie.database_exceptions import DatabaseExceptions
 from eolie.database_settings import DatabaseSettings
 from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
@@ -43,7 +42,6 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
-from eolie.define import ADBLOCK_URIS
 from eolie.utils import is_unity, wanted_loading_type
 from eolie.logger import Logger
 
@@ -307,16 +305,8 @@ class Application(Gtk.Application):
         self.websettings = DatabaseSettings()
         self.adblock = AdblockHelper()
         self.adblock.connect("new-filter", self.__on_new_adblock_filter)
-        self.adblock.update(list(ADBLOCK_URIS))
         self.phishing = DatabasePhishing()
         self.phishing.create_db()
-        self.adblock_exceptions = DatabaseExceptions("adblock")
-        self.popup_exceptions = DatabaseExceptions("popups")
-        self.image_exceptions = DatabaseExceptions("images")
-        if self.settings.get_user_value("jsblock") is not None:
-            self.js_exceptions = DatabaseExceptions("js")
-        else:
-            self.js_exceptions = None
         self.phishing.update()
         self.art = Art()
 

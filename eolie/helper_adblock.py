@@ -16,9 +16,11 @@ from gi.repository.Gio import FILE_ATTRIBUTE_STANDARD_NAME, \
 
 
 from hashlib import sha256
+import json
 
 from eolie.helper_task import TaskHelper
-from eolie.define import EOLIE_DATA_PATH
+from eolie.exceptions_adblock import AdblockExceptions
+from eolie.define import EOLIE_DATA_PATH, ADBLOCK_URIS
 from eolie.logger import Logger
 
 SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
@@ -30,6 +32,7 @@ class AdblockHelper(GObject.Object):
         Eolie adblock helper
     """
     __DB_PATH = "%s/adblock" % EOLIE_DATA_PATH
+    __JSON_PATH = "%s/adblock_sources" % EOLIE_DATA_PATH
     __UPDATE = 172800
     __gsignals__ = {
         "new-filter": (GObject.SignalFlags.RUN_FIRST, None,
@@ -38,7 +41,7 @@ class AdblockHelper(GObject.Object):
 
     def __init__(self):
         """
-            Create database tables or manage update if needed
+            Init adblock helper
         """
         try:
             GObject.Object.__init__(self)
@@ -46,25 +49,27 @@ class AdblockHelper(GObject.Object):
             self.__cancellable = Gio.Cancellable.new()
             self.__task_helper = TaskHelper()
             self.__store = WebKit2.UserContentFilterStore.new(self.__DB_PATH)
+            self.__exceptions = AdblockExceptions()
+            for uri in ADBLOCK_URIS:
+                encoded = sha256(uri.encode("utf-8")).hexdigest()
+                self.__store.load(encoded, self.__cancellable,
+                                  self.__on_store_load, encoded)
+            self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
-            Logger.error("DatabaseAdblock::__init__(): %s", e)
+            Logger.error("AdblockHelper::__init__(): %s", e)
 
-    def update(self, uris):
+    def update(self):
         """
-            Update database
-            @param uris as [str]
+            Update current filters with new exceptions
         """
-        if not Gio.NetworkMonitor.get_default().get_network_available():
-            return
-        if uris:
-            uri = uris.pop(0)
+        for uri in ADBLOCK_URIS:
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            self.__store.load(encoded, self.__cancellable,
-                              self.__on_store_load, encoded)
-            self.__task_helper.load_uri_content(uri,
-                                                self.__cancellable,
-                                                self.__on_load_uri_content,
-                                                uris)
+            f = Gio.File.new_for_path(
+                "%s/%s.json" % (self.__JSON_PATH, encoded))
+            if f.query_exists():
+                (status, content, tag) = f.load_contents(None)
+                if status:
+                    self.__task_helper.run(self.__save_rules, uri, content)
 
     def stop(self):
         """
@@ -72,6 +77,14 @@ class AdblockHelper(GObject.Object):
         """
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
+
+    @property
+    def exceptions(self):
+        """
+            Get adblock exceptions
+            @return AdblockExceptions
+        """
+        return self.__exceptions
 
     @property
     def filters(self):
@@ -84,6 +97,20 @@ class AdblockHelper(GObject.Object):
 #######################
 # PRIVATE             #
 #######################
+    def __download_uris(self, uris):
+        """
+            Update database from the web
+            @param uris as [str]
+        """
+        if not Gio.NetworkMonitor.get_default().get_network_available():
+            return
+        if uris:
+            uri = uris.pop(0)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_content,
+                                                uris)
+
     def __save_rules(self, uri, rules):
         """
             Save rules to file
@@ -91,11 +118,14 @@ class AdblockHelper(GObject.Object):
             @param rules as bytes
         """
         encoded = sha256(uri.encode("utf-8")).hexdigest()
+        data = json.loads(rules.decode("utf-8"))
+        data += self.__exceptions.rules
+        rules = json.dumps(data).encode("utf-8")
         try:
             self.__store.save(encoded, GLib.Bytes(rules), self.__cancellable,
                               self.__on_store_save, encoded)
         except Exception as e:
-            Logger.warning("DatabaseAdblock::__save_rules(): %s", e)
+            Logger.warning("AdblockHelper::__save_rules(): %s", e)
 
     def __on_store_load(self, store, result, encoded):
         """
@@ -127,7 +157,7 @@ class AdblockHelper(GObject.Object):
         """
         if self.__cancellable.is_cancelled():
             return
-        self.update(uris)
+        self.__download_uris(uris)
 
     def __on_load_uri_content(self, uri, status, content, uris):
         """
@@ -137,10 +167,19 @@ class AdblockHelper(GObject.Object):
             @param content as bytes
             @param uris as [str]
         """
-        Logger.debug("DatabaseAdblock::__on_load_uri_content(): %s", uri)
+        Logger.debug("AdblockHelper::__on_load_uri_content(): %s", uri)
         if status:
+            encoded = sha256(uri.encode("utf-8")).hexdigest()
+            # Save to sources
+            f = Gio.File.new_for_path(
+                "%s/%s.json" % (self.__JSON_PATH, encoded))
+            f.replace_contents(content,
+                               None,
+                               False,
+                               Gio.FileCreateFlags.REPLACE_DESTINATION,
+                               None)
             self.__task_helper.run(self.__save_rules, uri, content,
                                    callback=(self.__on_save_rules, uris))
         else:
             self.__on_save_rules(None, uris)
-            Logger.error("DatabaseAdblock::__on_load_uri_content(): %s", uri)
+            Logger.error("AdblockHelper::__on_load_uri_content(): %s", uri)

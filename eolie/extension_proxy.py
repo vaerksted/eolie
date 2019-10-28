@@ -91,9 +91,6 @@ class ProxyExtensionServer(Server):
     </method>
     <method name="SetNextElementValue">
     </method>
-    <method name="EnableJS">
-        <arg type="s" name="netloc" direction="in" />
-    </method>
     <method name="SaveCredentials">
       <arg type="s" name="uuid" direction="in" />
       <arg type="s" name="user_form_name" direction="in" />
@@ -104,18 +101,6 @@ class ProxyExtensionServer(Server):
     <method name="SetAuthForms">
       <arg type="s" name="username" direction="in" />
       <arg type="s" name="username" direction="in" />
-    </method>
-    <method name="GetScripts">
-      <arg type="as" name="results" direction="out" />
-    </method>
-    <method name="GetImages">
-      <arg type="as" name="results" direction="out" />
-    </method>
-    <method name="GetVideos">
-      <arg type="aas" name="results" direction="out" />
-    </method>
-    <method name="GetImageLinks">
-      <arg type="as" name="results" direction="out" />
     </method>
     <method name="GetSelection">
       <arg type="s" name="selection" direction="out" />
@@ -138,18 +123,16 @@ class ProxyExtensionServer(Server):
     </node>
     '''
 
-    def __init__(self, extension, page, form_extension, jsblock_extension):
+    def __init__(self, extension, page, form_extension):
         """
             Init server
             @param extension as WebKit2WebExtension.WebExtension
             @param page as WebKit2WebExtension.WebPage
             @param form_extension as FormsExtension
-            @param jsblock_extension as JSBlockExtension
         """
         self.__extension = extension
         self.__page = page
         self.__form_extension = form_extension
-        self.__jsblock_extension = jsblock_extension
         self.__focus_element = None
         self.__mouse_down_element = None
         self.__on_input_timeout_id = None
@@ -184,13 +167,6 @@ class ProxyExtensionServer(Server):
             if collection.item(i).is_edited():
                 return True
         return False
-
-    def EnableJS(self, netloc):
-        """
-            Enable JS for netloc
-            @param netloc as JS
-        """
-        self.__jsblock_extension.enable_for(netloc)
 
     def SaveCredentials(self, uuid, user_form_name,
                         pass_form_name, hostname_uri, form_uri):
@@ -264,87 +240,6 @@ class ProxyExtensionServer(Server):
                     return
         except Exception as e:
             Logger.error("ProxyExtension::SetAuthForms(): %s", e)
-
-    def GetScripts(self):
-        """
-            Get images
-            @return [str]
-        """
-        try:
-            return self.__jsblock_extension.scripts
-        except Exception as e:
-            Logger.error("ProxyExtension::GetScripts(): %s", e)
-        return []
-
-    def GetImages(self):
-        """
-            Get images
-            @return [str]
-        """
-        try:
-            page = self.__extension.get_page(self.__page.get_id())
-            if page is None:
-                return []
-            dom_list = page.get_dom_document().get_elements_by_tag_name("img")
-            uris = []
-            for i in range(0, dom_list.get_length()):
-                uri = dom_list.item(i).get_src()
-                if uri not in uris:
-                    uris.append(uri)
-            return uris
-        except Exception as e:
-            Logger.error("ProxyExtension::GetImages(): %s", e)
-        return []
-
-    def GetVideos(self):
-        """
-            Get videos
-            @return [str]
-        """
-        page = self.__extension.get_page(self.__page.get_id())
-        if page is None:
-            return []
-        videos = []
-        extensions = ["avi", "flv", "mp4", "mpg", "mpeg", "webm"]
-        for uri in self.__send_requests:
-            parsed = urlparse(uri)
-            title = None
-            # Search for video in page
-            if uri.split(".")[-1] in extensions:
-                title = uri
-            elif parsed.netloc.endswith("googlevideo.com") and\
-                    parsed.path == "/videoplayback":
-                title = page.get_dom_document().get_title()
-                if title is None:
-                    title = uri
-                # For youtube, we only want one video:
-                return [(title, uri)]
-            if title is not None and (title, uri) not in videos:
-                videos.append((title, uri))
-        return videos
-
-    def GetImageLinks(self):
-        """
-            Get image links
-            @return [str]
-        """
-        try:
-            page = self.__extension.get_page(self.__page.get_id())
-            if page is None:
-                return []
-            dom_list = page.get_dom_document().get_elements_by_tag_name("a")
-            uris = []
-            for i in range(0, dom_list.get_length()):
-                uri = dom_list.item(i).get_href()
-                if uri is None or uri in uris:
-                    continue
-                ext = uri.split(".")[-1]
-                if ext in ["gif", "jpg", "png", "jpeg"]:
-                    uris.append(uri)
-            return uris
-        except Exception as e:
-            Logger.error("ProxyExtension::GetImagesLinks(): %s", e)
-        return []
 
     def GetSelection(self):
         """
@@ -608,24 +503,21 @@ class ProxyExtension:
         Communication proxy for Eolie
     """
 
-    def __init__(self, extension, form_extension, jsblock_extension):
+    def __init__(self, extension, form_extension):
         """
             Init extension
             @param extension as WebKit2WebExtension.WebExtension
             @param form_extension as FormsExtension
-            @parma jsblock_extension as JSBlockExtension
         """
         self.__server = None
         extension.connect("page-created",
                           self.__on_page_created,
-                          form_extension,
-                          jsblock_extension)
+                          form_extension)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_page_created(self, extension, webpage,
-                          form_extension, jsblock_extension):
+    def __on_page_created(self, extension, webpage, form_extension):
         """
             Cache webpage
             @param extension as WebKit2WebExtension.WebExtension
@@ -634,5 +526,4 @@ class ProxyExtension:
         """
         self.__server = ProxyExtensionServer(extension,
                                              webpage,
-                                             form_extension,
-                                             jsblock_extension)
+                                             form_extension)

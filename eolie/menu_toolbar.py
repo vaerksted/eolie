@@ -15,8 +15,8 @@ from gi.repository import Gtk, Gio, GLib
 from gettext import gettext as _
 
 from eolie.menu_languages import LanguagesMenu
-from eolie.menu_block import JSBlockMenu, AdblockMenu
-from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
+from eolie.menu_block import AdblockMenu  # JSBlockMenu
+# from eolie.menu_block import PopupBlockMenu, ImageBlockMenu
 from eolie.define import App
 
 
@@ -54,28 +54,28 @@ class ToolbarMenu(Gtk.PopoverMenu):
             "{} %".format(int(webview.get_zoom_level() * 100)))
         adblock_menu = AdblockMenu(uri, self.__window)
         adblock_menu.show()
-        js_block_menu = JSBlockMenu(uri, self.__window)
-        js_block_menu.show()
-        popup_block_menu = PopupBlockMenu(uri, self.__window)
-        popup_block_menu.show()
-        image_block_menu = ImageBlockMenu(uri, self.__window)
-        image_block_menu.show()
+        # js_block_menu = JSBlockMenu(uri, self.__window)
+        # js_block_menu.show()
+        # popup_block_menu = PopupBlockMenu(uri, self.__window)
+        # popup_block_menu.show()
+        # image_block_menu = ImageBlockMenu(uri, self.__window)
+        # image_block_menu.show()
         languages_menu = LanguagesMenu(uri)
         languages_menu.show()
 
         # Add items
         self.add(widget)
         self.add(adblock_menu)
-        self.add(popup_block_menu)
-        self.add(js_block_menu)
-        self.add(image_block_menu)
+        # self.add(popup_block_menu)
+        # self.add(js_block_menu)
+        # self.add(image_block_menu)
         self.add(languages_menu)
         self.child_set_property(adblock_menu, "submenu", "adblock_menu")
-        self.child_set_property(js_block_menu, "submenu", "js_block_menu")
-        self.child_set_property(popup_block_menu,
-                                "submenu", "popup_block_menu")
-        self.child_set_property(image_block_menu,
-                                "submenu", "image_block_menu")
+        # self.child_set_property(js_block_menu, "submenu", "js_block_menu")
+        # self.child_set_property(popup_block_menu,
+        #                        "submenu", "popup_block_menu")
+        # self.child_set_property(image_block_menu,
+        #                        "submenu", "image_block_menu")
         self.child_set_property(languages_menu, "submenu", "languages")
 
         # Add old «Application Menu»
