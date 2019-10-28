@@ -31,7 +31,7 @@ from eolie.window import Window
 from eolie.art import Art
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
-from eolie.database_adblock import DatabaseAdblock
+from eolie.helper_adblock import AdblockHelper
 from eolie.database_exceptions import DatabaseExceptions
 from eolie.database_settings import DatabaseSettings
 from eolie.database_phishing import DatabasePhishing
@@ -43,6 +43,7 @@ from eolie.menu_pages import PagesMenu
 from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
+from eolie.define import ADBLOCK_URIS
 from eolie.utils import is_unity, wanted_loading_type
 from eolie.logger import Logger
 
@@ -63,7 +64,6 @@ class Application(Gtk.Application):
         self.__version = version
         self.__state_cache = []
         self.__pinned = []
-        self.__ephemeral_context = None
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
         # Set main thread name
@@ -239,17 +239,6 @@ class Application(Gtk.Application):
         return value
 
     @property
-    def ephemeral_context(self):
-        """
-            Return ephemeral context
-            @return WebKit2.WebContext
-        """
-        if self.__ephemeral_context is None:
-            self.__ephemeral_context = WebKit2.WebContext.new_ephemeral()
-            Context(self.__ephemeral_context)
-        return self.__ephemeral_context
-
-    @property
     def active_window(self):
         """
             Get active window
@@ -316,7 +305,9 @@ class Application(Gtk.Application):
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
-        self.adblock = DatabaseAdblock()
+        self.adblock = AdblockHelper()
+        self.adblock.connect("new-filter", self.__on_new_adblock_filter)
+        self.adblock.update(list(ADBLOCK_URIS))
         self.phishing = DatabasePhishing()
         self.phishing.create_db()
         self.adblock_exceptions = DatabaseExceptions("adblock")
@@ -766,3 +757,14 @@ class Application(Gtk.Application):
             window = self.get_new_window()
             window.container.add_webview(self.start_page,
                                          LoadingType.FOREGROUND)
+
+    def __on_new_adblock_filter(self, adblock, content_filter):
+        """
+            Update views to use new content filter
+            @param Adblock as AdblockHelper
+            @param content_filter as WebKit2.UserContentFilter
+        """
+        for window in self.windows:
+            for view in window.container.views:
+                view.webview.get_user_content_manager().add_filter(
+                    content_filter)

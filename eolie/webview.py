@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App, Indicator, LoadingType
+from eolie.context import Context
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
@@ -35,13 +36,11 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        # context = WebKit2.WebContext.new()
-        # Context(context)
-        context = WebKit2.WebContext.get_default()
-        webview = WebKit2.WebView.new_with_context(context)
-        content_manager = webview.get_property("user-content-manager")
+        content_manager = WebKit2.UserContentManager.new()
+        webview = WebKit2.WebView.new_with_user_content_manager(
+            content_manager)
         webview.__class__ = WebViewMeta
-        webview.__init(None, context, content_manager, window, view)
+        webview.__init(None, window, view)
         return webview
 
     def new_ephemeral(window, view):
@@ -50,13 +49,11 @@ class WebView(WebKit2.WebView):
             @param window as Window
             @param view as View
         """
-        # context = WebKit2.WebContext.new_ephemeral()
-        # Context(context)
-        context = App().ephemeral_context
+        context = WebKit2.WebContext.new_ephemeral()
+        Context(context)
         webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
-        content_manager = webview.get_property("user-content-manager")
-        webview.__init(None, context, content_manager, window, view)
+        webview.__init(None, window, view)
         return webview
 
     def new_with_related_view(related, window):
@@ -68,10 +65,7 @@ class WebView(WebKit2.WebView):
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        # Related view are linked to related context, can't do anything about
-        # this
-        webview.__init(related, related.context,
-                       related.content_manager, window, None)
+        webview.__init(related, window, None)
         return webview
 
     def set_setting(self, key, value):
@@ -321,28 +315,12 @@ class WebView(WebKit2.WebView):
             self.__children.remove(child)
 
     @property
-    def content_manager(self):
-        """
-            Get content manager
-            @return WebKit2.UserContentManager
-        """
-        return self.__content_manager
-
-    @property
     def readable(self):
         """
             True if webview readable
             @return bool
         """
         return self._readable
-
-    @property
-    def context(self):
-        """
-            Get context
-            @return WebKit2.WebContext
-        """
-        return self.__context
 
     @property
     def atime(self):
@@ -433,23 +411,19 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, context, content_manager, window, view):
+    def __init(self, related_view, window, view):
         """
             Init WebView
             @param related_view as WebView
-            @param context as WebKit2.WebContext
-            @param content_manager as WebKit2.UserContentManager
             @param window as Window
             @param view as View
         """
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
-        self.__context = context
         WebViewArtwork.__init__(self)
         self._window = window
         self.__view = view
-        self.__content_manager = content_manager
         self.__atime = 0
         self.__children = []
         self.__parent = None

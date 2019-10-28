@@ -28,6 +28,10 @@ PHISHTANK_KEY =\
     "2eba68d50e3b974d6831c25e45d34f691056ef410a357c186d5cb94b7bf4048b"
 
 
+ADBLOCK_URIS = ["https://easylist-downloads.adblockplus.org/" +
+                "easylist_content_blocker.json"]
+
+
 class TimeSpan:
     HOUR = "0"
     DAY = "1"

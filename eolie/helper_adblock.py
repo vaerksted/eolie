@@ -10,12 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import GObject, Gio, GLib, WebKit2
 from gi.repository.Gio import FILE_ATTRIBUTE_STANDARD_NAME, \
                               FILE_ATTRIBUTE_TIME_MODIFIED
 
 
-from time import time
 from hashlib import sha256
 
 from eolie.helper_task import TaskHelper
@@ -26,55 +25,46 @@ SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
                                  FILE_ATTRIBUTE_TIME_MODIFIED)
 
 
-class DatabaseAdblock:
+class AdblockHelper(GObject.Object):
     """
-        Eolie adblock db
+        Eolie adblock helper
     """
     __DB_PATH = "%s/adblock" % EOLIE_DATA_PATH
-
-    __URIS = ["https://easylist-downloads.adblockplus.org/" +
-              "easylist_content_blocker.json"]
-
     __UPDATE = 172800
+    __gsignals__ = {
+        "new-filter": (GObject.SignalFlags.RUN_FIRST, None,
+                       (GObject.TYPE_PYOBJECT,))
+    }
 
     def __init__(self):
         """
             Create database tables or manage update if needed
         """
-        self.__cancellable = Gio.Cancellable.new()
-        self.__task_helper = TaskHelper()
-        if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_DIR):
-            try:
-                GLib.mkdir_with_parents(self.__DB_PATH, 0o0750)
-            except Exception as e:
-                Logger.error("DatabaseAdblock::__init__(): %s", e)
-        self.update(list(self.__URIS))
+        try:
+            GObject.Object.__init__(self)
+            self.__filters = {}
+            self.__cancellable = Gio.Cancellable.new()
+            self.__task_helper = TaskHelper()
+            self.__store = WebKit2.UserContentFilterStore.new(self.__DB_PATH)
+        except Exception as e:
+            Logger.error("DatabaseAdblock::__init__(): %s", e)
 
-    def update(self, uris=[]):
+    def update(self, uris):
         """
             Update database
+            @param uris as [str]
         """
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
-
-        while uris:
+        if uris:
             uri = uris.pop(0)
             encoded = sha256(uri.encode("utf-8")).hexdigest()
-            f = Gio.File.new_for_path("%s/%s.json" % (self.__DB_PATH, encoded))
-            try:
-                info = f.query_info(SCAN_QUERY_INFO,
-                                    Gio.FileQueryInfoFlags.NONE,
-                                    None)
-                mtime = int(info.get_attribute_as_string("time::modified"))
-            except Exception as e:
-                Logger.warning("DatabaseAdblock::update(): %s", e)
-                mtime = self.__UPDATE
-            if time() - mtime >= self.__UPDATE:
-                self.__task_helper.load_uri_content(uri,
-                                                    self.__cancellable,
-                                                    self.__on_load_uri_content,
-                                                    uris)
-                return
+            self.__store.load(encoded, self.__cancellable,
+                              self.__on_store_load, encoded)
+            self.__task_helper.load_uri_content(uri,
+                                                self.__cancellable,
+                                                self.__on_load_uri_content,
+                                                uris)
 
     def stop(self):
         """
@@ -82,6 +72,14 @@ class DatabaseAdblock:
         """
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
+
+    @property
+    def filters(self):
+        """
+            Get filters
+            return [WebKit2.UserContentFilter]
+        """
+        return list(self.__filters.values())
 
 #######################
 # PRIVATE             #
@@ -93,15 +91,33 @@ class DatabaseAdblock:
             @param rules as bytes
         """
         encoded = sha256(uri.encode("utf-8")).hexdigest()
-        f = Gio.File.new_for_path("%s/%s.json" % (self.__DB_PATH, encoded))
         try:
-            f.replace_contents(rules,
-                               None,
-                               False,
-                               Gio.FileCreateFlags.REPLACE_DESTINATION,
-                               None)
+            self.__store.save(encoded, GLib.Bytes(rules), self.__cancellable,
+                              self.__on_store_save, encoded)
         except Exception as e:
             Logger.warning("DatabaseAdblock::__save_rules(): %s", e)
+
+    def __on_store_load(self, store, result, encoded):
+        """
+            Notify for new filter
+            @param store as WebKit2.UserContentFilterStore
+            @param result as Gio.AsyncResult
+            @param encoded as str
+        """
+        content_filter = store.save_finish(result)
+        self.__filters[encoded] = content_filter
+        self.emit("new-filter", content_filter)
+
+    def __on_store_save(self, store, result, encoded):
+        """
+            Notify for new filter
+            @param store as WebKit2.UserContentFilterStore
+            @param result as Gio.AsyncResult
+            @param encoded as str
+        """
+        content_filter = store.load_finish(result)
+        self.__filters[encoded] = content_filter
+        self.emit("new-filter", content_filter)
 
     def __on_save_rules(self, result, uris):
         """

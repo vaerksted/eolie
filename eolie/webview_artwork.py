@@ -31,7 +31,7 @@ class WebViewArtwork:
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
-        self.__favicon_db = self.context.get_favicon_database()
+        self.__favicon_db = self.get_context().get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
 
