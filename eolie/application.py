@@ -29,9 +29,9 @@ from signal import signal, SIGINT, SIGTERM
 from eolie.settings import Settings
 from eolie.window import Window
 from eolie.art import Art
+from eolie.content_blocker_ad import AdContentBlocker
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
-from eolie.helper_adblock import AdblockHelper
 from eolie.database_settings import DatabaseSettings
 from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
@@ -194,7 +194,7 @@ class Application(Gtk.Application):
             window.hide()
         # Stop pending tasks
         self.download_manager.cancel()
-        self.adblock.stop()
+        self.ad_content_blocker.stop()
         # Clear history
         active_id = str(self.settings.get_enum("history-storage"))
         if active_id != TimeSpan.FOREVER:
@@ -303,8 +303,9 @@ class Application(Gtk.Application):
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
-        self.adblock = AdblockHelper()
-        self.adblock.connect("new-filter", self.__on_new_adblock_filter)
+        self.ad_content_blocker = AdContentBlocker()
+        self.ad_content_blocker.connect("new-filter",
+                                        self.__on_content_blocker_new_filter)
         self.phishing = DatabasePhishing()
         self.phishing.create_db()
         self.phishing.update()
@@ -748,10 +749,10 @@ class Application(Gtk.Application):
             window.container.add_webview(self.start_page,
                                          LoadingType.FOREGROUND)
 
-    def __on_new_adblock_filter(self, adblock, content_filter):
+    def __on_content_blocker_new_filter(self, content_blocker, content_filter):
         """
             Update views to use new content filter
-            @param Adblock as AdblockHelper
+            @param content_blocker as ContentBlocker
             @param content_filter as WebKit2.UserContentFilter
         """
         self.content_manager.add_filter(content_filter)

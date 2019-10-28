@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio
 
 import json
 
@@ -18,11 +18,11 @@ from eolie.define import EOLIE_DATA_PATH
 from eolie.logger import Logger
 
 
-class AdblockExceptions:
+class AdContentBlockerExceptions:
     """
-        Eolie adblock exception constructor
+        Exception handler for AdContentBlocker
     """
-    __JSON_PATH = "%s/adblock_sources" % EOLIE_DATA_PATH
+    __JSON_PATH = "%s/content_blocker_json" % EOLIE_DATA_PATH
 
     def __init__(self):
         """

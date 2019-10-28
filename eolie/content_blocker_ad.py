@@ -10,30 +10,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GObject, Gio, GLib, WebKit2
-from gi.repository.Gio import FILE_ATTRIBUTE_STANDARD_NAME, \
-                              FILE_ATTRIBUTE_TIME_MODIFIED
+from gi.repository import Gio, GObject, GLib, WebKit2
 
-
-from hashlib import sha256
 import json
 
 from eolie.helper_task import TaskHelper
-from eolie.exceptions_adblock import AdblockExceptions
+from eolie.content_blocker_ad_exceptions import AdContentBlockerExceptions
 from eolie.define import EOLIE_DATA_PATH, ADBLOCK_URIS, App
 from eolie.logger import Logger
 
-SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
-                                 FILE_ATTRIBUTE_TIME_MODIFIED)
 
-
-class AdblockHelper(GObject.Object):
+class AdContentBlocker(GObject.Object):
     """
-        Eolie adblock helper
+        A WebKit Content Blocker for ads
     """
     __DB_PATH = "%s/content_blocker" % EOLIE_DATA_PATH
     __JSON_PATH = "%s/content_blocker_json" % EOLIE_DATA_PATH
-    __UPDATE = 172800
     __gsignals__ = {
         "new-filter": (GObject.SignalFlags.RUN_FIRST, None,
                        (GObject.TYPE_PYOBJECT,))
@@ -49,7 +41,7 @@ class AdblockHelper(GObject.Object):
             self.__cancellable = Gio.Cancellable.new()
             self.__task_helper = TaskHelper()
             self.__store = WebKit2.UserContentFilterStore.new(self.__DB_PATH)
-            self.__exceptions = AdblockExceptions()
+            self.__exceptions = AdContentBlockerExceptions()
             if not GLib.file_test(self.__JSON_PATH, GLib.FileTest.IS_DIR):
                 GLib.mkdir_with_parents(self.__JSON_PATH, 0o0750)
             App().settings.connect("changed::adblock",
@@ -58,13 +50,12 @@ class AdblockHelper(GObject.Object):
                               self.__on_store_load)
             self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
-            Logger.error("AdblockHelper::__init__(): %s", e)
+            Logger.error("AdContentBlocker::__init__(): %s", e)
 
     def update(self):
         """
             Update current filters with new exceptions
         """
-        encoded = sha256(uri.encode("utf-8")).hexdigest()
         f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
         if f.query_exists():
             (status, content, tag) = f.load_contents(None)
@@ -124,7 +115,7 @@ class AdblockHelper(GObject.Object):
             self.__store.save("adblock", GLib.Bytes(rules), self.__cancellable,
                               self.__on_store_save)
         except Exception as e:
-            Logger.error("AdblockHelper::__save_rules(): %s", e)
+            Logger.error("AdContentBlocker::__save_rules(): %s", e)
 
     def __on_store_load(self, store, result):
         """
@@ -137,7 +128,7 @@ class AdblockHelper(GObject.Object):
             self.__filter = store.save_finish(result)
             self.emit("new-filter", self.__filter)
         except Exception as e:
-            Logger.error("AdblockHelper::__on_store_load(): %s", e)
+            Logger.error("AdContentBlocker::__on_store_load(): %s", e)
 
     def __on_store_save(self, store, result):
         """
@@ -149,7 +140,7 @@ class AdblockHelper(GObject.Object):
             self.__filter = store.load_finish(result)
             self.emit("new-filter", self.__filter)
         except Exception as e:
-            Logger.error("AdblockHelper::__on_store_save(): %s", e)
+            Logger.error("AdContentBlocker::__on_store_save(): %s", e)
 
     def __on_save_rules(self, result, uris):
         """
@@ -169,9 +160,8 @@ class AdblockHelper(GObject.Object):
             @param content as bytes
             @param uris as [str]
         """
-        Logger.debug("AdblockHelper::__on_load_uri_content(): %s", uri)
+        Logger.debug("AdContentBlocker::__on_load_uri_content(): %s", uri)
         if status:
-            encoded = sha256(uri.encode("utf-8")).hexdigest()
             # Save to sources
             f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
             f.replace_contents(content,
@@ -183,7 +173,7 @@ class AdblockHelper(GObject.Object):
                                    callback=(self.__on_save_rules, uris))
         else:
             self.__on_save_rules(None, uris)
-            Logger.error("AdblockHelper::__on_load_uri_content(): %s", uri)
+            Logger.error("AdContentBlocker::__on_load_uri_content(): %s", uri)
 
     def __on_adblock_changed(self, settings, value):
         """
