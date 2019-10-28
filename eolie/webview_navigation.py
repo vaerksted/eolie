@@ -106,25 +106,12 @@ class WebViewNavigation:
             self.__update_bookmark_metadata(self.uri)
         elif event == WebKit2.LoadEvent.REDIRECTED:
             self.__update_bookmark_metadata(self.uri)
-            # Block ads, useful for some site
-            if App().settings.get_value("adblock") and\
-                    parsed.scheme in ["http", "https"] and\
-                    not App().adblock_exceptions.find_parsed(parsed):
-                if App().adblock.is_netloc_blocked(parsed.netloc) or\
-                        App().adblock.is_uri_blocked(self.uri,
-                                                     parsed.netloc):
-                    Logger.debug("WebView::__wait_for_uri(): blocking %s",
-                                 self.uri)
-                    webview.stop_loading()
-                    self._window.container.close_view(self.view)
-                    return
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
             App().history.set_page_state(self.uri)
             if self._initial_uri != self.uri:
                 self.__update_bookmark_metadata(self.uri)
             self.__set_imgblock(self.uri)
-            self.__set_adblock(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
@@ -169,30 +156,6 @@ class WebViewNavigation:
         if App().bookmarks.get_id(uri) is not None:
             App().bookmarks.set_access_time(uri, round(time(), 2))
             App().bookmarks.set_more_popular(uri)
-
-    def __set_adblock(self, uri):
-        """
-            Set adblocker
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        http_scheme = parsed.scheme in ["http", "https"]
-        self.content_manager.remove_all_style_sheets()
-        # Can't find a way to block content for ephemeral views
-        if App().settings.get_value("adblock") and\
-                not App().adblock_exceptions.find_parsed(parsed) and\
-                http_scheme and\
-                self.content_manager is not None:
-            self.content_manager.add_style_sheet(
-                App().default_style_sheet)
-            rules = App().adblock.get_css_rules(uri)
-            user_style_sheet = WebKit2.UserStyleSheet(
-                rules,
-                WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                WebKit2.UserStyleLevel.USER,
-                None,
-                None)
-            self.content_manager.add_style_sheet(user_style_sheet)
 
     def __set_user_agent(self, uri):
         """

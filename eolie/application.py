@@ -121,18 +121,6 @@ class Application(Gtk.Application):
         if self.get_is_remote():
             Gdk.notify_startup_complete()
 
-    def update_default_style_sheet(self):
-        """
-            Should be called on startup
-        """
-        rules = self.adblock.get_default_css_rules()
-        self.__default_style_sheet = WebKit2.UserStyleSheet(
-            rules,
-            WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-            WebKit2.UserStyleLevel.USER,
-            None,
-            None)
-
     def do_startup(self):
         """
             Init application
@@ -262,14 +250,6 @@ class Application(Gtk.Application):
         return self.__ephemeral_context
 
     @property
-    def default_style_sheet(self):
-        """
-            Get default style sheet
-            @return WebKit2.UserStyleSheet
-        """
-        return self.__default_style_sheet
-
-    @property
     def active_window(self):
         """
             Get active window
@@ -337,13 +317,9 @@ class Application(Gtk.Application):
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
         self.adblock = DatabaseAdblock()
-        self.adblock.create_db()
-        self.adblock.update()
         self.phishing = DatabasePhishing()
         self.phishing.create_db()
         self.adblock_exceptions = DatabaseExceptions("adblock")
-        # Do not remove this!
-        self.update_default_style_sheet()
         self.popup_exceptions = DatabaseExceptions("popups")
         self.image_exceptions = DatabaseExceptions("images")
         if self.settings.get_user_value("jsblock") is not None:
@@ -448,10 +424,6 @@ class Application(Gtk.Application):
                 sql.execute("VACUUM")
                 sql.isolation_level = ""
             with SqlCursor(self.history) as sql:
-                sql.isolation_level = None
-                sql.execute("VACUUM")
-                sql.isolation_level = ""
-            with SqlCursor(self.adblock) as sql:
                 sql.isolation_level = None
                 sql.execute("VACUUM")
                 sql.isolation_level = ""

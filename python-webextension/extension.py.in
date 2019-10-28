@@ -19,10 +19,8 @@ sys.path.insert(1, '@PYTHON_DIR@')
 from gi.repository import Gio
 
 from eolie.extension_forms import FormsExtension
-from eolie.extension_adblock import AdblockExtension
 from eolie.extension_jsblock import JSblockExtension
 from eolie.extension_proxy import ProxyExtension
-from eolie.database_adblock import DatabaseAdblock
 from eolie.database_exceptions import DatabaseExceptions
 from eolie.settings import Settings
 
@@ -36,8 +34,6 @@ class Application(Gio.Application):
         app.__class__ = Application
         app.cursors = {}
         app.settings = Settings.new()
-        app.adblock = DatabaseAdblock()
-        app.adblock_exceptions = DatabaseExceptions("adblock")
         app.js_exceptions = DatabaseExceptions("js")
         return app
 
@@ -50,7 +46,6 @@ def initialize(extension, arguments):
         Connect to page created
         @param extension as WebKit2WebExtension.WebExtension
     """
-    AdblockExtension(extension)
     jsblock = JSblockExtension(extension)
     forms = FormsExtension(extension)
     ProxyExtension(extension, forms, jsblock)

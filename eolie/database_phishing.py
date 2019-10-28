@@ -29,7 +29,7 @@ class DatabasePhishing:
         Phishing database
     """
     __DB_PATH = "%s/phishing.db" % EOLIE_DATA_PATH
-    __URI = "http://data.phishtank.com/data/%s/online-valid.json" %\
+    __URI = "https://data.phishtank.com/data/%s/online-valid.json" %\
         PHISHTANK_KEY
     __SCHEMA_VERSION = 0
     __UPDATE = 172800
@@ -85,6 +85,7 @@ class DatabasePhishing:
         """
             Update database
         """
+        return
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
         # DB version is last successful sync mtime
