@@ -125,7 +125,7 @@ class AdblockHelper(GObject.Object):
             self.__store.save(encoded, GLib.Bytes(rules), self.__cancellable,
                               self.__on_store_save, encoded)
         except Exception as e:
-            Logger.warning("AdblockHelper::__save_rules(): %s", e)
+            Logger.error("AdblockHelper::__save_rules(): %s", e)
 
     def __on_store_load(self, store, result, encoded):
         """
@@ -134,9 +134,12 @@ class AdblockHelper(GObject.Object):
             @param result as Gio.AsyncResult
             @param encoded as str
         """
-        content_filter = store.save_finish(result)
-        self.__filters[encoded] = content_filter
-        self.emit("new-filter", content_filter)
+        try:
+            content_filter = store.save_finish(result)
+            self.__filters[encoded] = content_filter
+            self.emit("new-filter", content_filter)
+        except Exception as e:
+            Logger.error("AdblockHelper::__on_store_load(): %s", e)
 
     def __on_store_save(self, store, result, encoded):
         """
@@ -145,9 +148,12 @@ class AdblockHelper(GObject.Object):
             @param result as Gio.AsyncResult
             @param encoded as str
         """
-        content_filter = store.load_finish(result)
-        self.__filters[encoded] = content_filter
-        self.emit("new-filter", content_filter)
+        try:
+            content_filter = store.load_finish(result)
+            self.__filters[encoded] = content_filter
+            self.emit("new-filter", content_filter)
+        except Exception as e:
+            Logger.error("AdblockHelper::__on_store_save(): %s", e)
 
     def __on_save_rules(self, result, uris):
         """
