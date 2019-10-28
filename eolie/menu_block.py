@@ -110,7 +110,8 @@ class AdblockMenu(BlockMenu):
         BlockMenu.__init__(self, uri, window)
         # Exception
         parsed = urlparse(uri)
-        exception = App().adblock.exceptions.is_domain_exception(parsed.netloc)
+        exception = App().ad_content_blocker.exceptions.is_domain_exception(
+            parsed.netloc)
         action = Gio.SimpleAction.new_stateful(
             "adblock-exception",
             None,
@@ -136,11 +137,11 @@ class AdblockMenu(BlockMenu):
         """
         action.set_state(param)
         if param:
-            App().adblock.exceptions.add_domain_exception(domain)
+            App().ad_content_blocker.exceptions.add_domain_exception(domain)
         else:
-            App().adblock.exceptions.remove_domain_exception(domain)
-        App().adblock.exceptions.save()
-        App().adblock.update()
+            App().ad_content_blocker.exceptions.remove_domain_exception(domain)
+        App().ad_content_blocker.exceptions.save()
+        App().ad_content_blocker.update()
 
 
 class PopupBlockMenu(BlockMenu):
