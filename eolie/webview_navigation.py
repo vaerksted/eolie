@@ -52,9 +52,14 @@ class WebViewNavigation:
         if App().phishing.is_phishing(uri):
             self._show_phishing_error(uri)
             return
+        parsed = urlparse(uri)
+        # Update content filtering
+        if App().adblock_exceptions.find_parsed(parsed):
+            self.get_user_content_manager().remove_all_filters()
+        else:
+            self.add_content_filters()
         self.discard_error()
         # If not an URI, start a search
-        parsed = urlparse(uri)
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
         if not is_uri and\
@@ -216,13 +221,6 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        parsed = urlparse(self.uri)
-        # Update content filtering
-        if App().adblock_exceptions.find_parsed(parsed):
-            self.get_user_content_manager().remove_all_filters()
-        else:
-            self.add_content_filters()
-
         # Js update
         if not self.is_loading():
             self._initial_uri = None

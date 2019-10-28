@@ -73,9 +73,11 @@ class WebView(WebKit2.WebView):
             Add default content filters
         """
         if App().settings.get_value("adblock"):
-            content_manager = self.get_user_content_manager()
-            for f in App().adblock.filters:
-                content_manager.add_filter(f)
+            parsed = urlparse(self.uri)
+            if not App().adblock_exceptions.find_parsed(parsed):
+                content_manager = self.get_user_content_manager()
+                for f in App().adblock.filters:
+                    content_manager.add_filter(f)
 
     def add_content_filter(self, content_filter):
         """

@@ -767,7 +767,7 @@ class Application(Gtk.Application):
         if self.settings.get_value("adblock"):
             for window in self.windows:
                 for view in window.container.views:
-                    view.webview.add_filter(content_filter)
+                    view.webview.add_content_filter(content_filter)
 
     def __on_adblock_changed(self, settings, value):
         """
