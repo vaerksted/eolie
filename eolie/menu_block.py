@@ -187,7 +187,7 @@ class AdblockMenu(ExceptionBlockMenu):
         builder.add_from_resource("/org/gnome/Eolie/AdblockMenu.ui")
         builder.connect_signals(self)
         self.__submenu = builder.get_object("submenu")
-        ExceptionBlockMenu.__init__(self, uri, window, True,
+        ExceptionBlockMenu.__init__(self, uri, window, False,
                                     "adblock_exceptions",
                                     App().adblock_exceptions)
         self.add(builder.get_object("menu"))

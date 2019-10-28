@@ -277,7 +277,7 @@ class Application(Gtk.Application):
             Init main application
         """
         self.settings = Settings.new()
-
+        self.settings.connect("changed::adblock", self.__on_adblock_changed)
         # Init extensions
         current_path = GLib.getenv("PYTHONPATH")
         new_path = self.__extension_dir
@@ -764,7 +764,22 @@ class Application(Gtk.Application):
             @param Adblock as AdblockHelper
             @param content_filter as WebKit2.UserContentFilter
         """
+        if self.settings.get_value("adblock"):
+            for window in self.windows:
+                for view in window.container.views:
+                    view.webview.add_filter(content_filter)
+
+    def __on_adblock_changed(self, settings, value):
+        """
+            Enable disable filtering
+            @param settings as Gio.Settings
+            @param value as GLib.Variant
+        """
+        adblock = self.settings.get_value("adblock")
         for window in self.windows:
             for view in window.container.views:
-                view.webview.get_user_content_manager().add_filter(
-                    content_filter)
+                if adblock:
+                    view.webview.add_content_filters()
+                else:
+                    content_manager = view.webview.get_user_content_manager()
+                    content_manager.remove_all_filters()

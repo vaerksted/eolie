@@ -37,9 +37,7 @@ class View(Gtk.Overlay):
             webview = WebView.new_ephemeral(window, None)
         else:
             webview = WebView.new(window, None)
-        content_manager = webview.get_user_content_manager()
-        for f in App().adblock.filters:
-            content_manager.add_filter(f)
+        webview.add_content_filters()
         return webview
 
     def __init__(self, webview, window, popover=False):
