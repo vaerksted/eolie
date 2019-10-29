@@ -31,21 +31,37 @@ class BlockMenu(Gtk.Bin):
             @param window as Window
         """
         Gtk.Bin.__init__(self)
-        self._actions = []
-        self.connect("map", self._on_map)
-        self.connect("unmap", self._on_unmap)
         self.__uri = uri
         self.__window = window
-        # Enable blocking
-        option_value = App().settings.get_value(self._option_block)
-        action = Gio.SimpleAction.new_stateful(
-            self._option_block,
-            None,
-            GLib.Variant.new_boolean(option_value))
-        action.connect("change-state",
-                       self.__on_action_change_state,
-                       self._option_block)
-        window.add_action(action)
+        builder = Gtk.Builder()
+        builder.add_from_resource("/org/gnome/Eolie/BlockMenu.ui")
+        builder.connect_signals(self)
+        self.add(builder.get_object("menu"))
+        for blocker in ["adblock", "popupblock"]:
+            content_blocker = App().get_content_blocker(blocker)
+            # Enable blocking
+            option_value = App().settings.get_value(blocker)
+            action = Gio.SimpleAction.new_stateful(
+                blocker,
+                None,
+                GLib.Variant.new_boolean(option_value))
+            action.connect("change-state",
+                           self.__on_blocker_change_state,
+                           blocker)
+            window.add_action(action)
+            # Exception
+            parsed = urlparse(uri)
+            exception = content_blocker.exceptions.is_domain_exception(
+                parsed.netloc)
+            action = Gio.SimpleAction.new_stateful(
+                "%s-exception" % blocker,
+                None,
+                GLib.Variant.new_boolean(exception))
+            action.connect("change-state",
+                           self.__on_exception_change_state,
+                           parsed.netloc,
+                           blocker)
+            window.add_action(action)
 
     @property
     def window(self):
@@ -64,126 +80,27 @@ class BlockMenu(Gtk.Bin):
         return self.__uri
 
 #######################
-# PROTECTED           #
-#######################
-    def _on_map(self, widget):
-        """
-            @param widget as Gtk.Widget
-        """
-        pass
-
-    def _on_unmap(self, widget):
-        """
-            Remove registered actions
-            @param widget as Gtk.Widget
-        """
-        for action in self._actions:
-            self.window.remove_action(action)
-
-#######################
 # PRIVATE             #
 #######################
-    def __on_action_change_state(self, action, param, option):
+    def __on_blocker_change_state(self, action, param, blocker):
         """
             Set option value
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
-            @param option as str
+            @param blocker as str
         """
         action.set_state(param)
-        App().settings.set_value(option, param)
-        self.window.container.current.webview.reload()
+        App().settings.set_value(blocker, param)
 
-
-class AdblockMenu(BlockMenu):
-    """
-        Menu for Adblock policy management
-    """
-
-    def __init__(self, uri, window):
-        """
-            Init menu
-            @param uri as str
-            @param window as Window
-        """
-        self._option_block = "adblock"
-        BlockMenu.__init__(self, uri, window)
-        # Exception
-        parsed = urlparse(uri)
-        exception = App().ad_content_blocker.exceptions.is_domain_exception(
-            parsed.netloc)
-        action = Gio.SimpleAction.new_stateful(
-            "adblock-exception",
-            None,
-            GLib.Variant.new_boolean(exception))
-        action.connect("change-state",
-                       self.__on_action_change_state,
-                       parsed.netloc)
-        window.add_action(action)
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/AdblockMenu.ui")
-        builder.connect_signals(self)
-        self.add(builder.get_object("menu"))
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_action_change_state(self, action, param, domain):
+    def __on_exception_change_state(self, action, param, blocker):
         """
             Set option value
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
-            @param domain as str
+            @param blocker as str
         """
         action.set_state(param)
-        if param:
-            App().ad_content_blocker.exceptions.add_domain_exception(domain)
-        else:
-            App().ad_content_blocker.exceptions.remove_domain_exception(domain)
-        App().ad_content_blocker.exceptions.save()
-        App().ad_content_blocker.update()
-
-
-class PopupBlockMenu(BlockMenu):
-    """
-        Menu for Popup policy management
-    """
-
-    def __init__(self, uri, window):
-        """
-            Init menu
-            @param uri as str
-            @param window as Window
-        """
-        self._option_block = "popupblock"
-        self._option_trust = "trust-websites-popup"
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/PopupBlockMenu.ui")
-        builder.connect_signals(self)
-        self.__submenu = builder.get_object("submenu")
-        BlockMenu.__init__(self, uri, window)
-        self.add(builder.get_object("menu"))
-
-
-class ImageBlockMenu(BlockMenu):
-    """
-        Menu for Popup policy management
-    """
-
-    def __init__(self, uri, window):
-        """
-            Init menu
-            @param uri as str
-            @param window as Window
-        """
-        self._option_block = "imageblock"
-        self._option_trust = "trust-websites-image"
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/ImageBlockMenu.ui")
-        builder.connect_signals(self)
-        self.__submenu = builder.get_object("submenu")
-        BlockMenu.__init__(self, uri, window)
-        self.add(builder.get_object("menu"))
+        return
 
 
 class JSBlockMenu(BlockMenu):

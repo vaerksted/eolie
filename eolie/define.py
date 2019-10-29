@@ -66,7 +66,6 @@ class ArtSize:
 class Indicator:
     NONE = 0
     GEOLOCATION = 1
-    POPUPS = 2
 
 
 class LoadingType:

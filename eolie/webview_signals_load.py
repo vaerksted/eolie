@@ -27,30 +27,6 @@ class WebViewLoadSignals:
             Init class
         """
         self.__current_event = WebKit2.LoadEvent.FINISHED
-        self.__popups = []
-
-    def add_popup(self, webview):
-        """
-            Add webview to popups
-            @webview as WebView
-        """
-        self.__popups.append(webview)
-
-    def remove_popup(self, webview):
-        """
-            Remove webview to popups
-            @webview as WebView
-        """
-        if webview in self.__popups:
-            self.__popups.remove(webview)
-
-    @property
-    def popups(self):
-        """
-            Get popups
-            @return [WebView]
-        """
-        return self.__popups
 
     @property
     def current_event(self):
@@ -101,12 +77,7 @@ class WebViewLoadSignals:
         # Load event may happen before a related webview is ready-to-show and
         # so before a view is associated
         if self.view is not None and not self.view.popover:
-            if event == WebKit2.LoadEvent.STARTED:
-                # Destroy current popups
-                for popup in self.__popups:
-                    popup.destroy()
-                self.__popups = []
-            elif event == WebKit2.LoadEvent.FINISHED:
+            if event == WebKit2.LoadEvent.FINISHED:
                 js1 = Gio.File.new_for_uri(
                     "resource:///org/gnome/Eolie/Readability.js")
                 js2 = Gio.File.new_for_uri(

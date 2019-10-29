@@ -18,19 +18,21 @@ from eolie.define import EOLIE_DATA_PATH
 from eolie.logger import Logger
 
 
-class AdContentBlockerExceptions:
+class ContentBlockerExceptions:
     """
-        Exception handler for AdContentBlocker
+        Exception handler
     """
     __JSON_PATH = "%s/content_blocker_json" % EOLIE_DATA_PATH
 
-    def __init__(self):
+    def __init__(self, name):
         """
             Init constructor
         """
         try:
+            self.__name = name
             self.__rules = []
-            f = Gio.File.new_for_path("%s/exceptions.json" % self.__JSON_PATH)
+            f = Gio.File.new_for_path(
+                "%s/exceptions_%s.json" % (self.__JSON_PATH, self.__name))
             if f.query_exists():
                 (status, contents, tag) = f.load_contents(None)
                 if status:
@@ -43,7 +45,8 @@ class AdContentBlockerExceptions:
             Save rules to disk
         """
         try:
-            f = Gio.File.new_for_path("%s/exceptions.json" % self.__JSON_PATH)
+            f = Gio.File.new_for_path(
+                "%s/exceptions_%s.json" % (self.__JSON_PATH, self.__name))
             content = json.dumps(self.__rules)
             f.replace_contents(content.encode("utf-8"),
                                None,

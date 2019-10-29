@@ -15,7 +15,8 @@ from gi.repository import Gio, GObject, GLib, WebKit2
 import json
 
 from eolie.helper_task import TaskHelper
-from eolie.define import EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH, App
+from eolie.content_blocker_exceptions import ContentBlockerExceptions
 from eolie.logger import Logger
 
 
@@ -26,8 +27,10 @@ class ContentBlocker(GObject.Object):
     _DB_PATH = "%s/content_blocker" % EOLIE_DATA_PATH
     _JSON_PATH = "%s/content_blocker_json" % EOLIE_DATA_PATH
     __gsignals__ = {
-        "new-filter": (GObject.SignalFlags.RUN_FIRST, None,
-                       (GObject.TYPE_PYOBJECT,))
+        "set-filter": (GObject.SignalFlags.RUN_FIRST, None,
+                       (GObject.TYPE_PYOBJECT,)),
+        "unset-filter": (GObject.SignalFlags.RUN_FIRST, None,
+                         (GObject.TYPE_PYOBJECT,))
     }
 
     def __init__(self, name):
@@ -39,13 +42,16 @@ class ContentBlocker(GObject.Object):
             GObject.Object.__init__(self)
             self.__filter = None
             self.__name = name
-            self._exceptions = None
+            self.__exceptions = ContentBlockerExceptions(name)
             self._cancellable = Gio.Cancellable.new()
             self._task_helper = TaskHelper()
             self.__store = WebKit2.UserContentFilterStore.new(self._DB_PATH)
             if not GLib.file_test(self._JSON_PATH, GLib.FileTest.IS_DIR):
                 GLib.mkdir_with_parents(self._JSON_PATH, 0o0750)
-            self.load()
+            if self.enabled:
+                self.load()
+            App().settings.connect("changed::%s" % name,
+                                   self.__on_setting_changed)
         except Exception as e:
             Logger.error("ContentBlocker::__init__(): %s", e)
 
@@ -91,7 +97,7 @@ class ContentBlocker(GObject.Object):
             Get adblock exceptions
             @return AdblockExceptions
         """
-        return self._exceptions
+        return self.__exceptions
 
     @property
     def filter(self):
@@ -100,6 +106,22 @@ class ContentBlocker(GObject.Object):
             return WebKit2.UserContentFilter
         """
         return self.__filter
+
+    @property
+    def name(self):
+        """
+            Get name
+            return str
+        """
+        return self.__name
+
+    @property
+    def enabled(self):
+        """
+            True if enabled
+            @return bool
+        """
+        return App().settings.get_value(self.__name)
 
 #######################
 # PROTECTED           #
@@ -110,8 +132,8 @@ class ContentBlocker(GObject.Object):
             @param uri as str
             @param rules []
         """
-        if self._exceptions is not None:
-            rules += self._exceptions.rules
+        if self.__exceptions is not None:
+            rules += self.__exceptions.rules
         bytes = json.dumps(rules).encode("utf-8")
         try:
             self.save(bytes)
@@ -130,7 +152,8 @@ class ContentBlocker(GObject.Object):
         """
         try:
             self.__filter = store.save_finish(result)
-            self.emit("new-filter", self.__filter)
+            if self.enabled:
+                self.emit("set-filter", self.__filter)
         except Exception as e:
             Logger.error("ContentBlocker::__on_store_load(): %s", e)
 
@@ -142,6 +165,18 @@ class ContentBlocker(GObject.Object):
         """
         try:
             self.__filter = store.load_finish(result)
-            self.emit("new-filter", self.__filter)
+            if self.enabled:
+                self.emit("set-filter", self.__filter)
         except Exception as e:
             Logger.error("ContentBlocker::__on_store_save(): %s", e)
+
+    def __on_setting_changed(self, settings, value):
+        """
+            Enable disable filtering
+            @param settings as Gio.Settings
+            @param value as GLib.Variant
+        """
+        if self.enabled:
+            self.load()
+        else:
+            self.emit("unset-filter", self.__filter)

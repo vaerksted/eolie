@@ -143,7 +143,7 @@ class ToolbarTitle(Gtk.Bin):
         builder.get_object("overlay").add_overlay(self.__progress)
         # Used for spinner and reader
         self.__indicator_stack = builder.get_object("indicator_stack")
-        # Used for popups and geolocation
+        # Used for geolocation
         self.__indicator2 = builder.get_object("indicator2")
         self.__indicator2_image = builder.get_object("indicator2_image")
         # Spinner
@@ -391,12 +391,6 @@ class ToolbarTitle(Gtk.Bin):
             self.__indicator2_image.set_from_icon_name(
                 "mark-location-symbolic",
                 Gtk.IconSize.MENU)
-        elif indicator == Indicator.POPUPS:
-            self.__indicator2.show()
-            self.__indicator2.set_tooltip_text(_("Blocked popups"))
-            self.__indicator2_image.set_from_icon_name(
-                "focus-windows-symbolic",
-                Gtk.IconSize.MENU)
         else:
             self.__indicator2.hide()
 
@@ -630,7 +624,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def _on_indicator2_press(self, eventbox, event):
         """
-            Disable geolocation for current or show popups
+            Disable geolocation for current
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
@@ -638,13 +632,8 @@ class ToolbarTitle(Gtk.Bin):
                 "mark-location-symbolic":
             uri = self.__window.container.current.webview.uri
             App().websettings.allow_geolocation(uri, False)
-            if self.__window.container.current.webview.popups:
-                self.show_indicator(Indicator.POPUPS)
-            else:
-                self.show_indicator(Indicator.NONE)
+            self.show_indicator(Indicator.NONE)
         else:
-            for popup in self.__window.container.current.webview.popups:
-                self.__window.container.popup_webview(popup, False)
             if self.__entry.has_focus():
                 self.__window.set_focus(None)
             else:

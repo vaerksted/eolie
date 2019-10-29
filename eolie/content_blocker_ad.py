@@ -15,7 +15,6 @@ from gi.repository import Gio
 import json
 
 from eolie.content_blocker import ContentBlocker
-from eolie.content_blocker_ad_exceptions import AdContentBlockerExceptions
 from eolie.define import ADBLOCK_URIS
 from eolie.logger import Logger
 
@@ -31,7 +30,6 @@ class AdContentBlocker(ContentBlocker):
         """
         try:
             ContentBlocker.__init__(self, "adblock")
-            self._exceptions = AdContentBlockerExceptions()
             self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
             Logger.error("AdContentBlocker::__init__(): %s", e)
@@ -82,15 +80,3 @@ class AdContentBlocker(ContentBlocker):
                 self._task_helper.run(self._save_rules, rules)
         except Exception as e:
             Logger.error("AdContentBlocker::__on_load_uri_content(): %s", e)
-
-    def __on_adblock_changed(self, settings, value):
-        """
-            Enable disable filtering
-            @param settings as Gio.Settings
-            @param value as GLib.Variant
-        """
-        adblock = self.settings.get_value("adblock")
-        if adblock:
-            self.load()
-        else:
-            self.save(b"")

@@ -30,6 +30,7 @@ from eolie.settings import Settings
 from eolie.window import Window
 from eolie.art import Art
 from eolie.content_blocker_ad import AdContentBlocker
+from eolie.content_blocker_popups import PopupsContentBlocker
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_settings import DatabaseSettings
@@ -61,6 +62,7 @@ class Application(Gtk.Application):
         """
         self.__version = version
         self.__state_cache = []
+        self.__content_blockers = []
         self.__pinned = []
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
@@ -194,7 +196,8 @@ class Application(Gtk.Application):
             window.hide()
         # Stop pending tasks
         self.download_manager.cancel()
-        self.ad_content_blocker.stop()
+        for content_blocker in self.__content_blockers:
+            content_blocker.stop()
         # Clear history
         active_id = str(self.settings.get_enum("history-storage"))
         if active_id != TimeSpan.FOREVER:
@@ -212,6 +215,16 @@ class Application(Gtk.Application):
                             callback=(lambda x: Gio.Application.quit(self),))
         else:
             Gio.Application.quit(self)
+
+    def get_content_blocker(self, name):
+        """
+            Get content blocker by name
+            @param name as str
+            @return ContentBlocker
+        """
+        for content_blocker in self.__content_blockers:
+            if content_blocker.name == name:
+                return content_blocker
 
     @property
     def pinned(self):
@@ -303,9 +316,14 @@ class Application(Gtk.Application):
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
-        self.ad_content_blocker = AdContentBlocker()
-        self.ad_content_blocker.connect("new-filter",
-                                        self.__on_content_blocker_new_filter)
+        for cls in [AdContentBlocker,
+                    PopupsContentBlocker]:
+            content_blocker = cls()
+            content_blocker.connect("set-filter",
+                                    self.__on_content_blocker_set_filter)
+            content_blocker.connect("unset-filter",
+                                    self.__on_content_blocker_unset_filter)
+            self.__content_blockers.append(content_blocker)
         self.phishing = DatabasePhishing()
         self.phishing.create_db()
         self.phishing.update()
@@ -749,10 +767,19 @@ class Application(Gtk.Application):
             window.container.add_webview(self.start_page,
                                          LoadingType.FOREGROUND)
 
-    def __on_content_blocker_new_filter(self, content_blocker, content_filter):
+    def __on_content_blocker_set_filter(self, content_blocker, content_filter):
         """
-            Update views to use new content filter
+            Add filter to content manager
             @param content_blocker as ContentBlocker
             @param content_filter as WebKit2.UserContentFilter
         """
         self.content_manager.add_filter(content_filter)
+
+    def __on_content_blocker_unset_filter(self, content_blocker,
+                                          content_filter):
+        """
+            Remove filter from content manager
+            @param content_blocker as ContentBlocker
+            @param content_filter as WebKit2.UserContentFilter
+        """
+        self.content_manager.remove_filter(content_filter)

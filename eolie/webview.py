@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, Indicator, LoadingType
+from eolie.define import App, LoadingType
 from eolie.context import Context
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -531,36 +531,14 @@ class WebView(WebKit2.WebView):
             @param navigation_action as WebKit2.NavigationAction
             @param elapsed as float
         """
-        popup_block = App().settings.get_value("popupblock")
         properties = webview.get_window_properties()
-        if popup_block and\
-                navigation_action.get_navigation_type() in [
-                    WebKit2.NavigationType.OTHER,
-                    WebKit2.NavigationType.RELOAD,
-                    WebKit2.NavigationType.BACK_FORWARD]:
-            related.add_popup(webview)
-            webview.connect("close", self.__on_popup_close, related)
-            if related == self._window.container.current.webview:
-                self._window.toolbar.title.show_indicator(
-                    Indicator.POPUPS)
-        elif (properties.get_toolbar_visible() or
+        if (properties.get_toolbar_visible() or
                 properties.get_scrollbars_visible()):
             self._window.container.add_webview_with_new_view(
                 webview,
                 LoadingType.FOREGROUND)
         else:
             self._window.container.popup_webview(webview, True)
-
-    def __on_popup_close(self, webview, related):
-        """
-            Remove webview from popups
-            @param webview as WebView
-            @param related as WebView
-        """
-        related.remove_popup(webview)
-        if self._window.container.current.webview == related and\
-                not related.popups:
-            self._window.toolbar.title.show_indicator(Indicator.NONE)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,

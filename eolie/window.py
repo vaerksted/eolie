@@ -135,10 +135,7 @@ class Window(Gtk.ApplicationWindow):
             self.toolbar.title.update()
             accept_tls = App().websettings.get_accept_tls(uri)
             self.toolbar.end.show_tls_button(accept_tls)
-        if webview.popups:
-            self.toolbar.title.show_indicator(Indicator.POPUPS)
-        else:
-            self.toolbar.title.show_indicator(Indicator.NONE)
+        self.toolbar.title.show_indicator(Indicator.NONE)
         if webview.is_loading():
             self.toolbar.title.set_loading(True)
             self.toolbar.title.progress.show()

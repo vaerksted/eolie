@@ -12,7 +12,7 @@
     <file compressed="true">Readability_check.js</file>
     <file compressed="true">Readability_get.js</file>
     <file compressed="true">Readability.js</file>
-     <file compressed="true" preprocess="xml-stripblanks">AdblockMenu.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">BlockMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>
@@ -20,8 +20,6 @@
      <file compressed="true" preprocess="xml-stripblanks">DialogImportBookmarks.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogModifyUA.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">ImageBlockMenu.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">JSBlockMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">LanguagesMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PagesManagerChild.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
@@ -33,7 +31,6 @@
      <file compressed="true" preprocess="xml-stripblanks">PopoverPasswords.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">PopupBlockMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">QuitDialog.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">RowDownload.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">ScriptsMenu.ui</file>
