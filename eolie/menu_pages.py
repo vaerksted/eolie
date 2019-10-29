@@ -31,10 +31,6 @@ class PagesMenu(Gio.Menu):
         Gio.Menu.__init__(self)
 
         # Setup actions
-        action = Gio.SimpleAction(name="new-private")
-        App().add_action(action)
-        action.connect('activate',
-                       self.__on_private_clicked)
         action = Gio.SimpleAction(name="openall")
         action.set_enabled(False)
         App().add_action(action)
@@ -151,16 +147,6 @@ class PagesMenu(Gio.Menu):
             if action is not None:
                 App().remove_action(encoded)
             self.__closed_section.remove(0)
-
-    def __on_private_clicked(self, action, variant):
-        """
-            Add a new private view
-            @param Gio.SimpleAction
-            @param GVariant
-        """
-        App().active_window.container.add_webview(App().start_page,
-                                                  LoadingType.FOREGROUND,
-                                                  True)
 
     def __on_openall_clicked(self, action, variant):
         """
