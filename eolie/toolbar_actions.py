@@ -165,7 +165,7 @@ class ToolbarActions(Gtk.Bin):
         self.__window.close_popovers()
         self.__window.toolbar.title.start_search()
 
-    def _on_pages_button_toggled(self, button):
+    def _on_application_button_toggled(self, button):
         """
             Show pages popover
             @param button as Gtk.ToggleButton
@@ -173,13 +173,12 @@ class ToolbarActions(Gtk.Bin):
         self.__window.close_popovers()
         if not button.get_active():
             return
-        popover = Gtk.Popover.new_from_model(button, App().pages_menu)
+        from eolie.menu_application import ApplicationMenu
+        menu = ApplicationMenu()
+        popover = Gtk.Popover.new_from_model(button, menu)
         popover.set_modal(False)
         self.__window.register(popover)
-        popover.forall(self.__update_popover_internals)
-        popover.connect("closed",
-                        self.__on_pages_popover_closed,
-                        button)
+        popover.connect("closed", lambda x: button.set_active(False))
         popover.popup()
 
     def _on_view_button_toggled(self, button):
@@ -215,14 +214,6 @@ class ToolbarActions(Gtk.Bin):
             widget.set_tooltip_text(widget.get_text())
         elif hasattr(widget, "forall"):
             GLib.idle_add(widget.forall, self.__update_popover_internals)
-
-    def __on_pages_popover_closed(self, popover, button):
-        """
-            Clear menu actions
-            @param popover
-            @param button as Gtk.ToggleButton
-        """
-        button.set_active(False)
 
     def __on_navigation_popover_closed(self, popover, model):
         """

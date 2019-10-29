@@ -10,13 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gio, GLib
+from gi.repository import Gtk
 
 from gettext import gettext as _
 
 from eolie.menu_languages import LanguagesMenu
 from eolie.menu_block import BlockMenu
-from eolie.define import App
 
 
 class ToolbarMenu(Gtk.PopoverMenu):
@@ -37,7 +36,6 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.__toolbar = toolbar
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarMenu.ui")
-        self.__spinner = builder.get_object("spinner")
         if not toolbar.home_button.is_visible():
             builder.get_object("toolbar_items").show()
         fullscreen_button = builder.get_object("fullscreen_button")
@@ -62,34 +60,6 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.add(languages_menu)
         self.child_set_property(block_menu, "submenu", "block_menu")
         self.child_set_property(languages_menu, "submenu", "languages")
-
-        # Add old «Application Menu»
-        settings_action = Gio.SimpleAction.new("settings", None)
-        settings_action.connect("activate", self.__on_settings_activate)
-        App().add_action(settings_action)
-
-        about_action = Gio.SimpleAction.new("about", None)
-        about_action.connect("activate", self.__on_about_activate)
-        App().add_action(about_action)
-
-        show_sidebar = App().settings.get_value("show-sidebar")
-        sidebar_action = Gio.SimpleAction.new_stateful(
-            "sidebar",
-            None,
-            GLib.Variant.new_boolean(show_sidebar))
-        sidebar_action.connect("change-state", self.__on_sidebar_change_state)
-        App().add_action(sidebar_action)
-
-        shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
-        shortcuts_action.connect("activate", self.__on_shortcuts_activate)
-        App().add_action(shortcuts_action)
-
-        quit_action = Gio.SimpleAction.new("quit", None)
-        quit_action.connect("activate", lambda x, y: App().quit())
-        App().add_action(quit_action)
-
-        self.connect("map", self.__on_map)
-        self.connect("unmap", self.__on_unmap)
 
 #######################
 # PROTECTED           #
@@ -165,82 +135,3 @@ class ToolbarMenu(Gtk.PopoverMenu):
 #######################
 # PRIVATE             #
 #######################
-    def __on_settings_activate(self, action, param):
-        """
-            Show settings dialog
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        from eolie.settings import SettingsDialog
-        dialog = SettingsDialog(self.__window)
-        dialog.show()
-
-    def __on_about_activate(self, action, param):
-        """
-            Setup about dialog
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/AboutDialog.ui')
-        about = builder.get_object('about_dialog')
-        about.set_transient_for(self.__window)
-        about.connect("response", self.__on_about_activate_response)
-        about.show()
-
-    def __on_shortcuts_activate(self, action, param):
-        """
-            Show shortcuts
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/Shortcuts.ui")
-        shortcuts = builder.get_object("shortcuts")
-        shortcuts.set_transient_for(self.__window)
-        shortcuts.show()
-
-    def __on_about_activate_response(self, dialog, response_id):
-        """
-            Destroy about dialog when closed
-            @param dialog as Gtk.Dialog
-            @param response ID as int
-        """
-        dialog.destroy()
-
-    def __on_sidebar_change_state(self, action, value):
-        """
-            Show/hide sidebar
-            @param action as Gio.SimpleAction
-            @param value as bool
-        """
-        action.set_state(value)
-        App().settings.set_value("show-sidebar", GLib.Variant("b", value))
-
-    def __on_worker_syncing(self, worker, status):
-        """
-            Update sync status
-            @param worker as SyncWorker
-            @param status as bool
-        """
-        if status:
-            self.__spinner.start()
-        else:
-            self.__spinner.stop()
-
-    def __on_map(self, widget):
-        """
-            Connect signals and update sync status
-        """
-        if App().sync_worker is not None:
-            App().sync_worker.connect("syncing", self.__on_worker_syncing)
-            if App().sync_worker.syncing:
-                self.__spinner.start()
-
-    def __on_unmap(self, widget):
-        """
-            Disconnect signals and update sync status
-        """
-        self.__spinner.stop()
-        if App().sync_worker is not None:
-            App().sync_worker.disconnect_by_func(self.__on_worker_syncing)
