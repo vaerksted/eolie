@@ -56,11 +56,15 @@ class AdContentBlocker(GObject.Object):
         """
             Update current filters with new exceptions
         """
-        f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
-        if f.query_exists():
-            (status, content, tag) = f.load_contents(None)
-            if status:
-                self.__task_helper.run(self.__save_rules, content)
+        try:
+            f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
+            if f.query_exists():
+                (status, content, tag) = f.load_contents(None)
+                if status:
+                    rules = json.loads(content.decode("utf-8"))
+                    self.__task_helper.run(self.__save_rules, rules)
+        except Exception as e:
+            Logger.error("AdContentBlocker::update(): %s", e)
 
     def stop(self):
         """
@@ -88,10 +92,11 @@ class AdContentBlocker(GObject.Object):
 #######################
 # PRIVATE             #
 #######################
-    def __download_uris(self, uris):
+    def __download_uris(self, uris, rules=[]):
         """
             Update database from the web
             @param uris as [str]
+            @param data as []
         """
         if not Gio.NetworkMonitor.get_default().get_network_available():
             return
@@ -100,19 +105,19 @@ class AdContentBlocker(GObject.Object):
             self.__task_helper.load_uri_content(uri,
                                                 self.__cancellable,
                                                 self.__on_load_uri_content,
-                                                uris)
+                                                uris,
+                                                rules)
 
     def __save_rules(self, rules):
         """
             Save rules to file
             @param uri as str
-            @param rules as bytes
+            @param rules []
         """
-        data = json.loads(rules.decode("utf-8"))
-        data += self.__exceptions.rules
-        rules = json.dumps(data).encode("utf-8")
+        rules += self.__exceptions.rules
+        bytes = json.dumps(rules).encode("utf-8")
         try:
-            self.__store.save("adblock", GLib.Bytes(rules), self.__cancellable,
+            self.__store.save("adblock", GLib.Bytes(bytes), self.__cancellable,
                               self.__on_store_save)
         except Exception as e:
             Logger.error("AdContentBlocker::__save_rules(): %s", e)
@@ -142,38 +147,33 @@ class AdContentBlocker(GObject.Object):
         except Exception as e:
             Logger.error("AdContentBlocker::__on_store_save(): %s", e)
 
-    def __on_save_rules(self, result, uris):
-        """
-            Load next uri
-            @ignore result
-            @param uris as [str]
-        """
-        if self.__cancellable.is_cancelled():
-            return
-        self.__download_uris(uris)
-
-    def __on_load_uri_content(self, uri, status, content, uris):
+    def __on_load_uri_content(self, uri, status, content, uris, rules):
         """
             Save loaded values
             @param uri as str
             @param status as bool
             @param content as bytes
             @param uris as [str]
+            @param rules as []
         """
-        Logger.debug("AdContentBlocker::__on_load_uri_content(): %s", uri)
-        if status:
-            # Save to sources
-            f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
-            f.replace_contents(content,
-                               None,
-                               False,
-                               Gio.FileCreateFlags.REPLACE_DESTINATION,
-                               None)
-            self.__task_helper.run(self.__save_rules, content,
-                                   callback=(self.__on_save_rules, uris))
-        else:
-            self.__on_save_rules(None, uris)
-            Logger.error("AdContentBlocker::__on_load_uri_content(): %s", uri)
+        try:
+            Logger.debug("AdContentBlocker::__on_load_uri_content(): %s", uri)
+            if status:
+                rules += json.loads(content.decode("utf-8"))
+            if uris:
+                self.__download_uris(uris, rules)
+            else:
+                # Save to sources
+                f = Gio.File.new_for_path("%s/adblock.json" % self.__JSON_PATH)
+                content = json.dumps(rules).encode("utf-8")
+                f.replace_contents(content,
+                                   None,
+                                   False,
+                                   Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                   None)
+                self.__task_helper.run(self.__save_rules, rules)
+        except Exception as e:
+            Logger.error("AdContentBlocker::__on_load_uri_content(): %s", e)
 
     def __on_adblock_changed(self, settings, value):
         """
