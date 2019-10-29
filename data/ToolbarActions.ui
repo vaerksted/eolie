@@ -180,7 +180,6 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="tooltip_text" translatable="yes">More actions</property>
             <property name="image">image5</property>
             <signal name="toggled" handler="_on_application_button_toggled" swapped="no"/>
           </object>
