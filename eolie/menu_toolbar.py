@@ -10,12 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, Gio, GLib
 
 from gettext import gettext as _
+from urllib.parse import urlparse
 
 from eolie.menu_languages import LanguagesMenu
-from eolie.menu_block import BlockMenu
+from eolie.define import App
 
 
 class ToolbarMenu(Gtk.PopoverMenu):
@@ -49,16 +50,33 @@ class ToolbarMenu(Gtk.PopoverMenu):
         webview = self.__window.container.current.webview
         builder.get_object("default_zoom_button").set_label(
             "{} %".format(int(webview.get_zoom_level() * 100)))
-        block_menu = BlockMenu(uri, self.__window)
-        block_menu.show()
+        parsed = urlparse(uri)
+        builder.get_object("domain_label").set_text(parsed.netloc or uri)
+        # Add blocker actions
+        for blocker in ["block-ads", "block-popups",
+                        "block-images", "block-medias"]:
+            if not App().settings.get_value(blocker):
+                builder.get_object(blocker).hide()
+                continue
+            content_blocker = App().get_content_blocker(blocker)
+            exception = content_blocker.exceptions.is_domain_exception(
+                parsed.netloc)
+            action = Gio.SimpleAction.new_stateful(
+                "%s-exception" % blocker,
+                None,
+                GLib.Variant.new_boolean(exception))
+            action.connect("change-state",
+                           self.__on_exception_change_state,
+                           parsed.netloc,
+                           blocker)
+            window.add_action(action)
+
         languages_menu = LanguagesMenu(uri)
         languages_menu.show()
 
         # Add items
         self.add(widget)
-        self.add(block_menu)
         self.add(languages_menu)
-        self.child_set_property(block_menu, "submenu", "block_menu")
         self.child_set_property(languages_menu, "submenu", "languages")
 
 #######################
@@ -135,3 +153,19 @@ class ToolbarMenu(Gtk.PopoverMenu):
 #######################
 # PRIVATE             #
 #######################
+    def __on_exception_change_state(self, action, param, domain, blocker):
+        """
+            Set option value
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param domain as str
+            @param blocker as str
+        """
+        action.set_state(param)
+        content_blocker = App().get_content_blocker(blocker)
+        if content_blocker.exceptions.is_domain_exception(domain):
+            content_blocker.exceptions.remove_domain_exception(domain)
+        else:
+            content_blocker.exceptions.add_domain_exception(domain)
+        content_blocker.exceptions.save()
+        content_blocker.update()

@@ -19,99 +19,7 @@ from eolie.define import App
 from eolie.logger import Logger
 
 
-class BlockMenu(Gtk.Bin):
-    """
-        Menu for block policy management
-    """
-
-    def __init__(self, uri, window):
-        """
-            Init widget
-            @param uri as str
-            @param window as Window
-        """
-        Gtk.Bin.__init__(self)
-        self.__uri = uri
-        self.__window = window
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/BlockMenu.ui")
-        builder.connect_signals(self)
-        self.add(builder.get_object("menu"))
-        for blocker in ["block-ads", "block-popups",
-                        "block-images", "block-medias"]:
-            content_blocker = App().get_content_blocker(blocker)
-            # Enable blocking
-            option_value = App().settings.get_value(blocker)
-            action = Gio.SimpleAction.new_stateful(
-                blocker,
-                None,
-                GLib.Variant.new_boolean(option_value))
-            action.connect("change-state",
-                           self.__on_blocker_change_state,
-                           blocker)
-            window.add_action(action)
-            # Exception
-            parsed = urlparse(uri)
-            exception = content_blocker.exceptions.is_domain_exception(
-                parsed.netloc)
-            action = Gio.SimpleAction.new_stateful(
-                "%s-exception" % blocker,
-                None,
-                GLib.Variant.new_boolean(exception))
-            action.connect("change-state",
-                           self.__on_exception_change_state,
-                           parsed.netloc,
-                           blocker)
-            window.add_action(action)
-
-    @property
-    def window(self):
-        """
-            Get related window
-            @return Window
-        """
-        return self.__window
-
-    @property
-    def uri(self):
-        """
-            Get related uri
-            @return str
-        """
-        return self.__uri
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_blocker_change_state(self, action, param, blocker):
-        """
-            Set option value
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-            @param blocker as str
-        """
-        action.set_state(param)
-        App().settings.set_value(blocker, param)
-
-    def __on_exception_change_state(self, action, param, domain, blocker):
-        """
-            Set option value
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-            @param domain as str
-            @param blocker as str
-        """
-        action.set_state(param)
-        content_blocker = App().get_content_blocker(blocker)
-        if content_blocker.exceptions.is_domain_exception(domain):
-            content_blocker.exceptions.remove_domain_exception(domain)
-        else:
-            content_blocker.exceptions.add_domain_exception(domain)
-        content_blocker.exceptions.save()
-        content_blocker.update()
-
-
-class JSBlockMenu(BlockMenu):
+class JSBlockMenu:
     """
         Menu for JS block policy management
     """
@@ -128,7 +36,6 @@ class JSBlockMenu(BlockMenu):
         builder.add_from_resource("/org/gnome/Eolie/JSBlockMenu.ui")
         builder.connect_signals(self)
         self.__submenu = builder.get_object("submenu")
-        BlockMenu.__init__(self, uri, window, True)
         self.add(builder.get_object("menu"))
         self.set_size_request(-1, 400)
 
@@ -140,7 +47,6 @@ class JSBlockMenu(BlockMenu):
             Populate Scripts
             @param widget as Gtk.Widget
         """
-        BlockMenu._on_map(self, widget)
         self._actions = []
         page_id = self.window.container.current.webview.get_page_id()
         App().helper.call("GetScripts", page_id, None,
@@ -151,7 +57,6 @@ class JSBlockMenu(BlockMenu):
             Clear submenu
             @param widget a Gtk.Widget
         """
-        BlockMenu._on_unmap(self, widget)
         for child in self.__submenu.get_children():
             child.destroy()
 

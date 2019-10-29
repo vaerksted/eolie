@@ -29,12 +29,34 @@ class ApplicationMenu(Gio.Menu):
         """
         Gio.Menu.__init__(self)
         self.__window = window
+        # Main actions menu
         action = Gio.SimpleAction(name="new-private")
         App().add_action(action)
         action.connect("activate",
                        self.__on_private_clicked)
         self.append(_("New private page"), "app.new-private")
 
+        # Blockers submenu
+        blockers_menu = Gio.Menu()
+        for (label, blocker) in [
+                (_("Block ads"), "block-ads"),
+                (_("Block popups"), "block-popups"),
+                (_("Block images"), "block-images"),
+                (_("Block medias"), "block-medias")]:
+            value = App().settings.get_value(blocker)
+            action = Gio.SimpleAction.new_stateful(
+                blocker,
+                None,
+                GLib.Variant.new_boolean(value))
+            App().add_action(action)
+            action.connect("change-state",
+                           self.__on_blocker_change_state,
+                           blocker)
+            blockers_menu.append(label, "app.%s" % blocker)
+
+        self.append_submenu(_("Blockers"), blockers_menu)
+
+        # Default application menu
         section = Gio.Menu()
         settings_action = Gio.SimpleAction.new("settings", None)
         settings_action.connect("activate", self.__on_settings_activate)
@@ -115,6 +137,16 @@ class ApplicationMenu(Gio.Menu):
         """
         action.set_state(value)
         App().settings.set_value("show-sidebar", GLib.Variant("b", value))
+
+    def __on_blocker_change_state(self, action, value, blocker):
+        """
+            Update blocker value
+            @param action as Gio.SimpleAction
+            @param value as bool
+            @param blocker as str
+        """
+        action.set_state(value)
+        App().settings.set_value(blocker, GLib.Variant("b", value))
 
     def __on_private_clicked(self, action, variant):
         """
