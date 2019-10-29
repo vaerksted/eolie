@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gdk, GLib
+from gi.repository import Gdk, GLib, Gtk, Pango
 
 import unicodedata
 import string
@@ -109,6 +109,22 @@ def resize_favicon(favicon):
     context.set_source_surface(favicon, 0, 0)
     context.paint()
     return surface
+
+
+# TODO Use Lollypop menu builder
+def update_popover_internals(widget):
+    """
+        Little hack to force Gtk.ModelButton to show image
+        @param widget as Gtk.Widget
+    """
+    if isinstance(widget, Gtk.Image):
+        widget.show()
+    elif isinstance(widget, Gtk.Label):
+        widget.set_ellipsize(Pango.EllipsizeMode.END)
+        widget.set_max_width_chars(40)
+        widget.set_tooltip_text(widget.get_text())
+    elif hasattr(widget, "forall"):
+        GLib.idle_add(widget.forall, update_popover_internals)
 
 
 def get_snapshot(webview, result, callback, *args):

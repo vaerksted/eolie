@@ -14,7 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
-from eolie.utils import resize_favicon
+from eolie.utils import resize_favicon, update_popover_internals
 from eolie.logger import Logger
 
 
@@ -370,7 +370,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                            "submenu", "moveto")
                 popover.set_relative_to(eventbox)
                 popover.set_position(Gtk.PositionType.RIGHT)
-                popover.forall(self.__update_popover_internals)
+                popover.forall(update_popover_internals)
                 popover.show()
                 return True
         except Exception as e:
@@ -393,18 +393,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             return True
         else:
             return row2.view.webview.atime > row1.view.webview.atime
-
-    def __update_popover_internals(self, widget):
-        """
-            Little hack to manage Gtk.ModelButton text
-            @param widget as Gtk.Widget
-        """
-        if isinstance(widget, Gtk.Label):
-            widget.set_ellipsize(Pango.EllipsizeMode.END)
-            widget.set_max_width_chars(30)
-            widget.set_tooltip_text(widget.get_text())
-        elif hasattr(widget, "forall"):
-            GLib.idle_add(widget.forall, self.__update_popover_internals)
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """

@@ -37,9 +37,6 @@ class PagesMenu(Gio.Menu):
         action.connect('activate',
                        self.__on_openall_clicked)
         # Setup menu
-        item = Gio.MenuItem.new(_("New private page"), "app.new-private")
-        item.set_icon(Gio.ThemedIcon.new("user-not-tracked-symbolic"))
-        self.append_item(item)
         self.__closed_section = Gio.Menu()
         self.append_section(_("Closed pages"), self.__closed_section)
         item = Gio.MenuItem.new(_("Open all pages"), "app.openall")

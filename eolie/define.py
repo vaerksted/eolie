@@ -32,6 +32,10 @@ ADBLOCK_URIS = ["https://easylist-downloads.adblockplus.org/" +
                 "easylist_content_blocker.json"]
 
 
+MARGIN = 15
+MARGIN_SMALL = 5
+
+
 class TimeSpan:
     HOUR = "0"
     DAY = "1"

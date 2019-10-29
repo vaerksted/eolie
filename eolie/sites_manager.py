@@ -13,11 +13,11 @@
 from gi.repository import Gtk, Gdk, GLib, WebKit2
 
 from eolie.sites_manager_child import SitesManagerChild
-from eolie.define import App, LoadingType
-from eolie.utils import get_safe_netloc
+from eolie.define import App, LoadingType, MARGIN_SMALL
+from eolie.utils import get_safe_netloc, update_popover_internals
 
 
-class SitesManager(Gtk.EventBox):
+class SitesManager(Gtk.Grid):
     """
         Site manager (merged netloc of opened pages)
     """
@@ -27,11 +27,13 @@ class SitesManager(Gtk.EventBox):
             Init stack
             @param window as Window
         """
-        Gtk.EventBox.__init__(self)
+        Gtk.Grid.__init__(self)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__window = window
         self.__initial_sort = []
         self.set_property("width-request", 50)
-        self.connect("button-press-event", self.__on_button_press)
+        # FIXME
+        # self.connect("button-press-event", self.__on_button_press)
         self.get_style_context().add_class("sidebar")
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_policy(Gtk.PolicyType.NEVER,
@@ -53,10 +55,19 @@ class SitesManager(Gtk.EventBox):
         self.__box.set_margin_bottom(2)
         self.__box.show()
         self.__box.connect("row-activated", self.__on_row_activated)
+
         viewport.set_property("valign", Gtk.Align.START)
         viewport.add(self.__box)
 
+        menu_button = Gtk.Button.new_from_icon_name(
+            "view-more-horizontal-symbolic", Gtk.IconSize.BUTTON)
+        menu_button.show()
+        menu_button.get_style_context().add_class("overlay-button")
+        menu_button.set_property("margin", MARGIN_SMALL)
+        menu_button.connect("clicked", self.__on_menu_button_clicked)
+
         self.add(self.__scrolled)
+        self.add(menu_button)
 
     def add_view(self, view):
         """
@@ -345,3 +356,15 @@ class SitesManager(Gtk.EventBox):
         if not up:
             child_index += 1
         self.__box.insert(row, child_index)
+
+    def __on_menu_button_clicked(self, button):
+        """
+            Show pages menu
+            @param button as Gtk.Button
+        """
+        self.__window.close_popovers()
+        popover = Gtk.Popover.new_from_model(button, App().pages_menu)
+        popover.set_modal(False)
+        self.__window.register(popover)
+        popover.forall(update_popover_internals)
+        popover.popup()
