@@ -34,9 +34,24 @@
          <summary>Show sidebar(sites manager)</summary>
          <description />
       </key>
-      <key type="b" name="adblock">
+      <key type="b" name="block-ads">
          <default>true</default>
          <summary>Block ads on pages</summary>
+         <description />
+      </key>
+      <key type="b" name="block-popups">
+         <default>true</default>
+         <summary>Block all unwanted popups</summary>
+         <description />
+      </key>
+      <key type="b" name="block-images">
+         <default>false</default>
+         <summary>Block all images</summary>
+         <description />
+      </key>
+      <key type="b" name="block-scripts">
+         <default>false</default>
+         <summary>Block all JavaScript</summary>
          <description />
       </key>
       <key type="b" name="trust-websites-adblock">
@@ -52,21 +67,6 @@
       <key type="b" name="enable-smooth-scrolling">
          <default>true</default>
          <summary>Enable smooth scrolling</summary>
-         <description />
-      </key>
-      <key type="b" name="popupblock">
-         <default>true</default>
-         <summary>Block all unwanted popups</summary>
-         <description />
-      </key>
-      <key type="b" name="imageblock">
-         <default>false</default>
-         <summary>Block all images</summary>
-         <description />
-      </key>
-      <key type="b" name="jsblock">
-         <default>false</default>
-         <summary>Block all JavaScript</summary>
          <description />
       </key>
       <key type="s" name="download-uri">

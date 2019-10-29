@@ -12,7 +12,6 @@
 
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
-from urllib.parse import urlparse
 from gettext import gettext as _
 
 from eolie.define import App
@@ -57,7 +56,6 @@ class ToolbarEnd(Gtk.Bin):
         self.__home_button = builder.get_object("home_button")
         self.__menu_button = builder.get_object("menu_button")
         self.__download_button = builder.get_object("download_button")
-        self.__adblock_button = builder.get_object("adblock_button")
         self.__settings_button = builder.get_object("settings_button")
         self.__sync_button = builder.get_object("sync_button")
         self.__tls_button = builder.get_object("tls_button")
@@ -297,51 +295,6 @@ class ToolbarEnd(Gtk.Bin):
                 WebKit2.SaveMode.MHTML,
                 None,
                 None)
-
-    def __on_action_change_state(self, action, param, option):
-        """
-            Set adblock state
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-            @param option as str
-        """
-        action.set_state(param)
-        App().settings.set_value(option, param)
-        self.__window.container.current.webview.reload()
-
-    def __on_trust_change_state(self, action, param):
-        """
-            Set trust state
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        App().settings.set_value("trust_websites", param)
-        self.__window.container.current.webview.reload()
-
-    def __on_popup_change_state(self, action, param):
-        """
-            Update popup block state
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        action.set_state(param)
-        App().settings.set_value("popupblock", param)
-
-    def __on_image_change_state(self, action, param):
-        """
-            Update image block state
-            @param action as Gio.SimpleAction
-            @param param as GLib.Variant
-        """
-        uri = self.__window.container.current.webview.uri
-        parsed = urlparse(uri)
-        if parsed.scheme in ["http", "https"]:
-            action.set_state(param)
-            if param.get_boolean():
-                App().image_exceptions.add_exception(parsed.netloc)
-            else:
-                App().image_exceptions.remove_exception(parsed.netloc)
 
     def __on_download(self, download_manager, name=""):
         """

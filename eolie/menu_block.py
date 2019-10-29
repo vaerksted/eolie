@@ -37,7 +37,7 @@ class BlockMenu(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/BlockMenu.ui")
         builder.connect_signals(self)
         self.add(builder.get_object("menu"))
-        for blocker in ["adblock", "popupblock"]:
+        for blocker in ["block-ads", "block-popups", "block-images"]:
             content_blocker = App().get_content_blocker(blocker)
             # Enable blocking
             option_value = App().settings.get_value(blocker)
@@ -92,15 +92,22 @@ class BlockMenu(Gtk.Bin):
         action.set_state(param)
         App().settings.set_value(blocker, param)
 
-    def __on_exception_change_state(self, action, param, blocker):
+    def __on_exception_change_state(self, action, param, domain, blocker):
         """
             Set option value
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
+            @param domain as str
             @param blocker as str
         """
         action.set_state(param)
-        return
+        content_blocker = App().get_content_blocker(blocker)
+        if content_blocker.exceptions.is_domain_exception(domain):
+            content_blocker.exceptions.remove_domain_exception(domain)
+        else:
+            content_blocker.exceptions.add_domain_exception(domain)
+        content_blocker.exceptions.save()
+        content_blocker.update()
 
 
 class JSBlockMenu(BlockMenu):

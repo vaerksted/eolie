@@ -29,7 +29,7 @@ class AdContentBlocker(ContentBlocker):
             Init adblock helper
         """
         try:
-            ContentBlocker.__init__(self, "adblock")
+            ContentBlocker.__init__(self, "block-ads")
             self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
             Logger.error("AdContentBlocker::__init__(): %s", e)
@@ -70,7 +70,8 @@ class AdContentBlocker(ContentBlocker):
                 self.__download_uris(uris, rules)
             else:
                 # Save to sources
-                f = Gio.File.new_for_path("%s/adblock.json" % self._JSON_PATH)
+                f = Gio.File.new_for_path(
+                    "%s/block-ads.json" % self._JSON_PATH)
                 content = json.dumps(rules).encode("utf-8")
                 f.replace_contents(content,
                                    None,

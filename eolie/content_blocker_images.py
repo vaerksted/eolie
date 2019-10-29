@@ -16,17 +16,16 @@ from eolie.content_blocker import ContentBlocker
 from eolie.logger import Logger
 
 
-class PopupsContentBlocker(ContentBlocker):
+class ImagesContentBlocker(ContentBlocker):
     """
-        A WebKit Content Blocker for popups
+        A WebKit Content Blocker for images
     """
 
     DEFAULT = [
         {
             "trigger": {
                 "url-filter": ".*",
-                "load-type": ["third-party"],
-                "resource-type": ["popup"]
+                "resource-type": ["image"]
             },
             "action": {
                 "type": "block"
@@ -39,7 +38,7 @@ class PopupsContentBlocker(ContentBlocker):
             Init adblock helper
         """
         try:
-            ContentBlocker.__init__(self, "block-popups")
+            ContentBlocker.__init__(self, "block-images")
             rules = self.DEFAULT + self.exceptions.rules
             bytes = json.dumps(rules).encode("utf-8")
             self.save(bytes)

@@ -30,7 +30,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.adblock</property>
+        <property name="action_name">win.block-ads</property>
         <property name="text" translatable="yes">Block ads</property>
       </object>
       <packing>
@@ -43,7 +43,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.adblock-exception</property>
+        <property name="action_name">win.block-ads-exception</property>
         <property name="text" translatable="yes">Not on this site</property>
       </object>
       <packing>
@@ -56,7 +56,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.popupblock</property>
+        <property name="action_name">win.block-popups</property>
         <property name="text" translatable="yes">Block popups</property>
       </object>
       <packing>
@@ -69,12 +69,38 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="action_name">win.popupblock-exception</property>
+        <property name="action_name">win.block-popups-exception</property>
         <property name="text" translatable="yes">Not on this site</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">win.block-images</property>
+        <property name="text" translatable="yes">Block images</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">8</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">win.block-images-exception</property>
+        <property name="text" translatable="yes">Not on this site</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">9</property>
       </packing>
     </child>
     <child>
@@ -179,6 +205,58 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">4</property>
+      </packing>
+    </child>
+        <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">5</property>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="valign">center</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Images</property>
+            <style>
+              <class name="dim-label"/>
+            </style>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="valign">center</property>
+            <property name="hexpand">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">7</property>
       </packing>
     </child>
   </object>

@@ -80,7 +80,9 @@ class ContentBlocker(GObject.Object):
                 (status, content, tag) = f.load_contents(None)
                 if status:
                     rules = json.loads(content.decode("utf-8"))
-                    self._task_helper.run(self.__save_rules, rules)
+                    self._task_helper.run(self._save_rules, rules)
+            else:
+                self._task_helper.run(self._save_rules, self.DEFAULT)
         except Exception as e:
             Logger.error("ContentBlocker::update(): %s", e)
 
@@ -132,10 +134,11 @@ class ContentBlocker(GObject.Object):
             @param uri as str
             @param rules []
         """
-        if self.__exceptions is not None:
-            rules += self.__exceptions.rules
-        bytes = json.dumps(rules).encode("utf-8")
         try:
+            new_rules = list(rules)
+            if self.__exceptions is not None:
+                new_rules += self.__exceptions.rules
+            bytes = json.dumps(new_rules).encode("utf-8")
             self.save(bytes)
         except Exception as e:
             Logger.error("ContentBlocker::_save_rules(): %s", e)

@@ -31,6 +31,7 @@ from eolie.window import Window
 from eolie.art import Art
 from eolie.content_blocker_ad import AdContentBlocker
 from eolie.content_blocker_popups import PopupsContentBlocker
+from eolie.content_blocker_images import ImagesContentBlocker
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_settings import DatabaseSettings
@@ -317,7 +318,8 @@ class Application(Gtk.Application):
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
         for cls in [AdContentBlocker,
-                    PopupsContentBlocker]:
+                    PopupsContentBlocker,
+                    ImagesContentBlocker]:
             content_blocker = cls()
             content_blocker.connect("set-filter",
                                     self.__on_content_blocker_set_filter)
