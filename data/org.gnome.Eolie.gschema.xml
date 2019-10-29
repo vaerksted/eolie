@@ -41,17 +41,22 @@
       </key>
       <key type="b" name="block-popups">
          <default>true</default>
-         <summary>Block all unwanted popups</summary>
+         <summary>Block unwanted popups</summary>
          <description />
       </key>
       <key type="b" name="block-images">
          <default>false</default>
-         <summary>Block all images</summary>
+         <summary>Block images</summary>
+         <description />
+      </key>
+      <key type="b" name="block-medias">
+         <default>false</default>
+         <summary>Block medias</summary>
          <description />
       </key>
       <key type="b" name="block-scripts">
          <default>false</default>
-         <summary>Block all JavaScript</summary>
+         <summary>Block JavaScript</summary>
          <description />
       </key>
       <key type="b" name="trust-websites-adblock">

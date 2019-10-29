@@ -37,7 +37,8 @@ class BlockMenu(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/BlockMenu.ui")
         builder.connect_signals(self)
         self.add(builder.get_object("menu"))
-        for blocker in ["block-ads", "block-popups", "block-images"]:
+        for blocker in ["block-ads", "block-popups",
+                        "block-images", "block-medias"]:
             content_blocker = App().get_content_blocker(blocker)
             # Enable blocking
             option_value = App().settings.get_value(blocker)
