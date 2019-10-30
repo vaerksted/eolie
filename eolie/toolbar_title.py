@@ -1029,7 +1029,6 @@ class ToolbarTitle(Gtk.Bin):
         css += ".placeholder:dir(rtl)"\
                "{margin-right: %spx;margin-left: 0px;}" % placeholder_margin
         # Get value from headerbar as not possible in pure CSS
-        style_context = self.get_style_context()
-        color = style_context.get_color(Gtk.StateFlags.NORMAL).to_string()
+        color = style.get_color(Gtk.StateFlags.ACTIVE).to_string()
         css += ".uribar { color: %s; caret-color:%s}" % (color, color)
         self.__css_provider.load_from_data(css.encode("utf-8"))
