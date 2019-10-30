@@ -12,9 +12,11 @@
 
 from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
+from urllib.parse import urlparse
+
 from eolie.label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals
-from eolie.utils import get_round_surface
+from eolie.utils import get_round_surface, get_char_surface
 from eolie.define import App
 from eolie.logger import Logger
 
@@ -397,8 +399,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                             surface.get_width() / 4)
                 self.__image.set_from_surface(resize_favicon(surface))
             else:
-                self.__image.set_from_icon_name(
-                    "web-browser-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
+                parsed = urlparse(webview.uri)
+                if parsed.netloc:
+                    netloc = parsed.netloc.replace("www.", "")
+                    surface = get_char_surface(netloc[0])
+                    self.__image.set_from_surface(surface)
+                else:
+                    self.__image.set_from_icon_name(
+                        "web-browser-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
 
     def __sort_func(self, row1, row2):
         """
