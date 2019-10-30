@@ -422,7 +422,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             return
         if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
-                                            Gtk.IconSize.INVALID)
+                                            Gtk.IconSize.BUTTON)
             return
         self.__set_favicon(webview)
 

@@ -16,7 +16,7 @@ from gettext import gettext as _
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import App, ArtSize
-from eolie.utils import resize_favicon, update_popover_internals
+from eolie.utils import update_popover_internals
 
 
 class PagesManagerChild(Gtk.FlowBoxChild):
@@ -46,6 +46,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__indicator_label.set_property("valign", Gtk.Align.CENTER)
         self.__indicator_label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__indicator_label.show()
+        self.__indicator_image = builder.get_object("indicator_image")
         if view.webview.title:
             self.__indicator_label.set_text(view.webview.title)
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
@@ -59,7 +60,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Gtk.IconSize.INVALID)
         self.__close_button_image.set_property("pixel-size",
                                                ArtSize.FAVICON)
-        self.__spinner = builder.get_object("spinner")
         self.add(builder.get_object("widget"))
 
         self.get_style_context().add_class("sidebar-item")
@@ -78,8 +78,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         view.connect("destroying", self.__on_view_destroying)
         self.__view.webview.connect("snapshot-changed",
                                     self.__on_webview_snapshot_changed)
-        self.__view.webview.connect("notify::favicon",
-                                    self.__on_webview_favicon_changed)
         self.__view.webview.connect("notify::is-playing-audio",
                                     self.__on_webview_notify_is_playing_audio)
         self.__view.webview.connect("title-changed",
@@ -88,7 +86,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                     self.__on_webview_load_changed)
         self.__view.webview.connect("shown",
                                     self.__on_webview_shown)
-        self.__on_webview_favicon_changed(self.__view.webview)
 
     @property
     def view(self):
@@ -229,31 +226,11 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
             @param playing as bool
         """
-        self.__on_webview_favicon_changed(webview)
-
-    def __on_webview_favicon_changed(self, webview, *ignore):
-        """
-            Set favicon
-            @param webview as WebView
-        """
-        if webview.current_event == WebKit2.LoadEvent.STARTED:
-            return
-        image = self.__close_button.get_image()
-        if webview.is_playing_audio():
-            image.set_from_icon_name("audio-speakers-symbolic",
-                                     Gtk.IconSize.INVALID)
-            return
-        artwork = App().art.get_icon_theme_artwork(webview.uri,
-                                                   webview.ephemeral)
-        if artwork is not None:
-            image.set_from_icon_name(artwork, Gtk.IconSize.INVALID)
+        if playing:
+            self.__indicator_image.set_from_icon_name(
+                "audio-speakers-symbolic", Gtk.IconSize.BUTTON)
         else:
-            surface = webview.get_favicon()
-            if surface is not None:
-                image.set_from_surface(resize_favicon(surface))
-            else:
-                image.set_from_icon_name("applications-internet",
-                                         Gtk.IconSize.INVALID)
+            self.__indicator_image.set_from_surface(None)
 
     def __on_webview_title_changed(self, webview, title):
         """
@@ -269,18 +246,15 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        uri = webview.uri
-        if event == WebKit2.LoadEvent.STARTED:
-            image = self.__close_button.get_image()
-            image.set_from_icon_name("content-loading-symbolic",
-                                     Gtk.IconSize.INVALID)
-            self.__spinner.start()
-            self.__indicator_label.set_text(uri)
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self.__indicator_label.set_text(uri)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.__on_webview_favicon_changed(webview)
-            self.__spinner.stop()
+        if event != WebKit2.LoadEvent.FINISHED:
+            self.__indicator_image.set_from_icon_name(
+                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
+            self.__indicator_image.get_style_context().add_class(
+                "image-rotate")
+        else:
+            self.__indicator_image.set_from_surface(None)
+            self.__indicator_image.get_style_context().remove_class(
+                "image-rotate")
 
     def __on_webview_snapshot_changed(self, webview, surface):
         """
