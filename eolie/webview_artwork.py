@@ -180,9 +180,10 @@ class WebViewArtwork:
         """
         try:
             surface = favicon_db.get_favicon_finish(result)
-            surface = get_round_surface(surface,
-                                        self.get_scale_factor(),
-                                        surface.get_width() / 4)
+            if surface is not None:
+                surface = get_round_surface(surface,
+                                            self.get_scale_factor(),
+                                            surface.get_width() / 4)
             self.__set_favicon_from_surface(surface,
                                             uri,
                                             initial_uri)
