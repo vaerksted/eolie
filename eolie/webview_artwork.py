@@ -188,7 +188,7 @@ class WebViewArtwork:
                                             uri,
                                             initial_uri)
         except Exception as e:
-            Logger.warning("WebViewArtwork::__on_get_favicon(): %s", e)
+            Logger.debug("WebViewArtwork::__on_get_favicon(): %s", e)
             if first:
                 favicons_path = App().favicons_path + "/WebpageIcons.db"
                 best_uri = get_favicon_best_uri(favicons_path, uri)
