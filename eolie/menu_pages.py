@@ -93,7 +93,7 @@ class PagesMenu(Gio.Menu):
                 if icon is not None:
                     item.set_icon(icon)
             else:
-                item.set_icon(Gio.ThemedIcon.new("applications-internet"))
+                item.set_icon(Gio.ThemedIcon.new("web-browser-symbolic"))
         self.__closed_section.insert_item(0, item)
         action = App().lookup_action("openall")
         if action is not None:

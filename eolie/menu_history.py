@@ -57,7 +57,7 @@ class HistoryMenu(Gio.Menu):
                     if icon is not None:
                         item.set_icon(icon)
                 else:
-                    item.set_icon(Gio.ThemedIcon.new("applications-internet"))
+                    item.set_icon(Gio.ThemedIcon.new("web-browser-symbolic"))
             self.append_item(item)
 
     def clean(self):

@@ -126,7 +126,7 @@ class Art:
         elif uri == "populars://":
             return "emote-love-symbolic"
         elif uri == "about://":
-            return "applications-internet"
+            return "web-browser-symbolic"
         else:
             return None
 

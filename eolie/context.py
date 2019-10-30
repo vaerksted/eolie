@@ -108,7 +108,7 @@ class Context:
             if favicon_path is not None:
                 favicon_uri = "file://%s" % favicon_path
             else:
-                favicon_uri = "internal://applications-internet"
+                favicon_uri = "internal://web-browser-symbolic"
             html_start += '<a class="child" id="%s"\
                            title="%s" href="%s">\
                            <img src="file://%s"></img>\

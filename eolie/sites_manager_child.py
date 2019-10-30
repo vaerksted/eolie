@@ -396,6 +396,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                             webview.get_scale_factor(),
                                             surface.get_width() / 4)
                 self.__image.set_from_surface(resize_favicon(surface))
+            else:
+                self.__image.set_from_icon_name(
+                    "web-browser-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
 
     def __sort_func(self, row1, row2):
         """

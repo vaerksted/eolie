@@ -211,7 +211,7 @@ class Row(Gtk.ListBoxRow):
         if favicon_path is not None:
             favicon.set_from_file(favicon_path)
         else:
-            favicon.set_from_icon_name("applications-internet",
+            favicon.set_from_icon_name("web-browser-symbolic",
                                        Gtk.IconSize.LARGE_TOOLBAR)
         favicon.show()
 
