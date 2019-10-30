@@ -247,6 +247,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param event as WebKit2.LoadEvent
         """
         if event != WebKit2.LoadEvent.FINISHED:
+            self.__image.set_from_surface(None)
             self.__indicator_image.set_from_icon_name(
                 "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
             self.__indicator_image.get_style_context().add_class(
