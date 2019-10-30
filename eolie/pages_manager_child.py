@@ -176,7 +176,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
            event.y <= 0 or\
            event.y >= allocation.height:
             self.__pin_button.set_opacity(0)
-            self.__on_webview_favicon_changed(self.__view.webview)
 
 #######################
 # PRIVATE             #
@@ -208,8 +207,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__view.webview.disconnect_by_func(
                                     self.__on_webview_snapshot_changed)
-        self.__view.webview.disconnect_by_func(
-                                    self.__on_webview_favicon_changed)
         self.__view.webview.disconnect_by_func(
                                     self.__on_webview_notify_is_playing_audio)
         self.__view.webview.disconnect_by_func(
