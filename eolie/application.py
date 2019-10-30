@@ -37,7 +37,6 @@ from eolie.content_blocker_scripts import ScriptsContentBlocker
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_settings import DatabaseSettings
-from eolie.database_phishing import DatabasePhishing
 from eolie.sqlcursor import SqlCursor
 from eolie.context import Context
 from eolie.search import Search
@@ -330,9 +329,6 @@ class Application(Gtk.Application):
             content_blocker.connect("unset-filter",
                                     self.__on_content_blocker_unset_filter)
             self.__content_blockers.append(content_blocker)
-        self.phishing = DatabasePhishing()
-        self.phishing.create_db()
-        self.phishing.update()
         self.art = Art()
 
         # Get a default user agent for search
@@ -430,10 +426,6 @@ class Application(Gtk.Application):
                 sql.execute("VACUUM")
                 sql.isolation_level = ""
             with SqlCursor(self.history) as sql:
-                sql.isolation_level = None
-                sql.execute("VACUUM")
-                sql.isolation_level = ""
-            with SqlCursor(self.phishing) as sql:
                 sql.isolation_level = None
                 sql.execute("VACUUM")
                 sql.isolation_level = ""

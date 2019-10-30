@@ -49,9 +49,6 @@ class WebViewNavigation:
             Load uri
             @param uri as str
         """
-        if App().phishing.is_phishing(uri):
-            self._show_phishing_error(uri)
-            return
         parsed = urlparse(uri)
         self.discard_error()
         # If not an URI, start a search
@@ -286,10 +283,6 @@ class WebViewNavigation:
             elif decision_type == WebKit2.PolicyDecisionType.NEW_WINDOW_ACTION:
                 decision.use()
                 return False
-            elif App().phishing.is_phishing(navigation_uri):
-                self._show_phishing_error(navigation_uri)
-                decision.ignore()
-                return True
             else:
                 self.discard_error()
                 self.__set_user_agent(navigation_uri)
@@ -306,10 +299,6 @@ class WebViewNavigation:
                 return True
             elif modifiers == Gdk.ModifierType.SHIFT_MASK:
                 self.new_page(navigation_uri, LoadingType.POPOVER)
-                decision.ignore()
-                return True
-            elif App().phishing.is_phishing(navigation_uri):
-                self._show_phishing_error(navigation_uri)
                 decision.ignore()
                 return True
             else:

@@ -63,34 +63,6 @@ class WebViewErrors:
 #######################
 # PROTECTED           #
 #######################
-    def _show_phishing_error(self, uri):
-        """
-            Show a warning about phishing
-            @param uri as str
-        """
-        self.stop_loading()
-        self.__error = True
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
-        (status, css_content, tag) = f.load_contents(None)
-        css = css_content.decode("utf-8")
-        # Hide reload button
-        css = css.replace("@button@", "display: none")
-        f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.html")
-        (status, content, tag) = f.load_contents(None)
-        html = content.decode("utf-8")
-        title = _("This page is dangerous")
-        detail = _("Eolie will not display this page")
-        icon = "dialog-warning-symbolic"
-        html = html % (title,
-                       css,
-                       uri,
-                       "internal://%s" % icon,
-                       title,
-                       _("%s is a phishing page") % uri,
-                       detail,
-                       "",
-                       "")
-        self.load_alternate_html(html, uri)
 
 #######################
 # PRIVATE             #
