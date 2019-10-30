@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 from eolie.label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals
 from eolie.utils import get_round_surface
+from eolie.define import App
 from eolie.logger import Logger
 
 
@@ -383,12 +384,18 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Set webview favicon
             @param webview as WebView
         """
-        surface = webview.get_favicon()
-        if surface is not None:
-            surface = get_round_surface(surface,
-                                        webview.get_scale_factor(),
-                                        surface.get_width() / 4)
-            self.__image.set_from_surface(resize_favicon(surface))
+        artwork = App().art.get_icon_theme_artwork(webview.uri,
+                                                   webview.ephemeral)
+        if artwork is not None:
+            self.__image.set_from_icon_name(
+                artwork, Gtk.IconSize.LARGE_TOOLBAR)
+        else:
+            surface = webview.get_favicon()
+            if surface is not None:
+                surface = get_round_surface(surface,
+                                            webview.get_scale_factor(),
+                                            surface.get_width() / 4)
+                self.__image.set_from_surface(resize_favicon(surface))
 
     def __sort_func(self, row1, row2):
         """
