@@ -15,7 +15,7 @@ from gi.repository import Gio
 import json
 
 from eolie.content_blocker import ContentBlocker
-from eolie.define import ADBLOCK_URIS
+from eolie.define import ADBLOCK_URIS, App
 from eolie.logger import Logger
 
 
@@ -30,7 +30,8 @@ class AdContentBlocker(ContentBlocker):
         """
         try:
             ContentBlocker.__init__(self, "block-ads")
-            self.__download_uris(list(ADBLOCK_URIS))
+            if App().settings.get_value("block-ads"):
+                self.__download_uris(list(ADBLOCK_URIS))
         except Exception as e:
             Logger.error("AdContentBlocker::__init__(): %s", e)
 
