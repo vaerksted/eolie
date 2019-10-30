@@ -54,7 +54,8 @@ class ToolbarMenu(Gtk.PopoverMenu):
         builder.get_object("domain_label").set_text(parsed.netloc or uri)
         # Add blocker actions
         for blocker in ["block-ads", "block-popups",
-                        "block-images", "block-medias"]:
+                        "block-images", "block-medias",
+                        "block-scripts"]:
             if not App().settings.get_value(blocker):
                 builder.get_object(blocker).hide()
                 continue
