@@ -17,7 +17,7 @@ from time import time
 from urllib.parse import urlparse
 
 from eolie.define import EOLIE_CACHE_PATH, ArtSize
-from eolie.utils import remove_www
+from eolie.utils import remove_www, get_round_surface
 from eolie.logger import Logger
 
 
@@ -106,6 +106,9 @@ class Art:
                 surface = Gdk.cairo_surface_create_from_pixbuf(pixbuf,
                                                                scale_factor,
                                                                None)
+                surface = get_round_surface(surface,
+                                            scale_factor,
+                                            ArtSize.FAVICON / 4)
                 return surface
         except Exception as e:
             Logger.debug("Art::get_favicon(): %s", e)

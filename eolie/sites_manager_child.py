@@ -13,8 +13,8 @@
 from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import App, ArtSize
 from eolie.utils import resize_favicon, update_popover_internals
+from eolie.utils import get_round_surface
 from eolie.logger import Logger
 
 
@@ -172,7 +172,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__netloc_label = builder.get_object("netloc")
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
-        self.__image.set_property("pixel-size", ArtSize.FAVICON)
         self.add(widget)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
                              Gdk.DragAction.MOVE)
@@ -379,6 +378,18 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon(self, webview):
+        """
+            Set webview favicon
+            @param webview as WebView
+        """
+        surface = webview.get_favicon()
+        if surface is not None:
+            surface = get_round_surface(surface,
+                                        webview.get_scale_factor(),
+                                        surface.get_width() / 4)
+            self.__image.set_from_surface(resize_favicon(surface))
+
     def __sort_func(self, row1, row2):
         """
             Sort pages
@@ -407,25 +418,13 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Set favicon
             @param webview as WebView
         """
-        if webview.current_event == WebKit2.LoadEvent.STARTED:
+        if webview.current_event != WebKit2.LoadEvent.FINISHED:
             return
-
         if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
                                             Gtk.IconSize.INVALID)
             return
-
-        artwork = App().art.get_icon_theme_artwork(webview.uri,
-                                                   webview.ephemeral)
-        if artwork is not None:
-            self.__image.set_from_icon_name(artwork, Gtk.IconSize.INVALID)
-        else:
-            surface = webview.get_favicon()
-            if surface is not None:
-                self.__image.set_from_surface(resize_favicon(surface))
-            else:
-                self.__image.set_from_icon_name("applications-internet",
-                                                Gtk.IconSize.INVALID)
+        self.__set_favicon(webview)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -535,8 +534,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__image.set_from_icon_name("content-loading-symbolic",
-                                            Gtk.IconSize.INVALID)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.__on_webview_favicon_changed(webview)
+        if event != WebKit2.LoadEvent.FINISHED:
+            self.__image.set_from_icon_name(
+                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
+            self.__image.get_style_context().add_class("image-rotate")
+        else:
+            self.__set_favicon(webview)
+            self.__image.get_style_context().remove_class("image-rotate")

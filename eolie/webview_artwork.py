@@ -15,8 +15,10 @@ from gi.repository import GLib, WebKit2, Gio
 from urllib.parse import urlparse
 
 from eolie.define import App
+from eolie.logger import Logger
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
+from eolie.utils import get_round_surface
 
 
 class WebViewArtwork:
@@ -172,10 +174,14 @@ class WebViewArtwork:
         """
         try:
             surface = favicon_db.get_favicon_finish(result)
+            surface = get_round_surface(surface,
+                                        self.get_scale_factor(),
+                                        surface.get_width() / 4)
             self.__set_favicon_from_surface(surface,
                                             uri,
                                             initial_uri)
-        except:
+        except Exception as e:
+            Logger.warning("WebViewArtwork::__on_get_favicon(): %s", e)
             if first:
                 favicons_path = App().favicons_path + "/WebpageIcons.db"
                 best_uri = get_favicon_best_uri(favicons_path, uri)
