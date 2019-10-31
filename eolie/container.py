@@ -17,13 +17,13 @@ from random import randint
 
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
-from eolie.pages_manager import PagesManager
 from eolie.define import App, LoadingType
 from eolie.webview_state import WebViewState, WebViewStateStruct
 from eolie.container_sidebar import SidebarContainer
+from eolie.container_expose import ExposeContainer
 
 
-class Container(Gtk.Overlay, SidebarContainer):
+class Container(Gtk.Overlay, SidebarContainer, ExposeContainer):
     """
         Main Eolie view
     """
@@ -38,30 +38,8 @@ class Container(Gtk.Overlay, SidebarContainer):
         Gtk.Overlay.__init__(self)
         self._window = window
         SidebarContainer.__init__(self)
+        ExposeContainer.__init__(self)
         self.__popover = WebViewPopover(window)
-        self.__current = None
-        self.__next_timeout_id = None
-        self.__previous_timeout_id = None
-
-        self.__stack = Gtk.Stack()
-        self.__stack.set_hexpand(True)
-        self.__stack.set_vexpand(True)
-        self.__stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.__stack.set_transition_duration(150)
-        self.__stack.show()
-
-        self.__expose_stack = Gtk.Stack()
-        self.__expose_stack.set_hexpand(True)
-        self.__expose_stack.set_vexpand(True)
-        self.__expose_stack.set_transition_type(
-            Gtk.StackTransitionType.CROSSFADE)
-        self.__expose_stack.set_transition_duration(150)
-        self.__expose_stack.show()
-        self.__pages_manager = PagesManager(self._window)
-        self.__pages_manager.show()
-        self._paned.add2(self.__expose_stack)
-        self.__expose_stack.add_named(self.__stack, "stack")
-        self.__expose_stack.add_named(self.__pages_manager, "expose")
         self.add(self._paned)
         # Show donation notification after one hour
         if App().settings.get_value("donation").get_int32() != self.__DONATION:
@@ -90,19 +68,19 @@ class Container(Gtk.Overlay, SidebarContainer):
             webview.load_uri(webview.uri)
         view = View(webview)
         view.show()
-        self.__pages_manager.add_view(view)
+        self.pages_manager.add_view(view)
         self.sites_manager.add_view(view)
-        self.__stack.add(view)
+        self._stack.add(view)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
-            self.__current = view
-            self.__pages_manager.update_visible_child()
+            self._current = view
+            self.pages_manager.update_visible_child()
             self.sites_manager.update_visible_child()
-            self.__stack.set_visible_child(view)
+            self._stack.set_visible_child(view)
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
-        count = len(self.__pages_manager.children)
+        count = len(self.pages_manager.children)
         self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
 
@@ -111,15 +89,15 @@ class Container(Gtk.Overlay, SidebarContainer):
             Add view to container
             @param view as View
         """
-        self.__current = view
-        self.__stack.add(view)
-        self.__pages_manager.add_view(view)
+        self._current = view
+        self._stack.add(view)
+        self.pages_manager.add_view(view)
         self.sites_manager.add_view(view)
-        self.__stack.set_visible_child(view)
-        count = len(self.__stack.get_children())
+        self._stack.set_visible_child(view)
+        count = len(self._stack.get_children())
         self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
-        self.__pages_manager.update_visible_child()
+        self.pages_manager.update_visible_child()
         self.sites_manager.update_visible_child()
 
     def remove_view(self, view):
@@ -127,16 +105,16 @@ class Container(Gtk.Overlay, SidebarContainer):
             Remove view from container
             @param view as View
         """
-        self.__stack.remove(view)
-        self.__pages_manager.remove_view(view)
+        self._stack.remove(view)
+        self.pages_manager.remove_view(view)
         self.sites_manager.remove_view(view)
-        children = self.__stack.get_children()
+        children = self._stack.get_children()
         if children:
-            self.__current = self.__stack.get_visible_child()
+            self._current = self._stack.get_visible_child()
             count = len(children)
             self._window.toolbar.actions.count_label.set_text(str(count))
             App().update_unity_badge()
-            self.__pages_manager.update_visible_child()
+            self.pages_manager.update_visible_child()
             self.sites_manager.update_visible_child()
         else:
             for window in App().windows:
@@ -151,18 +129,6 @@ class Container(Gtk.Overlay, SidebarContainer):
         if self.current is not None:
             self.current.webview.load_uri(uri)
 
-    def set_current(self, view, switch=False):
-        """
-            Set visible view
-            @param view as View
-            @param switch as bool
-        """
-        self.__current = view
-        self.__pages_manager.update_visible_child()
-        self.sites_manager.update_visible_child()
-        if switch:
-            self.__stack.set_visible_child(view)
-
     def popup_webview(self, webview, destroy):
         """
             Show webview in popopver
@@ -176,20 +142,6 @@ class Container(Gtk.Overlay, SidebarContainer):
             self.__popover.set_relative_to(self._window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
-
-    def set_expose(self, expose):
-        """
-            Show current views
-            @param expose as bool
-        """
-        if expose:
-            self.__pages_manager.update_sort(self.sites_manager.sort)
-            self.__pages_manager.set_filtered(True)
-        else:
-            self._window.toolbar.actions.view_button.set_active(False)
-            self._window.container.pages_manager.set_filter("")
-            self.__pages_manager.set_filtered(False)
-        self.__set_expose(expose)
 
     def try_close_view(self, view):
         """
@@ -266,118 +218,9 @@ class Container(Gtk.Overlay, SidebarContainer):
             # We are last row, add a new one
             self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
 
-    def next(self):
-        """
-            Show next view
-        """
-        if self.__next_timeout_id is None and\
-                self.__next_timeout_id != -1:
-            self.__next_timeout_id = GLib.timeout_add(
-                100,
-                self.__on_prev_next_timeout,
-                self.__pages_manager.next)
-        else:
-            self.__pages_manager.next()
-
-    def previous(self):
-        """
-            Show next view
-        """
-        if self.__previous_timeout_id is None and\
-                self.__previous_timeout_id != -1:
-            self.__previous_timeout_id = GLib.timeout_add(
-                100,
-                self.__on_prev_next_timeout,
-                self.__pages_manager.previous)
-        else:
-            self.__pages_manager.previous()
-
-    def ctrl_released(self):
-        """
-            Disable any pending expose
-        """
-        if self.__next_timeout_id is not None:
-            if self.__next_timeout_id != -1:
-                self.pages_manager.next()
-                GLib.source_remove(self.__next_timeout_id)
-        if self.__previous_timeout_id is not None:
-            if self.__previous_timeout_id != -1:
-                self.pages_manager.previous()
-                GLib.source_remove(self.__previous_timeout_id)
-
-        self.__next_timeout_id = None
-        self.__previous_timeout_id = None
-        self.set_expose(False)
-
-    @property
-    def in_expose(self):
-        """
-            True if in expose mode
-            @return bool
-        """
-        return self.__expose_stack.get_visible_child_name() == "expose"
-
-    @property
-    def pages_manager(self):
-        """
-            Get pages manager
-            @return PagesManager
-        """
-        return self.__pages_manager
-
-    @property
-    def views(self):
-        """
-            Get views
-            @return views as [View]
-        """
-        return self.__stack.get_children()
-
-    @property
-    def current(self):
-        """
-            Current view
-            @return WebView
-        """
-        return self.__current
-
 #######################
 # PRIVATE             #
 #######################
-    def __on_prev_next_timeout(self, callback):
-        """
-            Set expose on and call callback
-            @param callback as __next()/__previous()
-        """
-        self.__next_timeout_id = -1
-        self.__previous_timeout_id = -1
-        if not self.in_expose:
-            self.__set_expose(True)
-        callback()
-
-    def __set_expose(self, expose):
-        """
-            Show current views
-            @param expose as bool
-            @param search as bool
-        """
-        # Show expose mode
-        if expose:
-            self.__expose_stack.set_visible_child_name("expose")
-        else:
-            if self.__stack.get_visible_child() != self.__current:
-                self.__stack.set_visible_child(self.__current)
-            self.__expose_stack.set_visible_child_name("stack")
-            self.__pages_manager.update_visible_child()
-
-    def __get_children(self):
-        """
-            Get children
-            @return [View]
-        """
-        return [child for child in self.__stack.get_children()
-                if not child.destroyed]
-
     def __show_donation(self):
         """
             Show a notification telling user to donate a little
