@@ -327,7 +327,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-medias-exception</property>
-        <property name="text" translatable="yes">Show medias</property>
+        <property name="text" translatable="yes">Show multimedia</property>
       </object>
       <packing>
         <property name="left_attach">0</property>

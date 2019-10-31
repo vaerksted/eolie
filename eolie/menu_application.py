@@ -42,7 +42,7 @@ class ApplicationMenu(Gio.Menu):
                 (_("Block ads"), "block-ads"),
                 (_("Block popups"), "block-popups"),
                 (_("Block images"), "block-images"),
-                (_("Block medias"), "block-medias"),
+                (_("Block multimedia"), "block-medias"),
                 (_("Block scripts"), "block-scripts")]:
             value = App().settings.get_value(blocker)
             action = Gio.SimpleAction.new_stateful(

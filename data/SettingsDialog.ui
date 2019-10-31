@@ -419,7 +419,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Sans serif font</property>
+                    <property name="label" translatable="yes">Sans-serif font</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -443,7 +443,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">Monospace font</property>
+                    <property name="label" translatable="yes">Monospaced font</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -854,7 +854,7 @@
             </child>
             <child>
               <object class="GtkCheckButton" id="dns_prediction_check">
-                <property name="label" translatable="yes">Predict websites address</property>
+                <property name="label" translatable="yes">Predict website addresses</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -941,7 +941,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Login :</property>
+                <property name="label" translatable="yes">Login:</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -963,7 +963,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Password :</property>
+                <property name="label" translatable="yes">Password:</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -984,7 +984,7 @@ on all your devices running Eolie or Firefox</property>
             </child>
             <child>
               <object class="GtkButton" id="sync_button">
-                <property name="label" translatable="yes">Allow synchronization</property>
+                <property name="label" translatable="yes">Allow syncing</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
@@ -1041,7 +1041,7 @@ on all your devices running Eolie or Firefox</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
-                <property name="label" translatable="yes">Code :</property>
+                <property name="label" translatable="yes">Code:</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -1052,8 +1052,8 @@ on all your devices running Eolie or Firefox</property>
               <object class="GtkEntry" id="code_entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="tooltip_text" translatable="yes">You need to enable Two Factor Authentication</property>
-                <property name="placeholder_text" translatable="yes">You need to enable Two Factor Authentication</property>
+                <property name="tooltip_text" translatable="yes">You need to turn on two-factor authentication</property>
+                <property name="placeholder_text" translatable="yes">You need to turn on two-factor authentication</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>
@@ -1070,7 +1070,7 @@ on all your devices running Eolie or Firefox</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Pull from Firefox sync</property>
+                    <property name="tooltip_text" translatable="yes">Fetch from Firefox Sync</property>
                     <property name="image">image1</property>
                     <signal name="clicked" handler="_on_pull_button_clicked" swapped="no"/>
                   </object>
@@ -1085,7 +1085,7 @@ on all your devices running Eolie or Firefox</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Push to Firefox sync</property>
+                    <property name="tooltip_text" translatable="yes">Send to Firefox Sync</property>
                     <property name="image">image2</property>
                     <signal name="clicked" handler="_on_push_button_clicked" swapped="no"/>
                   </object>
