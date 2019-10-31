@@ -277,14 +277,7 @@ class WebView(WebKit2.WebView):
         """
         if child not in self.__children:
             self.__children.insert(0, child)
-
-    def remove_child(self, child):
-        """
-            Remove child from webview
-            @param child as WebView
-        """
-        if child in self.__children:
-            self.__children.remove(child)
+            child.connect("destroy", lambda x: self.__children.remove(x))
 
     @property
     def is_pinned(self):

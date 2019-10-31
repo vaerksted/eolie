@@ -219,7 +219,7 @@ class Container(Gtk.Overlay):
         """
         # Get children less view
         views = self.__get_children()
-        if view.destroying or view not in views:
+        if view.destroyed or view not in views:
             return
         views.remove(view)
         views_count = len(views)
@@ -228,14 +228,11 @@ class Container(Gtk.Overlay):
         # Needed to unfocus titlebar
         self.__window.set_focus(None)
         was_current = view == self.__window.container.current
-        if not view.webview.ephemeral:
+        if not view.webview.is_ephemeral:
             App().pages_menu.add_action(view.webview.title,
                                         view.webview.uri,
                                         view.webview.get_session_state())
 
-        # Remove webview from parent
-        if view.webview.parent is not None:
-            view.webview.parent.remove_child(view.webview)
         view.destroy()
         # Don't show 0 as we are going to open a new one
         if views_count:
@@ -278,7 +275,7 @@ class Container(Gtk.Overlay):
             self.__window.container.set_current(next_view, True)
         else:
             # We are last row, add a new one
-            self.add_webview(App().start_page, LoadingType.FOREGROUND)
+            self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
 
     def next(self):
         """
@@ -398,22 +395,7 @@ class Container(Gtk.Overlay):
             @return [View]
         """
         return [child for child in self.__stack.get_children()
-                if not child.destroying]
-
-    def __add_pending_items(self):
-        """
-            Add pending items to container
-        """
-        if self.__pending_items:
-            (uri, title, atime, ephemeral,
-             is_pinned, state, loading_type) = self.__pending_items.pop(0)
-            webview = self.add_webview(uri, loading_type,
-                                       ephemeral, state, atime)
-            webview.set_title(title)
-            webview.set_pinned(is_pinned)
-            GLib.idle_add(self.__add_pending_items)
-        else:
-            self.sites_manager.set_initial_sort(None)
+                if not child.destroyed]
 
     def __show_donation(self):
         """
