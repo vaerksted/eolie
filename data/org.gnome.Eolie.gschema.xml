@@ -51,7 +51,7 @@
       </key>
       <key type="b" name="block-medias">
          <default>false</default>
-         <summary>Block medias</summary>
+         <summary>Block multimedia</summary>
          <description />
       </key>
       <key type="b" name="block-scripts">
