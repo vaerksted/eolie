@@ -33,7 +33,6 @@ class WindowState:
         from eolie.window import Window
         window = Window(state.size, state.is_maximized)
         window.container.sites_manager.set_initial_sort(state.sort)
-        window.container.restore_webview_states(state.webview_states)
         return window
 
     def __init__(self):
