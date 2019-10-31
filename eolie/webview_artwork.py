@@ -146,10 +146,11 @@ class WebViewArtwork:
                           uri,
                           surface,
                           "favicon")
-        # Save favicon for initial URI
+        # Only update initial URI if netloc did not changed
         if initial_uri is not None:
-            striped_uri = uri.rstrip("/")
-            if initial_uri != striped_uri:
+            initial_parsed = urlparse(initial_uri)
+            parsed = urlparse(uri)
+            if parsed.netloc == initial_parsed.netloc:
                 self.__helper.run(App().art.save_artwork,
                                   initial_uri,
                                   surface,
