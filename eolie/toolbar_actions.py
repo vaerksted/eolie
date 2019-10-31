@@ -161,8 +161,8 @@ class ToolbarActions(Gtk.Bin):
             Add a new web view
             @param button as Gtk.Button
         """
-        self.__window.container.add_webview(App().start_page,
-                                            LoadingType.FOREGROUND)
+        self.__window.container.add_webview_for_uri(App().start_page,
+                                                    LoadingType.FOREGROUND)
         self.__window.close_popovers()
         self.__window.toolbar.title.start_search()
 

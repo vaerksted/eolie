@@ -13,7 +13,6 @@
 from gi.repository import GObject, Gtk, Gdk, GLib, Gio, WebKit2
 
 from eolie.widget_find import FindWidget
-from eolie.webview import WebView
 from eolie.widget_uri_label import UriLabelWidget
 from eolie.define import App
 
@@ -24,36 +23,18 @@ class View(Gtk.Overlay):
     """
 
     __gsignals__ = {
-        'destroying': (GObject.SignalFlags.RUN_FIRST, None, ())
+        "destroyed": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
-    def get_new_webview(ephemeral, window):
-        """
-            Get a new webview
-            @return webview as WebView
-            @param window as Window
-        """
-        if ephemeral:
-            webview = WebView.new_ephemeral(window, None)
-        else:
-            webview = WebView.new(window, None)
-        return webview
-
-    def __init__(self, webview, window, popover=False):
+    def __init__(self, webview):
         """
             Init view
             @param webview as WebView
-            @param window as window
-            @param popover as bool
         """
         Gtk.Overlay.__init__(self)
         self.__reading_view = None
-        self.__destroying = False
-        self.__window = window
+        self.__destroyed = False
         self.__webview = webview
-        self.__popover = popover
-        webview.set_view(self)
-        self.__webview.show()
         self.__find_widget = FindWidget(self.__webview)
         self.__find_widget.show()
         self.__grid = Gtk.Grid()
@@ -64,7 +45,7 @@ class View(Gtk.Overlay):
         self.add(self.__grid)
         self.__uri_label = UriLabelWidget()
         self.add_overlay(self.__uri_label)
-        if webview.ephemeral:
+        if webview.is_ephemeral:
             image = Gtk.Image.new_from_icon_name("user-not-tracked-symbolic",
                                                  Gtk.IconSize.DIALOG)
             image.set_opacity(0.5)
@@ -91,8 +72,8 @@ class View(Gtk.Overlay):
         """
             Delayed destroy
         """
-        self.__destroying = True
-        self.emit("destroying")
+        self.__destroyed = True
+        self.emit("destroyed")
         GLib.timeout_add(1000, self.__destroy)
 
     def stop_reading(self):
@@ -103,29 +84,13 @@ class View(Gtk.Overlay):
             self.__reading_view.destroy()
             self.__reading_view = None
 
-    def set_window(self, window):
-        """
-            Set window
-            @param window as window
-        """
-        self.__window = window
-        self.__webview.set_window(window)
-
     @property
-    def destroying(self):
+    def destroyed(self):
         """
             Destroy is pending
             @return bool
         """
-        return self.__destroying
-
-    @property
-    def popover(self):
-        """
-            True if popover
-            @return bool
-        """
-        return self.__popover
+        return self.__destroyed
 
     @property
     def reading(self):

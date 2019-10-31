@@ -187,7 +187,7 @@ class WebViewNavigation:
                 request.deny()
             else:
                 uri = webview.uri
-                self._window.toolbar.title.show_geolocation(uri, request)
+                self.window.toolbar.title.show_geolocation(uri, request)
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
             # Can use Gnome Shell notification policy
             request.allow()
@@ -242,7 +242,7 @@ class WebViewNavigation:
                                     None)
                 if info.get_file_type() == Gio.FileType.REGULAR:
                     try:
-                        Gtk.show_uri_on_window(self._window,
+                        Gtk.show_uri_on_window(self.window,
                                                uri,
                                                Gtk.get_current_event_time())
                     except Exception as e:
@@ -268,7 +268,7 @@ class WebViewNavigation:
         if parsed_navigation.scheme not in ["http", "https", "file", "about",
                                             "populars", "accept"]:
             try:
-                Gtk.show_uri_on_window(self._window,
+                Gtk.show_uri_on_window(self.window,
                                        navigation_uri,
                                        Gtk.get_current_event_time())
             except Exception as e:

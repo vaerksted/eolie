@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, WebKit2, Pango
 from gettext import gettext as _
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import App, ArtSize
+from eolie.define import ArtSize
 from eolie.utils import update_popover_internals
 
 
@@ -75,7 +75,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.START_HEIGHT +
                               ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        view.connect("destroying", self.__on_view_destroying)
+        view.connect("destroyed", self.__on_view_destroyed)
         self.__view.webview.connect("snapshot-changed",
                                     self.__on_webview_snapshot_changed)
         self.__view.webview.connect("notify::is-playing-audio",
@@ -131,12 +131,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Pin/Unpin page
             @param button as Gtk.Button
         """
-        if self.view.webview.uri in App().pinned:
+        if self.view.webview.is_pinned:
             self.__pin_image.set_opacity(0.5)
-            App().remove_from_pinned(self.view.webview.uri)
+            self.view.webview.set_pinned(False)
         else:
             self.__pin_image.set_opacity(1)
-            App().add_to_pinned(self.view.webview.uri)
+            self.view.webview.set_pinned(True)
         return True
 
     def _on_close_button_clicked(self, button):
@@ -153,16 +153,16 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self.view.webview.uri in App().pinned:
+        if self.view.webview.is_pinned:
             self.__pin_image.set_opacity(1)
             self.__pin_button.set_tooltip_text(_("Unpin this page"))
         else:
             self.__pin_image.set_opacity(0.5)
             self.__pin_button.set_tooltip_text(_("Pin this page"))
+            self.__close_button_image.set_from_icon_name(
+                "window-close-symbolic",
+                Gtk.IconSize.INVALID)
         self.__pin_button.set_opacity(1)
-        self.__close_button_image.set_from_icon_name(
-            "window-close-symbolic",
-            Gtk.IconSize.INVALID)
 
     def _on_leave_notify_event(self, eventbox, event):
         """
@@ -200,7 +200,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                                       GLib.markup_escape_text(uri))
         widget.set_tooltip_markup(text)
 
-    def __on_view_destroying(self, view):
+    def __on_view_destroyed(self, view):
         """
             Destroy self
             @param view as View
@@ -260,7 +260,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param webview as WebView
             @param surface as cairo.surface
         """
-        if self.__view.webview.ephemeral:
+        if self.__view.webview.is_ephemeral:
             self.__image.set_from_icon_name(
                 "user-not-tracked-symbolic",
                 Gtk.IconSize.DIALOG)

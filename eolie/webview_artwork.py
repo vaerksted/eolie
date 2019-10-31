@@ -42,7 +42,7 @@ class WebViewArtwork:
             Set favicon based on current webview favicon
         """
         parsed = urlparse(self.uri)
-        if self.ephemeral or parsed.scheme not in ["http", "https"]:
+        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable()
@@ -58,7 +58,7 @@ class WebViewArtwork:
             Use this for JS update (do not update initial uri)
         """
         parsed = urlparse(self.uri)
-        if self.ephemeral or parsed.scheme not in ["http", "https"]:
+        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable()
@@ -162,7 +162,7 @@ class WebViewArtwork:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        if not webview.is_loading() and not webview.ephemeral:
+        if not webview.is_loading() and not webview.is_ephemeral:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
@@ -209,7 +209,7 @@ class WebViewArtwork:
             @param favicon_db as WebKit2.FaviconDatabase
             @param uri as str
         """
-        if uri != self.uri or self.ephemeral:
+        if uri != self.uri or self.is_ephemeral:
             return
         self.__favicon_db.get_favicon(uri,
                                       None,

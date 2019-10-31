@@ -20,6 +20,7 @@ from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
 from eolie.sites_manager import SitesManager
 from eolie.define import App, LoadingType
+from eolie.webview_state import WebViewState, WebViewStateStruct
 
 
 class Container(Gtk.Overlay):
@@ -78,75 +79,38 @@ class Container(Gtk.Overlay):
             GLib.timeout_add_seconds(randint(3600, 7200),
                                      self.__show_donation)
 
-    def add_webview(self, uri, loading_type, ephemeral=False,
-                    state=None, atime=None):
+    def add_webview_for_uri(self, uri, loading_type):
         """
-            Add a webview to container
+            Add a webview to container with uri
             @param uri as str
             @param loading_type as Gdk.LoadingType
-            @param ephemeral as bool
-            @param state as WebViewSessionState
-            @param atime as int
-            @return WebView
         """
-        webview = View.get_new_webview(ephemeral, self.__window)
-        if atime is not None:
-            webview.set_atime(atime)
-        if state is not None:
-            webview.restore_session_state(state)
-        if uri is not None:
-            webview.set_uri(uri)
-            # Force loading
-            if loading_type == LoadingType.BACKGROUND or self.in_expose:
-                webview.load_uri(uri)
-        self.add_webview_with_new_view(webview, loading_type)
-        return webview
+        state = WebViewStateStruct()
+        state.uri = uri
+        webview = WebViewState.new_from_state(state)
+        webview.show()
+        self.add_webview(webview, loading_type)
 
-    def add_webviews(self, items):
+    def add_webview(self, webview, loading_type):
         """
-            Add webviews to container
-            @param items as [(uri, title, atime,
-                              ephemeral, state, loading_type)]
-        """
-        running = self.__pending_items != []
-        self.__pending_items += items
-        if not running:
-            self.__add_pending_items()
-
-    def add_webview_with_new_view(self, webview, loading_type):
-        """
-            Add view to container
+            Add a webview to container
             @param webview as WebView
             @param loading_type as Gdk.LoadingType
         """
-        view = self.__get_new_view(webview)
+        if loading_type == LoadingType.BACKGROUND or self.in_expose:
+            webview.load_uri(webview.uri)
+        view = View(webview)
         view.show()
         self.__pages_manager.add_view(view)
         self.__sites_manager.add_view(view)
+        self.__stack.add(view)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.__current = view
-            self.__stack.add(view)
             self.__pages_manager.update_visible_child()
             self.__sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
-        elif loading_type in [LoadingType.BACKGROUND, LoadingType.OFFLOAD] or\
-                self.in_expose:
-            # This allow us to get real size snapshot
-            window = Gtk.OffscreenWindow.new()
-            view.set_size_request(self.get_allocated_width(),
-                                  self.get_allocated_height())
-            window.add(view)
-            window.show()
-            window.remove(view)
-            view.set_size_request(-1, -1)
-            # Needed to force view to resize
-            view.queue_draw()
-            self.__stack.add(view)
-            window.destroy()
-            if self.in_expose and loading_type == LoadingType.FOREGROUND:
-                self.set_current(view, True)
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.__pages_manager.children)
@@ -428,16 +392,6 @@ class Container(Gtk.Overlay):
             self.__expose_stack.set_visible_child_name("stack")
             self.__pages_manager.update_visible_child()
 
-    def __get_new_view(self, webview):
-        """
-            Get a new view
-            @param webview as WebView
-            @return View
-        """
-        view = View(webview, self.__window)
-        view.show()
-        return view
-
     def __get_children(self):
         """
             Get children
@@ -451,11 +405,12 @@ class Container(Gtk.Overlay):
             Add pending items to container
         """
         if self.__pending_items:
-            (uri, title, atime,
-             ephemeral, state, loading_type) = self.__pending_items.pop(0)
+            (uri, title, atime, ephemeral,
+             is_pinned, state, loading_type) = self.__pending_items.pop(0)
             webview = self.add_webview(uri, loading_type,
                                        ephemeral, state, atime)
             webview.set_title(title)
+            webview.set_pinned(is_pinned)
             GLib.idle_add(self.__add_pending_items)
         else:
             self.sites_manager.set_initial_sort(None)

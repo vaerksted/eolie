@@ -89,7 +89,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             self.go_forward()
             return True
         elif self.get_ancestor(Gtk.Popover) is None:
-            return self._window.close_popovers()
+            return self.window.close_popovers()
 
     def _on_map(self, webview):
         """
@@ -97,7 +97,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
         """
         # We are offscreen
-        if self._window != self.get_toplevel():
+        if self.window != self.get_toplevel():
             return
         # URI set but not loaded
         # Webviews with a related webview have a None URI
@@ -108,8 +108,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._shown = True
         self.emit("shown")
         self.set_atime(int(time()))
-        if not webview.view.popover:
-            self._window.update(webview)
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)
         self.connect("leave-fullscreen", self.__on_leave_fullscreen)
@@ -124,7 +122,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
         """
         # We are offscreen
-        if self._window != self.get_toplevel():
+        if self.window != self.get_toplevel():
             return
         self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_enter_fullscreen)
@@ -143,7 +141,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param request as WebKit2.FileChooserRequest
         """
         dialog = Gtk.FileChooserNative.new(_("Select files to upload"),
-                                           self._window,
+                                           self.window,
                                            Gtk.FileChooserAction.OPEN,
                                            _("Open"),
                                            _("Cancel"))
@@ -215,7 +213,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.__title_changed_timeout_id = None
         parsed = urlparse(webview.uri)
         if self.error or\
-                webview.ephemeral or\
+                webview.is_ephemeral or\
                 parsed.scheme not in ["http", "https"]:
             return
         mtime = round(time(), 2)
@@ -229,7 +227,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Hide sidebar (conflict with fs)
             @param webview as WebView
         """
-        self._window.container.sites_manager.hide()
+        self.window.container.sites_manager.hide()
 
     def __on_leave_fullscreen(self, webview):
         """
@@ -237,11 +235,11 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             @param webview as WebView
         """
         if App().settings.get_value("show-sidebar"):
-            self._window.container.sites_manager.show()
+            self.window.container.sites_manager.show()
 
     def __on_insecure_content_detected(self, webview, event):
         """
             @param webview as WebView
             @param event as WebKit2.InsecureContentEvent
         """
-        self._window.toolbar.title.set_insecure_content()
+        self.window.toolbar.title.set_insecure_content()

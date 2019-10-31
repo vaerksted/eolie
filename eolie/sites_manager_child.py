@@ -143,19 +143,19 @@ class SitesManagerChild(Gtk.ListBoxRow):
         'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
     }
 
-    def __init__(self, netloc, window, ephemeral):
+    def __init__(self, netloc, window, is_ephemeral):
         """
             Init child
             @param netloc as str
             @param window as Window
-            @param ephemeral as bool
+            @param is_ephemeral as bool
         """
         Gtk.ListBoxRow.__init__(self)
         self.__window = window
         self.__netloc = netloc
         self.__minimal = None
         self.__current_child = None
-        self.__ephemeral = ephemeral
+        self.__is_ephemeral = is_ephemeral
         self.__views = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
@@ -329,12 +329,12 @@ class SitesManagerChild(Gtk.ListBoxRow):
         return self.__views
 
     @property
-    def ephemeral(self):
+    def is_ephemeral(self):
         """
-            Get ephemeral
+            True if ephemeral
             @return bool
         """
-        return self.__ephemeral
+        return self.__is_ephemeral
 
     @property
     def netloc(self):
@@ -387,7 +387,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
         """
         artwork = App().art.get_icon_theme_artwork(webview.uri,
-                                                   webview.ephemeral)
+                                                   webview.is_ephemeral)
         if artwork is not None:
             self.__image.set_from_icon_name(
                 artwork, Gtk.IconSize.LARGE_TOOLBAR)

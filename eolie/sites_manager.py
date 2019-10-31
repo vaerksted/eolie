@@ -76,16 +76,20 @@ class SitesManager(Gtk.Grid):
         """
         # Force update
         if view.webview.uri:
-            self.__loaded_uri(view.webview, view.webview.uri)
-        view.webview.connect("load-changed", self.__on_webview_load_changed)
-        view.connect("destroying", self.__on_view_destroying)
+            self.__on_webview_load_changed(view.webview,
+                                           WebKit2.LoadEvent.STARTED,
+                                           view)
+        view.webview.connect("load-changed",
+                             self.__on_webview_load_changed,
+                             view)
+        view.connect("destroyed", self.__on_view_destroyed)
 
     def remove_view(self, view):
         """
             Remove view from pages manager
         """
-        view.disconnect_by_func(self.__on_view_destroying)
-        self.__on_view_destroying(view)
+        view.disconnect_by_func(self.__on_view_destroyed)
+        self.__on_view_destroyed(view)
 
     def set_minimal(self, minimal):
         """
@@ -95,15 +99,16 @@ class SitesManager(Gtk.Grid):
         for child in self.__box.get_children():
             child.set_minimal(minimal)
 
-    def update_label(self, view):
+    def update_label(self, webview):
         """
             Update label for view
-            @param view as View
+            @param webview as WebView
         """
         for child in self.__box.get_children():
-            if view in child.views:
-                child.update_label()
-                break
+            for view in child.views:
+                if webview == view.webview:
+                    child.update_label()
+                    return
 
     def next(self):
         """
@@ -207,55 +212,6 @@ class SitesManager(Gtk.Grid):
         except:
             return False
 
-    def __loaded_uri(self, webview, uri):
-        """
-            Update children based on webview and uri
-            @param webview as WebView
-            @param uri as str
-        """
-        netloc = get_safe_netloc(uri)
-        child = None
-        empty_child = None
-        # Do not group by netloc
-        if webview.ephemeral:
-            for site in self.__box.get_children():
-                if site.ephemeral:
-                    child = site
-                    break
-        else:
-            # Search for a child for wanted netloc
-            # Clean up any child matching view, allowing us to reuse it
-            for site in self.__box.get_children():
-                if site.netloc == netloc and site.ephemeral is False:
-                    child = site
-                else:
-                    site.remove_view(webview.view)
-                    if site.empty:
-                        empty_child = site
-
-        if child is None:
-            if empty_child is None:
-                child = SitesManagerChild(netloc,
-                                          self.__window,
-                                          webview.ephemeral)
-                child.connect("moved", self.__on_moved)
-                position = App().settings.get_value(
-                    "sidebar-position").get_int32()
-                child.set_minimal(position < 80)
-                child.show()
-                child.add_view(webview.view)
-                self.__box.add(child)
-                self.update_visible_child()
-            else:
-                child = empty_child
-                child.reset(netloc)
-                child.add_view(webview.view)
-        else:
-            if empty_child is not None:
-                empty_child.destroy()
-            child.add_view(webview.view)
-            self.update_visible_child()
-
     def __get_index(self, netloc):
         """
             Get child index
@@ -289,7 +245,7 @@ class SitesManager(Gtk.Grid):
                 y - child.get_allocated_height() < 0 + value:
             self.__scrolled.get_vadjustment().set_value(y)
 
-    def __on_view_destroying(self, view):
+    def __on_view_destroyed(self, view):
         """
             Clean children
             @param view as View
@@ -301,14 +257,58 @@ class SitesManager(Gtk.Grid):
             if site.empty and count > 1:
                 site.destroy()
 
-    def __on_webview_load_changed(self, webview, event):
+    def __on_webview_load_changed(self, webview, event, view):
         """
             Update children
             @param webview as WebView
             @param event as WebKit2.LoadEvent
+            @param view as View
         """
-        if event in [WebKit2.LoadEvent.STARTED, WebKit2.LoadEvent.COMMITTED]:
-            self.__loaded_uri(webview, webview.uri)
+        if event not in [WebKit2.LoadEvent.STARTED,
+                         WebKit2.LoadEvent.COMMITTED]:
+            return
+        netloc = get_safe_netloc(webview.uri)
+        child = None
+        empty_child = None
+        # Do not group by netloc
+        if webview.is_ephemeral:
+            for site in self.__box.get_children():
+                if site.is_ephemeral:
+                    child = site
+                    break
+        else:
+            # Search for a child for wanted netloc
+            # Clean up any child matching view, allowing us to reuse it
+            for site in self.__box.get_children():
+                if site.netloc == netloc and site.is_ephemeral is False:
+                    child = site
+                else:
+                    site.remove_view(view)
+                    if site.empty:
+                        empty_child = site
+
+        if child is None:
+            if empty_child is None:
+                child = SitesManagerChild(netloc,
+                                          self.__window,
+                                          webview.is_ephemeral)
+                child.connect("moved", self.__on_moved)
+                position = App().settings.get_value(
+                    "sidebar-position").get_int32()
+                child.set_minimal(position < 80)
+                child.show()
+                child.add_view(view)
+                self.__box.add(child)
+                self.update_visible_child()
+            else:
+                child = empty_child
+                child.reset(netloc)
+                child.add_view(view)
+        else:
+            if empty_child is not None:
+                empty_child.destroy()
+            child.add_view(view)
+            self.update_visible_child()
 
     def __on_row_activated(self, listbox, child):
         """

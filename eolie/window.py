@@ -18,24 +18,26 @@ from eolie.container import Container
 from eolie.utils import get_current_monitor_model
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
+from eolie.window_state import WindowState
 
 
-class Window(Gtk.ApplicationWindow):
+class Window(Gtk.ApplicationWindow, WindowState):
     """
         Main window
     """
 
-    def __init__(self, app, size, maximized):
+    def __init__(self, size, is_maximized):
         """
             Init window
             @param app as Gtk.Application
             @param size as (int, int)
-            @param maximized as bool
+            @param is_maximized as bool
         """
         Gtk.ApplicationWindow.__init__(self,
-                                       application=app,
+                                       application=App(),
                                        title="Eolie",
                                        icon_name="org.gnome.Eolie")
+        WindowState.__init__(self)
         self.__monitor_model = ""
         self.__popovers = []
         self.__zoom_level = 1.0
@@ -46,7 +48,7 @@ class Window(Gtk.ApplicationWindow):
         self.__size = size
         self.set_default_size(size[0], size[1])
         self.__setup_content()
-        self.connect("realize", self.__on_realize, maximized)
+        self.connect("realize", self.__on_realize, is_maximized)
         self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
@@ -227,7 +229,7 @@ class Window(Gtk.ApplicationWindow):
     @property
     def size(self):
         """
-            Unmaximized window size
+            Unis_maximized window size
             return (int, int)
         """
         return self.__size
@@ -266,13 +268,13 @@ class Window(Gtk.ApplicationWindow):
         self.__toolbar.headerbar.set_show_close_button(True)
         self.add(self.__container)
 
-    def __setup_window(self, maximized):
+    def __setup_window(self, is_maximized):
         """
             Set window
-            @param maximized as bool
+            @param is_maximized as bool
         """
         try:
-            if maximized:
+            if is_maximized:
                 # Lets resize happen
                 GLib.idle_add(self.maximize)
         except Exception as e:
@@ -352,13 +354,13 @@ class Window(Gtk.ApplicationWindow):
             if not lock:
                 self.__fullscreen_revealer.set_reveal_child(False)
 
-    def __on_realize(self, widget, maximized):
+    def __on_realize(self, widget, is_maximized):
         """
             Update zoom level
             @param widget as Gtk.Widget
-            @param maximized as bool
+            @param is_maximized as bool
         """
-        self.__setup_window(maximized)
+        self.__setup_window(is_maximized)
         self.update_zoom_level(False)
 
     def __on_key_press_event(self, window, event):
