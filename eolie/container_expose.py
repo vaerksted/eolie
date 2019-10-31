@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GLib
 
 from eolie.pages_manager import PagesManager
-from eolie.define import App, LoadingType
+from eolie.define import App
 
 
 class ExposeContainer:
@@ -83,72 +83,6 @@ class ExposeContainer:
         page_id = view.webview.get_page_id()
         App().helper.call("FormsFilled", page_id, None,
                           self.__on_forms_filled, view)
-
-    def close_view(self, view):
-        """
-            close current view
-            @param view as View
-            @param animate as bool
-        """
-        # Get children less view
-        views = self.__get_children()
-        if view.destroyed or view not in views:
-            return
-        views.remove(view)
-        views_count = len(views)
-        App().history.set_page_state(view.webview.uri)
-        self._window.close_popovers()
-        # Needed to unfocus titlebar
-        self._window.set_focus(None)
-        was_current = view == self._window.container.current
-        if not view.webview.is_ephemeral:
-            App().pages_menu.add_action(view.webview.title,
-                                        view.webview.uri,
-                                        view.webview.get_session_state())
-
-        view.destroy()
-        # Don't show 0 as we are going to open a new one
-        if views_count:
-            App().update_unity_badge()
-            self._window.toolbar.actions.count_label.set_text(
-                str(views_count))
-        # Nothing to do if was not current page
-        if not was_current:
-            return False
-
-        next_view = None
-
-        # First we search for a child for current view
-        if view.webview.children:
-            next_view = view.webview.children[0].view
-
-        # Current webview children not needed, clear parent
-        for child in view.webview.children:
-            child.set_parent(None)
-
-        # Next we search for a brother for current view
-        # If no brother, use parent
-        parent = view.webview.parent
-        if next_view is None and parent is not None:
-            for parent_child in parent.children:
-                if view.webview != parent_child:
-                    next_view = parent_child.view
-                    break
-            if next_view is None and parent.view in views:
-                next_view = parent.view
-
-        # Next we search for view with higher atime
-        if next_view is None:
-            atime = 0
-            for view in reversed(views):
-                if view.webview.atime >= atime:
-                    next_view = view
-                    atime = view.webview.atime
-        if next_view is not None:
-            self._window.container.set_current(next_view, True)
-        else:
-            # We are last row, add a new one
-            self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
 
     def next(self):
         """
@@ -253,11 +187,3 @@ class ExposeContainer:
                 self._stack.set_visible_child(self._current)
             self.__expose_stack.set_visible_child_name("stack")
             self.__pages_manager.update_visible_child()
-
-    def __get_children(self):
-        """
-            Get children
-            @return [View]
-        """
-        return [child for child in self._stack.get_children()
-                if not child.destroyed]

@@ -159,7 +159,8 @@ class Container(Gtk.Overlay, SidebarContainer, ExposeContainer):
             @param animate as bool
         """
         # Get children less view
-        views = self.__get_children()
+        views = [child for child in self._stack.get_children()
+                 if not child.destroyed]
         if view.destroyed or view not in views:
             return
         views.remove(view)
