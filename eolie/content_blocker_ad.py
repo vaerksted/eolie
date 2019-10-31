@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 import json
 
@@ -31,13 +31,23 @@ class AdContentBlocker(ContentBlocker):
         try:
             ContentBlocker.__init__(self, "block-ads")
             if App().settings.get_value("block-ads"):
-                self.__download_uris(list(ADBLOCK_URIS))
+                GLib.timeout_add_seconds(7200, self.__download_task, True)
+                GLib.timeout_add_seconds(20, self.__download_task, False)
         except Exception as e:
             Logger.error("AdContentBlocker::__init__(): %s", e)
 
 #######################
 # PRIVATE             #
 #######################
+    def __download_task(self, loop):
+        """
+            Update database from the web, for timeout_add()
+            @param loop as bool
+        """
+        if not Gio.NetworkMonitor.get_default().get_network_metered():
+            self.__download_uris(list(ADBLOCK_URIS))
+        return loop
+
     def __download_uris(self, uris, rules=[]):
         """
             Update database from the web
