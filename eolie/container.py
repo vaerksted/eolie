@@ -18,12 +18,12 @@ from random import randint
 from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.pages_manager import PagesManager
-from eolie.sites_manager import SitesManager
 from eolie.define import App, LoadingType
 from eolie.webview_state import WebViewState, WebViewStateStruct
+from eolie.container_sidebar import SidebarContainer
 
 
-class Container(Gtk.Overlay):
+class Container(Gtk.Overlay, SidebarContainer):
     """
         Main Eolie view
     """
@@ -36,12 +36,12 @@ class Container(Gtk.Overlay):
             @param window as Window
         """
         Gtk.Overlay.__init__(self)
-        self.__window = window
+        self._window = window
+        SidebarContainer.__init__(self)
         self.__popover = WebViewPopover(window)
         self.__current = None
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
-        self.__pending_items = []
 
         self.__stack = Gtk.Stack()
         self.__stack.set_hexpand(True)
@@ -57,23 +57,12 @@ class Container(Gtk.Overlay):
             Gtk.StackTransitionType.CROSSFADE)
         self.__expose_stack.set_transition_duration(150)
         self.__expose_stack.show()
-        self.__pages_manager = PagesManager(self.__window)
+        self.__pages_manager = PagesManager(self._window)
         self.__pages_manager.show()
-        self.__sites_manager = SitesManager(self.__window)
-        if App().settings.get_value("show-sidebar"):
-            self.__sites_manager.show()
-        App().settings.connect("changed::show-sidebar",
-                               self.__on_show_sidebar_changed)
-        paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-        paned.pack1(self.__sites_manager, False, False)
-        paned.add2(self.__expose_stack)
-        position = App().settings.get_value("sidebar-position").get_int32()
-        paned.set_position(position)
-        paned.connect("notify::position", self.__on_paned_notify_position)
-        paned.show()
+        self._paned.add2(self.__expose_stack)
         self.__expose_stack.add_named(self.__stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
-        self.add(paned)
+        self.add(self._paned)
         # Show donation notification after one hour
         if App().settings.get_value("donation").get_int32() != self.__DONATION:
             GLib.timeout_add_seconds(randint(3600, 7200),
@@ -102,19 +91,19 @@ class Container(Gtk.Overlay):
         view = View(webview)
         view.show()
         self.__pages_manager.add_view(view)
-        self.__sites_manager.add_view(view)
+        self.sites_manager.add_view(view)
         self.__stack.add(view)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.__current = view
             self.__pages_manager.update_visible_child()
-            self.__sites_manager.update_visible_child()
+            self.sites_manager.update_visible_child()
             self.__stack.set_visible_child(view)
         # Do not count container views as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.__pages_manager.children)
-        self.__window.toolbar.actions.count_label.set_text(str(count))
+        self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
 
     def add_view(self, view):
@@ -125,13 +114,13 @@ class Container(Gtk.Overlay):
         self.__current = view
         self.__stack.add(view)
         self.__pages_manager.add_view(view)
-        self.__sites_manager.add_view(view)
+        self.sites_manager.add_view(view)
         self.__stack.set_visible_child(view)
         count = len(self.__stack.get_children())
-        self.__window.toolbar.actions.count_label.set_text(str(count))
+        self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
         self.__pages_manager.update_visible_child()
-        self.__sites_manager.update_visible_child()
+        self.sites_manager.update_visible_child()
 
     def remove_view(self, view):
         """
@@ -140,19 +129,19 @@ class Container(Gtk.Overlay):
         """
         self.__stack.remove(view)
         self.__pages_manager.remove_view(view)
-        self.__sites_manager.remove_view(view)
+        self.sites_manager.remove_view(view)
         children = self.__stack.get_children()
         if children:
             self.__current = self.__stack.get_visible_child()
             count = len(children)
-            self.__window.toolbar.actions.count_label.set_text(str(count))
+            self._window.toolbar.actions.count_label.set_text(str(count))
             App().update_unity_badge()
             self.__pages_manager.update_visible_child()
-            self.__sites_manager.update_visible_child()
+            self.sites_manager.update_visible_child()
         else:
             for window in App().windows:
                 window.mark(False)
-            self.__window.close()
+            self._window.close()
 
     def load_uri(self, uri):
         """
@@ -170,7 +159,7 @@ class Container(Gtk.Overlay):
         """
         self.__current = view
         self.__pages_manager.update_visible_child()
-        self.__sites_manager.update_visible_child()
+        self.sites_manager.update_visible_child()
         if switch:
             self.__stack.set_visible_child(view)
 
@@ -180,11 +169,11 @@ class Container(Gtk.Overlay):
             @param webview as WebView
             @param destroy webview when popover hidden
         """
-        view = View(webview, self.__window, True)
+        view = View(webview, self._window, True)
         view.show()
         self.__popover.add_view(view, destroy)
         if not self.__popover.is_visible():
-            self.__popover.set_relative_to(self.__window.toolbar)
+            self.__popover.set_relative_to(self._window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
 
@@ -194,11 +183,11 @@ class Container(Gtk.Overlay):
             @param expose as bool
         """
         if expose:
-            self.__pages_manager.update_sort(self.__sites_manager.sort)
+            self.__pages_manager.update_sort(self.sites_manager.sort)
             self.__pages_manager.set_filtered(True)
         else:
-            self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.pages_manager.set_filter("")
+            self._window.toolbar.actions.view_button.set_active(False)
+            self._window.container.pages_manager.set_filter("")
             self.__pages_manager.set_filtered(False)
         self.__set_expose(expose)
 
@@ -224,10 +213,10 @@ class Container(Gtk.Overlay):
         views.remove(view)
         views_count = len(views)
         App().history.set_page_state(view.webview.uri)
-        self.__window.close_popovers()
+        self._window.close_popovers()
         # Needed to unfocus titlebar
-        self.__window.set_focus(None)
-        was_current = view == self.__window.container.current
+        self._window.set_focus(None)
+        was_current = view == self._window.container.current
         if not view.webview.is_ephemeral:
             App().pages_menu.add_action(view.webview.title,
                                         view.webview.uri,
@@ -237,7 +226,7 @@ class Container(Gtk.Overlay):
         # Don't show 0 as we are going to open a new one
         if views_count:
             App().update_unity_badge()
-            self.__window.toolbar.actions.count_label.set_text(
+            self._window.toolbar.actions.count_label.set_text(
                 str(views_count))
         # Nothing to do if was not current page
         if not was_current:
@@ -272,7 +261,7 @@ class Container(Gtk.Overlay):
                     next_view = view
                     atime = view.webview.atime
         if next_view is not None:
-            self.__window.container.set_current(next_view, True)
+            self._window.container.set_current(next_view, True)
         else:
             # We are last row, add a new one
             self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
@@ -335,14 +324,6 @@ class Container(Gtk.Overlay):
             @return PagesManager
         """
         return self.__pages_manager
-
-    @property
-    def sites_manager(self):
-        """
-            Get sites manager
-            @return SitesManager
-        """
-        return self.__sites_manager
 
     @property
     def views(self):
@@ -419,32 +400,6 @@ class Container(Gtk.Overlay):
         App().settings.set_value("donation",
                                  GLib.Variant("i", self.__DONATION))
 
-    def __on_paned_notify_position(self, paned, ignore):
-        """
-            Update SitesManager width based on current position
-            @param paned as Gtk.Paned
-            @param ignore as GParamInt
-        """
-        position = paned.get_position()
-        saved_position = App().settings.get_value(
-            "sidebar-position").get_int32()
-        # We do not want to keep minimal mode changes
-        if position >= 80 or saved_position > position:
-            App().settings.set_value("sidebar-position",
-                                     GLib.Variant("i", position))
-        self.__sites_manager.set_minimal(position < 80)
-
-    def __on_show_sidebar_changed(self, settings, value):
-        """
-            Show/hide panel
-            @param settings as Gio.Settings
-            @param value as bool
-        """
-        if App().settings.get_value("show-sidebar"):
-            self.__sites_manager.show()
-        else:
-            self.__sites_manager.hide()
-
     def __on_forms_filled(self, source, result, view):
         """
             Ask user to close view, if ok, close view
@@ -476,7 +431,7 @@ class Container(Gtk.Overlay):
                 close = builder.get_object("close")
                 cancel = builder.get_object("cancel")
                 label.set_text(_("Do you really want to close this page?"))
-                dialog.set_transient_for(self.__window)
+                dialog.set_transient_for(self._window)
                 dialog.connect("response", on_response_id, view, self)
                 close.connect("clicked", on_close, dialog)
                 cancel.connect("clicked", on_cancel, dialog)
