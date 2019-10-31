@@ -24,13 +24,11 @@ EOLIE_CACHE_PATH = GLib.get_user_cache_dir() + "/eolie"
 
 COOKIES_PATH = "%s/cookies_%s.db"
 
-PHISHTANK_KEY =\
-    "2eba68d50e3b974d6831c25e45d34f691056ef410a357c186d5cb94b7bf4048b"
-
-
 ADBLOCK_URIS = ["https://easylist-downloads.adblockplus.org/" +
                 "easylist_content_blocker.json"]
 
+PHISHING_URI = "https://raw.githubusercontent.com/bellegarde-c/" +\
+    "webkit-blocker-phishing/master/phishing.json"
 
 MARGIN = 15
 MARGIN_SMALL = 5

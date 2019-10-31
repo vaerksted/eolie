@@ -59,14 +59,9 @@
          <summary>Block JavaScript</summary>
          <description />
       </key>
-      <key type="b" name="trust-websites-adblock">
+      <key type="b" name="block-phishing">
          <default>true</default>
-         <summary>Trust websites: No adblocking of internal URIs</summary>
-         <description />
-      </key>
-      <key type="b" name="trust-websites-js">
-         <default>true</default>
-         <summary>Trust websites: No JavaScript blocking of internal URIs</summary>
+         <summary>Block Phishing</summary>
          <description />
       </key>
       <key type="b" name="enable-smooth-scrolling">

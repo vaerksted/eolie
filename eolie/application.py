@@ -34,6 +34,7 @@ from eolie.content_blocker_popups import PopupsContentBlocker
 from eolie.content_blocker_images import ImagesContentBlocker
 from eolie.content_blocker_medias import MediasContentBlocker
 from eolie.content_blocker_scripts import ScriptsContentBlocker
+from eolie.content_blocker_phishing import PhishingContentBlocker
 from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_settings import DatabaseSettings
@@ -322,7 +323,8 @@ class Application(Gtk.Application):
                     PopupsContentBlocker,
                     ImagesContentBlocker,
                     MediasContentBlocker,
-                    ScriptsContentBlocker]:
+                    ScriptsContentBlocker,
+                    PhishingContentBlocker]:
             content_blocker = cls()
             content_blocker.connect("set-filter",
                                     self.__on_content_blocker_set_filter)
