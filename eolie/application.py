@@ -421,8 +421,7 @@ class Application(Gtk.Application):
             window_states = []
             for window in self.windows:
                 state = window.state
-                if state is not None:
-                    window_states.append(state)
+                window_states.append(state)
             for window_state in self.__state_cache:
                 window_states.append(window_state)
             dump(window_states,
@@ -446,21 +445,29 @@ class Application(Gtk.Application):
             @return active window as Window
         """
         try:
-            from eolie.window_state import WindowState
+            from eolie.window_state import WindowState, WindowStateStruct
             window_states = load(
                 open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
+            state = WindowStateStruct()
             for state in window_states:
+                # If webview to restore
+                if state.webview_states:
+                    window = WindowState.new_from_state(state)
+                    for webview_state in state.webview_states:
+                        webview = WebViewState.new_from_state(webview_state)
+                        webview.show()
+                        loading_type = wanted_loading_type(
+                            len(window.container.views))
+                        window.container.add_webview(webview, loading_type)
+                        session = WebKit2.WebViewSessionState(
+                            GLib.Bytes.new(webview_state.session))
+                        webview.restore_session_state(session)
+                    window.connect("delete-event", self.__on_delete_event)
+                    window.show()
+            # Add a default window
+            if not self.windows:
                 window = WindowState.new_from_state(state)
-                for webview_state in state.webview_states:
-                    webview = WebViewState.new_from_state(webview_state)
-                    webview.show()
-                    loading_type = wanted_loading_type(
-                        len(window.container.views))
-                    window.container.add_webview(webview, loading_type)
-                    session = WebKit2.WebViewSessionState(
-                        GLib.Bytes.new(webview_state.session))
-                    webview.restore_session_state(session)
-                window.connect('delete-event', self.__on_delete_event)
+                window.connect("delete-event", self.__on_delete_event)
                 window.show()
         except Exception as e:
             Logger.error("Application::__restore_state(): %s", e)

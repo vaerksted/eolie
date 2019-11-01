@@ -14,7 +14,7 @@
 class WindowStateStruct:
     def __init__(self):
         self.wid = ""
-        self.size = []
+        self.size = (800, 600)
         self.is_maximized = False
         self.webview_states = []
         self.sort = []
@@ -52,8 +52,6 @@ class WindowState:
             webview_state = view.webview.state
             if webview_state is not None:
                 state.webview_states.append(webview_state)
-        if not state.webview_states:
-            return None
         state.size = self.size
         state.is_maximized = self.is_maximized()
         state.sort = self.container.sites_manager.sort
