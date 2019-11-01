@@ -105,13 +105,12 @@ class WebViewArtwork:
         ibookmark_id = App().bookmarks.get_id(self._initial_uri)
         if bookmark_id is None and ibookmark_id is None:
             save = False
-        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+        self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                           WebKit2.SnapshotOptions.NONE,
                           self.__cancellable,
                           get_snapshot,
                           self.__on_snapshot,
-                          save,
-                          True)
+                          save)
 
     def __set_favicon_from_surface(self, surface, uri, initial_uri):
         """
@@ -217,27 +216,13 @@ class WebViewArtwork:
                                       uri,
                                       self._initial_uri)
 
-    def __on_snapshot(self, surface, save, first_pass):
+    def __on_snapshot(self, surface, save):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param uri as str
             @param save as bool
-            @param first_pass as bool
         """
-        # The 32767 limit on the width/height dimensions
-        # of an image surface is new in cairo 1.10,
-        # try with WebKit2.SnapshotRegion.VISIBLE
-        if surface is None:
-            if first_pass:
-                self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                  WebKit2.SnapshotOptions.NONE,
-                                  self.__cancellable,
-                                  get_snapshot,
-                                  self.__on_snapshot,
-                                  save,
-                                  False)
-            return
         self.emit("snapshot-changed", surface)
         if not save or self.error:
             return
