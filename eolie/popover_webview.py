@@ -27,7 +27,6 @@ class WebViewPopover(Gtk.Popover):
         self.set_modal(False)
         window.register(self, False)
         self.__window = window
-        self.__to_destroy = []
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/PopoverWebView.ui')
         builder.connect_signals(self)
@@ -41,20 +40,19 @@ class WebViewPopover(Gtk.Popover):
         self.add(builder.get_object("widget"))
         self.connect("closed", self.__on_closed)
 
-    def add_view(self, view, destroy):
+    def add_webview(self, webview):
         """
             Add view to popover
-            @param view as View
-            @param destroy webview as bool
+            @param webview as WebView
         """
         position = len(self.__stack.get_children())
-        self.__stack.add(view)
-        self.__stack.set_visible_child(view)
-        view.webview.connect("close", self.__on_webview_close, destroy)
-        view.webview.connect("title-changed", self.__on_webview_title_changed)
-        view.webview.connect("load-changed", self.__on_webview_load_changed)
-        title = view.webview.title or view.webview.uri or ""
-        self.__combobox.append(str(view), title)
+        self.__stack.add(webview)
+        self.__stack.set_visible_child(webview)
+        webview.connect("close", self.__on_webview_close)
+        webview.connect("title-changed", self.__on_webview_title_changed)
+        webview.connect("load-changed", self.__on_webview_load_changed)
+        title = webview.title or webview.uri or ""
+        self.__combobox.append(str(webview), title)
 
         size = self.__window.get_size()
         width = min(800, size[0] * 0.8)
@@ -64,20 +62,18 @@ class WebViewPopover(Gtk.Popover):
         if position == 0:
             self.__label.set_text(title)
             self.__label.show()
-            self.__combobox.set_active_id(str(view))
+            self.__combobox.set_active_id(str(webview))
             self.__combobox.hide()
         else:
             self.__label.hide()
             self.__combobox.show()
-        if destroy:
-            self.__to_destroy.append(view.webview)
 
 #######################
 # PROTECTED           #
 #######################
     def _on_combobox_changed(self, combobox):
         """
-            Update visible view
+            Update visible webview
             @param combobox as Gtk.ComboBoxText
         """
         active_id = combobox.get_active_id()
@@ -96,10 +92,10 @@ class WebViewPopover(Gtk.Popover):
         """
         current = self.__stack.get_visible_child()
         child = None
-        for view in self.__stack:
-            if view == current:
+        for webview in self.__stack:
+            if webview == current:
                 break
-            child = view
+            child = webview
         return child
 
     def __get_next_child(self):
@@ -110,11 +106,11 @@ class WebViewPopover(Gtk.Popover):
         current = self.__stack.get_visible_child()
         at_current = False
         child = None
-        for view in self.__stack:
+        for webview in self.__stack:
             if at_current:
-                child = view
+                child = webview
                 break
-            if view == current:
+            if webview == current:
                 at_current = True
         return child
 
@@ -127,15 +123,15 @@ class WebViewPopover(Gtk.Popover):
         # Search previous entry
         position = 0
         for child in self.__stack.get_children():
-            if webview.view == child:
+            if webview == child:
                 break
             position += 1
         self.__combobox.remove(position)
-        self.__combobox.insert(position, str(webview.view), title)
+        self.__combobox.insert(position, str(webview), title)
         self.__label.set_text(title)
-        view = self.__stack.get_visible_child()
-        if view == webview.view:
-            self.__combobox.set_active_id(str(view))
+        visible = self.__stack.get_visible_child()
+        if visible == webview:
+            self.__combobox.set_active_id(str(visible))
 
     def __on_webview_load_changed(self, webview, event):
         """
@@ -148,7 +144,7 @@ class WebViewPopover(Gtk.Popover):
         elif event == event == WebKit2.LoadEvent.FINISHED:
             self.__spinner.stop()
 
-    def __on_webview_close(self, webview, destroy):
+    def __on_webview_close(self, webview):
         """
             Remove view from stack, destroy it if wanted
             @param webview as WebView
@@ -156,16 +152,15 @@ class WebViewPopover(Gtk.Popover):
         """
         webview.disconnect_by_func(self.__on_webview_title_changed)
         webview.disconnect_by_func(self.__on_webview_load_changed)
-        for view in self.__stack.get_children():
-            if view.webview == webview:
-                self.__stack.remove(view)
+        for child in self.__stack.get_children():
+            if child == webview:
+                self.__stack.remove(child)
                 break
         if self.__stack.get_children():
             pass
         else:
             self.hide()
-        if destroy:
-            webview.destroy()
+        child.destroy()
 
     def __on_closed(self, popover):
         """
@@ -173,11 +168,5 @@ class WebViewPopover(Gtk.Popover):
             Remove children
             @param popover as Gtk.Popover
         """
-        for view in self.__stack.get_children():
-            view.webview.disconnect_by_func(self.__on_webview_title_changed)
-            view.webview.disconnect_by_func(self.__on_webview_load_changed)
-            view.free_webview()
-            self.__stack.remove(view)
-        for webview in self.__to_destroy:
+        for webview in self.__stack.get_children():
             webview.destroy()
-        self.__to_destroy = []

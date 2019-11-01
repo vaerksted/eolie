@@ -454,7 +454,8 @@ class Application(Gtk.Application):
                 if state.webview_states:
                     window = WindowState.new_from_state(state)
                     for webview_state in state.webview_states:
-                        webview = WebViewState.new_from_state(webview_state)
+                        webview = WebViewState.new_from_state(webview_state,
+                                                              window)
                         webview.show()
                         loading_type = wanted_loading_type(
                             len(window.container.views))

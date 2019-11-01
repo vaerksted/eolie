@@ -28,16 +28,17 @@ class WebViewState:
         Web view state allowing to restore a webview from disk
     """
 
-    def new_from_state(state):
+    def new_from_state(state, window):
         """
             New webview from state
             @param state as WebViewStateStruct
+            @param window as Window
         """
         from eolie.webview import WebView
         if state.is_ephemeral:
-            webview = WebView.new_ephemeral()
+            webview = WebView.new_ephemeral(window)
         else:
-            webview = WebView.new()
+            webview = WebView.new(window)
         webview.set_uri(state.uri)
         webview.set_title(state.title)
         webview.set_atime(state.atime)

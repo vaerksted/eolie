@@ -61,13 +61,6 @@ class View(Gtk.Overlay):
         webview.connect("readability-content", self.__on_readability_content)
         webview.connect("close", self.__on_close)
 
-    def free_webview(self):
-        """
-            Free the webview associated with view
-        """
-        self.__grid.remove(self.__webview)
-        self.__webview = None
-
     def destroy(self):
         """
             Delayed destroy
@@ -166,7 +159,7 @@ class View(Gtk.Overlay):
             @param webview as WebView
         """
         if self.get_ancestor(Gtk.Popover) is None:
-            self.__window.container.close_view(self)
+            self.__webview.window.container.close_view(self)
 
     def __on_mouse_target_changed(self, webview, hit, modifiers):
         """

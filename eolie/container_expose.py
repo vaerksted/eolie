@@ -13,7 +13,6 @@
 from gi.repository import Gtk, GLib
 
 from eolie.pages_manager import PagesManager
-from eolie.define import App
 
 
 class ExposeContainer:
@@ -65,15 +64,6 @@ class ExposeContainer:
         self.sites_manager.update_visible_child()
         if switch:
             self._stack.set_visible_child(view)
-
-    def try_close_view(self, view):
-        """
-            Ask user before closing view if forms filled
-            @param view as View
-        """
-        page_id = view.webview.get_page_id()
-        App().helper.call("FormsFilled", page_id, None,
-                          self.__on_forms_filled, view)
 
     def next(self):
         """

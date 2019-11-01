@@ -15,7 +15,6 @@ from gi.repository import Gtk, GLib, Gdk
 from gettext import gettext as _
 from random import randint
 
-from eolie.view import View
 from eolie.popover_webview import WebViewPopover
 from eolie.define import App
 from eolie.container_sidebar import SidebarContainer
@@ -55,15 +54,12 @@ class Container(Gtk.Overlay, ViewContainer, SidebarContainer, ExposeContainer):
         if self.current is not None:
             self.current.webview.load_uri(uri)
 
-    def popup_webview(self, webview, destroy):
+    def popup_webview(self, webview):
         """
             Show webview in popopver
             @param webview as WebView
-            @param destroy webview when popover hidden
         """
-        view = View(webview, self._window, True)
-        view.show()
-        self.__popover.add_view(view, destroy)
+        self.__popover.add_webview(webview)
         if not self.__popover.is_visible():
             self.__popover.set_relative_to(self._window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)

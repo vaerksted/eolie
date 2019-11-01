@@ -44,7 +44,7 @@ class ViewContainer:
         """
         state = WebViewStateStruct()
         state.uri = uri
-        webview = WebViewState.new_from_state(state)
+        webview = WebViewState.new_from_state(state, self._window)
         webview.show()
         self.add_webview(webview, loading_type)
 

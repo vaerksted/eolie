@@ -31,36 +31,39 @@ class WebView(WebKit2.WebView):
         WebKit view
     """
 
-    def new():
+    def new(window):
         """
             New webview
+            @param window as Window
         """
         webview = WebKit2.WebView.new_with_user_content_manager(
             App().content_manager)
         webview.__class__ = WebViewMeta
-        webview.__init(None)
+        webview.__init(None, window)
         return webview
 
-    def new_ephemeral():
+    def new_ephemeral(window):
         """
             New ephemeral webview
+            @param window as Window
         """
         context = WebKit2.WebContext.new_ephemeral()
         Context(context)
         webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
-        webview.__init(None)
+        webview.__init(None, window)
         return webview
 
-    def new_with_related_view(related):
+    def new_with_related_view(related, window):
         """
             Create a new WebView related to view
             @param related as WebView
+            @param window as Window
             @return WebView
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        webview.__init(related)
+        webview.__init(related, window)
         return webview
 
     def set_setting(self, key, value):
@@ -237,14 +240,14 @@ class WebView(WebKit2.WebView):
             @param loading_type as Gdk.LoadingType
         """
         if self.is_ephemeral:
-            webview = WebView.new_ephemeral()
+            webview = WebView.new_ephemeral(self.window)
         else:
-            webview = WebView.new()
+            webview = WebView.new(self.window)
+        webview.show()
+        webview.load_uri(uri)
         if loading_type == LoadingType.POPOVER:
-            self.window.container.popup_webview(webview, True)
-            GLib.idle_add(webview.load_uri, uri)
+            self.window.container.popup_webview(webview)
         else:
-            self.__new_pages_opened += 1
             self.window.container.add_webview(webview, loading_type)
             webview.set_parent(self)
             self.add_child(webview)
@@ -320,14 +323,6 @@ class WebView(WebKit2.WebView):
         return self.__parent
 
     @property
-    def view(self):
-        """
-            Get view
-            @return View
-        """
-        return self.__view
-
-    @property
     def shown(self):
         """
             True if page already shown on screen (one time)
@@ -379,7 +374,7 @@ class WebView(WebKit2.WebView):
             Get window
             @return Gtk.Window
         """
-        return self.get_ancestor(Gtk.Window)
+        return self.__window
 
     @property
     def selection(self):
@@ -392,20 +387,21 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view):
+    def __init(self, related_view, window):
         """
             Init WebView
             @param related_view as WebView
+            @param window as Window
         """
         WebViewState.__init__(self)
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
         WebViewArtwork.__init__(self)
+        self.__window = window
         self.__atime = 0
         self.__children = []
         self.__parent = None
-        self.__new_pages_opened = 0
         self.__pinned = False
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
@@ -510,6 +506,7 @@ class WebView(WebKit2.WebView):
                         elapsed)
         webview.set_uri(uri)
         webview.set_parent(self)
+        webview.show()
         self.add_child(webview)
         return webview
 
@@ -528,7 +525,7 @@ class WebView(WebKit2.WebView):
                 webview,
                 LoadingType.FOREGROUND)
         else:
-            self.window.container.popup_webview(webview, True)
+            self.window.container.popup_webview(webview)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
@@ -549,7 +546,5 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__new_pages_opened = 0
-        elif event == WebKit2.LoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.COMMITTED:
             self._uri = webview.get_uri()
