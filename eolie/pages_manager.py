@@ -70,23 +70,23 @@ class PagesManager(Gtk.EventBox):
 
         self.add(grid)
 
-    def add_view(self, view):
+    def add_webview(self, webview):
         """
-            Add child to pages manager
+            Add webview to pages manager
             @param view as View
             @return child
         """
-        child = PagesManagerChild(view, self.__window)
+        child = PagesManagerChild(webview, self.__window)
         child.show()
         self.__box.add(child)
         return child
 
-    def remove_view(self, view):
+    def remove_webview(self, webview):
         """
             Remove view from pages manager
         """
         for child in self.__box.get_children():
-            if child.view == view:
+            if child.webview == webview:
                 child.destroy()
                 break
 
@@ -94,13 +94,13 @@ class PagesManager(Gtk.EventBox):
         """
             Mark current child or visible if passed as arg
             Unmark all others
-            @param visible as view
+            @param visible as WebView
         """
         if visible is None:
-            visible = self.__window.container.current
+            visible = self.__window.container.webview
         for child in self.__box.get_children():
             style_context = child.get_style_context()
-            if child.view == visible:
+            if child.webview == visible:
                 style_context.add_class("item-selected")
                 self.__current_child = child
             else:
@@ -122,7 +122,7 @@ class PagesManager(Gtk.EventBox):
 
     def set_filter(self, search):
         """
-            Filter view
+            Filter webview
             @param search as str
         """
         self.__search_entry.set_text(search)
@@ -142,7 +142,7 @@ class PagesManager(Gtk.EventBox):
 
     def next(self, switch=True):
         """
-            Show next view
+            Show next webview
             @param switch as bool
         """
         children = self.__box.get_children()
@@ -156,13 +156,13 @@ class PagesManager(Gtk.EventBox):
             wanted_index = 0
         child = self.__box.get_child_at_index(wanted_index)
         if switch:
-            self.__window.container.set_current(child.view)
+            self.__window.container.set_current(child.webview)
         else:
-            self.update_visible_child(child.view)
+            self.update_visible_child(child.webview)
 
     def previous(self, switch=True):
         """
-            Show previous view
+            Show previous webview
             @param switch as bool
         """
         children = self.__box.get_children()
@@ -176,9 +176,9 @@ class PagesManager(Gtk.EventBox):
             wanted_index = count - 1
         child = self.__box.get_child_at_index(wanted_index)
         if switch:
-            self.__window.container.set_current(child.view)
+            self.__window.container.set_current(child.webview)
         else:
-            self.update_visible_child(child.view)
+            self.update_visible_child(child.webview)
 
     @property
     def filter(self):
@@ -199,7 +199,7 @@ class PagesManager(Gtk.EventBox):
     @property
     def children(self):
         """
-            Get views ordered
+            Get children ordered
             @return [PagesManagerChild]
         """
         return self.__box.get_children()
@@ -209,12 +209,12 @@ class PagesManager(Gtk.EventBox):
 #######################
     def _on_child_activated(self, flowbox, child):
         """
-            Show wanted web view
+            Show wanted webview
             @param flowbox as Gtk.FlowBox
             @param child as PagesManagerChild
         """
         self.__window.close_popovers()
-        self.__window.container.set_current(child.view)
+        self.__window.container.set_current(child.webview)
         self.__window.container.set_expose(False)
 
 #######################
@@ -235,17 +235,17 @@ class PagesManager(Gtk.EventBox):
             count += 1
         return count
 
-    def __get_index(self, view):
+    def __get_index(self, webview):
         """
-            Get view index
-            @param view as View
+            Get webview index
+            @param webview as WebView
             @return int
         """
         # Search current index
         children = self.__box.get_children()
         index = 0
         for child in children:
-            if child.view == view:
+            if child.webview == webview:
                 break
             index += 1
         return index
@@ -258,26 +258,26 @@ class PagesManager(Gtk.EventBox):
         """
         try:
             # Group pages by net location then atime
-            if self.__sort_pages and row2.view.webview.uri is not None and\
-                    row1.view.webview.uri is not None:
-                netloc1 = get_safe_netloc(row1.view.webview.uri)
-                netloc2 = get_safe_netloc(row2.view.webview.uri)
+            if self.__sort_pages and row2.webview.uri is not None and\
+                    row1.webview.uri is not None:
+                netloc1 = get_safe_netloc(row1.webview.uri)
+                netloc2 = get_safe_netloc(row2.webview.uri)
                 if netloc1 != netloc2 and netloc1 in self.__sort_pages and\
                         netloc2 in self.__sort_pages:
                     index1 = self.__sort_pages.index(netloc1)
                     index2 = self.__sort_pages.index(netloc2)
                     return index2 < index1
                 else:
-                    return row2.view.webview.atime > row1.view.webview.atime
+                    return row2.webview.atime > row1.webview.atime
             # Always show current first
             elif self.__current_child is not None and\
                     self.__current_child in [row1, row2]:
                 return self.__current_child == row2
             # Unshown first
-            elif not row2.view.webview.shown and row1.view.webview.shown:
+            elif not row2.webview.shown and row1.webview.shown:
                 return True
             else:
-                return row2.view.webview.atime > row1.view.webview.atime
+                return row2.webview.atime > row1.webview.atime
         except Exception as e:
             Logger.error("PagesManager::__sort_func(): %s", e)
 
@@ -289,11 +289,11 @@ class PagesManager(Gtk.EventBox):
         filter = self.__search_entry.get_text()
         if not filter:
             return True
-        uri = row.view.webview.uri
-        title = row.view.webview.title
+        uri = row.webview.uri
+        title = row.webview.title
         if (uri is not None and uri.find(filter) != -1) or\
                 (title is not None and title.find(filter) != -1) or\
-                (filter == "private://" and row.view.webview.ephemeral):
+                (filter == "private://" and row.webview.ephemeral):
             return True
         return False
 
@@ -336,7 +336,7 @@ class PagesManager(Gtk.EventBox):
                     new_index = index - column_count
                 wanted_child = self.__box.get_child_at_index(new_index)
                 if wanted_child is not None:
-                    self.update_visible_child(wanted_child.view)
+                    self.update_visible_child(wanted_child.webview)
         elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
             if self.__current_child is not None:
                 self._on_child_activated(self.__box, self.__current_child)

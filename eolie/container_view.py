@@ -14,8 +14,8 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 
-from eolie.view import View
 from eolie.define import App, LoadingType
+from eolie.widget_stack import Stack
 from eolie.webview_state import WebViewState, WebViewStateStruct
 
 
@@ -28,12 +28,9 @@ class ViewContainer:
         """
             Init container
         """
-        self._current = None
-        self._stack = Gtk.Stack()
+        self._stack = Stack()
         self._stack.set_hexpand(True)
         self._stack.set_vexpand(True)
-        self._stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self._stack.set_transition_duration(150)
         self._stack.show()
 
     def add_webview_for_uri(self, uri, loading_type):
@@ -54,53 +51,33 @@ class ViewContainer:
             @param webview as WebView
             @param loading_type as Gdk.LoadingType
         """
-        if loading_type == LoadingType.BACKGROUND or self.in_expose:
-            webview.load_uri(webview.uri)
-        view = View(webview)
-        view.show()
-        self.pages_manager.add_view(view)
-        self.sites_manager.add_view(view)
-        self._stack.add(view)
+        self.pages_manager.add_webview(webview)
+        self.sites_manager.add_webview(webview)
+        self._stack.add(webview)
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
-            self._current = view
             self.pages_manager.update_visible_child()
             self.sites_manager.update_visible_child()
-            self._stack.set_visible_child(view)
-        # Do not count container views as destroy may be pending on somes
+            self._stack.set_visible_child(webview)
+        # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.pages_manager.children)
         self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
+        if loading_type == LoadingType.BACKGROUND or self.in_expose:
+            webview.load_uri(webview.uri)
 
-    def add_view(self, view):
-        """
-            Add view to container
-            @param view as View
-        """
-        self._current = view
-        self._stack.add(view)
-        self.pages_manager.add_view(view)
-        self.sites_manager.add_view(view)
-        self._stack.set_visible_child(view)
-        count = len(self._stack.get_children())
-        self._window.toolbar.actions.count_label.set_text(str(count))
-        App().update_unity_badge()
-        self.pages_manager.update_visible_child()
-        self.sites_manager.update_visible_child()
-
-    def remove_view(self, view):
+    def remove_webview(self, webview):
         """
             Remove view from container
-            @param view as View
+            @param webview as WebView
         """
-        self._stack.remove(view)
-        self.pages_manager.remove_view(view)
-        self.sites_manager.remove_view(view)
+        self._stack.remove(webview)
+        self.pages_manager.remove_webview(webview)
+        self.sites_manager.remove_webview(webview)
         children = self._stack.get_children()
         if children:
-            self._current = self._stack.get_visible_child()
             count = len(children)
             self._window.toolbar.actions.count_label.set_text(str(count))
             App().update_unity_badge()
@@ -111,81 +88,88 @@ class ViewContainer:
                 window.mark(False)
             self._window.close()
 
-    def try_close_view(self, view):
+    def try_close_webview(self, webview):
         """
             Ask user before closing view if forms filled
-            @param view as View
+            @param webview as WebView
         """
-        page_id = view.webview.get_page_id()
+        page_id = webview.get_page_id()
         App().helper.call("FormsFilled", page_id, None,
-                          self.__on_forms_filled, view)
+                          self.__on_forms_filled, webview)
 
-    def close_view(self, view):
+    def close_view(self, webview):
         """
-            close current view
+            close current webview
             @param view as View
             @param animate as bool
         """
         # Get children less view
-        views = [child for child in self._stack.get_children()
-                 if not child.destroyed]
-        if view.destroyed or view not in views:
+        webviews = [child for child in self._stack.get_children()]
+        if webview not in webviews:
             return
-        views.remove(view)
-        views_count = len(views)
-        App().history.set_page_state(view.webview.uri)
+        webviews.remove(webview)
+        webviews_count = len(webviews)
+        App().history.set_page_state(webview.uri)
         self._window.close_popovers()
         # Needed to unfocus titlebar
         self._window.set_focus(None)
-        was_current = view == self._window.container.current
-        if not view.webview.is_ephemeral:
-            App().pages_menu.add_action(view.webview.title,
-                                        view.webview.uri,
-                                        view.webview.get_session_state())
+        was_current = webview == self._window.container.webview
+        if not webview.is_ephemeral:
+            App().pages_menu.add_action(webview.title,
+                                        webview.uri,
+                                        webview.get_session_state())
 
-        view.destroy()
+        webview.destroy()
         # Don't show 0 as we are going to open a new one
-        if views_count:
+        if webviews_count:
             App().update_unity_badge()
             self._window.toolbar.actions.count_label.set_text(
-                str(views_count))
+                str(webviews_count))
         # Nothing to do if was not current page
         if not was_current:
             return False
 
-        next_view = None
+        next_webview = None
 
         # First we search for a child for current view
-        if view.webview.children:
-            next_view = view.webview.children[0].view
+        if webview.children:
+            next_webview = webview.children[0].webview
 
         # Current webview children not needed, clear parent
-        for child in view.webview.children:
+        for child in webview.children:
             child.set_parent(None)
 
         # Next we search for a brother for current view
         # If no brother, use parent
-        parent = view.webview.parent
-        if next_view is None and parent is not None:
+        parent = webview.parent
+        if next_webview is None and parent is not None:
             for parent_child in parent.children:
-                if view.webview != parent_child:
-                    next_view = parent_child.view
+                if webview != parent_child:
+                    next_webview = parent_child.webview
                     break
-            if next_view is None and parent.view in views:
-                next_view = parent.view
+            if next_webview is None and parent.webview in webviews:
+                next_webview = parent.webview
 
         # Next we search for view with higher atime
-        if next_view is None:
+        if next_webview is None:
             atime = 0
-            for view in reversed(views):
-                if view.webview.atime >= atime:
-                    next_view = view
-                    atime = view.webview.atime
-        if next_view is not None:
-            self._window.container.set_current(next_view, True)
+            for webview in reversed(webviews):
+                if webview.atime >= atime:
+                    next_webview = webview
+                    atime = webview.atime
+        if next_webview is not None:
+            self._window.container.set_webview(next_webview, True)
         else:
             # We are last row, add a new one
             self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
+
+    @property
+    def webview(self):
+        """
+            Get current webview
+            @return webview
+        """
+        return self._stack.get_visible_child()
 
 #######################
 # PRIVATE             #

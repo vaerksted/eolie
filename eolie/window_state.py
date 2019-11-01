@@ -48,8 +48,8 @@ class WindowState:
             @return WindowStateStruct
         """
         state = WindowStateStruct()
-        for view in self.container.views:
-            webview_state = view.webview.state
+        for webview in self.container.webviews:
+            webview_state = webview.state
             if webview_state is not None:
                 state.webview_states.append(webview_state)
         state.size = self.size

@@ -231,7 +231,7 @@ class ToolbarTitle(Gtk.Bin):
             Update toolbar based on current webview
             @param text as str
         """
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
@@ -253,7 +253,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__window.set_title(title)
         markup = False
         # Do not show this in titlebar
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         if parsed.scheme in ["populars", "about"]:
             self.__set_default_placeholder()
@@ -448,7 +448,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__popover.is_visible():
             return
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.set_text_entry(uri)
@@ -478,10 +478,10 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__popover.is_visible():
             return
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         self.__action_image2.set_from_icon_name("edit-clear-symbolic",
                                                 Gtk.IconSize.MENU)
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         value = webview.get_current_text_entry()
         if value:
@@ -508,7 +508,7 @@ class ToolbarTitle(Gtk.Bin):
             @param menu as Gtk.Menu
         """
         def on_item_activate(item, clipboard):
-            self.__window.container.current.webview.load_uri(clipboard)
+            self.__window.container.webview.load_uri(clipboard)
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD).wait_for_text()
         if clipboard is not None:
             item = Gtk.MenuItem.new_with_label(_("Paste and load"))
@@ -539,7 +539,7 @@ class ToolbarTitle(Gtk.Bin):
             @param entry as Gtk.Entry
             @param event as Gdk.EventKey
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         uri = entry.get_text().lstrip().rstrip()
 
         # Walk history if Ctrl + [zZ]
@@ -607,10 +607,10 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        view = self.__window.container.current
-        self.set_readable_button_state(not view.reading)
-        if view.reading:
-            view.stop_reading()
+        webview = self.__window.container.webview
+        self.set_readable_button_state(not webview.reading)
+        if webview.reading:
+            webview.stop_reading()
         else:
             js1 = Gio.File.new_for_uri(
                 "resource:///org/gnome/Eolie/Readability.js")
@@ -619,7 +619,7 @@ class ToolbarTitle(Gtk.Bin):
             (status, content1, tags) = js1.load_contents()
             (status, content2, tags) = js2.load_contents()
             script = content1.decode("utf-8") + content2.decode("utf-8")
-            view.webview.run_javascript(script, None, None)
+            webview.run_javascript(script, None, None)
         return True
 
     def _on_indicator2_press(self, eventbox, event):
@@ -630,7 +630,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__indicator2_image.get_icon_name()[0] ==\
                 "mark-location-symbolic":
-            uri = self.__window.container.current.webview.uri
+            uri = self.__window.container.webview.uri
             App().websettings.allow_geolocation(uri, False)
             self.show_indicator(Indicator.NONE)
         else:
@@ -649,11 +649,11 @@ class ToolbarTitle(Gtk.Bin):
         """
         if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
             if event.button == 1:
-                self.__window.container.current.webview.reload()
+                self.__window.container.webview.reload()
             else:
-                self.__window.container.current.webview.reload_bypass_cache()
+                self.__window.container.webview.reload_bypass_cache()
         else:
-            self.__window.container.current.webview.stop_loading()
+            self.__window.container.webview.stop_loading()
         return True
 
     def _on_action2_press(self, eventbox, event):
@@ -662,7 +662,7 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         if self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
             webview.clear_text_entry()
@@ -729,11 +729,11 @@ class ToolbarTitle(Gtk.Bin):
         """
             Focus out widget
         """
-        view = self.__window.container.current
+        webview = self.__window.container.webview
         self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.set_text_entry("")
-        uri = view.webview.uri
+        uri = webview.uri
         if uri is not None:
             bookmark_id = App().bookmarks.get_id(uri)
             if bookmark_id is not None:
@@ -748,7 +748,7 @@ class ToolbarTitle(Gtk.Bin):
             Leave widget
         """
         self.__placeholder.set_opacity(0.8)
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.set_text_entry("")
@@ -774,7 +774,7 @@ class ToolbarTitle(Gtk.Bin):
             Update PRIMARY icon, Gtk.Entry should be set
         """
         self.__password_timeout_id = None
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         if (parsed.scheme == "https" and self.__secure_content) or\
                 parsed.scheme == "file":
@@ -876,7 +876,7 @@ class ToolbarTitle(Gtk.Bin):
             @thread safe
         """
         views = []
-        for view in self.__window.container.views:
+        for view in self.__window.container.webviews:
             uri = view.webview.uri
             if uri is None:
                 continue
@@ -893,7 +893,7 @@ class ToolbarTitle(Gtk.Bin):
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
         self.__completion_model.clear()
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         if popover == self.__popover:
             webview.grab_focus()
             self.__focus_out()
@@ -916,7 +916,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         value = entry.get_text()
         if not value:
-            webview = self.__window.container.current.webview
+            webview = self.__window.container.webview
             webview.clear_text_entry()
         # Text change comes from completion validation ie Enter
         for completion in self.__completion_model:
@@ -924,7 +924,7 @@ class ToolbarTitle(Gtk.Bin):
                 return
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         if value:
             self.__placeholder.set_opacity(0)
@@ -950,7 +950,7 @@ class ToolbarTitle(Gtk.Bin):
         task_helper = TaskHelper()
         self.__entry_changed_id = None
 
-        self.__window.container.current.webview.add_text_entry(value)
+        self.__window.container.webview.add_text_entry(value)
 
         # Populate completion model
         task_helper.run(self.__populate_completion, value)

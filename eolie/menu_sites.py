@@ -102,7 +102,7 @@ class SitesMenu(Gtk.Grid):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        for view in self.__window.container.views:
+        for view in self.__window.container.webviews:
             if view in self.__views:
                 self.__window.container.try_close_view(view)
 
@@ -125,7 +125,7 @@ class SitesMenu(Gtk.Grid):
             @param view as View
         """
         view_str = variant.get_string()
-        for view in self.__window.container.views:
+        for view in self.__window.container.webviews:
             if view_str == str(view):
                 self.__window.container.set_current(view, True)
                 break

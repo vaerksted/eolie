@@ -47,7 +47,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             fullscreen_button.set_tooltip_text(_("Enter fullscreen"))
         builder.connect_signals(self)
         widget = builder.get_object("widget")
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         builder.get_object("default_zoom_button").set_label(
             "{} %".format(int(webview.get_zoom_level() * 100)))
         parsed = urlparse(uri)
@@ -116,7 +116,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Zoom current page
             @param button as Gtk.Button
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         current = webview.zoom_in()
         button.set_label("{} %".format(current))
 
@@ -125,7 +125,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Unzoom current page
             @param button as Gtk.Button
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         current = webview.zoom_out()
         button.set_label("{} %".format(current))
 
@@ -147,7 +147,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Restore default zoom level
             @param button as Gtk.Button
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         current = webview.zoom_default()
         button.set_label("{} %".format(current))
 

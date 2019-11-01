@@ -156,8 +156,8 @@ class Application(Gtk.Application):
             @param value as GLib.Variant
         """
         for window in self.get_windows():
-            for view in window.container.views:
-                view.webview.set_setting(key, value)
+            for webview in window.container.webviews:
+                webview.set_setting(key, value)
 
     def update_unity_badge(self, fraction=None):
         """
@@ -458,7 +458,7 @@ class Application(Gtk.Application):
                                                               window)
                         webview.show()
                         loading_type = wanted_loading_type(
-                            len(window.container.views))
+                            len(window.container.webviews))
                         window.container.add_webview(webview, loading_type)
                         session = WebKit2.WebViewSessionState(
                             GLib.Bytes.new(webview_state.session))
@@ -521,13 +521,13 @@ class Application(Gtk.Application):
                 else:
                     uri = "http://%s" % uri
             loading_type = wanted_loading_type(
-                len(active_window.container.views))
+                len(active_window.container.webviews))
             active_window.container.add_webview_for_uri(uri, loading_type)
 
         # Add default start page
-        if not active_window.container.views:
+        if not active_window.container.webviews:
             loading_type = wanted_loading_type(
-                len(active_window.container.views))
+                len(active_window.container.webviews))
             active_window.container.add_webview_for_uri(self.start_page,
                                                         loading_type)
         if self.settings.get_value("debug"):
@@ -551,30 +551,32 @@ class Application(Gtk.Application):
         else:
             self.quit(True)
 
-    def __try_closing(self, window, views):
+    def __try_closing(self, window, webviews):
         """
-            Try closing all views
+            Try closing all webviews
+            @param window as Window
+            @param webviews as [WebView]
         """
-        if views:
-            view = views.pop(0)
-            page_id = view.webview.get_page_id()
+        if webviews:
+            webview = webviews.pop(0)
+            page_id = webview.get_page_id()
             self.helper.call("FormsFilled", page_id, None,
-                             self.__on_forms_filled, window, views)
+                             self.__on_forms_filled, window, webviews)
         else:
             self.__close_window(window)
 
-    def __on_forms_filled(self, source, result, window, views):
+    def __on_forms_filled(self, source, result, window, webviews):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param window as Window
-            @param views as [View]
+            @param webviews as [WebView]
         """
-        def on_response_id(dialog, response_id, window, views, self):
+        def on_response_id(dialog, response_id, window, webviews, self):
             if response_id == Gtk.ResponseType.CLOSE:
-                if views:
-                    self.__try_closing(window, views)
+                if webviews:
+                    self.__try_closing(window, webviews)
                 else:
                     self.__close_window(window)
             dialog.destroy()
@@ -596,13 +598,14 @@ class Application(Gtk.Application):
                 cancel = builder.get_object("cancel")
                 label.set_text(_("Do you really want to quit Eolie?"))
                 dialog.set_transient_for(window)
-                dialog.connect("response", on_response_id, window, views, self)
+                dialog.connect("response", on_response_id,
+                               window, webviews, self)
                 close.connect("clicked", on_close, dialog)
                 cancel.connect("clicked", on_cancel, dialog)
                 dialog.run()
             else:
-                if views:
-                    self.__try_closing(window, views)
+                if webviews:
+                    self.__try_closing(window, webviews)
                 else:
                     self.__close_window(window)
         except Exception as e:
@@ -631,7 +634,7 @@ class Application(Gtk.Application):
         """
         def on_response_id(dialog, response_id, window):
             if response_id == Gtk.ResponseType.CLOSE:
-                self.__try_closing(window, window.container.views)
+                self.__try_closing(window, window.container.webviews)
             dialog.destroy()
 
         def on_close(widget, dialog):
@@ -655,7 +658,7 @@ class Application(Gtk.Application):
             cancel.connect("clicked", on_cancel, dialog)
             dialog.run()
         else:
-            self.__try_closing(window, window.container.views)
+            self.__try_closing(window, window.container.webviews)
         return True
 
     def __on_activate(self, application):

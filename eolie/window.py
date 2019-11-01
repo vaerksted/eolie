@@ -73,7 +73,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
                 self.__update_zoom_level()
                 self.__monitor_model = monitor_model
                 # Update view zoom level
-                for view in self.__container.views:
+                for view in self.__container.webviews:
                     view.webview.update_zoom_level()
         except Exception as e:
             Logger.error("Window::update_zoom_level(): %s", e)
@@ -86,11 +86,11 @@ class Window(Gtk.ApplicationWindow, WindowState):
         if self.__fullscreen_revealer is not None:
             return
         self.__fullscreen_toolbar = Toolbar(self, True)
-        # Do not count container views as destroy may be pending on somes
+        # Do not count container.webviews as destroy may be pending on somes
         count = str(len(self.__container.pages_manager.children))
         self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
-        self.update(self.container.current.webview)
+        self.update(self.container.webview)
         self.__fullscreen_revealer = Gtk.Revealer.new()
         self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
@@ -115,14 +115,14 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
-        self.update(self.container.current.webview)
-        # Do not count container views as destroy may be pending on somes
+        self.update(self.container.webview)
+        # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.container.pages_manager.children)
         self.toolbar.actions.count_label.set_text(str(count))
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
-        self.__container.current.webview.run_javascript(
+        self.__container.webview.run_javascript(
             "document.webkitExitFullscreen();",
             None,
             None)
@@ -384,9 +384,9 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)
-            if self.__container.current is not None and\
-                    self.__container.current.reading:
-                self.__container.current.switch_read_mode()
+            if self.__container.webview is not None and\
+                    self.__container.webview.reading:
+                self.__container.webview.switch_read_mode()
                 self.__toolbar.title.set_reading()
 
     def __on_shortcut_action(self, action, param):
@@ -413,24 +413,24 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.toolbar.title.start_search()
         elif string == "close_page":
             if self.is_fullscreen:
-                self.container.current.webview.emit("leave-fullscreen")
+                self.container.webview.emit("leave-fullscreen")
                 Gtk.ApplicationWindow.unfullscreen(self)
-            self.__container.try_close_view(self.container.current)
+            self.__container.try_close_view(self.container.webview)
         elif string == "reload":
-            self.container.current.webview.reload()
+            self.container.webview.reload()
         elif string == "settings":
             # Rework all this code to use actions like in Lollypop
             from eolie.settings import SettingsDialog
             dialog = SettingsDialog(self)
             dialog.show()
         elif string == "home":
-            self.container.current.webview.load_uri(App().start_page)
+            self.container.webview.load_uri(App().start_page)
         elif string == "source":
-            uri = self.container.current.webview.uri
+            uri = self.container.webview.uri
             task_helper = TaskHelper()
             task_helper.load_uri_content(uri, None, self.__on_source_loaded)
         elif string == "find":
-            find_widget = self.container.current.find_widget
+            find_widget = self.container.webview.find_widget
             find_widget.set_search_mode(True)
             find_widget.search()
         elif string == "backward":
@@ -446,7 +446,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "next_site":
             self.__container.sites_manager.next()
         elif string == "print":
-            self.container.current.webview.print()
+            self.container.webview.print()
         elif string == "private":
             self.container.add_webview(App().start_page,
                                        LoadingType.FOREGROUND,
@@ -454,11 +454,11 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "last_page":
             App().pages_menu.activate_last_action()
         elif string == "zoom_in":
-            self.container.current.webview.zoom_in()
+            self.container.webview.zoom_in()
         elif string == "zoom_out":
-            self.container.current.webview.zoom_out()
+            self.container.webview.zoom_out()
         elif string == "zoom_default":
-            self.container.current.webview.zoom_default()
+            self.container.webview.zoom_default()
         elif string == "history":
             self.toolbar.title.focus_entry("history")
         elif string == "search":
@@ -475,9 +475,8 @@ class Window(Gtk.ApplicationWindow, WindowState):
             App().settings.set_value("show-sidebar",
                                      GLib.Variant("b", not value))
         elif string == "mse_enabled":
-            self.container.current.webview.set_setting("enable-mediasource",
-                                                       True)
-            self.container.current.webview.reload()
+            self.container.webview.set_setting("enable-mediasource", True)
+            self.container.webview.reload()
 
     def __on_js_enabled(self, proxy, task, webview):
         """

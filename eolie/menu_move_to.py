@@ -141,6 +141,6 @@ class MoveToMenu(Gtk.Grid):
             window.container.add_view(view)
             view.set_window(window)
         window.update(view.webview)
-        current_view = self.__current_window.container.current
+        current_view = self.__current_window.container.webview
         if current_view is not None:
             self.__current_window.update(current_view.webview)

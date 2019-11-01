@@ -69,27 +69,30 @@ class SitesManager(Gtk.Grid):
         self.add(self.__scrolled)
         self.add(menu_button)
 
-    def add_view(self, view):
+    def add_webview(self, webview):
         """
-            Add a new view to monitor
-            @param view as View
+            Add a new web view to monitor
+            @param webview as WebView
         """
         # Force update
-        if view.webview.uri:
-            self.__on_webview_load_changed(view.webview,
-                                           WebKit2.LoadEvent.STARTED,
-                                           view)
-        view.webview.connect("load-changed",
-                             self.__on_webview_load_changed,
-                             view)
-        view.connect("destroyed", self.__on_view_destroyed)
+        if webview.uri:
+            self.__on_webview_load_changed(webview,
+                                           WebKit2.LoadEvent.STARTED)
+        webview.connect("load-changed", self.__on_webview_load_changed)
+        webview.connect("destroy", self.__on_webview_destroy)
 
-    def remove_view(self, view):
+    def remove_webview(self, webview):
         """
-            Remove view from pages manager
+            Remove web view from pages manager
+            @param webview as WebView
         """
-        view.disconnect_by_func(self.__on_view_destroyed)
-        self.__on_view_destroyed(view)
+        count = len(self.__box.get_children())
+        for site in self.__box.get_children():
+            site.remove_webview(webview)
+            if site.empty and count > 1:
+                site.destroy()
+        webview.disconnect_by_func(self.__on_webview_load_changed)
+        webview.disconnect_by_func(self.__on_webview_destroy)
 
     def set_minimal(self, minimal):
         """
@@ -105,8 +108,8 @@ class SitesManager(Gtk.Grid):
             @param webview as WebView
         """
         for child in self.__box.get_children():
-            for view in child.views:
-                if webview == view.webview:
+            for _webview in child.webviews:
+                if _webview == webview:
                     child.update_label()
                     return
 
@@ -127,8 +130,8 @@ class SitesManager(Gtk.Grid):
             next_row = self.__box.get_row_at_index(0)
         if next_row is not None:
             next_row.get_style_context().add_class("item-selected")
-            self.__window.container.set_current(next_row.views[0])
-            if len(next_row.views) == 1:
+            self.__window.container.set_current(next_row.webviews[0])
+            if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
             else:
                 self.__window.container.pages_manager.set_filter(
@@ -152,8 +155,8 @@ class SitesManager(Gtk.Grid):
             next_row = self.__box.get_row_at_index(index - 1)
         if next_row is not None:
             next_row.get_style_context().add_class("item-selected")
-            self.__window.container.set_current(next_row.views[0])
-            if len(next_row.views) == 1:
+            self.__window.container.set_webview(next_row.webviews[0])
+            if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
             else:
                 self.__window.container.pages_manager.set_filter(
@@ -165,9 +168,9 @@ class SitesManager(Gtk.Grid):
             Mark current child as visible
             Unmark all others
         """
-        current = self.__window.container.current
+        current = self.__window.container.webview
         for child in self.__box.get_children():
-            if current in child.views:
+            if current in child.webviews:
                 child.set_selected(True)
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
@@ -245,24 +248,18 @@ class SitesManager(Gtk.Grid):
                 y - child.get_allocated_height() < 0 + value:
             self.__scrolled.get_vadjustment().set_value(y)
 
-    def __on_view_destroyed(self, view):
+    def __on_webview_destroy(self, webview):
         """
             Clean children
-            @param view as View
+            @param webview as WebView
         """
-        view.webview.disconnect_by_func(self.__on_webview_load_changed)
-        count = len(self.__box.get_children())
-        for site in self.__box.get_children():
-            site.remove_view(view)
-            if site.empty and count > 1:
-                site.destroy()
+        self.remove_webview(webview)
 
-    def __on_webview_load_changed(self, webview, event, view):
+    def __on_webview_load_changed(self, webview, event):
         """
             Update children
             @param webview as WebView
             @param event as WebKit2.LoadEvent
-            @param view as View
         """
         if event not in [WebKit2.LoadEvent.STARTED,
                          WebKit2.LoadEvent.COMMITTED]:
@@ -278,12 +275,12 @@ class SitesManager(Gtk.Grid):
                     break
         else:
             # Search for a child for wanted netloc
-            # Clean up any child matching view, allowing us to reuse it
+            # Clean up any child matching webview, allowing us to reuse it
             for site in self.__box.get_children():
                 if site.netloc == netloc and site.is_ephemeral is False:
                     child = site
                 else:
-                    site.remove_view(view)
+                    site.remove_webview(webview)
                     if site.empty:
                         empty_child = site
 
@@ -297,17 +294,17 @@ class SitesManager(Gtk.Grid):
                     "sidebar-position").get_int32()
                 child.set_minimal(position < 80)
                 child.show()
-                child.add_view(view)
+                child.add_webview(webview)
                 self.__box.add(child)
                 self.update_visible_child()
             else:
                 child = empty_child
                 child.reset(netloc)
-                child.add_view(view)
+                child.add_webview(webview)
         else:
             if empty_child is not None:
                 empty_child.destroy()
-            child.add_view(view)
+            child.add_webview(webview)
             self.update_visible_child()
 
     def __on_row_activated(self, listbox, child):
@@ -319,9 +316,9 @@ class SitesManager(Gtk.Grid):
         if self.__window.toolbar.actions.view_button.get_active() and\
                 self.__window.container.pages_manager.filter == child.netloc:
             self.__window.toolbar.actions.view_button.set_active(False)
-        elif len(child.views) == 1:
+        elif len(child.webviews) == 1:
             self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.set_current(child.views[0], True)
+            self.__window.container.set_current(child.webviews[0], True)
         else:
             if child.ephemeral:
                 self.__window.container.pages_manager.set_filter("private://")

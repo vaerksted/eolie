@@ -321,7 +321,7 @@ class Row(Gtk.ListBoxRow):
         if type_id in [Type.HISTORY, Type.SUGGESTION,
                        Type.SEARCH, Type.BOOKMARK]:
             if event.button == 1:
-                self.__window.container.current.webview.load_uri(uri)
+                self.__window.container.webview.load_uri(uri)
                 self.__window.container.set_expose(False)
                 self.__window.close_popovers()
             else:
@@ -331,7 +331,7 @@ class Row(Gtk.ListBoxRow):
                     self.__window.close_popovers()
         elif type_id == Type.VIEW:
             title = self.__item.get_property("title")
-            for view in self.__window.container.views:
+            for view in self.__window.container.webviews:
                 if view.webview.uri == uri and view.webview.title == title:
                     self.__window.container.set_current(view, True)
                     self.__window.close_popovers()
@@ -612,7 +612,7 @@ class UriPopover(Gtk.Popover):
                     if item.get_property("type") == Type.VIEW:
                         title = item.get_property("title")
                         uri = item.get_property("uri")
-                        for view in container.views:
+                        for view in container.webviews:
                             if view.webview.uri == uri and\
                                     view.webview.title == title:
                                 container.set_current(view, True)
@@ -623,7 +623,7 @@ class UriPopover(Gtk.Popover):
                         uri = selected.item.get_property("uri")
                         if uri:
                             self.__window.close_popovers()
-                            container.current.webview.load_uri(uri)
+                            container.webview.load_uri(uri)
                             container.set_expose(False)
                             return True
             else:

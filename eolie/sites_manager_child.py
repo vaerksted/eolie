@@ -26,19 +26,19 @@ class PageChildRow(Gtk.ListBoxRow):
         Label for a view
     """
 
-    def __init__(self, view, window):
+    def __init__(self, webview, window):
         """
             Init widget
-            @param view as View
+            @param webview as WebView
             @param window as Window
         """
         Gtk.ListBoxRow.__init__(self)
         eventbox = Gtk.EventBox()
         eventbox.show()
         self.get_style_context().add_class("page-child-row")
-        self.__view = view
+        self.__webview = webview
         self.__window = window
-        self.__label = Gtk.Label.new(view.webview.title)
+        self.__label = Gtk.Label.new(webview.title)
         self.__label.set_property("valign", Gtk.Align.CENTER)
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.set_hexpand(True)
@@ -60,16 +60,17 @@ class PageChildRow(Gtk.ListBoxRow):
         self.connect("destroy", self.__on_destroy)
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        view.webview.connect("load-changed", self.__on_webview_load_changed)
-        view.webview.connect("title-changed", self.__on_webview_title_changed)
+        webview.connect("load-changed", self.__on_webview_load_changed)
+        webview.connect("title-changed", self.__on_webview_title_changed)
         eventbox.connect("button-press-event", self.__on_button_press_event)
 
     @property
-    def view(self):
+    def webview(self):
         """
-            Get associated view
+            Get associated webview
+            @return WebView
         """
-        return self.__view
+        return self.__webview
 
 #######################
 # PRIVATE             #
@@ -79,7 +80,7 @@ class PageChildRow(Gtk.ListBoxRow):
             Close view
             @param button as Gtk.Button
         """
-        self.__window.container.try_close_view(self.__view)
+        self.__window.container.try_close_webview(self.__webview)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
@@ -90,7 +91,7 @@ class PageChildRow(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        title = self.__view.webview.get_title()
+        title = self.__webview.webview.get_title()
         if title is not None:
             tooltip = GLib.markup_escape_text(title)
             widget.set_tooltip_markup(tooltip)
@@ -101,7 +102,7 @@ class PageChildRow(Gtk.ListBoxRow):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__window.container.set_current(self.__view, True)
+        self.__window.container.set_current(self.__webview, True)
         self.__window.container.set_expose(False)
         return True
 
@@ -110,8 +111,8 @@ class PageChildRow(Gtk.ListBoxRow):
             Disconnect signals
             @param widget as Gtk.Widget
         """
-        self.__view.webview.disconnect_by_func(self.__on_webview_load_changed)
-        self.__view.webview.disconnect_by_func(self.__on_webview_title_changed)
+        self.__webview.disconnect_by_func(self.__on_webview_load_changed)
+        self.__webview.disconnect_by_func(self.__on_webview_title_changed)
 
     def __on_webview_load_changed(self, webview, event):
         """
@@ -156,7 +157,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__minimal = None
         self.__current_child = None
         self.__is_ephemeral = is_ephemeral
-        self.__views = []
+        self.__webviews = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         self.__pages_listbox = None
@@ -188,55 +189,54 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.connect("drag-motion", self.__on_drag_motion)
         self.connect("drag-leave", self.__on_drag_leave)
 
-    def add_view(self, view):
+    def add_webview(self, webview):
         """
-            Add view
-            @param view as View
+            Add webview
+            @param webview as WebView
             @param uri as str
         """
-        if view not in self.__views:
-            self.__views.append(view)
-            view.webview.connect("shown", self.__on_webview_shown)
-            view.webview.connect("load-changed",
-                                 self.__on_webview_load_changed)
-            view.webview.connect("notify::is-playing-audio",
-                                 self.__on_webview_notify_is_playing_audio)
-            view.webview.connect("notify::favicon",
-                                 self.__on_webview_favicon_changed)
+        if webview not in self.__webviews:
+            self.__webviews.append(webview)
+            webview.connect("shown", self.__on_webview_shown)
+            webview.connect("load-changed", self.__on_webview_load_changed)
+            webview.connect("notify::is-playing-audio",
+                            self.__on_webview_notify_is_playing_audio)
+            webview.connect("notify::favicon",
+                            self.__on_webview_favicon_changed)
             self.update_label()
             self.__indicator_label.update_count(True)
-            if view.webview.shown:
-                self.__on_webview_favicon_changed(view.webview)
+            if webview.shown:
+                self.__on_webview_favicon_changed(webview)
             else:
-                self.__indicator_label.mark_unshown(view.webview)
+                self.__indicator_label.mark_unshown(webview)
             if self.__pages_listbox is not None:
-                child = PageChildRow(view, self.__window)
+                child = PageChildRow(webview, self.__window)
                 child.show()
                 self.__pages_listbox.add(child)
 
-    def remove_view(self, view):
+    def remove_webview(self, webview):
         """
-            Remove view and destroy self if no more view
-            @param view as View
+            Remove webview and destroy self if no more webview
+            @param webview as WebView
         """
-        if view in self.__views:
-            self.__views.remove(view)
-            view.webview.disconnect_by_func(self.__on_webview_shown)
-            view.webview.disconnect_by_func(self.__on_webview_favicon_changed)
-            view.webview.disconnect_by_func(self.__on_webview_load_changed)
-            view.webview.disconnect_by_func(
-                                    self.__on_webview_notify_is_playing_audio)
+        if webview in self.__webviews:
+            self.__webviews.remove(webview)
+            webview.disconnect_by_func(self.__on_webview_shown)
+            webview.disconnect_by_func(self.__on_webview_favicon_changed)
+            webview.disconnect_by_func(self.__on_webview_load_changed)
+            webview.disconnect_by_func(
+                self.__on_webview_notify_is_playing_audio)
             self.update_label()
             self.__indicator_label.update_count(False)
-            if not view.webview.shown:
-                self.__indicator_label.mark_shown(view.webview)
+            if not webview.shown:
+                self.__indicator_label.mark_shown(webview)
             if self.__pages_listbox is not None:
                 for child in self.__pages_listbox.get_children():
-                    if child.view == view:
+                    if child.webview == webview:
                         child.destroy()
                         break
-            if self.__views:
-                self.__on_webview_favicon_changed(self.__views[0].webview)
+            if self.__webviews:
+                self.__on_webview_favicon_changed(self.__webviews[0])
 
     def set_minimal(self, minimal):
         """
@@ -266,12 +266,12 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__image.set_hexpand(False)
             self.__image.set_property("halign", Gtk.Align.START)
             # Setup listbox
-            current = self.__window.container.current
-            for view in self.__views:
-                child = PageChildRow(view, self.__window)
+            current = self.__window.container.webview
+            for webview in self.__webviews:
+                child = PageChildRow(webview, self.__window)
                 child.show()
                 self.__pages_listbox.add(child)
-                if view == current:
+                if webview == current:
                     self.__pages_listbox.select_row(child)
         self.__minimal = minimal
 
@@ -286,8 +286,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
 
     def update_label(self):
         """
-            Update label: if one view, use title else use netloc
-            @param view as View
+            Update label using netloc
         """
         self.__netloc_label.set_text(self.__netloc)
 
@@ -302,9 +301,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.get_style_context().remove_class("item-selected")
         if self.__pages_listbox is not None:
             if selected:
-                current = self.__window.container.current
+                current = self.__window.container.webview
                 for child in self.__pages_listbox.get_children():
-                    if child.view == current:
+                    if child.webview == current:
                         self.__pages_listbox.select_row(child)
                         self.__current_child = child
                 self.__pages_listbox.invalidate_sort()
@@ -315,18 +314,18 @@ class SitesManagerChild(Gtk.ListBoxRow):
     @property
     def empty(self):
         """
-            True if no view associated
+            True if no webview associated
             @return bool
         """
-        return len(self.__views) == 0
+        return len(self.__webviews) == 0
 
     @property
-    def views(self):
+    def webviews(self):
         """
-            Get views
-            @return [view]
+            Get webviews
+            @return [webview]
         """
-        return self.__views
+        return self.__webviews
 
     @property
     def is_ephemeral(self):
@@ -349,21 +348,21 @@ class SitesManagerChild(Gtk.ListBoxRow):
 #######################
     def _on_button_press_event(self, eventbox, event):
         """
-            Hide popover or close view
+            Hide popover or close webview
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
         try:
             if event.button == 2:
-                for view in self.__views:
-                    self.__window.container.try_close_view(view)
+                for webview in self.__webviews:
+                    self.__window.container.try_close_webview(webview)
                 return True
             elif event.button == 3:
                 from eolie.menu_sites import SitesMenu
                 from eolie.menu_move_to import MoveToMenu
-                sites_menu = SitesMenu(self.__views, self.__window)
+                sites_menu = SitesMenu(self.__webviews, self.__window)
                 sites_menu.show()
-                moveto_menu = MoveToMenu(self.__views, self.__window)
+                moveto_menu = MoveToMenu(self.__webviews, self.__window)
                 moveto_menu.show()
                 popover = Gtk.PopoverMenu.new()
                 popover.add(sites_menu)
@@ -418,10 +417,10 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if self.__current_child in [row1, row2]:
             return self.__current_child == row2
         # Unshown first
-        elif not row2.view.webview.shown and row1.view.webview.shown:
+        elif not row2.webview.shown and row1.webview.shown:
             return True
         else:
-            return row2.view.webview.atime > row1.view.webview.atime
+            return row2.webview.atime > row1.webview.atime
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
@@ -456,8 +455,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if self.__pages_listbox is not None:
             return
         tooltip = "<b>%s</b>" % GLib.markup_escape_text(self.__netloc)
-        for view in self.__views:
-            title = view.webview.get_title()
+        for webview in self.__webviews:
+            title = webview.get_title()
             if title is not None:
                 tooltip += "\n%s" % GLib.markup_escape_text(title)
         widget.set_tooltip_markup(tooltip)

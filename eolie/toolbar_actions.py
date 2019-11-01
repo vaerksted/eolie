@@ -55,14 +55,14 @@ class ToolbarActions(Gtk.Bin):
         """
             Click next
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         webview.go_back()
 
     def forward(self):
         """
             Click previous
         """
-        webview = self.__window.container.current.webview
+        webview = self.__window.container.webview
         webview.go_forward()
 
     @property
@@ -196,7 +196,7 @@ class ToolbarActions(Gtk.Bin):
             Close current page
             @param button as button
         """
-        current = self.__window.container.current
+        current = self.__window.container.webview
         self.__window.container.try_close_view(current)
 
 #######################
@@ -216,7 +216,7 @@ class ToolbarActions(Gtk.Bin):
             Show back history
         """
         self.__timeout_id = None
-        current = self.__window.container.current.webview
+        current = self.__window.container.webview
         back_list = current.get_back_forward_list().get_back_list()
         if back_list:
             from eolie.menu_history import HistoryMenu
@@ -235,7 +235,7 @@ class ToolbarActions(Gtk.Bin):
             Show forward history
         """
         self.__timeout_id = None
-        current = self.__window.container.current.webview
+        current = self.__window.container.webview
         forward_list = current.get_back_forward_list().get_forward_list()
         if forward_list:
             from eolie.menu_history import HistoryMenu

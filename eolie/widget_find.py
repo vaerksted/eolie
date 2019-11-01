@@ -22,19 +22,17 @@ class FindWidget(Gtk.SearchBar):
         Show a find in webpage widget
     """
 
-    def __init__(self, webview):
+    def __init__(self, window):
         """
             Init widget
-            @param webview as WebKit2.WebView
+            @param window as Window
         """
         Gtk.SearchBar.__init__(self)
-        self.__webview = webview
+        self.__find_controller = None
         self.__action = None
+        self.__window = window
         self.__count = 0
         self.__current = 0
-        self.__find_controller = webview.get_find_controller()
-        self.__find_controller.connect("counted-matches",
-                                       self.__on_counted_matches)
         self.__search_entry = Gtk.SearchEntry.new()
         self.__search_entry.set_size_request(300, -1)
         self.__search_entry.connect("search-changed", self.__on_search_changed)
@@ -84,7 +82,7 @@ class FindWidget(Gtk.SearchBar):
         """
             Search for current clipboard
         """
-        page_id = self.__webview.get_page_id()
+        page_id = self.__window.container.webview.get_page_id()
         App().helper.call("GetSelection", page_id, None,
                           self.__on_get_selection)
 
@@ -126,6 +124,10 @@ class FindWidget(Gtk.SearchBar):
         App().add_action(self.__action)
         App().set_accels_for_action("app.find_shortcut::next", ["F3"])
         App().set_accels_for_action("app.find_shortcut::prev", ["<Shift>F3"])
+        self.__find_controller =\
+            self.__window.container.webview.get_find_controller()
+        self.__find_controller.connect("counted-matches",
+                                       self.__on_counted_matches)
 
     def __on_unmap(self, entry):
         """
@@ -135,6 +137,7 @@ class FindWidget(Gtk.SearchBar):
         self.__label.set_width_chars(-1)
         App().remove_action("find_shortcut")
         self.__find_controller.search_finish()
+        self.__find_controller.disconnect_by_func(self.__on_counted_matches)
 
     def __on_shortcut_action(self, action, param):
         """

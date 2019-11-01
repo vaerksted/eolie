@@ -101,7 +101,7 @@ class WebViewLoadSignals:
         self.window.toolbar.title.update()
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            self.window.container.current.find_widget.set_search_mode(False)
+            self.window.container.find_widget.set_search_mode(False)
             self.window.toolbar.title.set_title(self.uri)
             self.window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
@@ -110,8 +110,6 @@ class WebViewLoadSignals:
                 # Give focus to url bar
                 self.window.toolbar.title.start_search()
             self.window.toolbar.title.show_indicator(Indicator.NONE)
-            # Turn off reading mode
-            self.window.container.current.stop_reading()
             self.window.toolbar.title.progress.show()
         elif event == WebKit2.LoadEvent.COMMITTED:
             self.window.toolbar.title.set_title(self.uri)

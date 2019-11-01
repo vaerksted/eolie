@@ -59,7 +59,6 @@ class ExposeContainer:
             @param view as View
             @param switch as bool
         """
-        self._current = view
         self.pages_manager.update_visible_child()
         self.sites_manager.update_visible_child()
         if switch:
@@ -125,20 +124,12 @@ class ExposeContainer:
         return self.__pages_manager
 
     @property
-    def views(self):
+    def webviews(self):
         """
-            Get views
-            @return views as [View]
+            Get webviews
+            @return webviews as [WebView]
         """
         return self._stack.get_children()
-
-    @property
-    def current(self):
-        """
-            Current view
-            @return WebView
-        """
-        return self._current
 
 #######################
 # PRIVATE             #
@@ -164,7 +155,5 @@ class ExposeContainer:
         if expose:
             self.__expose_stack.set_visible_child_name("expose")
         else:
-            if self._stack.get_visible_child() != self._current:
-                self._stack.set_visible_child(self._current)
             self.__expose_stack.set_visible_child_name("stack")
             self.__pages_manager.update_visible_child()
