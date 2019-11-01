@@ -408,8 +408,8 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "quit":
             App().quit(True)
         elif string == "new_page":
-            self.container.add_webview(App().start_page,
-                                       LoadingType.FOREGROUND)
+            self.container.add_webview_for_uri(App().start_page,
+                                               LoadingType.FOREGROUND)
             self.toolbar.title.start_search()
         elif string == "close_page":
             if self.is_fullscreen:
