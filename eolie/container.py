@@ -47,6 +47,14 @@ class Container(Gtk.Overlay, ViewContainer, SidebarContainer, ExposeContainer):
             GLib.timeout_add_seconds(randint(3600, 7200),
                                      self.__show_donation)
 
+    def load_uri(self, uri):
+        """
+            Load uri in current view
+            @param uri as str
+        """
+        if self.current is not None:
+            self.current.webview.load_uri(uri)
+
     def popup_webview(self, webview, destroy):
         """
             Show webview in popopver
