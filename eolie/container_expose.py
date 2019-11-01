@@ -25,17 +25,8 @@ class ExposeContainer:
         """
             Init container
         """
-        self._current = None
         self.__next_timeout_id = None
         self.__previous_timeout_id = None
-
-        self._stack = Gtk.Stack()
-        self._stack.set_hexpand(True)
-        self._stack.set_vexpand(True)
-        self._stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self._stack.set_transition_duration(150)
-        self._stack.show()
-
         self.__expose_stack = Gtk.Stack()
         self.__expose_stack.set_hexpand(True)
         self.__expose_stack.set_vexpand(True)
