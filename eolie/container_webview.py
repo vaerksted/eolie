@@ -28,6 +28,7 @@ class WebViewContainer:
         """
         self.__current_webview = None
         self.__signal_ids = []
+        self.__bfl_signal_id = None
 
     def set_visible_webview(self, webview):
         """
@@ -45,10 +46,9 @@ class WebViewContainer:
         self.__signal_ids.append(
             webview.connect("notify::estimated-load-progress",
                             self.__on_estimated_load_progress))
-        self.__signal_ids.append(
-            webview.get_back_forward_list().connect(
+        self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
-                self.__on_back_forward_list_changed))
+                self.__on_back_forward_list_changed)
 
 #######################
 # PRIVATE             #
@@ -61,6 +61,8 @@ class WebViewContainer:
             return
         for signal_id in self.__signal_ids:
             self.__current_webview.disconnect(signal_id)
+        self.__current_webview.get_back_forward_list().disconnect(
+            self.__bfl_signal_id)
 
     def __on_title_changed(self, webview, title):
         """
