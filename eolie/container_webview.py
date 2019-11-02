@@ -33,9 +33,9 @@ class WebViewContainer:
     def set_visible_webview(self, webview):
         """
             Manage webview signals
-            @param expose as bool
+            @param webview as WebView
         """
-        self.__disconnect_signals()
+        self.dismiss_webview(self.__current_webview)
         self.__current_webview = webview
         self.__signal_ids.append(
             webview.connect("load-changed", self.__on_load_changed))
@@ -53,22 +53,23 @@ class WebViewContainer:
                 "changed",
                 self.__on_back_forward_list_changed)
 
-#######################
-# PRIVATE             #
-#######################
-    def __disconnect_signals(self):
+    def dismiss_webview(self, webview):
         """
-            Disconnect currently connected signals
+            Dismiss webview from handlers
+            @param webview as WebView
         """
-        if self.__current_webview is None:
+        if webview is None:
             return
         for signal_id in self.__signal_ids:
-            self.__current_webview.disconnect(signal_id)
-        self.__current_webview.get_back_forward_list().disconnect(
-            self.__bfl_signal_id)
+            webview.disconnect(signal_id)
+        if self.__bfl_signal_id is not None:
+            webview.get_back_forward_list().disconnect(self.__bfl_signal_id)
         self.__signal_ids = []
         self.__bfl_signal_id = None
 
+#######################
+# PRIVATE             #
+#######################
     def __on_title_changed(self, webview, title):
         """
             Update title

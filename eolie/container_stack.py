@@ -51,6 +51,7 @@ class StackContainer:
             @param webview as WebView
             @param loading_type as Gdk.LoadingType
         """
+        webview.connect("destroy", self.__on_destroy)
         self.pages_manager.add_webview(webview)
         self.sites_manager.add_webview(webview)
         self._stack.add(webview)
@@ -181,6 +182,15 @@ class StackContainer:
 #######################
 # PRIVATE             #
 #######################
+    def __on_destroy(self, webview):
+        """
+            Remove webview from monitored webviews
+            @param webview as WebView
+        """
+        self.dismiss_webview(webview)
+        self.pages_manager.remove_webview(webview)
+        self.sites_manager.remove_webview(webview)
+
     def __on_forms_filled(self, source, result, view):
         """
             Ask user to close view, if ok, close view

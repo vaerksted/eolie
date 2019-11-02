@@ -196,8 +196,8 @@ class ToolbarActions(Gtk.Bin):
             Close current page
             @param button as button
         """
-        current = self.__window.container.webview
-        self.__window.container.try_close_view(current)
+        self.__window.container.try_close_webview(
+            self.__window.container.webview)
 
 #######################
 # PRIVATE             #
