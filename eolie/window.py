@@ -384,10 +384,8 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)
-            if self.__container.webview is not None and\
-                    self.__container.webview.reading:
-                self.__container.webview.switch_read_mode()
-                self.__toolbar.title.set_reading()
+            if self.__container.reading:
+                self.__container.toggle_reading()
 
     def __on_shortcut_action(self, action, param):
         """
