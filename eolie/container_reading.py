@@ -22,16 +22,16 @@ class ReadingContainer:
         """
             Init container
         """
-        self.__reading_view = None
         self.__reading_webview = None
-        self.__reading_webview_id = None
+        self.__related_webview = None
+        self.__related_webview_id = None
 
     def toggle_reading(self):
         """
             Toggle reading mode
             @return status as bool
         """
-        if self.__reading_view is None:
+        if self.__reading_webview is None:
             js1 = Gio.File.new_for_uri(
                 "resource:///org/gnome/Eolie/Readability.js")
             js2 = Gio.File.new_for_uri(
@@ -40,17 +40,17 @@ class ReadingContainer:
             (status, content2, tags) = js2.load_contents()
             script = content1.decode("utf-8") + content2.decode("utf-8")
             self.webview.run_javascript(script, None, None)
-            self.__reading_webview = self.webview
-            self.__reading_webview_id = self.__reading_webview.connect(
+            self.__related_webview = self.webview
+            self.__related_webview_id = self.__related_webview.connect(
                 "readability-content", self.__on_readability_content)
             return True
         else:
-            if self.__reading_webview_id is not None:
-                self.__reading_webview.disconnect(self.__reading_webview_id)
+            if self.__related_webview_id is not None:
+                self.__related_webview.disconnect(self.__related_webview_id)
+            self.__related_webview = None
+            self.__related_webview_id = None
+            self.__reading_webview.destroy()
             self.__reading_webview = None
-            self.__reading_webview_id = None
-            self.__reading_view.destroy()
-            self.__reading_view = None
             return False
 
     @property
@@ -59,7 +59,7 @@ class ReadingContainer:
             True if reading
             @return bool
         """
-        return self.__reading_view is not None
+        return self.__reading_webview is not None
 
 #######################
 # PRIVATE             #
@@ -92,12 +92,12 @@ class ReadingContainer:
         document_font_name = system.get_value("document-font-name").get_string(
         )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
-        if self.__reading_view is None:
-            self.__reading_view = WebKit2.WebView.new()
-            self.__reading_view.connect("decide-policy",
-                                        self.__on_decide_policy)
-            self.__reading_view.show()
-            self.add_overlay(self.__reading_view)
+        if self.__reading_webview is None:
+            self.__reading_webview = WebKit2.WebView.new()
+            self.__reading_webview.connect("decide-policy",
+                                           self.__on_decide_policy)
+            self.__reading_webview.show()
+            self.add_overlay(self.__reading_webview)
             html = "<html><head>\
                     <style type='text/css'>\
                     *:not(img) {font-size: %s;\
@@ -111,4 +111,4 @@ class ReadingContainer:
             html += "<title>%s</title>" % webview.title
             html += content
             html += "</html>"
-            self.__reading_view.load_html(html, None)
+            self.__reading_webview.load_html(html, None)
