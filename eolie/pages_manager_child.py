@@ -128,12 +128,12 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Pin/Unpin page
             @param button as Gtk.Button
         """
-        if self.view.webview.is_pinned:
+        if self.__webview.is_pinned:
             self.__pin_image.set_opacity(0.5)
-            self.view.webview.set_pinned(False)
+            self.__webview.set_pinned(False)
         else:
             self.__pin_image.set_opacity(1)
-            self.view.webview.set_pinned(True)
+            self.__webview.set_pinned(True)
         return True
 
     def _on_close_button_clicked(self, button):
@@ -150,7 +150,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        if self.view.webview.is_pinned:
+        if self.__webview.is_pinned:
             self.__pin_image.set_opacity(1)
             self.__pin_button.set_tooltip_text(_("Unpin this page"))
         else:
