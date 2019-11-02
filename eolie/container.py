@@ -84,6 +84,7 @@ class Container(OverlayContainer, StackContainer,
         """
         StackContainer.set_visible_webview(self, webview)
         WebViewContainer.set_visible_webview(self, webview)
+        ReadingContainer.set_visible_webview(self, webview)
 
 #######################
 # PRIVATE             #

@@ -59,8 +59,8 @@ class WebViewJsSignals:
             self.emit("readability-content",
                       message.replace("@EOLIE_READER@", ""))
         elif message.startswith("@EOLIE_READERABLE@"):
-            self._readable = True
-            self.window.toolbar.title.show_readable_button(True)
+            self._readability = True
+            self.emit("readability-status", True)
         # OpenSearch message
         elif message.startswith("@EOLIE_OPENSEARCH@"):
             uri = message.replace("@EOLIE_OPENSEARCH@", "")

@@ -291,12 +291,12 @@ class WebView(WebKit2.WebView):
         return self.__pinned
 
     @property
-    def readable(self):
+    def readability(self):
         """
             True if webview readable
             @return bool
         """
-        return self._readable
+        return self._readability
 
     @property
     def atime(self):
@@ -406,7 +406,7 @@ class WebView(WebKit2.WebView):
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
-        self._readable = False
+        self._readability = False
         self._uri = None
         self._initial_uri = None
         self._title = None

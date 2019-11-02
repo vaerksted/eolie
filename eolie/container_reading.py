@@ -53,6 +53,31 @@ class ReadingContainer:
             self.__reading_webview = None
             return False
 
+    def check_readability(self, webview):
+        """
+            Check webview readability
+            @param webview as WebView
+        """
+        # Load Readability
+        js1 = Gio.File.new_for_uri(
+            "resource:///org/gnome/Eolie/Readability.js")
+        js2 = Gio.File.new_for_uri(
+            "resource:///org/gnome/Eolie/Readability_check.js")
+        (status, content1, tags) = js1.load_contents()
+        (status, content2, tags) = js2.load_contents()
+        script = content1.decode("utf-8") + content2.decode("utf-8")
+        webview.run_javascript(script, None, None)
+
+    def set_visible_webview(self, webview):
+        """
+            Set visible webview
+            @param webview as WebView
+        """
+        if self.reading:
+            self.toggle_reading()
+        webview.emit("readability-status", webview.readability)
+        self.check_readability(webview)
+
     @property
     def reading(self):
         """

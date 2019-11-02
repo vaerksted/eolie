@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio, GLib
+from gi.repository import WebKit2, GLib
 
 from urllib.parse import urlparse
 
@@ -44,6 +44,9 @@ class WebViewContainer:
         self.__signal_ids.append(
             webview.connect("uri-changed", self.__on_uri_changed))
         self.__signal_ids.append(
+            webview.connect("readability-status",
+                            self.__on_readability_status))
+        self.__signal_ids.append(
             webview.connect("notify::estimated-load-progress",
                             self.__on_estimated_load_progress))
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
@@ -63,6 +66,8 @@ class WebViewContainer:
             self.__current_webview.disconnect(signal_id)
         self.__current_webview.get_back_forward_list().disconnect(
             self.__bfl_signal_id)
+        self.__signal_ids = []
+        self.__bfl_signal_id = None
 
     def __on_title_changed(self, webview, title):
         """
@@ -102,6 +107,14 @@ class WebViewContainer:
         """
         self._window.toolbar.actions.set_actions(self.__current_webview)
 
+    def __on_readability_status(self, webview, status):
+        """
+            Show/hide toolbar indicator
+            @param webview as WebView
+            @param status as bool
+        """
+        self._window.toolbar.title.show_readable_button(status)
+
     def __on_load_changed(self, webview, event):
         """
             Update UI based on current event
@@ -129,12 +142,4 @@ class WebViewContainer:
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
-            # Load Readability
-            js1 = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/Readability.js")
-            js2 = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/Readability_check.js")
-            (status, content1, tags) = js1.load_contents()
-            (status, content2, tags) = js2.load_contents()
-            script = content1.decode("utf-8") + content2.decode("utf-8")
-            webview.run_javascript(script, None, None)
+            self.check_readability(webview)
