@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gio, WebKit2
+from gi.repository import Gtk
 
 from eolie.widget_find import FindWidget
 from eolie.widget_uri_label import UriLabelWidget
@@ -26,27 +26,10 @@ class OverlayContainer(Gtk.Overlay):
             Init container
         """
         Gtk.Overlay.__init__(self)
-        self.__reading_view = None
         self.__find_widget = FindWidget(self._window)
         self.__find_widget.show()
         self.__uri_label = UriLabelWidget()
         self.add_overlay(self.__uri_label)
-
-    def stop_reading(self):
-        """
-            Destroy reading view
-        """
-        if self.__reading_view is not None:
-            self.__reading_view.destroy()
-            self.__reading_view = None
-
-    @property
-    def reading(self):
-        """
-            True if reading
-            @return bool
-        """
-        return self.__reading_view is not None
 
     @property
     def find_widget(self):
@@ -59,33 +42,3 @@ class OverlayContainer(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __on_readability_content(self, webview, content):
-        """
-            Show reading view
-            @param webview as WebView
-            @param content as str
-        """
-        system = Gio.Settings.new("org.gnome.desktop.interface")
-        document_font_name = system.get_value("document-font-name").get_string(
-        )
-        document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
-        if self.__reading_view is None:
-            self.__reading_view = WebKit2.WebView.new()
-            self.__reading_view.connect("decide-policy",
-                                        self.__on_decide_policy)
-            self.__reading_view.show()
-            self.add_overlay(self.__reading_view)
-            html = "<html><head>\
-                    <style type='text/css'>\
-                    *:not(img) {font-size: %s;\
-                        background-color: #333333;\
-                        color: #e6e6e6;\
-                        margin-left: auto;\
-                        margin-right: auto;\
-                        width: %s}\
-                    </style></head>" % (document_font_size,
-                                        self.get_allocated_width() / 1.5)
-            html += "<title>%s</title>" % self.__webview.title
-            html += content
-            html += "</html>"
-            self.__reading_view.load_html(html, None)

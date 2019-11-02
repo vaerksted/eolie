@@ -22,11 +22,12 @@ from eolie.container_expose import ExposeContainer
 from eolie.container_stack import StackContainer
 from eolie.container_overlay import OverlayContainer
 from eolie.container_webview import WebViewContainer
+from eolie.container_reading import ReadingContainer
 
 
 class Container(OverlayContainer, StackContainer,
                 SidebarContainer, ExposeContainer,
-                WebViewContainer):
+                WebViewContainer, ReadingContainer):
     """
         Main Eolie view
     """
@@ -44,6 +45,7 @@ class Container(OverlayContainer, StackContainer,
         SidebarContainer.__init__(self)
         ExposeContainer.__init__(self)
         WebViewContainer.__init__(self)
+        ReadingContainer.__init__(self)
         self.__popover = WebViewPopover(window)
         self.__grid = Gtk.Grid()
         self.__grid.set_orientation(Gtk.Orientation.VERTICAL)

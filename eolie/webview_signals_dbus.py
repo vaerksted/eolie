@@ -113,5 +113,5 @@ class WebViewDBusSignals:
             @param popover as Gtk.Popover
             @param model as FormMenu
         """
-        # Let model activate actions, idle needed to action activate
+        # Let model activate actions, idle needed for action activation
         GLib.idle_add(model.clean)

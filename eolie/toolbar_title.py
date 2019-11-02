@@ -609,19 +609,8 @@ class ToolbarTitle(Gtk.Bin):
             @param eventbox as Gtk.EventBox
             @param event as Gdk.Event
         """
-        webview = self.__window.container.webview
-        self.set_readable_button_state(not webview.reading)
-        if webview.reading:
-            webview.stop_reading()
-        else:
-            js1 = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/Readability.js")
-            js2 = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/Readability_get.js")
-            (status, content1, tags) = js1.load_contents()
-            (status, content2, tags) = js2.load_contents()
-            script = content1.decode("utf-8") + content2.decode("utf-8")
-            webview.run_javascript(script, None, None)
+        reading = self.__window.container.toggle_reading()
+        self.set_readable_button_state(reading)
         return True
 
     def _on_indicator2_press(self, eventbox, event):
