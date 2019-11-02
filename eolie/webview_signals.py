@@ -20,11 +20,10 @@ from eolie.define import App
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
 from eolie.webview_signals_dbus import WebViewDBusSignals
-from eolie.webview_signals_load import WebViewLoadSignals
 
 
 class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
-                     WebViewDBusSignals, WebViewLoadSignals):
+                     WebViewDBusSignals):
     """
         Handle webview signals
     """
@@ -51,7 +50,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         WebViewMenuSignals.__init__(self)
         WebViewJsSignals.__init__(self)
         WebViewDBusSignals.__init__(self)
-        WebViewLoadSignals.__init__(self)
         self.__title_changed_timeout_id = None
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
@@ -114,7 +112,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.connect("insecure-content-detected",
                      self.__on_insecure_content_detected)
         WebViewDBusSignals._on_map(self, webview)
-        WebViewLoadSignals._on_map(self, webview)
 
     def _on_unmap(self, webview):
         """
@@ -129,7 +126,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.disconnect_by_func(self.__on_leave_fullscreen)
         self.disconnect_by_func(self.__on_insecure_content_detected)
         WebViewDBusSignals._on_unmap(self, webview)
-        WebViewLoadSignals._on_unmap(self, webview)
 
 #######################
 # PRIVATE             #

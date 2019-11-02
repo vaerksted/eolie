@@ -21,10 +21,12 @@ from eolie.container_sidebar import SidebarContainer
 from eolie.container_expose import ExposeContainer
 from eolie.container_stack import StackContainer
 from eolie.container_overlay import OverlayContainer
+from eolie.container_webview import WebViewContainer
 
 
 class Container(OverlayContainer, StackContainer,
-                SidebarContainer, ExposeContainer):
+                SidebarContainer, ExposeContainer,
+                WebViewContainer):
     """
         Main Eolie view
     """
@@ -41,6 +43,7 @@ class Container(OverlayContainer, StackContainer,
         OverlayContainer.__init__(self)
         SidebarContainer.__init__(self)
         ExposeContainer.__init__(self)
+        WebViewContainer.__init__(self)
         self.__popover = WebViewPopover(window)
         self.__grid = Gtk.Grid()
         self.__grid.set_orientation(Gtk.Orientation.VERTICAL)
@@ -71,6 +74,14 @@ class Container(OverlayContainer, StackContainer,
             self.__popover.set_relative_to(self._window.toolbar)
             self.__popover.set_position(Gtk.PositionType.BOTTOM)
             self.__popover.popup()
+
+    def set_visible_webview(self, webview):
+        """
+            Set visible webview
+            @param webview as WebView
+        """
+        StackContainer.set_visible_webview(self, webview)
+        WebViewContainer.set_visible_webview(self, webview)
 
 #######################
 # PRIVATE             #

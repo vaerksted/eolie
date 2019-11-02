@@ -57,9 +57,7 @@ class StackContainer:
         # Check for expose because we will be unable to get snapshot as
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
-            self.pages_manager.update_visible_child()
-            self.sites_manager.update_visible_child()
-            self._stack.set_visible_child(webview)
+            self.set_visible_webview(webview)
         # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.pages_manager.children)
@@ -167,7 +165,6 @@ class StackContainer:
         """
             Set visible webview
             @param webview as WebView
-            @param switch as bool
         """
         self._stack.set_visible_child(webview)
         self.pages_manager.update_visible_child()

@@ -63,13 +63,16 @@ class SmoothProgressBar(Gtk.ProgressBar):
             Set fraction smoothly
             @param fraction as float
         """
+        Gtk.ProgressBar.show(self)
         self.__timeout_id = None
         current = self.get_fraction()
         if fraction - current > 0.5 or fraction == 1.0:
             ms = 10
+            delta = 0.05
         else:
+            delta = 0.005
             ms = 25
-        progress = current + 0.025
+        progress = current + delta
         if progress < fraction:
             Gtk.ProgressBar.set_fraction(self, progress)
             self.__timeout_id = GLib.timeout_add(ms,
@@ -226,12 +229,11 @@ class ToolbarTitle(Gtk.Bin):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def update(self):
+    def set_uri(self, uri):
         """
-            Update toolbar based on current webview
-            @param text as str
+            Set toolbar URI
+            @param uri as str
         """
-        uri = self.__window.container.webview.uri
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
@@ -247,7 +249,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def set_title(self, title):
         """
-            Show title instead of uri
+            Set toolbar title
             @param title as str
         """
         self.__window.set_title(title)
