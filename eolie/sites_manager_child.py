@@ -375,7 +375,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 popover.show()
                 return True
         except Exception as e:
-            Logger.error("SitesManagerChild::_on_button_press_event:", e)
+            Logger.error("SitesManagerChild::_on_button_press_event: %s", e)
 
 #######################
 # PRIVATE             #

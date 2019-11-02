@@ -333,7 +333,7 @@ class Row(Gtk.ListBoxRow):
             title = self.__item.get_property("title")
             for view in self.__window.container.webviews:
                 if view.webview.uri == uri and view.webview.title == title:
-                    self.__window.container.set_current(view, True)
+                    self.__window.container.set_visible_webview(view)
                     self.__window.close_popovers()
                     break
         else:
@@ -615,7 +615,7 @@ class UriPopover(Gtk.Popover):
                         for view in container.webviews:
                             if view.webview.uri == uri and\
                                     view.webview.title == title:
-                                container.set_current(view, True)
+                                container.set_current(view)
                                 self.__window.close_popovers()
                                 break
                     # Load URI

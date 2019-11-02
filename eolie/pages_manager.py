@@ -156,7 +156,7 @@ class PagesManager(Gtk.EventBox):
             wanted_index = 0
         child = self.__box.get_child_at_index(wanted_index)
         if switch:
-            self.__window.container.set_current(child.webview)
+            self.__window.container.set_visible_webview(child.webview)
         else:
             self.update_visible_child(child.webview)
 
@@ -176,7 +176,7 @@ class PagesManager(Gtk.EventBox):
             wanted_index = count - 1
         child = self.__box.get_child_at_index(wanted_index)
         if switch:
-            self.__window.container.set_current(child.webview)
+            self.__window.container.set_visible_webview(child.webview)
         else:
             self.update_visible_child(child.webview)
 
@@ -214,7 +214,7 @@ class PagesManager(Gtk.EventBox):
             @param child as PagesManagerChild
         """
         self.__window.close_popovers()
-        self.__window.container.set_current(child.webview)
+        self.__window.container.set_visible_webview(child.webview)
         self.__window.container.set_expose(False)
 
 #######################

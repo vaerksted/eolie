@@ -53,17 +53,6 @@ class ExposeContainer:
             self.__pages_manager.set_filtered(False)
         self.__set_expose(expose)
 
-    def set_current(self, view, switch=False):
-        """
-            Set visible view
-            @param view as View
-            @param switch as bool
-        """
-        self.pages_manager.update_visible_child()
-        self.sites_manager.update_visible_child()
-        if switch:
-            self._stack.set_visible_child(view)
-
     def next(self):
         """
             Show next view

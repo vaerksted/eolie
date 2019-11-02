@@ -19,9 +19,9 @@ from eolie.widget_stack import Stack
 from eolie.webview_state import WebViewState, WebViewStateStruct
 
 
-class ViewContainer:
+class StackContainer:
     """
-        View management for container
+        Stack management for container
     """
 
     def __init__(self):
@@ -162,6 +162,16 @@ class ViewContainer:
         else:
             # We are last row, add a new one
             self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
+
+    def set_visible_webview(self, webview):
+        """
+            Set visible webview
+            @param webview as WebView
+            @param switch as bool
+        """
+        self._stack.set_visible_child(webview)
+        self.pages_manager.update_visible_child()
+        self.sites_manager.update_visible_child()
 
     @property
     def webview(self):

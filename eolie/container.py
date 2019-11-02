@@ -19,11 +19,11 @@ from eolie.popover_webview import WebViewPopover
 from eolie.define import App
 from eolie.container_sidebar import SidebarContainer
 from eolie.container_expose import ExposeContainer
-from eolie.container_view import ViewContainer
+from eolie.container_stack import StackContainer
 from eolie.container_overlay import OverlayContainer
 
 
-class Container(OverlayContainer, ViewContainer,
+class Container(OverlayContainer, StackContainer,
                 SidebarContainer, ExposeContainer):
     """
         Main Eolie view
@@ -37,7 +37,7 @@ class Container(OverlayContainer, ViewContainer,
             @param window as Window
         """
         self._window = window
-        ViewContainer.__init__(self)
+        StackContainer.__init__(self)
         OverlayContainer.__init__(self)
         SidebarContainer.__init__(self)
         ExposeContainer.__init__(self)

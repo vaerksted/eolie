@@ -130,7 +130,7 @@ class SitesManager(Gtk.Grid):
             next_row = self.__box.get_row_at_index(0)
         if next_row is not None:
             next_row.get_style_context().add_class("item-selected")
-            self.__window.container.set_current(next_row.webviews[0])
+            self.__window.container.set_visible_webview(next_row.webviews[0])
             if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
             else:
@@ -155,7 +155,7 @@ class SitesManager(Gtk.Grid):
             next_row = self.__box.get_row_at_index(index - 1)
         if next_row is not None:
             next_row.get_style_context().add_class("item-selected")
-            self.__window.container.set_webview(next_row.webviews[0])
+            self.__window.container.set_visible_webview(next_row.webviews[0])
             if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
             else:
@@ -318,7 +318,7 @@ class SitesManager(Gtk.Grid):
             self.__window.toolbar.actions.view_button.set_active(False)
         elif len(child.webviews) == 1:
             self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.set_current(child.webviews[0], True)
+            self.__window.container.set_visible_webview(child.webviews[0])
         else:
             if child.ephemeral:
                 self.__window.container.pages_manager.set_filter("private://")
