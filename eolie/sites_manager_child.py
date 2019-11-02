@@ -435,6 +435,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Set favicon
             @param webview as WebView
         """
+        if self.__image.get_icon_name()[0] == "emblem-synchronizing-symbolic":
+            return
         if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
                                             Gtk.IconSize.BUTTON)
