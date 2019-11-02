@@ -73,8 +73,8 @@ class Window(Gtk.ApplicationWindow, WindowState):
                 self.__update_zoom_level()
                 self.__monitor_model = monitor_model
                 # Update view zoom level
-                for view in self.__container.webviews:
-                    view.webview.update_zoom_level()
+                for webview in self.__container.webviews:
+                    webview.update_zoom_level()
         except Exception as e:
             Logger.error("Window::update_zoom_level(): %s", e)
 
@@ -468,8 +468,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
-        elif string == "jsblock":
-            pass
         elif string == "show_sidebar":
             value = App().settings.get_value("show-sidebar")
             App().settings.set_value("show-sidebar",
@@ -477,15 +475,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "mse_enabled":
             self.container.webview.set_setting("enable-mediasource", True)
             self.container.webview.reload()
-
-    def __on_js_enabled(self, proxy, task, webview):
-        """
-            Reload page
-            @param proxy as Gio.DBusProxy
-            @param task as Gio.Task
-            @param webview as WebView
-        """
-        webview.reload()
 
     def __on_popover_closed(self, popover):
         """
