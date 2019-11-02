@@ -24,32 +24,46 @@ class Stack(Gtk.Overlay):
             Init overlay
         """
         Gtk.Overlay.__init__(self)
+        self.__visible_child = None
 
-    def add(self, widget):
+    def add(self, webview):
         """
             Add widget to stack
-            @param widget as Gtk.Widget
+            @param webview as WebView
         """
-        self.add_overlay(widget)
-        self.reorder_overlay(widget, 0)
+        webview.connect("snapshot-changed", self.__on_snapshot_changed)
+        self.add_overlay(webview)
+        self.reorder_overlay(webview, 0)
+        if self.__visible_child is None:
+            self.__visible_child = webview
 
-    def set_visible_child(self, widget):
+    def set_visible_child(self, webview):
         """
             Set visible child
-            @param widget as Gtk.Widget
+            @param webview as WebView
         """
-        self.reorder_overlay(widget, -1)
+        if self.__visible_child is not None and\
+                self.__visible_child.is_snapshot_valid:
+            self.__visible_child.hide()
+        webview.show()
+        self.__visible_child = webview
+        self.reorder_overlay(webview, -1)
 
     def get_visible_child(self):
         """
             Get visible child
             @return Gtk.Widget
         """
-        visible_child = None
-        index = -1
-        for child in self.get_children():
-            child_index = self.child_get_property(child, "index")
-            if child_index > index:
-                index = child_index
-                visible_child = child
-        return visible_child
+        return self.__visible_child
+
+#######################
+# PRIVATE             #
+#######################
+    def __on_snapshot_changed(self, webview, surface):
+        """
+            We can now hide this view if not visible one
+            @param webview as WebView
+            @param surface as cairo.Surface
+        """
+        if webview != self.__visible_child:
+            webview.hide()

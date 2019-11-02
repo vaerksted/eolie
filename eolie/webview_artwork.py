@@ -33,6 +33,7 @@ class WebViewArtwork:
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
+        self.__is_snapshot_valid = False
         self.__favicon_db = self.get_context().get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
@@ -68,6 +69,14 @@ class WebViewArtwork:
                                       self.uri,
                                       None)
 
+    @property
+    def is_snapshot_valid(self):
+        """
+            True if snapshot is valid for current URI
+            @return bool
+        """
+        return self.__is_snapshot_valid
+
 #######################
 # PROTECTED           #
 #######################
@@ -78,6 +87,7 @@ class WebViewArtwork:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
+            self.__is_snapshot_valid = False
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable()
             if self.__snapshot_id is not None:
@@ -223,6 +233,7 @@ class WebViewArtwork:
             @param uri as str
             @param save as bool
         """
+        self.__is_snapshot_valid = True
         self.emit("snapshot-changed", surface)
         if not save or self.error:
             return
