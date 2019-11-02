@@ -16,7 +16,7 @@ from eolie.widget_find import FindWidget
 from eolie.widget_uri_label import UriLabelWidget
 
 
-class OverlayContainer(Gtk.Overlay):
+class OverlayContainer:
     """
         Overlay management for container
     """
@@ -29,7 +29,9 @@ class OverlayContainer(Gtk.Overlay):
         self.__find_widget = FindWidget(self._window)
         self.__find_widget.show()
         self.__uri_label = UriLabelWidget()
-        self.add_overlay(self.__uri_label)
+        self._overlay = Gtk.Overlay.new()
+        self._overlay.show()
+        self._overlay.add_overlay(self.__uri_label)
 
     @property
     def find_widget(self):

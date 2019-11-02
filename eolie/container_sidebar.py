@@ -16,7 +16,7 @@ from eolie.sites_manager import SitesManager
 from eolie.define import App
 
 
-class SidebarContainer:
+class SidebarContainer(Gtk.Paned):
     """
         Sidebar management for container
     """
@@ -30,13 +30,10 @@ class SidebarContainer:
             self.__sites_manager.show()
         App().settings.connect("changed::show-sidebar",
                                self.__on_show_sidebar_changed)
-        self._paned = Gtk.Paned.new(Gtk.Orientation.HORIZONTAL)
-        self._paned.pack1(self.__sites_manager, False, False)
+        self.pack1(self.__sites_manager, False, False)
         position = App().settings.get_value("sidebar-position").get_int32()
-        self._paned.set_position(position)
-        self._paned.connect("notify::position",
-                            self.__on_paned_notify_position)
-        self._paned.show()
+        self.set_position(position)
+        self.connect("notify::position", self.__on_paned_notify_position)
 
     @property
     def sites_manager(self):
@@ -55,7 +52,7 @@ class SidebarContainer:
             @param paned as Gtk.Paned
             @param ignore as GParamInt
         """
-        position = self._paned.get_position()
+        position = self.get_position()
         saved_position = App().settings.get_value(
             "sidebar-position").get_int32()
         # We do not want to keep minimal mode changes

@@ -97,7 +97,7 @@ class ReadingContainer:
             self.__reading_webview.connect("decide-policy",
                                            self.__on_decide_policy)
             self.__reading_webview.show()
-            self.add_overlay(self.__reading_webview)
+            self._overlay.add_overlay(self.__reading_webview)
             html = "<html><head>\
                     <style type='text/css'>\
                     *:not(img) {font-size: %s;\

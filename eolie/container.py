@@ -50,9 +50,9 @@ class Container(OverlayContainer, StackContainer,
         self.__grid = Gtk.Grid()
         self.__grid.set_orientation(Gtk.Orientation.VERTICAL)
         self.__grid.add(self.find_widget)
-        self.__grid.add(self._paned)
+        self.__grid.add(self._overlay)
         self.__grid.show()
-        self.add(self.__grid)
+        self.add2(self.__grid)
         # Show donation notification after one hour
         if App().settings.get_value("donation").get_int32() != self.__DONATION:
             GLib.timeout_add_seconds(randint(3600, 7200),

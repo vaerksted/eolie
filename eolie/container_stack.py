@@ -166,6 +166,8 @@ class StackContainer:
             Set visible webview
             @param webview as WebView
         """
+        if self.reading:
+            self.toggle_reading()
         self._stack.set_visible_child(webview)
         self.pages_manager.update_visible_child()
         self.sites_manager.update_visible_child()
