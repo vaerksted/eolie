@@ -58,7 +58,7 @@ class WebViewContainer:
             Dismiss webview from handlers
             @param webview as WebView
         """
-        if webview is None:
+        if webview != self.__current_webview:
             return
         for signal_id in self.__signal_ids:
             webview.disconnect(signal_id)
