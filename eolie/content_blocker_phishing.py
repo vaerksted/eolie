@@ -11,12 +11,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gio, GLib
+from gi.repository.Gio import FILE_ATTRIBUTE_STANDARD_NAME, \
+                              FILE_ATTRIBUTE_TIME_MODIFIED
 
 import json
+from time import time
 
 from eolie.content_blocker import ContentBlocker
 from eolie.define import PHISHING_URI, App
 from eolie.logger import Logger
+
+
+SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
+                                 FILE_ATTRIBUTE_TIME_MODIFIED)
 
 
 class PhishingContentBlocker(ContentBlocker):
@@ -30,9 +37,16 @@ class PhishingContentBlocker(ContentBlocker):
         """
         try:
             ContentBlocker.__init__(self, "block-phishing")
+            f = Gio.File.new_for_path(
+                    "%s/block-phishing.json" % self._JSON_PATH)
+            info = f.query_info(SCAN_QUERY_INFO,
+                                Gio.FileQueryInfoFlags.NONE,
+                                None)
+            mtime = int(info.get_attribute_as_string("time::modified"))
             if App().settings.get_value("block-phishing"):
                 GLib.timeout_add_seconds(7200, self.__download_task, True)
-                GLib.timeout_add_seconds(10, self.__download_task, False)
+                if time() - mtime > 7200:
+                    GLib.timeout_add_seconds(10, self.__download_task, False)
         except Exception as e:
             Logger.error("PhishingContentBlocker::__init__(): %s", e)
 
