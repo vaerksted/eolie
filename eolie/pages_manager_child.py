@@ -102,7 +102,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             @param event as Gdk.Event
         """
         if event.button == 2:
-            self.__window.container.try_close_view(self.__webview)
+            self.__window.container.try_close_webview(self.__webview)
             return True
         elif event.button == 3:
             from eolie.menu_move_to import MoveToMenu
@@ -141,7 +141,7 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             Destroy self
             @param button as Gtk.Button
         """
-        self.__window.container.try_close_view(self.__webview)
+        self.__window.container.try_close_webview(self.__webview)
         return True
 
     def _on_enter_notify_event(self, eventbox, event):

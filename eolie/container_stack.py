@@ -14,6 +14,7 @@ from gi.repository import Gtk
 
 from gettext import gettext as _
 
+from eolie.logger import Logger
 from eolie.define import App, LoadingType
 from eolie.widget_stack import Stack
 from eolie.webview_state import WebViewState, WebViewStateStruct
@@ -59,7 +60,7 @@ class StackContainer:
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.set_visible_webview(webview)
-        # Do not count container.webviews as destroy may be pending on somes
+        # Do not count container webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.pages_manager.children)
         self._window.toolbar.actions.count_label.set_text(str(count))
@@ -96,7 +97,7 @@ class StackContainer:
         App().helper.call("FormsFilled", page_id, None,
                           self.__on_forms_filled, webview)
 
-    def close_view(self, webview):
+    def close_webview(self, webview):
         """
             close current webview
             @param view as View
@@ -124,6 +125,7 @@ class StackContainer:
             App().update_unity_badge()
             self._window.toolbar.actions.count_label.set_text(
                 str(webviews_count))
+
         # Nothing to do if was not current page
         if not was_current:
             return False
@@ -132,7 +134,7 @@ class StackContainer:
 
         # First we search for a child for current view
         if webview.children:
-            next_webview = webview.children[0].webview
+            next_webview = webview.children[0]
 
         # Current webview children not needed, clear parent
         for child in webview.children:
@@ -144,10 +146,10 @@ class StackContainer:
         if next_webview is None and parent is not None:
             for parent_child in parent.children:
                 if webview != parent_child:
-                    next_webview = parent_child.webview
+                    next_webview = parent_child
                     break
-            if next_webview is None and parent.webview in webviews:
-                next_webview = parent.webview
+            if next_webview is None and parent in webviews:
+                next_webview = parent
 
         # Next we search for view with higher atime
         if next_webview is None:
@@ -156,8 +158,9 @@ class StackContainer:
                 if webview.atime >= atime:
                     next_webview = webview
                     atime = webview.atime
+
         if next_webview is not None:
-            self._window.container.set_webview(next_webview, True)
+            self._window.container.set_visible_webview(next_webview)
         else:
             # We are last row, add a new one
             self.add_webview_for_uri(App().start_page, LoadingType.FOREGROUND)
@@ -191,16 +194,16 @@ class StackContainer:
         self.pages_manager.remove_webview(webview)
         self.sites_manager.remove_webview(webview)
 
-    def __on_forms_filled(self, source, result, view):
+    def __on_forms_filled(self, source, result, webview):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param view as View
+            @param webview as WebView
         """
-        def on_response_id(dialog, response_id, view, self):
+        def on_response_id(dialog, response_id, webview, self):
             if response_id == Gtk.ResponseType.CLOSE:
-                self.close_view(view)
+                self.close_webview(webview)
             dialog.destroy()
 
         def on_close(widget, dialog):
@@ -223,11 +226,12 @@ class StackContainer:
                 cancel = builder.get_object("cancel")
                 label.set_text(_("Do you really want to close this page?"))
                 dialog.set_transient_for(self._window)
-                dialog.connect("response", on_response_id, view, self)
+                dialog.connect("response", on_response_id, webview, self)
                 close.connect("clicked", on_close, dialog)
                 cancel.connect("clicked", on_cancel, dialog)
                 dialog.run()
             else:
-                self.close_view(view)
-        except:
-            self.close_view(view)
+                self.close_webview(webview)
+        except Exception as e:
+            Logger.error("StackContainer::__on_forms_filled(): %s", e)
+            self.close_webview(webview)

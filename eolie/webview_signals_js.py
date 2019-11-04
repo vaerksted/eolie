@@ -78,7 +78,7 @@ class WebViewJsSignals:
             self.__js_blocker_count = 0
             self.window.toolbar.title.show_message(
                 _("Eolie is going to close this page because it is broken"))
-            self.window.container.close_view(self.view)
+            self.window.container.close_webview(self.view)
         # Webpage message
         else:
             self.window.toolbar.title.show_javascript(dialog)
