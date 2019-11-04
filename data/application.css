@@ -341,10 +341,10 @@
 	opacity: 1;
 }
 
-.overlay-button2 {
+.overlay-button-alt {
     box-shadow: none;
-    min-height: 24px;
-    min-width: 24px;
+    min-height: 28px;
+    min-width: 30px;
     margin-left: 2px;
     padding-left: 4px;
     padding-right: 4px;
@@ -362,7 +362,7 @@
     color: inherit;
 }
 
-.row:hover .overlay-button2 {
+.row:hover .overlay-button-alt {
        border-color: alpha(@theme_fg_color, 0.1);
 }
 

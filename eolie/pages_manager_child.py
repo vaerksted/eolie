@@ -12,8 +12,6 @@
 
 from gi.repository import Gtk, GLib, WebKit2, Pango
 
-from gettext import gettext as _
-
 from eolie.label_indicator import LabelIndicator
 from eolie.define import ArtSize
 from eolie.utils import update_popover_internals
@@ -53,6 +51,8 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__image = builder.get_object("image")
         self.__pin_button = builder.get_object("pin_button")
         self.__pin_image = builder.get_object("pin_image")
+        if not self.__webview.is_pinned:
+            self.__pin_image.set_opacity(0.5)
         self.__close_button = builder.get_object("close_button")
         self.__close_button_image = self.__close_button.get_image()
         self.__close_button_image.set_from_icon_name(
@@ -143,36 +143,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         """
         self.__window.container.try_close_webview(self.__webview)
         return True
-
-    def _on_enter_notify_event(self, eventbox, event):
-        """
-            Show close button
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__webview.is_pinned:
-            self.__pin_image.set_opacity(1)
-            self.__pin_button.set_tooltip_text(_("Unpin this page"))
-        else:
-            self.__pin_image.set_opacity(0.5)
-            self.__pin_button.set_tooltip_text(_("Pin this page"))
-            self.__close_button_image.set_from_icon_name(
-                "window-close-symbolic",
-                Gtk.IconSize.INVALID)
-        self.__pin_button.set_opacity(1)
-
-    def _on_leave_notify_event(self, eventbox, event):
-        """
-            Show close button
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        allocation = eventbox.get_allocation()
-        if event.x <= 0 or\
-           event.x >= allocation.width or\
-           event.y <= 0 or\
-           event.y >= allocation.height:
-            self.__pin_button.set_opacity(0)
 
 #######################
 # PRIVATE             #

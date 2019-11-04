@@ -15,7 +15,6 @@
     <property name="can_focus">False</property>
     <property name="halign">center</property>
     <property name="valign">center</property>
-    <property name="pixel_size">22</property>
     <property name="icon_name">view-pin-symbolic</property>
   </object>
   <object class="GtkEventBox" id="widget">
@@ -23,8 +22,6 @@
     <property name="can_focus">False</property>
     <signal name="button-press-event" handler="_on_button_press_event" swapped="no"/>
     <signal name="button-release-event" handler="_on_button_release_event" swapped="no"/>
-    <signal name="enter-notify-event" handler="_on_enter_notify_event" swapped="no"/>
-    <signal name="leave-notify-event" handler="_on_leave_notify_event" swapped="no"/>
     <child>
       <object class="GtkOverlay" id="overlay">
         <property name="visible">True</property>
@@ -61,9 +58,6 @@
                 <property name="image">image1</property>
                 <property name="relief">none</property>
                 <signal name="clicked" handler="_on_close_button_clicked" swapped="no"/>
-                <style>
-                  <class name="no-padding"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">2</property>
@@ -75,13 +69,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="opacity">0</property>
+                <property name="tooltip_text" translatable="yes">Pin this page</property>
                 <property name="image">pin_image</property>
                 <property name="relief">none</property>
                 <signal name="clicked" handler="_on_pin_button_clicked" swapped="no"/>
-                <style>
-                  <class name="no-padding"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">0</property>
