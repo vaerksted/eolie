@@ -33,10 +33,12 @@ class WebViewArtwork:
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
+        self.__scroll_event_id = None
         self.__is_snapshot_valid = False
         self.__favicon_db = self.get_context().get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("scroll-event", self.__on_scroll_event)
 
     def set_favicon(self):
         """
@@ -245,3 +247,21 @@ class WebViewArtwork:
             uris.append(self._initial_uri)
         for uri in uris:
             App().art.save_artwork(uri, surface, "start")
+
+    def __on_scroll_event(self, widget, event):
+        """
+            Update snapshot
+            @param widget as WebView
+            @param event as Gdk.EventScroll
+        """
+        def update_snapshot():
+            self.__scroll_event_id = None
+            self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                              WebKit2.SnapshotOptions.NONE,
+                              self.__cancellable,
+                              get_snapshot,
+                              self.__on_snapshot,
+                              False)
+        if self.__scroll_event_id is not None:
+            GLib.source_remove(self.__scroll_event_id)
+        self.__scroll_event_id = GLib.timeout_add(1000, update_snapshot)
