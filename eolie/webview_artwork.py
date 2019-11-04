@@ -262,6 +262,9 @@ class WebViewArtwork:
                               get_snapshot,
                               self.__on_snapshot,
                               False)
+        if self.__snapshot_id is not None:
+            GLib.source_remove(self.__snapshot_id)
+            self.__snapshot_id = None
         if self.__scroll_event_id is not None:
             GLib.source_remove(self.__scroll_event_id)
         self.__scroll_event_id = GLib.timeout_add(1000, update_snapshot)
