@@ -428,7 +428,11 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param playing as bool
         """
-        self.__on_webview_favicon_changed(webview)
+        if playing:
+            self.__image.set_from_icon_name("audio-speakers-symbolic",
+                                            Gtk.IconSize.BUTTON)
+        else:
+            self.__set_favicon(webview)
 
     def __on_webview_favicon_changed(self, webview, *ignore):
         """
@@ -437,11 +441,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if self.__image.get_icon_name()[0] == "emblem-synchronizing-symbolic":
             return
-        if webview.is_playing_audio():
-            self.__image.set_from_icon_name("audio-speakers-symbolic",
-                                            Gtk.IconSize.BUTTON)
-            return
-        self.__set_favicon(webview)
+        if webview.get_favicon() is not None:
+            self.__set_favicon(webview)
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
