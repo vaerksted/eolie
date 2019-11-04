@@ -329,11 +329,11 @@ class Row(Gtk.ListBoxRow):
                     uri, LoadingType.FOREGROUND)
                 if event.button == 2:
                     self.__window.close_popovers()
-        elif type_id == Type.VIEW:
+        elif type_id == Type.WEBVIEW:
             title = self.__item.get_property("title")
-            for view in self.__window.container.webviews:
-                if view.webview.uri == uri and view.webview.title == title:
-                    self.__window.container.set_visible_webview(view)
+            for webview in self.__window.container.webviews:
+                if webview.uri == uri and webview.title == title:
+                    self.__window.container.set_visible_webview(webview)
                     self.__window.close_popovers()
                     break
         else:
@@ -473,20 +473,20 @@ class UriPopover(Gtk.Popover):
         self.add_suggestions([search], Type.SEARCH, True)
         self.__stack.set_visible_child_name("search")
 
-    def add_views(self, views):
+    def add_webviews(self, webviews):
         """
-            Add a row representing view
-            @param views as [View]
+            Add a row representing webview
+            @param webviews as [WebView]
         """
         if self.__stack.get_visible_child_name() != "search":
             return
-        for view in views:
+        for webview in webviews:
             item = Item()
-            item.set_property("type", Type.VIEW)
-            item.set_property("title", view.webview.title)
-            item.set_property("uri", view.webview.uri)
+            item.set_property("type", Type.WEBVIEW)
+            item.set_property("title", webview.title)
+            item.set_property("uri", webview.uri)
             item.set_property("search", self.__search)
-            item.set_property("score", Type.VIEW)
+            item.set_property("score", Type.WEBVIEW)
             child = Row(item, self.__window)
             child.show()
             self.__search_box.insert(child, 0)
@@ -609,7 +609,7 @@ class UriPopover(Gtk.Popover):
                     container = self.__window.container
                     item = selected.item
                     # Switch to view
-                    if item.get_property("type") == Type.VIEW:
+                    if item.get_property("type") == Type.WEBVIEW:
                         title = item.get_property("title")
                         uri = item.get_property("uri")
                         for webview in container.webviews:

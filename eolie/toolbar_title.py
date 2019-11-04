@@ -864,15 +864,15 @@ class ToolbarTitle(Gtk.Bin):
             @param value as str
             @thread safe
         """
-        views = []
-        for view in self.__window.container.webviews:
-            uri = view.webview.uri
+        webviews = []
+        for webview in self.__window.container.webviews:
+            uri = webview.uri
             if uri is None:
                 continue
             parsed = urlparse(uri)
             if parsed.netloc.lower().find(value) != -1:
-                views.append(view)
-        GLib.idle_add(self.__popover.add_views, views)
+                webviews.append(webview)
+        GLib.idle_add(self.__popover.add_views, webviews)
 
     def __on_popover_closed(self, popover):
         """
