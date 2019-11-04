@@ -872,7 +872,7 @@ class ToolbarTitle(Gtk.Bin):
             parsed = urlparse(uri)
             if parsed.netloc.lower().find(value) != -1:
                 webviews.append(webview)
-        GLib.idle_add(self.__popover.add_views, webviews)
+        GLib.idle_add(self.__popover.add_webviews, webviews)
 
     def __on_popover_closed(self, popover):
         """
