@@ -521,7 +521,7 @@ class WebView(WebKit2.WebView):
         properties = webview.get_window_properties()
         if (properties.get_toolbar_visible() or
                 properties.get_scrollbars_visible()):
-            self.window.container.add_webview_with_new_view(
+            self.window.container.add_webview(
                 webview,
                 LoadingType.FOREGROUND)
         else:
