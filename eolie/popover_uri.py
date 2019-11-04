@@ -82,7 +82,7 @@ class Row(Gtk.ListBoxRow):
             favicon = Gtk.Image.new_from_icon_name("system-search-symbolic",
                                                    Gtk.IconSize.MENU)
             favicon.show()
-        elif item_type == Type.VIEW:
+        elif item_type == Type.WEBVIEW:
             favicon = Gtk.Image.new_from_icon_name("view-paged-symbolic",
                                                    Gtk.IconSize.MENU)
             favicon.show()
