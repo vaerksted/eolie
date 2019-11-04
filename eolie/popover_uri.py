@@ -325,8 +325,8 @@ class Row(Gtk.ListBoxRow):
                 self.__window.container.set_expose(False)
                 self.__window.close_popovers()
             else:
-                self.__window.container.add_webview(uri,
-                                                    LoadingType.FOREGROUND)
+                self.__window.container.add_webview_for_uri(
+                    uri, LoadingType.FOREGROUND)
                 if event.button == 2:
                     self.__window.close_popovers()
         elif type_id == Type.VIEW:
@@ -612,10 +612,9 @@ class UriPopover(Gtk.Popover):
                     if item.get_property("type") == Type.VIEW:
                         title = item.get_property("title")
                         uri = item.get_property("uri")
-                        for view in container.webviews:
-                            if view.webview.uri == uri and\
-                                    view.webview.title == title:
-                                container.set_current(view)
+                        for webview in container.webviews:
+                            if webview.uri == uri and webview.title == title:
+                                container.set_visible_webview(webview)
                                 self.__window.close_popovers()
                                 break
                     # Load URI

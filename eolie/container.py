@@ -63,8 +63,8 @@ class Container(OverlayContainer, StackContainer,
             Load uri in current view
             @param uri as str
         """
-        if self.current is not None:
-            self.current.webview.load_uri(uri)
+        if self.webview is not None:
+            self.webview.load_uri(uri)
 
     def popup_webview(self, webview):
         """
