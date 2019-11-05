@@ -167,8 +167,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__indicator_label = LabelIndicator(True)
         self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_label.show()
+        builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__separator = builder.get_object("separator")
-        self.__grid = builder.get_object("grid")
         self.__netloc_label = builder.get_object("netloc")
         self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
@@ -184,6 +184,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.connect("drag-data-received", self.__on_drag_data_received)
         self.connect("drag-motion", self.__on_drag_motion)
         self.connect("drag-leave", self.__on_drag_leave)
+        self.set_size_request(-1, 38)
 
     def add_webview(self, webview):
         """
