@@ -401,7 +401,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
             task_helper = TaskHelper()
             task_helper.load_uri_content(uri, None, self.__on_source_loaded)
         elif string == "find":
-            find_widget = self.container.webview.find_widget
+            find_widget = self.container.find_widget
             find_widget.set_search_mode(True)
             find_widget.search()
         elif string == "backward":
