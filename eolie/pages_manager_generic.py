@@ -73,6 +73,8 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
 
         self.__indicator_image = Gtk.Image.new()
         self.__indicator_image.show()
+        self.__indicator_image.set_property("halign", Gtk.Align.CENTER)
+        self.__indicator_image.set_property("valign", Gtk.Align.CENTER)
 
         self.__background_image = Gtk.Image.new_from_surface(webview.surface)
         self.__background_image.show()
