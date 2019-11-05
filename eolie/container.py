@@ -25,7 +25,8 @@ from eolie.container_webview import WebViewContainer
 from eolie.container_reading import ReadingContainer
 
 
-class Container(OverlayContainer, StackContainer,
+class Container(Gtk.Grid,
+                OverlayContainer, StackContainer,
                 SidebarContainer, ExposeContainer,
                 WebViewContainer, ReadingContainer):
     """
@@ -40,6 +41,7 @@ class Container(OverlayContainer, StackContainer,
             @param window as Window
         """
         self._window = window
+        Gtk.Grid.__init__(self)
         StackContainer.__init__(self)
         OverlayContainer.__init__(self)
         SidebarContainer.__init__(self)
@@ -47,12 +49,11 @@ class Container(OverlayContainer, StackContainer,
         WebViewContainer.__init__(self)
         ReadingContainer.__init__(self)
         self.__popover = WebViewPopover(window)
-        self.__grid = Gtk.Grid()
-        self.__grid.set_orientation(Gtk.Orientation.VERTICAL)
-        self.__grid.add(self.find_widget)
-        self.__grid.add(self._overlay)
-        self.__grid.show()
-        self.add2(self.__grid)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
+        self.add(self.find_widget)
+        self.add(self._overlay)
+        self.insert_column(0)
+        self.attach(self.sites_manager, 0, 0, 1, 2)
         # Show donation notification after one hour
         if App().settings.get_value("donation").get_int32() != self.__DONATION:
             GLib.timeout_add_seconds(randint(3600, 7200),

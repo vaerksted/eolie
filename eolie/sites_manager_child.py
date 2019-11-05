@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango, GObject, WebKit2
+from gi.repository import Gtk, Gdk, GLib, Pango, WebKit2
 
 from urllib.parse import urlparse
 
@@ -141,10 +141,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         Child showing snapshot, title and favicon
     """
 
-    __gsignals__ = {
-        'moved': (GObject.SignalFlags.RUN_FIRST, None, (str, bool))
-    }
-
     def __init__(self, netloc, window, is_ephemeral):
         """
             Init child
@@ -161,7 +157,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__webviews = []
         self.__connected_ids = []
         self.__scroll_timeout_id = None
-        self.__pages_listbox = None
         self.set_margin_top(1)
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
@@ -210,10 +205,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__on_webview_favicon_changed(webview)
             else:
                 self.__indicator_label.mark_unshown(webview)
-            if self.__pages_listbox is not None:
-                child = PageChildRow(webview, self.__window)
-                child.show()
-                self.__pages_listbox.add(child)
 
     def remove_webview(self, webview):
         """
@@ -231,50 +222,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.update_count(False)
             if not webview.shown:
                 self.__indicator_label.mark_shown(webview)
-            if self.__pages_listbox is not None:
-                for child in self.__pages_listbox.get_children():
-                    if child.webview == webview:
-                        child.destroy()
-                        break
             if self.__webviews:
                 self.__set_favicon(self.__webviews[0])
-
-    def set_minimal(self, minimal):
-        """
-            Make widget minimal
-            @param minimal as bool
-        """
-        if self.__minimal == minimal:
-            return
-        if minimal:
-            self.__grid.remove(self.__netloc_label)
-            if self.__pages_listbox is not None:
-                self.__grid.remove(self.__pages_listbox)
-                self.__pages_listbox.destroy()
-            self.__pages_listbox = None
-            self.__grid.attach(self.__indicator_label, 1, 0, 1, 1)
-            self.__image.set_property("halign", Gtk.Align.CENTER)
-            self.__image.set_hexpand(True)
-            self.__separator.hide()
-        else:
-            self.__grid.remove(self.__indicator_label)
-            self.__grid.attach(self.__netloc_label, 1, 0, 1, 1)
-            self.__pages_listbox = Gtk.ListBox.new()
-            self.__pages_listbox.set_sort_func(self.__sort_func)
-            self.__pages_listbox.show()
-            self.__separator.show()
-            self.__grid.attach(self.__pages_listbox, 0, 2, 2, 1)
-            self.__image.set_hexpand(False)
-            self.__image.set_property("halign", Gtk.Align.START)
-            # Setup listbox
-            current = self.__window.container.webview
-            for webview in self.__webviews:
-                child = PageChildRow(webview, self.__window)
-                child.show()
-                self.__pages_listbox.add(child)
-                if webview == current:
-                    self.__pages_listbox.select_row(child)
-        self.__minimal = minimal
 
     def reset(self, netloc):
         """
@@ -300,17 +249,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.get_style_context().add_class("item-selected")
         else:
             self.get_style_context().remove_class("item-selected")
-        if self.__pages_listbox is not None:
-            if selected:
-                current = self.__window.container.webview
-                for child in self.__pages_listbox.get_children():
-                    if child.webview == current:
-                        self.__pages_listbox.select_row(child)
-                        self.__current_child = child
-                self.__pages_listbox.invalidate_sort()
-            else:
-                self.__pages_listbox.unselect_all()
-                self.__current_child = None
 
     @property
     def empty(self):
@@ -455,8 +393,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        if self.__pages_listbox is not None:
-            return
         tooltip = "<b>%s</b>" % GLib.markup_escape_text(self.__netloc)
         for webview in self.__webviews:
             title = webview.get_title()

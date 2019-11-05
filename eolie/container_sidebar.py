@@ -10,13 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
-
 from eolie.sites_manager import SitesManager
 from eolie.define import App
 
 
-class SidebarContainer(Gtk.Paned):
+class SidebarContainer:
     """
         Sidebar management for container
     """
@@ -30,10 +28,6 @@ class SidebarContainer(Gtk.Paned):
             self.__sites_manager.show()
         App().settings.connect("changed::show-sidebar",
                                self.__on_show_sidebar_changed)
-        self.pack1(self.__sites_manager, False, False)
-        position = App().settings.get_value("sidebar-position").get_int32()
-        self.set_position(position)
-        self.connect("notify::position", self.__on_paned_notify_position)
 
     @property
     def sites_manager(self):
@@ -46,20 +40,6 @@ class SidebarContainer(Gtk.Paned):
 #######################
 # PRIVATE             #
 #######################
-    def __on_paned_notify_position(self, paned, ignore):
-        """
-            Update SitesManager width based on current position
-            @param paned as Gtk.Paned
-            @param ignore as GParamInt
-        """
-        position = self.get_position()
-        saved_position = App().settings.get_value(
-            "sidebar-position").get_int32()
-        # We do not want to keep minimal mode changes
-        if position >= 80 or saved_position > position:
-            App().settings.set_value("sidebar-position",
-                                     GLib.Variant("i", position))
-        self.__sites_manager.set_minimal(position < 80)
 
     def __on_show_sidebar_changed(self, settings, value):
         """

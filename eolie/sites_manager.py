@@ -32,8 +32,6 @@ class SitesManager(Gtk.Grid):
         self.__window = window
         self.__initial_sort = []
         self.set_property("width-request", 50)
-        # FIXME
-        # self.connect("button-press-event", self.__on_button_press)
         self.get_style_context().add_class("sidebar")
         self.__scrolled = Gtk.ScrolledWindow()
         self.__scrolled.set_policy(Gtk.PolicyType.NEVER,
@@ -93,14 +91,6 @@ class SitesManager(Gtk.Grid):
                 site.destroy()
         webview.disconnect_by_func(self.__on_webview_load_changed)
         webview.disconnect_by_func(self.__on_webview_destroy)
-
-    def set_minimal(self, minimal):
-        """
-            Set all children as minimal
-            @param minimal as bool
-        """
-        for child in self.__box.get_children():
-            child.set_minimal(minimal)
 
     def update_label(self, webview):
         """
@@ -289,10 +279,6 @@ class SitesManager(Gtk.Grid):
                 child = SitesManagerChild(netloc,
                                           self.__window,
                                           webview.is_ephemeral)
-                child.connect("moved", self.__on_moved)
-                position = App().settings.get_value(
-                    "sidebar-position").get_int32()
-                child.set_minimal(position < 80)
                 child.show()
                 child.add_webview(webview)
                 self.__box.add(child)
@@ -336,23 +322,6 @@ class SitesManager(Gtk.Grid):
             self.__window.container.add_webview(App().start_page,
                                                 LoadingType.FOREGROUND)
         return self.__window.close_popovers()
-
-    def __on_moved(self, child, netloc, up):
-        """
-            Move child row
-            @param child as SidebarChild
-            @param netloc as str
-            @param up as bool
-        """
-        index = self.__get_index(netloc)
-        row = self.__box.get_row_at_index(index)
-        if row is None:
-            return
-        self.__box.remove(row)
-        child_index = self.__get_index(child.netloc)
-        if not up:
-            child_index += 1
-        self.__box.insert(row, child_index)
 
     def __on_menu_button_clicked(self, button):
         """
