@@ -313,18 +313,22 @@ class SitesManager(Gtk.Grid):
             @param listbox as Gtk.ListBox
             @param child as SitesManagerChild
         """
-        if self.__window.toolbar.actions.view_button.get_active() and\
-                self.__window.container.pages_manager.filter == child.netloc:
-            self.__window.toolbar.actions.view_button.set_active(False)
-        elif len(child.webviews) == 1:
-            self.__window.toolbar.actions.view_button.set_active(False)
-            self.__window.container.set_visible_webview(child.webviews[0])
+        webviews = child.webviews
+        if len(webviews) == 1:
+            self.__window.container.set_visible_webview(webviews[0])
         else:
-            if child.is_ephemeral:
-                self.__window.container.pages_manager.set_filter("private://")
-            else:
-                self.__window.container.pages_manager.set_filter(child.netloc)
-            self.__window.toolbar.actions.view_button.set_active(True)
+            from eolie.pages_manager_list import PagesManagerList
+            from eolie.widget_utils import Popover
+            widget = PagesManagerList(self.__window)
+            widget.show()
+            widget.populate(webviews)
+            popover = Popover()
+            popover.get_style_context().add_class("dark")
+            popover.set_size_request(300, 300)
+            popover.set_relative_to(child)
+            popover.set_position(Gtk.PositionType.RIGHT)
+            popover.add(widget)
+            popover.popup()
 
     def __on_button_press(self, widget, event):
         """

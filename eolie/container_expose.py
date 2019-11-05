@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib
 
-from eolie.pages_manager import PagesManager
+from eolie.pages_manager_box import PagesManagerBox
 
 
 class ExposeContainer:
@@ -33,7 +33,7 @@ class ExposeContainer:
             Gtk.StackTransitionType.CROSSFADE)
         self.__expose_stack.set_transition_duration(150)
         self.__expose_stack.show()
-        self.__pages_manager = PagesManager(self._window)
+        self.__pages_manager = PagesManagerBox(self._window)
         self.__pages_manager.show()
         self._overlay.add(self.__expose_stack)
         self.__expose_stack.add_named(self._stack, "stack")

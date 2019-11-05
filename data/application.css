@@ -53,6 +53,18 @@
     color: white;
 }
 
+.big-padding {
+    padding: 10px;
+}
+
+.padding {
+    padding: 5px;
+}
+
+.small-padding {
+    padding: 1px;
+}
+
 .border {
     border: 1px solid alpha(@theme_fg_color, 0.5);
     border-radius: 2px;
@@ -217,30 +229,18 @@
 }
 
 .page-child-row  {
-    padding: 2px;
     border-radius: 2px;
-	background-color: transparent;
-  	color: inherit;
+  	color: white;
     margin-top: 3px;
     margin-bottom: 3px;
 }
 
 .page-child-row:hover {
-	background-color: alpha(@theme_fg_color, 0.05);
-  	color: inherit;
+	background-color: alpha(@theme_bg_color, 0.05);
 }
 
-.page-child-row:selected {
-    border: solid;
-    border-radius: 0px;
-    border-color: alpha(@theme_selected_bg_color, 0.5);
-    border-left-width: 3px;
-}
-
-.page-child-row:selected *{
-    color: @theme_fg_color;
-    background-color: transparent;
-    background-image: none;
+.page-child-row:selected:hover {
+    background-color: alpha(@theme_selected_bg_color, 0.9);
 }
 
 .no-padding {
@@ -299,6 +299,28 @@
     color: @theme_selected_fg_color;
 }
 
+.close-button {
+    opacity: 0.8;
+	box-shadow: none;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	background-image: none;
+	border-style: solid;
+	border-image-source: none;
+    border-bottom-width: 1px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-color: transparent;
+    color: inherit;
+}
+
+.close-button:hover {
+  	opacity: 1;
+}
+
 .overlay-button {
     opacity: 0.8;
 	box-shadow: none;
@@ -324,7 +346,6 @@
 }
 
 .overlay-button:hover {
-    color: inherit;
     border-color: alpha(@theme_fg_color, 0.1);
   	opacity: 1;
 }

@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango, WebKit2
+from gi.repository import Gtk, Gdk, GLib, WebKit2
 
 from urllib.parse import urlparse
 
@@ -19,121 +19,6 @@ from eolie.utils import resize_favicon, update_popover_internals
 from eolie.utils import get_round_surface, get_char_surface
 from eolie.define import App
 from eolie.logger import Logger
-
-
-class PageChildRow(Gtk.ListBoxRow):
-    """
-        Label for a view
-    """
-
-    def __init__(self, webview, window):
-        """
-            Init widget
-            @param webview as WebView
-            @param window as Window
-        """
-        Gtk.ListBoxRow.__init__(self)
-        eventbox = Gtk.EventBox()
-        eventbox.show()
-        self.get_style_context().add_class("page-child-row")
-        self.__webview = webview
-        self.__window = window
-        self.__label = Gtk.Label.new(webview.title)
-        self.__label.set_property("valign", Gtk.Align.CENTER)
-        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
-        self.__label.set_hexpand(True)
-        self.__label.set_xalign(0)
-        self.__label.show()
-        button = Gtk.Button.new_from_icon_name("window-close-symbolic",
-                                               Gtk.IconSize.MENU)
-        button.set_relief(Gtk.ReliefStyle.NONE)
-        button.get_style_context().add_class("small-padding")
-        button.set_property("valign", Gtk.Align.CENTER)
-        button.set_property("halign", Gtk.Align.END)
-        button.connect("clicked", self.__on_button_clicked)
-        button.show()
-        grid = Gtk.Grid()
-        grid.add(self.__label)
-        grid.add(button)
-        grid.show()
-        eventbox.add(grid)
-        self.add(eventbox)
-        self.connect("destroy", self.__on_destroy)
-        self.set_property("has-tooltip", True)
-        self.connect("query-tooltip", self.__on_query_tooltip)
-        webview.connect("load-changed", self.__on_webview_load_changed)
-        webview.connect("title-changed", self.__on_webview_title_changed)
-        eventbox.connect("button-press-event", self.__on_button_press_event)
-
-    @property
-    def webview(self):
-        """
-            Get associated webview
-            @return WebView
-        """
-        return self.__webview
-
-#######################
-# PRIVATE             #
-#######################
-    def __on_button_clicked(self, button):
-        """
-            Close view
-            @param button as Gtk.Button
-        """
-        self.__window.container.try_close_webview(self.__webview)
-
-    def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
-        """
-            Show tooltip if needed
-            @param widget as Gtk.Widget
-            @param x as int
-            @param y as int
-            @param keyboard as bool
-            @param tooltip as Gtk.Tooltip
-        """
-        title = self.__webview.get_title()
-        if title is not None:
-            tooltip = GLib.markup_escape_text(title)
-            widget.set_tooltip_markup(tooltip)
-
-    def __on_button_press_event(self, widget, event):
-        """
-            Switch to view
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        self.__window.container.set_visible_webview(self.__webview)
-        self.__window.container.set_expose(False)
-        return True
-
-    def __on_destroy(self, widget):
-        """
-            Disconnect signals
-            @param widget as Gtk.Widget
-        """
-        self.__webview.disconnect_by_func(self.__on_webview_load_changed)
-        self.__webview.disconnect_by_func(self.__on_webview_title_changed)
-
-    def __on_webview_load_changed(self, webview, event):
-        """
-            Update widget content
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        if event in [WebKit2.LoadEvent.STARTED,
-                     WebKit2.LoadEvent.COMMITTED]:
-            uri = webview.get_uri()
-            if uri is not None:
-                self.__label.set_text(uri)
-
-    def __on_webview_title_changed(self, webview, title):
-        """
-            Update title
-            @param webview as WebView
-            @param title as str
-        """
-        self.__label.set_text(title)
 
 
 class SitesManagerChild(Gtk.ListBoxRow):
@@ -350,21 +235,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 else:
                     self.__image.set_from_icon_name(
                         "web-browser-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
-
-    def __sort_func(self, row1, row2):
-        """
-            Sort pages
-            @param row1 as PageChildRow
-            @param row2 as PageChildRow
-        """
-        # Always show current first
-        if self.__current_child in [row1, row2]:
-            return self.__current_child == row2
-        # Unshown first
-        elif not row2.webview.shown and row1.webview.shown:
-            return True
-        else:
-            return row2.webview.atime > row1.webview.atime
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
