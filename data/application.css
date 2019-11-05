@@ -205,20 +205,6 @@
     background-color: transparent;
 }
 
-.tag-button {
-    border: 2px solid white;
-    background-color: black;
-    color: white;
-    padding: 0px;
-    border-radius: 16px;
-}
-
-.tag-edit {
-    border-color: transparent;
-    background-color: transparent;
-    background-image: none;
-}
-
 .selected {
     color: @theme_selected_bg_color;
     transition: color 500ms linear;
