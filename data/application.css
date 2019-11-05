@@ -94,6 +94,7 @@
 .item-selected {
     border-color: @theme_selected_bg_color;
     background-color: @theme_selected_bg_color;
+    transition: background-color 500ms linear, border-color 500ms linear;
 }
 
 .invalid-entry {
