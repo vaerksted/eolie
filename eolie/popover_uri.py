@@ -850,7 +850,7 @@ class UriPopover(Gtk.Popover):
             child.show()
             self.__search_box.add(child)
             GLib.idle_add(self.__add_searches, searches, search,
-                          priority=GLib.PRIORITY_HIGH_IDLE)
+                          priority=GLib.PRIORITY_HIGH)
         else:
             self.__do_sort_search()
 
@@ -868,7 +868,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
             GLib.idle_add(self.__add_bookmarks, bookmarks,
-                          priority=GLib.PRIORITY_HIGH_IDLE)
+                          priority=GLib.PRIORITY_HIGH)
 
     def __add_tags(self, tags, select, position=0):
         """
@@ -888,7 +888,7 @@ class UriPopover(Gtk.Popover):
             child.show()
             self.__tags_box.add(child)
             GLib.idle_add(self.__add_tags, tags, select,
-                          priority=GLib.PRIORITY_HIGH_IDLE)
+                          priority=GLib.PRIORITY_HIGH)
         else:
             if select is None:
                 select = Type.POPULARS
@@ -917,7 +917,7 @@ class UriPopover(Gtk.Popover):
             item.set_property("atime", atime)
             self.__history_model.append(item)
             GLib.idle_add(self.__add_history_items, items, date,
-                          priority=GLib.PRIORITY_HIGH_IDLE)
+                          priority=GLib.PRIORITY_HIGH)
 
     def __get_current_box(self):
         """
