@@ -101,7 +101,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__on_webview_notify_is_playing_audio)
             self.update_label()
             self.__indicator_label.update_count(False)
-            self.__indicator_label.mark_shown(webview)
+            self.__indicator_label.mark(webview)
             if self.__webviews:
                 self.__set_favicon(self.__webviews[0])
 
