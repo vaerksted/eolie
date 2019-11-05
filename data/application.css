@@ -148,6 +148,10 @@
     border: none;
 }
 
+.site-manager-child {
+    background-color: @theme_selected_fg_color;
+}
+
 .button-edit {
     border: 2px solid white;
     background-color: red;

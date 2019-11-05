@@ -43,6 +43,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__connected_ids = []
         self.__scroll_timeout_id = None
         self.set_margin_top(1)
+        self.get_style_context().add_class("sidebar-item")
         self.set_property("has-tooltip", True)
         self.connect("query-tooltip", self.__on_query_tooltip)
         builder = Gtk.Builder()
@@ -119,16 +120,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Update label using netloc
         """
         self.__netloc_label.set_text(self.__netloc)
-
-    def set_selected(self, selected):
-        """
-            Mark self as selected
-            @param selected as bool
-        """
-        if selected:
-            self.get_style_context().add_class("item-selected")
-        else:
-            self.get_style_context().remove_class("item-selected")
 
     @property
     def indicator_label(self):

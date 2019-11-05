@@ -110,16 +110,16 @@ class SitesManager(Gtk.Grid):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.get_style_context().has_class("item-selected"):
+            if child.self.get_state_flags() & Gtk.StateFlags.VISITED:
                 current = child
-            child.get_style_context().remove_class("item-selected")
+            child.unset_state_flags(Gtk.StateFlags.VISITED)
         index = current.get_index()
         if index + 1 < len(children):
             next_row = self.__box.get_row_at_index(index + 1)
         else:
             next_row = self.__box.get_row_at_index(0)
         if next_row is not None:
-            next_row.get_style_context().add_class("item-selected")
+            next_row.set_state_flags(Gtk.StateFlags.VISITED, False)
             self.__window.container.set_visible_webview(next_row.webviews[0])
             if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
@@ -135,16 +135,16 @@ class SitesManager(Gtk.Grid):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.get_style_context().has_class("item-selected"):
+            if child.self.get_state_flags() & Gtk.StateFlags.VISITED:
                 current = child
-            child.get_style_context().remove_class("item-selected")
+            child.unset_state_flags(Gtk.StateFlags.VISITED)
         index = current.get_index()
         if index == 0:
             next_row = self.__box.get_row_at_index(len(children) - 1)
         else:
             next_row = self.__box.get_row_at_index(index - 1)
         if next_row is not None:
-            next_row.get_style_context().add_class("item-selected")
+            next_row.set_state_flags(Gtk.StateFlags.VISITED, False)
             self.__window.container.set_visible_webview(next_row.webviews[0])
             if len(next_row.webviews) == 1:
                 self.__window.container.set_expose(False)
@@ -161,11 +161,11 @@ class SitesManager(Gtk.Grid):
         current = self.__window.container.webview
         for child in self.__box.get_children():
             if current in child.webviews:
-                child.set_selected(True)
+                child.set_state_flags(Gtk.StateFlags.VISITED, False)
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
             else:
-                child.set_selected(False)
+                child.unset_state_flags(Gtk.StateFlags.VISITED)
 
     def set_initial_sort(self, sort):
         """

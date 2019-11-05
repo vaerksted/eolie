@@ -44,7 +44,7 @@
       </object>
     </child>
     <style>
-      <class name="sidebar-item"/>
+      <class name="site-manager-child"/>
     </style>
   </object>
 </interface>
