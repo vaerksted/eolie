@@ -12,10 +12,12 @@
 
 from gi.repository import Gtk
 
-from eolie.pages_manager_row import PageRow
+from eolie.pages_manager_row import PagesManagerRow
+from eolie.define import ArtSize
+from eolie.helper_size_allocation import SizeAllocationHelper
 
 
-class PagesManagerList(Gtk.ScrolledWindow):
+class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
     """
         WebViews in a ListBox
     """
@@ -31,11 +33,14 @@ class PagesManagerList(Gtk.ScrolledWindow):
         self.__listbox = Gtk.ListBox.new()
         self.__listbox.show()
         self.__listbox.set_sort_func(self.__sort_func)
+        self.__listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__listbox.set_activate_on_single_click(True)
         self.__listbox.connect("row-activated", self.__on_row_activated)
         self.__listbox.get_style_context().add_class("transparent")
+        self.__viewport = Gtk.Viewport.new()
+        SizeAllocationHelper.__init__(self, self.__listbox)
         self.add(self.__listbox)
-        self.get_style_context().add_class("big-padding")
+        self.get_style_context().add_class("padding")
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
     def populate(self, webviews):
@@ -45,11 +50,20 @@ class PagesManagerList(Gtk.ScrolledWindow):
         """
         current_webview = self.__window.container.webview
         for webview in webviews:
-            child = PageRow(webview, self.__window)
+            child = PagesManagerRow(webview, self.__window)
             child.show()
             self.__listbox.add(child)
             if webview == current_webview:
-                self.__listbox.select_row(child)
+                child.set_state_flags(Gtk.StateFlags.VISITED, False)
+
+    def _handle_height_allocate(self, allocation):
+        """
+            @param allocation as Gtk.Allocation
+        """
+        if SizeAllocationHelper._handle_height_allocate(self, allocation):
+            height = min(allocation.height + 10,
+                         self.__window.get_allocated_height() - 100)
+            self.set_size_request(ArtSize.START_WIDTH, height)
 
 #######################
 # PRIVATE             #

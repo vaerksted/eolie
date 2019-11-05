@@ -101,9 +101,10 @@ class PagesManagerBox(Gtk.EventBox):
         for child in self.__box.get_children():
             style_context = child.get_style_context()
             if child.webview == visible:
-                style_context.add_class("item-selected")
+                child.set_state_flags(Gtk.StateFlags.VISITED, False)
                 self.__current_child = child
             else:
+                child.unset_state_flags(Gtk.StateFlags.VISITED)
                 style_context.remove_class("item-selected")
 
     def update_shown_state(self, webview):

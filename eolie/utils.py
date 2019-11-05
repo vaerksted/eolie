@@ -150,6 +150,21 @@ def is_unity():
     return GLib.getenv("XDG_CURRENT_DESKTOP") == "ubuntu:GNOME"
 
 
+def on_query_tooltip(label, x, y, keyboard, tooltip):
+    """
+        Show label tooltip if needed
+        @param label as Gtk.Label
+        @param x as int
+        @param y as int
+        @param keyboard as bool
+        @param tooltip as Gtk.Tooltip
+    """
+    layout = label.get_layout()
+    if layout.is_ellipsized():
+        tooltip.set_markup(label.get_label())
+        return True
+
+
 def get_favicon_best_uri(favicons_path, uri):
     """
         Search in WebKit DB for best uri

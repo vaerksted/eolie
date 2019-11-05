@@ -32,6 +32,7 @@ class WebViewArtwork:
         """
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
+        self.__surface = None
         self.__snapshot_id = None
         self.__scroll_event_id = None
         self.__is_snapshot_valid = False
@@ -70,6 +71,14 @@ class WebViewArtwork:
                                       self.__on_get_favicon,
                                       self.uri,
                                       None)
+
+    @property
+    def surface(self):
+        """
+            Get webview snapshot surface
+            @return cairo.Surface
+        """
+        return self.__surface
 
     @property
     def is_snapshot_valid(self):
@@ -235,6 +244,7 @@ class WebViewArtwork:
             @param uri as str
             @param save as bool
         """
+        self.__surface = surface
         self.__is_snapshot_valid = True
         self.emit("snapshot-changed", surface)
         if not save or self.error:
