@@ -42,11 +42,12 @@ class PageChildRow(Gtk.ListBoxRow):
         self.__label.set_property("valign", Gtk.Align.CENTER)
         self.__label.set_ellipsize(Pango.EllipsizeMode.END)
         self.__label.set_hexpand(True)
+        self.__label.set_xalign(0)
         self.__label.show()
         button = Gtk.Button.new_from_icon_name("window-close-symbolic",
                                                Gtk.IconSize.MENU)
         button.set_relief(Gtk.ReliefStyle.NONE)
-        button.get_style_context().add_class("no-padding")
+        button.get_style_context().add_class("small-padding")
         button.set_property("valign", Gtk.Align.CENTER)
         button.set_property("halign", Gtk.Align.END)
         button.connect("clicked", self.__on_button_clicked)
