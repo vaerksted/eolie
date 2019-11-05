@@ -47,38 +47,38 @@ class ToolbarMenu(Gtk.PopoverMenu):
             fullscreen_button.set_tooltip_text(_("Enter fullscreen"))
         builder.connect_signals(self)
         widget = builder.get_object("widget")
+        self.add(widget)
         webview = self.__window.container.webview
         builder.get_object("default_zoom_button").set_label(
             "{} %".format(int(webview.get_zoom_level() * 100)))
         parsed = urlparse(uri)
         builder.get_object("domain_label").set_text(parsed.netloc or uri)
-        # Add blocker actions
-        for blocker in ["block-ads", "block-popups",
-                        "block-images", "block-medias",
-                        "block-scripts"]:
-            if not App().settings.get_value(blocker):
-                builder.get_object(blocker).hide()
-                continue
-            content_blocker = App().get_content_blocker(blocker)
-            exception = content_blocker.exceptions.is_domain_exception(
-                parsed.netloc)
-            action = Gio.SimpleAction.new_stateful(
-                "%s-exception" % blocker,
-                None,
-                GLib.Variant.new_boolean(exception))
-            action.connect("change-state",
-                           self.__on_exception_change_state,
-                           parsed.netloc,
-                           blocker)
-            window.add_action(action)
+        if parsed.scheme in ["http", "https"]:
+            # Add blocker actions
+            for blocker in ["block-ads", "block-popups",
+                            "block-images", "block-medias",
+                            "block-scripts"]:
+                if not App().settings.get_value(blocker):
+                    continue
+                builder.get_object(blocker).show()
+                content_blocker = App().get_content_blocker(blocker)
+                exception = content_blocker.exceptions.is_domain_exception(
+                    parsed.netloc)
+                action = Gio.SimpleAction.new_stateful(
+                    "%s-exception" % blocker,
+                    None,
+                    GLib.Variant.new_boolean(exception))
+                action.connect("change-state",
+                               self.__on_exception_change_state,
+                               parsed.netloc,
+                               blocker)
+                window.add_action(action)
 
-        languages_menu = LanguagesMenu(uri)
-        languages_menu.show()
-
-        # Add items
-        self.add(widget)
-        self.add(languages_menu)
-        self.child_set_property(languages_menu, "submenu", "languages")
+            builder.get_object("spell-checking").show()
+            languages_menu = LanguagesMenu(uri)
+            languages_menu.show()
+            self.add(languages_menu)
+            self.child_set_property(languages_menu, "submenu", "languages")
 
 #######################
 # PROTECTED           #

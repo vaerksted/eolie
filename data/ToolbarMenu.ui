@@ -270,8 +270,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkModelButton">
-        <property name="visible">True</property>
+      <object class="GtkModelButton" id="spell-checking">
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="text" translatable="yes">Spell checking</property>
@@ -284,7 +283,6 @@
     </child>
     <child>
       <object class="GtkModelButton" id="block-ads">
-        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-ads-exception</property>
@@ -297,7 +295,6 @@
     </child>
     <child>
       <object class="GtkModelButton" id="block-popups">
-        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-popups-exception</property>
@@ -310,7 +307,6 @@
     </child>
     <child>
       <object class="GtkModelButton" id="block-images">
-        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-images-exception</property>
@@ -323,7 +319,6 @@
     </child>
     <child>
       <object class="GtkModelButton" id="block-medias">
-        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-medias-exception</property>
@@ -389,7 +384,6 @@
     </child>
     <child>
       <object class="GtkModelButton" id="block-scripts">
-        <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="action_name">win.block-scripts-exception</property>
