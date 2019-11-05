@@ -157,10 +157,9 @@ class Row(Gtk.ListBoxRow):
             open_button.show()
             grid.attach(open_button, 0, 0, 1, 1)
         grid.show()
+        grid.get_style_context().add_class("row")
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             grid.get_style_context().add_class("bigrow")
-        else:
-            grid.get_style_context().add_class("row")
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
         eventbox.set_size_request(-1, 30)
