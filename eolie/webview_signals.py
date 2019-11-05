@@ -53,7 +53,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.__title_changed_timeout_id = None
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
-        self.connect("map", self.__on_map)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
@@ -71,18 +70,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
 #######################
 # PRIVATE             #
 #######################
-    def __on_map(self, webview):
-        """
-            Connect all signals
-            @param webview as WebView
-        """
-        # URI set but not loaded
-        # Webviews with a related webview have a None URI
-        if self.get_uri() is None and\
-                self.uri is not None and\
-                self._related_view is None:
-            self.load_uri(self.uri)
-
     def __on_button_press_event(self, webview, event):
         """
             Hide Titlebar popover
