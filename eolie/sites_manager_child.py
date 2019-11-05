@@ -211,7 +211,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if webview in self.__webviews:
             self.__webviews.remove(webview)
-            webview.disconnect_by_func(self.__on_webview_shown)
             webview.disconnect_by_func(self.__on_webview_favicon_changed)
             webview.disconnect_by_func(self.__on_webview_load_changed)
             webview.disconnect_by_func(
