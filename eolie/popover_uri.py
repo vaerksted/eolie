@@ -21,26 +21,7 @@ from urllib.parse import urlparse
 from eolie.helper_task import TaskHelper
 from eolie.define import App, Type, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import wanted_loading_type
-
-
-class Item(GObject.GObject):
-    id = GObject.Property(type=int,
-                          default=0)
-    type = GObject.Property(type=int,
-                            default=0)
-    title = GObject.Property(type=str,
-                             default="")
-    uri = GObject.Property(type=str,
-                           default="")
-    atime = GObject.Property(type=int,
-                             default=0)
-    score = GObject.Property(type=int,
-                             default=0)
-    search = GObject.Property(type=str,
-                              default="")
-
-    def __init__(self):
-        GObject.GObject.__init__(self)
+from eolie.popover_uri_item import Item
 
 
 class Row(Gtk.ListBoxRow):
