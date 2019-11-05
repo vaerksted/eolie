@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, GLib, Gio, Gdk
 
-from eolie.define import App, Indicator, LoadingType
+from eolie.define import App, LoadingType
 from eolie.toolbar import Toolbar
 from eolie.container import Container
 from eolie.utils import get_current_monitor_model
@@ -90,7 +90,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
         count = str(len(self.__container.pages_manager.children))
         self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
-        self.update(self.container.webview)
         self.__fullscreen_revealer = Gtk.Revealer.new()
         self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
@@ -115,7 +114,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
-        self.update(self.container.webview)
         # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.container.pages_manager.children)
@@ -126,31 +124,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
             "document.webkitExitFullscreen();",
             None,
             None)
-
-    def update(self, webview):
-        """
-            Update window
-            @param webview as WebView
-        """
-        uri = webview.uri
-        if uri is not None:
-            self.toolbar.title.update()
-            accept_tls = App().websettings.get_accept_tls(uri)
-            self.toolbar.end.show_tls_button(accept_tls)
-        self.toolbar.title.show_indicator(Indicator.NONE)
-        if webview.is_loading():
-            self.toolbar.title.set_loading(True)
-            self.toolbar.title.progress.show()
-        else:
-            self.toolbar.title.progress.hide()
-            self.toolbar.title.set_loading(False)
-        self.toolbar.title.show_readable_button(webview.readable)
-        title = webview.title
-        if title:
-            self.toolbar.title.set_title(title)
-        elif uri:
-            self.toolbar.title.set_title(uri)
-        self.toolbar.actions.set_actions(webview)
 
     def register(self, popover, monitor=True):
         """

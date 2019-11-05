@@ -55,8 +55,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.__indicator_label.show()
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__separator = builder.get_object("separator")
-        self.__netloc_label = builder.get_object("netloc")
-        self.__netloc_label.set_text(self.__netloc)
         self.__image = builder.get_object("image")
         self.add(widget)
         self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
@@ -85,7 +83,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
                             self.__on_webview_notify_is_playing_audio)
             webview.connect("notify::favicon",
                             self.__on_webview_favicon_changed)
-            self.update_label()
             self.__indicator_label.update_count(True)
             self.__indicator_label.mark(webview)
 
@@ -100,7 +97,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
             webview.disconnect_by_func(self.__on_webview_load_changed)
             webview.disconnect_by_func(
                 self.__on_webview_notify_is_playing_audio)
-            self.update_label()
             self.__indicator_label.update_count(False)
             self.__indicator_label.mark(webview)
             if self.__webviews:
@@ -113,13 +109,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
-            self.__netloc_label.set_text(self.__netloc)
-
-    def update_label(self):
-        """
-            Update label using netloc
-        """
-        self.__netloc_label.set_text(self.__netloc)
 
     @property
     def indicator_label(self):

@@ -92,17 +92,6 @@ class SitesManager(Gtk.Grid):
         webview.disconnect_by_func(self.__on_webview_load_changed)
         webview.disconnect_by_func(self.__on_webview_destroy)
 
-    def update_label(self, webview):
-        """
-            Update label for view
-            @param webview as WebView
-        """
-        for child in self.__box.get_children():
-            for _webview in child.webviews:
-                if _webview == webview:
-                    child.update_label()
-                    return
-
     def next(self):
         """
             Show next site

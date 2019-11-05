@@ -52,6 +52,11 @@ class WebViewContainer:
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
                 self.__on_back_forward_list_changed)
+        accept_tls = App().websettings.get_accept_tls(webview.uri)
+        self._window.toolbar.end.show_tls_button(accept_tls)
+        self._window.toolbar.actions.set_actions(self.__current_webview)
+        self._window.toolbar.title.set_uri(webview.uri)
+        self._window.toolbar.title.set_title(webview.title)
 
     def dismiss_webview(self, webview):
         """
@@ -77,7 +82,6 @@ class WebViewContainer:
             @param title as str
         """
         self._window.toolbar.title.set_title(title)
-        self.sites_manager.update_label(webview)
 
     def __on_uri_changed(self, webview, uri):
         """
