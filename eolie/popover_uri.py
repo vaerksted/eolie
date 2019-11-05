@@ -709,7 +709,7 @@ class UriPopover(Gtk.Popover):
         atime = mktime(date.timetuple())
         result = App().history.get(atime)
         self.__history_model.remove_all()
-        self.__add_history_items(result, (year, month, day))
+        GLib.idle_add(self.__add_history_items, result, (year, month, day))
         self.__infobar.hide()
 
     def _on_clear_history_clicked(self, button):
