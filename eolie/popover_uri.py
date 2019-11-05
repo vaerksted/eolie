@@ -839,12 +839,6 @@ class UriPopover(Gtk.Popover):
             return
         elif searches:
             (rowid, title, uri, score) = searches.pop(0)
-            for child in self.__search_box.get_children():
-                if child.item.get_property("uri") == uri:
-                    child.item.set_property("search", self.__search)
-                    child.item.set_property("score", score)
-                    GLib.idle_add(self.__add_searches, searches, search)
-                    return
             item = Item()
             item.set_property("id", rowid)
             item.set_property("type", Type.SEARCH)
@@ -855,7 +849,8 @@ class UriPopover(Gtk.Popover):
             child = Row(item, self.__window)
             child.show()
             self.__search_box.add(child)
-            GLib.idle_add(self.__add_searches, searches, search)
+            GLib.idle_add(self.__add_searches, searches, search,
+                          priority=GLib.PRIORITY_HIGH_IDLE)
         else:
             self.__do_sort_search()
 
@@ -872,7 +867,8 @@ class UriPopover(Gtk.Popover):
             item.set_property("title", title)
             item.set_property("uri", uri)
             self.__bookmarks_model.append(item)
-            GLib.idle_add(self.__add_bookmarks, bookmarks)
+            GLib.idle_add(self.__add_bookmarks, bookmarks,
+                          priority=GLib.PRIORITY_HIGH_IDLE)
 
     def __add_tags(self, tags, select, position=0):
         """
@@ -891,7 +887,8 @@ class UriPopover(Gtk.Popover):
             child.connect("moved", self.__on_row_moved)
             child.show()
             self.__tags_box.add(child)
-            GLib.idle_add(self.__add_tags, tags, select)
+            GLib.idle_add(self.__add_tags, tags, select,
+                          priority=GLib.PRIORITY_HIGH_IDLE)
         else:
             if select is None:
                 select = Type.POPULARS
@@ -919,7 +916,8 @@ class UriPopover(Gtk.Popover):
             item.set_property("uri", uri)
             item.set_property("atime", atime)
             self.__history_model.append(item)
-            GLib.idle_add(self.__add_history_items, items, date)
+            GLib.idle_add(self.__add_history_items, items, date,
+                          priority=GLib.PRIORITY_HIGH_IDLE)
 
     def __get_current_box(self):
         """
