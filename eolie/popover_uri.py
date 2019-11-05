@@ -116,7 +116,7 @@ class Row(Gtk.ListBoxRow):
             atime.show()
             grid.attach(atime, 2, 0, 1, 2)
 
-        if item_type in [Type.HISTORY, Type.SEARCH]:
+        if item_type == Type.HISTORY:
             delete_button = Gtk.Button.new_from_icon_name(
                 "user-trash-symbolic",
                 Gtk.IconSize.MENU)
