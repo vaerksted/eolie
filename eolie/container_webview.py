@@ -49,6 +49,13 @@ class WebViewContainer:
         self.__signal_ids.append(
             webview.connect("notify::estimated-load-progress",
                             self.__on_estimated_load_progress))
+        self.__signal_ids.append(
+            webview.connect("enter-fullscreen", self.__on_enter_fullscreen))
+        self.__signal_ids.append(
+            webview.connect("leave-fullscreen", self.__on_leave_fullscreen))
+        self.__signal_ids.append(
+            webview.connect("insecure-content-detected",
+                            self.__on_insecure_content_detected))
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
                 self.__on_back_forward_list_changed)
@@ -148,3 +155,25 @@ class WebViewContainer:
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
             self.check_readability(webview)
+
+    def __on_enter_fullscreen(self, webview):
+        """
+            Hide sidebar (conflict with fs)
+            @param webview as WebView
+        """
+        self.sites_manager.hide()
+
+    def __on_leave_fullscreen(self, webview):
+        """
+            Show sidebar (conflict with fs)
+            @param webview as WebView
+        """
+        if App().settings.get_value("show-sidebar"):
+            self.sites_manager.show()
+
+    def __on_insecure_content_detected(self, webview, event):
+        """
+            @param webview as WebView
+            @param event as WebKit2.InsecureContentEvent
+        """
+        self._window.toolbar.title.set_insecure_content()

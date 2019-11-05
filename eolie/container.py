@@ -14,6 +14,7 @@ from gi.repository import Gtk, GLib, Gdk
 
 from gettext import gettext as _
 from random import randint
+from time import time
 
 from eolie.popover_webview import WebViewPopover
 from eolie.define import App
@@ -84,6 +85,7 @@ class Container(Gtk.Grid,
             @param webview as WebView
         """
         webview.set_shown(True)
+        webview.set_atime(int(time()))
         self.sites_manager.update_shown_state(webview)
         self.pages_manager.update_shown_state(webview)
         StackContainer.set_visible_webview(self, webview)

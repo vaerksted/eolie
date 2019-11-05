@@ -28,12 +28,13 @@ class WebViewDBusSignals:
         """
             Init class
         """
-        pass
+        self.connect("map", self.__on_map)
+        self.connect("unmap", self.__on_unmap)
 
 #######################
-# PROTECTED           #
+# PRIVATE             #
 #######################
-    def _on_map(self, webview):
+    def __on_map(self, webview):
         """
             Connect all signals
             @param webview as WebView
@@ -44,7 +45,7 @@ class WebViewDBusSignals:
                              WebViewDBusSignals.__on_signal(self, e, f),
                              page_id)
 
-    def _on_unmap(self, webview):
+    def __on_unmap(self, webview):
         """
             Disconnect all signals
             @param webview as WebView
@@ -52,9 +53,6 @@ class WebViewDBusSignals:
         page_id = webview.get_page_id()
         App().helper.disconnect(page_id)
 
-#######################
-# PRIVATE             #
-#######################
     def __on_signal(self, signal, params):
         """
             Handle proxy signals

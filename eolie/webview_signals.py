@@ -53,12 +53,12 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self.__title_changed_timeout_id = None
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
-        self.connect("map", self._on_map)
-        self.connect("unmap", self._on_unmap)
+        self.connect("map", self.__on_map)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
+        self.connect("button-press-event", self.__on_button_press_event)
 
     def reset_last_click_event(self):
         """
@@ -69,9 +69,21 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         self._last_click_time = 0
 
 #######################
-# PROTECTED           #
+# PRIVATE             #
 #######################
-    def _on_button_press_event(self, webview, event):
+    def __on_map(self, webview):
+        """
+            Connect all signals
+            @param webview as WebView
+        """
+        # URI set but not loaded
+        # Webviews with a related webview have a None URI
+        if self.get_uri() is None and\
+                self.uri is not None and\
+                self._related_view is None:
+            self.load_uri(self.uri)
+
+    def __on_button_press_event(self, webview, event):
         """
             Hide Titlebar popover
             @param webview as WebView
@@ -89,39 +101,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         elif self.get_ancestor(Gtk.Popover) is None:
             return self.window.close_popovers()
 
-    def _on_map(self, webview):
-        """
-            Connect all signals
-            @param webview as WebView
-        """
-        # URI set but not loaded
-        # Webviews with a related webview have a None URI
-        if self.get_uri() is None and\
-                self.uri is not None and\
-                self._related_view is None:
-            self.load_uri(self.uri)
-        self.set_atime(int(time()))
-        self.connect("button-press-event", self._on_button_press_event)
-        self.connect("enter-fullscreen", self.__on_enter_fullscreen)
-        self.connect("leave-fullscreen", self.__on_leave_fullscreen)
-        self.connect("insecure-content-detected",
-                     self.__on_insecure_content_detected)
-        WebViewDBusSignals._on_map(self, webview)
-
-    def _on_unmap(self, webview):
-        """
-            Disconnect all signals
-            @param webview as WebView
-        """
-        self.disconnect_by_func(self._on_button_press_event)
-        self.disconnect_by_func(self.__on_enter_fullscreen)
-        self.disconnect_by_func(self.__on_leave_fullscreen)
-        self.disconnect_by_func(self.__on_insecure_content_detected)
-        WebViewDBusSignals._on_unmap(self, webview)
-
-#######################
-# PRIVATE             #
-#######################
     def __on_run_file_chooser(self, webview, request):
         """
             Run own file chooser
@@ -188,7 +167,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             2000, title_changed_timeout)
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable()
-        self._readable = False
 
     def __on_title_changed(self, webview, title):
         """
@@ -209,25 +187,3 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         App().history.set_page_state(webview.uri, mtime)
         if App().sync_worker is not None:
             App().sync_worker.push_history(history_id)
-
-    def __on_enter_fullscreen(self, webview):
-        """
-            Hide sidebar (conflict with fs)
-            @param webview as WebView
-        """
-        self.window.container.sites_manager.hide()
-
-    def __on_leave_fullscreen(self, webview):
-        """
-            Show sidebar (conflict with fs)
-            @param webview as WebView
-        """
-        if App().settings.get_value("show-sidebar"):
-            self.window.container.sites_manager.show()
-
-    def __on_insecure_content_detected(self, webview, event):
-        """
-            @param webview as WebView
-            @param event as WebKit2.InsecureContentEvent
-        """
-        self.window.toolbar.title.set_insecure_content()
