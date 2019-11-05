@@ -78,9 +78,6 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
         # Always show current first
         if current_child in [row1, row2]:
             return current_child == row2
-        # Unshown first
-        elif not row2.webview.shown and row1.webview.shown:
-            return True
         else:
             return row2.webview.atime > row1.webview.atime
 
