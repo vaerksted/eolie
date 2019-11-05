@@ -697,7 +697,8 @@ class UriPopover(Gtk.Popover):
                    _("Recent")),
                   (Type.UNCLASSIFIED,
                    _("Unclassified"))]
-        self.__add_tags(static + App().bookmarks.get_all_tags(), current)
+        GLib.idle_add(self.__add_tags,
+                      static + App().bookmarks.get_all_tags(), current)
 
     def _on_day_selected(self, calendar):
         """
@@ -960,7 +961,7 @@ class UriPopover(Gtk.Popover):
             result = App().history.search(search, 15)
             result += App().bookmarks.search(search, 15)
 
-        self.__add_searches(result, search)
+        GLib.idle_add(self.__add_searches, result, search)
 
     def __set_bookmarks(self, tag_id):
         """
@@ -978,7 +979,7 @@ class UriPopover(Gtk.Popover):
         else:
             items = App().bookmarks.get_bookmarks(tag_id)
         self.__bookmarks_count.set_text(_("%s bookmarks") % len(items))
-        self.__add_bookmarks(items)
+        GLib.idle_add(self.__add_bookmarks, items)
 
     def __on_tag_entry_changed(self, entry):
         """
