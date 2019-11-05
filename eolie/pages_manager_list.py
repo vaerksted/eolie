@@ -33,7 +33,7 @@ class PagesManagerList(Gtk.ScrolledWindow):
         self.__listbox.set_sort_func(self.__sort_func)
         self.__listbox.set_activate_on_single_click(True)
         self.__listbox.connect("row-activated", self.__on_row_activated)
-        self.__listbox.get_style_context().add_class("dark")
+        self.__listbox.get_style_context().add_class("transparent")
         self.add(self.__listbox)
         self.get_style_context().add_class("big-padding")
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)

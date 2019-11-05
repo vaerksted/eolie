@@ -75,6 +75,7 @@ class PageRow(Gtk.ListBoxRow):
             @param button as Gtk.Button
         """
         self.__window.container.try_close_webview(self.__webview)
+        self.destroy()
 
     def __on_query_tooltip(self, widget, x, y, keyboard, tooltip):
         """
