@@ -29,6 +29,7 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
         """
         Gtk.ScrolledWindow.__init__(self)
         self.__window = window
+        self.__selected_row = None
         self.__hovered_row = None
         self.__listbox = Gtk.ListBox.new()
         self.__listbox.show()
@@ -50,11 +51,12 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
         """
         current_webview = self.__window.container.webview
         for webview in webviews:
-            child = PagesManagerRow(webview, self.__window)
-            child.show()
-            self.__listbox.add(child)
+            row = PagesManagerRow(webview, self.__window)
+            row.show()
+            self.__listbox.add(row)
             if webview == current_webview:
-                child.set_state_flags(Gtk.StateFlags.VISITED, False)
+                self.__selected_row = row
+                row.set_state_flags(Gtk.StateFlags.VISITED, False)
 
     def _handle_height_allocate(self, allocation):
         """
@@ -74,10 +76,9 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
             @param row1 as PageChildRow
             @param row2 as PageChildRow
         """
-        current_child = self.__listbox.get_selected_row()
         # Always show current first
-        if current_child in [row1, row2]:
-            return current_child == row2
+        if self.__selected_row in [row1, row2]:
+            return self.__selected_row == row2
         else:
             return row2.webview.atime > row1.webview.atime
 
