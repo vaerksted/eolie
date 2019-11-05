@@ -66,7 +66,7 @@ class WebViewContainer:
         self._window.toolbar.title.set_title(webview.title)
         if webview.get_uri() is None and\
                 webview.uri is not None and\
-                webview.related_view is None:
+                webview.related is None:
             webview.load_uri(webview.uri)
 
     def dismiss_webview(self, webview):

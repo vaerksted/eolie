@@ -54,14 +54,14 @@ class WebView(WebKit2.WebView):
         webview.__init(None, window)
         return webview
 
-    def new_with_related_view(related, window):
+    def new_with_related(related, window):
         """
             Create a new WebView related to view
             @param related as WebView
             @param window as Window
             @return WebView
         """
-        webview = WebKit2.WebView.new_with_related_view(related)
+        webview = WebKit2.WebView.new_with_related(related)
         webview.__class__ = WebViewMeta
         webview.__init(related, window)
         return webview
@@ -84,8 +84,8 @@ class WebView(WebKit2.WebView):
         """
         try:
             zoom_level = self.window.zoom_level
-            if self._related_view is not None:
-                window = self._related_view.get_ancestor(Gtk.Window)
+            if self.__related is not None:
+                window = self.__related.get_ancestor(Gtk.Window)
                 if window is not None and hasattr(window, "zoom_level"):
                     zoom_level = window.zoom_level
             else:
@@ -384,6 +384,14 @@ class WebView(WebKit2.WebView):
         return self.get_property("is-ephemeral")
 
     @property
+    def related(self):
+        """
+            Get related webview
+            @return WebView
+        """
+        return self.__related
+
+    @property
     def window(self):
         """
             Get window
@@ -402,10 +410,10 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, window):
+    def __init(self, related, window):
         """
             Init WebView
-            @param related_view as WebView
+            @param related as WebView
             @param window as Window
         """
         WebViewState.__init__(self)
@@ -425,12 +433,12 @@ class WebView(WebKit2.WebView):
         self._uri = None
         self._initial_uri = None
         self._title = None
-        self._related_view = related_view
+        self.__related = related
         self.__shown = False
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()
-        if related_view is None:
+        if related is None:
             # Set settings
             settings = self.get_settings()
             settings.set_property("enable-java",
@@ -510,7 +518,7 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        webview = WebView.new_with_related_view(related, self.window)
+        webview = WebView.new_with_related(related, self.window)
         webview.set_atime(related.atime - 1)
         elapsed = time() - related._last_click_time
         uri = navigation_action.get_request().get_uri()
