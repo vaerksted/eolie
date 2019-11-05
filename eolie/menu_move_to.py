@@ -14,7 +14,7 @@ from gi.repository import Gio, Gtk, GLib
 
 from gettext import gettext as _
 
-from eolie.define import App
+from eolie.define import App, LoadingType
 
 
 class MoveToMenu(Gtk.Grid):
@@ -70,21 +70,21 @@ class MoveToMenu(Gtk.Grid):
             item.show()
             self.add(item)
 
-        for window in App().windows:
-            if window == window:
+        for _window in App().windows:
+            if _window == window:
                 continue
             item = Gtk.ModelButton.new()
             item.set_hexpand(True)
-            item.set_property("text", window.get_title())
+            item.set_property("text", _window.get_title())
             item.set_action_name("win.switch_window")
-            item.set_action_target_value(GLib.Variant("s", str(window)))
+            item.set_action_target_value(GLib.Variant("s", str(_window)))
             item.show()
             item.connect("enter-notify-event",
                          self.__on_enter_notify_event,
-                         window)
+                         _window)
             item.connect("leave-notify-event",
                          self.__on_leave_notify_event,
-                         window)
+                         _window)
             self.add(item)
 
     def do_hide(self):
@@ -138,5 +138,5 @@ class MoveToMenu(Gtk.Grid):
         # Move webviews to window
         for webview in self.__webviews:
             self.__window.container.remove_webview(webview)
-            window.container.add_webview(webview)
+            window.container.add_webview(webview, LoadingType.FOREGROUND)
             webview.set_window(window)

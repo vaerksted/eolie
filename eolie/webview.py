@@ -289,6 +289,13 @@ class WebView(WebKit2.WebView):
         """
         self.__shown = shown
 
+    def set_window(self, window):
+        """
+            Update GTK window
+            @param window as Window
+        """
+        self.__window = window
+
     @property
     def is_pinned(self):
         """

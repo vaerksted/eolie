@@ -94,9 +94,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Connect all signals
             @param webview as WebView
         """
-        # We are offscreen
-        if self.window != self.get_toplevel():
-            return
         # URI set but not loaded
         # Webviews with a related webview have a None URI
         if self.get_uri() is None and\
@@ -116,9 +113,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             Disconnect all signals
             @param webview as WebView
         """
-        # We are offscreen
-        if self.window != self.get_toplevel():
-            return
         self.disconnect_by_func(self._on_button_press_event)
         self.disconnect_by_func(self.__on_enter_fullscreen)
         self.disconnect_by_func(self.__on_leave_fullscreen)
