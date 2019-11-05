@@ -65,7 +65,9 @@ class StackContainer:
         count = len(self.pages_manager.children)
         self._window.toolbar.actions.count_label.set_text(str(count))
         App().update_unity_badge()
-        if loading_type == LoadingType.BACKGROUND or self.in_expose:
+        if loading_type == LoadingType.OFFLOAD:
+            webview.set_title(webview.uri)
+        elif loading_type == LoadingType.BACKGROUND or self.in_expose:
             webview.load_uri(webview.uri)
 
     def remove_webview(self, webview):
