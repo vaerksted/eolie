@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2017-2018 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # Copyright (c) 2015 Jean-Philippe Braun <eon@patapon.info>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from threading import current_thread
-from time import sleep
 
 from eolie.define import App
 
@@ -24,65 +23,62 @@ class SqlCursor:
     def add(obj):
         """
             Add cursor to thread list
-            Raise an exception if cursor already exists
         """
-        obj.thread_lock.acquire()
         name = current_thread().getName() + obj.__class__.__name__
         App().cursors[name] = obj.get_cursor()
 
     def remove(obj):
         """
             Remove cursor from thread list and commit
-            Raise an exception if cursor already exists
         """
         name = current_thread().getName() + obj.__class__.__name__
-        App().cursors[name].commit()
-        App().cursors[name].close()
-        del App().cursors[name]
-        obj.thread_lock.release()
+        if name in App().cursors.keys():
+            obj.thread_lock.acquire()
+            App().cursors[name].commit()
+            obj.thread_lock.release()
+            App().cursors[name].close()
+            del App().cursors[name]
 
     def commit(obj):
         """
             Commit current obj
         """
         name = current_thread().getName() + obj.__class__.__name__
-        App().cursors[name].commit()
-
-    def allow_thread_execution(obj):
-        """
-            Release thread lock allowing others threads execution
-        """
-        name = current_thread().getName() + obj.__class__.__name__
-        if name in App().cursors.keys() and len(App().cursors.keys()) > 1:
-            obj.thread_lock.release()
-            sleep(0.01)
+        if name in App().cursors.keys():
             obj.thread_lock.acquire()
+            App().cursors[name].commit()
+            obj.thread_lock.release()
 
-    def __init__(self, obj):
+    def __init__(self, obj, commit=False):
         """
             Init object
+            @param obj as Database/Playlists/Radios
+            @param commit as bool
         """
         self.__obj = obj
-        self.__creator = False
+        self.__commit = commit
+        self.__cursor = None
 
     def __enter__(self):
         """
-            Return cursor for thread, create a new one if needed
+            Get thread cursor or a new one
         """
         name = current_thread().getName() + self.__obj.__class__.__name__
-        if name not in App().cursors:
-            self.__creator = True
-            App().cursors[name] = self.__obj.get_cursor()
-            self.__obj.thread_lock.acquire()
-        return App().cursors[name]
+        if name in App().cursors.keys():
+            cursor = App().cursors[name]
+            return cursor
+        else:
+            self.__cursor = self.__obj.get_cursor()
+            return self.__cursor
 
     def __exit__(self, type, value, traceback):
         """
-            If creator, close cursor and remove it
+            Close cursor if not thread cursor
         """
-        if self.__creator:
-            name = current_thread().getName() + self.__obj.__class__.__name__
-            App().cursors[name].commit()
-            App().cursors[name].close()
-            del App().cursors[name]
-            self.__obj.thread_lock.release()
+        if self.__cursor is not None:
+            if self.__commit:
+                self.__obj.thread_lock.acquire()
+                self.__cursor.commit()
+                self.__obj.thread_lock.release()
+            self.__cursor.close()
+        self.__cursor = None

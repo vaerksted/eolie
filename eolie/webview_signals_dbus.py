@@ -62,12 +62,12 @@ class WebViewDBusSignals:
             @params as []
         """
         if signal == "UnsecureFormFocused":
-            self._window.toolbar.title.show_input_warning(self)
+            self.window.toolbar.title.show_input_warning(self)
         elif signal == "AskSaveCredentials":
             (uuid, user_form_name, user_form_value,
              pass_form_name, uri, form_uri) = params[0]
-            self._window.close_popovers()
-            self._window.toolbar.title.show_password(
+            self.window.close_popovers()
+            self.window.toolbar.title.show_password(
                 uuid,
                 user_form_name,
                 user_form_value,
@@ -77,7 +77,7 @@ class WebViewDBusSignals:
                 self.get_page_id())
         elif signal == "ShowCredentials":
             (userform, form_uri) = params
-            model = FormMenu(self.get_page_id(), self._window)
+            model = FormMenu(self.get_page_id(), self.window)
             helper = PasswordsHelper()
             helper.get(form_uri, userform, None, self.__on_password, model)
 
@@ -98,7 +98,7 @@ class WebViewDBusSignals:
             if index == 0:
                 popover = Gtk.Popover.new_from_model(self, model)
                 popover.set_modal(False)
-                self._window.register(popover)
+                self.window.register(popover)
                 rect = Gdk.Rectangle()
                 rect.x = self._last_click_event_x
                 rect.y = self._last_click_event_y - 10
@@ -113,5 +113,5 @@ class WebViewDBusSignals:
             @param popover as Gtk.Popover
             @param model as FormMenu
         """
-        # Let model activate actions, idle needed to action activate
+        # Let model activate actions, idle needed for action activation
         GLib.idle_add(model.clean)

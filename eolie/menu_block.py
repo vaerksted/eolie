@@ -48,7 +48,7 @@ class JSBlockMenu:
             @param widget as Gtk.Widget
         """
         self._actions = []
-        page_id = self.window.container.current.webview.get_page_id()
+        page_id = self.window.container.webview.get_page_id()
         App().helper.call("GetScripts", page_id, None,
                           self.__on_get_scripts)
 

@@ -11,12 +11,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gio, GLib
+from gi.repository.Gio import FILE_ATTRIBUTE_STANDARD_NAME, \
+                              FILE_ATTRIBUTE_TIME_MODIFIED
 
 import json
+from time import time
 
 from eolie.content_blocker import ContentBlocker
 from eolie.define import ADBLOCK_URIS, App
 from eolie.logger import Logger
+
+
+SCAN_QUERY_INFO = "{},{}".format(FILE_ATTRIBUTE_STANDARD_NAME,
+                                 FILE_ATTRIBUTE_TIME_MODIFIED)
 
 
 class AdContentBlocker(ContentBlocker):
@@ -30,9 +37,16 @@ class AdContentBlocker(ContentBlocker):
         """
         try:
             ContentBlocker.__init__(self, "block-ads")
+            f = Gio.File.new_for_path(
+                    "%s/block-ads.json" % self._JSON_PATH)
+            info = f.query_info(SCAN_QUERY_INFO,
+                                Gio.FileQueryInfoFlags.NONE,
+                                None)
+            mtime = int(info.get_attribute_as_string("time::modified"))
             if App().settings.get_value("block-ads"):
                 GLib.timeout_add_seconds(7200, self.__download_task, True)
-                GLib.timeout_add_seconds(20, self.__download_task, False)
+                if time() - mtime > 7200:
+                    GLib.timeout_add_seconds(20, self.__download_task, False)
         except Exception as e:
             Logger.error("AdContentBlocker::__init__(): %s", e)
 
@@ -79,7 +93,7 @@ class AdContentBlocker(ContentBlocker):
                 rules += json.loads(content.decode("utf-8"))
             if uris:
                 self.__download_uris(uris, rules)
-            else:
+            elif rules:
                 # Save to sources
                 f = Gio.File.new_for_path(
                     "%s/block-ads.json" % self._JSON_PATH)

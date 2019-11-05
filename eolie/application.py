@@ -48,6 +48,7 @@ from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import is_unity, wanted_loading_type
 from eolie.logger import Logger
+from eolie.webview_state import WebViewState
 
 
 class Application(Gtk.Application):
@@ -66,7 +67,6 @@ class Application(Gtk.Application):
         self.__version = version
         self.__state_cache = []
         self.__content_blockers = []
-        self.__pinned = []
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
         # Set main thread name
@@ -132,17 +132,19 @@ class Application(Gtk.Application):
         if not self.get_windows():
             self.__init()
 
-    def get_new_window(self, size=None, maximized=False):
+    def get_new_window(self):
         """
             Return a new window
             @return Window
         """
+        size = (800, 600)
+        is_maximized = False
         windows = self.get_windows()
         if windows and size is None:
             active_window = self.active_window
             size = active_window.size
-            maximized = active_window.is_maximized()
-        window = Window(self, size, maximized)
+            is_maximized = active_window.is_maximized()
+        window = Window(size, is_maximized)
         window.connect('delete-event', self.__on_delete_event)
         window.show()
         return window
@@ -154,8 +156,8 @@ class Application(Gtk.Application):
             @param value as GLib.Variant
         """
         for window in self.get_windows():
-            for view in window.container.views:
-                view.webview.set_setting(key, value)
+            for webview in window.container.webviews:
+                webview.set_setting(key, value)
 
     def update_unity_badge(self, fraction=None):
         """
@@ -172,22 +174,6 @@ class Application(Gtk.Application):
             else:
                 self.__unity.set_property("progress", fraction)
                 self.__unity.set_property("progress_visible", fraction != 1.0)
-
-    def add_to_pinned(self, uri):
-        """
-            Add uri to pinned pages
-            @param uri as str
-        """
-        if uri not in self.__pinned:
-            self.__pinned.append(uri)
-
-    def remove_from_pinned(self, uri):
-        """
-            Remove uri from pinned pages
-            @param uri as str
-        """
-        if uri in self.__pinned:
-            self.__pinned.remove(uri)
 
     def quit(self, vacuum=False):
         """
@@ -228,14 +214,6 @@ class Application(Gtk.Application):
         for content_blocker in self.__content_blockers:
             if content_blocker.name == name:
                 return content_blocker
-
-    @property
-    def pinned(self):
-        """
-            Get pinned pages
-            @return [str]
-        """
-        return self.__pinned
 
     @property
     def start_page(self):
@@ -364,8 +342,6 @@ class Application(Gtk.Application):
         shortcut_action.connect('activate', self.__on_shortcut_action)
         self.add_action(shortcut_action)
         self.set_accels_for_action("win.shortcut::expose", ["<Alt>e"])
-        self.set_accels_for_action("win.exceptions::site", ["<Control>e"])
-        self.set_accels_for_action("win.shortcut::jsblock", ["<Control>j"])
         self.set_accels_for_action("win.shortcut::show_sidebar", ["F9"])
         self.set_accels_for_action("win.shortcut::uri",
                                    ["<Control>l", "<Control>b"])
@@ -435,45 +411,6 @@ class Application(Gtk.Application):
             Logger.error("Application::__vacuum(): %s ", e)
         self.art.vacuum()
 
-    def __get_state(self, window):
-        """
-            Return state for window
-            @param window as Window
-            @return {}
-        """
-        def get_state_for_webview(webview):
-            uri = webview.uri
-            parsed = urlparse(uri)
-            if parsed.scheme in ["http", "https"]:
-                ephemeral = webview.ephemeral
-                state = webview.get_session_state().serialize()
-                return (uri, webview.title, webview.atime,
-                        ephemeral, state.get_data())
-            else:
-                return None
-
-        window_state = {}
-        window_state["id"] = str(window)
-        window_state["size"] = window.size
-        window_state["maximized"] = window.is_maximized()
-        session_states = []
-        if self.settings.get_value("remember-session"):
-            # Save current first, will be loaded first on restore
-            current = window.container.current.webview
-            state = get_state_for_webview(current)
-            if state is not None:
-                session_states.append(state)
-            # Do not get view from container to save order
-            for view in window.container.views:
-                if view.webview == current or view.destroying:
-                    continue
-                state = get_state_for_webview(view.webview)
-                if state is not None:
-                    session_states.append(state)
-        window_state["states"] = session_states
-        window_state["sites"] = window.container.sites_manager.sort
-        return window_state
-
     def __save_state(self):
         """
             Save windows state
@@ -481,14 +418,12 @@ class Application(Gtk.Application):
         try:
             window_states = []
             for window in self.windows:
-                window_state = self.__get_state(window)
-                window_states.append(window_state)
+                state = window.state
+                window_states.append(state)
             for window_state in self.__state_cache:
                 window_states.append(window_state)
             dump(window_states,
                  open(EOLIE_DATA_PATH + "/session_states.bin", "wb"))
-            dump(self.__pinned,
-                 open(EOLIE_DATA_PATH + "/pinned.bin", "wb"))
         except Exception as e:
             Logger.error("Application::__save_state(): %s", e)
 
@@ -498,72 +433,43 @@ class Application(Gtk.Application):
             @param window_id as str
         """
         for state in self.__state_cache:
-            if state["id"] == window_id:
+            if state.wid == window_id:
                 self.__state_cache.remove(state)
                 break
 
-    def __create_initial_windows(self):
+    def __restore_state(self):
         """
-            Create initial windows based on saved session
+            Restore state
             @return active window as Window
         """
-        size = (800, 600)
-        maximized = False
-        i = 0
-        pinned = []
         try:
-            pinned = load(
-                open(EOLIE_DATA_PATH + "/pinned.bin", "rb"))
+            from eolie.window_state import WindowState, WindowStateStruct
             window_states = load(
                 open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
-            if self.settings.get_value("remember-session"):
-                for window_state in window_states:
-                    window = self.get_new_window(window_state["size"],
-                                                 window_state["maximized"])
-                    window.container.sites_manager.set_initial_sort(
-                        window_state["sites"])
-                    items = []
-                    for (uri, title, atime,
-                         ephemeral, state) in window_state["states"]:
-                        if uri in pinned:
-                            pinned.remove(uri)
-                        loading_type = wanted_loading_type(i)
-                        webkit_state = WebKit2.WebViewSessionState(
-                            GLib.Bytes.new(state))
-                        items.append((uri, title, atime, ephemeral,
-                                      webkit_state, loading_type))
-                        i += 1
-                    if window_state["states"]:
-                        window.container.add_webviews(items)
-                    else:
-                        window.container.add_webview(
-                            self.start_page,
-                            LoadingType.FOREGROUND,
-                            False)
-            elif window_states:
-                size = window_states[0]["size"]
-                maximized = window_states[0]["maximized"]
+            state = WindowStateStruct()
+            for state in window_states:
+                # If webview to restore
+                if state.webview_states:
+                    window = WindowState.new_from_state(state)
+                    for webview_state in state.webview_states:
+                        webview = WebViewState.new_from_state(webview_state,
+                                                              window)
+                        webview.show()
+                        loading_type = wanted_loading_type(
+                            len(window.container.webviews))
+                        window.container.add_webview(webview, loading_type)
+                        session = WebKit2.WebViewSessionState(
+                            GLib.Bytes.new(webview_state.session))
+                        webview.restore_session_state(session)
+                    window.connect("delete-event", self.__on_delete_event)
+                    window.show()
+            # Add a default window
+            if not self.windows:
+                window = WindowState.new_from_state(state)
+                window.connect("delete-event", self.__on_delete_event)
+                window.show()
         except Exception as e:
-            Logger.error("Application::__create_initial_windows(): %s", e)
-        # Create a window if None available and setup pinned pages
-        # We already removed saved states from pinned
-        if self.windows:
-            window = self.windows[0]
-        else:
-            window = self.get_new_window(size, maximized)
-        for uri in pinned:
-            loading_type = wanted_loading_type(i)
-            window.container.add_webview(uri,
-                                         loading_type,
-                                         False)
-            i += 1
-        # Really setup pinned
-        try:
-            self.__pinned = load(
-                    open(EOLIE_DATA_PATH + "/pinned.bin", "rb"))
-        except:
-            self.__pinned = []
-        return window
+            Logger.error("Application::__restore_state(): %s", e)
 
     def __on_handle_local_options(self, app, options):
         """
@@ -589,18 +495,21 @@ class Application(Gtk.Application):
             self.show_tls = True
         if options.contains("disable-artwork-cache"):
             self.art.disable_cache()
-        ephemeral = options.contains("private")
 
-        active_window = self.active_window
-        # Handle initial windows
+        # FIXME
+        # is_ephemeral = options.contains("private")
+
+        # Only restore state on first run
         if not self.windows:
-            active_window = self.__create_initial_windows()
-        elif options.contains("new") or len(args) == 1:
+            self.__restore_state()
+
+        # Setup at least one window
+        if not self.windows or options.contains("new"):
             active_window = self.get_new_window()
+        else:
+            active_window = self.windows[0]
 
         # Open command line args
-        items = []
-        i = 0
         for uri in args[1:]:
             # Transform path to uri
             parsed = urlparse(uri)
@@ -609,17 +518,16 @@ class Application(Gtk.Application):
                     uri = "file://%s" % uri
                 else:
                     uri = "http://%s" % uri
-            loading_type = wanted_loading_type(i)
-            items.append((uri, uri, None, ephemeral, None, loading_type))
-            i += 1
-        if items:
-            active_window.container.add_webviews(items)
+            loading_type = wanted_loading_type(
+                len(active_window.container.webviews))
+            active_window.container.add_webview_for_uri(uri, loading_type)
 
         # Add default start page
-        if not active_window.container.views:
-            active_window.container.add_webview(self.start_page,
-                                                LoadingType.FOREGROUND,
-                                                ephemeral)
+        if not active_window.container.webviews:
+            loading_type = wanted_loading_type(
+                len(active_window.container.webviews))
+            active_window.container.add_webview_for_uri(self.start_page,
+                                                        loading_type)
         if self.settings.get_value("debug"):
             WebKit2.WebContext.get_default().get_plugins(None,
                                                          self.__on_get_plugins,
@@ -633,37 +541,40 @@ class Application(Gtk.Application):
             Close window
         """
         if len(self.get_windows()) > 1:
-            state = self.__get_state(window)
-            self.__state_cache.append(state)
-            GLib.timeout_add(10000, self.__clean_state_cache, state["id"])
+            state = window.state
+            if state is not None:
+                self.__state_cache.append(window.state)
+                GLib.timeout_add(10000, self.__clean_state_cache, state.wid)
             window.destroy()
         else:
             self.quit(True)
 
-    def __try_closing(self, window, views):
+    def __try_closing(self, window, webviews):
         """
-            Try closing all views
+            Try closing all webviews
+            @param window as Window
+            @param webviews as [WebView]
         """
-        if views:
-            view = views.pop(0)
-            page_id = view.webview.get_page_id()
+        if webviews:
+            webview = webviews.pop(0)
+            page_id = webview.get_page_id()
             self.helper.call("FormsFilled", page_id, None,
-                             self.__on_forms_filled, window, views)
+                             self.__on_forms_filled, window, webviews)
         else:
             self.__close_window(window)
 
-    def __on_forms_filled(self, source, result, window, views):
+    def __on_forms_filled(self, source, result, window, webviews):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
             @param result as Gio.AsyncResult
             @param window as Window
-            @param views as [View]
+            @param webviews as [WebView]
         """
-        def on_response_id(dialog, response_id, window, views, self):
+        def on_response_id(dialog, response_id, window, webviews, self):
             if response_id == Gtk.ResponseType.CLOSE:
-                if views:
-                    self.__try_closing(window, views)
+                if webviews:
+                    self.__try_closing(window, webviews)
                 else:
                     self.__close_window(window)
             dialog.destroy()
@@ -685,13 +596,14 @@ class Application(Gtk.Application):
                 cancel = builder.get_object("cancel")
                 label.set_text(_("Do you really want to quit Eolie?"))
                 dialog.set_transient_for(window)
-                dialog.connect("response", on_response_id, window, views, self)
+                dialog.connect("response", on_response_id,
+                               window, webviews, self)
                 close.connect("clicked", on_close, dialog)
                 cancel.connect("clicked", on_cancel, dialog)
                 dialog.run()
             else:
-                if views:
-                    self.__try_closing(window, views)
+                if webviews:
+                    self.__try_closing(window, webviews)
                 else:
                     self.__close_window(window)
         except Exception as e:
@@ -720,7 +632,7 @@ class Application(Gtk.Application):
         """
         def on_response_id(dialog, response_id, window):
             if response_id == Gtk.ResponseType.CLOSE:
-                self.__try_closing(window, window.container.views)
+                self.__try_closing(window, window.container.webviews)
             dialog.destroy()
 
         def on_close(widget, dialog):
@@ -744,7 +656,7 @@ class Application(Gtk.Application):
             cancel.connect("clicked", on_cancel, dialog)
             dialog.run()
         else:
-            self.__try_closing(window, window.container.views)
+            self.__try_closing(window, window.container.webviews)
         return True
 
     def __on_activate(self, application):
@@ -764,8 +676,8 @@ class Application(Gtk.Application):
         string = param.get_string()
         if string == "new_window":
             window = self.get_new_window()
-            window.container.add_webview(self.start_page,
-                                         LoadingType.FOREGROUND)
+            window.container.add_webview_for_uri(
+                self.start_page, LoadingType.FOREGROUND)
 
     def __on_content_blocker_set_filter(self, content_blocker, content_filter):
         """

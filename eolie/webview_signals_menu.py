@@ -149,9 +149,9 @@ class WebViewMenuSignals:
             @param uri as str
             @param ephemeral as bool
         """
-        self._window.container.add_webview(uri,
-                                           LoadingType.FOREGROUND,
-                                           self.ephemeral or ephemeral)
+        self.window.container.add_webview(uri,
+                                          LoadingType.FOREGROUND,
+                                          self.is_ephemeral or ephemeral)
 
     def __on_open_new_window_activate(self, action, variant, uri):
         """
@@ -175,7 +175,7 @@ class WebViewMenuSignals:
         """
         search = Search()
         uri = search.get_search_uri(selection)
-        self._window.container.add_webview(uri, LoadingType.FOREGROUND)
+        self.window.container.add_webview(uri, LoadingType.FOREGROUND)
 
     def __on_save_as_image_activate(self, action, variant):
         """
@@ -268,7 +268,7 @@ class WebViewMenuSignals:
                                                  snapshot.get_width(),
                                                  snapshot.get_height())
             pixbuf.savev("/tmp/eolie_snapshot.png", "png", [None], [None])
-            Gtk.show_uri_on_window(self._window,
+            Gtk.show_uri_on_window(self.window,
                                    "file:///tmp/eolie_snapshot.png",
                                    Gtk.get_current_event_time())
         except Exception as e:

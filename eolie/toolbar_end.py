@@ -205,9 +205,9 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         button.hide()
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         App().websettings.set_accept_tls(uri, False)
-        self.__window.container.close_view(self.__window.container.current)
+        self.__window.container.close_webview(self.__window.container.webview)
 
     def _on_fullscreen_button_clicked(self, button):
         """
@@ -222,7 +222,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.Button
         """
         self.__window.close_popovers()
-        self.__window.container.current.webview.load_uri(App().start_page)
+        self.__window.container.webview.load_uri(App().start_page)
 
     def _on_menu_button_toggled(self, button):
         """
@@ -230,7 +230,7 @@ class ToolbarEnd(Gtk.Bin):
             @param button as Gtk.ToogleButton
         """
         self.__window.close_popovers()
-        uri = self.__window.container.current.webview.uri
+        uri = self.__window.container.webview.uri
         if not button.get_active() or not uri:
             return
         from eolie.menu_toolbar import ToolbarMenu
@@ -290,7 +290,7 @@ class ToolbarEnd(Gtk.Bin):
             @param response_id as int
         """
         if response_id == Gtk.ResponseType.ACCEPT:
-            self.__window.container.current.webview.save_to_file(
+            self.__window.container.webview.save_to_file(
                 dialog.get_file(),
                 WebKit2.SaveMode.MHTML,
                 None,

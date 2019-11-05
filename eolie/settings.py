@@ -273,7 +273,7 @@ class SettingsDialog:
         """
         App().settings.set_enum("cookie-storage", int(combo.get_active_id()))
         for window in App().windows:
-            for view in window.container.views:
+            for view in window.container.webviews:
                 context = view.webview.get_context()
                 cookie_manager = context.get_cookie_manager()
                 cookie_manager.set_accept_policy(

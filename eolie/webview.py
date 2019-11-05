@@ -21,6 +21,7 @@ from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
+from eolie.webview_state import WebViewState
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -30,29 +31,27 @@ class WebView(WebKit2.WebView):
         WebKit view
     """
 
-    def new(window, view):
+    def new(window):
         """
             New webview
             @param window as Window
-            @param view as View
         """
         webview = WebKit2.WebView.new_with_user_content_manager(
             App().content_manager)
         webview.__class__ = WebViewMeta
-        webview.__init(None, window, view)
+        webview.__init(None, window)
         return webview
 
-    def new_ephemeral(window, view):
+    def new_ephemeral(window):
         """
             New ephemeral webview
             @param window as Window
-            @param view as View
         """
         context = WebKit2.WebContext.new_ephemeral()
         Context(context)
         webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
-        webview.__init(None, window, view)
+        webview.__init(None, window)
         return webview
 
     def new_with_related_view(related, window):
@@ -64,7 +63,7 @@ class WebView(WebKit2.WebView):
         """
         webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
-        webview.__init(related, window, None)
+        webview.__init(related, window)
         return webview
 
     def set_setting(self, key, value):
@@ -84,7 +83,7 @@ class WebView(WebKit2.WebView):
             Update zoom level
         """
         try:
-            zoom_level = self._window.zoom_level
+            zoom_level = self.window.zoom_level
             if self._related_view is not None:
                 window = self._related_view.get_ancestor(Gtk.Window)
                 if window is not None and hasattr(window, "zoom_level"):
@@ -112,7 +111,7 @@ class WebView(WebKit2.WebView):
         """
         current = App().websettings.get_zoom(self.uri)
         if current is None:
-            current = int(self._window.zoom_level * 100)
+            current = int(self.window.zoom_level * 100)
         current += 10
         App().websettings.set_zoom(current, self.uri)
         self.update_zoom_level()
@@ -125,7 +124,7 @@ class WebView(WebKit2.WebView):
         """
         current = App().websettings.get_zoom(self.uri)
         if current is None:
-            current = int(self._window.zoom_level * 100)
+            current = int(self.window.zoom_level * 100)
         current -= 10
         if current == 0:
             return 10
@@ -138,7 +137,7 @@ class WebView(WebKit2.WebView):
             Reset zoom level
             @return current zoom after zoom out
         """
-        current = int(self._window.zoom_level * 100)
+        current = int(self.window.zoom_level * 100)
         App().websettings.set_zoom(None, self.uri)
         self.update_zoom_level()
         return current
@@ -240,22 +239,16 @@ class WebView(WebKit2.WebView):
             @param uri as uri
             @param loading_type as Gdk.LoadingType
         """
-        if loading_type == LoadingType.POPOVER:
-            if self.ephemeral:
-                webview = WebView.new_ephemeral(self._window, None)
-            else:
-                webview = WebView.new(self._window, None)
-            self._window.container.popup_webview(webview, True)
-            GLib.idle_add(webview.load_uri, uri)
+        if self.is_ephemeral:
+            webview = WebView.new_ephemeral(self.window)
         else:
-            self.__new_pages_opened += 1
-            webview = self._window.container.add_webview(
-                uri,
-                loading_type,
-                self.ephemeral,
-                None,
-                self.atime -
-                self.__new_pages_opened)
+            webview = WebView.new(self.window)
+        webview.show()
+        webview.load_uri(uri)
+        if loading_type == LoadingType.POPOVER:
+            self.window.container.popup_webview(webview)
+        else:
+            self.window.container.add_webview(webview, loading_type)
             webview.set_parent(self)
             self.add_child(webview)
 
@@ -273,19 +266,12 @@ class WebView(WebKit2.WebView):
         """
         self.__atime = atime
 
-    def set_view(self, view):
+    def set_pinned(self, pinned):
         """
-            Set webview view
-            @param view as View
+            Set window pinned
+            @param pinned as bool
         """
-        self.__view = view
-
-    def set_window(self, window):
-        """
-            Set webview window
-            @param window as Window
-        """
-        self._window = window
+        self.__pinned = pinned
 
     def add_child(self, child):
         """
@@ -294,22 +280,23 @@ class WebView(WebKit2.WebView):
         """
         if child not in self.__children:
             self.__children.insert(0, child)
-
-    def remove_child(self, child):
-        """
-            Remove child from webview
-            @param child as WebView
-        """
-        if child in self.__children:
-            self.__children.remove(child)
+            child.connect("destroy", lambda x: self.__children.remove(x))
 
     @property
-    def readable(self):
+    def is_pinned(self):
+        """
+            True if window is pinned
+            @return bool
+        """
+        return self.__pinned
+
+    @property
+    def readability(self):
         """
             True if webview readable
             @return bool
         """
-        return self._readable
+        return self._readability
 
     @property
     def atime(self):
@@ -334,14 +321,6 @@ class WebView(WebKit2.WebView):
             @return WebView/None
         """
         return self.__parent
-
-    @property
-    def view(self):
-        """
-            Get view
-            @return View
-        """
-        return self.__view
 
     @property
     def shown(self):
@@ -382,12 +361,20 @@ class WebView(WebKit2.WebView):
         return parsed.netloc or ""
 
     @property
-    def ephemeral(self):
+    def is_ephemeral(self):
         """
             True if view is private/ephemeral
             @return bool
         """
         return self.get_property("is-ephemeral")
+
+    @property
+    def window(self):
+        """
+            Get window
+            @return Gtk.Window
+        """
+        return self.__window
 
     @property
     def selection(self):
@@ -400,27 +387,26 @@ class WebView(WebKit2.WebView):
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, related_view, window, view):
+    def __init(self, related_view, window):
         """
             Init WebView
             @param related_view as WebView
             @param window as Window
-            @param view as View
         """
+        WebViewState.__init__(self)
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
         WebViewArtwork.__init__(self)
-        self._window = window
-        self.__view = view
+        self.__window = window
         self.__atime = 0
         self.__children = []
         self.__parent = None
-        self.__new_pages_opened = 0
+        self.__pinned = False
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
-        self._readable = False
+        self._readability = False
         self._uri = None
         self._initial_uri = None
         self._title = None
@@ -509,7 +495,7 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        webview = WebView.new_with_related_view(related, self._window)
+        webview = WebView.new_with_related_view(related, self.window)
         webview.set_atime(related.atime - 1)
         elapsed = time() - related._last_click_time
         uri = navigation_action.get_request().get_uri()
@@ -520,6 +506,7 @@ class WebView(WebKit2.WebView):
                         elapsed)
         webview.set_uri(uri)
         webview.set_parent(self)
+        webview.show()
         self.add_child(webview)
         return webview
 
@@ -534,15 +521,15 @@ class WebView(WebKit2.WebView):
         properties = webview.get_window_properties()
         if (properties.get_toolbar_visible() or
                 properties.get_scrollbars_visible()):
-            self._window.container.add_webview_with_new_view(
+            self.window.container.add_webview(
                 webview,
                 LoadingType.FOREGROUND)
         else:
-            self._window.container.popup_webview(webview, True)
+            self.window.container.popup_webview(webview)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
-                  WebViewSignals, WebViewArtwork):
+                  WebViewSignals, WebViewArtwork, WebViewState):
 
     def __init__(self):
         pass
@@ -557,9 +544,6 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param event as WebKit2.LoadEvent
         """
         WebViewNavigation._on_load_changed(self, webview, event)
-        WebViewSignals._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__new_pages_opened = 0
-        elif event == WebKit2.LoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.COMMITTED:
             self._uri = webview.get_uri()

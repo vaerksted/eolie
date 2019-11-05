@@ -78,4 +78,4 @@ class HistoryMenu(Gio.Menu):
             @param item as WebKit2.BackForwardListItem
         """
         App().active_window.\
-            container.current.webview.go_to_back_forward_list_item(item)
+            container.webview.go_to_back_forward_list_item(item)

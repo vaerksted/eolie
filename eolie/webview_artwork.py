@@ -33,16 +33,19 @@ class WebViewArtwork:
         self.__helper = TaskHelper()
         self.__cancellable = Gio.Cancellable()
         self.__snapshot_id = None
+        self.__scroll_event_id = None
+        self.__is_snapshot_valid = False
         self.__favicon_db = self.get_context().get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("scroll-event", self.__on_scroll_event)
 
     def set_favicon(self):
         """
             Set favicon based on current webview favicon
         """
         parsed = urlparse(self.uri)
-        if self.ephemeral or parsed.scheme not in ["http", "https"]:
+        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable()
@@ -58,7 +61,7 @@ class WebViewArtwork:
             Use this for JS update (do not update initial uri)
         """
         parsed = urlparse(self.uri)
-        if self.ephemeral or parsed.scheme not in ["http", "https"]:
+        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
             return
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable()
@@ -67,6 +70,14 @@ class WebViewArtwork:
                                       self.__on_get_favicon,
                                       self.uri,
                                       None)
+
+    @property
+    def is_snapshot_valid(self):
+        """
+            True if snapshot is valid for current URI
+            @return bool
+        """
+        return self.__is_snapshot_valid
 
 #######################
 # PROTECTED           #
@@ -78,6 +89,7 @@ class WebViewArtwork:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
+            self.__is_snapshot_valid = False
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable()
             if self.__snapshot_id is not None:
@@ -105,13 +117,12 @@ class WebViewArtwork:
         ibookmark_id = App().bookmarks.get_id(self._initial_uri)
         if bookmark_id is None and ibookmark_id is None:
             save = False
-        self.get_snapshot(WebKit2.SnapshotRegion.FULL_DOCUMENT,
+        self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                           WebKit2.SnapshotOptions.NONE,
                           self.__cancellable,
                           get_snapshot,
                           self.__on_snapshot,
-                          save,
-                          True)
+                          save)
 
     def __set_favicon_from_surface(self, surface, uri, initial_uri):
         """
@@ -162,7 +173,7 @@ class WebViewArtwork:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        if not webview.is_loading() and not webview.ephemeral:
+        if not webview.is_loading() and not webview.is_ephemeral:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
@@ -209,7 +220,7 @@ class WebViewArtwork:
             @param favicon_db as WebKit2.FaviconDatabase
             @param uri as str
         """
-        if uri != self.uri or self.ephemeral:
+        if uri != self.uri or self.is_ephemeral:
             return
         self.__favicon_db.get_favicon(uri,
                                       None,
@@ -217,27 +228,14 @@ class WebViewArtwork:
                                       uri,
                                       self._initial_uri)
 
-    def __on_snapshot(self, surface, save, first_pass):
+    def __on_snapshot(self, surface, save):
         """
             Cache snapshot
             @param surface as cairo.Surface
             @param uri as str
             @param save as bool
-            @param first_pass as bool
         """
-        # The 32767 limit on the width/height dimensions
-        # of an image surface is new in cairo 1.10,
-        # try with WebKit2.SnapshotRegion.VISIBLE
-        if surface is None:
-            if first_pass:
-                self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
-                                  WebKit2.SnapshotOptions.NONE,
-                                  self.__cancellable,
-                                  get_snapshot,
-                                  self.__on_snapshot,
-                                  save,
-                                  False)
-            return
+        self.__is_snapshot_valid = True
         self.emit("snapshot-changed", surface)
         if not save or self.error:
             return
@@ -249,3 +247,24 @@ class WebViewArtwork:
             uris.append(self._initial_uri)
         for uri in uris:
             App().art.save_artwork(uri, surface, "start")
+
+    def __on_scroll_event(self, widget, event):
+        """
+            Update snapshot
+            @param widget as WebView
+            @param event as Gdk.EventScroll
+        """
+        def update_snapshot():
+            self.__scroll_event_id = None
+            self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
+                              WebKit2.SnapshotOptions.NONE,
+                              self.__cancellable,
+                              get_snapshot,
+                              self.__on_snapshot,
+                              False)
+        if self.__snapshot_id is not None:
+            GLib.source_remove(self.__snapshot_id)
+            self.__snapshot_id = None
+        if self.__scroll_event_id is not None:
+            GLib.source_remove(self.__scroll_event_id)
+        self.__scroll_event_id = GLib.timeout_add(1000, update_snapshot)

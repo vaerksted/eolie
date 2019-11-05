@@ -79,7 +79,7 @@ class LanguageRow(Gtk.EventBox):
             App().websettings.add_language(self.__code, self.__uri)
         else:
             App().websettings.remove_language(self.__code, self.__uri)
-        App().active_window.container.current.webview.update_spell_checking(
+        App().active_window.container.webview.update_spell_checking(
             self.__uri)
 
 
@@ -130,6 +130,6 @@ class LanguagesMenu(Gtk.Bin):
                                  GLib.Variant("b", state))
         listbox.set_sensitive(state)
         for window in App().windows:
-            for view in window.container.views:
+            for view in window.container.webviews:
                 context = view.webview.get_context()
                 context.set_spell_checking_enabled(state)

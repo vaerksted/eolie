@@ -59,12 +59,12 @@ class WebViewJsSignals:
             self.emit("readability-content",
                       message.replace("@EOLIE_READER@", ""))
         elif message.startswith("@EOLIE_READERABLE@"):
-            self._readable = True
-            self._window.toolbar.title.show_readable_button(True)
+            self._readability = True
+            self.emit("readability-status", True)
         # OpenSearch message
         elif message.startswith("@EOLIE_OPENSEARCH@"):
             uri = message.replace("@EOLIE_OPENSEARCH@", "")
-            App().search.install_engine(uri, self._window)
+            App().search.install_engine(uri, self.window)
         # Populars view message
         elif message.startswith("@EOLIE_HIDE_BOOKMARK_POPULARS@"):
             uri = message.replace("@EOLIE_HIDE_BOOKMARK_POPULARS@", "")
@@ -76,12 +76,12 @@ class WebViewJsSignals:
         # Here we handle JS flood
         elif self.__js_blocker_count > 5:
             self.__js_blocker_count = 0
-            self._window.toolbar.title.show_message(
+            self.window.toolbar.title.show_message(
                 _("Eolie is going to close this page because it is broken"))
-            self._window.container.close_view(self.view)
+            self.window.container.close_webview(self.view)
         # Webpage message
         else:
-            self._window.toolbar.title.show_javascript(dialog)
+            self.window.toolbar.title.show_javascript(dialog)
             self.__js_blocker_count += 1
             self.__js_blocker_timeout_id = GLib.timeout_add(
                 1000,

@@ -22,16 +22,16 @@ class MoveToMenu(Gtk.Grid):
         Menu allowing to move webviews to a window
     """
 
-    def __init__(self, views, current_window, back=True):
+    def __init__(self, webviews, window, back=True):
         """
             Init menu
-            @param views as [Views]
-            @param current_window as Window
+            @param webviews as [WebView]
+            @param window as Window
             @param back as bool
         """
-        self.__current_window = current_window
+        self.__window = window
         self.__actions = []
-        self.__views = list(views)
+        self.__webviews = list(webviews)
         Gtk.Menu.__init__(self)
         self.set_margin_start(5)
         self.set_margin_end(5)
@@ -55,7 +55,7 @@ class MoveToMenu(Gtk.Grid):
                                       GLib.VariantType.new("s"))
         action.connect('activate',
                        self.__on_action_activate)
-        current_window.add_action(action)
+        window.add_action(action)
 
         # New window button
         item = Gtk.ModelButton.new()
@@ -71,7 +71,7 @@ class MoveToMenu(Gtk.Grid):
             self.add(item)
 
         for window in App().windows:
-            if window == current_window:
+            if window == window:
                 continue
             item = Gtk.ModelButton.new()
             item.set_hexpand(True)
@@ -117,7 +117,7 @@ class MoveToMenu(Gtk.Grid):
 
     def __on_action_activate(self, action, variant):
         """
-            Moves views to window
+            Moves webviews to window
             @param action as  Gio.SimpleAction
             @param variant as GLib.Variant
             @param window as Window
@@ -135,12 +135,12 @@ class MoveToMenu(Gtk.Grid):
         if window is None:
             return
 
-        # Move views to window
-        for view in self.__views:
-            self.__current_window.container.remove_view(view)
-            window.container.add_view(view)
-            view.set_window(window)
-        window.update(view.webview)
-        current_view = self.__current_window.container.current
-        if current_view is not None:
-            self.__current_window.update(current_view.webview)
+        # Move webviews to window
+        for webview in self.__webviews:
+            self.__window.container.remove_webview(webview)
+            window.container.add_webview(webview)
+            webview.set_window(window)
+        window.update(webview)
+        webview = self.__window.container.webview
+        if webview is not None:
+            self.__window.update(webview)

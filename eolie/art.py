@@ -12,7 +12,7 @@
 
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib
 
-from hashlib import sha256
+from hashlib import md5
 from time import time
 from urllib.parse import urlparse
 
@@ -158,7 +158,7 @@ class Art:
         cached_path = parsed.path.rstrip("/")
         if cached_path:
             cached_uri += cached_path
-        encoded = sha256(cached_uri.encode("utf-8")).hexdigest()
+        encoded = md5(cached_uri.encode("utf-8")).hexdigest()
         filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 

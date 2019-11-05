@@ -22,14 +22,14 @@ class SitesMenu(Gtk.Grid):
         Menu linked to a SitesManagerChild
     """
 
-    def __init__(self, views, window):
+    def __init__(self, webviews, window):
         """
             Init menu
-            @param views as [view]
+            @param webviews as [WebView]
             @param window as Window
         """
         self.__window = window
-        self.__views = views
+        self.__webviews = webviews
         Gtk.Grid.__init__(self)
         self.set_margin_start(5)
         self.set_margin_end(5)
@@ -42,16 +42,16 @@ class SitesMenu(Gtk.Grid):
         self.__window.add_action(action)
         action.connect("activate",
                        self.__on_action_activate)
-        for view in views:
-            uri = view.webview.uri
+        for webview in webviews:
+            uri = webview.uri
             if uri is None:
                 continue
-            title = view.webview.title
+            title = webview.title
             item = Gtk.ModelButton.new()
             item.set_hexpand(True)
             item.set_property("text", title)
             item.set_action_name("win.switch_page")
-            item.set_action_target_value(GLib.Variant("s", str(view)))
+            item.set_action_target_value(GLib.Variant("s", str(webview)))
             item.show()
             self.add(item)
         # Bottom section
@@ -102,9 +102,8 @@ class SitesMenu(Gtk.Grid):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        for view in self.__window.container.views:
-            if view in self.__views:
-                self.__window.container.try_close_view(view)
+        for webview in self.__webviews:
+            self.__window.container.try_close_webview(webview)
 
     def __on_modify_ua_activate(self, action, param):
         """
@@ -112,9 +111,9 @@ class SitesMenu(Gtk.Grid):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        if self.__views:
+        if self.__webviews:
             from eolie.dialog_modify_ua import ModifyUADialog
-            dialog = ModifyUADialog(self.__views[0].webview.uri, self.__window)
+            dialog = ModifyUADialog(self.__webviews[0].uri, self.__window)
             dialog.run()
 
     def __on_action_activate(self, action, variant):
@@ -124,8 +123,8 @@ class SitesMenu(Gtk.Grid):
             @param variant as GLib.Variant
             @param view as View
         """
-        view_str = variant.get_string()
-        for view in self.__window.container.views:
-            if view_str == str(view):
-                self.__window.container.set_current(view, True)
+        webview_str = variant.get_string()
+        for webview in self.__window.container.webviews:
+            if webview_str == str(webview):
+                self.__window.container.set_visible_webview(webview)
                 break

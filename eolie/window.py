@@ -18,24 +18,26 @@ from eolie.container import Container
 from eolie.utils import get_current_monitor_model
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
+from eolie.window_state import WindowState
 
 
-class Window(Gtk.ApplicationWindow):
+class Window(Gtk.ApplicationWindow, WindowState):
     """
         Main window
     """
 
-    def __init__(self, app, size, maximized):
+    def __init__(self, size, is_maximized):
         """
             Init window
             @param app as Gtk.Application
             @param size as (int, int)
-            @param maximized as bool
+            @param is_maximized as bool
         """
         Gtk.ApplicationWindow.__init__(self,
-                                       application=app,
+                                       application=App(),
                                        title="Eolie",
                                        icon_name="org.gnome.Eolie")
+        WindowState.__init__(self)
         self.__monitor_model = ""
         self.__popovers = []
         self.__zoom_level = 1.0
@@ -46,7 +48,7 @@ class Window(Gtk.ApplicationWindow):
         self.__size = size
         self.set_default_size(size[0], size[1])
         self.__setup_content()
-        self.connect("realize", self.__on_realize, maximized)
+        self.connect("realize", self.__on_realize, is_maximized)
         self.connect("key-press-event", self.__on_key_press_event)
         self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
@@ -71,8 +73,8 @@ class Window(Gtk.ApplicationWindow):
                 self.__update_zoom_level()
                 self.__monitor_model = monitor_model
                 # Update view zoom level
-                for view in self.__container.views:
-                    view.webview.update_zoom_level()
+                for webview in self.__container.webviews:
+                    webview.update_zoom_level()
         except Exception as e:
             Logger.error("Window::update_zoom_level(): %s", e)
 
@@ -84,11 +86,11 @@ class Window(Gtk.ApplicationWindow):
         if self.__fullscreen_revealer is not None:
             return
         self.__fullscreen_toolbar = Toolbar(self, True)
-        # Do not count container views as destroy may be pending on somes
+        # Do not count container.webviews as destroy may be pending on somes
         count = str(len(self.__container.pages_manager.children))
         self.__fullscreen_toolbar.actions.count_label.set_text(count)
         self.__fullscreen_toolbar.show()
-        self.update(self.container.current.webview)
+        self.update(self.container.webview)
         self.__fullscreen_revealer = Gtk.Revealer.new()
         self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
@@ -113,14 +115,14 @@ class Window(Gtk.ApplicationWindow):
             self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
-        self.update(self.container.current.webview)
-        # Do not count container views as destroy may be pending on somes
+        self.update(self.container.webview)
+        # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.container.pages_manager.children)
         self.toolbar.actions.count_label.set_text(str(count))
         if force:
             Gtk.ApplicationWindow.unfullscreen(self)
-        self.__container.current.webview.run_javascript(
+        self.__container.webview.run_javascript(
             "document.webkitExitFullscreen();",
             None,
             None)
@@ -227,7 +229,7 @@ class Window(Gtk.ApplicationWindow):
     @property
     def size(self):
         """
-            Unmaximized window size
+            Unis_maximized window size
             return (int, int)
         """
         return self.__size
@@ -266,13 +268,13 @@ class Window(Gtk.ApplicationWindow):
         self.__toolbar.headerbar.set_show_close_button(True)
         self.add(self.__container)
 
-    def __setup_window(self, maximized):
+    def __setup_window(self, is_maximized):
         """
             Set window
-            @param maximized as bool
+            @param is_maximized as bool
         """
         try:
-            if maximized:
+            if is_maximized:
                 # Lets resize happen
                 GLib.idle_add(self.maximize)
         except Exception as e:
@@ -352,13 +354,13 @@ class Window(Gtk.ApplicationWindow):
             if not lock:
                 self.__fullscreen_revealer.set_reveal_child(False)
 
-    def __on_realize(self, widget, maximized):
+    def __on_realize(self, widget, is_maximized):
         """
             Update zoom level
             @param widget as Gtk.Widget
-            @param maximized as bool
+            @param is_maximized as bool
         """
-        self.__setup_window(maximized)
+        self.__setup_window(is_maximized)
         self.update_zoom_level(False)
 
     def __on_key_press_event(self, window, event):
@@ -382,10 +384,8 @@ class Window(Gtk.ApplicationWindow):
             self.__container.ctrl_released()
         elif event.keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)
-            if self.__container.current is not None and\
-                    self.__container.current.reading:
-                self.__container.current.switch_read_mode()
-                self.__toolbar.title.set_reading()
+            if self.__container.reading:
+                self.__container.toggle_reading()
 
     def __on_shortcut_action(self, action, param):
         """
@@ -406,29 +406,29 @@ class Window(Gtk.ApplicationWindow):
         elif string == "quit":
             App().quit(True)
         elif string == "new_page":
-            self.container.add_webview(App().start_page,
-                                       LoadingType.FOREGROUND)
+            self.container.add_webview_for_uri(App().start_page,
+                                               LoadingType.FOREGROUND)
             self.toolbar.title.start_search()
         elif string == "close_page":
             if self.is_fullscreen:
-                self.container.current.webview.emit("leave-fullscreen")
+                self.container.webview.emit("leave-fullscreen")
                 Gtk.ApplicationWindow.unfullscreen(self)
-            self.__container.try_close_view(self.container.current)
+            self.__container.try_close_webview(self.container.webview)
         elif string == "reload":
-            self.container.current.webview.reload()
+            self.container.webview.reload()
         elif string == "settings":
             # Rework all this code to use actions like in Lollypop
             from eolie.settings import SettingsDialog
             dialog = SettingsDialog(self)
             dialog.show()
         elif string == "home":
-            self.container.current.webview.load_uri(App().start_page)
+            self.container.webview.load_uri(App().start_page)
         elif string == "source":
-            uri = self.container.current.webview.uri
+            uri = self.container.webview.uri
             task_helper = TaskHelper()
             task_helper.load_uri_content(uri, None, self.__on_source_loaded)
         elif string == "find":
-            find_widget = self.container.current.find_widget
+            find_widget = self.container.webview.find_widget
             find_widget.set_search_mode(True)
             find_widget.search()
         elif string == "backward":
@@ -444,7 +444,7 @@ class Window(Gtk.ApplicationWindow):
         elif string == "next_site":
             self.__container.sites_manager.next()
         elif string == "print":
-            self.container.current.webview.print()
+            self.container.webview.print()
         elif string == "private":
             self.container.add_webview(App().start_page,
                                        LoadingType.FOREGROUND,
@@ -452,11 +452,11 @@ class Window(Gtk.ApplicationWindow):
         elif string == "last_page":
             App().pages_menu.activate_last_action()
         elif string == "zoom_in":
-            self.container.current.webview.zoom_in()
+            self.container.webview.zoom_in()
         elif string == "zoom_out":
-            self.container.current.webview.zoom_out()
+            self.container.webview.zoom_out()
         elif string == "zoom_default":
-            self.container.current.webview.zoom_default()
+            self.container.webview.zoom_default()
         elif string == "history":
             self.toolbar.title.focus_entry("history")
         elif string == "search":
@@ -466,25 +466,13 @@ class Window(Gtk.ApplicationWindow):
         elif string == "expose":
             active = self.toolbar.actions.view_button.get_active()
             self.toolbar.actions.view_button.set_active(not active)
-        elif string == "jsblock":
-            pass
         elif string == "show_sidebar":
             value = App().settings.get_value("show-sidebar")
             App().settings.set_value("show-sidebar",
                                      GLib.Variant("b", not value))
         elif string == "mse_enabled":
-            self.container.current.webview.set_setting("enable-mediasource",
-                                                       True)
-            self.container.current.webview.reload()
-
-    def __on_js_enabled(self, proxy, task, webview):
-        """
-            Reload page
-            @param proxy as Gio.DBusProxy
-            @param task as Gio.Task
-            @param webview as WebView
-        """
-        webview.reload()
+            self.container.webview.set_setting("enable-mediasource", True)
+            self.container.webview.reload()
 
     def __on_popover_closed(self, popover):
         """
