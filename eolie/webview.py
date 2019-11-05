@@ -54,14 +54,14 @@ class WebView(WebKit2.WebView):
         webview.__init(None, window)
         return webview
 
-    def new_with_related(related, window):
+    def new_with_related_view(related, window):
         """
             Create a new WebView related to view
             @param related as WebView
             @param window as Window
             @return WebView
         """
-        webview = WebKit2.WebView.new_with_related(related)
+        webview = WebKit2.WebView.new_with_related_view(related)
         webview.__class__ = WebViewMeta
         webview.__init(related, window)
         return webview
@@ -518,7 +518,7 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param navigation_action as WebKit2.NavigationAction
         """
-        webview = WebView.new_with_related(related, self.window)
+        webview = WebView.new_with_related_view(related, self.window)
         webview.set_atime(related.atime - 1)
         elapsed = time() - related._last_click_time
         uri = navigation_action.get_request().get_uri()
