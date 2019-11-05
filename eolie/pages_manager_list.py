@@ -37,21 +37,18 @@ class PagesManagerList(Gtk.ScrolledWindow):
         self.add(self.__listbox)
         self.get_style_context().add_class("big-padding")
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.connect("destroy", self.__on_destroy)
-        self.__event_controller = Gtk.EventControllerMotion.new(self)
-        self.__event_controller.connect("motion", self.__on_box_motion)
-        self.__current_webview = self.__window.container.webview
 
     def populate(self, webviews):
         """
             Populate list with webviews
             @param webviews as [WebView]
         """
+        current_webview = self.__window.container.webview
         for webview in webviews:
             child = PageRow(webview, self.__window)
             child.show()
             self.__listbox.add(child)
-            if webview == self.__current_webview:
+            if webview == current_webview:
                 self.__listbox.select_row(child)
 
 #######################
@@ -73,33 +70,11 @@ class PagesManagerList(Gtk.ScrolledWindow):
         else:
             return row2.webview.atime > row1.webview.atime
 
-    def __on_destroy(self, widget):
-        """
-            Restore current if not None
-            @param widget as Gtk.Widget
-        """
-        if self.__current_webview is not None:
-            self.__window.container.set_visible_webview(self.__current_webview)
-
     def __on_row_activated(self, listbox, row):
         """
             Switch to webview
             @param listbox as Gtk.ListBox
             @param row as PageRow
         """
-        self.__current_webview = None
         self.__window.container.set_visible_webview(row.webview)
         self.get_ancestor(Gtk.Popover).hide()
-
-    def __on_box_motion(self, event_controller, x, y):
-        """
-            Update current selected child
-            @param event_controller as Gtk.EventControllerMotion
-            @param x as int
-            @param y as int
-        """
-        row = self.__listbox.get_row_at_y(y)
-        if row == self.__hovered_row or row is None:
-            return
-        self.__hovered_row = row
-        self.__window.container.set_visible_webview(row.webview)
