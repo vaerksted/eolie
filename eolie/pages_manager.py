@@ -106,6 +106,19 @@ class PagesManager(Gtk.EventBox):
             else:
                 style_context.remove_class("item-selected")
 
+    def update_shown_state(self, webview):
+        """
+            Update shown state for webview
+            @param webview as WebView
+        """
+        for child in self.__box.get_children():
+            if child.webview == webview:
+                if webview.shown:
+                    child.indicator_label.mark_shown(webview)
+                else:
+                    child.indicator_label.mark_unshown(webview)
+                return
+
     def search_grab_focus(self):
         """
             Grab focus on search entry

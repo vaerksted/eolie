@@ -178,6 +178,20 @@ class SitesManager(Gtk.Grid):
             self.__box.set_sort_func(None)
         self.__initial_sort = sort
 
+    def update_shown_state(self, webview):
+        """
+            Update shown state for webview
+            @param webview as WebView
+        """
+        for child in self.__box.get_children():
+            for _webview in child.webviews:
+                if _webview == webview:
+                    if webview.shown:
+                        child.indicator_label.mark_shown(webview)
+                    else:
+                        child.indicator_label.mark_unshown(webview)
+                    return
+
     @property
     def sort(self):
         """

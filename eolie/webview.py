@@ -282,6 +282,13 @@ class WebView(WebKit2.WebView):
             self.__children.insert(0, child)
             child.connect("destroy", lambda x: self.__children.remove(x))
 
+    def set_shown(self, shown):
+        """
+            Set webview as shown
+            @param shown as bool
+        """
+        self.__shown = shown
+
     @property
     def is_pinned(self):
         """
@@ -326,8 +333,9 @@ class WebView(WebKit2.WebView):
     def shown(self):
         """
             True if page already shown on screen (one time)
+            @return bool
         """
-        return self._shown
+        return self.__shown
 
     @property
     def title(self):
@@ -411,7 +419,7 @@ class WebView(WebKit2.WebView):
         self._initial_uri = None
         self._title = None
         self._related_view = related_view
-        self._shown = False
+        self.__shown = False
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()

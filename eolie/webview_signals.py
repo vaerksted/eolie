@@ -31,7 +31,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
     gsignals = {
         "readability-content": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "readability-status": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
-        "shown": (GObject.SignalFlags.RUN_FIRST, None, ()),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "uri-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "snapshot-changed": (GObject.SignalFlags.RUN_FIRST, None,
@@ -104,8 +103,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                 self.uri is not None and\
                 self._related_view is None:
             self.load_uri(self.uri)
-        self._shown = True
-        self.emit("shown")
         self.set_atime(int(time()))
         self.connect("button-press-event", self._on_button_press_event)
         self.connect("enter-fullscreen", self.__on_enter_fullscreen)

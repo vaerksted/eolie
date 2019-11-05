@@ -82,7 +82,14 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                         self.__on_webview_notify_is_playing_audio)
         webview.connect("title-changed", self.__on_webview_title_changed)
         webview.connect("load-changed", self.__on_webview_load_changed)
-        webview.connect("shown", self.__on_webview_shown)
+
+    @property
+    def indicator_label(self):
+        """
+            Get indicator
+            @return IndicatorLabel
+        """
+        return self.__indicator_label
 
     @property
     def webview(self):
@@ -176,7 +183,6 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         webview.disconnect_by_func(self.__on_webview_notify_is_playing_audio)
         webview.disconnect_by_func(self.__on_webview_title_changed)
         webview.disconnect_by_func(self.__on_webview_load_changed)
-        webview.disconnect_by_func(self.__on_webview_shown)
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
@@ -227,9 +233,3 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                 Gtk.IconSize.DIALOG)
         else:
             self.__image.set_from_surface(surface)
-
-    def __on_webview_shown(self, webview):
-        """
-            Remove indicator
-        """
-        self.__indicator_label.mark_shown(webview)

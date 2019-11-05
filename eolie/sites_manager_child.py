@@ -194,7 +194,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if webview not in self.__webviews:
             self.__webviews.append(webview)
-            webview.connect("shown", self.__on_webview_shown)
             webview.connect("load-changed", self.__on_webview_load_changed)
             webview.connect("notify::is-playing-audio",
                             self.__on_webview_notify_is_playing_audio)
@@ -202,9 +201,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                             self.__on_webview_favicon_changed)
             self.update_label()
             self.__indicator_label.update_count(True)
-            if webview.shown:
-                self.__on_webview_favicon_changed(webview)
-            else:
+            if not webview.shown:
                 self.__indicator_label.mark_unshown(webview)
 
     def remove_webview(self, webview):
@@ -221,8 +218,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                 self.__on_webview_notify_is_playing_audio)
             self.update_label()
             self.__indicator_label.update_count(False)
-            if not webview.shown:
-                self.__indicator_label.mark_shown(webview)
+            self.__indicator_label.mark_shown(webview)
             if self.__webviews:
                 self.__set_favicon(self.__webviews[0])
 
@@ -250,6 +246,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.get_style_context().add_class("item-selected")
         else:
             self.get_style_context().remove_class("item-selected")
+
+    @property
+    def indicator_label(self):
+        """
+            Get indicator
+            @return IndicatorLabel
+        """
+        return self.__indicator_label
 
     @property
     def empty(self):
@@ -477,13 +481,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         self.get_style_context().remove_class("drag-up")
         self.get_style_context().remove_class("drag-down")
-
-    def __on_webview_shown(self, webview):
-        """
-            Update indicator
-        """
-        self.__indicator_label.mark_shown(webview)
-        self.__on_webview_favicon_changed(webview)
 
     def __on_webview_load_changed(self, webview, event):
         """

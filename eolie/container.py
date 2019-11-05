@@ -83,6 +83,9 @@ class Container(Gtk.Grid,
             Set visible webview
             @param webview as WebView
         """
+        webview.set_shown(True)
+        self.sites_manager.update_shown_state(webview)
+        self.pages_manager.update_shown_state(webview)
         StackContainer.set_visible_webview(self, webview)
         WebViewContainer.set_visible_webview(self, webview)
         ReadingContainer.set_visible_webview(self, webview)
