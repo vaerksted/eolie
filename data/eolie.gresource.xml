@@ -20,7 +20,6 @@
      <file compressed="true" preprocess="xml-stripblanks">DialogModifyUA.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">LanguagesMenu.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">PagesManagerChild.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverCredentials.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverDownloads.ui</file>
