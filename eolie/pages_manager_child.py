@@ -15,13 +15,15 @@ from gi.repository import Gtk, GLib, WebKit2, Pango
 from eolie.label_indicator import LabelIndicator
 from eolie.define import ArtSize
 from eolie.utils import update_popover_internals
+from eolie.helper_signals import SignalsHelper, signals
 
 
-class PagesManagerChild(Gtk.FlowBoxChild):
+class PagesManagerChild(Gtk.FlowBoxChild, SignalsHelper):
     """
         Child showing snapshot, title and favicon
     """
 
+    @signals
     def __init__(self, webview, window):
         """
             Init child
@@ -75,13 +77,13 @@ class PagesManagerChild(Gtk.FlowBoxChild):
                               ArtSize.START_HEIGHT +
                               ArtSize.PREVIEW_WIDTH_MARGIN)
         self.connect("query-tooltip", self.__on_query_tooltip)
-        webview.connect("destroy", self.__on_webview_destroy)
-        webview.connect("snapshot-changed",
-                        self.__on_webview_snapshot_changed)
-        webview.connect("notify::is-playing-audio",
-                        self.__on_webview_notify_is_playing_audio)
-        webview.connect("title-changed", self.__on_webview_title_changed)
-        webview.connect("load-changed", self.__on_webview_load_changed)
+        return [
+            (webview, "snapshot-changed", "_on_webview_snapshot_changed"),
+            (webview, "notify::is-playing-audio",
+                      "_on_webview_notify_is_playing_audio"),
+            (webview, "title-changed", "_on_webview_title_changed"),
+            (webview, "load-changed", "_on_webview_load_changed")
+        ]
 
     @property
     def indicator_label(self):
@@ -151,6 +153,56 @@ class PagesManagerChild(Gtk.FlowBoxChild):
         self.__window.container.try_close_webview(self.__webview)
         return True
 
+    def _on_webview_notify_is_playing_audio(self, webview, playing):
+        """
+            Update favicon
+            @param webview as WebView
+            @param playing as bool
+        """
+        if playing:
+            self.__indicator_image.set_from_icon_name(
+                "audio-speakers-symbolic", Gtk.IconSize.BUTTON)
+        else:
+            self.__indicator_image.set_from_surface(None)
+
+    def _on_webview_title_changed(self, webview, title):
+        """
+            Update title
+            @param webview as WebView
+            @param title as str
+        """
+        self.__indicator_label.set_text(title)
+
+    def _on_webview_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event != WebKit2.LoadEvent.FINISHED:
+            self.__image.set_from_surface(None)
+            self.__indicator_image.set_from_icon_name(
+                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
+            self.__indicator_image.get_style_context().add_class(
+                "image-rotate")
+        else:
+            self.__indicator_image.set_from_surface(None)
+            self.__indicator_image.get_style_context().remove_class(
+                "image-rotate")
+
+    def _on_webview_snapshot_changed(self, webview, surface):
+        """
+            Update preview with surface
+            @param webview as WebView
+            @param surface as cairo.surface
+        """
+        if webview.is_ephemeral:
+            self.__image.set_from_icon_name(
+                "user-not-tracked-symbolic",
+                Gtk.IconSize.DIALOG)
+        else:
+            self.__image.set_from_surface(surface)
+
 #######################
 # PRIVATE             #
 #######################
@@ -173,63 +225,3 @@ class PagesManagerChild(Gtk.FlowBoxChild):
             text = "<b>%s</b>\n%s" % (GLib.markup_escape_text(label),
                                       GLib.markup_escape_text(uri))
         widget.set_tooltip_markup(text)
-
-    def __on_webview_destroy(self, webview):
-        """
-            Destroy self
-            @param webview as WebView
-        """
-        webview.disconnect_by_func(self.__on_webview_snapshot_changed)
-        webview.disconnect_by_func(self.__on_webview_notify_is_playing_audio)
-        webview.disconnect_by_func(self.__on_webview_title_changed)
-        webview.disconnect_by_func(self.__on_webview_load_changed)
-
-    def __on_webview_notify_is_playing_audio(self, webview, playing):
-        """
-            Update favicon
-            @param webview as WebView
-            @param playing as bool
-        """
-        if playing:
-            self.__indicator_image.set_from_icon_name(
-                "audio-speakers-symbolic", Gtk.IconSize.BUTTON)
-        else:
-            self.__indicator_image.set_from_surface(None)
-
-    def __on_webview_title_changed(self, webview, title):
-        """
-            Update title
-            @param webview as WebView
-            @param title as str
-        """
-        self.__indicator_label.set_text(title)
-
-    def __on_webview_load_changed(self, webview, event):
-        """
-            Update widget content
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        if event != WebKit2.LoadEvent.FINISHED:
-            self.__image.set_from_surface(None)
-            self.__indicator_image.set_from_icon_name(
-                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
-            self.__indicator_image.get_style_context().add_class(
-                "image-rotate")
-        else:
-            self.__indicator_image.set_from_surface(None)
-            self.__indicator_image.get_style_context().remove_class(
-                "image-rotate")
-
-    def __on_webview_snapshot_changed(self, webview, surface):
-        """
-            Update preview with surface
-            @param webview as WebView
-            @param surface as cairo.surface
-        """
-        if webview.is_ephemeral:
-            self.__image.set_from_icon_name(
-                "user-not-tracked-symbolic",
-                Gtk.IconSize.DIALOG)
-        else:
-            self.__image.set_from_surface(surface)
