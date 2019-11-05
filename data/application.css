@@ -196,6 +196,7 @@
 
 .selected {
     color: @theme_selected_bg_color;
+    transition: color 500ms linear;
 }
 
 .download-button {
