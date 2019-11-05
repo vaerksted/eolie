@@ -183,6 +183,7 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
         """
         if event != WebKit2.LoadEvent.FINISHED:
             self.__background_image.set_from_surface(None)
+            self.__indicator_image.set_from_surface(None)
             self.__indicator_image.set_from_icon_name(
                 "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
             self.__indicator_image.get_style_context().add_class(
