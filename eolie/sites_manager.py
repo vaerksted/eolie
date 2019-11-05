@@ -320,7 +320,7 @@ class SitesManager(Gtk.Grid):
             self.__window.toolbar.actions.view_button.set_active(False)
             self.__window.container.set_visible_webview(child.webviews[0])
         else:
-            if child.ephemeral:
+            if child.is_ephemeral:
                 self.__window.container.pages_manager.set_filter("private://")
             else:
                 self.__window.container.pages_manager.set_filter(child.netloc)

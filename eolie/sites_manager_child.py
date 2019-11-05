@@ -91,7 +91,7 @@ class PageChildRow(Gtk.ListBoxRow):
             @param keyboard as bool
             @param tooltip as Gtk.Tooltip
         """
-        title = self.__webview.webview.get_title()
+        title = self.__webview.get_title()
         if title is not None:
             tooltip = GLib.markup_escape_text(title)
             widget.set_tooltip_markup(tooltip)
@@ -102,7 +102,7 @@ class PageChildRow(Gtk.ListBoxRow):
             @param widget as Gtk.Widget
             @param event as Gdk.Event
         """
-        self.__window.container.set_current(self.__webview, True)
+        self.__window.container.set_visible_webview(self.__webview)
         self.__window.container.set_expose(False)
         return True
 
