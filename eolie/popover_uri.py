@@ -64,7 +64,6 @@ class Row(Gtk.ListBoxRow):
         eventbox = None
         favicon = None
         Gtk.ListBoxRow.__init__(self)
-        self.get_style_context().add_class("row")
         item_id = item.get_property("id")
         item_type = item.get_property("type")
         uri = item.get_property("uri")
@@ -160,26 +159,15 @@ class Row(Gtk.ListBoxRow):
         grid.show()
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             grid.get_style_context().add_class("bigrow")
+        else:
+            grid.get_style_context().add_class("row")
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
         eventbox.set_size_request(-1, 30)
-        eventbox.connect("button-release-event", self.__on_button_release)
+        eventbox.connect("button-release-event",
+                         self.__on_button_release_event)
         eventbox.show()
         self.add(eventbox)
-        if item_type == Type.BOOKMARK:
-            self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, [],
-                                 Gdk.DragAction.MOVE)
-            self.drag_source_add_text_targets()
-            self.connect('drag-begin', self.__on_drag_begin)
-            self.connect('drag-data-get', self.__on_drag_data_get)
-        # We add bookmark, not useful, only for visual feedback on drag
-        if item_type in [Type.TAG, Type.BOOKMARK]:
-            self.drag_dest_set(Gtk.DestDefaults.DROP | Gtk.DestDefaults.MOTION,
-                               [], Gdk.DragAction.MOVE)
-            self.drag_dest_add_text_targets()
-            self.connect('drag-data-received', self.__on_drag_data_received)
-            self.connect('drag-motion', self.__on_drag_motion)
-            self.connect('drag-leave', self.__on_drag_leave)
 
     def set_title(self, title):
         """
@@ -231,75 +219,7 @@ class Row(Gtk.ListBoxRow):
             text = "%s" % (GLib.markup_escape_text(label))
         widget.set_tooltip_markup(text)
 
-    def __on_drag_begin(self, widget, context):
-        """
-            We need to select self
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-        """
-        # add current drag to selected rows
-        self.get_parent().select_row(self)
-
-    def __on_drag_data_get(self, widget, context, data, info, time):
-        """
-            Send item ids
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param data as Gtk.SelectionData
-            @param info as int
-            @param time as int
-        """
-        # Get data from parent as multiple row may be selected
-        text = ""
-        for row in self.get_parent().get_selected_rows():
-            text += str(row.item.get_property("id")) + "@"
-        data.set_text(text, len(text))
-
-    def __on_drag_data_received(self, widget, context, x, y, data, info, time):
-        """
-            Move items
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param x as int
-            @param y as int
-            @param data as Gtk.SelectionData
-            @param info as int
-            @param time as int
-        """
-        try:
-            items = []
-            for rowid in data.get_text().split("@"):
-                if not rowid:
-                    continue
-                bookmark_id = int(rowid)
-                tag_id = self.__item.get_property("id")
-                items.append((bookmark_id, tag_id))
-            self.emit("moved", GLib.Variant("aai", items))
-        except:
-            pass
-
-    def __on_drag_motion(self, widget, context, x, y, time):
-        """
-            Add style
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param x as int
-            @param y as int
-            @param time as int
-        """
-        if self.__item.get_property("type") == Type.TAG:
-            self.get_style_context().add_class('drag')
-
-    def __on_drag_leave(self, widget, context, time):
-        """
-            Remove style
-            @param widget as Gtk.Widget
-            @param context as Gdk.DragContext
-            @param time as int
-        """
-        self.get_style_context().remove_class('drag')
-
-    def __on_button_release(self, eventbox, event):
+    def __on_button_release_event(self, eventbox, event):
         """
             Handle button press in popover
             @param eventbox as Gtk.EventBox
@@ -308,11 +228,7 @@ class Row(Gtk.ListBoxRow):
         # Lets user select item
         if event.state & Gdk.ModifierType.CONTROL_MASK or\
                 event.state & Gdk.ModifierType.SHIFT_MASK:
-            if self.is_selected():
-                self.get_parent().unselect_row(self)
-            else:
-                self.get_parent().select_row(self)
-            return True
+            return False
         # Event is for internal button
         if eventbox.get_window() != event.window:
             return True
