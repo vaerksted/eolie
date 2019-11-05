@@ -236,7 +236,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                         child.destroy()
                         break
             if self.__webviews:
-                self.__on_webview_favicon_changed(self.__webviews[0])
+                self.__set_favicon(self.__webviews[0])
 
     def set_minimal(self, minimal):
         """
@@ -385,6 +385,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Set webview favicon
             @param webview as WebView
         """
+        self.__image.get_style_context().remove_class("image-rotate")
         artwork = App().art.get_icon_theme_artwork(webview.uri,
                                                    webview.is_ephemeral)
         if artwork is not None:
@@ -559,4 +560,3 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__image.get_style_context().add_class("image-rotate")
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__set_favicon(webview)
-            self.__image.get_style_context().remove_class("image-rotate")
