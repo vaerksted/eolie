@@ -68,7 +68,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         self._bookmarks_box = builder.get_object("bookmarks_box")
         self._bookmarks_box.bind_model(self._bookmarks_model,
                                        self.__on_item_create)
-        self.__calendar = builder.get_object("calendar")
+        self._calendar = builder.get_object("calendar")
         self.add(builder.get_object("widget"))
         self.connect("map", self.__on_map)
         self.connect("unmap", self.__on_unmap)
@@ -226,8 +226,8 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         """
         self._input = Input.NONE
         now = datetime.now()
-        self.__calendar.select_month(now.month - 1, now.year)
-        self.__calendar.select_day(now.day)
+        self._calendar.select_month(now.month - 1, now.year)
+        self._calendar.select_day(now.day)
 
     def _on_close_map(self, widget):
         """
@@ -300,7 +300,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         if response_id == 1:
             active_id = self.__infobar_select.get_active_id()
             if active_id == TimeSpan.CUSTOM:
-                (year, month, day) = self.__calendar.get_date()
+                (year, month, day) = self._calendar.get_date()
                 date = "%02d/%02d/%s" % (day, month + 1, year)
                 atime = mktime(
                     datetime.strptime(date, "%d/%m/%Y").timetuple())
@@ -320,7 +320,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
             @thread safe
         """
         App().history.clear_from(atime)
-        GLib.idle_add(self._on_day_selected, self.__calendar)
+        GLib.idle_add(self._on_day_selected, self._calendar)
         if App().sync_worker is not None:
             for history_id in App().history.get_empties():
                 App().history.remove(history_id)

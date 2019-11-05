@@ -173,7 +173,7 @@ class UriPopoverContent:
             @param date (jj, mm, aaaa) as (int, int, int)
         """
         if items:
-            if date != self.__calendar.get_date():
+            if date != self._calendar.get_date():
                 return
             (history_id, title, uri, atime) = items.pop(0)
             item = Item()
@@ -182,7 +182,7 @@ class UriPopoverContent:
             item.set_property("title", title)
             item.set_property("uri", uri)
             item.set_property("atime", atime)
-            self.__history_model.append(item)
+            self._history_model.append(item)
             GLib.idle_add(self._add_history_items, items, date,
                           priority=GLib.PRIORITY_HIGH)
 
