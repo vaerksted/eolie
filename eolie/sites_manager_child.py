@@ -86,8 +86,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                             self.__on_webview_favicon_changed)
             self.update_label()
             self.__indicator_label.update_count(True)
-            if not webview.shown:
-                self.__indicator_label.mark_unshown(webview)
+            self.__indicator_label.mark(webview)
 
     def remove_webview(self, webview):
         """

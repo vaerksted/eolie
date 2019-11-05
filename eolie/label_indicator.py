@@ -52,22 +52,15 @@ class LabelIndicator(Gtk.Label):
         else:
             self.set_text(str(count))
 
-    def mark_unshown(self, webview):
+    def mark(self, webview):
         """
-            Mark view as unshown and redraw
+            Mark view as show or unshown
             @param webview as WebView
         """
-        if webview not in self.__unshown:
-            self.__unshown.append(webview)
-        self.queue_draw()
-
-    def mark_shown(self, webview):
-        """
-            Mark view as shown and redraw
-            @param view as WebView
-        """
-        if webview in self.__unshown:
+        if webview.shown and webview in self.__unshown:
             self.__unshown.remove(webview)
+        elif not webview.shown and webview not in self.__unshown:
+            self.__unshown.append(webview)
         self.queue_draw()
 
     def do_get_preferred_width(self):

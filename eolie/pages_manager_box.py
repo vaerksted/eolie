@@ -114,10 +114,7 @@ class PagesManagerBox(Gtk.EventBox):
         """
         for child in self.__box.get_children():
             if child.webview == webview:
-                if webview.shown:
-                    child.indicator_label.mark_shown(webview)
-                else:
-                    child.indicator_label.mark_unshown(webview)
+                child.indicator_label.mark(webview)
                 return
 
     def search_grab_focus(self):

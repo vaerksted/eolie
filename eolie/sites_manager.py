@@ -186,10 +186,7 @@ class SitesManager(Gtk.Grid):
         for child in self.__box.get_children():
             for _webview in child.webviews:
                 if _webview == webview:
-                    if webview.shown:
-                        child.indicator_label.mark_shown(webview)
-                    else:
-                        child.indicator_label.mark_unshown(webview)
+                    child.indicator_label.mark(webview)
                     return
 
     @property

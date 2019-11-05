@@ -60,7 +60,7 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
 
         self.__indicator_label = LabelIndicator(False)
         self.__indicator_label.show()
-        self.__indicator_label.mark_unshown(not webview.shown)
+        self.__indicator_label.mark(webview)
         self.__indicator_label.set_hexpand(True)
         self.__indicator_label.set_margin_right(4)
         self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
