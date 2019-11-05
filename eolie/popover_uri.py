@@ -157,7 +157,7 @@ class Row(Gtk.ListBoxRow):
             open_button.show()
             grid.attach(open_button, 0, 0, 1, 1)
         grid.show()
-        style_context = grid.get_style_context()
+        style_context = self.get_style_context()
         style_context.add_class("row")
         if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
             style_context.add_class("bigrow")
