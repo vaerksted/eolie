@@ -73,16 +73,16 @@ class ApplicationMenu(Gio.Menu):
         App().add_action(sidebar_action)
         section.append(_("_Sidebar"), "app.sidebar")
 
-        about_action = Gio.SimpleAction.new("about", None)
-        about_action.connect("activate", self.__on_about_activate)
-        App().add_action(about_action)
-        section.append(_("_About"), "app.about")
-
         shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
         shortcuts_action.connect("activate", self.__on_shortcuts_activate)
         App().add_action(shortcuts_action)
         section.append(_("_Keyboard Shortcuts"), "app.shortcuts")
         self.append_section(None, section)
+
+        about_action = Gio.SimpleAction.new("about", None)
+        about_action.connect("activate", self.__on_about_activate)
+        App().add_action(about_action)
+        section.append(_("_About"), "app.about")
 
 #######################
 # PRIVATE             #
