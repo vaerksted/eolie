@@ -49,10 +49,13 @@ class Window(Gtk.ApplicationWindow, WindowState):
         self.set_default_size(size[0], size[1])
         self.__setup_content()
         self.connect("realize", self.__on_realize, is_maximized)
-        self.connect("key-press-event", self.__on_key_press_event)
-        self.connect("key-release-event", self.__on_key_release_event)
         self.connect("window-state-event", self.__on_window_state_event)
         self.connect("configure-event", self.__on_configure_event)
+        self.__key_event_controller = Gtk.EventControllerKey.new(self)
+        self.__key_event_controller.connect("key-pressed",
+                                            self.__on_key_pressed)
+        self.__key_event_controller.connect("key-released",
+                                            self.__on_key_released)
 
         # Set window actions
         shortcut_action = Gio.SimpleAction.new("shortcut",
@@ -336,26 +339,32 @@ class Window(Gtk.ApplicationWindow, WindowState):
         self.__setup_window(is_maximized)
         self.update_zoom_level(False)
 
-    def __on_key_press_event(self, window, event):
+    def __on_key_pressed(self, controller, keyval, keycode, state):
         """
             Update PagesManager sort on Ctrl<Tab>
-            @param window as Window
+            @param controller as Gtk.EventControllerKey
+            @param keyval as int
+            @param keycode as int
+            @param state as Gtk.ModifierType
             @param event as Gdk.EventKey
         """
-        if event.state & Gdk.ModifierType.CONTROL_MASK and\
-                event.keyval == Gdk.KEY_Tab:
+        if state & Gdk.ModifierType.CONTROL_MASK and\
+                keyval == Gdk.KEY_Tab:
             if not self.container.in_expose:
                 self.container.pages_manager.update_sort()
 
-    def __on_key_release_event(self, window, event):
+    def __on_key_released(self, controller, keyval, keycode, state):
         """
             Handle Esc/Ctrl release
-            @param window as Window
+            @param controller as Gtk.EventControllerKey
+            @param keyval as int
+            @param keycode as int
+            @param state as Gtk.ModifierType
             @param event as Gdk.EventKey
         """
-        if event.keyval == Gdk.KEY_Control_L:
+        if keyval == Gdk.KEY_Control_L:
             self.__container.ctrl_released()
-        elif event.keyval == Gdk.KEY_Escape:
+        elif keyval == Gdk.KEY_Escape:
             self.__container.set_expose(False)
             if self.__container.reading:
                 self.__container.toggle_reading()
