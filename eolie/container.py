@@ -52,7 +52,7 @@ class Container(Gtk.Grid,
         self.__popover = WebViewPopover(window)
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.add(self.find_widget)
-        self.add(self._overlay)
+        self.add(self.overlay)
         self.insert_column(0)
         self.attach(self.sites_manager, 0, 0, 1, 2)
         # Show donation notification after one hour

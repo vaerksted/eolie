@@ -25,13 +25,20 @@ class OverlayContainer:
         """
             Init container
         """
-        Gtk.Overlay.__init__(self)
         self.__find_widget = FindWidget(self._window)
         self.__find_widget.show()
         self.__uri_label = UriLabelWidget()
         self._overlay = Gtk.Overlay.new()
         self._overlay.show()
         self._overlay.add_overlay(self.__uri_label)
+
+    @property
+    def overlay(self):
+        """
+            Get overlay
+            @return Gtk.Overlay
+        """
+        return self._overlay
 
     @property
     def find_widget(self):

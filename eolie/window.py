@@ -94,7 +94,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         self.__fullscreen_revealer.set_property("valign", Gtk.Align.START)
         self.__fullscreen_revealer.add(self.__fullscreen_toolbar)
         self.__fullscreen_revealer.show()
-        self.__container.add_overlay(self.__fullscreen_revealer)
+        self.__container.overlay.add_overlay(self.__fullscreen_revealer)
         self.__container.sites_manager.hide()
         if force:
             Gtk.ApplicationWindow.fullscreen(self)

@@ -35,7 +35,7 @@ class ExposeContainer:
         self.__expose_stack.show()
         self.__pages_manager = PagesManagerBox(self._window)
         self.__pages_manager.show()
-        self._overlay.add(self.__expose_stack)
+        self.overlay.add(self.__expose_stack)
         self.__expose_stack.add_named(self._stack, "stack")
         self.__expose_stack.add_named(self.__pages_manager, "expose")
 
