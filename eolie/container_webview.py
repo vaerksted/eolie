@@ -100,6 +100,8 @@ class WebViewContainer:
             @param webview as WebView
             @param uri as str
         """
+        if self.reading:
+            self.toggle_reading()
         accept_tls = App().websettings.get_accept_tls(uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.title.set_uri(uri)
