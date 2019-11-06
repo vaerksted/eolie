@@ -14,6 +14,7 @@ from gi.repository import Gtk, GLib
 
 from eolie.define import App, LoadingType
 from eolie.utils import update_popover_internals
+from eolie.helper_gestures import GesturesHelper
 
 
 class ToolbarActions(Gtk.Bin):
@@ -42,6 +43,17 @@ class ToolbarActions(Gtk.Bin):
         self.__view_button = builder.get_object("view_button")
         self.__close_button = builder.get_object("close_button")
         self.__count = builder.get_object("count")
+
+        self.__gesture1 = GesturesHelper(
+            self.__backward_button,
+            primary_press_callback=self.__on_back_primary_press,
+            secondary_press_callback=self.__on_back_secondary_press,
+            primary_long_callback=self.__on_back_primary_long)
+        self.__gesture2 = GesturesHelper(
+            self.__forward_button,
+            primary_press_callback=self.__on_forward_primary_press,
+            secondary_press_callback=self.__on_forward_secondary_press,
+            primary_long_callback=self.__on_forward_primary_long)
 
     def set_actions(self, webview):
         """
@@ -84,78 +96,6 @@ class ToolbarActions(Gtk.Bin):
 #######################
 # PROTECTED           #
 #######################
-    def _on_back_button_press_event(self, button, event):
-        """
-            Launch history menu after timeout
-            @param button as Gtk.Button
-            @param event as Gdk.event
-        """
-        if self.__timeout_id is not None:
-            GLib.source_remove(self.__timeout_id)
-        button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.close_popovers()
-        self.__timeout_id = GLib.timeout_add(500,
-                                             self.__on_back_history_timeout)
-        if event.button == 3:
-            return True
-
-    def _on_back_button_release_event(self, button, event):
-        """
-            Go backward on current view
-            @param button as Gtk.Button
-            @param event as Gdk.event
-        """
-        if self.__timeout_id is not None:
-            GLib.source_remove(self.__timeout_id)
-            self.__timeout_id = None
-            if event.button == 1:
-                self.backward()
-            elif event.button == 2:
-                back_list = self.__window.container.\
-                    current.webview.get_back_forward_list().get_back_list()
-                if back_list:
-                    uri = back_list[0].get_uri()
-                    self.__window.container.add_webview(uri,
-                                                        LoadingType.FOREGROUND)
-            else:
-                self.__on_back_history_timeout()
-
-    def _on_forward_button_press_event(self, button, event):
-        """
-            Launch history menu after timeout
-            @param button as Gtk.Button
-            @param event as Gdk.event
-        """
-        if self.__timeout_id is not None:
-            GLib.source_remove(self.__timeout_id)
-        button.get_style_context().set_state(Gtk.StateFlags.ACTIVE)
-        self.__window.close_popovers()
-        self.__timeout_id = GLib.timeout_add(500,
-                                             self.__on_forward_history_timeout)
-        if event.button == 3:
-            return True
-
-    def _on_forward_button_release_event(self, button, event):
-        """
-            Go forward on current view
-            @param button as Gtk.Button
-            @param event as Gdk.event
-        """
-        if self.__timeout_id is not None:
-            GLib.source_remove(self.__timeout_id)
-            self.__timeout_id = None
-            if event.button == 1:
-                self.forward()
-            elif event.button == 2:
-                forward_list = self.__window.container.\
-                    current.webview.get_back_forward_list().get_forward_list()
-                if forward_list:
-                    uri = forward_list[0].get_uri()
-                    self.__window.container.add_webview(uri,
-                                                        LoadingType.FOREGROUND)
-            else:
-                self.__on_forward_history_timeout()
-
     def _on_new_button_clicked(self, button):
         """
             Add a new web view
@@ -202,6 +142,28 @@ class ToolbarActions(Gtk.Bin):
 #######################
 # PRIVATE             #
 #######################
+    def __show_menu(self, button):
+        """
+            Show back history
+            @param button as Gtk.Button
+        """
+        current = self.__window.container.webview
+        if button == self.__backward_button:
+            history_list = current.get_back_forward_list().get_back_list()
+        else:
+            history_list = current.get_back_forward_list().get_forward_list()
+        if history_list:
+            from eolie.menu_history import HistoryMenu
+            model = HistoryMenu(history_list, self.__window)
+            popover = Gtk.Popover.new_from_model(button, model)
+            popover.set_modal(False)
+            self.__window.register(popover)
+            GLib.idle_add(popover.forall, update_popover_internals)
+            popover.connect("closed",
+                            self.__on_navigation_popover_closed,
+                            model)
+            popover.popup()
+
     def __on_navigation_popover_closed(self, popover, model):
         """
             Clear menu actions
@@ -211,40 +173,52 @@ class ToolbarActions(Gtk.Bin):
         # Let model activate actions, idle needed to action activate
         GLib.idle_add(model.clean)
 
-    def __on_back_history_timeout(self):
+    def __on_back_primary_press(self, x, y, event):
         """
-            Show back history
+            Go backward in history
+            @param x as int
+            @param y as int
+            @param even as Gdk.Event
         """
-        self.__timeout_id = None
-        current = self.__window.container.webview
-        back_list = current.get_back_forward_list().get_back_list()
-        if back_list:
-            from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(back_list, self.__window)
-            popover = Gtk.Popover.new_from_model(self.__backward_button, model)
-            popover.set_modal(False)
-            self.__window.register(popover)
-            GLib.idle_add(popover.forall, update_popover_internals)
-            popover.connect("closed",
-                            self.__on_navigation_popover_closed,
-                            model)
-            popover.popup()
+        self.backward()
 
-    def __on_forward_history_timeout(self):
+    def __on_back_secondary_press(self, x, y):
         """
-            Show forward history
+            Show backward menu
+            @param x as int
+            @param y as int
         """
-        self.__timeout_id = None
-        current = self.__window.container.webview
-        forward_list = current.get_back_forward_list().get_forward_list()
-        if forward_list:
-            from eolie.menu_history import HistoryMenu
-            model = HistoryMenu(forward_list, self.__window)
-            popover = Gtk.Popover.new_from_model(self.__forward_button, model)
-            popover.set_modal(False)
-            self.__window.register(popover)
-            GLib.idle_add(popover.forall, update_popover_internals)
-            popover.connect("closed",
-                            self.__on_navigation_popover_closed,
-                            model)
-            popover.popup()
+        self.__show_menu(self.__backward_button)
+
+    def __on_back_primary_long(self, x, y):
+        """
+            Show backward menu
+            @param x as int
+            @param y as int
+        """
+        self.__show_menu(self.__backward_button)
+
+    def __on_forward_primary_press(self, x, y, event):
+        """
+            Go forward in history
+            @param x as int
+            @param y as int
+            @param even as Gdk.Event
+        """
+        self.forward()
+
+    def __on_forward_secondary_press(self, x, y):
+        """
+            Show forward menu
+            @param x as int
+            @param y as int
+        """
+        self.__show_menu(self.__forward_button)
+
+    def __on_forward_primary_long(self, x, y):
+        """
+            Show forward menu
+            @param x as int
+            @param y as int
+        """
+        self.__show_menu(self.__forward_button)
