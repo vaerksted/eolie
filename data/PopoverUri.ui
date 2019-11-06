@@ -90,6 +90,9 @@
                     </child>
                   </object>
                 </child>
+                <style>
+                  <class name="sidebar"/>
+                </style>
               </object>
               <packing>
                 <property name="left_attach">0</property>
