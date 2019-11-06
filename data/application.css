@@ -137,6 +137,7 @@
 .uribar {
     background-color: transparent;
     background-image: none;
+    border-radius: 2px;
 }
 
 .uribar:focus {
@@ -303,7 +304,7 @@
     color: inherit;
 }
 
-.close-button:hover {
+.no-border-button:hover {
   	opacity: 1;
 }
 

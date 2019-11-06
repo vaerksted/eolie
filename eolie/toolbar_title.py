@@ -16,9 +16,10 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.helper_task import TaskHelper
-from eolie.define import App, Indicator, Type
+from eolie.define import App
 from eolie.popover_uri import UriPopover
 from eolie.widget_smooth_progressbar import SmoothProgressBar
+from eolie.widget_uri_entry_icons import UriEntryIcons
 
 
 class ToolbarTitle(Gtk.Bin):
@@ -39,8 +40,10 @@ class ToolbarTitle(Gtk.Bin):
         self.__suggestion_id = None
         self.__password_timeout_id = None
         self.__secure_content = True
-        self.__size_allocation_timeout = Type.NONE  # CSS update needed
+        self.__size_allocation_timeout = None
         self.__width = -1
+        self.__icons = UriEntryIcons(window)
+        self.__icons.show()
         self.__cancellable = Gio.Cancellable.new()
         self.__dns_suffixes = ["com", "org"]
         for string in reversed(GLib.get_language_names()):
@@ -52,6 +55,7 @@ class ToolbarTitle(Gtk.Bin):
         builder.add_from_resource("/org/gnome/Eolie/ToolbarTitle.ui")
         builder.connect_signals(self)
 
+        builder.get_object("grid").add(self.__icons)
         self.__entry = builder.get_object("entry")
         # Inline completion
         self.__completion_model_append_timeout_id = None
@@ -81,47 +85,12 @@ class ToolbarTitle(Gtk.Bin):
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         self.__progress = SmoothProgressBar()
         builder.get_object("overlay").add_overlay(self.__progress)
-        # Used for spinner and reader
-        self.__indicator_stack = builder.get_object("indicator_stack")
-        # Used for geolocation
-        self.__indicator2 = builder.get_object("indicator2")
-        self.__indicator2_image = builder.get_object("indicator2_image")
-        # Spinner
-        self.__spinner = builder.get_object("spinner")
 
         self.__placeholder = builder.get_object("placeholder")
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
-    def set_readable_button_state(self, reading):
-        """
-            Mark readable button
-            @param reading as bool
-        """
-        if self.__indicator_stack.get_visible_child_name() != "image":
-            return
-        child = self.__indicator_stack.get_visible_child()
-        if reading:
-            child.get_style_context().add_class("selected")
-        else:
-            child.get_style_context().remove_class("selected")
-
-    def set_loading(self, b):
-        """
-            Mark current view as loading
-            @param b as bool
-        """
-        if b:
-            self.__indicator_stack.set_visible_child_name("spinner")
-            self.__spinner.start()
-            self.__indicator_stack.show()
-            self.__action_image1.set_from_icon_name('process-stop-symbolic',
-                                                    Gtk.IconSize.MENU)
-        else:
-            self.__spinner.stop()
-            self.__indicator_stack.hide()
-            self.__action_image1.set_from_icon_name('view-refresh-symbolic',
-                                                    Gtk.IconSize.MENU)
+        self.__icons.connect("size-allocate", self.__on_size_allocate)
 
     def do_get_preferred_width(self):
         """
@@ -177,12 +146,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__password_timeout_id is None:
             self.__update_secure_content_indicator()
         bookmark_id = App().bookmarks.get_id(uri)
-        if bookmark_id is not None:
-            icon_name = "starred-symbolic"
-        else:
-            icon_name = "non-starred-symbolic"
-        self.__action_image2.set_from_icon_name(icon_name,
-                                                Gtk.IconSize.MENU)
+        self.__icons.set_bookmarked(bookmark_id is not None)
 
     def set_title(self, title):
         """
@@ -240,7 +204,7 @@ class ToolbarTitle(Gtk.Bin):
         """
         if App().websettings.allowed_geolocation(uri):
             request.allow()
-            self.show_indicator(Indicator.GEOLOCATION)
+            self.icons.show_geolocation(True)
         else:
             from eolie.popover_geolocation import GeolocationPopover
             popover = GeolocationPopover(uri, request, self.__window)
@@ -272,18 +236,6 @@ class ToolbarTitle(Gtk.Bin):
             "Heads-up: This page is insecure.\n"
             "If you type your password,\nit will be "
             "visible to cybercriminals!"))
-
-    def show_readable_button(self, b):
-        """
-            Show readable button
-            @param b as bool
-        """
-        if b:
-            self.__indicator_stack.show()
-            self.__indicator_stack.set_visible_child_name("image")
-            self.set_readable_button_state(False)
-        else:
-            self.__indicator_stack.hide()
 
     def show_password(self, uuid, user_form_name, user_form_value,
                       pass_form_name, uri, form_uri, page_id):
@@ -319,20 +271,6 @@ class ToolbarTitle(Gtk.Bin):
                                      page_id,
                                      self.__window)
 
-    def show_indicator(self, indicator):
-        """
-            Show indicator
-            @param indicator as Indicator
-        """
-        if indicator == Indicator.GEOLOCATION:
-            self.__indicator2.show()
-            self.__indicator2.set_tooltip_text(_("Deny geolocation"))
-            self.__indicator2_image.set_from_icon_name(
-                "mark-location-symbolic",
-                Gtk.IconSize.MENU)
-        else:
-            self.__indicator2.hide()
-
     def focus_entry(self, child="bookmarks"):
         """
             Focus entry
@@ -348,6 +286,14 @@ class ToolbarTitle(Gtk.Bin):
         """
         if not self.__entry.is_focus():
             self.__entry.grab_focus()
+
+    @property
+    def icons(self):
+        """
+            Get entry icons
+            @return UriEntryIcons
+        """
+        return self.__icons
 
     @property
     def progress(self):
@@ -418,8 +364,7 @@ class ToolbarTitle(Gtk.Bin):
         if self.__popover.is_visible():
             return
         webview = self.__window.container.webview
-        self.__action_image2.set_from_icon_name("edit-clear-symbolic",
-                                                Gtk.IconSize.MENU)
+        self.__icons.show_clear_button()
         uri = self.__window.container.webview.uri
         parsed = urlparse(uri)
         value = webview.get_current_text_entry()
@@ -540,83 +485,6 @@ class ToolbarTitle(Gtk.Bin):
                 self.__completion_model.clear()
                 return True
 
-    def _on_indicator1_press(self, eventbox, event):
-        """
-            Switch reading mode
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        reading = self.__window.container.toggle_reading()
-        self.set_readable_button_state(reading)
-        return True
-
-    def _on_indicator2_press(self, eventbox, event):
-        """
-            Disable geolocation for current
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__indicator2_image.get_icon_name()[0] ==\
-                "mark-location-symbolic":
-            uri = self.__window.container.webview.uri
-            App().websettings.allow_geolocation(uri, False)
-            self.show_indicator(Indicator.NONE)
-        else:
-            if self.__entry.has_focus():
-                self.__window.set_focus(None)
-            else:
-                self._on_entry_focus_out(self.__entry, None)
-            self.__update_secure_content_indicator()
-        return True
-
-    def _on_action1_press(self, eventbox, event):
-        """
-            Reload current view/Stop loading
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        if self.__action_image1.get_icon_name()[0] == 'view-refresh-symbolic':
-            if event.button == 1:
-                self.__window.container.webview.reload()
-            else:
-                self.__window.container.webview.reload_bypass_cache()
-        else:
-            self.__window.container.webview.stop_loading()
-        return True
-
-    def _on_action2_press(self, eventbox, event):
-        """
-            Add/Remove page to/from bookmarks
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.Event
-        """
-        webview = self.__window.container.webview
-        if self.__action_image2.get_icon_name()[0] == "edit-clear-symbolic":
-            self.__entry.delete_text(0, -1)
-            webview.clear_text_entry()
-        else:
-            bookmark_id = App().bookmarks.get_id(webview.uri)
-            if bookmark_id is None:
-                uri = webview.uri
-                if uri is None or uri == "about:blank":
-                    return
-                self.__action_image2.set_from_icon_name("starred-symbolic",
-                                                        Gtk.IconSize.MENU)
-                bookmark_id = App().bookmarks.add(webview.title,
-                                                  uri, None, [])
-            from eolie.widget_bookmark_edit import BookmarkEditWidget
-            widget = BookmarkEditWidget(bookmark_id, False)
-            widget.show()
-            popover = Gtk.Popover.new()
-            popover.set_relative_to(eventbox)
-            popover.connect("closed", self.__on_popover_closed)
-            popover.connect("closed",
-                            lambda x: self._on_entry_focus_out(
-                                self.__entry, None))
-            popover.add(widget)
-            popover.popup()
-        return True
-
     def _on_eventbox_enter_notify(self, eventbox, event):
         """
             Change opacity
@@ -633,23 +501,6 @@ class ToolbarTitle(Gtk.Bin):
         """
         eventbox.set_opacity(0.8)
 
-    def _on_icon_grid_size_allocate(self, grid, allocation):
-        """
-            Delayed css update
-            @param grid as Gtk.Grid
-            @param allocation as Gtk.Allocation
-        """
-        if self.__size_allocation_timeout not in [None, Type.NONE]:
-            GLib.source_remove(self.__size_allocation_timeout)
-        # If Type.NONE, we need to create initial css content
-        if self.__size_allocation_timeout == Type.NONE:
-            self.__on_size_allocation_timeout(allocation)
-        else:
-            self.__size_allocation_timeout = GLib.timeout_add(
-                250,
-                self.__on_size_allocation_timeout,
-                allocation)
-
 #######################
 # PRIVATE             #
 #######################
@@ -664,12 +515,7 @@ class ToolbarTitle(Gtk.Bin):
         uri = webview.uri
         if uri is not None:
             bookmark_id = App().bookmarks.get_id(uri)
-            if bookmark_id is not None:
-                icon_name = "starred-symbolic"
-            else:
-                icon_name = "non-starred-symbolic"
-            self.__action_image2.set_from_icon_name(icon_name,
-                                                    Gtk.IconSize.MENU)
+            self.__icons.set_bookmarked(bookmark_id is not None)
 
     def __leave(self):
         """
@@ -815,7 +661,7 @@ class ToolbarTitle(Gtk.Bin):
 
     def __on_popover_closed(self, popover):
         """
-            Clean titlebar if UriPopover, else update star
+            Clean titlebar
             @param popover as Gtk.popover
         """
         self.__cancellable.cancel()
@@ -830,12 +676,6 @@ class ToolbarTitle(Gtk.Bin):
             if value:
                 webview.add_text_entry(value)
             self.__entry.delete_selection()
-        from eolie.widget_bookmark_edit import BookmarkEditWidget
-        if isinstance(popover, BookmarkEditWidget):
-            bookmark_id = App().bookmarks.get_id(webview.uri)
-            if bookmark_id is None:
-                self.__action_image2.set_from_icon_name("non-starred-symbolic",
-                                                        Gtk.IconSize.MENU)
 
     def __on_entry_changed(self, entry):
         """
@@ -919,6 +759,18 @@ class ToolbarTitle(Gtk.Bin):
         App().search.search_suggestions(value,
                                         self.__cancellable,
                                         self.__on_search_suggestion)
+
+    def __on_size_allocate(self, grid, allocation):
+        """
+            Delayed css update
+            @param grid as Gtk.Grid
+            @param allocation as Gtk.Allocation
+        """
+        if self.__size_allocation_timeout is not None:
+            GLib.source_remove(self.__size_allocation_timeout)
+        self.__size_allocation_timeout = GLib.idle_add(
+            self.__on_size_allocation_timeout,
+            allocation)
 
     def __on_size_allocation_timeout(self, allocation):
         """

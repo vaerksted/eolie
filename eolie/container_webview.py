@@ -14,7 +14,7 @@ from gi.repository import WebKit2, GLib
 
 from urllib.parse import urlparse
 
-from eolie.define import App, Indicator
+from eolie.define import App
 
 
 class WebViewContainer:
@@ -131,7 +131,7 @@ class WebViewContainer:
             @param webview as WebView
             @param status as bool
         """
-        self._window.toolbar.title.show_readable_button(status)
+        self._window.toolbar.title.icons.show_readable_button(status)
 
     def __on_load_changed(self, webview, event):
         """
@@ -143,19 +143,18 @@ class WebViewContainer:
         self._window.toolbar.title.set_uri(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            # self._window.container.find_widget.set_search_mode(False)
             self._window.toolbar.title.set_title(webview.uri)
-            # self._window.toolbar.title.show_readable_button(False)
             if wanted_scheme:
-                self._window.toolbar.title.set_loading(True)
+                self._window.toolbar.title.icons.set_loading(True)
             else:
                 # Give focus to url bar
                 self._window.toolbar.title.start_search()
-            self._window.toolbar.title.show_indicator(Indicator.NONE)
+            self._window.toolbar.title.icons.show_geolocation(False)
+            self._window.toolbar.title.icons.show_readable_button(False)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self._window.toolbar.title.set_title(webview.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
-            self._window.toolbar.title.set_loading(False)
+            self._window.toolbar.title.icons.set_loading(False)
             self._window.toolbar.title.progress.set_fraction(1.0)
             # Give focus to webview
             if wanted_scheme:
