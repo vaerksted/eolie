@@ -62,8 +62,8 @@ class WebViewContainer:
         accept_tls = App().websettings.get_accept_tls(webview.uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.actions.set_actions(self.__current_webview)
-        self._window.toolbar.title.set_uri(webview.uri)
-        self._window.toolbar.title.set_title(webview.title)
+        self._window.toolbar.title.entry.set_uri(webview.uri)
+        self._window.toolbar.title.entry.set_title(webview.title)
         if webview.get_uri() is None and\
                 webview.uri is not None and\
                 webview.related is None:
@@ -92,7 +92,7 @@ class WebViewContainer:
             @param webview as WebView
             @param title as str
         """
-        self._window.toolbar.title.set_title(title)
+        self._window.toolbar.title.entry.set_title(title)
 
     def __on_uri_changed(self, webview, uri):
         """
@@ -104,7 +104,7 @@ class WebViewContainer:
             self.toggle_reading()
         accept_tls = App().websettings.get_accept_tls(uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
-        self._window.toolbar.title.set_uri(uri)
+        self._window.toolbar.title.entry.set_uri(uri)
 
     def __on_estimated_load_progress(self, webview, value):
         """
@@ -113,7 +113,7 @@ class WebViewContainer:
             @param value GparamFloat
         """
         value = self.__current_webview.get_estimated_load_progress()
-        self._window.toolbar.title.progress.set_fraction(value)
+        self._window.toolbar.title.entry.progress.set_fraction(value)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed):
         """
@@ -131,7 +131,7 @@ class WebViewContainer:
             @param webview as WebView
             @param status as bool
         """
-        self._window.toolbar.title.icons.show_readable_button(status)
+        self._window.toolbar.title.entry.icons.show_readable_button(status)
 
     def __on_load_changed(self, webview, event):
         """
@@ -140,22 +140,22 @@ class WebViewContainer:
             @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(webview.uri)
-        self._window.toolbar.title.set_uri(webview.uri)
+        self._window.toolbar.title.entry.set_uri(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            self._window.toolbar.title.set_title(webview.uri)
+            self._window.toolbar.title.entry.set_title(webview.uri)
             if wanted_scheme:
-                self._window.toolbar.title.icons.set_loading(True)
+                self._window.toolbar.title.entry.icons.set_loading(True)
             else:
                 # Give focus to url bar
                 self._window.toolbar.title.start_search()
-            self._window.toolbar.title.icons.show_geolocation(False)
-            self._window.toolbar.title.icons.show_readable_button(False)
+            self._window.toolbar.title.entry.icons.show_geolocation(False)
+            self._window.toolbar.title.entry.icons.show_readable_button(False)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.set_title(webview.uri)
+            self._window.toolbar.title.entry.set_title(webview.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
-            self._window.toolbar.title.icons.set_loading(False)
-            self._window.toolbar.title.progress.set_fraction(1.0)
+            self._window.toolbar.title.entry.icons.set_loading(False)
+            self._window.toolbar.title.entry.progress.set_fraction(1.0)
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(self.grab_focus)
@@ -181,4 +181,4 @@ class WebViewContainer:
             @param webview as WebView
             @param event as WebKit2.InsecureContentEvent
         """
-        self._window.toolbar.title.set_insecure_content()
+        self._window.toolbar.title.entry.set_insecure_content()

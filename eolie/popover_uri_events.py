@@ -27,34 +27,35 @@ class UriPopoverEvents:
         """
         pass
 
-    def forward_event(self, event):
+    def forward_event(self, keyval, state):
         """
             Forward event, smart navigation between boxes
-            @param event as Gdk.Event
+            @param keyval as bool
+            @param state as state as Gdk.ModifierType
             @return True if event forwarded
         """
         if not self.is_visible():
             return False
-        if event.keyval == Gdk.KEY_Up and self._input == Input.NONE:
+        if keyval == Gdk.KEY_Up and self._input == Input.NONE:
             return False
-        elif event.keyval == Gdk.KEY_Left and self._input == Input.BOOKMARKS:
+        elif keyval == Gdk.KEY_Left and self._input == Input.BOOKMARKS:
             self._input = Input.TAGS
             self._tags_box.get_style_context().add_class("kbd-input")
             self._bookmarks_box.get_style_context().remove_class("kbd-input")
             self._window.toolbar.title.set_text_entry("")
             return True
-        elif event.keyval == Gdk.KEY_Right and self._input == Input.TAGS:
+        elif keyval == Gdk.KEY_Right and self._input == Input.TAGS:
             self._input = Input.BOOKMARKS
             self._bookmarks_box.get_style_context().add_class("kbd-input")
             self._tags_box.get_style_context().remove_class("kbd-input")
             return True
-        elif event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
+        elif keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
                 self._input == Input.SEARCH:
             return False
-        elif event.keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
+        elif keyval in [Gdk.KEY_Left, Gdk.KEY_Right] and\
                 self._input != Input.NONE:
             return True
-        elif event.keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
+        elif keyval in [Gdk.KEY_Down, Gdk.KEY_Up]:
             # If nothing selected, detect default widget
             if self._input == Input.NONE:
                 if self._stack.get_visible_child_name() == "search":
@@ -84,7 +85,7 @@ class UriPopoverEvents:
                     item_id = rows[0].item.get_property("id")
                     self._set_bookmarks(item_id)
             else:
-                idx = -1 if event.keyval == Gdk.KEY_Up else 1
+                idx = -1 if keyval == Gdk.KEY_Up else 1
                 for row in rows:
                     if row == selected:
                         break
@@ -111,7 +112,7 @@ class UriPopoverEvents:
                         item_id = rows[idx].item.get_property("id")
                         self._set_bookmarks(item_id)
                     return True
-        elif event.keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
+        elif keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
             box = self._get_current_input_box()
             if box is not None:
                 selected = box.get_selected_row()

@@ -15,6 +15,7 @@ from gi.repository import Gtk
 from eolie.toolbar_actions import ToolbarActions
 from eolie.toolbar_title import ToolbarTitle
 from eolie.toolbar_end import ToolbarEnd
+from eolie.helper_gestures import GesturesHelper
 
 
 class Toolbar(Gtk.EventBox):
@@ -42,7 +43,9 @@ class Toolbar(Gtk.EventBox):
         self.__headerbar.pack_start(self.__toolbar_actions)
         self.__headerbar.set_custom_title(self.__toolbar_title)
         self.__headerbar.pack_end(self.__toolbar_end)
-        self.connect("button-press-event", self.__on_button_press)
+        self.__gesture = GesturesHelper(
+            self,
+            primary_press_callback=self.__on_press)
         self.add(self.__headerbar)
 
     @property
@@ -80,10 +83,11 @@ class Toolbar(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __on_button_press(self, widget, event):
+    def __on_press(self, x, y, event):
         """
-            Hide popover if visible
-            @param widget as Gtk.Widget
+            Hide popovers
+            @param x as int
+            @param y as int
             @param event as Gdk.Event
         """
         self.__window.close_popovers()

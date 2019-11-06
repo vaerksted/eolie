@@ -231,7 +231,7 @@ class Row(Gtk.ListBoxRow):
         else:
             self.emit("activate")
             # We force focus to stay on title entry
-            GLib.idle_add(self.__window.toolbar.title.focus_entry)
+            GLib.idle_add(self.__window.toolbar.title.entry.focus)
 
     def __on_edit_clicked(self, button):
         """

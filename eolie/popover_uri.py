@@ -190,7 +190,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         # Update titlebar
         if row.item.get_property("type") == Type.SUGGESTION:
             title = row.item.get_property("title")
-            self._window.toolbar.title.set_text_entry(title)
+            self._window.toolbar.title.entry.set_text_entry(title)
         else:
             uri = row.item.get_property("uri")
             if not uri:
@@ -198,7 +198,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
             parsed = urlparse(uri)
             if parsed.scheme not in ["http", "https", "file"]:
                 uri = ""
-            self._window.toolbar.title.set_text_entry(uri)
+            self._window.toolbar.title.entry.set_text_entry(uri)
         # Scroll to row
         scrolled = listbox.get_ancestor(Gtk.ScrolledWindow)
         if scrolled is None:

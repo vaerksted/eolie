@@ -379,7 +379,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         if string == "uri":
             if self.is_fullscreen:
                 self.__fullscreen_revealer.set_reveal_child(True)
-            self.toolbar.title.focus_entry()
+            self.toolbar.title.entry.focus()
         elif string == "fullscreen":
             if self.is_fullscreen:
                 self.unfullscreen()
@@ -440,9 +440,9 @@ class Window(Gtk.ApplicationWindow, WindowState):
         elif string == "zoom_default":
             self.container.webview.zoom_default()
         elif string == "history":
-            self.toolbar.title.focus_entry("history")
+            self.toolbar.title.entry.focus("history")
         elif string == "search":
-            self.toolbar.title.focus_entry("search")
+            self.toolbar.title.entry.focus("search")
         elif string == "save":
             self.toolbar.end.save_page()
         elif string == "expose":
