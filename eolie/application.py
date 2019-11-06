@@ -140,7 +140,7 @@ class Application(Gtk.Application):
         size = (800, 600)
         is_maximized = False
         windows = self.get_windows()
-        if windows and size is None:
+        if windows:
             active_window = self.active_window
             size = active_window.size
             is_maximized = active_window.is_maximized()
