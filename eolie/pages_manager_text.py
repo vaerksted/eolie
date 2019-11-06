@@ -43,7 +43,7 @@ class PagesManagerRowText(Gtk.ListBoxRow, SignalsHelper):
         button = Gtk.Button.new_from_icon_name("window-close-symbolic",
                                                Gtk.IconSize.MENU)
         button.set_relief(Gtk.ReliefStyle.NONE)
-        button.get_style_context().add_class("close-button")
+        button.get_style_context().add_class("no-border-button")
         button.set_property("valign", Gtk.Align.CENTER)
         button.set_property("halign", Gtk.Align.END)
         button.connect("clicked", self.__on_button_clicked)

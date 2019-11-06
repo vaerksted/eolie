@@ -285,7 +285,7 @@
     color: @theme_selected_fg_color;
 }
 
-.close-button {
+.no-border-button {
     opacity: 0.8;
 	box-shadow: none;
 	padding-left: 2px;
@@ -377,6 +377,15 @@
        border-color: alpha(@theme_fg_color, 0.1);
 }
 
+
+
+.red {
+    color: red;
+}
+
+.red:hover {
+    border-color: alpha(red, 0.1);
+}
 
 .drag-up {
     background-image: -gtk-gradient (linear,
