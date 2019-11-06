@@ -65,7 +65,7 @@ class WebViewDBusSignals:
             (uuid, user_form_name, user_form_value,
              pass_form_name, uri, form_uri) = params[0]
             self.window.close_popovers()
-            self.window.toolbar.title.show_password(
+            self.window.toolbar.title.entry.show_password(
                 uuid,
                 user_form_name,
                 user_form_value,

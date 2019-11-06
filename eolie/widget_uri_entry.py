@@ -57,7 +57,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry.get_style_context().add_class("uribar")
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
-        self.__entry.connect("icon-press", self.__on_entry_icon_press)
         self.__entry.connect("populate-popup", self.__on_entry_populate_popup)
         self.__entry_gesture = GesturesHelper(
             self.__entry,
@@ -515,25 +514,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                                         self.__cancellable,
                                         self.__on_search_suggestion)
 
-    def __on_entry_icon_press(self, widget, icon_pos, event):
-        """
-            Show cert dialog or copy uri
-            @param widget as Gtk.Widget
-            @param icon_pos as Gtk.EntryIconPosition
-            @param event as Gdk.Event
-        """
-        def on_popover_closed(popover):
-            self.__credentials_popover = None
-
-        if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
-                "dialog-password-symbolic":
-            self.__update_secure_content_indicator()
-            self.__credentials_popover.set_relative_to(self.__entry)
-            self.__credentials_popover.set_pointing_to(
-                self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
-            self.__credentials_popover.connect("closed", on_popover_closed)
-            self.__credentials_popover.popup()
-
     def __on_entry_focus_in(self, entry, event):
         """
             Block entry on uri
@@ -586,7 +566,19 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param y as int
             @param event as Gdk.Event
         """
-        if not self.__popover.get_visible():
+        def on_popover_closed(popover):
+            self.__credentials_popover = None
+
+        if x < 30:
+            if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
+                    "dialog-password-symbolic":
+                self.__update_secure_content_indicator()
+                self.__credentials_popover.set_relative_to(self.__entry)
+                self.__credentials_popover.set_pointing_to(
+                    self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
+                self.__credentials_popover.connect("closed", on_popover_closed)
+                self.__credentials_popover.popup()
+        elif not self.__popover.get_visible():
             self.__on_entry_focus_in(self.__entry, event)
             self.__popover.popup("bookmarks")
 
