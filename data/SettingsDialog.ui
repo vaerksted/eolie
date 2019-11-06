@@ -238,7 +238,7 @@
             <child>
               <object class="GtkEntry" id="start_page_uri">
                 <property name="can_focus">True</property>
-                <property name="placeholder_text">https://gnumdk.github.io/lollypop-web</property>
+                <property name="placeholder_text">https://gitlab.gnome.org/World/eolie</property>
                 <signal name="changed" handler="_on_start_page_uri_changed" swapped="no"/>
               </object>
               <packing>
