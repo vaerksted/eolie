@@ -56,6 +56,9 @@ class WebViewContainer:
         self.__signal_ids.append(
             webview.connect("insecure-content-detected",
                             self.__on_insecure_content_detected))
+        self.__signal_ids.append(
+            webview.connect("mouse-target-changed",
+                            self.__on_mouse_target_changed))
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
                 self.__on_back_forward_list_changed)
@@ -182,3 +185,16 @@ class WebViewContainer:
             @param event as WebKit2.InsecureContentEvent
         """
         self._window.toolbar.title.entry.set_insecure_content()
+
+    def __on_mouse_target_changed(self, webview, hit, modifiers):
+        """
+            Show uri label
+            @param webview as WebView
+            @param hit as WebKit2.HitTestResult
+            @param modifiers as Gdk.ModifierType
+        """
+        if hit.context_is_link():
+            self._uri_label.set_text(hit.get_link_uri())
+            self._uri_label.show()
+        else:
+            self._uri_label.hide()
