@@ -304,13 +304,11 @@ class SitesManager(Gtk.Grid):
             self.__window.container.set_visible_webview(webviews[0])
         else:
             from eolie.pages_manager_list import PagesManagerList
-            from eolie.widget_utils import Popover
             widget = PagesManagerList(self.__window)
             widget.show()
             widget.populate(webviews)
-            popover = Popover()
+            popover = Gtk.Popover.new(child)
             popover.get_style_context().add_class("box-shadow")
-            popover.set_relative_to(child)
             popover.set_position(Gtk.PositionType.RIGHT)
             popover.add(widget)
             popover.popup()

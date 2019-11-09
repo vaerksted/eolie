@@ -136,7 +136,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         """
         self.__popovers.append(popover)
         if monitor:
-            popover.connect("closed", self.__on_popover_closed)
+            popover.connect("destroy", self.__on_popover_destroy)
 
     def close_popovers(self):
         """
@@ -461,8 +461,6 @@ class Window(Gtk.ApplicationWindow, WindowState):
             Remove popover from registered
             @param popover as Gtk.Popover
         """
-        # Needed as popover may belong to another class
-        popover.disconnect_by_func(self.__on_popover_closed)
         if popover in self.__popovers:
             self.__popovers.remove(popover)
             GLib.timeout_add(1000, popover.destroy)
