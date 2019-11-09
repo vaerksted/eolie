@@ -69,6 +69,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.connect("drag-motion", self.__on_drag_motion)
         self.connect("drag-leave", self.__on_drag_leave)
         self.set_size_request(-1, 38)
+        self.set_property("margin", 2)
 
     def add_webview(self, webview):
         """

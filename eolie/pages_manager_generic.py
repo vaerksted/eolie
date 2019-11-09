@@ -100,8 +100,9 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
 
         self.set_property("halign", Gtk.Align.START)
         self.set_property("margin", MARGIN)
-        self.set_size_request(ArtSize.START_WIDTH + MARGIN,
-                              ArtSize.START_HEIGHT + MARGIN)
+        # padding + border
+        self.set_size_request(ArtSize.START_WIDTH + 8,
+                              ArtSize.START_HEIGHT + 8)
         self.add(overlay)
 
         return [
@@ -109,7 +110,8 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             (webview, "notify::is-playing-audio",
                       "_on_webview_notify_is_playing_audio"),
             (webview, "title-changed", "_on_webview_title_changed"),
-            (webview, "load-changed", "_on_webview_load_changed")
+            (webview, "load-changed", "_on_webview_load_changed"),
+            (webview, "destroy", "_on_webview_destroyed")
         ]
 
     @property
@@ -205,6 +207,13 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
                 Gtk.IconSize.DIALOG)
         else:
             self.__background_image.set_from_surface(surface)
+
+    def _on_webview_destroyed(self, webview):
+        """
+            Destroy self
+            @param webview as WebView
+        """
+        self.destroy()
 
 #######################
 # PRIVATE             #

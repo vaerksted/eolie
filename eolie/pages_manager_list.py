@@ -13,11 +13,10 @@
 from gi.repository import Gtk
 
 from eolie.pages_manager_row import PagesManagerRow
-from eolie.define import ArtSize
-from eolie.helper_size_allocation import SizeAllocationHelper
+from eolie.define import ArtSize, MARGIN
 
 
-class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
+class PagesManagerList(Gtk.ScrolledWindow):
     """
         WebViews in a ListBox
     """
@@ -39,7 +38,6 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
         self.__listbox.connect("row-activated", self.__on_row_activated)
         self.__listbox.get_style_context().add_class("transparent")
         self.__viewport = Gtk.Viewport.new()
-        SizeAllocationHelper.__init__(self, self.__listbox)
         self.add(self.__listbox)
         self.get_style_context().add_class("padding")
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -53,23 +51,30 @@ class PagesManagerList(Gtk.ScrolledWindow, SizeAllocationHelper):
         for webview in webviews:
             row = PagesManagerRow(webview, self.__window)
             row.show()
+            row.connect("destroy",
+                        lambda x: self.__calculate_height())
             self.__listbox.add(row)
+            self.__calculate_height()
             if webview == current_webview:
                 self.__selected_row = row
                 row.set_state_flags(Gtk.StateFlags.VISITED, False)
 
-    def _handle_height_allocate(self, allocation):
-        """
-            @param allocation as Gtk.Allocation
-        """
-        if SizeAllocationHelper._handle_height_allocate(self, allocation):
-            height = min(allocation.height + 10,
-                         self.__window.get_allocated_height() - 100)
-            self.set_size_request(ArtSize.START_WIDTH, height)
-
 #######################
 # PRIVATE             #
 #######################
+    def __calculate_height(self):
+        """
+            Update popover height request
+        """
+        height = 0
+        for row in self.__listbox.get_children():
+            height += ArtSize.START_HEIGHT + 8 + MARGIN * 2
+        size = self.__window.get_size()
+        # 8 for child padding/border, 10 for scrolled padding + MARGIN
+        # TODO: Use style context to get this
+        self.set_size_request(ArtSize.START_WIDTH + 8 + 10 + MARGIN * 2,
+                              min(size[1] - 100, height + 10))
+
     def __sort_func(self, row1, row2):
         """
             Sort pages
