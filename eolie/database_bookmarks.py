@@ -713,9 +713,9 @@ class DatabaseBookmarks:
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT rowid FROM bookmarks LIMIT 1")
             v = result.fetchone()
-            if v is not None:
-                return True
-            return False
+            if v is None:
+                return False
+            return True
 
     def import_html(self, path):
         """
