@@ -78,6 +78,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
             Popup popover and wanted child
             @param child as str
         """
+        Gtk.Popover.popup(self)
         # Add a new view for importing bookmarks
         if child == "bookmarks" and App().bookmarks.is_empty():
             grid = Gtk.Grid()
@@ -94,8 +95,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
             self._stack.add(grid)
             self._stack.set_visible_child(grid)
         else:
-            self._stack.set_visible_child_name(child)
-        Gtk.Popover.popup(self)
+            GLib.idle_add(self._stack.set_visible_child_name, child)
 
     def set_search_text(self, search):
         """
