@@ -72,7 +72,7 @@ class DatabaseBookmarks:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
                     GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
-                with SqlCursor(self) as sql:
+                with SqlCursor(self, True) as sql:
                     sql.execute(self.__create_bookmarks)
                     sql.execute(self.__create_tags)
                     sql.execute(self.__create_bookmarks_tags)
@@ -100,7 +100,7 @@ class DatabaseBookmarks:
             if self.exists_guid(guid):
                 guid = None
 
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             result = sql.execute("INSERT INTO bookmarks\
                                   (title, uri, popularity, guid, atime, mtime)\
                                   VALUES (?, ?, ?, ?, ?, ?)",
@@ -123,7 +123,7 @@ class DatabaseBookmarks:
             @param bookmark id as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE FROM bookmarks\
                          WHERE rowid=?", (bookmark_id,))
             sql.execute("DELETE FROM bookmarks_tags\
@@ -137,7 +137,7 @@ class DatabaseBookmarks:
             @param tag as str
             @return tag id as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             result = sql.execute("INSERT INTO tags\
                                   (title) VALUES (?)",
                                  (tag,))
@@ -148,7 +148,7 @@ class DatabaseBookmarks:
             Add tag to db, return existing if exists
             @param tag as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             tag_id = self.get_tag_id(tag)
             if tag_id is None:
                 return
@@ -163,7 +163,7 @@ class DatabaseBookmarks:
             @param old as str
             @param new as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE tags set title=? WHERE title=?", (new, old))
 
     def get_tags(self, bookmark_id):
@@ -542,7 +542,7 @@ class DatabaseBookmarks:
             @param bookmark_id as int
             @param guid as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET guid=?\
                          WHERE rowid=?", (bookmark_id, guid))
@@ -553,7 +553,7 @@ class DatabaseBookmarks:
             @param bookmark id as int
             @param title as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET title=?\
                          WHERE rowid=?", (title, bookmark_id,))
@@ -576,7 +576,7 @@ class DatabaseBookmarks:
             @param popularity as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET popularity=?\
                          WHERE rowid=?", (popularity, bookmark_id,))
@@ -588,7 +588,7 @@ class DatabaseBookmarks:
             @param parent_guid as str
             @param parent_name as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             result = sql.execute("SELECT parent_guid\
                                   FROM parents\
                                   WHERE bookmark_id=?", (bookmark_id,))
@@ -610,7 +610,7 @@ class DatabaseBookmarks:
             @param uri as str
             @param atime as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET atime=? where uri=?", (atime, uri.rstrip('/')))
 
@@ -621,7 +621,7 @@ class DatabaseBookmarks:
             @param mtime as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET mtime=? where rowid=?", (mtime, bookmark_id))
 
@@ -632,7 +632,7 @@ class DatabaseBookmarks:
             @param mtime as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET position=? where rowid=?", (position,
                                                          bookmark_id))
@@ -643,7 +643,7 @@ class DatabaseBookmarks:
             @param tag id as int
             @parma title as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE tags SET title=? WHERE id=?", (title, tag_id,))
 
     def set_more_popular(self, uri):
@@ -651,7 +651,7 @@ class DatabaseBookmarks:
             Increment bookmark popularity
             @param uri as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             uri = uri.rstrip('/')
             result = sql.execute("SELECT popularity FROM bookmarks\
                                   WHERE uri=?", (uri,))
@@ -667,7 +667,7 @@ class DatabaseBookmarks:
             @param bookmark id as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("INSERT INTO bookmarks_tags\
                          (bookmark_id, tag_id) VALUES (?, ?)",
                         (bookmark_id, tag_id))
@@ -679,7 +679,7 @@ class DatabaseBookmarks:
             @param bookmark id as int
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE from bookmarks_tags\
                          WHERE bookmark_id=? and tag_id=?",
                         (bookmark_id, tag_id))
@@ -688,7 +688,7 @@ class DatabaseBookmarks:
         """
             Remove orphan tags
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE from tags\
                          WHERE NOT EXISTS (\
                             SELECT bookmarks_tags.rowid\
@@ -701,7 +701,7 @@ class DatabaseBookmarks:
             Reset popularity for uri
             @param uri as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks SET popularity=0 WHERE uri=?",
                         (uri,))
 

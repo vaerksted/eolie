@@ -59,14 +59,14 @@ class DatabaseSettings:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
                     GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
-                with SqlCursor(self) as sql:
+                with SqlCursor(self, True) as sql:
                     sql.execute(self.__create_settings)
                     sql.execute("PRAGMA user_version=%s" % new_version)
             except Exception as e:
                 Logger.error("DatabaseSettings::__init__(): %s", e)
         # DB upgrade, TODO Make it generic between class
         version = 0
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             result = sql.execute("PRAGMA user_version")
             v = result.fetchone()
             if v is not None:
@@ -89,7 +89,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -130,7 +130,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -170,7 +170,7 @@ class DatabaseSettings:
         if parsed.scheme != "https":
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -211,7 +211,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -252,7 +252,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -293,7 +293,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
                                       WHERE uri=?", (parsed.netloc,))
                 v = result.fetchone()
@@ -334,7 +334,7 @@ class DatabaseSettings:
             Remove profile from settings
             @param profile as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE settings SET profile=''\
                         WHERE profile=?", (profile,))
 
@@ -369,7 +369,7 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 codes = self.get_languages(uri)
                 if codes is not None:
                     if code not in codes:
@@ -396,7 +396,7 @@ class DatabaseSettings:
         codes = self.get_languages(uri)
         if codes is not None and code in codes:
             codes.remove(code)
-            with SqlCursor(self) as sql:
+            with SqlCursor(self, True) as sql:
                 sql.execute("UPDATE settings\
                                  SET languages=?\
                                  WHERE uri=?", (";".join(codes),

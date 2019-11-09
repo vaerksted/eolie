@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, Gio, WebKit2, GObject, GLib
+from gi.repository import Gtk, Gdk, Gio, WebKit2, GObject
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -50,10 +50,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         WebViewMenuSignals.__init__(self)
         WebViewJsSignals.__init__(self)
         WebViewDBusSignals.__init__(self)
-        self.__title_changed_timeout_id = None
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
-        self.connect("uri-changed", self.__on_uri_changed)
         self.connect("title-changed", self.__on_title_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
@@ -136,34 +134,12 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             event.delta_x *= 2
             event.delta_y *= 2
 
-    def __on_uri_changed(self, webview, uri):
-        """
-            Update UI and cancel current snapshot
-            @param webview as WebView
-            @param uri as str
-        """
-        def title_changed_timeout():
-            """
-                We need this to update history as soon title is available
-            """
-            self.__title_changed_timeout_id = None
-            self.__on_title_changed(webview, webview.title)
-        if self.__title_changed_timeout_id is not None:
-            GLib.source_remove(self.__title_changed_timeout_id)
-        self.__title_changed_timeout_id = GLib.timeout_add(
-            2000, title_changed_timeout)
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable()
-
     def __on_title_changed(self, webview, title):
         """
             Append title to history
             @param webview as WebView
             @param title as str
         """
-        if self.__title_changed_timeout_id is not None:
-            GLib.source_remove(self.__title_changed_timeout_id)
-        self.__title_changed_timeout_id = None
         parsed = urlparse(webview.uri)
         if self.error or\
                 webview.is_ephemeral or\

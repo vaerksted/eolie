@@ -78,7 +78,7 @@ class DatabaseHistory:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
                     GLib.mkdir_with_parents(EOLIE_DATA_PATH, 0o0750)
                 # Create db schema
-                with SqlCursor(self) as sql:
+                with SqlCursor(self, True) as sql:
                     sql.execute(self.__create_history)
                     sql.execute(self.__create_history_atime)
                     sql.execute(self.__create_history_orderby_idx)
@@ -103,12 +103,13 @@ class DatabaseHistory:
             return
         uri = uri.rstrip('/')
         parsed = urlparse(uri)
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             result = sql.execute("SELECT rowid, popularity FROM history\
                                   WHERE uri=?", (uri,))
             v = result.fetchone()
             # Update current item
             if v is not None:
+                print("update")
                 history_id = v[0]
                 guid = self.get_guid(history_id)
                 sql.execute("UPDATE history\
@@ -118,6 +119,7 @@ class DatabaseHistory:
                                               guid, v[1] + 1, history_id))
             # Add a new item
             else:
+                print("current")
                 # Find an uniq guid
                 while guid is None:
                     guid = get_random_string(12)
@@ -146,7 +148,7 @@ class DatabaseHistory:
             Remove item from history
             @param history id as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE from history\
                          WHERE rowid=?", (history_id,))
             sql.execute("DELETE from history_atime\
@@ -157,7 +159,7 @@ class DatabaseHistory:
             Clear history from atime
             @param atime as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE FROM history_atime\
                          WHERE atime >= ?", (atime,))
 
@@ -166,7 +168,7 @@ class DatabaseHistory:
             Clear history to atime
             @param atime as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("DELETE FROM history_atime\
                          WHERE atime <= ?", (atime,))
 
@@ -353,7 +355,7 @@ class DatabaseHistory:
             @param title as str
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE history\
                          SET title=?\
                          WHERE rowid=?", (title, history_id,))
@@ -400,7 +402,7 @@ class DatabaseHistory:
             Get page with opened state
             @return [(uri, title)]
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             try:
                 result = sql.execute("SELECT uri, title\
                                       FROM history\
@@ -420,7 +422,7 @@ class DatabaseHistory:
         if uri is None:
             return
         uri = uri.rstrip('/')
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             if mtime is None:
                 sql.execute("UPDATE history\
                              SET opened=0\
@@ -438,7 +440,7 @@ class DatabaseHistory:
             @param atimes as [int]
             @param commit as bool
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             current_atimes = self.get_atimes(history_id)
             for atime in atimes:
                 if atime not in current_atimes:
@@ -451,7 +453,7 @@ class DatabaseHistory:
             @param history_id as int
             @param mtime as int
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE history\
                          SET mtime=? where rowid=?", (mtime, history_id))
 
@@ -538,7 +540,7 @@ class DatabaseHistory:
             Reset popularity for uri
             @param uri as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             parsed = urlparse(uri)
             if parsed.scheme:
                 sql.execute("UPDATE history SET popularity=0 WHERE uri=?",
