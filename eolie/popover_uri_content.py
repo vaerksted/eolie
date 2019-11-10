@@ -117,7 +117,7 @@ class UriPopoverContent:
             child.show()
             self._search_box.add(child)
             GLib.idle_add(self._add_searches, searches, search,
-                          priority=GLib.PRIORITY_HIGH)
+                          priority=GLib.PRIORITY_HIGH_IDLE)
         else:
             self.__do_sort_search()
 
@@ -135,7 +135,7 @@ class UriPopoverContent:
             item.set_property("uri", uri)
             self._bookmarks_model.append(item)
             GLib.idle_add(self._add_bookmarks, bookmarks,
-                          priority=GLib.PRIORITY_HIGH)
+                          priority=GLib.PRIORITY_HIGH_IDLE)
 
     def _add_tags(self, tags, select, position=0):
         """
@@ -155,7 +155,7 @@ class UriPopoverContent:
             child.show()
             self._tags_box.add(child)
             GLib.idle_add(self._add_tags, tags, select,
-                          priority=GLib.PRIORITY_HIGH)
+                          priority=GLib.PRIORITY_HIGH_IDLE)
         else:
             if select is None:
                 select = Type.POPULARS
@@ -184,7 +184,7 @@ class UriPopoverContent:
             item.set_property("atime", atime)
             self._history_model.append(item)
             GLib.idle_add(self._add_history_items, items, date,
-                          priority=GLib.PRIORITY_HIGH)
+                          priority=GLib.PRIORITY_HIGH_IDLE)
 
     def _set_bookmarks(self, tag_id):
         """
