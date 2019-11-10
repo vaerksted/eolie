@@ -51,8 +51,7 @@ class PagesManagerList(Gtk.ScrolledWindow):
         for webview in webviews:
             row = PagesManagerRow(webview, self.__window)
             row.show()
-            row.connect("destroy",
-                        lambda x: self.__calculate_height())
+            row.connect("destroy", self.__on_row_destroy)
             self.__listbox.add(row)
             self.__calculate_height()
             if webview == current_webview:
@@ -86,6 +85,16 @@ class PagesManagerList(Gtk.ScrolledWindow):
             return self.__selected_row == row2
         else:
             return row2.webview.atime > row1.webview.atime
+
+    def __on_row_destroy(self, row):
+        """
+            Destroy list if empty
+            @parma row as PageRow
+        """
+        if self.__listbox.get_children():
+            self.__calculate_height()
+        else:
+            self.get_ancestor(Gtk.Popover).destroy()
 
     def __on_row_activated(self, listbox, row):
         """
