@@ -109,7 +109,6 @@ class DatabaseHistory:
             v = result.fetchone()
             # Update current item
             if v is not None:
-                print("update")
                 history_id = v[0]
                 guid = self.get_guid(history_id)
                 sql.execute("UPDATE history\
@@ -119,7 +118,6 @@ class DatabaseHistory:
                                               guid, v[1] + 1, history_id))
             # Add a new item
             else:
-                print("current")
                 # Find an uniq guid
                 while guid is None:
                     guid = get_random_string(12)
