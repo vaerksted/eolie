@@ -136,7 +136,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         """
         self.__popovers.append(popover)
         if monitor:
-            popover.connect("destroy", self.__on_popover_destroy)
+            popover.connect("closed", self.__on_popover_closed)
 
     def close_popovers(self):
         """
@@ -456,7 +456,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.container.webview.set_setting("enable-mediasource", True)
             self.container.webview.reload()
 
-    def __on_popover_destroy(self, popover):
+    def __on_popover_closed(self, popover):
         """
             Remove popover from registered
             @param popover as Gtk.Popover
