@@ -79,6 +79,10 @@ def get_safe_netloc(uri):
     netloc = parsed.netloc
     if not netloc:
         netloc = "%s://" % urlparse(uri).scheme
+    else:
+        split = netloc.split(".")
+        if len(split) > 2:
+            netloc = ".".join(split[-2:])
     return netloc
 
 
