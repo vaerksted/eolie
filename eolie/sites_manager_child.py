@@ -79,7 +79,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if webview not in self.__webviews:
             self.__webviews.append(webview)
-            webview.connect("load-changed", self.__on_webview_load_changed)
+            webview.connect("load-changed", self.on_webview_load_changed)
             webview.connect("notify::is-playing-audio",
                             self.__on_webview_notify_is_playing_audio)
             webview.connect("notify::favicon",
@@ -102,7 +102,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if webview in self.__webviews:
             self.__webviews.remove(webview)
             webview.disconnect_by_func(self.__on_webview_favicon_changed)
-            webview.disconnect_by_func(self.__on_webview_load_changed)
+            webview.disconnect_by_func(self.on_webview_load_changed)
             webview.disconnect_by_func(
                 self.__on_webview_notify_is_playing_audio)
             self.__indicator_label.remove()
@@ -134,6 +134,20 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         if netloc != self.__netloc:
             self.__netloc = netloc
+
+    def on_webview_load_changed(self, webview, event):
+        """
+            Update widget content
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event in [WebKit2.LoadEvent.STARTED,
+                     WebKit2.LoadEvent.COMMITTED]:
+            self.__image.set_from_icon_name(
+                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
+            self.__image.get_style_context().add_class("image-rotate")
+        elif event == WebKit2.LoadEvent.FINISHED:
+            self.__set_favicon(webview)
 
     @property
     def indicator_label(self):
@@ -354,17 +368,3 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
         self.get_style_context().remove_class("drag-up")
         self.get_style_context().remove_class("drag-down")
-
-    def __on_webview_load_changed(self, webview, event):
-        """
-            Update widget content
-            @param webview as WebView
-            @param event as WebKit2.LoadEvent
-        """
-        if event in [WebKit2.LoadEvent.STARTED,
-                     WebKit2.LoadEvent.COMMITTED]:
-            self.__image.set_from_icon_name(
-                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
-            self.__image.get_style_context().add_class("image-rotate")
-        elif event == WebKit2.LoadEvent.FINISHED:
-            self.__set_favicon(webview)

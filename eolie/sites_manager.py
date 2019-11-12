@@ -262,8 +262,7 @@ class SitesManager(Gtk.Grid):
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event not in [WebKit2.LoadEvent.STARTED,
-                         WebKit2.LoadEvent.COMMITTED]:
+        if event != WebKit2.LoadEvent.COMMITTED:
             return
         netloc = get_safe_netloc(webview.uri)
         child = None
@@ -286,6 +285,7 @@ class SitesManager(Gtk.Grid):
                         empty_child = site
 
         if child is None:
+            # We need to create a new child
             if empty_child is None:
                 child = SitesManagerChild(netloc,
                                           self.__window,
@@ -295,15 +295,19 @@ class SitesManager(Gtk.Grid):
                 child.show_label(self.__show_labels)
                 self.__box.add(child)
                 self.update_visible_child()
+            # Use empty child
             else:
                 child = empty_child
                 child.reset(netloc)
                 child.add_webview(webview)
+        # We already have a child for this netloc
         else:
+            # Webview previous child is empty, destroy it
             if empty_child is not None:
                 empty_child.destroy()
             child.add_webview(webview)
             self.update_visible_child()
+        child.on_webview_load_changed(webview, event)
 
     def __on_row_activated(self, listbox, child):
         """
