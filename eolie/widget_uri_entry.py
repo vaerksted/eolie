@@ -230,6 +230,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         parsed = urlparse(uri)
         if parsed.scheme in ["http", "https", "file"]:
             self.set_text_entry(uri)
+            self.__entry.select_region(0, -1)
         self.__popover.popup(child)
 
     def set_default_placeholder(self):
