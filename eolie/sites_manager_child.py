@@ -120,6 +120,13 @@ class SitesManagerChild(Gtk.ListBoxRow):
         else:
             self.__netloc_label.hide()
 
+    def update_favicon(self):
+        """
+            Update favicon for current webview
+        """
+        if self.__window.container.webview in self.__webviews:
+            self.__set_favicon(self.__window.container.webview)
+
     def reset(self, netloc):
         """
             Reset widget to new netloc

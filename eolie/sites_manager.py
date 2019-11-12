@@ -152,6 +152,7 @@ class SitesManager(Gtk.Grid):
         for child in self.__box.get_children():
             if current in child.webviews:
                 child.set_state_flags(Gtk.StateFlags.VISITED, False)
+                child.update_favicon()
                 # Wait loop empty: will fails otherwise if child just created
                 GLib.idle_add(self.__scroll_to_child, child)
             else:
