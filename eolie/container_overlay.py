@@ -25,12 +25,18 @@ class OverlayContainer:
         """
             Init container
         """
+        grid = Gtk.Grid.new()
+        grid.show()
+        grid.set_orientation(Gtk.Orientation.VERTICAL)
         self.__find_widget = FindWidget(self._window)
         self.__find_widget.show()
         self._uri_label = UriLabelWidget()
-        self._overlay = Gtk.Overlay.new()
-        self._overlay.show()
-        self._overlay.add_overlay(self._uri_label)
+        self.__overlay = Gtk.Overlay.new()
+        self.__overlay.show()
+        self.__overlay.add_overlay(self._uri_label)
+        grid.add(self.__find_widget)
+        grid.add(self.__overlay)
+        self.add2(grid)
 
     @property
     def overlay(self):
@@ -38,7 +44,7 @@ class OverlayContainer:
             Get overlay
             @return Gtk.Overlay
         """
-        return self._overlay
+        return self.__overlay
 
     @property
     def find_widget(self):

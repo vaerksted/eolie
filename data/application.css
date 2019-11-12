@@ -79,12 +79,12 @@
     border-radius: 2px;
 }
 
-.font-monospace {
-    font-family: Monospace;
+.text-small {
+    font-size: small;
 }
 
-.font-small {
-    font-size: 80%;
+.text-x-small {
+    font-size: x-small;
 }
 
 .bold {

@@ -26,10 +26,10 @@ class LabelIndicator(Gtk.Label):
             @param count as bool
         """
         Gtk.Label.__init__(self)
+        self.set_size_request(8, 5)
         if is_count:
             self.__margin = 0
-            self.get_style_context().add_class("font-small")
-            self.get_style_context().add_class("font-monospace")
+            self.get_style_context().add_class("text-x-small")
         else:
             self.__margin = 10
         self.set_xalign(0.0)
@@ -37,20 +37,19 @@ class LabelIndicator(Gtk.Label):
         self.__count = 0
         self.__unshown = []
 
-    def update_count(self, add):
+    def add(self):
         """
-            Update view count
-            @param add as bool
+            Add to count
         """
-        if add:
-            self.__count += 1
-        else:
-            self.__count -= 1
-        count = max(1, self.__count)
-        if count == 1:
-            self.set_text(" ")
-        else:
-            self.set_text(str(count))
+        self.__count += 1
+        self.__update_count()
+
+    def remove(self):
+        """
+            Remove from count
+        """
+        self.__count -= 1
+        self.__update_count()
 
     def mark(self, webview):
         """
@@ -86,3 +85,16 @@ class LabelIndicator(Gtk.Label):
             cr.stroke_preserve()
             Gdk.cairo_set_source_color(cr, Gdk.Color.parse("red")[1])
             cr.fill()
+
+#######################
+# PRIVATE             #
+#######################
+    def __update_count(self):
+        """
+            Update view count
+        """
+        count = max(1, self.__count)
+        if count == 1:
+            self.set_text(" ")
+        else:
+            self.set_text(str(count))

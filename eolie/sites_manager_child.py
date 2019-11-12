@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals
-from eolie.utils import get_round_surface, get_char_surface
+from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
 from eolie.define import App
 from eolie.logger import Logger
 
@@ -50,8 +50,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
         builder.add_from_resource("/org/gnome/Eolie/SitesManagerChild.ui")
         builder.connect_signals(self)
         widget = builder.get_object("widget")
+        self.__netloc_label = builder.get_object("netloc_label")
         self.__indicator_label = LabelIndicator(True)
-        self.__indicator_label.set_property("halign", Gtk.Align.CENTER)
+        self.__indicator_label.set_hexpand(True)
         self.__indicator_label.show()
         builder.get_object("grid").attach(self.__indicator_label, 1, 0, 1, 1)
         self.__separator = builder.get_object("separator")
@@ -68,7 +69,6 @@ class SitesManagerChild(Gtk.ListBoxRow):
         self.connect("drag-data-received", self.__on_drag_data_received)
         self.connect("drag-motion", self.__on_drag_motion)
         self.connect("drag-leave", self.__on_drag_leave)
-        self.set_size_request(-1, 38)
         self.set_property("margin", 2)
 
     def add_webview(self, webview):
@@ -84,8 +84,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
                             self.__on_webview_notify_is_playing_audio)
             webview.connect("notify::favicon",
                             self.__on_webview_favicon_changed)
-            self.__indicator_label.update_count(True)
+            self.__indicator_label.add()
             self.__indicator_label.mark(webview)
+            self.__netloc_label.set_text(get_safe_netloc(webview.uri))
             # URI is None, webview not loaded, get favicon from cache
             if webview.get_uri() is None:
                 uri = webview.uri
@@ -104,10 +105,20 @@ class SitesManagerChild(Gtk.ListBoxRow):
             webview.disconnect_by_func(self.__on_webview_load_changed)
             webview.disconnect_by_func(
                 self.__on_webview_notify_is_playing_audio)
-            self.__indicator_label.update_count(False)
+            self.__indicator_label.remove()
             self.__indicator_label.mark(webview)
             if self.__webviews:
                 self.__set_favicon(self.__webviews[0])
+
+    def show_label(self, show):
+        """
+            Show netloc label
+            @param show as bool
+        """
+        if show:
+            self.__netloc_label.show()
+        else:
+            self.__netloc_label.hide()
 
     def reset(self, netloc):
         """

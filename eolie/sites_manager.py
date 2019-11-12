@@ -31,6 +31,7 @@ class SitesManager(Gtk.Grid):
         self.set_orientation(Gtk.Orientation.VERTICAL)
         self.__window = window
         self.__initial_sort = []
+        self.__show_labels = False
         self.set_property("width-request", 50)
         self.get_style_context().add_class("sidebar")
         self.__scrolled = Gtk.ScrolledWindow()
@@ -178,6 +179,15 @@ class SitesManager(Gtk.Grid):
                     child.indicator_label.mark(webview)
                     return
 
+    def show_labels(self, show):
+        """
+            Show labels on children
+            @param show as bool
+        """
+        self.__show_labels = show
+        for child in self.__box.get_children():
+            child.show_label(show)
+
     @property
     def sort(self):
         """
@@ -281,6 +291,7 @@ class SitesManager(Gtk.Grid):
                                           webview.is_ephemeral)
                 child.show()
                 child.add_webview(webview)
+                child.show_label(self.__show_labels)
                 self.__box.add(child)
                 self.update_visible_child()
             else:
