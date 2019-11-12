@@ -130,6 +130,6 @@ class LanguagesMenu(Gtk.Bin):
                                  GLib.Variant("b", state))
         listbox.set_sensitive(state)
         for window in App().windows:
-            for view in window.container.webviews:
-                context = view.webview.get_context()
+            for webview in window.container.webviews:
+                context = webview.get_context()
                 context.set_spell_checking_enabled(state)
