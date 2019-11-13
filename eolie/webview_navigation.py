@@ -111,8 +111,8 @@ class WebViewNavigation:
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             # Night mode
+            App().content_manager.remove_all_style_sheets()
             if App().websettings.get("night_mode", self.uri):
-                App().content_manager.remove_all_style_sheets()
                 cssProviderFile = Gio.File.new_for_uri(
                     "resource:///org/gnome/Eolie/night-mode.css")
                 (status, rules, tag) = cssProviderFile.load_contents(None)
