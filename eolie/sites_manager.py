@@ -324,6 +324,8 @@ class SitesManager(Gtk.Grid):
             widget.show()
             widget.populate(webviews)
             popover = Gtk.Popover.new(child)
+            popover.set_modal(False)
+            self.__window.register(popover)
             popover.get_style_context().add_class("box-shadow")
             popover.set_position(Gtk.PositionType.RIGHT)
             popover.add(widget)
