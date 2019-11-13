@@ -12,8 +12,6 @@
 
 from gi.repository import Gtk, Gdk, GLib, WebKit2
 
-from urllib.parse import urlparse
-
 from eolie.label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
@@ -245,14 +243,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
                                             surface.get_width() / 4)
                 self.__image.set_from_surface(resize_favicon(surface))
             else:
-                parsed = urlparse(webview.uri)
-                if parsed.netloc:
-                    netloc = parsed.netloc.replace("www.", "")
-                    surface = get_char_surface(netloc[0])
-                    self.__image.set_from_surface(surface)
-                else:
-                    self.__image.set_from_icon_name(
-                        "web-browser-symbolic", Gtk.IconSize.LARGE_TOOLBAR)
+                surface = get_char_surface(get_safe_netloc(webview.uri)[0])
+                self.__image.set_from_surface(surface)
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """

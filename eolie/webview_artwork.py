@@ -18,7 +18,7 @@ from eolie.define import App
 from eolie.logger import Logger
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
-from eolie.utils import get_round_surface, get_char_surface
+from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
 
 
 class WebViewArtwork:
@@ -143,10 +143,7 @@ class WebViewArtwork:
         """
         # Get a default favicon
         if surface is None:
-            parsed = urlparse(uri)
-            if parsed.netloc:
-                netloc = parsed.netloc.replace("www.", "")
-                surface = get_char_surface(netloc[0])
+            surface = get_char_surface(get_safe_netloc(uri)[0])
         # Save webview favicon
         if surface is not None:
             resized = resize_favicon(surface)
