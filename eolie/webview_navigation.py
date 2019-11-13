@@ -110,6 +110,19 @@ class WebViewNavigation:
                 self.__update_bookmark_metadata(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
+            # Night mode
+            if App().websettings.get("night_mode", self.uri):
+                App().content_manager.remove_all_style_sheets()
+                cssProviderFile = Gio.File.new_for_uri(
+                    "resource:///org/gnome/Eolie/night-mode.css")
+                (status, rules, tag) = cssProviderFile.load_contents(None)
+                user_style_sheet = WebKit2.UserStyleSheet(
+                                 rules.decode("utf-8"),
+                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                                 WebKit2.UserStyleLevel.USER,
+                                 None,
+                                 None)
+                App().content_manager.add_style_sheet(user_style_sheet)
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)

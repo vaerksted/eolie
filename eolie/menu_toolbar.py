@@ -77,6 +77,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
                 window.add_action(action)
             # Night mode
             night_mode = App().websettings.get("night_mode", uri)
+            builder.get_object("night_mode").show()
             action = Gio.SimpleAction.new_stateful(
                     "night-mode",
                     None,
