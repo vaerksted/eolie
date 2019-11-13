@@ -544,20 +544,23 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param y as int
             @param event as Gdk.Event
         """
-        def on_popover_closed(popover):
-            self.__credentials_popover = None
-
         if x < 30:
             if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
                     "dialog-password-symbolic":
                 self.__update_secure_content_indicator()
                 from eolie.popover_credentials import CredentialsPopover
-                self.__credentials_popover = CredentialsPopover(self.__window)
-                self.__credentials_popover.set_relative_to(self.__entry)
-                self.__credentials_popover.set_pointing_to(
+                credentials_popover = CredentialsPopover(self.__window)
+                credentials_popover.set_relative_to(self.__entry)
+                credentials_popover.set_pointing_to(
                     self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
-                self.__credentials_popover.connect("closed", on_popover_closed)
-                self.__credentials_popover.popup()
+                credentials_popover.popup()
+            else:
+                from eolie.popover_tls import TLSPopover
+                tls_popover = TLSPopover(self.__window)
+                tls_popover.set_relative_to(self.__entry)
+                tls_popover.set_pointing_to(
+                    self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
+                tls_popover.popup()
         elif not self.__popover.get_visible():
             self.__on_entry_focus_in(self.__entry, event)
             self.__popover.popup("bookmarks")
