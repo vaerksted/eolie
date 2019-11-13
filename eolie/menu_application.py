@@ -36,6 +36,16 @@ class ApplicationMenu(Gio.Menu):
                        self.__on_private_clicked)
         self.append(_("New private page"), "app.new-private")
 
+        value = App().settings.get_value("night-mode")
+        action = Gio.SimpleAction.new_stateful(
+            "night-mode",
+            None,
+            GLib.Variant.new_boolean(value))
+        App().add_action(action)
+        action.connect("change-state",
+                       self.__on_night_mode_change_state)
+        self.append(_("Night mode"), "app.night-mode")
+
         # Blockers submenu
         blockers_menu = Gio.Menu()
         for (label, blocker) in [
@@ -148,6 +158,15 @@ class ApplicationMenu(Gio.Menu):
         """
         action.set_state(value)
         App().settings.set_value(blocker, GLib.Variant("b", value))
+
+    def __on_night_mode_change_state(self, action, value):
+        """
+            Update night mode value
+            @param action as Gio.SimpleAction
+            @param value as bool
+        """
+        action.set_state(value)
+        App().settings.set_value("night-mode", GLib.Variant("b", value))
 
     def __on_private_clicked(self, action, variant):
         """

@@ -39,6 +39,11 @@
          <summary>Minimum sidebar position</summary>
          <description />
       </key>
+      <key type="b" name="night-mode">
+         <default>false</default>
+         <summary>Enable night mode</summary>
+         <description />
+      </key>
       <key type="b" name="block-ads">
          <default>true</default>
          <summary>Block ads on pages</summary>
