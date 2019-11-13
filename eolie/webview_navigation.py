@@ -158,7 +158,7 @@ class WebViewNavigation:
             Set user agent for uri
             @param uri as str
         """
-        user_agent = App().websettings.get_user_agent(uri)
+        user_agent = App().websettings.get("user_agent", uri)
         settings = self.get_settings()
         if user_agent:
             settings.set_user_agent(user_agent)

@@ -85,7 +85,7 @@ class ModifyUADialog:
         """
         if response_id != Gtk.ResponseType.DELETE_EVENT:
             user_agent = self.__entry.get_text()
-            App().websettings.set_user_agent(user_agent, self.__uri)
+            App().websettings.set("user_agent", self.__uri, user_agent)
 
 #######################
 # PRIVATE             #

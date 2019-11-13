@@ -56,7 +56,7 @@ class GeolocationPopover(Gtk.Popover):
         self.__request.allow()
         self.hide()
         if self.__switch.get_active():
-            App().websettings.allow_geolocation(self.__uri, True)
+            App().websettings.set("geolocation", self.__uri, True)
             self.__window.toolbar.title.show_indicator(Indicator.GEOLOCATION)
 
     def _on_cancel_button_clicked(self, button):

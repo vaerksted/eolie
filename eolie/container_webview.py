@@ -62,7 +62,7 @@ class WebViewContainer:
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
                 self.__on_back_forward_list_changed)
-        accept_tls = App().websettings.get_accept_tls(webview.uri)
+        accept_tls = App().websettings.get("accept_tls", webview.uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.actions.set_actions(self.__current_webview)
         self._window.toolbar.title.entry.set_uri(webview.uri)
@@ -105,7 +105,7 @@ class WebViewContainer:
         """
         if self.reading:
             self.toggle_reading()
-        accept_tls = App().websettings.get_accept_tls(uri)
+        accept_tls = App().websettings.get("accept_tls", uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.title.entry.set_uri(uri)
 

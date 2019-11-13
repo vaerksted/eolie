@@ -98,7 +98,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
                                            _("Open"),
                                            _("Cancel"))
         dialog.set_select_multiple(request.get_select_multiple())
-        chooser_uri = App().websettings.get_chooser_uri(webview.uri)
+        chooser_uri = App().websettings.get("chooseruri", webview.uri)
         if chooser_uri is not None:
             dialog.set_current_folder_uri(chooser_uri)
         response = dialog.run()
@@ -107,8 +107,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
             request.cancel()
         else:
             request.select_files(dialog.get_filenames())
-            App().websettings.set_chooser_uri(dialog.get_current_folder_uri(),
-                                              webview.uri)
+            App().websettings.set("chooseruri",
+                                  webview.uri,
+                                  dialog.get_current_folder_uri())
         return True
 
     def __on_scroll_event(self, webview, event):

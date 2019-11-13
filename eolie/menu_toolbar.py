@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from eolie.menu_languages import LanguagesMenu
 from eolie.define import App
+from eolie.utils import get_safe_netloc
 
 
 class ToolbarMenu(Gtk.PopoverMenu):
@@ -51,8 +52,9 @@ class ToolbarMenu(Gtk.PopoverMenu):
         webview = self.__window.container.webview
         builder.get_object("default_zoom_button").set_label(
             "{} %".format(int(webview.get_zoom_level() * 100)))
+        netloc = get_safe_netloc(uri)
         parsed = urlparse(uri)
-        builder.get_object("domain_label").set_text(parsed.netloc or uri)
+        builder.get_object("domain_label").set_text(netloc)
         if parsed.scheme in ["http", "https"]:
             # Add blocker actions
             for blocker in ["block-ads", "block-popups",
@@ -63,14 +65,14 @@ class ToolbarMenu(Gtk.PopoverMenu):
                 builder.get_object(blocker).show()
                 content_blocker = App().get_content_blocker(blocker)
                 exception = content_blocker.exceptions.is_domain_exception(
-                    parsed.netloc)
+                    netloc)
                 action = Gio.SimpleAction.new_stateful(
                     "%s-exception" % blocker,
                     None,
                     GLib.Variant.new_boolean(exception))
                 action.connect("change-state",
                                self.__on_exception_change_state,
-                               parsed.netloc,
+                               netloc,
                                blocker)
                 window.add_action(action)
 

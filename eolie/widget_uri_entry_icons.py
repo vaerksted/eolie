@@ -172,7 +172,7 @@ class UriEntryIcons(Gtk.Grid):
             @param button as Gtk.Button
         """
         uri = self.__window.container.webview.uri
-        App().websettings.allow_geolocation(uri, False)
+        App().websettings.set("geolocation", uri, False)
 
     def __on_reload_button_clicked(self, button):
         """

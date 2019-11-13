@@ -63,7 +63,7 @@ class ToolbarTitle(Gtk.EventBox):
             @param uri as str
             @param request as WebKit2.PermissionRequest
         """
-        if App().websettings.allowed_geolocation(uri):
+        if App().websettings.get("geolocation", uri):
             request.allow()
             self.icons.show_geolocation(True)
         else:

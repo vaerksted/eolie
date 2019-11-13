@@ -90,7 +90,7 @@ class WebView(WebKit2.WebView):
                 if window is not None and hasattr(window, "zoom_level"):
                     zoom_level = window.zoom_level
             else:
-                _zoom_level = App().websettings.get_zoom(self.uri)
+                _zoom_level = App().websettings.get("zoom", self.uri)
                 if _zoom_level is not None:
                     zoom_level = _zoom_level / 100
         except Exception as e:
@@ -110,11 +110,11 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        current = App().websettings.get_zoom(self.uri)
+        current = App().websettings.get("zoom", self.uri)
         if current is None:
             current = int(self.window.zoom_level * 100)
         current += 10
-        App().websettings.set_zoom(current, self.uri)
+        App().websettings.set("zoom", self.uri, current)
         self.update_zoom_level()
         return current
 
@@ -123,13 +123,13 @@ class WebView(WebKit2.WebView):
             Zoom out view
             @return current zoom after zoom out
         """
-        current = App().websettings.get_zoom(self.uri)
+        current = App().websettings.get("zoom", self.uri)
         if current is None:
             current = int(self.window.zoom_level * 100)
         current -= 10
         if current == 0:
             return 10
-        App().websettings.set_zoom(current, self.uri)
+        App().websettings.set("zoom", self.uri, current)
         self.update_zoom_level()
         return current
 
@@ -139,7 +139,7 @@ class WebView(WebKit2.WebView):
             @return current zoom after zoom out
         """
         current = int(self.window.zoom_level * 100)
-        App().websettings.set_zoom(None, self.uri)
+        App().websettings.set("zoom", self.uri, None)
         self.update_zoom_level()
         return current
 

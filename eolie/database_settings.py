@@ -27,6 +27,7 @@ class DatabaseSettings:
     """
     __UPGRADES = {
         1: "ALTER TABLE settings ADD accept_tls INT NOT NULL DEFAULT 0",
+        2: "ALTER TABLE settings ADD dark INT NOT NULL DEFAULT 0",
     }
 
     # SQLite documentation:
@@ -42,6 +43,7 @@ class DatabaseSettings:
                                            profile TEXT,
                                            zoom INT,
                                            accept_tls INT NOT NULL DEFAULT 0,
+                                           dark INT NOT NULL DEFAULT 0,
                                            geolocation INT,
                                            user_agent TEXT
                                            )'''
@@ -79,11 +81,12 @@ class DatabaseSettings:
                         Logger.error("Settings DB upgrade %s failed", i)
                 sql.execute("PRAGMA user_version=%s" % new_version)
 
-    def set_chooser_uri(self, chooseruri, uri):
+    def set(self, option, uri, status):
         """
-            Add an uri related to uri
-            @param chooseruri as str
+            Set option for URI to value
+            @param option as str
             @param uri as str
+            @param status as object
         """
         parsed = urlparse(uri)
         if parsed.scheme not in ["http", "https"]:
@@ -95,248 +98,33 @@ class DatabaseSettings:
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE settings\
-                                 SET chooseruri=?\
-                                 WHERE uri=?", (chooseruri, parsed.netloc))
+                                 SET %s=?\
+                                 WHERE uri=?" % option,
+                                (status, parsed.netloc))
                 else:
                     sql.execute("INSERT INTO settings\
-                                          (uri, chooseruri)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           chooseruri))
+                                          (uri, %s)\
+                                          VALUES (?, ?)" % option,
+                                (status, parsed.netloc))
         except Exception as e:
-            Logger.error("DatabaseSettings::set_chooser_uri(): %s", e)
+            Logger.error("DatabaseSettings::set(): %s", e)
 
-    def get_chooser_uri(self, uri):
+    def get(self, option, uri):
         """
-            Get chooser uri for uri
+            Get option for URI
+            @param option as str
             @param uri as str
-            @return chooseruri as str/None
+            @return object
         """
         parsed = urlparse(uri)
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT chooseruri FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
+            result = sql.execute("SELECT %s FROM settings\
+                                  WHERE uri=?" % option,
+                                 (parsed.netloc,))
             v = result.fetchone()
             if v is not None:
                 return v[0]
             return None
-
-    def allow_geolocation(self, uri, b):
-        """
-            Allow geolocation for uri
-            @param uri as str
-            @param b as bool
-        """
-        parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https"]:
-            return
-        try:
-            with SqlCursor(self, True) as sql:
-                result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    sql.execute("UPDATE settings\
-                                 SET geolocation=?\
-                                 WHERE uri=?", (b, parsed.netloc))
-                else:
-                    sql.execute("INSERT INTO settings\
-                                          (uri, geolocation)\
-                                          VALUES (?, ?)", (b, parsed.netloc))
-        except Exception as e:
-            Logger.error("DatabaseSettings::allow_geolocation(): %s", e)
-
-    def allowed_geolocation(self, uri):
-        """
-            Check if geolocation is allowed
-            @param uri as str
-            @return allowed as bool
-        """
-        parsed = urlparse(uri)
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT geolocation FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
-            v = result.fetchone()
-            if v is not None:
-                return v[0] == 1
-            return False
-
-    def set_accept_tls(self, uri, accept):
-        """
-            Accept TLS for uri
-            @param uri as str
-            @param accept as bool
-        """
-        parsed = urlparse(uri)
-        if parsed.scheme != "https":
-            return
-        try:
-            with SqlCursor(self, True) as sql:
-                result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    sql.execute("UPDATE settings\
-                                 SET accept_tls=?\
-                                 WHERE uri=?", (accept, parsed.netloc))
-                else:
-                    sql.execute("INSERT INTO settings\
-                                          (uri, accept_tls)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           accept))
-        except Exception as e:
-            Logger.error("DatabaseSettings::set_accept_tls(): %s", e)
-
-    def get_accept_tls(self, uri):
-        """
-            True if should accept tls for uri
-            @param uri as str
-            @return bool
-        """
-        parsed = urlparse(uri)
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT accept_tls FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
-            v = result.fetchone()
-            if v is not None:
-                return bool(v[0])
-            return False
-
-    def set_zoom(self, zoom, uri):
-        """
-            Set zoom for uri
-            @param zoom as int
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https"]:
-            return
-        try:
-            with SqlCursor(self, True) as sql:
-                result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    sql.execute("UPDATE settings\
-                                 SET zoom=?\
-                                 WHERE uri=?", (zoom, parsed.netloc))
-                else:
-                    sql.execute("INSERT INTO settings\
-                                          (uri, zoom)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           zoom))
-        except Exception as e:
-            Logger.error("DatabaseSettings::set_zoom(): %s", e)
-
-    def get_zoom(self, uri):
-        """
-            Get zoom for uri
-            @param uri as str
-            @return zoom as int/None
-        """
-        parsed = urlparse(uri)
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT zoom FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
-            v = result.fetchone()
-            if v is not None:
-                return v[0]
-            return None
-
-    def set_user_agent(self, user_agent, uri):
-        """
-            Set user agent for uri
-            @param user_agent as str
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https"]:
-            return
-        try:
-            with SqlCursor(self, True) as sql:
-                result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    sql.execute("UPDATE settings\
-                                 SET user_agent=?\
-                                 WHERE uri=?", (user_agent, parsed.netloc))
-                else:
-                    sql.execute("INSERT INTO settings\
-                                          (uri, user_agent)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           user_agent))
-        except Exception as e:
-            Logger.error("DatabaseSettings::set_user_agent(): %s", e)
-
-    def get_user_agent(self, uri):
-        """
-            Get user agent for uri
-            @param uri as str
-            @return user_agent as str
-        """
-        parsed = urlparse(uri)
-        with SqlCursor(self) as sql:
-            result = sql.execute("SELECT user_agent FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
-            v = result.fetchone()
-            if v is not None:
-                return v[0] or ""
-            return ""
-
-    def set_profile(self, profile, uri):
-        """
-            Set profile for uri
-            @param user_agent as str
-            @param uri as str
-        """
-        parsed = urlparse(uri)
-        if parsed.scheme not in ["http", "https"]:
-            return
-        try:
-            with SqlCursor(self, True) as sql:
-                result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
-                v = result.fetchone()
-                if v is not None:
-                    sql.execute("UPDATE settings\
-                                 SET profile=?\
-                                 WHERE uri=?", (profile, parsed.netloc))
-                else:
-                    sql.execute("INSERT INTO settings\
-                                          (uri, profile)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           profile))
-        except Exception as e:
-            Logger.error("DatabaseSettings::set_profile(): %s", e)
-
-    def get_profile(self, uri):
-        """
-            Get profile for uri
-            @param uri as str
-            @return user_agent as str
-        """
-        parsed = urlparse(uri)
-        if parsed.netloc:
-            domain = ".".join(parsed.netloc.split(".")[-2:])
-        else:
-            return "default"
-        with SqlCursor(self) as sql:
-            filter = ("%" + domain + "%",)
-            result = sql.execute("SELECT profile FROM settings\
-                                  WHERE uri LIKE ?", filter)
-            v = result.fetchone()
-            if v is not None:
-                return v[0] or "default"
-            return "default"
-
-    def remove_profile(self, profile):
-        """
-            Remove profile from settings
-            @param profile as str
-        """
-        with SqlCursor(self, True) as sql:
-            sql.execute("UPDATE settings SET profile=''\
-                        WHERE profile=?", (profile,))
 
     def get_languages(self, uri):
         """
