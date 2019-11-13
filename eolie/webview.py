@@ -22,6 +22,7 @@ from eolie.webview_navigation import WebViewNavigation
 from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
 from eolie.webview_state import WebViewState
+from eolie.webview_credentials import WebViewCredentials
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -421,6 +422,7 @@ class WebView(WebKit2.WebView):
         WebViewNavigation.__init__(self)
         WebViewSignals.__init__(self)
         WebViewArtwork.__init__(self)
+        WebViewCredentials.__init__(self)
         self.__window = window
         self.__atime = 0
         self.__children = []
@@ -552,7 +554,8 @@ class WebView(WebKit2.WebView):
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
-                  WebViewSignals, WebViewArtwork, WebViewState):
+                  WebViewSignals, WebViewArtwork, WebViewState,
+                  WebViewCredentials):
 
     def __init__(self):
         pass
