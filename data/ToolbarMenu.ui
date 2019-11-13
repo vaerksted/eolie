@@ -278,7 +278,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">9</property>
+        <property name="top_attach">10</property>
       </packing>
     </child>
     <child>
@@ -392,6 +392,19 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">8</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkModelButton" id="night_mode">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="action_name">win.night-mode</property>
+        <property name="text" translatable="yes">Night mode</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">9</property>
       </packing>
     </child>
   </object>

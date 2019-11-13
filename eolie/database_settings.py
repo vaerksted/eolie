@@ -19,6 +19,7 @@ from threading import Lock
 from eolie.sqlcursor import SqlCursor
 from eolie.define import EOLIE_DATA_PATH
 from eolie.logger import Logger
+from eolie.utils import get_safe_netloc
 
 
 class DatabaseSettings:
@@ -27,7 +28,7 @@ class DatabaseSettings:
     """
     __UPGRADES = {
         1: "ALTER TABLE settings ADD accept_tls INT NOT NULL DEFAULT 0",
-        2: "ALTER TABLE settings ADD dark INT NOT NULL DEFAULT 0",
+        2: "ALTER TABLE settings ADD night_mode INT NOT NULL DEFAULT 0",
     }
 
     # SQLite documentation:
@@ -38,12 +39,11 @@ class DatabaseSettings:
     __create_settings = '''CREATE TABLE settings (
                                            id INTEGER PRIMARY KEY,
                                            uri TEXT NOT NULL,
-                                           chooseruri TEXT,
+                                           chooser_uri TEXT,
                                            languages TEXT,
-                                           profile TEXT,
                                            zoom INT,
                                            accept_tls INT NOT NULL DEFAULT 0,
-                                           dark INT NOT NULL DEFAULT 0,
+                                           night_mode INT NOT NULL DEFAULT 0,
                                            geolocation INT,
                                            user_agent TEXT
                                            )'''
@@ -55,7 +55,7 @@ class DatabaseSettings:
         """
         self.thread_lock = Lock()
         new_version = len(self.__UPGRADES)
-        self.__DB_PATH = "%s/settings2.db" % EOLIE_DATA_PATH
+        self.__DB_PATH = "%s/websettings.db" % EOLIE_DATA_PATH
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
@@ -92,20 +92,21 @@ class DatabaseSettings:
         if parsed.scheme not in ["http", "https"]:
             return
         try:
+            netloc = get_safe_netloc(uri)
             with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (parsed.netloc,))
+                                      WHERE uri=?", (netloc,))
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE settings\
                                  SET %s=?\
                                  WHERE uri=?" % option,
-                                (status, parsed.netloc))
+                                (status, netloc))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (uri, %s)\
                                           VALUES (?, ?)" % option,
-                                (status, parsed.netloc))
+                                (netloc, status))
         except Exception as e:
             Logger.error("DatabaseSettings::set(): %s", e)
 
@@ -116,11 +117,10 @@ class DatabaseSettings:
             @param uri as str
             @return object
         """
-        parsed = urlparse(uri)
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT %s FROM settings\
                                   WHERE uri=?" % option,
-                                 (parsed.netloc,))
+                                 (get_safe_netloc(uri),))
             v = result.fetchone()
             if v is not None:
                 return v[0]
@@ -133,10 +133,9 @@ class DatabaseSettings:
             @return codes as [str]
             @raise if not found
         """
-        parsed = urlparse(uri)
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT languages FROM settings\
-                                  WHERE uri=?", (parsed.netloc,))
+                                  WHERE uri=?", (get_safe_netloc(uri),))
             v = result.fetchone()
             if v is not None:
                 languages = v[0]
@@ -165,12 +164,12 @@ class DatabaseSettings:
                     sql.execute("UPDATE settings\
                                  SET languages=?\
                                  WHERE uri=?", (";".join(codes),
-                                                parsed.netloc))
+                                                get_safe_netloc(uri)))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (uri, languages)\
-                                          VALUES (?, ?)", (parsed.netloc,
-                                                           code))
+                                          VALUES (?, ?)",
+                                (get_safe_netloc(uri), code))
         except Exception as e:
             Logger.error("DatabaseSettings::add_language(): %s", e)
 
@@ -180,7 +179,6 @@ class DatabaseSettings:
             @param code as str
             @param uri as str
         """
-        parsed = urlparse(uri)
         codes = self.get_languages(uri)
         if codes is not None and code in codes:
             codes.remove(code)
@@ -188,7 +186,7 @@ class DatabaseSettings:
                 sql.execute("UPDATE settings\
                                  SET languages=?\
                                  WHERE uri=?", (";".join(codes),
-                                                parsed.netloc))
+                                                get_safe_netloc(uri)))
 
     def get_cursor(self):
         """
