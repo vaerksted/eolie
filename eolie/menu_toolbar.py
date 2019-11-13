@@ -79,11 +79,12 @@ class ToolbarMenu(Gtk.PopoverMenu):
             night_mode = App().settings.get_value("night-mode")
             netloc_night_mode = App().websettings.get("night_mode", uri)
             builder.get_object("night_mode").show()
+            enabled = (night_mode and netloc_night_mode is not False) or\
+                netloc_night_mode
             action = Gio.SimpleAction.new_stateful(
                     "night-mode",
                     None,
-                    GLib.Variant.new_boolean(
-                        night_mode and netloc_night_mode is not False))
+                    GLib.Variant.new_boolean(enabled))
             action.connect("change-state",
                            self.__on_night_mode_change_state,
                            uri)
