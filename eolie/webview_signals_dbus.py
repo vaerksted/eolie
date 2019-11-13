@@ -72,7 +72,6 @@ class WebViewDBusSignals:
                 pass_form_name,
                 uri,
                 form_uri)
-            self.window.toolbar.title.entry.show_credentials_indicator(uri)
         elif signal == "ShowCredentials":
             (userform, form_uri) = params
             model = FormMenu(self.get_page_id(), self.window)

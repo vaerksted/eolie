@@ -10,7 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib, Gio
+from gi.repository import GLib
+
+from time import time
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
@@ -32,6 +34,7 @@ class WebViewCredentials:
         self.__pass_form_name = ""
         self.__uri = ""
         self.__form_uri = ""
+        self.__ctime = 0
 
     def add_credentials(self, uuid, user_form_name, user_form_value,
                         pass_form_name, uri, form_uri):
@@ -50,6 +53,7 @@ class WebViewCredentials:
         self.__pass_form_name = pass_form_name
         self.__uri = uri
         self.__form_uri = form_uri
+        self.__ctime = int(time())
 
     def save_credentials(self):
         """
@@ -72,6 +76,14 @@ class WebViewCredentials:
             @return str
         """
         return self.__uri
+
+    @property
+    def ctime(self):
+        """
+            Get credentials creation time
+            @return int
+        """
+        return self.__ctime
 
 #######################
 # PRIVATE             #

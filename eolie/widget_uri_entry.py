@@ -14,6 +14,7 @@ from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
 from gettext import gettext as _
 from urllib.parse import urlparse
+from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.define import App
@@ -40,7 +41,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__input_warning_shown = False
         self.__entry_changed_id = None
         self.__suggestion_id = None
-        self.__credentials_timeout_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = None
 
@@ -144,8 +144,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.set_tooltip_text(uri)
         self.__input_warning_shown = False
         self.__secure_content = True
-        if self.__credentials_timeout_id is None:
-            self.__update_secure_content_indicator()
+        self.__update_secure_content_indicator()
         bookmark_id = App().bookmarks.get_id(uri)
         self.__icons.set_bookmarked(bookmark_id is not None)
 
@@ -184,20 +183,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry.set_icon_from_icon_name(
             Gtk.EntryIconPosition.PRIMARY,
             "channel-insecure-symbolic")
-
-    def show_credentials_indicator(self, uri):
-        """
-            Show an indicator to tell user credentials are available
-            @param uri as str
-        """
-        if self.__credentials_timeout_id is not None:
-            GLib.source_remove(self.__credentials_timeout_id)
-        self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
-                                             "dialog-password-symbolic")
-        self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                                           _("Save password for: %s") % uri)
-        self.__credentials_timeout_id = GLib.timeout_add(
-            10000, self.__update_secure_content_indicator)
 
     def focus(self, child="bookmarks"):
         """
@@ -286,20 +271,29 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
             Update PRIMARY icon, Gtk.Entry should be set
         """
-        self.__credentials_timeout_id = None
-        uri = self.__window.container.webview.uri
-        parsed = urlparse(uri)
-        if (parsed.scheme == "https" and self.__secure_content) or\
-                parsed.scheme == "file":
+        webview = self.__window.container.webview
+        if time() - webview.ctime < 10:
             self.__entry.set_icon_from_icon_name(
+                Gtk.EntryIconPosition.PRIMARY, "dialog-password-symbolic")
+            self.__entry.set_icon_tooltip_text(
                 Gtk.EntryIconPosition.PRIMARY,
-                "channel-secure-symbolic")
-        elif parsed.scheme in ["http", "https"]:
-            self.set_insecure_content()
+                _("Save password for: %s") % webview.credentials_uri)
         else:
-            self.__entry.set_icon_from_icon_name(
-                Gtk.EntryIconPosition.PRIMARY,
-                "system-search-symbolic")
+            uri = webview.uri
+            parsed = urlparse(uri)
+            self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
+                                               "")
+            if (parsed.scheme == "https" and self.__secure_content) or\
+                    parsed.scheme == "file":
+                self.__entry.set_icon_from_icon_name(
+                    Gtk.EntryIconPosition.PRIMARY,
+                    "channel-secure-symbolic")
+            elif parsed.scheme in ["http", "https"]:
+                self.set_insecure_content()
+            else:
+                self.__entry.set_icon_from_icon_name(
+                    Gtk.EntryIconPosition.PRIMARY,
+                    "system-search-symbolic")
 
     def __on_search_suggestion(self, uri, status, content, encoding, value):
         """
