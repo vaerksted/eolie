@@ -97,10 +97,11 @@ class ContentBlockerExceptions:
             @param domain as str
             @return {}
         """
+        value = "*%s" % domain
         return {
             "trigger": {
                 "url-filter": ".*",
-                "if-domain": [domain]
+                "if-domain": [value]
             },
             "action": {
                 "type": "ignore-previous-rules"
