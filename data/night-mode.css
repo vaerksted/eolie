@@ -174,12 +174,19 @@ span {
 
 pre {
     background-color: #353535 !important;
-    color: #EAEAEA !important;
+    color: red !important;
     background-image: none !important;
     border-color: #292929 ! important;
 }
 
 nav {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+figure {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
