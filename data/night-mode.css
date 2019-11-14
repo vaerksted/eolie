@@ -125,6 +125,13 @@ p {
     border-color: #292929 ! important;
 }
 
+em {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
 li {
     background-color: #353535 !important;
     color: #EAEAEA !important;
@@ -145,6 +152,27 @@ li:hover * {
 }
 
 footer {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+code {
+    background-color: #303030 !important;
+    color: red !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+span {
+    background-color: #353535 !important;
+    color: red !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+pre {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
