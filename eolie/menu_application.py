@@ -170,6 +170,7 @@ class ApplicationMenu(Gio.Menu):
         App().settings.set_value("night-mode", GLib.Variant("b", value))
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", value)
+        GLib.idle_add(self.__window.toolbar.title.entry.update_style)
         self.__window.container.webview.reload()
 
     def __on_private_clicked(self, action, variant):

@@ -105,9 +105,13 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
 
         # Some on the fly css styling
         context = self.__entry.get_style_context()
-        self.__css_provider = Gtk.CssProvider()
+        self.__css_allocation = Gtk.CssProvider()
+        self.__css_color = Gtk.CssProvider()
         context.add_provider_for_screen(Gdk.Screen.get_default(),
-                                        self.__css_provider,
+                                        self.__css_allocation,
+                                        Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        context.add_provider_for_screen(Gdk.Screen.get_default(),
+                                        self.__css_color,
                                         Gtk.STYLE_PROVIDER_PRIORITY_USER)
         SizeAllocationHelper.__init__(self, self.__icons)
 
@@ -210,6 +214,17 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
                                            "")
+
+    def update_style(self):
+        """
+            Update color based on parent values
+            Used for dark headerbar (Ubuntu like)
+        """
+        # Getting color for headerbar as not possible in pure CSS
+        style = self.get_parent().get_style_context()
+        color = style.get_color(Gtk.StateFlags.ACTIVE).to_string()
+        css = ".uribar { color: %s; caret-color:%s}" % (color, color)
+        self.__css_color.load_from_data(css.encode("utf-8"))
 
     @property
     def widget(self):
@@ -672,7 +687,5 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             css += ".placeholder:dir(rtl)"\
                    "{margin-right: %spx;\
                      margin-left: 0px;}" % placeholder_margin
-            # Get value from headerbar as not possible in pure CSS
-            color = style.get_color(Gtk.StateFlags.ACTIVE).to_string()
-            css += ".uribar { color: %s; caret-color:%s}" % (color, color)
-            self.__css_provider.load_from_data(css.encode("utf-8"))
+            self.__css_allocation.load_from_data(css.encode("utf-8"))
+            self.update_style()
