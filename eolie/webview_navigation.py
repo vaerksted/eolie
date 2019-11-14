@@ -85,6 +85,27 @@ class WebViewNavigation:
             self.set_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
+    def night_mode(self):
+        """
+            Handle night mode
+        """
+        # Night mode
+        App().content_manager.remove_all_style_sheets()
+        night_mode = App().settings.get_value("night-mode")
+        netloc_night_mode = App().websettings.get("night_mode", self.uri)
+        if (night_mode and netloc_night_mode is not False) or\
+                netloc_night_mode:
+            cssProviderFile = Gio.File.new_for_uri(
+                "resource:///org/gnome/Eolie/night-mode.css")
+            (status, rules, tag) = cssProviderFile.load_contents(None)
+            user_style_sheet = WebKit2.UserStyleSheet(
+                             rules.decode("utf-8"),
+                             WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                             WebKit2.UserStyleLevel.USER,
+                             None,
+                             None)
+            App().content_manager.add_style_sheet(user_style_sheet)
+
 #######################
 # PROTECTED           #
 #######################
@@ -110,22 +131,7 @@ class WebViewNavigation:
                 self.__update_bookmark_metadata(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
-            # Night mode
-            App().content_manager.remove_all_style_sheets()
-            night_mode = App().settings.get_value("night-mode")
-            netloc_night_mode = App().websettings.get("night_mode", self.uri)
-            if (night_mode and netloc_night_mode is not False) or\
-                    netloc_night_mode:
-                cssProviderFile = Gio.File.new_for_uri(
-                    "resource:///org/gnome/Eolie/night-mode.css")
-                (status, rules, tag) = cssProviderFile.load_contents(None)
-                user_style_sheet = WebKit2.UserStyleSheet(
-                                 rules.decode("utf-8"),
-                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                                 WebKit2.UserStyleLevel.USER,
-                                 None,
-                                 None)
-                App().content_manager.add_style_sheet(user_style_sheet)
+            self.night_mode()
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)

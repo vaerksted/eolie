@@ -197,4 +197,4 @@ class ToolbarMenu(Gtk.PopoverMenu):
         """
         action.set_state(param)
         App().websettings.set("night_mode", uri, param.get_boolean())
-        self.__window.container.webview.reload()
+        self.__window.container.webview.night_mode()

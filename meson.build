@@ -1,6 +1,6 @@
 project('eolie', 'c',
   version: '0.9.92',
-  meson_version: '>= 0.40.0',
+  meson_version: '>= 0.48.0',
 )
 i18n = import('i18n')
 python = import('python3')
@@ -37,7 +37,7 @@ conf.set('libexecdir', LIBEXEC_DIR)
 conf.set('VERSION', meson.project_version())
 
 subdir('data')
-subdir('python-webextension')
+#subdir('python-webextension')
 subproject('po')
 subdir('search-provider')
 
