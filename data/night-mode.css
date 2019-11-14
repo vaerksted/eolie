@@ -2,34 +2,68 @@ html {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 body {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 section {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 a {
     background-color: transparent !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
+    border-color: #292929 ! important;
 }
 
 div {
     background-color: transparent !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
+    border-color: #292929 ! important;
 }
 
 header {
     background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+input {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+ul {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+
+li {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+li:hover {
+    background-color: #636363 !important;
     color: #EAEAEA !important;
     background-image: none !important;
 }
@@ -38,28 +72,33 @@ footer {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 nav {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 aside {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 main {
     background-color: transparent !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }
 
 article {
     background-color: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
+    border-color: #292929 ! important;
 }

@@ -109,14 +109,14 @@ class Context:
                 favicon_uri = "file://%s" % favicon_path
             else:
                 favicon_uri = "internal://web-browser-symbolic"
-            html_start += '<a class="child" id="%s"\
+            html_start += '<a class="child color" id="%s"\
                            title="%s" href="%s">\
                            <img src="file://%s"></img>\
-                           <div class="caption">%s\
+                           <footer class="caption color">%s\
                            <img onclick="%s(event, %s, %s)"\
-                                class="close_button">\
+                                class="close_button color">\
                            <img class="favicon" src="%s">\
-                           </img></img></div></a>' % (
+                           </img></img></footer></a>' % (
                 element_id, title, netloc, path,
                 title, reset_function,
                 "'%s'" % netloc,
