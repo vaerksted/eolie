@@ -28,6 +28,7 @@ a {
 
 div {
     background-color: transparent !important;
+    background: transparent !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
