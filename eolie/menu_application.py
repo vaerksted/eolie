@@ -158,6 +158,7 @@ class ApplicationMenu(Gio.Menu):
         """
         action.set_state(value)
         App().settings.set_value(blocker, GLib.Variant("b", value))
+        self.__window.container.webview.reload()
 
     def __on_night_mode_change_state(self, action, value):
         """
@@ -167,6 +168,7 @@ class ApplicationMenu(Gio.Menu):
         """
         action.set_state(value)
         App().settings.set_value("night-mode", GLib.Variant("b", value))
+        self.__window.container.webview.reload()
 
     def __on_private_clicked(self, action, variant):
         """
