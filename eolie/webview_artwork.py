@@ -252,8 +252,12 @@ class WebViewArtwork:
         if self._initial_uri is not None and\
                 self._initial_uri not in uris:
             uris.append(self._initial_uri)
+        if App().settings.get_value("night-mode"):
+            prefix = "start_dark"
+        else:
+            prefix = "start_light"
         for uri in uris:
-            App().art.save_artwork(uri, surface, "start")
+            App().art.save_artwork(uri, surface, prefix)
 
     def __on_scroll_event(self, widget, event):
         """
