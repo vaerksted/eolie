@@ -270,6 +270,10 @@ class Application(Gtk.Application):
         """
         self.content_manager = WebKit2.UserContentManager.new()
         self.settings = Settings.new()
+        # Dark mode
+        if self.settings.get_value("night-mode"):
+            settings = Gtk.Settings.get_default()
+            settings.set_property("gtk-application-prefer-dark-theme", True)
         # Init extensions
         current_path = GLib.getenv("PYTHONPATH")
         new_path = self.__extension_dir
