@@ -133,7 +133,13 @@ li {
 }
 
 li:hover {
-    background-color: #636363 !important;
+    background-color: #444444 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+}
+
+li:hover * {
+    background-color: #444444 !important;
     color: #EAEAEA !important;
     background-image: none !important;
 }
