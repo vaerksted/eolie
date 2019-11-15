@@ -40,7 +40,7 @@ class Context:
             cookie_manager.set_persistent_storage(
                 path,
                 WebKit2.CookiePersistentStorage.SQLITE)
-        context.set_web_extensions_directory(App().extension_dir)
+        # context.set_web_extensions_directory(App().extension_dir)
         context.set_process_model(
             WebKit2.ProcessModel.MULTIPLE_SECONDARY_PROCESSES)
         context.set_spell_checking_enabled(

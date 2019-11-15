@@ -15,6 +15,7 @@ from gi.repository import Gtk, Gdk, Gio, GLib, WebKit2
 from gettext import gettext as _
 
 from eolie.define import App
+from eolie.logger import Logger
 
 
 class FindWidget(Gtk.SearchBar):
@@ -82,9 +83,10 @@ class FindWidget(Gtk.SearchBar):
         """
             Search for current clipboard
         """
-        page_id = self.__window.container.webview.get_page_id()
-        App().helper.call("GetSelection", page_id, None,
-                          self.__on_get_selection)
+        webview = self.__window.container.webview
+        webview.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/Selection.js", None,
+                self.__on_get_selection)
 
 #######################
 # PRIVATE             #
@@ -189,9 +191,11 @@ class FindWidget(Gtk.SearchBar):
         """
         selection = None
         try:
-            selection = source.call_finish(result)[0]
-        except:
-            pass
+            data = source.run_javascript_from_gresource_finish(result)
+            selection = data.get_js_value().to_string()
+            print(selection)
+        except Exception as e:
+            Logger.warning("FindWidget::__on_get_selection(): %s", e)
         if selection is None:
             selection = ""
         self.__search_entry.set_text(selection)
