@@ -96,6 +96,37 @@ class PasswordsHelper:
         except Exception as e:
             Logger.debug("PasswordsHelper::get(): %s", e)
 
+    def get_by_uri(self, uri, callback, *args):
+        """
+            Get password attributes by uri
+            @param uri as str
+            @param callback as function
+            @param args
+        """
+        try:
+            self.__wait_for_secret(self.get, uri, callback, *args)
+            SecretSchema = {
+                "type": Secret.SchemaAttributeType.STRING,
+                "hostname": Secret.SchemaAttributeType.STRING,
+            }
+            SecretAttributes = {
+                "type": "eolie web login",
+                "hostname": uri,
+            }
+
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            self.__secret.search(schema, SecretAttributes,
+                                 Secret.SearchFlags.ALL,
+                                 None,
+                                 self.__on_secret_search,
+                                 uri,
+                                 callback,
+                                 *args)
+        except Exception as e:
+            Logger.debug("PasswordsHelper::get_by_uri(): %s", e)
+
     def get_sync(self, callback, *args):
         """
             Get sync password
