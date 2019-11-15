@@ -18,7 +18,6 @@ from gi.repository import Gio
 
 localedir = '@LOCALE_DIR@'
 pkgdatadir = '@DATA_DIR@'
-extensiondir = '@EXTENSION_DIR@'
 
 from eolie.application import Application
 
@@ -45,7 +44,7 @@ if __name__ == "__main__":
     resource = Gio.resource_load(os.path.join(pkgdatadir, 'eolie.gresource'))
     Gio.Resource._register(resource)
 
-    app = Application("@VERSION@", os.path.join(extensiondir, 'webkitextension'))
+    app = Application("@VERSION@")
     if 'EOLIE_TRACE' in os.environ:
         graphviz = GraphvizOutput()
         graphviz.output_file = 'eolie.png'

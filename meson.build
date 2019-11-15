@@ -37,7 +37,6 @@ conf.set('libexecdir', LIBEXEC_DIR)
 conf.set('VERSION', meson.project_version())
 
 subdir('data')
-#subdir('python-webextension')
 subproject('po')
 subdir('search-provider')
 

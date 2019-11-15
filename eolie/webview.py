@@ -571,6 +571,7 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        WebViewCredentials._on_load_changed(self, webview, event)
         WebViewHelpers._on_load_changed(self, webview, event)
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)

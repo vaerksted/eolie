@@ -19,11 +19,9 @@ from time import time
 from eolie.define import App
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
-from eolie.webview_signals_dbus import WebViewDBusSignals
 
 
-class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
-                     WebViewDBusSignals):
+class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
     """
         Handle webview signals
     """
@@ -49,7 +47,6 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals,
         """
         WebViewMenuSignals.__init__(self)
         WebViewJsSignals.__init__(self)
-        WebViewDBusSignals.__init__(self)
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
         self.connect("title-changed", self.__on_title_changed)

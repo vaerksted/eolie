@@ -15,6 +15,7 @@ from gi.repository import WebKit2, Gio
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
+from eolie.utils import get_baseuri
 
 
 class WebViewHelpers:
@@ -33,7 +34,7 @@ class WebViewHelpers:
 #######################
     def _on_load_changed(self, webview, event):
         """
-            Update internals
+            Run JS helpers
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
@@ -60,17 +61,8 @@ class WebViewHelpers:
             @parma uri as str
         """
         # First get passwords for URI
-        self.__helper.get_by_uri(self.__get_hostname_uri(uri),
+        self.__helper.get_by_uri(get_baseuri(uri),
                                  self.__on_password)
-
-    def __get_hostname_uri(self, uri):
-        """
-            Get form uri for page
-            @param uri as str
-            @return str
-        """
-        parsed = urlparse(uri)
-        return "%s://%s" % (parsed.scheme, parsed.netloc)
 
     def __on_password(self, attributes, password, uri, index, count):
         """

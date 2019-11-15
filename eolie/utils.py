@@ -70,6 +70,16 @@ def get_char_surface(char):
     return surface
 
 
+def get_baseuri(uri):
+    """
+        Get Base URI
+        @param uri as str
+        @return str
+    """
+    parsed = urlparse(uri)
+    return "%s://%s" % (parsed.scheme, parsed.netloc)
+
+
 def get_safe_netloc(uri):
     """
         Get netloc (scheme if empty)

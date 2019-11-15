@@ -58,11 +58,10 @@ class Application(Gtk.Application):
 
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
-    def __init__(self, version, extension_dir):
+    def __init__(self, version):
         """
             Create application
             @param version as str
-            @param extension_dir as str
         """
         self.__version = version
         self.__state_cache = []
@@ -99,7 +98,6 @@ class Application(Gtk.Application):
                     GLib.setenv("SSL_CERT_FILE", path, True)
                     break
         self.sync_worker = None  # Not initialised
-        self.__extension_dir = extension_dir
         self.show_tls = False
         self.cursors = {}
         GLib.set_application_name('Eolie')
@@ -247,14 +245,6 @@ class Application(Gtk.Application):
         return self.get_windows()
 
     @property
-    def extension_dir(self):
-        """
-            Extension dir path
-            @return str
-        """
-        return self.__extension_dir
-
-    @property
     def favicons_path(self):
         """
             Cookies sqlite DB path
@@ -274,12 +264,6 @@ class Application(Gtk.Application):
         if self.settings.get_value("night-mode"):
             settings = Gtk.Settings.get_default()
             settings.set_property("gtk-application-prefer-dark-theme", True)
-        # Init extensions
-        current_path = GLib.getenv("PYTHONPATH")
-        new_path = self.__extension_dir
-        if current_path:
-            new_path = new_path + ':' + current_path
-        GLib.setenv("PYTHONPATH", new_path, True)
 
         # Add a global DBus helper
         self.helper = DBusHelper()

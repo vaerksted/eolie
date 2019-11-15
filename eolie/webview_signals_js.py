@@ -54,8 +54,11 @@ class WebViewJsSignals:
             GLib.source_remove(self.__js_blocker_timeout_id)
             self.__js_blocker_timeout_id = None
         message = dialog.get_message()
+        # Credentials message
+        if message.startswith("@EOLIE_SUBMIT@"):
+            webview.add_credentials(message)
         # Focus message
-        if message.startswith("@EOLIE_FOCUS_MESSAGE@"):
+        elif message.startswith("@EOLIE_FOCUS_MESSAGE@"):
             self.window.toolbar.title.show_input_warning(self)
         # Reader js message
         elif message.startswith("@EOLIE_READER@"):

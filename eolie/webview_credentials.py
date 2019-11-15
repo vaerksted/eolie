@@ -10,12 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib
+from gi.repository import WebKit2
 
 from time import time
+from uuid import uuid4
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
+from eolie.utils import get_baseuri
 from eolie.logger import Logger
 
 
@@ -35,39 +37,62 @@ class WebViewCredentials:
         self.__uri = ""
         self.__form_uri = ""
         self.__ctime = 0
+        self.__helper = PasswordsHelper()
 
-    def add_credentials(self, uuid, user_form_name, user_form_value,
-                        pass_form_name, uri, form_uri):
+    def add_credentials(self, message):
         """
             Add credential to webview
-            @param uuid as str
-            @param user_form_name as str
-            @param user_form_value as str
-            @param pass_form_name as str
-            @param uri as str
-            @param form_uri as str
+            @param message as str
         """
-        self.__uuid = uuid
-        self.__user_form_name = user_form_name
-        self.__user_form_value = user_form_value
-        self.__pass_form_name = pass_form_name
-        self.__uri = uri
-        self.__form_uri = form_uri
-        self.__ctime = int(time())
+        try:
+            split = message.split("\n")
+            self.__user_form_name = split[1]
+            self.__user_form_value = split[2]
+            self.__pass_form_name = split[3]
+            self.__pass_form_value = split[4]
+            self.__form_uri = get_baseuri(split[5])
+            self.__hostname = get_baseuri(self.uri)
+            self.__ctime = int(time())
+            self.__helper.get_by_uri(self.__hostname, self.__on_password)
+        except Exception as e:
+            Logger.error("WebViewCredentials::add_credentials(): %s", e)
 
     def save_credentials(self):
         """
             Save credentials to secrets
         """
-        App().helper.call("SaveCredentials", self.get_page_id(),
-                          GLib.Variant("(sssss)",
-                                       (self.__uuid, self.__user_form_name,
-                                        self.__pass_form_name, self.__uri,
-                                        self.__form_uri)),
-                          self.__on_save_credentials,
-                          self.__form_uri,
-                          self.__user_form_name,
-                          self.__pass_form_name)
+        try:
+            if not self.__uuid:
+                self.__uuid = str(uuid4())
+                self.__helper.store(self.__user_form_name,
+                                    self.__user_form_value,
+                                    self.__pass_form_name,
+                                    self.__pass_form_value,
+                                    self.__hostname,
+                                    self.__form_uri,
+                                    self.__uuid,
+                                    None)
+            else:
+                self.__helper.clear(self.__uuid,
+                                    self.__helper.store,
+                                    self.__user_form_name,
+                                    self.__user_form_value,
+                                    self.__pass_form_name,
+                                    self.__pass_form_value,
+                                    self.__hostname,
+                                    self.__form_uri,
+                                    self.__uuid,
+                                    None)
+            if App().sync_worker is not None:
+                App().sync_worker.push_password(self.__user_form_name,
+                                                self.__user_form_value,
+                                                self.__pass_form_name,
+                                                self.__pass_form_value,
+                                                self.__hostname,
+                                                self.__form_uri,
+                                                self.__uuid)
+        except Exception as e:
+            Logger.error("WebViewCredentials::save_credentials(): %s", e)
 
     @property
     def credentials_uri(self):
@@ -75,7 +100,7 @@ class WebViewCredentials:
             Get credentials URI
             @return str
         """
-        return self.__uri
+        return self.__hostname
 
     @property
     def ctime(self):
@@ -86,39 +111,34 @@ class WebViewCredentials:
         return self.__ctime
 
 #######################
+# PROTECTED           #
+#######################
+    def _on_load_changed(self, webview, event):
+        """
+            Run JS helper
+            @param webview as WebView
+            @param event as WebKit2.LoadEvent
+        """
+        if event == WebKit2.LoadEvent.FINISHED:
+            self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/Submit.js", None, None)
+
+#######################
 # PRIVATE             #
 #######################
-    def __on_get_password(self, attributes, password, form_uri, index, count):
+    def __on_password(self, attributes, password, uri, index, count):
         """
-            Push credential to sync
+            Set login/password input
             @param attributes as {}
             @param password as str
-            @param form_uri as str
+            @param uri as str
             @param index as int
             @param count as int
         """
         try:
-            if attributes is not None and App().sync_worker is not None:
-                App().sync_worker.push_password(attributes["userform"],
-                                                attributes["login"],
-                                                attributes["passform"],
-                                                password,
-                                                attributes["hostname"],
-                                                attributes["formSubmitURL"],
-                                                attributes["uuid"])
+            if attributes is None:
+                return
+            if attributes["formSubmitURL"] == self.__form_uri:
+                self.__uuid = attributes["uuid"]
         except Exception as e:
-            Logger.error("CredentialsPopover::__on_get_password(): %s", e)
-
-    def __on_save_credentials(self, source, result, form_uri,
-                              user_form_name, pass_form_name):
-        """
-            Get password and push credential to sync
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param form_uri as str
-            @param user_form_name as str
-            @param pass_form_name as str
-        """
-        helper = PasswordsHelper()
-        helper.get(form_uri, user_form_name,
-                   pass_form_name, self.__on_get_password)
+            Logger.error("WebViewCredentials::__on_password(): %s", e)
