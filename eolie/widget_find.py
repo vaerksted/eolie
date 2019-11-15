@@ -193,7 +193,6 @@ class FindWidget(Gtk.SearchBar):
         try:
             data = source.run_javascript_from_gresource_finish(result)
             selection = data.get_js_value().to_string()
-            print(selection)
         except Exception as e:
             Logger.warning("FindWidget::__on_get_selection(): %s", e)
         if selection is None:

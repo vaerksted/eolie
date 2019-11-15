@@ -23,6 +23,7 @@ from eolie.webview_signals import WebViewSignals
 from eolie.webview_artwork import WebViewArtwork
 from eolie.webview_state import WebViewState
 from eolie.webview_credentials import WebViewCredentials
+from eolie.webview_helpers import WebViewHelpers
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -417,6 +418,7 @@ class WebView(WebKit2.WebView):
             @param related as WebView
             @param window as Window
         """
+        WebViewHelpers.__init__(self)
         WebViewState.__init__(self)
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
@@ -555,7 +557,7 @@ class WebView(WebKit2.WebView):
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
                   WebViewSignals, WebViewArtwork, WebViewState,
-                  WebViewCredentials):
+                  WebViewCredentials, WebViewHelpers):
 
     def __init__(self):
         pass
@@ -569,6 +571,7 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        WebViewHelpers._on_load_changed(self, webview, event)
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
         if event == WebKit2.LoadEvent.COMMITTED:

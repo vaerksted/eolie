@@ -32,6 +32,7 @@ class ToolbarTitle(Gtk.EventBox):
         Gtk.EventBox.__init__(self)
         self.__window = window
         self.__width = -1
+        self.__input_warning_shown = False
         self.connect("enter-notify-event", self.__on_enter_notify_event)
         self.connect("leave-notify-event", self.__on_leave_notify_event)
         self.__entry = UriEntry(window)
