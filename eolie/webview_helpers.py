@@ -29,6 +29,13 @@ class WebViewHelpers:
         """
         self.__helper = PasswordsHelper()
 
+    def set_forms_content(self, uuid):
+        """
+            Set input forms for uuid
+            @parma uuid as str
+        """
+        self.__helper.get_by_uuid(uuid, self.__on_get_password_by)
+
 #######################
 # PROTECTED           #
 #######################
@@ -60,20 +67,22 @@ class WebViewHelpers:
             Set input forms for current uri
             @parma uri as str
         """
-        # First get passwords for URI
+        self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/FormMenu.js", None, None)
         self.__helper.get_by_uri(get_baseuri(uri),
-                                 self.__on_password)
+                                 self.__on_get_password_by)
 
-    def __on_password(self, attributes, password, uri, index, count):
+    def __on_get_password_by(self, attributes, password,
+                             ignored, index, count):
         """
             Set login/password input
             @param attributes as {}
             @param password as str
-            @param uri as str
+            @param ignored
             @param index as int
             @param count as int
         """
-        if attributes is None:
+        if attributes is None or index != 0:
             return
         f = Gio.File.new_for_uri(
             "resource:///org/gnome/Eolie/javascript/SetForms.js")

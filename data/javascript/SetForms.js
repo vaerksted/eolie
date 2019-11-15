@@ -1,4 +1,4 @@
-let formsArray = document.querySelectorAll("form");
+formsArray = document.querySelectorAll("form");
 
 forms_loop: for (let i = 0; i < formsArray.length; i++) {
     let form = formsArray[i];

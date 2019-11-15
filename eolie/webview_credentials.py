@@ -10,10 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2
+from gi.repository import WebKit2, Gtk, Gdk
 
 from time import time
 from uuid import uuid4
+from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
@@ -53,7 +54,7 @@ class WebViewCredentials:
             self.__form_uri = get_baseuri(split[5])
             self.__hostname = get_baseuri(self.uri)
             self.__ctime = int(time())
-            self.__helper.get_by_uri(self.__hostname, self.__on_password)
+            self.__helper.get_by_uri(self.__hostname, self.__on_get_password)
         except Exception as e:
             Logger.error("WebViewCredentials::add_credentials(): %s", e)
 
@@ -94,6 +95,23 @@ class WebViewCredentials:
         except Exception as e:
             Logger.error("WebViewCredentials::save_credentials(): %s", e)
 
+    def show_form_menu(self, message):
+        """
+            Show form menu for message
+            @param message as str
+        """
+        try:
+            from eolie.menu_form import FormMenu
+            split = message.split("\n")
+            user_form_name = split[1]
+            menu = FormMenu(self, self.window)
+            self.__helper.get_by_uri(get_baseuri(self.uri),
+                                     self.__on_menu_get_password,
+                                     menu,
+                                     user_form_name)
+        except Exception as e:
+            Logger.error("WebViewCredentials::show_form_menu(): %s", e)
+
     @property
     def credentials_uri(self):
         """
@@ -126,9 +144,9 @@ class WebViewCredentials:
 #######################
 # PRIVATE             #
 #######################
-    def __on_password(self, attributes, password, uri, index, count):
+    def __on_get_password(self, attributes, password, uri, index, count):
         """
-            Set login/password input
+            Update uuid
             @param attributes as {}
             @param password as str
             @param uri as str
@@ -141,4 +159,35 @@ class WebViewCredentials:
             if attributes["formSubmitURL"] == self.__form_uri:
                 self.__uuid = attributes["uuid"]
         except Exception as e:
-            Logger.error("WebViewCredentials::__on_password(): %s", e)
+            Logger.error("WebViewCredentials::__on_get_password(): %s", e)
+
+    def __on_menu_get_password(self, attributes, password,
+                               uri, index, count, menu, user_form_name):
+        """
+            Append to menu
+            @param attributes as {}
+            @param password as str
+            @param uri as str
+            @param index as int
+            @param count as int
+            @param menu as FormMenu
+            @param user_form_name as str
+        """
+        try:
+            parsed = urlparse(uri)
+            if attributes is not None and\
+                    attributes["userform"] == user_form_name and (
+                        count > 0 or parsed.scheme == "http"):
+                menu.add_attributes(attributes, uri)
+                if index == 0:
+                    popover = Gtk.Popover.new_from_model(self, menu)
+                    popover.set_modal(False)
+                    self.window.register(popover)
+                    rect = Gdk.Rectangle()
+                    rect.x = self._last_click_event_x
+                    rect.y = self._last_click_event_y - 10
+                    rect.width = rect.height = 1
+                    popover.set_pointing_to(rect)
+                    popover.popup()
+        except Exception as e:
+            Logger.error("WebViewCredentials::__on_get_password(): %s", e)

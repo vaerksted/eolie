@@ -57,6 +57,9 @@ class WebViewJsSignals:
         # Credentials message
         if message.startswith("@EOLIE_SUBMIT@"):
             webview.add_credentials(message)
+        # Input menu message
+        elif message.startswith("@EOLIE_FORM_MENU_MESSAGE@"):
+            webview.show_form_menu(message)
         # Focus message
         elif message.startswith("@EOLIE_FOCUS_MESSAGE@"):
             self.window.toolbar.title.show_input_warning(self)

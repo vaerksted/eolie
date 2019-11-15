@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gio, GLib
+from gi.repository import Gio
 
 from hashlib import sha256
 from gettext import gettext as _
@@ -23,15 +23,15 @@ class FormMenu(Gio.Menu):
         Menu showing form username
     """
 
-    def __init__(self, page_id, window):
+    def __init__(self, webview, window):
         """
             Init menu
-            @param page_id as int
+            @param webview as Webview
+            @param window as Window
         """
         Gio.Menu.__init__(self)
         self.__window = window
-        self.__actions = []
-        self.__page_id = page_id
+        self.__webview = webview
         self.__section = Gio.Menu()
         self.append_section(_("Saved credentials"), self.__section)
 
@@ -45,32 +45,21 @@ class FormMenu(Gio.Menu):
             attributes["login"].encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
         App().add_action(action)
-        self.__actions.append(encoded)
         action.connect('activate',
                        self.__on_action_clicked,
-                       attributes)
+                       attributes["uuid"])
         label = attributes["login"].replace("_", "__")
         item = Gio.MenuItem.new(label, "app.%s" % encoded)
         self.__section.append_item(item)
 
-    def clean(self):
-        """
-            Clean menu
-        """
-        for action in self.__actions:
-            self.__window.remove_action(action)
-
 #######################
 # PRIVATE             #
 #######################
-    def __on_action_clicked(self, action, variant, attributes):
+    def __on_action_clicked(self, action, variant, uuid):
         """
             Update form
             @param Gio.SimpleAction
             @param GVariant
-            @param attributes as {}
+            @param uuid as str
         """
-        App().helper.call("SetAuthForms", self.__page_id,
-                          GLib.Variant("(ss)",
-                                       (attributes["userform"],
-                                        attributes["login"])))
+        self.__webview.set_forms_content(uuid)
