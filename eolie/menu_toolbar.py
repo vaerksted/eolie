@@ -186,7 +186,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
             content_blocker.exceptions.add_domain_exception(domain)
         content_blocker.exceptions.save()
         content_blocker.update()
-        self.__window.container.webview.reload
+        self.__window.container.webview.reload()
 
     def __on_night_mode_change_state(self, action, param, uri):
         """
