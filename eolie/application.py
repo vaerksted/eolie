@@ -561,19 +561,19 @@ class Application(Gtk.Application):
         """
         if webviews:
             webview = webviews.pop(0)
-            page_id = webview.get_page_id()
-            self.helper.call("FormsFilled", page_id, None,
-                             self.__on_forms_filled, window, webviews)
+            webview.run_javascript("document.activeElement.tagName;", None,
+                                   self.__on_get_active_element,
+                                   webviews, window)
         else:
             self.__close_window(window)
 
-    def __on_forms_filled(self, source, result, window, webviews):
+    def __on_get_active_element(self, source, result, webviews, window):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
             @param result as Gio.AsyncResult
-            @param window as Window
             @param webviews as [WebView]
+            @param window as Window
         """
         def on_response_id(dialog, response_id, window, webviews, self):
             if response_id == Gtk.ResponseType.CLOSE:
@@ -590,8 +590,9 @@ class Application(Gtk.Application):
             dialog.response(Gtk.ResponseType.CANCEL)
 
         try:
-            result = source.call_finish(result)[0]
-            if result:
+            data = source.run_javascript_finish(result)
+            name = data.get_js_value().to_string()
+            if name == "TEXTAREA":
                 builder = Gtk.Builder()
                 builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
                 dialog = builder.get_object("dialog")

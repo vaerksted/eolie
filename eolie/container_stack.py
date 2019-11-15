@@ -95,9 +95,8 @@ class StackContainer:
             Ask user before closing view if forms filled
             @param webview as WebView
         """
-        page_id = webview.get_page_id()
-        App().helper.call("FormsFilled", page_id, None,
-                          self.__on_forms_filled, webview)
+        webview.run_javascript("document.activeElement.tagName;", None,
+                               self.__on_get_active_element, webview)
 
     def close_webview(self, webview):
         """
@@ -196,7 +195,7 @@ class StackContainer:
         self.pages_manager.remove_webview(webview)
         self.sites_manager.remove_webview(webview)
 
-    def __on_forms_filled(self, source, result, webview):
+    def __on_get_active_element(self, source, result, webview):
         """
             Ask user to close view, if ok, close view
             @param source as GObject.Object
@@ -215,11 +214,9 @@ class StackContainer:
             dialog.response(Gtk.ResponseType.CANCEL)
 
         try:
-            try:
-                result = source.call_finish(result)
-            except:
-                result = None
-            if result is not None and result[0]:
+            data = source.run_javascript_finish(result)
+            name = data.get_js_value().to_string()
+            if name == "TEXTAREA":
                 builder = Gtk.Builder()
                 builder.add_from_resource("/org/gnome/Eolie/QuitDialog.ui")
                 dialog = builder.get_object("dialog")

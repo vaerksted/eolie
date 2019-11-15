@@ -36,3 +36,7 @@ class WebViewHelpers:
         if event == WebKit2.LoadEvent.FINISHED:
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/Insecure.js", None, None)
+
+#######################
+# PRIVATE             #
+#######################
