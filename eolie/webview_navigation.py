@@ -128,13 +128,13 @@ class WebViewNavigation:
         elif event == WebKit2.LoadEvent.REDIRECTED:
             self.__update_bookmark_metadata(self.uri)
         elif event == WebKit2.LoadEvent.COMMITTED:
+            self.night_mode()
             self.emit("uri-changed", self.uri)
             App().history.set_page_state(self.uri)
             if self._initial_uri != self.uri:
                 self.__update_bookmark_metadata(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
-            self.night_mode()
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
