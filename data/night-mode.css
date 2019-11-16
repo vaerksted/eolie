@@ -33,6 +33,14 @@ div {
     border-color: #292929 ! important;
 }
 
+div[role="dialog"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: transparent !important;
+    border-color: #292929 ! important;
+}
+
+
 header {
     background-color: #353535 !important;
     color: #EAEAEA !important;
@@ -166,13 +174,6 @@ code {
 
 time {
     background-color: #353535 !important;
-    color: #EAEAEA !important;
-    background-image: none !important;
-    border-color: #292929 ! important;
-}
-
-span {
-    background-color: inherit !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
