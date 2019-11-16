@@ -45,6 +45,13 @@ div[role="dialog"] {
     border-color: #292929 ! important;
 }
 
+div[role="button"] {
+    background-color: #393939 !important;
+    background: #393939 !important;
+    color: #EAEAEA !important;
+    background-image: transparent !important;
+    border-color: #292929 ! important;
+}
 
 header {
     background-color: #353535 !important;
