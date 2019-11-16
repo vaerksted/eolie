@@ -94,8 +94,8 @@ class Container(Gtk.Paned,
         """
             Show a notification telling user to donate a little
         """
-        from eolie.app_notification import AppNotification
-        notification = AppNotification(
+        from eolie.container_notification import ContainerNotification
+        notification = ContainerNotification(
             _("Please consider a donation to the project"),
             [_("PayPal"), _("Patreon")],
             [lambda: Gtk.show_uri_on_window(

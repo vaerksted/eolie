@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GLib
 
 
-class AppNotification(Gtk.Revealer):
+class ContainerNotification(Gtk.Revealer):
     """
         Show a notification to user with a button connected to an action
     """
