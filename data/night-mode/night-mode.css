@@ -27,7 +27,7 @@ a {
 }
 
 div {
-    background-color: transparent !important;
+    background-color: initial !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
@@ -41,10 +41,9 @@ div[role="dialog"] {
 }
 
 div[role="button"] {
-    background-color: #454545 !important;
+    background-color: #383838 !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
-    border-color: #292929 ! important;
 }
 
 
