@@ -61,6 +61,22 @@ cite {
     border-color: #292929 ! important;
 }
 
+textarea {
+    background-color: #393939 !important;
+    background: #393939 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+button {
+    background-color: #393939 !important;
+    background: #393939 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
 header {
     background-color: #353535 !important;
     background: #353535 !important;
