@@ -22,6 +22,12 @@ install_data(
   install_dir: 'share/glib-2.0/schemas'
 )
 
+# Install CSS for night mode
+install_subdir(
+  'night-mode',
+  install_dir: 'share/eolie'
+)
+
 # Merging the translations with the desktop file
 i18n.merge_file(
   output: project_id + '.desktop',

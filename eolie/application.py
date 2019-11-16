@@ -58,13 +58,15 @@ class Application(Gtk.Application, NightApplication):
 
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
-    def __init__(self, version):
+    def __init__(self, version, data_dir):
         """
             Create application
             @param version as str
+            @param data_dir as str
         """
         self.__version = version
         self.__state_cache = []
+        self.__data_dir = data_dir
         self.__content_blockers = []
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
@@ -245,9 +247,18 @@ class Application(Gtk.Application, NightApplication):
         return self.get_windows()
 
     @property
+    def data_dir(self):
+        """
+            Get data dir
+            @return str
+        """
+        return self.__data_dir
+
+    @property
     def favicons_path(self):
         """
             Cookies sqlite DB path
+            @return str
         """
         return self.__FAVICONS_PATH
 

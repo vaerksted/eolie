@@ -95,9 +95,9 @@ class WebViewNavigation:
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
         if (night_mode and netloc_night_mode is not False) or\
                 netloc_night_mode:
-            cssProviderFile = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/night-mode.css")
-            (status, rules, tag) = cssProviderFile.load_contents(None)
+            f = Gio.File.new_for_uri("file://%s/night-mode/%s.css" %
+                                     (App().data_dir, "night-mode"))
+            (status, rules, tag) = f.load_contents(None)
             user_style_sheet = WebKit2.UserStyleSheet(
                              rules.decode("utf-8"),
                              WebKit2.UserContentInjectedFrames.ALL_FRAMES,
