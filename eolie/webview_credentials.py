@@ -32,6 +32,7 @@ class WebViewCredentials:
             Init credentials
         """
         self.__uuid = ""
+        self.__in_secrets_user_form_name = ""
         self.__user_form_name = ""
         self.__user_form_value = ""
         self.__pass_form_name = ""
@@ -54,7 +55,10 @@ class WebViewCredentials:
             self.__form_uri = get_baseuri(split[5])
             self.__hostname = get_baseuri(self.uri)
             self.__ctime = int(time())
-            self.__helper.get_by_uri(self.__hostname, self.__on_get_password)
+            self.__helper.get(self.__hostname,
+                              self.__user_form_name,
+                              self.__pass_form_name,
+                              self.__on_get_password)
         except Exception as e:
             Logger.error("WebViewCredentials::add_credentials(): %s", e)
 
@@ -63,7 +67,9 @@ class WebViewCredentials:
             Save credentials to secrets
         """
         try:
-            if not self.__uuid:
+            # Store a new password if non exists or if login is different
+            if not self.__uuid or\
+                    self.__in_secrets_login != self.__user_form_value:
                 self.__uuid = str(uuid4())
                 self.__helper.store(self.__user_form_name,
                                     self.__user_form_value,
@@ -94,6 +100,7 @@ class WebViewCredentials:
                                                 self.__uuid)
         except Exception as e:
             Logger.error("WebViewCredentials::save_credentials(): %s", e)
+        self.__in_secrets_login = ""
 
     def show_form_menu(self, message):
         """
@@ -105,10 +112,10 @@ class WebViewCredentials:
             split = message.split("\n")
             user_form_name = split[1]
             menu = FormMenu(self, self.window)
-            self.__helper.get_by_uri(get_baseuri(self.uri),
-                                     self.__on_menu_get_password,
-                                     menu,
-                                     user_form_name)
+            self.__helper.get(get_baseuri(self.uri), user_form_name, None,
+                              self.__on_menu_get_password,
+                              menu,
+                              user_form_name)
         except Exception as e:
             Logger.error("WebViewCredentials::show_form_menu(): %s", e)
 
@@ -156,8 +163,8 @@ class WebViewCredentials:
         try:
             if attributes is None:
                 return
-            if attributes["formSubmitURL"] == self.__form_uri:
-                self.__uuid = attributes["uuid"]
+            self.__in_secrets_login = attributes["login"]
+            self.__uuid = attributes["uuid"]
         except Exception as e:
             Logger.error("WebViewCredentials::__on_get_password(): %s", e)
 
@@ -175,9 +182,8 @@ class WebViewCredentials:
         """
         try:
             parsed = urlparse(uri)
-            if attributes is not None and\
-                    attributes["userform"] == user_form_name and (
-                        count > 0 or parsed.scheme == "http"):
+            if attributes is not None and (
+                    count > 0 or parsed.scheme == "http"):
                 menu.add_attributes(attributes, uri)
                 if index == 0:
                     popover = Gtk.Popover.new_from_model(self, menu)

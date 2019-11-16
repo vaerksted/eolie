@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.utils import get_baseuri
+from eolie.logger import Logger
 
 
 class WebViewHelpers:
@@ -68,9 +69,24 @@ class WebViewHelpers:
             @parma uri as str
         """
         self.run_javascript_from_gresource(
-                "/org/gnome/Eolie/javascript/FormMenu.js", None, None)
-        self.__helper.get_by_uri(get_baseuri(uri),
-                                 self.__on_get_password_by)
+                "/org/gnome/Eolie/javascript/FormMenu.js",
+                None, self.__on_get_forms)
+
+    def __on_get_forms(self, source, result):
+        """
+            Start search with selection
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            data = source.run_javascript_from_gresource_finish(result)
+            message = data.get_js_value().to_string()
+            split = message.split("\n")
+            for user_form_name in split:
+                self.__helper.get(get_baseuri(self.uri), user_form_name, None,
+                                  self.__on_get_password_by)
+        except Exception as e:
+            Logger.warning("WebViewHelpers::__on_get_forms(): %s", e)
 
     def __on_get_password_by(self, attributes, password,
                              ignored, index, count):
@@ -82,7 +98,7 @@ class WebViewHelpers:
             @param index as int
             @param count as int
         """
-        if attributes is None or index != 0:
+        if attributes is None or count > 1:
             return
         f = Gio.File.new_for_uri(
             "resource:///org/gnome/Eolie/javascript/SetForms.js")
