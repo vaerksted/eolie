@@ -81,6 +81,8 @@ class NightApplication:
             @param changed_properties as {}
             @param invalidated_properties as [str]
         """
+        if not self.settings.get_value("auto-night-mode"):
+            return
         if "Temperature" in changed_properties.keys():
             temperature = changed_properties["Temperature"]
             night_mode = self.settings.get_value("night-mode")

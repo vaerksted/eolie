@@ -44,6 +44,11 @@
          <summary>Enable night mode</summary>
          <description />
       </key>
+      <key type="b" name="auto-night-mode">
+         <default>false</default>
+         <summary>Switch to night mode with GNOME</summary>
+         <description />
+      </key>
       <key type="b" name="block-ads">
          <default>true</default>
          <summary>Block ads on pages</summary>
