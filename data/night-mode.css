@@ -164,8 +164,15 @@ code {
     border-color: #292929 ! important;
 }
 
-span {
+time {
     background-color: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+span {
+    background-color: inherit !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
