@@ -26,6 +26,7 @@ from time import time
 from getpass import getuser
 from signal import signal, SIGINT, SIGTERM
 
+from eolie.application_night import NightApplication
 from eolie.settings import Settings
 from eolie.window import Window
 from eolie.art import Art
@@ -50,7 +51,7 @@ from eolie.logger import Logger
 from eolie.webview_state import WebViewState
 
 
-class Application(Gtk.Application):
+class Application(Gtk.Application, NightApplication):
     """
         Eolie application
     """
@@ -259,10 +260,7 @@ class Application(Gtk.Application):
         """
         self.content_manager = WebKit2.UserContentManager.new()
         self.settings = Settings.new()
-        # Dark mode
-        if self.settings.get_value("night-mode"):
-            settings = Gtk.Settings.get_default()
-            settings.set_property("gtk-application-prefer-dark-theme", True)
+        NightApplication.__init__(self)
 
         # First init sync worker
         from eolie.firefox_sync import SyncWorker
