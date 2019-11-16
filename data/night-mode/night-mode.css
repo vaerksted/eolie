@@ -1,5 +1,6 @@
 html {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -7,6 +8,7 @@ html {
 
 body {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -14,6 +16,7 @@ body {
 
 section {
     background-color: transparent !important;
+    background: transparent !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -21,13 +24,14 @@ section {
 
 a {
     background-color: transparent !important;
+    background: transparent !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
 }
 
 div {
-    background-color: initial !important;
+    background-color: transparent !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
@@ -35,20 +39,16 @@ div {
 
 div[role="dialog"] {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
 }
 
-div[role="button"] {
-    background-color: #383838 !important;
-    color: #EAEAEA !important;
-    background-image: transparent !important;
-}
-
 
 header {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -56,6 +56,7 @@ header {
 
 input {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -63,6 +64,7 @@ input {
 
 ul {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -70,6 +72,7 @@ ul {
 
 ol {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -77,6 +80,7 @@ ol {
 
 form {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -84,6 +88,7 @@ form {
 
 h1 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -91,6 +96,7 @@ h1 {
 
 h1 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -98,6 +104,7 @@ h1 {
 
 h2 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -105,6 +112,7 @@ h2 {
 
 h3 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -112,6 +120,7 @@ h3 {
 
 h4 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -119,6 +128,7 @@ h4 {
 
 h5 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -126,6 +136,7 @@ h5 {
 
 h6 {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -133,6 +144,7 @@ h6 {
 
 p {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -140,6 +152,7 @@ p {
 
 em {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -147,6 +160,7 @@ em {
 
 li {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -154,18 +168,21 @@ li {
 
 li:hover {
     background-color: #444444 !important;
+    background: #444444 !important;
     color: #EAEAEA !important;
     background-image: none !important;
 }
 
 li:hover * {
     background-color: #444444 !important;
+    background: #444444 !important;
     color: #EAEAEA !important;
     background-image: none !important;
 }
 
 footer {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -173,6 +190,7 @@ footer {
 
 code {
     background-color: #303030 !important;
+    background: #303030 !important;
     color: red !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -180,6 +198,7 @@ code {
 
 time {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -187,6 +206,7 @@ time {
 
 pre {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: red !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -194,6 +214,7 @@ pre {
 
 nav {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -201,6 +222,7 @@ nav {
 
 figure {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -208,6 +230,7 @@ figure {
 
 aside {
     background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -215,6 +238,7 @@ aside {
 
 main {
     background-color: transparent !important;
+    background: transparent !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
@@ -222,6 +246,7 @@ main {
 
 article {
     background-color: transparent !important;
+    background: transparent !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
