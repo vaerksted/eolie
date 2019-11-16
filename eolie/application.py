@@ -43,7 +43,6 @@ from eolie.context import Context
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
-from eolie.helper_dbus import DBusHelper
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
 from eolie.utils import is_unity, wanted_loading_type
@@ -265,8 +264,6 @@ class Application(Gtk.Application):
             settings = Gtk.Settings.get_default()
             settings.set_property("gtk-application-prefer-dark-theme", True)
 
-        # Add a global DBus helper
-        self.helper = DBusHelper()
         # First init sync worker
         from eolie.firefox_sync import SyncWorker
         if SyncWorker.check_modules():
