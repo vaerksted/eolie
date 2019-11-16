@@ -1,6 +1,6 @@
 
-let formsArrayMenu = document.querySelectorAll("form");
-var user_form_names = "";
+formsArrayMenu = document.querySelectorAll("form");
+user_form_names = "";
 formsArrayMenu.forEach(function(form) {
     inputsArrayMenu = form.querySelectorAll("input");
     inputsArrayMenu.forEach(function(input) {
