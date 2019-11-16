@@ -53,6 +53,14 @@ div[role="button"] {
     border-color: #292929 ! important;
 }
 
+cite {
+    background-color: #353535 !important;
+    background: #353535 !important;
+    color: #BABABA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
 header {
     background-color: #353535 !important;
     background: #353535 !important;
