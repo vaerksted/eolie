@@ -89,22 +89,25 @@ class WebViewNavigation:
         """
             Handle night mode
         """
+        parsed = urlparse(self.uri)
         # Night mode
         App().content_manager.remove_all_style_sheets()
         night_mode = App().settings.get_value("night-mode")
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
         if (night_mode and netloc_night_mode is not False) or\
                 netloc_night_mode:
-            f = Gio.File.new_for_uri("file://%s/night-mode/%s.css" %
-                                     (App().data_dir, "night-mode"))
-            (status, rules, tag) = f.load_contents(None)
-            user_style_sheet = WebKit2.UserStyleSheet(
-                             rules.decode("utf-8"),
-                             WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                             WebKit2.UserStyleLevel.USER,
-                             None,
-                             None)
-            App().content_manager.add_style_sheet(user_style_sheet)
+            for name in ["night-mode", parsed.netloc]:
+                f = Gio.File.new_for_uri("file://%s/night-mode/%s.css" %
+                                         (App().data_dir, name))
+                if f.query_exists():
+                    (status, rules, tag) = f.load_contents(None)
+                    user_style_sheet = WebKit2.UserStyleSheet(
+                                 rules.decode("utf-8"),
+                                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                                 WebKit2.UserStyleLevel.USER,
+                                 None,
+                                 None)
+                    App().content_manager.add_style_sheet(user_style_sheet)
 
 #######################
 # PROTECTED           #
