@@ -34,14 +34,16 @@ class StackContainer:
         self._stack.set_vexpand(True)
         self._stack.show()
 
-    def add_webview_for_uri(self, uri, loading_type):
+    def add_webview_for_uri(self, uri, loading_type, is_ephemeral=False):
         """
             Add a webview to container with uri
             @param uri as str
             @param loading_type as Gdk.LoadingType
+            @param is_ephemeral as bool
         """
         state = WebViewStateStruct()
         state.uri = uri
+        state.is_ephemeral = is_ephemeral
         webview = WebViewState.new_from_state(state, self._window)
         webview.show()
         self.add_webview(webview, loading_type)

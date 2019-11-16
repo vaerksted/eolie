@@ -149,7 +149,8 @@ class WebViewMenuSignals:
             @param uri as str
             @param ephemeral as bool
         """
-        self.window.container.add_webview(uri,
+        self.window.container.add_webview_for_uri(
+                                          uri,
                                           LoadingType.FOREGROUND,
                                           self.is_ephemeral or ephemeral)
 
