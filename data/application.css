@@ -273,13 +273,6 @@
     box-shadow: 1px 1px 5px 5px alpha(black, 0.5);
 }
 
-
-.bigrow {
-    padding-top: 4px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid alpha(@theme_bg_color, 0.5);
-}
-
 .toolbar-mark {
     background-color: @theme_selected_bg_color;
     background-image: none;

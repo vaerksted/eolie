@@ -15,7 +15,7 @@ from gi.repository import Gtk, Gdk, GObject, GLib, Pango
 from gettext import gettext as _
 from datetime import datetime
 
-from eolie.define import App, Type, LoadingType
+from eolie.define import App, Type, LoadingType, MARGIN_SMALL
 from eolie.utils import wanted_loading_type
 
 
@@ -45,8 +45,7 @@ class Row(Gtk.ListBoxRow):
         uri = item.get_property("uri")
         title = item.get_property("title")
         grid = Gtk.Grid()
-        grid.set_margin_start(5)
-        grid.set_margin_end(5)
+        grid.set_property("margin", MARGIN_SMALL)
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
@@ -135,8 +134,6 @@ class Row(Gtk.ListBoxRow):
         grid.show()
         style_context = self.get_style_context()
         style_context.add_class("row")
-        if item_type in [Type.BOOKMARK, Type.SEARCH, Type.HISTORY]:
-            style_context.add_class("bigrow")
         eventbox = Gtk.EventBox()
         eventbox.add(grid)
         eventbox.set_size_request(-1, 30)
