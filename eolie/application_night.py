@@ -70,6 +70,12 @@ class NightApplication:
             self.__proxy = source.new_finish(result)
             self.__proxy.connect("g-properties-changed",
                                  self.__on_property_changed)
+            if self.settings.get_value("auto-night-mode"):
+                value = self.__proxy.get_cached_property(
+                    "Temperature").get_uint32()
+                self.__on_property_changed(self.__proxy,
+                                           {"Temperature": value},
+                                           [])
         except Exception as e:
             Logger.error("NightApplication::__on_get_bus(): %s", e)
 
