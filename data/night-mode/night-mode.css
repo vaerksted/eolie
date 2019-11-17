@@ -24,22 +24,12 @@ section {
 
 a {
     background-color: transparent !important;
-    background: transparent !important;
     color: #EAEAEA !important;
-    background-image: transparent !important;
     border-color: #292929 ! important;
 }
 
-div {
+div:not([role]) {
     background-color: transparent !important;
-    color: #EAEAEA !important;
-    background-image: transparent !important;
-    border-color: #292929 ! important;
-}
-
-div[role="dialog"] {
-    background-color: #353535 !important;
-    background: #353535 !important;
     color: #EAEAEA !important;
     background-image: transparent !important;
     border-color: #292929 ! important;
@@ -88,6 +78,14 @@ header {
 input {
     background-color: #353535 !important;
     background: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
+input[type="submit"] {
+    background-color: #393939 !important;
+    background: #393939 !important;
     color: #EAEAEA !important;
     background-image: none !important;
     border-color: #292929 ! important;
