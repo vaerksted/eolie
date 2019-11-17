@@ -9,7 +9,7 @@
 }
 
 .progressbar progress {
-    background-color: @theme_selected_bg_color;
+    background-color: @theme_fg_color;
     background-image: none;
     border: none;
     min-height: 2px;
@@ -33,7 +33,7 @@
 
 
 .progressbar-button progress {
-    background-color: @theme_selected_bg_color;
+    background-color: @theme_fg_color;
     background-image: none;
     border: none;
     border-radius: 1px;
