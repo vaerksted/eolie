@@ -36,7 +36,7 @@ div:not([role]) {
     border-color: #292929 ! important;
 }
 
-div[role="button"], div[id="toolbar"] {
+div[role="button"], div[id="toolbar"], div[role="tooltip"] {
     background-color: #393939 !important;
     background: #393939 !important;
     color: #EAEAEA !important;
@@ -60,7 +60,7 @@ textarea {
     border-color: #292929 ! important;
 }
 
-button, button > *{
+button, button > *, select {
     background-color: #393939 !important;
     background: #393939 !important;
     color: #EAEAEA !important;
