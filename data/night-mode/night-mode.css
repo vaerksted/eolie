@@ -23,7 +23,8 @@ section {
 }
 
 a {
-    background-color: transparent !important;
+    background-color: #353535 !important;
+    background: #353535 !important;
     color: #EAEAEA !important;
     border-color: #292929 ! important;
 }
