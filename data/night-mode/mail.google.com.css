@@ -1,0 +1,124 @@
+span, span > *{
+    transition-duration: 0 !important;
+}
+
+div[role="button"] > * > div, div[role="button"] > img, div[role="button"] > span{
+    filter: invert(100%);
+}
+
+div[role="listbox"] > div > div {
+    filter: invert(100%);
+}
+
+div[role="listbox"] > div > div {
+    filter: invert(100%);
+}
+
+span[role="checkbox"] {
+    filter: invert(100%);
+}
+
+.aKe-aLf {
+    filter: invert(100%);
+}
+
+a[role="button"] > img {
+    filter: invert(100%);
+}
+
+.qj {
+    filter: invert(100%);
+}
+
+svg {
+    color: white !important;
+}
+
+button {
+	background: none !important;
+	border: none !important;
+	transition-property: none !important;
+}
+
+button > svg {
+    background: none !important;
+	border: none !important;
+}
+
+button:hover > svg {
+	background-color: rgba(60,64,67,0.08);
+}
+
+div[role="tab"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="tablist"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="dialog"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="menu"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="menuitem"]:hover {
+    background-color: #555555 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="menuitemcheckbox"]:hover {
+    background-color: #555555 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+.aDg>.aDj {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="region"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+form {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+div[role="textbox"] {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+span, span > * {
+    color: #EAEAEA !important;
+}
+
+input {
+    background-color: #353535 !important;
+    color: #EAEAEA !important;
+    border-color: #292929 ! important;
+}
+
+input::placeholder {
+    color: #AAAAAA !important;
+}
