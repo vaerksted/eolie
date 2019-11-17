@@ -75,6 +75,14 @@ header {
     border-color: #292929 ! important;
 }
 
+table, tbody, tr, td {
+    background-color: #353535 !important;
+    background: #353535 !important;
+    color: #EAEAEA !important;
+    background-image: none !important;
+    border-color: #292929 ! important;
+}
+
 ul {
     background-color: #353535 !important;
     background: #353535 !important;
