@@ -11,6 +11,12 @@ function generate_resource()
         echo -n $(basename $file)
         echo '</file>'
     done
+    for file in data/javascript/*
+    do
+        echo -n '    <file compressed="true">'
+        echo -n javascript/$(basename $file)
+        echo '</file>'
+    done
     for file in data/*.ui AboutDialog.ui
     do
         echo -n '     <file compressed="true" preprocess="xml-stripblanks">'

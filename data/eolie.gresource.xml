@@ -12,6 +12,11 @@
     <file compressed="true">Readability_check.js</file>
     <file compressed="true">Readability_get.js</file>
     <file compressed="true">Readability.js</file>
+    <file compressed="true">javascript/FormMenu.js</file>
+    <file compressed="true">javascript/Insecure.js</file>
+    <file compressed="true">javascript/Selection.js</file>
+    <file compressed="true">javascript/SetForms.js</file>
+    <file compressed="true">javascript/Submit.js</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>
