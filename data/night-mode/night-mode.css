@@ -75,18 +75,6 @@ header {
     border-color: #292929 ! important;
 }
 
-input {
-    background-color: #353535 !important;
-    color: #EAEAEA !important;
-    border-color: #292929 ! important;
-}
-
-input[type="submit"] {
-    background-color: #393939 !important;
-    color: #EAEAEA !important;
-    border-color: #292929 ! important;
-}
-
 ul {
     background-color: #353535 !important;
     background: #353535 !important;
