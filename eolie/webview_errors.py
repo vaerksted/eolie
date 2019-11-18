@@ -136,7 +136,7 @@ class WebViewErrors:
         self.__error = True
         self.__bad_tls = certificate
         accept_uri = uri.replace("https://", "accept://")
-        if App().websettings.get_accept_tls(uri):
+        if App().websettings.get("accept_tls", uri):
             self.load_uri(accept_uri)
         else:
             f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
