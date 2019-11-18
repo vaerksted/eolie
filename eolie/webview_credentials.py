@@ -48,17 +48,18 @@ class WebViewCredentials:
         """
         try:
             split = message.split("\n")
-            self.__user_form_name = split[1]
-            self.__user_form_value = split[2]
-            self.__pass_form_name = split[3]
-            self.__pass_form_value = split[4]
-            self.__form_uri = get_baseuri(split[5])
-            self.__hostname = get_baseuri(self.uri)
-            self.__ctime = int(time())
-            self.__helper.get(self.__hostname,
-                              self.__user_form_name,
-                              self.__pass_form_name,
-                              self.__on_get_password)
+            if split[1] != "undefined":
+                self.__user_form_name = split[1]
+                self.__user_form_value = split[2]
+                self.__pass_form_name = split[3]
+                self.__pass_form_value = split[4]
+                self.__form_uri = get_baseuri(split[5])
+                self.__hostname = get_baseuri(self.uri)
+                self.__ctime = int(time())
+                self.__helper.get(self.__hostname,
+                                  self.__user_form_name,
+                                  self.__pass_form_name,
+                                  self.__on_get_password)
         except Exception as e:
             Logger.error("WebViewCredentials::add_credentials(): %s", e)
 
@@ -163,8 +164,12 @@ class WebViewCredentials:
         try:
             if attributes is None:
                 return
-            self.__in_secrets_login = attributes["login"]
-            self.__uuid = attributes["uuid"]
+            if attributes["login"] != self.__user_form_value and\
+                    password != self.__pass_form_value:
+                self.__in_secrets_login = attributes["login"]
+                self.__uuid = attributes["uuid"]
+            else:
+                self.__ctime = 0
         except Exception as e:
             Logger.error("WebViewCredentials::__on_get_password(): %s", e)
 
