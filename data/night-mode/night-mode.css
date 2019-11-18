@@ -223,7 +223,7 @@ footer {
     border-color: #292929 ! important;
 }
 
-code {
+code, blockquote {
     background-color: #303030 !important;
     background: #303030 !important;
     color: red !important;
