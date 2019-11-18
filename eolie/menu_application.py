@@ -181,6 +181,7 @@ class ApplicationMenu(Gio.Menu):
             @param Gio.SimpleAction
             @param GVariant
         """
-        App().active_window.container.add_webview(App().start_page,
+        App().active_window.container.add_webview_for_uri(
+                                                  App().start_page,
                                                   LoadingType.FOREGROUND,
                                                   True)
