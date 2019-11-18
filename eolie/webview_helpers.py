@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from eolie.helper_passwords import PasswordsHelper
 from eolie.utils import get_baseuri
 from eolie.logger import Logger
+from eolie.define import App
 
 
 class WebViewHelpers:
@@ -37,6 +38,17 @@ class WebViewHelpers:
         """
         self.__helper.get_by_uuid(uuid, self.__on_get_password_by)
 
+    def night_mode(self):
+        """
+            Handle night mode
+        """
+        night_mode = App().settings.get_value("night-mode")
+        netloc_night_mode = App().websettings.get("night_mode", self.uri)
+        if (night_mode and netloc_night_mode is not False) or\
+                netloc_night_mode:
+            self.run_javascript_from_gresource(
+                    "/org/gnome/Eolie/javascript/NightMode.js", None, None)
+
 #######################
 # PROTECTED           #
 #######################
@@ -46,7 +58,9 @@ class WebViewHelpers:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event == WebKit2.LoadEvent.FINISHED:
+        if event == WebKit2.LoadEvent.COMMITTED:
+            self.night_mode()
+        elif event == WebKit2.LoadEvent.FINISHED:
             self.__run_insecure(webview.uri)
             self.__run_set_forms(webview.uri)
 

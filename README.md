@@ -4,8 +4,6 @@ Eolie is a new GNOME web browser.
 
 - For users: https://wiki.gnome.org/Apps/Eolie
 
-- **For night mode**: Please help me creating better support for GMail, YouTube, ... (see in data/night-mode)
-
 - For translators: https://hosted.weblate.org/projects/gnumdk
 
 It provides:
