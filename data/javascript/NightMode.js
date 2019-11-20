@@ -4,6 +4,15 @@ var handled_css_uri = {}
 var handled_css_content = []
 var xhr_running = 0
 
+function showBody() {
+    if (xhr_running == 0 ) {
+        body = document.querySelector("body");
+        if (body !== null) {
+            body.style.display = "block";
+        }
+    }
+}
+
 function getURL(url) {
     try {
         var xhr = new XMLHttpRequest();
@@ -12,11 +21,17 @@ function getURL(url) {
             if(xhr.readyState === 4 && xhr.status === 200) {
                 injectStyleSheet(xhr.responseText);
             }
+            else {
+                xhr_running --;
+                showBody()
+            }
         };
         xhr.send();
     }
     catch(error) {
         console.log(error);
+        xhr_running --;
+        showBody()
     }
 }
 
@@ -46,10 +61,7 @@ function injectStyleSheet(css) {
     s.appendChild(document.createTextNode(css));
     document.head.appendChild(s)
     xhr_running --;
-    if (xhr_running == 0 ) {
-        body = document.querySelector("body");
-        body.style.display = "block";
-    }
+    showBody()
 }
 
 function setRules(style) {
@@ -108,7 +120,9 @@ function setRules(style) {
         getURL(style.href);
         style.disabled = true;
         body = document.querySelector("body");
-        body.style.display = "none";
+        if (body !== null) {
+            body.style.display = "none";
+        }
         xhr_running++;
     }
 }
