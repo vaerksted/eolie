@@ -113,19 +113,11 @@ function subscriber(mutations) {
     setStyleCheets()
 }
 
-function addStyleString(str) {
-    var node = document.createElement('style');
-    node.innerHTML = str;
-    document.body.appendChild(node);
-}
-
 head = document.querySelector("head");
 observer.observe(head, config);
 window.addEventListener("DOMContentLoaded", (event) => {
-    addStyleString("body {color: #EAEAEA !important; background-color: #353535 !important} * {border-color: #555555 !important}");
     setStyleCheets();
 });
 window.addEventListener("load", (event) => {
-    addStyleString("body {color: #EAEAEA !important; background-color: #353535 !important} * {border-color: #555555 !important}");
     setStyleCheets();
 });

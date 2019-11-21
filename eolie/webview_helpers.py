@@ -62,6 +62,20 @@ class WebViewHelpers:
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
         if (night_mode and netloc_night_mode is not False) or\
                 netloc_night_mode:
+            App().content_manager.remove_all_style_sheets()
+            user_style_sheet = WebKit2.UserStyleSheet(
+                 "body {\
+                    color: #EAEAEA !important;\
+                    background-color: #353535 !important\
+                  }\
+                  * {\
+                    border-color: #555555 !important\
+                  }",
+                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                 WebKit2.UserStyleLevel.USER,
+                 None,
+                 None)
+            App().content_manager.add_style_sheet(user_style_sheet)
             self.run_javascript_from_gresource(
                     "/org/gnome/Eolie/javascript/NightMode.js", None, None)
 
