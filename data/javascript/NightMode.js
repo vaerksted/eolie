@@ -64,7 +64,7 @@ function setRules(styles) {
                         rule.style.setProperty("color", "#EAEAEA", "important");
                     }
                     else {
-                        rule.style.setProperty("filter", "brightness(1.25)", "important");
+                        rule.style.setProperty("filter", "brightness(1.5)", "important");
                     }
                 }
             }
