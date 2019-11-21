@@ -33,7 +33,7 @@ class WebViewHelpers:
         """
             Init credentials
         """
-        self.__css = {}
+        self.__night_mode_css = False
         self.__task_helper = TaskHelper()
         self.__passwords_helper = PasswordsHelper()
         self.__cancellable = Gio.Cancellable.new()
@@ -60,24 +60,28 @@ class WebViewHelpers:
         """
         night_mode = App().settings.get_value("night-mode")
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
-        App().content_manager.remove_all_style_sheets()
         if (night_mode and netloc_night_mode is not False) or\
                 netloc_night_mode:
-            user_style_sheet = WebKit2.UserStyleSheet(
-                 "body {\
-                    color: #EAEAEA !important;\
-                    background-color: #353535 !important\
-                  }\
-                  * {\
-                    border-color: #555555 !important\
-                  }",
-                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                 WebKit2.UserStyleLevel.USER,
-                 None,
-                 None)
-            App().content_manager.add_style_sheet(user_style_sheet)
+            if not self.__night_mode_css:
+                self.__night_mode_css = True
+                user_style_sheet = WebKit2.UserStyleSheet(
+                     "body {\
+                        color: #EAEAEA !important;\
+                        background-color: #353535 !important\
+                      }\
+                      * {\
+                        border-color: #555555 !important\
+                      }",
+                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                     WebKit2.UserStyleLevel.USER,
+                     None,
+                     None)
+                App().content_manager.add_style_sheet(user_style_sheet)
             self.run_javascript_from_gresource(
                     "/org/gnome/Eolie/javascript/NightMode.js", None, None)
+        else:
+            App().content_manager.remove_all_style_sheets()
+            self.__night_mode_css = False
 
 #######################
 # PROTECTED           #
