@@ -22,10 +22,26 @@ function shouldTransformColor(color) {
     return greyscale || (rgb[0] + rgb[1] + rgb[2]) / 3 < 100;
 }
 
+function isMediaScreen(media) {
+    if (media.length == 0) {
+        return true;
+    }
+    for (let i=0; i < media.length; i++) {
+        let mediaText = media[i].mediaText
+        if (mediaText == "screen" || mediaText == "all") {
+            return true;
+        }
+    }
+    return false;
+}
+
 function setRules(styles) {
     while (styles.length > 0) {
         style = styles.pop();
         try {
+            if (!isMediaScreen(style.media)) {
+                continue
+            }
             rules = Array.from(style.cssRules);
             if (style in handled_css) {
                 if (handled_css[style] === rules.length) {

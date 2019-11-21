@@ -165,6 +165,7 @@ class WebViewHelpers:
                     self.__task_helper.load_uri_content(
                         css_uri, self.__cancellable,
                         self.__on_load_uri_content)
+
             data = re.sub('(@import url\([^\)]*\);)', '', data)
             if data == "":
                 return
