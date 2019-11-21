@@ -14,13 +14,12 @@ function setStyle(e) {
 function shouldTransformColor(color) {
     match = color.match(/rgba?\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)?(?:, ?(\d(?:\.\d?))\))?/);
     if (match === null) {
-        return color == "white" || color == "black" || color.startsWith("var(");
+        return color == "white" || color == "black" || color == "inherit" || color.startsWith("var(");
     }
     rgb = [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
     rgb_ratio1 = (rgb[0] + 0.1) / (rgb[1] + 0.1);
     rgb_ratio2 = (rgb[1] + 0.1) / (rgb[1] + 0.1);
     greyscale = rgb_ratio1 > 0.8 && rgb_ratio1 < 1.2 && rgb_ratio2 > 0.8 && rgb_ratio2 < 1.2
-    //console.log(greyscale + " / " + rgb);
     return greyscale || (rgb[0] + rgb[1] + rgb[2]) / 3 < 100;
 }
 
@@ -34,9 +33,6 @@ function setRules(style) {
                 return;
             }
             handled_css_content.push(style.ownerNode.innerText);
-        }
-        else if (style.href.startsWith("data")) {
-            return;
         }
         else {
             if (style.href in handled_css_uri) {
@@ -101,19 +97,9 @@ function subscriber(mutations) {
     setStyleCheets()
 }
 
-function addStyleString(str) {
-    var node = document.createElement('style');
-    node.innerHTML = str;
-    document.body.appendChild(node);
-}
-
-if (document.body !== null) {
-    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important; background: none !important}");
-}
 head = document.querySelector("head");
 observer.observe(head, config);
 setStyleCheets();
 window.addEventListener("DOMContentLoaded", (event) => {
-    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important; background: none !important}");
     setStyleCheets();
 });
