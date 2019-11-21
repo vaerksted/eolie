@@ -27,8 +27,7 @@ function isMediaScreen(media) {
         return true;
     }
     for (let i=0; i < media.length; i++) {
-        let mediaText = media[i].mediaText
-        if (mediaText == "screen" || mediaText == "all") {
+        if (media[i] == "screen" || media[i] == "all") {
             return true;
         }
     }
