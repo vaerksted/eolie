@@ -162,11 +162,12 @@ class WebViewHelpers:
                     parent = dirname(parsed.path)
                     css_uri = "%s://%s%s/%s" % (
                         parsed.scheme, parsed.netloc, parent, css)
-                else:
-                    css_uri = css
-                self.__task_helper.load_uri_content(
-                    css_uri, self.__cancellable, self.__on_load_uri_content)
-
+                    self.__task_helper.load_uri_content(
+                        css_uri, self.__cancellable,
+                        self.__on_load_uri_content)
+            data = re.sub('(@import url\([^\)]*\);)', '', data)
+            if data == "":
+                return
             f = Gio.File.new_for_uri(
                 "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
             (status, js_contents, tags) = f.load_contents(None)
