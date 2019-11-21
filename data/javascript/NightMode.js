@@ -1,7 +1,6 @@
 var observer = new MutationObserver(subscriber);
 var config = { childList: true, subtree: true };
-var handled_css_uri = {};
-var handled_css_content = [];
+var handled_css = {};
 var xhr_running = 0;
 
 function setStyle(e) {
@@ -26,22 +25,12 @@ function shouldTransformColor(color) {
 function setRules(style) {
     try {
         rules = Array.from(style.cssRules);
-
-        // Style already handled and same rules length
-        if (style.href === null) {
-            if (handled_css_content.includes(style.ownerNode.innerText)) {
+        if (style in handled_css) {
+            if (handled_css[style] === rules.length) {
                 return;
             }
-            handled_css_content.push(style.ownerNode.innerText);
         }
-        else {
-            if (style.href in handled_css_uri) {
-                if (handled_css_uri[style.href] === rules.length) {
-                    return;
-                }
-            }
-            handled_css_uri[style.href] = rules.length;
-        }
+        handled_css[style] = rules.length;
 
         while (rules.length > 0) {
             rule = rules.pop();
@@ -97,9 +86,20 @@ function subscriber(mutations) {
     setStyleCheets()
 }
 
+function addStyleString(str) {
+    var node = document.createElement('style');
+    node.innerHTML = str;
+    document.body.appendChild(node);
+}
+
+if (document.body !== null) {
+    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important}");
+}
+
 head = document.querySelector("head");
 observer.observe(head, config);
 setStyleCheets();
 window.addEventListener("DOMContentLoaded", (event) => {
+    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important}");
     setStyleCheets();
 });
