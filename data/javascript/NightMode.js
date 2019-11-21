@@ -103,14 +103,13 @@ function addStyleString(str) {
     document.body.appendChild(node);
 }
 
-if (document.body !== null) {
-    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important}");
-}
-
 head = document.querySelector("head");
 observer.observe(head, config);
-setStyleCheets();
+window.addEventListener("DOMContentLoaded", (event) => {
+    addStyleString("body {color: #EAEAEA !important; background-color: #353535 !important} * {border-color: #555555 !important}");
+    setStyleCheets();
+});
 window.addEventListener("load", (event) => {
-    addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important}");
+    addStyleString("body {color: #EAEAEA !important; background-color: #353535 !important} * {border-color: #555555 !important}");
     setStyleCheets();
 });
