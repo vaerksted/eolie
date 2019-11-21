@@ -1,8 +1,9 @@
 var observer = new MutationObserver(subscriber);
 var config = { childList: true, subtree: true };
-var handled_css_uri = {}
-var handled_css_content = []
-var xhr_running = 0
+var handled_css_uri = {};
+var handled_css_content = [];
+var xhr_running = 0;
+
 
 function showBody() {
     if (xhr_running == 0 ) {
@@ -10,28 +11,6 @@ function showBody() {
         if (body !== null) {
             body.style.display = "block";
         }
-    }
-}
-
-function getURL(url) {
-    try {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.onreadystatechange = function () {
-            if(xhr.readyState === 4 && xhr.status === 200) {
-                injectStyleSheet(xhr.responseText);
-            }
-            else {
-                xhr_running --;
-                showBody()
-            }
-        };
-        xhr.send();
-    }
-    catch(error) {
-        console.log(error);
-        xhr_running --;
-        showBody()
     }
 }
 
@@ -53,15 +32,6 @@ function shouldTransformColor(color) {
     greyscale = rgb_ratio1 > 0.8 && rgb_ratio1 < 1.2 && rgb_ratio2 > 0.8 && rgb_ratio2 < 1.2
     //console.log(greyscale + " / " + rgb);
     return greyscale || (rgb[0] + rgb[1] + rgb[2]) / 3 < 100;
-}
-
-function injectStyleSheet(css) {
-    let s = document.createElement("style");
-    s.setAttribute('type', 'text/css');
-    s.appendChild(document.createTextNode(css));
-    document.head.appendChild(s)
-    xhr_running --;
-    showBody()
 }
 
 function setRules(style) {
@@ -115,15 +85,16 @@ function setRules(style) {
         }
     }
     catch(error) {
-        console.log(error);
-        // CORS disallowed, get by hand
-        getURL(style.href);
+        //console.log(error);
+        link = document.createElement("link");
+        link.type = "text/css";
+        link.rel = "stylesheet";
+        page_url = new URL(window.location.href)
+        css_url = new URL(style.href)
+        // Bypass CORS
+        link.href = "css://" + page_url.hostname + css_url.pathname + "@@"  + style.href;
+        head.appendChild(link);
         style.disabled = true;
-        body = document.querySelector("body");
-        if (body !== null) {
-            body.style.display = "none";
-        }
-        xhr_running++;
     }
 }
 

@@ -479,8 +479,9 @@ class WebView(WebKit2.WebView):
             if not autoplay_videos:
                 settings.set_property("media-playback-requires-user-gesture",
                                       True)
-            settings.set_property("enable-developer-extras",
-                                  App().settings.get_value("developer-extras"))
+            if App().settings.get_value("developer-extras"):
+                settings.set_property("enable-developer-extras", True)
+                settings.set_enable_write_console_messages_to_stdout(True)
             settings.set_property("enable-offline-web-application-cache", True)
             settings.set_property("enable-page-cache", True)
             settings.set_property("enable-resizable-text-areas", True)

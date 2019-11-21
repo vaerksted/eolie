@@ -17,6 +17,7 @@ from gettext import gettext as _
 from datetime import datetime
 
 from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
+from eolie.helper_task import TaskHelper
 
 
 class Context:
@@ -30,6 +31,7 @@ class Context:
             @param context as WebKit2.WebContext
         """
         self.__context = context
+        self.__task_helper = TaskHelper()
         if not context.is_ephemeral():
             context.set_cache_model(WebKit2.CacheModel.WEB_BROWSER)
             context.set_favicon_database_directory(App().favicons_path)

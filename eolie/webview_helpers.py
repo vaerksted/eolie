@@ -14,7 +14,9 @@ from gi.repository import WebKit2, Gio
 
 from urllib.parse import urlparse
 
+
 from eolie.helper_passwords import PasswordsHelper
+from eolie.helper_task import TaskHelper
 from eolie.utils import get_baseuri
 from eolie.logger import Logger
 from eolie.define import App
@@ -29,14 +31,21 @@ class WebViewHelpers:
         """
             Init credentials
         """
-        self.__helper = PasswordsHelper()
+        self.__css = {}
+        self.__task_helper = TaskHelper()
+        self.__passwords_helper = PasswordsHelper()
+        self.__cancellable = Gio.Cancellable.new()
+        context = self.get_context()
+        context.register_uri_scheme("css", self.__on_css_scheme)
+        security_manager = context.get_security_manager()
+        security_manager.register_uri_scheme_as_secure("css")
 
     def set_forms_content(self, uuid):
         """
             Set input forms for uuid
             @parma uuid as str
         """
-        self.__helper.get_by_uuid(uuid, self.__on_get_password_by)
+        self.__passwords_helper.get_by_uuid(uuid, self.__on_get_password_by)
 
     def night_mode(self):
         """
@@ -58,7 +67,10 @@ class WebViewHelpers:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event == WebKit2.LoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.STARTED:
+            self.__cancellable.cancel()
+            self.__cancellable = Gio.Cancellable.new()
+        elif event == WebKit2.LoadEvent.COMMITTED:
             self.night_mode()
         elif event == WebKit2.LoadEvent.FINISHED:
             self.__run_insecure(webview.uri)
@@ -97,8 +109,10 @@ class WebViewHelpers:
             message = data.get_js_value().to_string()
             split = message.split("\n")
             for user_form_name in split:
-                self.__helper.get(get_baseuri(self.uri), user_form_name, None,
-                                  self.__on_get_password_by)
+                self.__passwords_helper.get(get_baseuri(self.uri),
+                                            user_form_name,
+                                            None,
+                                            self.__on_get_password_by)
         except Exception as e:
             Logger.warning("WebViewHelpers::__on_get_forms(): %s", e)
 
@@ -123,3 +137,33 @@ class WebViewHelpers:
         js = js.replace("@USERNAME@", attributes["login"])
         js = js.replace("@PASSWORD@", password)
         self.run_javascript(js, None, None)
+
+    def __on_content(self, uri, status, content, request):
+        """
+            Path content to request
+            @param uri as str
+            @param status as bool
+            @param content as bytes
+            @param request as WebKit2.URISchemeRequest
+        """
+        try:
+            print(uri, status)
+            stream = Gio.MemoryInputStream.new_from_data(content)
+            request.finish(stream, -1, None)
+        except Exception as e:
+            Logger.error("WebViewHelpers::__on_content(): %s", e)
+            stream = Gio.MemoryInputStream.new_from_data(b"")
+            request.finish(stream, -1, None)
+
+    def __on_css_scheme(self, request):
+        """
+            Load CSS
+            @param request as WebKit2.URISchemeRequest
+        """
+        try:
+            print(request.get_uri())
+            (css_uri, http_uri) = request.get_uri().split("@@")
+            self.__task_helper.load_uri_content(
+                http_uri, self.__cancellable, self.__on_content, request)
+        except Exception as e:
+            Logger.error("WebViewHelpers::__on_css_scheme(): %s", e)
