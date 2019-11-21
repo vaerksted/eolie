@@ -4,16 +4,6 @@ var handled_css_uri = {};
 var handled_css_content = [];
 var xhr_running = 0;
 
-
-function showBody() {
-    if (xhr_running == 0 ) {
-        body = document.querySelector("body");
-        if (body !== null) {
-            body.style.display = "block";
-        }
-    }
-}
-
 function setStyle(e) {
     e.style.background =  "none";
     e.style.backgroundImage = "none";
@@ -44,6 +34,9 @@ function setRules(style) {
                 return;
             }
             handled_css_content.push(style.ownerNode.innerText);
+        }
+        else if (style.href.startsWith("data")) {
+            return;
         }
         else {
             if (style.href in handled_css_uri) {
@@ -85,15 +78,12 @@ function setRules(style) {
         }
     }
     catch(error) {
-        //console.log(error);
-        link = document.createElement("link");
-        link.type = "text/css";
-        link.rel = "stylesheet";
-        page_url = new URL(window.location.href)
-        css_url = new URL(style.href)
-        // Bypass CORS
-        link.href = "css://" + page_url.hostname + css_url.pathname + "@@"  + style.href;
-        head.appendChild(link);
+        html = document.querySelector("html");
+        if (html !== null) {
+            html.style.display = "none";
+        }
+        xhr_running++;
+        alert("@EOLIE_CSS_URI@" + style.href)
         style.disabled = true;
     }
 }

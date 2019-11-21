@@ -13,7 +13,7 @@
 from gi.repository import WebKit2, Gio
 
 from urllib.parse import urlparse
-
+from base64 import b64encode
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.helper_task import TaskHelper
@@ -35,10 +35,15 @@ class WebViewHelpers:
         self.__task_helper = TaskHelper()
         self.__passwords_helper = PasswordsHelper()
         self.__cancellable = Gio.Cancellable.new()
-        context = self.get_context()
-        context.register_uri_scheme("css", self.__on_css_scheme)
-        security_manager = context.get_security_manager()
-        security_manager.register_uri_scheme_as_secure("css")
+
+    def load_css_message(self, message):
+        """
+            Load CSS message in page
+            @param message as str
+        """
+        uri = message.replace("@EOLIE_CSS_URI@", "")
+        self.__task_helper.load_uri_content(uri, self.__cancellable,
+                                            self.__on_load_uri_content)
 
     def set_forms_content(self, uuid):
         """
@@ -138,32 +143,22 @@ class WebViewHelpers:
         js = js.replace("@PASSWORD@", password)
         self.run_javascript(js, None, None)
 
-    def __on_content(self, uri, status, content, request):
+    def __on_load_uri_content(self, uri, status, contents):
         """
-            Path content to request
+            Inject CSS in page
             @param uri as str
             @param status as bool
             @param content as bytes
-            @param request as WebKit2.URISchemeRequest
         """
         try:
-            print(uri, status)
-            stream = Gio.MemoryInputStream.new_from_data(content)
-            request.finish(stream, -1, None)
+            f = Gio.File.new_for_uri(
+                "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
+            (status, js_contents, tags) = f.load_contents(None)
+            js = js_contents.decode("utf-8")
+            if status:
+                js = js.replace("@CSS@", b64encode(contents).decode("utf-8"))
+            else:
+                js = js.replace("@CSS@", b64encode(b'').decode("utf-8"))
+            self.run_javascript(js, None, None)
         except Exception as e:
-            Logger.error("WebViewHelpers::__on_content(): %s", e)
-            stream = Gio.MemoryInputStream.new_from_data(b"")
-            request.finish(stream, -1, None)
-
-    def __on_css_scheme(self, request):
-        """
-            Load CSS
-            @param request as WebKit2.URISchemeRequest
-        """
-        try:
-            print(request.get_uri())
-            (css_uri, http_uri) = request.get_uri().split("@@")
-            self.__task_helper.load_uri_content(
-                http_uri, self.__cancellable, self.__on_content, request)
-        except Exception as e:
-            Logger.error("WebViewHelpers::__on_css_scheme(): %s", e)
+            Logger.error("WebViewHelpers::__on_load_uri_content(): %s", e)

@@ -54,8 +54,10 @@ class WebViewJsSignals:
             GLib.source_remove(self.__js_blocker_timeout_id)
             self.__js_blocker_timeout_id = None
         message = dialog.get_message()
+        if message.startswith("@EOLIE_CSS_URI@"):
+            webview.load_css_message(message)
         # Credentials message
-        if message.startswith("@EOLIE_SUBMIT@"):
+        elif message.startswith("@EOLIE_SUBMIT@"):
             webview.add_credentials(message)
         # Input menu message
         elif message.startswith("@EOLIE_FORM_MENU_MESSAGE@"):

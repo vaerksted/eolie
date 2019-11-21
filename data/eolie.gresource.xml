@@ -18,6 +18,7 @@
     <file compressed="true">javascript/SetForms.js</file>
     <file compressed="true">javascript/Submit.js</file>
     <file compressed="true">javascript/NightMode.js</file>
+    <file compressed="true">javascript/InjectCSS.js</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>

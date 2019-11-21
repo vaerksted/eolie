@@ -266,7 +266,7 @@ class WebViewNavigation:
         parsed_navigation = urlparse(navigation_uri)
         self.clear_text_entry()
         if parsed_navigation.scheme not in ["http", "https", "file", "about",
-                                            "populars", "accept", "css"]:
+                                            "populars", "accept"]:
             try:
                 Gtk.show_uri_on_window(self.window,
                                        navigation_uri,
