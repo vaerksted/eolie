@@ -9,13 +9,21 @@ function setStyle(e) {
     e.style.backgroundColor = "#353535";
 }
 
-// color as str rgb(r, g, b) or white/black/...
-function shouldTransformColor(color) {
+function getRGB(color) {
     match = color.match(/rgba?\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)?(?:, ?(\d(?:\.\d?))\))?/);
     if (match === null) {
+        return null;
+    }
+    else {
+        return [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
+    }
+}
+
+// color as str rgb(r, g, b) or white/black/...
+function shouldTransformColor(rgb, color) {
+    if (rgb === null) {
         return color == "white" || color == "black" || color == "inherit" || color.startsWith("var(");
     }
-    rgb = [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])];
     rgb_ratio1 = (rgb[0] + 0.1) / (rgb[1] + 0.1);
     rgb_ratio2 = (rgb[1] + 0.1) / (rgb[1] + 0.1);
     greyscale = rgb_ratio1 > 0.8 && rgb_ratio1 < 1.2 && rgb_ratio2 > 0.8 && rgb_ratio2 < 1.2
@@ -76,15 +84,18 @@ function setRules(styles) {
                 background_color = rule.style.getPropertyValue("background-color");
                 background = rule.style.getPropertyValue("background");
                 color = rule.style.getPropertyValue("color");
+                background_color_rgb = getRGB(background_color);
+                background_rgb = getRGB(background);
+                color_rgb = getRGB(color);
                 background_updated = false;
-                if (background_color !== "" && shouldTransformColor(background_color)) {
+                if (background_color !== "" && shouldTransformColor(background_color_rgb, background_color)) {
                     rule.style.setProperty("background-color", "#353535", "important");
                 }
-                if (background !== "" && shouldTransformColor(background)) {
+                if (background !== "" && shouldTransformColor(background_rgb, background)) {
                     rule.style.setProperty("background", "#353535", "important");
                 }
                 if (color !== "") {
-                    if (shouldTransformColor(color)) {
+                    if (shouldTransformColor(color_rgb, color)) {
                         rule.style.setProperty("color", "#EAEAEA", "important");
                     }
                     else {
