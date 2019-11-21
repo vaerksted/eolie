@@ -39,6 +39,10 @@ function setRules(style) {
                 rules = rules.concat(Array.from(rule.cssRules));
                 continue;
             }
+            else if (rule.type === CSSRule.IMPORT_RULE) {
+                setRules(rule.styleSheet);
+                continue;
+            }
             else if (rule.style === undefined) {
                 continue;
             }
