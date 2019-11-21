@@ -22,68 +22,75 @@ function shouldTransformColor(color) {
     return greyscale || (rgb[0] + rgb[1] + rgb[2]) / 3 < 100;
 }
 
-function setRules(style) {
-    try {
-        rules = Array.from(style.cssRules);
-        if (style in handled_css) {
-            if (handled_css[style] === rules.length) {
-                return;
-            }
-        }
-        handled_css[style] = rules.length;
-
-        while (rules.length > 0) {
-            rule = rules.pop();
-            //console.log(rule);
-            if (rule.type === CSSRule.MEDIA_RULE) {
-                rules = rules.concat(Array.from(rule.cssRules));
-                continue;
-            }
-            else if (rule.type === CSSRule.IMPORT_RULE) {
-                setRules(rule.styleSheet);
-                continue;
-            }
-            else if (rule.style === undefined) {
-                continue;
-            }
-            background_color = rule.style.getPropertyValue("background-color");
-            background = rule.style.getPropertyValue("background");
-            color = rule.style.getPropertyValue("color");
-            background_updated = false;
-            if (background_color !== "" && shouldTransformColor(background_color)) {
-                rule.style.setProperty("background-color", "#353535", "important");
-            }
-            if (background !== "" && shouldTransformColor(background)) {
-                rule.style.setProperty("background", "#353535", "important");
-            }
-            if (color !== "") {
-                if (shouldTransformColor(color)) {
-                    rule.style.setProperty("color", "#EAEAEA", "important");
-                }
-                else {
-                    rule.style.setProperty("filter", "brightness(1.25)", "important");
+function setRules(styles) {
+    while (styles.length > 0) {
+        style = styles.pop();
+        try {
+            rules = Array.from(style.cssRules);
+            if (style in handled_css) {
+                if (handled_css[style] === rules.length) {
+                    continue;
                 }
             }
+            handled_css[style] = rules.length;
+            while (rules.length > 0) {
+                rule = rules.pop();
+                //console.log(rule);
+                if (rule.type === CSSRule.MEDIA_RULE) {
+                    rules = rules.concat(Array.from(rule.cssRules));
+                    continue;
+                }
+                else if (rule.type === CSSRule.IMPORT_RULE) {
+                    if (rule.styleSheet !== null && rule.styleSheet.disabled == false) {
+                        styles.push(rule.styleSheet);
+                    }
+                    continue;
+                }
+                else if (rule.style === undefined) {
+                    continue;
+                }
+                background_color = rule.style.getPropertyValue("background-color");
+                background = rule.style.getPropertyValue("background");
+                color = rule.style.getPropertyValue("color");
+                background_updated = false;
+                if (background_color !== "" && shouldTransformColor(background_color)) {
+                    rule.style.setProperty("background-color", "#353535", "important");
+                }
+                if (background !== "" && shouldTransformColor(background)) {
+                    rule.style.setProperty("background", "#353535", "important");
+                }
+                if (color !== "") {
+                    if (shouldTransformColor(color)) {
+                        rule.style.setProperty("color", "#EAEAEA", "important");
+                    }
+                    else {
+                        rule.style.setProperty("filter", "brightness(1.25)", "important");
+                    }
+                }
+            }
         }
-    }
-    catch(error) {
-        html = document.querySelector("html");
-        if (html !== null) {
-            html.style.display = "none";
+        catch(error) {
+            console.log(error, style.href);
+            style.disabled = true;
+            html = document.querySelector("html");
+            if (html !== null) {
+                html.style.display = "none";
+            }
+            xhr_running++;
+            alert("@EOLIE_CSS_URI@" + style.href)
         }
-        xhr_running++;
-        alert("@EOLIE_CSS_URI@" + style.href)
-        style.disabled = true;
     }
 }
 
 function setStyleCheets() {
+    styles = [];
     for(let i=0; i<document.styleSheets.length; i++) {
         style = document.styleSheets[i]
-        if (style.disabled === false) {
-            setRules(style);
+        if (style.disabled == false) {
+            styles.push(style)
         }
-    }  
+    }
+    setRules(styles);
 }
 
 function subscriber(mutations) {

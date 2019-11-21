@@ -14,6 +14,8 @@ from gi.repository import WebKit2, Gio
 
 from urllib.parse import urlparse
 from base64 import b64encode
+import re
+from os.path import dirname
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.helper_task import TaskHelper
@@ -151,6 +153,20 @@ class WebViewHelpers:
             @param content as bytes
         """
         try:
+            # Try to detect imports
+            # Injecting import in <style/> does not work
+            data = contents.decode("utf-8")
+            parsed = urlparse(uri)
+            for css in re.findall('url\("([^"\']*)', data):
+                if not css.startswith("http"):
+                    parent = dirname(parsed.path)
+                    css_uri = "%s://%s%s/%s" % (
+                        parsed.scheme, parsed.netloc, parent, css)
+                else:
+                    css_uri = css
+                self.__task_helper.load_uri_content(
+                    css_uri, self.__cancellable, self.__on_load_uri_content)
+
             f = Gio.File.new_for_uri(
                 "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
             (status, js_contents, tags) = f.load_contents(None)
