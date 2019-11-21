@@ -110,7 +110,7 @@ if (document.body !== null) {
 head = document.querySelector("head");
 observer.observe(head, config);
 setStyleCheets();
-window.addEventListener("DOMContentLoaded", (event) => {
+window.addEventListener("load", (event) => {
     addStyleString("*[style] {color: #EAEAEA !important; background-color: #353535 !important}");
     setStyleCheets();
 });
