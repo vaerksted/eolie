@@ -35,19 +35,28 @@ function isMediaScreen(media) {
 }
 
 function setRules(styles) {
+    let i = 0
     while (styles.length > 0) {
         style = styles.pop();
         try {
-            if (!isMediaScreen(style.media)) {
+            // CSS is not valid for screen
+            if (style.media !== null && !isMediaScreen(style.media)) {
+                i++;
                 continue
             }
+            // Raise exception if rules no accessible (CORS)
+            // See catch
             rules = Array.from(style.cssRules);
-            if (style in handled_css) {
-                if (handled_css[style] === rules.length) {
+            // Do not read CSS if already set for this length
+            if (i in handled_css) {
+                if (handled_css[i] === rules.length) {
+                    i++;
                     continue;
                 }
             }
-            handled_css[style] = rules.length;
+            handled_css[i] = rules.length;
+            i++;
+            // Load rules
             while (rules.length > 0) {
                 rule = rules.pop();
                 //console.log(rule);
