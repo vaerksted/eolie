@@ -60,9 +60,9 @@ class WebViewHelpers:
         """
         night_mode = App().settings.get_value("night-mode")
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
+        App().content_manager.remove_all_style_sheets()
         if (night_mode and netloc_night_mode is not False) or\
                 netloc_night_mode:
-            App().content_manager.remove_all_style_sheets()
             user_style_sheet = WebKit2.UserStyleSheet(
                  "body {\
                     color: #EAEAEA !important;\
