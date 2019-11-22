@@ -181,6 +181,16 @@ function shoulIgnoreColor(color) {
     return false;
 }
 
+function shouldOverrideImage(image) {
+    values = ["initial", "var(", "linear-", "radial-", "-"];
+    for (let i in values) {
+        if (image.startsWith(values[i])) {
+            return true
+        }
+    }
+    return false;
+}
+
 function shouldOverrideColor(color) {
     values = ["initial", "var(", "url(", "linear-", "radial-", "-"];
     for (let i in values) {
@@ -265,7 +275,7 @@ function setRules(styles) {
                 background_color = rule.style.getPropertyValue("background-color");
                 background = rule.style.getPropertyValue("background");
                 color = rule.style.getPropertyValue("color");
-                if (background_image !== "" && shouldOverrideColor(background_image)) {
+                if (background_image !== "" && shouldOverrideImage(background_image)) {
                     rule.style.setProperty("background-image", "none", "important");
                 }
                 if (background_color !== "" && !shoulIgnoreColor(background_color)) {
@@ -349,9 +359,11 @@ function subscriber(mutations) {
 }
 
 head = document.querySelector("head");
-html = document.querySelector("html");
-if (html !== null) {
-    html.style.display = "none";
+if (document.readyState !== "complete") {
+    html = document.querySelector("html");
+    if (html !== null) {
+        html.style.display = "none";
+    }
 }
 observer.observe(head, config);
 window.addEventListener("DOMContentLoaded", (event) => {
