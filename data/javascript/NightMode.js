@@ -1,7 +1,6 @@
 var observer = new MutationObserver(subscriber);
 var config = { childList: true, subtree: true };
 var handled_css = {};
-var xhr_running = 0;
 
 function string2RGB(color) {
     colors = {
@@ -322,13 +321,10 @@ function setRules(styles) {
             }
         }
         catch(error) {
-            style.disabled = true;
-            html = document.querySelector("html");
-            if (html !== null) {
-                html.style.display = "none";
+            if (style.href !== null) {
+                style.disabled = true;
+                alert("@EOLIE_CSS_URI@" + style.href)
             }
-            xhr_running++;
-            alert("@EOLIE_CSS_URI@" + style.href)
         }
     }
 }
@@ -349,10 +345,15 @@ function subscriber(mutations) {
 }
 
 head = document.querySelector("head");
+html = document.querySelector("html");
+if (html !== null) {
+    html.style.display = "none";
+}
 observer.observe(head, config);
 window.addEventListener("DOMContentLoaded", (event) => {
     setStyleCheets();
 });
 window.addEventListener("load", (event) => {
     setStyleCheets();
+    html.style.display = "block";
 });
