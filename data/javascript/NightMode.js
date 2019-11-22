@@ -310,11 +310,11 @@ function setRules(styles) {
                         rule.style.setProperty("color", "#EAEAEA", "important");
                     }
                     else if (isDarkColor(rgb)) {
-                        rgb_str = colorBrightness(rgb, -100);
+                        rgb_str = colorBrightness(rgb, 100);
                         rule.style.setProperty("color", rgb_str, "important");
                     }
                     else {
-                        rgb_str = colorBrightness(rgb, 100);
+                        rgb_str = colorBrightness(rgb, -100);
                         rule.style.setProperty("color", rgb_str, "important");
                     }
                 }
