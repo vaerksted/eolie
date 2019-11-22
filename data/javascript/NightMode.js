@@ -160,6 +160,7 @@ function getRGB(color) {
     if (match === null) {
         rgb = string2RGB(color);
         if (rgb === undefined) {
+            return [0, 0, 0, 0];
         }
         else {
             return [rgb[0], rgb[1], rgb[2], 1];
@@ -172,7 +173,7 @@ function getRGB(color) {
 }
 
 function shoulIgnoreColor(color) {
-    values = ["inherit", "transparent", "none"];
+    values = ["inherit", "transparent", "none", "unset", "currentcolor"];
     for (let i in values) {
         if (color.startsWith(values[i])) {
             return true
@@ -335,10 +336,8 @@ function setRules(styles) {
             }
         }
         catch(error) {
-            if (style.href !== null) {
-                style.disabled = true;
-                alert("@EOLIE_CSS_URI@" + style.href)
-            }
+            style.disabled = true;
+            alert("@EOLIE_CSS_URI@" + style.href)
         }
     }
 }
@@ -359,17 +358,12 @@ function subscriber(mutations) {
 }
 
 head = document.querySelector("head");
-if (document.readyState !== "complete") {
-    html = document.querySelector("html");
-    if (html !== null) {
-        html.style.display = "none";
-    }
-}
 observer.observe(head, config);
+setStyleCheets();
 window.addEventListener("DOMContentLoaded", (event) => {
     setStyleCheets();
 });
 window.addEventListener("load", (event) => {
     setStyleCheets();
-    html.style.display = "block";
+    //html.style.display = "block";
 });

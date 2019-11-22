@@ -180,30 +180,28 @@ class WebViewHelpers:
             @param content as bytes
         """
         try:
-            # Try to detect imports
-            # Injecting import in <style/> does not work
-            data = contents.decode("utf-8")
-            parsed = urlparse(uri)
-            for css in re.findall('url\("([^"\']*)', data):
-                if not css.startswith("http"):
-                    parent = dirname(parsed.path)
-                    css_uri = "%s://%s%s/%s" % (
-                        parsed.scheme, parsed.netloc, parent, css)
-                    self.__task_helper.load_uri_content(
-                        css_uri, self.__cancellable,
-                        self.__on_load_uri_content)
-
-            data = re.sub('(@[^}]*})', '', data)
-            if data == "":
-                return
-            f = Gio.File.new_for_uri(
-                "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
-            (status, js_contents, tags) = f.load_contents(None)
-            js = js_contents.decode("utf-8")
             if status:
+                # Try to detect imports
+                # Injecting import in <style/> does not work
+                data = contents.decode("utf-8")
+                parsed = urlparse(uri)
+                for css in re.findall('@import url\("([^"\']*)', data):
+                    if not css.startswith("http"):
+                        parent = dirname(parsed.path)
+                        css_uri = "%s://%s%s/%s" % (
+                            parsed.scheme, parsed.netloc, parent, css)
+                        self.__task_helper.load_uri_content(
+                            css_uri, self.__cancellable,
+                            self.__on_load_uri_content)
+
+                data = re.sub('(@import url\([^\)]*\);)', '', data)
+                if data == "":
+                    return
+                f = Gio.File.new_for_uri(
+                    "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
+                (js_status, js_contents, tags) = f.load_contents(None)
+                js = js_contents.decode("utf-8")
                 js = js.replace("@CSS@", b64encode(contents).decode("utf-8"))
-            else:
-                js = js.replace("@CSS@", b64encode(b'').decode("utf-8"))
-            self.run_javascript(js, None, None)
+                self.run_javascript(js, None, None)
         except Exception as e:
             Logger.error("WebViewHelpers::__on_load_uri_content(): %s", e)
