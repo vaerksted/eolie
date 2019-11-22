@@ -233,6 +233,86 @@ function colorBrightness(rgb, diff) {
     return "rgba("  + r + "," + g + "," + b + "," + a +")"
 }
 
+function handle_background_color(rule) {
+    background_color = rule.style.getPropertyValue("background-color");
+    if (background_color !== "" && !shoulIgnoreColor(background_color)) {
+        set_color = shouldOverrideColor(background_color)
+        let rgb = null;
+        if (set_color == false) {
+            rgb = getRGB(background_color);
+            set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
+        }
+        if (set_color == true) {
+            rule.style.setProperty("background-color", "#353535", "important");
+            return true;
+        }
+        else {
+            if (rgb == null) {
+                rgb = getRGB(background_color);
+            }
+            rgb_str = colorBrightness(rgb, -50);
+            rule.style.setProperty("background-color", rgb_str, "important");
+            return true;
+        }
+    }
+    return false;
+}
+
+function handle_background(rule) {
+    background = rule.style.getPropertyValue("background");
+    if (background !== "" && !shoulIgnoreColor(background)) {
+        set_color = shouldOverrideColor(background)
+        let rgb = null;
+        if (set_color == false) {
+            rgb = getRGB(background);
+            set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
+        }
+        if (set_color == true) {
+            rule.style.setProperty("background", "#353535", "important");
+            return true;
+        }
+        else {
+            if (rgb == null) {
+                rgb = getRGB(background);
+            }
+            rgb_str = colorBrightness(rgb, -50);
+            rule.style.setProperty("background", rgb_str, "important");
+            return true;
+        }
+    }
+    return false;
+}
+
+function handle_background_image(rule) {
+    background = rule.style.getPropertyValue("background-image");
+    if (background !== "" && shouldOverrideImage(background)) {
+        rule.style.setProperty("background-image", "none", "important");
+        return true;
+    }
+    return false;
+}
+
+function handle_color(rule) {
+    color = rule.style.getPropertyValue("color");
+    if (color !== "" && !shoulIgnoreColor(color)) {
+        if (shouldOverrideColor(color)) {
+            rule.style.setProperty("color", "#EAEAEA", "important");
+            return;
+        }
+        rgb = getRGB(color);
+        if (isGrayscaleColor(rgb)) {
+            rule.style.setProperty("color", "#EAEAEA", "important");
+        }
+        else if (isDarkColor(rgb)) {
+            rgb_str = colorBrightness(rgb, 100);
+            rule.style.setProperty("color", rgb_str, "important");
+        }
+        else {
+            rgb_str = colorBrightness(rgb, -100);
+            rule.style.setProperty("color", rgb_str, "important");
+        }
+    }
+}
 
 function setRules(styles) {
     let i = 0
@@ -272,70 +352,22 @@ function setRules(styles) {
                 else if (rule.style === undefined) {
                     continue;
                 }
-                background_image = rule.style.getPropertyValue("background-image");
-                background_color = rule.style.getPropertyValue("background-color");
-                background = rule.style.getPropertyValue("background");
-                color = rule.style.getPropertyValue("color");
-                if (background_image !== "" && shouldOverrideImage(background_image)) {
-                    rule.style.setProperty("background-image", "none", "important");
+
+                background_set = false;
+                background_color_set = handle_background_color(rule);
+                if (!background_color_set) {
+                    background_set = handle_background(rule);
                 }
-                if (background_color !== "" && !shoulIgnoreColor(background_color)) {
-                    set_color = shouldOverrideColor(background_color)
-                    let rgb = null;
-                    if (set_color == false) {
-                        rgb = getRGB(background_color);
-                        set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
-                    }
-                    if (set_color == true) {
-                        rule.style.setProperty("background-color", "#353535", "important");
-                    }
-                    else {
-                        if (rgb == null) {
-                            rgb = getRGB(background_color);
-                        }
-                        rgb_str = colorBrightness(rgb, -50);
-                        rule.style.setProperty("background-color", rgb_str, "important");
-                    }
+                if (!background_color_set) {
+                    background_set = handle_background_image(rule);
                 }
-                if (background !== "" && !shoulIgnoreColor(background)) {
-                    set_color = shouldOverrideColor(background)
-                    let rgb = null;
-                    if (set_color == false) {
-                        rgb = getRGB(background);
-                        set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
-                    }
-                    if (set_color == true) {
-                        rule.style.setProperty("background", "#353535", "important");
-                    }
-                    else {
-                        if (rgb == null) {
-                            rgb = getRGB(background);
-                        }
-                        rgb_str = colorBrightness(rgb, -50);
-                        rule.style.setProperty("background", rgb_str, "important");
-                    }
-                }
-                if (color !== "" && !shoulIgnoreColor(color)) {
-                    if (shouldOverrideColor(color)) {
-                        rule.style.setProperty("color", "#EAEAEA", "important");
-                        continue;
-                    }
-                    rgb = getRGB(color);
-                    if (isGrayscaleColor(rgb)) {
-                        rule.style.setProperty("color", "#EAEAEA", "important");
-                    }
-                    else if (isDarkColor(rgb)) {
-                        rgb_str = colorBrightness(rgb, 100);
-                        rule.style.setProperty("color", rgb_str, "important");
-                    }
-                    else {
-                        rgb_str = colorBrightness(rgb, -100);
-                        rule.style.setProperty("color", rgb_str, "important");
-                    }
+                if (!background_set) {
+                    handle_color(rule);
                 }
             }
         }
         catch(error) {
+            console.log(error);
             style.disabled = true;
             alert("@EOLIE_CSS_URI@" + style.href)
             html = document.querySelector("html");
