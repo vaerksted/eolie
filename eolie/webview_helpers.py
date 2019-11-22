@@ -37,6 +37,7 @@ class WebViewHelpers:
         self.__task_helper = TaskHelper()
         self.__passwords_helper = PasswordsHelper()
         self.__cancellable = Gio.Cancellable.new()
+        self.__messages_count = 0
 
     def load_css_message(self, message):
         """
@@ -46,7 +47,9 @@ class WebViewHelpers:
         uri = message.replace("@EOLIE_CSS_URI@", "")
         # We ignore fonts from Google, not supported by <style/>
         if uri.find("fonts.googleapis.com") != -1:
+            self.__show_webpage()
             return
+        self.__messages_count += 1
         self.__task_helper.load_uri_content(uri, self.__cancellable,
                                             self.__on_load_uri_content)
 
@@ -113,6 +116,14 @@ class WebViewHelpers:
 #######################
 # PRIVATE             #
 #######################
+    def __show_webpage(self):
+        """
+            Force webpage to show
+        """
+        if self.__messages_count == 0:
+            self.run_javascript("html = document.querySelector('html');\
+                                 html.style.display = 'block';", None, None)
+
     def __run_insecure(self, uri):
         """
             Run a script checking for password inputs while in http
@@ -205,3 +216,5 @@ class WebViewHelpers:
                 self.run_javascript(js, None, None)
         except Exception as e:
             Logger.error("WebViewHelpers::__on_load_uri_content(): %s", e)
+        self.__messages_count -= 1
+        self.__show_webpage()

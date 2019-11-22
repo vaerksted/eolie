@@ -338,6 +338,10 @@ function setRules(styles) {
         catch(error) {
             style.disabled = true;
             alert("@EOLIE_CSS_URI@" + style.href)
+            html = document.querySelector("html");
+            if (html !== null) {
+                html.style.display = "none";
+            }
         }
     }
 }
