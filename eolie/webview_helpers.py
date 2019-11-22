@@ -194,7 +194,7 @@ class WebViewHelpers:
                             css_uri, self.__cancellable,
                             self.__on_load_uri_content)
 
-                data = re.sub('(@import url\([^\)]*\);)', '', data)
+                data = re.sub('(@[^}]*})', '', data)
                 if data == "":
                     return
                 f = Gio.File.new_for_uri(

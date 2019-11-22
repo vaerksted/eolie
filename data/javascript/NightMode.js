@@ -365,5 +365,4 @@ window.addEventListener("DOMContentLoaded", (event) => {
 });
 window.addEventListener("load", (event) => {
     setStyleCheets();
-    //html.style.display = "block";
 });
