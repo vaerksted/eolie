@@ -71,6 +71,12 @@ class WebViewHelpers:
                       }\
                       * {\
                         border-color: #555555 !important\
+                      }\
+                      a {\
+                        color: #F0FFFE !important;\
+                      }\
+                      a:hover {\
+                        color: white !important;\
                       }",
                      WebKit2.UserContentInjectedFrames.ALL_FRAMES,
                      WebKit2.UserStyleLevel.USER,
