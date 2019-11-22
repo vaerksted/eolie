@@ -182,20 +182,10 @@ function shoulIgnoreColor(color) {
     return false;
 }
 
-function shouldOverrideImage(image) {
+function shouldOverride(value) {
     values = ["initial", "var(", "linear-", "radial-", "-"];
     for (let i in values) {
-        if (image.startsWith(values[i])) {
-            return true
-        }
-    }
-    return false;
-}
-
-function shouldOverrideColor(color) {
-    values = ["initial", "var(", "url(", "linear-", "radial-", "-"];
-    for (let i in values) {
-        if (color.startsWith(values[i])) {
+        if (value.startsWith(values[i])) {
             return true
         }
     }
@@ -236,7 +226,7 @@ function colorBrightness(rgb, diff) {
 function handle_background_color(rule) {
     background_color = rule.style.getPropertyValue("background-color");
     if (background_color !== "" && !shoulIgnoreColor(background_color)) {
-        set_color = shouldOverrideColor(background_color)
+        set_color = shouldOverride(background_color)
         let rgb = null;
         if (set_color == false) {
             rgb = getRGB(background_color);
@@ -258,36 +248,40 @@ function handle_background_color(rule) {
     return false;
 }
 
-function handle_background(rule) {
+function handle_background(rule, background_color_set) {
     background = rule.style.getPropertyValue("background");
-    if (background !== "" && !shoulIgnoreColor(background)) {
-        set_color = shouldOverrideColor(background)
-        let rgb = null;
-        if (set_color == false) {
-            rgb = getRGB(background);
-            set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
-        }
-        if (set_color == true) {
-            rule.style.setProperty("background", "#353535", "important");
-            return true;
-        }
-        else {
-            if (rgb == null) {
+    if (background !== "") {
+        if (!shoulIgnoreColor(background)) {
+            set_color = background_color_set || shouldOverride(background)
+            let rgb = null;
+            if (set_color == false) {
                 rgb = getRGB(background);
+                set_color = isGrayscaleColor(rgb) || isDarkColor(rgb);
             }
-            rgb_str = colorBrightness(rgb, -50);
-            rule.style.setProperty("background", rgb_str, "important");
-            return true;
+            if (set_color == true) {
+                rule.style.setProperty("background", "#353535", "important");
+                return true;
+            }
+            else {
+                if (rgb == null) {
+                    rgb = getRGB(background);
+                }
+                rgb_str = colorBrightness(rgb, -50);
+                rule.style.setProperty("background", rgb_str, "important");
+                return true;
+            }
         }
     }
     return false;
 }
 
-function handle_background_image(rule) {
+function handle_background_image(rule, background_color_set) {
     background = rule.style.getPropertyValue("background-image");
-    if (background !== "" && shouldOverrideImage(background)) {
-        rule.style.setProperty("background-image", "none", "important");
-        return true;
+    if (background !== "") {
+        if (background_color_set || shouldOverride(background)) {
+            rule.style.setProperty("background-image", "none", "important");
+            return true;
+        }
     }
     return false;
 }
@@ -295,7 +289,7 @@ function handle_background_image(rule) {
 function handle_color(rule) {
     color = rule.style.getPropertyValue("color");
     if (color !== "" && !shoulIgnoreColor(color)) {
-        if (shouldOverrideColor(color)) {
+        if (shouldOverride(color)) {
             rule.style.setProperty("color", "#EAEAEA", "important");
             return;
         }
@@ -355,15 +349,9 @@ function setRules(styles) {
 
                 background_set = false;
                 background_color_set = handle_background_color(rule);
-                if (!background_color_set) {
-                    background_set = handle_background(rule);
-                }
-                if (!background_color_set) {
-                    background_set = handle_background_image(rule);
-                }
-                if (!background_set) {
-                    handle_color(rule);
-                }
+                handle_background(rule, background_color_set);
+                handle_background_image(rule, background_color_set);
+                handle_color(rule);
             }
         }
         catch(error) {
