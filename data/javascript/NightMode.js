@@ -182,7 +182,7 @@ function shoulIgnoreColor(color) {
 }
 
 function shouldOverrideColor(color) {
-    values = ["initial", "var(", "url(", "linear-", "radial-"];
+    values = ["initial", "var(", "url(", "linear-", "radial-", "-"];
     for (let i in values) {
         if (color.startsWith(values[i])) {
             return true
@@ -261,9 +261,13 @@ function setRules(styles) {
                 else if (rule.style === undefined) {
                     continue;
                 }
+                background_image = rule.style.getPropertyValue("background-image");
                 background_color = rule.style.getPropertyValue("background-color");
                 background = rule.style.getPropertyValue("background");
                 color = rule.style.getPropertyValue("color");
+                if (background_image !== "" && shouldOverrideColor(background_image)) {
+                    rule.style.setProperty("background-image", "none", "important");
+                }
                 if (background_color !== "" && !shoulIgnoreColor(background_color)) {
                     set_color = shouldOverrideColor(background_color)
                     let rgb = null;
