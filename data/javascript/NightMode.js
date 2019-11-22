@@ -182,7 +182,7 @@ function shoulIgnoreColor(color) {
 }
 
 function shouldOverrideColor(color) {
-    values = ["initial", "var(", "url("];
+    values = ["initial", "var(", "url(", "linear-", "radial-"];
     for (let i in values) {
         if (color.startsWith(values[i])) {
             return true

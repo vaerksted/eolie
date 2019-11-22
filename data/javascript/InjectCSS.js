@@ -6,8 +6,3 @@ function injectStyleSheet(css) {
 }
 
 injectStyleSheet(atob('@CSS@'));
-xhr_running --;
-if (xhr_running == 0 ) {
-    html = document.querySelector("html");
-    html.style.display = "block";
-}
