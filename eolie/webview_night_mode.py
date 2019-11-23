@@ -17,7 +17,7 @@ from hashlib import md5
 
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
-from eolie.define import App
+from eolie.define import App, COLORS
 
 
 class WebViewNightMode:
@@ -44,7 +44,6 @@ class WebViewNightMode:
         encoded = md5(uri.encode("utf-8")).hexdigest()
         if encoded not in self.__loaded_css:
             if encoded in self.__cached_css.keys():
-                print("cache")
                 self.__apply_night_mode(self.__cached_css[encoded], None)
             else:
                 self.__loading_uris += 1
@@ -98,6 +97,252 @@ class WebViewNightMode:
 #######################
 # PRIVATE             #
 #######################
+    def __get_color_from_rule(self, rule):
+        """
+            Get RGBA color from rule
+            @param rule as str containing #FFFFFFFF or rgb() or rgba ()
+            @return (r, g, b, a) as (int, int, int, int)
+        """
+        # Extract values from rgb() and rgba()
+        found = re.findall('rgb.\(([^\)]*)', rule)
+        if found:
+            values = found[0].split(",")
+            rgb = tuple(int(values[i]) for i in (0, 1, 2))
+            if len(values) == 4:
+                a = float(values[3])
+            return rgb + (a,)
+        # Extract values from hexadecimal notation
+        found = re.search('#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})',
+                          rule)
+        if found is not None:
+            hexa = found[0][1:]
+            a = 1
+            # Translate short version of hexa string
+            if len(hexa) == 3:
+                _hexa = ""
+                for letter in hexa:
+                    _hexa += letter + letter
+                hexa = _hexa
+            rgb = tuple(int(hexa[i:i+2], 16) for i in (0, 2, 4))
+            if len(hexa) == 8:
+                a = round(255 / int(hexa[6, 8], 16))
+            return rgb + (a,)
+        # Extract values from named colors, not very good has only
+        # handling color only values
+        for color in COLORS.keys():
+            if rule.find(color) != -1:
+                return COLORS[color]
+        return None
+
+    def __should_ignore_color(self, rule):
+        """
+            True if color should be ignored
+            @param rule as str
+            @return bool
+        """
+        values = ["inherit", "transparent", "none", "unset", "currentcolor"]
+        for value in values:
+            if rule.find(value) != -1:
+                return True
+        return False
+
+    def __should_override(self, rule):
+        """
+            True if color should be overrided
+        """
+        values = ["initial", "var(", "linear-", "radial-", "-"]
+        for value in values:
+            if rule.find(value) != -1:
+                return True
+        return False
+
+    def __is_greyscale_color(self, rgb):
+        """
+            True if RGB color is grayscale
+            @param rgb (int, int, int)
+            @return bool
+        """
+        rgb_ratio1 = (rgb[0] + 0.1) / (rgb[1] + 0.1)
+        rgb_ratio2 = (rgb[1] + 0.1) / (rgb[2] + 0.1)
+        greyscale = rgb_ratio1 > 0.8 and\
+            rgb_ratio1 < 1.2 and\
+            rgb_ratio2 > 0.8 and\
+            rgb_ratio2 < 1.2
+        return greyscale
+
+    def __is_dark_color(self, rgb):
+        """
+            True if RGB color is dark
+            @param rgb as (int, int, int)
+            @return bool
+        """
+        return (rgb[0] + rgb[1] + rgb[2]) / 3 < 127
+
+    def __set_color_brightness(self, rgb, diff):
+        """
+            Set color brightness value +/- diff
+            @param rgb as (int, int, int) + optional a (int,)
+            @return rgb as (int, int, int) + optional a (int,)
+        """
+        new_rgb = (min(255, max(0, rgb[0] + diff)),
+                   min(255, max(0, rgb[1] + diff)),
+                   min(255, max(0, rgb[2] + diff)))
+        if len(rgb) == 4:
+            new_rgb += (rgb[3],)
+        return new_rgb
+
+    def __handle_background_color(self, match):
+        """
+            Handle background color rule
+            @param match as re.Match
+            @return new color string as str
+        """
+        if match is None:
+            return None
+
+        rule = match[0]
+
+        if self.__should_ignore_color(rule):
+            return None
+
+        # Override gradients
+        set_color = self.__should_override(rule)
+        if set_color:
+            return "background-color: #353535 !important;"
+
+        rgba = self.__get_color_from_rule(rule)
+        set_color = self.__is_greyscale_color(rgba) or\
+            self.__is_dark_color(rgba)
+        if set_color:
+            return "background-color: #353535 !important;"
+
+        rgba = self.__set_color_brightness(rgba, -50)
+        return "background-color: rgba%s !important;" % rgba
+
+    def __handle_background(self, match, background_color_set):
+        """
+            Handle background rule
+            @param match as re.Match
+            @param background_color_set as bool
+            @return new color string as str
+        """
+        if match is None:
+            return None
+
+        rule = match[0]
+        if self.__should_ignore_color(rule):
+            return None
+
+        # Override gradients
+        set_color = self.__should_override(rule) or background_color_set
+        if set_color:
+            return "background: #353535 !important;"
+
+        rgba = self.__get_color_from_rule(rule)
+
+        set_color = self.__is_greyscale_color(rgba) or\
+            self.__is_dark_color(rgba)
+        if set_color:
+            return "background: #353535 !important;"
+
+        rgba = self.__set_color_brightness(rgba, -50)
+        return "background: rgba%s !important;" % str(rgba)
+
+    def __handle_background_image(self, match, background_color_set):
+        """
+            Handle background image rule
+            @param match as re.Match
+            @param background_color_set as bool
+            @return new color string as str
+        """
+        if match is None:
+            return None
+
+        rule = match[0]
+        if self.__should_ignore_color(rule):
+            return None
+
+        # Override gradients
+        set_color = self.__should_override(rule) or background_color_set
+        if set_color:
+            return "background-image: none !important;"
+        return None
+
+    def __handle_color(self, match):
+        """
+            Handle color rule
+            @param match as re.Match
+            @return new color string as str
+        """
+        if match is None:
+            return None
+
+        rule = match[0]
+        if self.__should_ignore_color(rule):
+            return None
+
+        # Override gradients
+        set_color = self.__should_override(rule)
+        if set_color:
+            return "color: #EAEAEA !important;"
+
+        rgba = self.__get_color_from_rule(rule)
+        if self.__is_greyscale_color(rgba):
+            return "color: #EAEAEA !important;"
+        elif self.__is_dark_color(rgba):
+            rgba = self.__set_color_brightness(rgba, 100)
+        else:
+            rgba = self.__set_color_brightness(rgba, -100)
+        return "color: rgba%s !important;" % str(rgba)
+
+    def __apply_night_mode(self, css, encoded):
+        """
+            Apply night mode on CSS
+            @param css as str
+            @param encoded as str
+        """
+        split = css.replace("\n", "").split("}")
+        for index, rules in enumerate(split):
+            if rules == "":
+                continue
+            color = re.search('[^-]color[ ]*:[^;]*', rules)
+            background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
+            background_color = re.search('background-color[ ]*:[^;]*',
+                                         rules)
+            background_image = re.search('background-image[ ]*:[^;]*',
+                                         rules)
+            if background_color is None and background is None and\
+                    background_image is None and color is None:
+                split[index] = None
+                continue
+
+            new_rules = re.search('.*{', rules)[0]
+
+            background_color_str = self.__handle_background_color(
+                background_color)
+            if background_color_str is not None:
+                new_rules += background_color_str
+
+            background_str = self.__handle_background(
+                background, background_color_str is not None)
+            if background_str is not None:
+                new_rules += background_str
+
+            background_image_str = self.__handle_background_image(
+                background_image, background_color_str is not None)
+            if background_image_str is not None:
+                new_rules += background_image_str
+
+            color_str = self.__handle_color(color)
+            if color_str is not None:
+                new_rules += color_str
+
+            split[index] = new_rules
+        css = "}".join([v for v in split if v is not None])
+        if encoded is not None:
+            self.__cached_css[encoded] = css
+        self.__load_user_css(css)
+
     def __reset(self):
         """
             Add default CSS rule
@@ -134,41 +379,6 @@ class WebViewNightMode:
                      None,
                      None)
         App().content_manager.add_style_sheet(user_style_sheet)
-
-    def __apply_night_mode(self, css, encoded):
-        """
-            Apply night mode on CSS
-            @param css as str
-            @param encoded as str
-        """
-        split = css.replace("\n", "").split("}")
-        for index, rules in enumerate(split):
-            if rules == "":
-                continue
-            color = re.search('[^-]color[ ]*:[^;]*;', rules)
-            background = re.search('background[^- ]*:[^;]*;', rules)
-            background_color = re.search('background-color[ ]*:[^;]*;',
-                                         rules)
-            background_image = re.search('background-image[ ]*:[^;]*;',
-                                         rules)
-            if background_color is None and background is None and\
-                    background_image is None and color is None:
-                split[index] = None
-                continue
-            new_rules = re.search('.*{', rules)[0]
-            if background_color is not None:
-                new_rules += "background-color: #353535 !important;"
-            if background is not None:
-                new_rules += "background: #353535 !important;"
-            if background_image is not None:
-                new_rules += "background-image: none !important;"
-            if color is not None:
-                new_rules += "color: #EAEAEA !important;"
-            split[index] = new_rules
-        css = "}".join([v for v in split if v is not None])
-        if encoded is not None:
-            self.__cached_css[encoded] = css
-        self.__load_user_css(css)
 
     def __on_load_uri_content(self, uri, status, contents, encoded):
         """
