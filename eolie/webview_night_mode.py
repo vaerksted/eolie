@@ -72,6 +72,9 @@ class WebViewNightMode:
                 netloc_night_mode:
             self.run_javascript_from_gresource(
                     "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
+        else:
+            self.__loaded_css = []
+            App().content_manager.remove_all_style_sheets()
 
 #######################
 # PROTECTED           #
