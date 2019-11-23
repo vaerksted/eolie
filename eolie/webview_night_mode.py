@@ -185,4 +185,4 @@ class WebViewNightMode:
             if self.__loading_uris == 0:
                 GLib.timeout_add(250, self.set_opacity, 1)
         except Exception as e:
-            Logger.error("WebViewHelpers::__on_load_uri_content(): %s", e)
+            Logger.error("WebViewNightMode::__on_load_uri_content(): %s", e)
