@@ -155,7 +155,7 @@ class WebViewNightMode:
         """
         values = ["initial", "var(", "linear-", "radial-", "-"]
         for value in values:
-            if rule.find(value) != -1:
+            if rule.startswith(value):
                 return True
         return False
 
@@ -220,7 +220,7 @@ class WebViewNightMode:
             return "background-color: #353535 !important;"
 
         rgba = self.__set_color_brightness(rgba, -50)
-        return "background-color: rgba%s !important;" % rgba
+        return "background-color: rgba%s !important;" % str(rgba)
 
     def __handle_background(self, match, background_color_set):
         """
