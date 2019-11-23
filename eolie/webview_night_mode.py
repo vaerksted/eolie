@@ -292,11 +292,9 @@ class WebViewNightMode:
         rgba = self.__get_color_from_rule(rule)
         if self.__is_greyscale_color(rgba):
             return "color: #EAEAEA !important;"
-        elif self.__is_dark_color(rgba):
-            rgba = self.__set_color_brightness(rgba, 100)
         else:
-            rgba = self.__set_color_brightness(rgba, -100)
-        return "color: rgba%s !important;" % str(rgba)
+            rgba = self.__set_color_brightness(rgba, 100)
+            return "color: rgba%s !important;" % str(rgba)
 
     def __apply_night_mode(self, css, encoded):
         """
