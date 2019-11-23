@@ -393,7 +393,7 @@ class WebViewNightMode:
             self.__loading_uris -= 1
             if status:
                 self.__apply_night_mode(contents.decode("utf-8"), encoded)
-            if self.__loading_uris == 0:
-                GLib.timeout_add(250, self.set_opacity, 1)
         except Exception as e:
             Logger.error("WebViewNightMode::__on_load_uri_content(): %s", e)
+        if self.__loading_uris == 0:
+            GLib.timeout_add(250, self.set_opacity, 1)
