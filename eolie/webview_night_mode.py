@@ -298,7 +298,7 @@ class WebViewNightMode:
         elif self.__is_greyscale_color(rgba):
             return "color: #EAEAEA !important;"
         else:
-            rgba = self.__set_color_brightness(rgba, 100)
+            rgba = self.__set_color_brightness(rgba, 127)
             return "color: rgba%s !important;" % str(rgba)
 
     def __apply_night_mode(self, css, encoded):
