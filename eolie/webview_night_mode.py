@@ -44,7 +44,7 @@ class WebViewNightMode:
         encoded = md5(uri.encode("utf-8")).hexdigest()
         if encoded not in self.__loaded_css:
             if encoded in self.__cached_css.keys():
-                self.__apply_night_mode(self.__cached_css[encoded], None)
+                self.__load_user_css(self.__cached_css[encoded])
             else:
                 self.__loading_uris += 1
                 self.__loaded_css.append(encoded)
