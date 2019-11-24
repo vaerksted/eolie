@@ -308,10 +308,12 @@ class WebViewNightMode:
             @param encoded as str
         """
         split = css.replace("\n", "").split("}")
+        new_rules = []
         for index, rules in enumerate(split):
             error = None
             try:
                 if rules == "":
+                    new_rules.append("")
                     continue
                 color = re.search('[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
                 background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
@@ -321,34 +323,35 @@ class WebViewNightMode:
                                              rules)
                 if background_color is None and background is None and\
                         background_image is None and color is None:
-                    split[index] = None
                     continue
 
-                new_rules = re.search('.*{', rules)[0]
+                selector = re.search('.*{', rules)[0]
+                selector_rules = ""
                 error = "background-color"
                 background_color_str = self.__handle_background_color(
                     background_color)
                 if background_color_str is not None:
-                    new_rules += background_color_str
+                    selector_rules += background_color_str
                 error = "background"
                 background_str = self.__handle_background(
                     background, background_color_str is not None)
                 if background_str is not None:
-                    new_rules += background_str
+                    selector_rules += background_str
                 error = "background-image"
                 background_image_str = self.__handle_background_image(
                     background_image, background_color_str is not None)
                 if background_image_str is not None:
-                    new_rules += background_image_str
+                    selector_rules += background_image_str
                 error = "color"
                 color_str = self.__handle_color(color)
                 if color_str is not None:
-                    new_rules += color_str
-                split[index] = new_rules
+                    selector_rules += color_str
+                if selector_rules:
+                    new_rules.append(selector + selector_rules)
             except Exception as e:
                 Logger.warning(
                     "WebViewNightMode::__apply_night_mode(): %s: %s", e, error)
-        css = "}".join([v for v in split if v is not None])
+        css = "}".join(new_rules + [''])
         if encoded is not None:
             self.__cached_css[encoded] = css
         self.__load_user_css(css)
