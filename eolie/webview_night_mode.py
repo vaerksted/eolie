@@ -110,7 +110,13 @@ class WebViewNightMode:
         found = re.findall('rgb.?\(([^\)]*)', rule)
         if found:
             values = found[0].split(",")
-            rgb = tuple(int(values[i]) for i in (0, 1, 2))
+            rgb = ()
+            for i in (0, 1, 2):
+                value = values[i]
+                if value.find("%") != -1:
+                    rgb += (int(int(value[:-1]) / 100 * 255),)
+                else:
+                    rgb += (int(value),)
             a = 1
             if len(values) == 4:
                 a = float(values[3])

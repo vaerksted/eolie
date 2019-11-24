@@ -483,7 +483,7 @@ class WebView(WebKit2.WebView):
                                       True)
             if App().settings.get_value("developer-extras"):
                 settings.set_property("enable-developer-extras", True)
-                settings.set_enable_write_console_messages_to_stdout(False)
+                settings.set_enable_write_console_messages_to_stdout(True)
             settings.set_property("enable-offline-web-application-cache", True)
             settings.set_property("enable-page-cache", True)
             settings.set_property("enable-resizable-text-areas", True)
