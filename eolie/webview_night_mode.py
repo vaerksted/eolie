@@ -277,6 +277,7 @@ class WebViewNightMode:
             return None
 
         rule = match[0]
+
         if self.__should_ignore_color(rule):
             return None
 
@@ -284,7 +285,9 @@ class WebViewNightMode:
             return "color: #EAEAEA !important;"
 
         rgba = self.__get_color_from_rule(rule)
-        if self.__is_greyscale_color(rgba):
+        if rgba is None:
+            return None
+        elif self.__is_greyscale_color(rgba):
             return "color: #EAEAEA !important;"
         else:
             rgba = self.__set_color_brightness(rgba, 100)
@@ -303,13 +306,15 @@ class WebViewNightMode:
                 if rules == "":
                     continue
                 color = re.search('[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
+                border_color = re.search('border[ ]*:[^;]*', rules)
                 background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
                 background_color = re.search('background-color[ ]*:[^;]*',
                                              rules)
                 background_image = re.search('background-image[ ]*:[^;]*',
                                              rules)
                 if background_color is None and background is None and\
-                        background_image is None and color is None:
+                        background_image is None and color is None and\
+                        border_color is None:
                     split[index] = None
                     continue
 
@@ -334,6 +339,12 @@ class WebViewNightMode:
                 if color_str is not None:
                     new_rules += color_str
                 split[index] = new_rules
+                error = "border-color"
+                border_color_str = self.__handle_color(border_color)
+                if border_color_str is not None:
+                    new_rules += border_color_str
+
+                split[index] = new_rules
             except Exception as e:
                 Logger.warning(
                     "WebViewNightMode::__apply_night_mode(): %s: %s", e, error)
@@ -351,9 +362,6 @@ class WebViewNightMode:
                      "body {\
                         color: #EAEAEA !important;\
                         background-color: #353535 !important\
-                      }\
-                      * {\
-                        border-color: #555555 !important\
                       }\
                       a {\
                         color: #F0FFFE !important;\
