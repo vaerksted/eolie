@@ -150,7 +150,9 @@ class WebViewNightMode:
             @param rule as str
             @return bool
         """
-        values = ["inherit", "transparent", "none", "unset", "currentcolor"]
+        values = ["inherit", "transparent",
+                  "none", "unset", "currentcolor",
+                  "no-repeat"]
         for value in values:
             if rule.find(value) != -1:
                 return True
@@ -310,7 +312,6 @@ class WebViewNightMode:
         split = css.replace("\n", "").split("}")
         new_rules = []
         for index, rules in enumerate(split):
-            error = None
             try:
                 if rules == "":
                     new_rules.append("")
@@ -327,22 +328,18 @@ class WebViewNightMode:
 
                 selector = re.search('.*{', rules)[0]
                 selector_rules = ""
-                error = "background-color"
                 background_color_str = self.__handle_background_color(
                     background_color)
                 if background_color_str is not None:
                     selector_rules += background_color_str
-                error = "background"
                 background_str = self.__handle_background(
                     background, background_color_str is not None)
                 if background_str is not None:
                     selector_rules += background_str
-                error = "background-image"
                 background_image_str = self.__handle_background_image(
                     background_image, background_color_str is not None)
                 if background_image_str is not None:
                     selector_rules += background_image_str
-                error = "color"
                 color_str = self.__handle_color(color)
                 if color_str is not None:
                     selector_rules += color_str
@@ -350,7 +347,7 @@ class WebViewNightMode:
                     new_rules.append(selector + selector_rules)
             except Exception as e:
                 Logger.warning(
-                    "WebViewNightMode::__apply_night_mode(): %s: %s", e, error)
+                    "WebViewNightMode::__apply_night_mode(): %s: %s", e, rules)
         css = "}".join(new_rules + [''])
         if encoded is not None:
             self.__cached_css[encoded] = css
