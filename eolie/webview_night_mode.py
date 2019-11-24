@@ -210,14 +210,12 @@ class WebViewNightMode:
             return None
 
         # Override gradients
-        set_color = self.__should_override(rule)
-        if set_color:
+        if self.__should_override(rule):
             return "background-color: #353535 !important;"
 
         rgba = self.__get_color_from_rule(rule)
-        set_color = self.__is_greyscale_color(rgba) or\
-            self.__is_dark_color(rgba)
-        if set_color:
+        if self.__is_greyscale_color(rgba) or\
+                self.__is_dark_color(rgba):
             return "background-color: #353535 !important;"
 
         rgba = self.__set_color_brightness(rgba, -50)
@@ -237,16 +235,15 @@ class WebViewNightMode:
         if self.__should_ignore_color(rule):
             return None
 
-        # Override gradients
-        set_color = self.__should_override(rule) or background_color_set
-        if set_color:
-            return "background: #353535 !important;"
+        if self.__should_override(rule) or background_color_set:
+            return "background: none !important;"
+        elif rule.find("url(") != -1:
+            return None
 
         rgba = self.__get_color_from_rule(rule)
 
-        set_color = self.__is_greyscale_color(rgba) or\
-            self.__is_dark_color(rgba)
-        if set_color:
+        if self.__is_greyscale_color(rgba) or\
+                self.__is_dark_color(rgba):
             return "background: #353535 !important;"
 
         rgba = self.__set_color_brightness(rgba, -50)
@@ -266,9 +263,7 @@ class WebViewNightMode:
         if self.__should_ignore_color(rule):
             return None
 
-        # Override gradients
-        set_color = self.__should_override(rule) or background_color_set
-        if set_color:
+        if self.__should_override(rule) or background_color_set:
             return "background-image: none !important;"
         return None
 
@@ -285,10 +280,7 @@ class WebViewNightMode:
         if self.__should_ignore_color(rule):
             return None
 
-        # Override gradients
-        set_color = self.__should_override(rule)
-
-        if set_color:
+        if self.__should_override(rule):
             return "color: #EAEAEA !important;"
 
         rgba = self.__get_color_from_rule(rule)
@@ -306,6 +298,7 @@ class WebViewNightMode:
         """
         split = css.replace("\n", "").split("}")
         for index, rules in enumerate(split):
+            error = None
             try:
                 if rules == "":
                     continue
@@ -321,29 +314,29 @@ class WebViewNightMode:
                     continue
 
                 new_rules = re.search('.*{', rules)[0]
-
+                error = "background-color"
                 background_color_str = self.__handle_background_color(
                     background_color)
                 if background_color_str is not None:
                     new_rules += background_color_str
-
+                error = "background"
                 background_str = self.__handle_background(
                     background, background_color_str is not None)
                 if background_str is not None:
                     new_rules += background_str
-
+                error = "background-image"
                 background_image_str = self.__handle_background_image(
                     background_image, background_color_str is not None)
                 if background_image_str is not None:
                     new_rules += background_image_str
-
+                error = "color"
                 color_str = self.__handle_color(color)
                 if color_str is not None:
                     new_rules += color_str
-
                 split[index] = new_rules
             except Exception as e:
-                Logger.warning("WebViewNightMode::__apply_night_mode(): %s", e)
+                Logger.warning(
+                    "WebViewNightMode::__apply_night_mode(): %s: %s", e, error)
         css = "}".join([v for v in split if v is not None])
         if encoded is not None:
             self.__cached_css[encoded] = css
