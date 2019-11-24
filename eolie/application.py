@@ -216,6 +216,18 @@ class Application(Gtk.Application, NightApplication):
                 return content_blocker
 
     @property
+    def content_filters(self):
+        """
+            Get content filters
+            @return [WebKit2.UserContentFilter]
+        """
+        filters = []
+        for content_blocker in self.__content_blockers:
+            if content_blocker.enabled:
+                filters.append(content_blocker.filter)
+        return filters
+
+    @property
     def start_page(self):
         """
             Get start page
@@ -269,7 +281,6 @@ class Application(Gtk.Application, NightApplication):
         """
             Init main application
         """
-        self.content_manager = WebKit2.UserContentManager.new()
         self.settings = Settings.new()
         NightApplication.__init__(self)
 
@@ -680,7 +691,10 @@ class Application(Gtk.Application, NightApplication):
             @param content_blocker as ContentBlocker
             @param content_filter as WebKit2.UserContentFilter
         """
-        self.content_manager.add_filter(content_filter)
+        for window in self.windows:
+            for webview in window.container.webviews:
+                content_manager = webview.get_user_content_manager()
+                content_manager.add_filter(content_filter)
 
     def __on_content_blocker_unset_filter(self, content_blocker,
                                           content_filter):
@@ -689,4 +703,7 @@ class Application(Gtk.Application, NightApplication):
             @param content_blocker as ContentBlocker
             @param content_filter as WebKit2.UserContentFilter
         """
-        self.content_manager.remove_filter(content_filter)
+        for window in self.windows:
+            for webview in window.container.webviews:
+                content_manager = webview.get_user_content_manager()
+                content_manager.remove_filter(content_filter)

@@ -39,8 +39,13 @@ class WebView(WebKit2.WebView):
             New webview
             @param window as Window
         """
+        content_manager = WebKit2.UserContentManager.new()
+        for content_filter in App().content_filters:
+            if content_filter is not None:
+                content_manager.add_filter(content_filter)
+
         webview = WebKit2.WebView.new_with_user_content_manager(
-            App().content_manager)
+            content_manager)
         webview.__class__ = WebViewMeta
         webview.__init(None, window)
         return webview

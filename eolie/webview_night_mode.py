@@ -74,7 +74,7 @@ class WebViewNightMode:
                     "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
         else:
             self.__loaded_css = []
-            App().content_manager.remove_all_style_sheets()
+            self.get_user_content_manager().remove_all_style_sheets()
 
 #######################
 # PROTECTED           #
@@ -357,7 +357,8 @@ class WebViewNightMode:
         """
             Add default CSS rule
         """
-        App().content_manager.remove_all_style_sheets()
+        content_manager = self.get_user_content_manager()
+        content_manager.remove_all_style_sheets()
         user_style_sheet = WebKit2.UserStyleSheet(
                      "body {\
                         color: #EAEAEA !important;\
@@ -376,7 +377,7 @@ class WebViewNightMode:
                      WebKit2.UserStyleLevel.USER,
                      None,
                      None)
-        App().content_manager.add_style_sheet(user_style_sheet)
+        content_manager.add_style_sheet(user_style_sheet)
 
     def __load_user_css(self, css):
         """
@@ -388,7 +389,8 @@ class WebViewNightMode:
                      WebKit2.UserStyleLevel.USER,
                      None,
                      None)
-        App().content_manager.add_style_sheet(user_style_sheet)
+        content_manager = self.get_user_content_manager()
+        content_manager.add_style_sheet(user_style_sheet)
 
     def __on_load_uri_content(self, uri, status, contents, encoded):
         """
