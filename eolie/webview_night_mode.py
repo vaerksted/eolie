@@ -107,10 +107,11 @@ class WebViewNightMode:
             @return (r, g, b, a) as (int, int, int, int)
         """
         # Extract values from rgb() and rgba()
-        found = re.findall('rgb.\(([^\)]*)', rule)
+        found = re.findall('rgb.?\(([^\)]*)', rule)
         if found:
             values = found[0].split(",")
             rgb = tuple(int(values[i]) for i in (0, 1, 2))
+            a = 1
             if len(values) == 4:
                 a = float(values[3])
             return rgb + (a,)
@@ -286,6 +287,7 @@ class WebViewNightMode:
 
         # Override gradients
         set_color = self.__should_override(rule)
+
         if set_color:
             return "color: #EAEAEA !important;"
 
@@ -304,41 +306,44 @@ class WebViewNightMode:
         """
         split = css.replace("\n", "").split("}")
         for index, rules in enumerate(split):
-            if rules == "":
-                continue
-            color = re.search('[^-]color[ ]*:[^;]*', rules)
-            background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
-            background_color = re.search('background-color[ ]*:[^;]*',
-                                         rules)
-            background_image = re.search('background-image[ ]*:[^;]*',
-                                         rules)
-            if background_color is None and background is None and\
-                    background_image is None and color is None:
-                split[index] = None
-                continue
+            try:
+                if rules == "":
+                    continue
+                color = re.search('[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
+                background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
+                background_color = re.search('background-color[ ]*:[^;]*',
+                                             rules)
+                background_image = re.search('background-image[ ]*:[^;]*',
+                                             rules)
+                if background_color is None and background is None and\
+                        background_image is None and color is None:
+                    split[index] = None
+                    continue
 
-            new_rules = re.search('.*{', rules)[0]
+                new_rules = re.search('.*{', rules)[0]
 
-            background_color_str = self.__handle_background_color(
-                background_color)
-            if background_color_str is not None:
-                new_rules += background_color_str
+                background_color_str = self.__handle_background_color(
+                    background_color)
+                if background_color_str is not None:
+                    new_rules += background_color_str
 
-            background_str = self.__handle_background(
-                background, background_color_str is not None)
-            if background_str is not None:
-                new_rules += background_str
+                background_str = self.__handle_background(
+                    background, background_color_str is not None)
+                if background_str is not None:
+                    new_rules += background_str
 
-            background_image_str = self.__handle_background_image(
-                background_image, background_color_str is not None)
-            if background_image_str is not None:
-                new_rules += background_image_str
+                background_image_str = self.__handle_background_image(
+                    background_image, background_color_str is not None)
+                if background_image_str is not None:
+                    new_rules += background_image_str
 
-            color_str = self.__handle_color(color)
-            if color_str is not None:
-                new_rules += color_str
+                color_str = self.__handle_color(color)
+                if color_str is not None:
+                    new_rules += color_str
 
-            split[index] = new_rules
+                split[index] = new_rules
+            except Exception as e:
+                Logger.warning("WebViewNightMode::__apply_night_mode(): %s", e)
         css = "}".join([v for v in split if v is not None])
         if encoded is not None:
             self.__cached_css[encoded] = css
