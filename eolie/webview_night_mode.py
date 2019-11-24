@@ -217,7 +217,7 @@ class WebViewNightMode:
         rule = match[0]
 
         if self.__should_ignore_color(rule):
-            return None
+            return "background-color: #353535 !important;"
 
         # Override gradients
         if self.__should_override(rule):
@@ -313,8 +313,9 @@ class WebViewNightMode:
         new_rules = []
         for index, rules in enumerate(split):
             try:
-                if rules == "":
-                    new_rules.append("")
+                # This is rule end } or any @ rule
+                if rules == "" or rules.startswith("@"):
+                    new_rules.append(rules)
                     continue
                 color = re.search('[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
                 background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
@@ -348,7 +349,7 @@ class WebViewNightMode:
             except Exception as e:
                 Logger.warning(
                     "WebViewNightMode::__apply_night_mode(): %s: %s", e, rules)
-        css = "}".join(new_rules + [''])
+        css = "}".join(new_rules)
         if encoded is not None:
             self.__cached_css[encoded] = css
         self.__load_user_css(css)
