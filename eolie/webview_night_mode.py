@@ -13,7 +13,9 @@
 from gi.repository import WebKit2, Gio, GLib
 
 import re
+from urllib.parse import urlparse
 from hashlib import md5
+from os.path import dirname
 
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
@@ -60,7 +62,7 @@ class WebViewNightMode:
         encoded = md5(css.encode("utf-8")).hexdigest()
         if encoded not in self.__loaded_css:
             self.__loaded_css.append(encoded)
-            self.__apply_night_mode(css, encoded)
+            self.__apply_night_mode(css, encoded, None)
 
     def night_mode(self):
         """
@@ -162,9 +164,9 @@ class WebViewNightMode:
         """
             True if color should be overrided
         """
-        values = ["initial", "var(", "linear-", "radial-", "-"]
+        values = ["initial", "var(", "linear-", "radial-", "repeat", "webkit"]
         for value in values:
-            if rule.startswith(value):
+            if rule.find(value) != -1:
                 return True
         return False
 
@@ -303,31 +305,61 @@ class WebViewNightMode:
             rgba = self.__set_color_brightness(rgba, 127)
             return "color: rgba%s !important;" % str(rgba)
 
-    def __apply_night_mode(self, css, encoded):
+    def __handle_import_rule(self, selector, uri):
+        """
+            Search for import rules and download them
+            @param selector as str
+            @param current css uri as str
+            @return str
+        """
+        parsed = urlparse(uri)
+        for css in re.findall('@import url\(["\']([^"\']*)', selector):
+            if css.startswith("//"):
+                css_uri = "%s:%s" % (parsed.scheme, css)
+            elif not css.startswith("http"):
+                parent = dirname(parsed.path)
+                css_uri = "%s://%s%s/%s" % (
+                    parsed.scheme, parsed.netloc, parent, css)
+            self.load_css_uri("@EOLIE_CSS_URI@" + css_uri)
+        return re.sub('[^*]@import[^;]*;', "", selector)
+
+    def __apply_night_mode(self, css, encoded, uri):
         """
             Apply night mode on CSS
             @param css as str
             @param encoded as str
+            @param uri as str
         """
-        split = css.replace("\n", "").split("}")
+        # Remove cariage return
+        css = css.replace("\n", "")
+        split = css.split("}")
         new_rules = []
         for index, rules in enumerate(split):
             try:
                 # This is rule end } or any @ rule
-                if rules == "" or rules.startswith("@"):
+                if rules == "" or\
+                        rules.startswith("@media"):
                     new_rules.append(rules)
                     continue
-                color = re.search('[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
-                background = re.search('background[^-: ]*:[ ]*[^;]*', rules)
-                background_color = re.search('background-color[ ]*:[^;]*',
-                                             rules)
-                background_image = re.search('background-image[ ]*:[^;]*',
-                                             rules)
+                # We don't know what to do with @import for inline CSS
+                if uri is not None:
+                    rules = self.__handle_import_rule(rules, uri)
+                search = re.search('.*{', rules)
+                # This is a comment
+                if search is None:
+                    continue
+                selector = search[0]
+                color = re.search(
+                    '[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
+                background = re.search(
+                    '[^-^a-z^A-Z]background[^-: ]*:[ ]*[^;]*', rules)
+                background_color = re.search(
+                    'background-color[ ]*:[^;]*', rules)
+                background_image = re.search(
+                    'background-image[ ]*:[^;]*', rules)
                 if background_color is None and background is None and\
                         background_image is None and color is None:
                     continue
-
-                selector = re.search('.*{', rules)[0]
                 selector_rules = ""
                 background_color_str = self.__handle_background_color(
                     background_color)
@@ -348,7 +380,8 @@ class WebViewNightMode:
                     new_rules.append(selector + selector_rules)
             except Exception as e:
                 Logger.warning(
-                    "WebViewNightMode::__apply_night_mode(): %s: %s", e, rules)
+                    "WebViewNightMode::__apply_night_mode(): %s: %s -> %s",
+                    e, uri, rules)
         css = "}".join(new_rules)
         if encoded is not None:
             self.__cached_css[encoded] = css
@@ -404,7 +437,7 @@ class WebViewNightMode:
         try:
             self.__loading_uris -= 1
             if status:
-                self.__apply_night_mode(contents.decode("utf-8"), encoded)
+                self.__apply_night_mode(contents.decode("utf-8"), encoded, uri)
         except Exception as e:
             Logger.error("WebViewNightMode::__on_load_uri_content(): %s", e)
         if self.__loading_uris == 0:
