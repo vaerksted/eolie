@@ -19,7 +19,7 @@ from os.path import dirname
 
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
-from eolie.define import App, COLORS
+from eolie.define import App, COLORS, EolieLoadEvent
 
 
 class WebViewNightMode:
@@ -31,7 +31,7 @@ class WebViewNightMode:
         """
             Init night mode
         """
-        self.__loading_uris = 0
+        self.__loading_css = 0
         self.__loaded_css = []
         self.__cached_css = {}
         self.__task_helper = TaskHelper()
@@ -48,7 +48,7 @@ class WebViewNightMode:
             if encoded in self.__cached_css.keys():
                 self.__load_user_css(self.__cached_css[encoded])
             else:
-                self.__loading_uris += 1
+                self.__loading_css += 1
                 self.__loaded_css.append(encoded)
                 self.__task_helper.load_uri_content(uri, self.__cancellable,
                                                     self.__on_load_uri_content,
@@ -78,6 +78,14 @@ class WebViewNightMode:
             self.__loaded_css = []
             self.get_user_content_manager().remove_all_style_sheets()
 
+    @property
+    def loading_css(self):
+        """
+            Get loading CSS count
+            @return int
+        """
+        return self.__loading_css
+
 #######################
 # PROTECTED           #
 #######################
@@ -85,18 +93,19 @@ class WebViewNightMode:
         """
             Run JS helpers
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event == WebKit2.LoadEvent.STARTED:
+        if event == EolieLoadEvent.STARTED:
             self.__loaded_css = []
             self.set_opacity(0)
             self.__reset()
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
-        elif event == WebKit2.LoadEvent.COMMITTED:
+        elif event == EolieLoadEvent.COMMITTED:
             self.night_mode()
-        elif event == WebKit2.LoadEvent.FINISHED:
-            if self.__loading_uris == 0:
+        elif event == EolieLoadEvent.FINISHED:
+            if self.__loading_css == 0:
+                self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
                 GLib.timeout_add(250, self.set_opacity, 1)
 
 #######################
@@ -435,10 +444,11 @@ class WebViewNightMode:
             @param encoded as str
         """
         try:
-            self.__loading_uris -= 1
+            self.__loading_css -= 1
             if status:
                 self.__apply_night_mode(contents.decode("utf-8"), encoded, uri)
         except Exception as e:
             Logger.error("WebViewNightMode::__on_load_uri_content(): %s", e)
-        if self.__loading_uris == 0:
+        if self.__loading_css == 0:
+            self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
             GLib.timeout_add(250, self.set_opacity, 1)

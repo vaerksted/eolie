@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType
+from eolie.define import App, LoadingType, EolieLoadEvent
 from eolie.utils import get_snapshot
 from eolie.search import Search
 from eolie.logger import Logger
@@ -215,10 +215,10 @@ class WebViewMenuSignals:
         """
             Get a snapshot
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
             @param uri as str
         """
-        if event == WebKit2.LoadEvent.FINISHED:
+        if event == EolieLoadEvent.FINISHED:
             GLib.timeout_add(3000,
                              webview.get_snapshot,
                              WebKit2.SnapshotRegion.FULL_DOCUMENT,

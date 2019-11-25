@@ -10,14 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, Gdk
+from gi.repository import Gtk, Gdk
 
 from time import time
 from uuid import uuid4
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
-from eolie.define import App
+from eolie.define import App, EolieLoadEvent
 from eolie.utils import get_baseuri
 from eolie.logger import Logger
 
@@ -143,9 +143,9 @@ class WebViewCredentials:
         """
             Run JS helper
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event == WebKit2.LoadEvent.FINISHED:
+        if event == EolieLoadEvent.FINISHED:
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/Submit.js", None, None)
 

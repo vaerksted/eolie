@@ -10,12 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import Gio
 
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.utils import get_baseuri
+from eolie.define import EolieLoadEvent
 from eolie.logger import Logger
 
 
@@ -44,9 +45,9 @@ class WebViewHelpers:
         """
             Run JS helpers
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event == WebKit2.LoadEvent.FINISHED:
+        if event == EolieLoadEvent.FINISHED:
             self.__run_insecure(webview.uri)
             self.__run_set_forms(webview.uri)
 

@@ -80,7 +80,7 @@ class WebViewErrors:
         """
             Show error page
             @param view as WebKit2.WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
             @param uri as str
             @param error as GLib.Error
         """

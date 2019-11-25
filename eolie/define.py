@@ -90,6 +90,14 @@ class Type:
     SEPARATOR = -11
 
 
+class EolieLoadEvent:
+    STARTED = 0
+    REDIRECTED = 1
+    COMMITTED = 2
+    FINISHED = 3
+    LOADED_CSS = 4
+
+
 COLORS = {
     "aliceblue": (240, 248, 255),
     "antiquewhite": (250, 235, 215),

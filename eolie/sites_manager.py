@@ -10,10 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, WebKit2
+from gi.repository import Gtk, Gdk, GLib
 
 from eolie.sites_manager_child import SitesManagerChild
-from eolie.define import App, LoadingType, MARGIN_SMALL
+from eolie.define import App, LoadingType, MARGIN_SMALL, EolieLoadEvent
 from eolie.utils import get_safe_netloc, update_popover_internals
 
 
@@ -76,7 +76,7 @@ class SitesManager(Gtk.Grid):
         # Force update
         if webview.uri:
             self.__on_webview_load_changed(webview,
-                                           WebKit2.LoadEvent.STARTED)
+                                           EolieLoadEvent.STARTED)
         webview.connect("load-changed", self.__on_webview_load_changed)
         webview.connect("destroy", self.__on_webview_destroy)
 
@@ -260,9 +260,9 @@ class SitesManager(Gtk.Grid):
         """
             Update children
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event != WebKit2.LoadEvent.COMMITTED:
+        if event != EolieLoadEvent.COMMITTED:
             return
         netloc = get_safe_netloc(webview.uri)
         child = None

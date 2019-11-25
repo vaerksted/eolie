@@ -10,10 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2, Pango
+from gi.repository import Gtk, Pango
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import ArtSize, MARGIN_SMALL, MARGIN
+from eolie.define import ArtSize, MARGIN_SMALL, MARGIN, EolieLoadEvent
 from eolie.utils import on_query_tooltip, update_popover_internals
 from eolie.helper_signals import SignalsHelper, signals
 from eolie.helper_gestures import GesturesHelper
@@ -181,9 +181,9 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
         """
             Update widget content
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event != WebKit2.LoadEvent.FINISHED:
+        if event != EolieLoadEvent.FINISHED:
             self.__background_image.set_from_surface(None)
             self.__indicator_image.set_from_surface(None)
             self.__indicator_image.set_from_icon_name(

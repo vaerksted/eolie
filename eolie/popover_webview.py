@@ -10,7 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2
+from gi.repository import Gtk
+
+from eolie.define import EolieLoadEvent
 
 
 class WebViewPopover(Gtk.Popover):
@@ -137,11 +139,11 @@ class WebViewPopover(Gtk.Popover):
         """
             Update spinner
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event == WebKit2.LoadEvent.STARTED:
+        if event == EolieLoadEvent.STARTED:
             self.__spinner.start()
-        elif event == event == WebKit2.LoadEvent.FINISHED:
+        elif event == event == EolieLoadEvent.FINISHED:
             self.__spinner.stop()
 
     def __on_webview_close(self, webview):

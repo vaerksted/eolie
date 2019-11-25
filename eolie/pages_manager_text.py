@@ -10,9 +10,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Pango, WebKit2
+from gi.repository import Gtk, Pango
 
-from eolie.define import MARGIN_SMALL
+from eolie.define import MARGIN_SMALL, EolieLoadEvent
 from eolie.helper_signals import SignalsHelper, signals
 from eolie.utils import on_query_tooltip
 
@@ -82,10 +82,10 @@ class PagesManagerRowText(Gtk.ListBoxRow, SignalsHelper):
         """
             Update widget content
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
-        if event in [WebKit2.LoadEvent.STARTED,
-                     WebKit2.LoadEvent.COMMITTED]:
+        if event in [EolieLoadEvent.STARTED,
+                     EolieLoadEvent.COMMITTED]:
             uri = webview.get_uri()
             if uri is not None:
                 self.__label.set_text(uri)

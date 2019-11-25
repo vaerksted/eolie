@@ -10,11 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, GLib
+from gi.repository import GLib
 
 from urllib.parse import urlparse
 
-from eolie.define import App
+from eolie.define import App, EolieLoadEvent
 
 
 class WebViewContainer:
@@ -115,7 +115,9 @@ class WebViewContainer:
             @param webview as WebView
             @param value GparamFloat
         """
-        value = self.__current_webview.get_estimated_load_progress()
+        value = webview.get_estimated_load_progress()
+        if webview.loading_css > 0:
+            value -= 1 / webview.loading_css
         self._window.toolbar.title.entry.progress.set_fraction(value)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed):
@@ -140,12 +142,12 @@ class WebViewContainer:
         """
             Update UI based on current event
             @param webview as WebView
-            @param event as WebKit2.LoadEvent
+            @param event as EolieLoadEvent
         """
         parsed = urlparse(webview.uri)
         self._window.toolbar.title.entry.set_uri(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
-        if event == WebKit2.LoadEvent.STARTED:
+        if event == EolieLoadEvent.STARTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
             if wanted_scheme:
                 self._window.toolbar.title.entry.icons.set_loading(True)
@@ -154,9 +156,9 @@ class WebViewContainer:
                 self._window.toolbar.title.start_search()
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
-        elif event == WebKit2.LoadEvent.COMMITTED:
+        elif event == EolieLoadEvent.COMMITTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
-        elif event == WebKit2.LoadEvent.FINISHED:
+        elif event == EolieLoadEvent.LOADED_CSS:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
             # Give focus to webview
