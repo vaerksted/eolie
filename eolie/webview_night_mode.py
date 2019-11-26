@@ -13,6 +13,7 @@
 from gi.repository import WebKit2, Gio, GLib
 
 import re
+from colorsys import rgb_to_hls
 from urllib.parse import urlparse
 from hashlib import md5
 from os.path import dirname
@@ -111,27 +112,60 @@ class WebViewNightMode:
 #######################
 # PRIVATE             #
 #######################
-    def __get_color_from_rule(self, rule):
+    def __get_hsla_as_float(self, value):
         """
-            Get RGBA color from rule
-            @param rule as str containing #FFFFFFFF or rgb() or rgba ()
+            Convert percent str to float, keep value if no percent
+            @param value as str
+            @return float
+        """
+        if value.find("%") != -1:
+            return int(value[:-1]) / 100
+        return float(value)
+
+    def __get_rgba_as_int(self, value):
+        """
+            Convert percent str to int, keep value if no percent
+            @param value as str
+            @return int
+        """
+        if value.find("%") != -1:
+            return int(value[:-1]) * 255 / 100
+        return int(value)
+
+    def __get_deg(self, deg):
+        """
+            Convert deg str to int
+            @param deg as str
+            @return int
+        """
+        if deg[0].find("deg") != -1:
+            return deg[0][:-3]
+        return deg
+
+    def __get_split(self, line):
+        """
+            Split RGBA/HSLA notation (CSS3 vs CSS4 syntax)
+        """
+        if "," in line:
+            return line.split(",")
+        else:
+            # Get Opacity after /
+            slash_split = line.split("/")
+            # Get HSL/RGB before /
+            split = slash_split[0].split(" ")
+            if len(slash_split) == 1:
+                # HSL/RGB + no opacity
+                return split + [1]
+            else:
+                # HSL/RGB + A
+                return split + slash_split[1]
+
+    def __get_hex_color_from_rule(self, rule):
+        """
+            Get RGBA color as hexa from rule
+            @param rule as str
             @return (r, g, b, a) as (int, int, int, int)
         """
-        # Extract values from rgb() and rgba()
-        found = re.findall('rgb.?\(([^\)]*)', rule)
-        if found:
-            values = found[0].split(",")
-            rgb = ()
-            for i in (0, 1, 2):
-                value = values[i]
-                if value.find("%") != -1:
-                    rgb += (int(int(value[:-1]) / 100 * 255),)
-                else:
-                    rgb += (int(value),)
-            a = 1
-            if len(values) == 4:
-                a = float(values[3])
-            return rgb + (a,)
         # Extract values from hexadecimal notation
         found = re.search('#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})',
                           rule)
@@ -148,22 +182,88 @@ class WebViewNightMode:
             if len(hexa) == 8:
                 a = round(255 / int(hexa[6, 8], 16))
             return rgb + (a,)
-        # Extract values from named colors, not very good has only
-        # handling color only values
-        for color in COLORS.keys():
-            if rule.find(color) != -1:
-                return COLORS[color]
         return None
 
-    def __should_ignore_color(self, rule):
+    def __get_rgba_color_from_rule(self, rule):
+        """
+            Get RGBA color from rule
+            @param rule str
+        """
+        # Extract values from rgb() and rgba()
+        found = re.findall('rgb.?\(([^\)]*)', rule)
+        if not found:
+            return None
+
+        split = self.__get_split(found[0])
+        r = int(split[0])
+        g = self.__get_rgba_as_int(split[1])
+        b = self.__get_rgba_as_int(split[2])
+        # Indentical to hsla float calculation
+        a = 1
+        if len(split) == 4:
+            a = self.__get_hsla_as_float(split[3])
+        return (r, g, b, a)
+
+    def __get_hsla_color_from_rule(self, rule):
+        """
+            Get HSLA color from rule
+            @param rule str
+        """
+        # Extract values from hsl() and hsla()
+        found = re.findall('hsl.?\(([^\)]*)', rule)
+        if not found:
+            return None
+
+        split = self.__get_split(found[0])
+        h = self.__get_deg(split[0])
+        s = self.__get_hsla_as_float(split[1])
+        l = self.__get_hsla_as_float(split[2])
+        a = 1
+        if len(split) == 4:
+            a = self.__get_hsla_as_float(split[3])
+        return (h, s, l, a)
+
+    def __get_color_from_rule(self, rule):
+        """
+            Get RGBA color from rule
+            @param rule as str
+            @return (h, s, l, a) as (int, int, int, int)
+        """
+        rgba = self.__get_hex_color_from_rule(rule)
+        if rgba is None:
+            rgba = self.__get_rgba_color_from_rule(rule)
+        if rgba is None:
+            for color in COLORS.keys():
+                if rule.find(color) != -1:
+                    rgba = COLORS[color] + (1,)
+        if rgba is None:
+            hsla = self.__get_hsla_color_from_rule(rule)
+        else:
+            (h, l, s) = rgb_to_hls(rgba[0] / 255,
+                                   rgba[1] / 255,
+                                   rgba[2] / 255)
+            hsla = (h, s, l, rgba[3])
+        return hsla
+
+    def __get_hsla_to_css_string(self, hsla):
+        """
+            Convert hsla values to CSS string
+            @param hsla as (int, float, float, float)
+            return str
+        """
+        return "hsla({}, {}%, {}%, {})".format(hsla[0] * 360,
+                                               hsla[1] * 100,
+                                               hsla[2] * 100,
+                                               hsla[3])
+
+    def __should_ignore(self, rule):
         """
             True if color should be ignored
             @param rule as str
             @return bool
         """
         values = ["inherit", "transparent",
-                  "none", "unset", "currentcolor",
-                  "no-repeat"]
+                  "none", "unset", "currentcolor"]
         for value in values:
             if rule.find(value) != -1:
                 return True
@@ -179,43 +279,6 @@ class WebViewNightMode:
                 return True
         return False
 
-    def __is_greyscale_color(self, rgb):
-        """
-            True if RGB color is grayscale
-            @param rgb (int, int, int)
-            @return bool
-        """
-        rgb_ratio1 = (rgb[0] + 0.1) / (rgb[1] + 0.1)
-        rgb_ratio2 = (rgb[1] + 0.1) / (rgb[2] + 0.1)
-        greyscale = rgb_ratio1 > 0.8 and\
-            rgb_ratio1 < 1.2 and\
-            rgb_ratio2 > 0.8 and\
-            rgb_ratio2 < 1.2
-        return greyscale
-
-    def __is_dark_color(self, rgb):
-        """
-            True if RGB color is dark
-            @param rgb as (int, int, int)
-            @return bool
-        """
-        # http://www.w3.org/TR/AERT#color-contrast
-        brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000
-        return brightness < 100
-
-    def __set_color_brightness(self, rgb, diff):
-        """
-            Set color brightness value +/- diff
-            @param rgb as (int, int, int) + optional a (int,)
-            @return rgb as (int, int, int) + optional a (int,)
-        """
-        new_rgb = (min(255, max(0, rgb[0] + diff)),
-                   min(255, max(0, rgb[1] + diff)),
-                   min(255, max(0, rgb[2] + diff)))
-        if len(rgb) == 4:
-            new_rgb += (rgb[3],)
-        return new_rgb
-
     def __handle_background_color(self, match):
         """
             Handle background color rule
@@ -227,20 +290,16 @@ class WebViewNightMode:
 
         rule = match[0]
 
-        if self.__should_ignore_color(rule):
+        if self.__should_ignore(rule):
             return "background-color: #353535 !important;"
 
         # Override gradients
         if self.__should_override(rule):
             return "background-color: #353535 !important;"
 
-        rgba = self.__get_color_from_rule(rule)
-        if self.__is_greyscale_color(rgba) or\
-                self.__is_dark_color(rgba):
-            return "background-color: #353535 !important;"
-
-        rgba = self.__set_color_brightness(rgba, -50)
-        return "background-color: rgba%s !important;" % str(rgba)
+        hsla = self.__get_color_from_rule(rule)
+        hsla = self.__get_hsla_to_css_string((hsla[0], hsla[1], 0.1, hsla[3]))
+        return "background-color: %s !important;" % hsla
 
     def __handle_background(self, match, background_color_set):
         """
@@ -253,7 +312,7 @@ class WebViewNightMode:
             return None
 
         rule = match[0]
-        if self.__should_ignore_color(rule):
+        if self.__should_ignore(rule):
             return None
 
         if self.__should_override(rule) or background_color_set:
@@ -261,14 +320,9 @@ class WebViewNightMode:
         elif rule.find("url(") != -1:
             return None
 
-        rgba = self.__get_color_from_rule(rule)
-
-        if self.__is_greyscale_color(rgba) or\
-                self.__is_dark_color(rgba):
-            return "background: #353535 !important;"
-
-        rgba = self.__set_color_brightness(rgba, -50)
-        return "background: rgba%s !important;" % str(rgba)
+        hsla = self.__get_color_from_rule(rule)
+        hsla = self.__get_hsla_to_css_string((hsla[0], hsla[1], 0.1, hsla[3]))
+        return "background: %s !important;" % hsla
 
     def __handle_background_image(self, match, background_color_set):
         """
@@ -281,7 +335,7 @@ class WebViewNightMode:
             return None
 
         rule = match[0]
-        if self.__should_ignore_color(rule):
+        if self.__should_ignore(rule):
             return None
 
         if self.__should_override(rule) or background_color_set:
@@ -299,20 +353,18 @@ class WebViewNightMode:
 
         rule = match[0]
 
-        if self.__should_ignore_color(rule):
+        if self.__should_ignore(rule):
             return None
 
         if self.__should_override(rule):
             return "color: #EAEAEA !important;"
 
-        rgba = self.__get_color_from_rule(rule)
-        if rgba is None:
+        hsla = self.__get_color_from_rule(rule)
+        if hsla is None:
             return None
-        elif self.__is_greyscale_color(rgba):
-            return "color: #EAEAEA !important;"
-        else:
-            rgba = self.__set_color_brightness(rgba, 127)
-            return "color: rgba%s !important;" % str(rgba)
+        hsla = self.__get_hsla_to_css_string(
+                (hsla[0], hsla[1], 0.8, hsla[3]))
+        return "color: %s !important;" % hsla
 
     def __handle_import_rule(self, selector, uri):
         """
