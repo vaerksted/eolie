@@ -256,6 +256,14 @@ class WebViewNightMode:
                                                hsla[2] * 100,
                                                hsla[3])
 
+    def __get_background_color_for_lightness(self, l):
+        """
+            Get background color for lightness
+            @param l as float
+            return (int, float, float, float)
+        """
+        return (0, 0, 0.15 + l / 10, 1)
+
     def __should_ignore(self, rule):
         """
             True if color should be ignored
@@ -298,8 +306,9 @@ class WebViewNightMode:
             return "background-color: #353535 !important;"
 
         hsla = self.__get_color_from_rule(rule)
-        hsla = self.__get_hsla_to_css_string((hsla[0], hsla[1], 0.1, hsla[3]))
-        return "background-color: %s !important;" % hsla
+        hsla = self.__get_background_color_for_lightness(hsla[2])
+        hsla_str = self.__get_hsla_to_css_string(hsla)
+        return "background-color: %s !important;" % hsla_str
 
     def __handle_background(self, match, background_color_set):
         """
@@ -321,8 +330,9 @@ class WebViewNightMode:
             return None
 
         hsla = self.__get_color_from_rule(rule)
-        hsla = self.__get_hsla_to_css_string((hsla[0], hsla[1], 0.1, hsla[3]))
-        return "background: %s !important;" % hsla
+        hsla = self.__get_background_color_for_lightness(hsla[2])
+        hsla_str = self.__get_hsla_to_css_string(hsla)
+        return "background-color: %s !important;" % hsla_str
 
     def __handle_background_image(self, match, background_color_set):
         """
@@ -431,7 +441,8 @@ class WebViewNightMode:
                 if background_str is not None:
                     selector_rules += background_str
                 background_image_str = self.__handle_background_image(
-                    background_image, background_color_str is not None)
+                    background_image, background_color_str is not None or
+                    background_str is not None)
                 if background_image_str is not None:
                     selector_rules += background_image_str
                 color_str = self.__handle_color(color)
