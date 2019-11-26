@@ -307,7 +307,7 @@ class WebViewNightMode:
 
         hsla = self.__get_color_from_rule(rule)
         if hsla[1] > 0.2:
-            hsla = (hsla[0], hsla[1], 0.4, hsla[3])
+            hsla = (hsla[0], hsla[1], 0.3, hsla[3])
         else:
             hsla = self.__get_background_color_for_lightness(hsla[2])
         hsla_str = self.__get_hsla_to_css_string(hsla)
@@ -394,7 +394,7 @@ class WebViewNightMode:
             hsla = self.__get_color_from_rule(item)
             if hsla is not None:
                 hsla = self.__get_hsla_to_css_string(
-                        (hsla[0], hsla[1], 0.4, hsla[3]))
+                        (hsla[0], hsla[1], 0.3, hsla[3]))
                 return "border-color: %s !important;" % hsla
         return None
 
