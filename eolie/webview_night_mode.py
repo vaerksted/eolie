@@ -306,7 +306,10 @@ class WebViewNightMode:
             return "background-color: #353535 !important;"
 
         hsla = self.__get_color_from_rule(rule)
-        hsla = self.__get_background_color_for_lightness(hsla[2])
+        if hsla[1] > 0.2:
+            hsla = (hsla[0], hsla[1], 0.4, hsla[3])
+        else:
+            hsla = self.__get_background_color_for_lightness(hsla[2])
         hsla_str = self.__get_hsla_to_css_string(hsla)
         return "background-color: %s !important;" % hsla_str
 
@@ -386,13 +389,14 @@ class WebViewNightMode:
             return None
 
         rule = match[0]
-
         (prop, values) = rule.split(":")
-        items = values.split(" ")
-        hsla = self.__get_color_from_rule(items[-1])
-        hsla = self.__get_hsla_to_css_string(
-                (hsla[0], hsla[1], 0.5, hsla[3]))
-        return "%s: %s %s !important;" % (prop, " ".join(items[:-1]), hsla)
+        for item in values.split(" "):
+            hsla = self.__get_color_from_rule(item)
+            if hsla is not None:
+                hsla = self.__get_hsla_to_css_string(
+                        (hsla[0], hsla[1], 0.4, hsla[3]))
+                return "border-color: %s !important;" % hsla
+        return None
 
     def __handle_import_rule(self, selector, uri):
         """
@@ -441,7 +445,7 @@ class WebViewNightMode:
                 color = re.search(
                     '[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
                 border = re.search(
-                    'border[ ]*:[^;]*', rules)
+                    'border[^;]*:[^;]*', rules)
                 background = re.search(
                     '[^-^a-z^A-Z]background[^-: ]*:[ ]*[^;]*', rules)
                 background_color = re.search(
