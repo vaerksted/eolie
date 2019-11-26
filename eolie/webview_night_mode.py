@@ -299,7 +299,7 @@ class WebViewNightMode:
         rule = match[0]
 
         if self.__should_ignore(rule):
-            return "background-color: #353535 !important;"
+            return None
 
         # Override gradients
         if self.__should_override(rule):
