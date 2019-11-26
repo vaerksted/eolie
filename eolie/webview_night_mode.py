@@ -376,6 +376,24 @@ class WebViewNightMode:
                 (hsla[0], hsla[1], 0.8, hsla[3]))
         return "color: %s !important;" % hsla
 
+    def __handle_border(self, match):
+        """
+            Handle color rule
+            @param match as re.Match
+            @return new color string as str
+        """
+        if match is None:
+            return None
+
+        rule = match[0]
+
+        (prop, values) = rule.split(":")
+        items = values.split(" ")
+        hsla = self.__get_color_from_rule(items[-1])
+        hsla = self.__get_hsla_to_css_string(
+                (hsla[0], hsla[1], 0.5, hsla[3]))
+        return "%s: %s %s !important;" % (prop, " ".join(items[:-1]), hsla)
+
     def __handle_import_rule(self, selector, uri):
         """
             Search for import rules and download them
@@ -422,6 +440,8 @@ class WebViewNightMode:
                 selector = search[0]
                 color = re.search(
                     '[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
+                border = re.search(
+                    'border[ ]*:[^;]*', rules)
                 background = re.search(
                     '[^-^a-z^A-Z]background[^-: ]*:[ ]*[^;]*', rules)
                 background_color = re.search(
@@ -448,6 +468,9 @@ class WebViewNightMode:
                 color_str = self.__handle_color(color)
                 if color_str is not None:
                     selector_rules += color_str
+                border_str = self.__handle_border(border)
+                if border_str is not None:
+                    selector_rules += border_str
                 if selector_rules:
                     new_rules.append(selector + selector_rules)
             except Exception as e:
@@ -469,9 +492,6 @@ class WebViewNightMode:
                      "body {\
                         color: #EAEAEA !important;\
                         background-color: #353535 !important\
-                      }\
-                      * {\
-                        border-color: #454545 !important\
                       }\
                       a {\
                         color: #F0FFFE !important;\
