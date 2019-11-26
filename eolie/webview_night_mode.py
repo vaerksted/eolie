@@ -262,7 +262,7 @@ class WebViewNightMode:
             @param l as float
             return (int, float, float, float)
         """
-        return (0, 0, 0.15 + l / 10, 1)
+        return (0, 0, 0.21 + l / 100, 1)
 
     def __should_ignore(self, rule):
         """
