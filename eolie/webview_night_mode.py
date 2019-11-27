@@ -442,15 +442,15 @@ class WebViewNightMode:
                     continue
                 selector = search[0]
                 color = re.search(
-                    '[; {](color[ ]*:[^;]*)', rules)
+                    '[;\s{](color[ ]*:[^;]*)', rules)
                 border = re.search(
-                    '[; {](border[^;]*:[^;]*)', rules)
+                    '[;\s{](border[^;]*:[^;]*)', rules)
                 background = re.search(
-                    '[; {](background[^-: ]*:[ ]*[^;]*)', rules)
+                    '[;\s{](background[^-: ]*:[ ]*[^;]*)', rules)
                 background_color = re.search(
-                    '[; {](background-color[ ]*:[^;]*)', rules)
+                    '[;\s{](background-color[ ]*:[^;]*)', rules)
                 background_image = re.search(
-                    '[; {](background-image[ ]*:[^;]*)', rules)
+                    '[;\s{](background-image[ ]*:[^;]*)', rules)
                 if background_color is None and background is None and\
                         background_image is None and color is None:
                     continue
