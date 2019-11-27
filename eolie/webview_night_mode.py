@@ -195,7 +195,7 @@ class WebViewNightMode:
             return None
 
         split = self.__get_split(found[0])
-        r = int(split[0])
+        r = self.__get_rgba_as_int(split[0])
         g = self.__get_rgba_as_int(split[1])
         b = self.__get_rgba_as_int(split[2])
         # Indentical to hsla float calculation
