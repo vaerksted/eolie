@@ -295,7 +295,6 @@ class WebViewNightMode:
         """
         if match is None:
             return None
-
         rule = match.group(1)
 
         if self.__should_ignore(rule):
@@ -304,6 +303,8 @@ class WebViewNightMode:
         # Override gradients
         if self.__should_override(rule):
             return "background-color: #353535 !important;"
+        elif rule.find("url(") != -1:
+            return None
 
         hsla = self.__get_color_from_rule(rule)
         if hsla[1] > 0.2:
@@ -322,8 +323,8 @@ class WebViewNightMode:
         """
         if match is None:
             return None
-
         rule = match.group(1)
+
         if self.__should_ignore(rule):
             return None
 
@@ -346,8 +347,8 @@ class WebViewNightMode:
         """
         if match is None:
             return None
-
         rule = match.group(1)
+
         if self.__should_ignore(rule):
             return None
 
@@ -363,7 +364,6 @@ class WebViewNightMode:
         """
         if match is None:
             return None
-
         rule = match.group(1)
 
         if self.__should_ignore(rule):
