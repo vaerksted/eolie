@@ -390,12 +390,11 @@ class WebViewNightMode:
 
         rule = match[0]
         (prop, values) = rule.split(":")
-        for item in values.split(" "):
-            hsla = self.__get_color_from_rule(item)
-            if hsla is not None:
-                hsla = self.__get_hsla_to_css_string(
-                        (hsla[0], hsla[1], 0.3, hsla[3]))
-                return "border-color: %s !important;" % hsla
+        hsla = self.__get_color_from_rule(values)
+        if hsla is not None:
+            hsla = self.__get_hsla_to_css_string(
+                    (hsla[0], hsla[1], 0.3, hsla[3]))
+            return "border-color: %s !important;" % hsla
         return None
 
     def __handle_import_rule(self, selector, uri):
