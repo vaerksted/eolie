@@ -117,7 +117,7 @@ class WebViewContainer:
         """
         value = webview.get_estimated_load_progress()
         if webview.loading_css > 0:
-            value -= 1 / webview.loading_css
+            value -= 0.1 / webview.loading_css
         self._window.toolbar.title.entry.progress.set_fraction(value)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed):
