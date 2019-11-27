@@ -296,7 +296,7 @@ class WebViewNightMode:
         if match is None:
             return None
 
-        rule = match[0]
+        rule = match.group(1)
 
         if self.__should_ignore(rule):
             return None
@@ -323,7 +323,7 @@ class WebViewNightMode:
         if match is None:
             return None
 
-        rule = match[0]
+        rule = match.group(1)
         if self.__should_ignore(rule):
             return None
 
@@ -347,7 +347,7 @@ class WebViewNightMode:
         if match is None:
             return None
 
-        rule = match[0]
+        rule = match.group(1)
         if self.__should_ignore(rule):
             return None
 
@@ -364,7 +364,7 @@ class WebViewNightMode:
         if match is None:
             return None
 
-        rule = match[0]
+        rule = match.group(1)
 
         if self.__should_ignore(rule):
             return None
@@ -388,7 +388,7 @@ class WebViewNightMode:
         if match is None:
             return None
 
-        rule = match[0]
+        rule = match.group(1)
         (prop, values) = rule.split(":")
         hsla = self.__get_color_from_rule(values)
         if hsla is not None:
@@ -442,15 +442,15 @@ class WebViewNightMode:
                     continue
                 selector = search[0]
                 color = re.search(
-                    '[^-^a-z^A-Z]color[ ]*:[^;]*', rules)
+                    '[; {](color[ ]*:[^;]*)', rules)
                 border = re.search(
-                    'border[^;]*:[^;]*', rules)
+                    '[; {](border[^;]*:[^;]*)', rules)
                 background = re.search(
-                    '[^-^a-z^A-Z]background[^-: ]*:[ ]*[^;]*', rules)
+                    '[; {](background[^-: ]*:[ ]*[^;]*)', rules)
                 background_color = re.search(
-                    'background-color[ ]*:[^;]*', rules)
+                    '[; {](background-color[ ]*:[^;]*)', rules)
                 background_image = re.search(
-                    'background-image[ ]*:[^;]*', rules)
+                    '[; {](background-image[ ]*:[^;]*)', rules)
                 if background_color is None and background is None and\
                         background_image is None and color is None:
                     continue
