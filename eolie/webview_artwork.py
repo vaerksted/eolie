@@ -104,7 +104,7 @@ class WebViewArtwork:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
                 self.__snapshot_id = None
-        elif event == EolieLoadEvent.FINISHED:
+        elif event == EolieLoadEvent.LOADED_CSS:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
