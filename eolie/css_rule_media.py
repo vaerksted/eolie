@@ -30,8 +30,8 @@ class CSSMediaRule:
         self.__rules = None
         self.__condition = None
         try:
-            # Get condition @media ... { or @media ..., selector {
-            search = re.search('@media ([^{^,]*)[{,](.*)', css)
+            # Get condition @media ... {
+            search = re.search('@media ([^{]*){(.*)', css)
             if search is not None:
                 from eolie.css_rule_list import CSSRuleList
                 self.__condition = search.group(1)
