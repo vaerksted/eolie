@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import WebKit2, Gio, GLib
 
 from eolie.helper_task import TaskHelper
 from eolie.define import App, EolieLoadEvent
@@ -27,15 +27,33 @@ class WebViewNightMode:
             Init night mode
         """
         self.__loading_css = 0
+        self.__load_finished = False
         self.__stylesheets = []
         self.__task_helper = TaskHelper()
         self.__cancellable = Gio.Cancellable.new()
+        self.get_style_context().add_class("night-mode")
+        self.__default_stylesheet = WebKit2.UserStyleSheet(
+                     "body {\
+                        color: #EAEAEA !important;\
+                        background-color: #353535 !important\
+                      }\
+                      a {\
+                        color: #F0FFFE !important;\
+                      }\
+                      a:hover {\
+                        color: white !important;\
+                      }",
+                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                     WebKit2.UserStyleLevel.USER,
+                     None,
+                     None)
 
     def load_css_uri(self, message):
         """
             Load CSS URI as user style
             @param message as str
         """
+        self.__loading_css += 1
         uri = message.replace("@EOLIE_CSS_URI@", "")
         for stylesheet in self.__stylesheets:
             if stylesheet.uri == uri:
@@ -48,11 +66,14 @@ class WebViewNightMode:
         """
             Load CSS text as user style
         """
-        # TODO
         content = message.replace("@EOLIE_CSS_TEXT@", "")
-        stylesheet = StyleSheet(content=content)
-        stylesheet.connect("populated", self.__on_stylesheet_populated)
-        self.__task_helper.run(stylesheet.populate)
+        if content:
+            self.__loading_css += 1
+            stylesheet = StyleSheet(content=content)
+            stylesheet.connect("populated", self.__on_stylesheet_populated)
+            self.__task_helper.run(stylesheet.populate)
+        else:
+            self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
 
     def night_mode(self):
         """
@@ -86,42 +107,24 @@ class WebViewNightMode:
             @param event as EolieLoadEvent
         """
         if event == EolieLoadEvent.STARTED:
-            self.__reset()
+            self.__load_finished = False
+            self.set_opacity(0)
+            content_manager = self.get_user_content_manager()
+            content_manager.remove_all_style_sheets()
+            content_manager.add_style_sheet(self.__default_stylesheet)
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
         elif event == EolieLoadEvent.COMMITTED:
             self.night_mode()
         elif event == EolieLoadEvent.FINISHED:
-            self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
+            self.__load_finished = True
+            if self.__loading_css == 0:
+                self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
+                GLib.timeout_add(250, self.set_opacity, 1)
 
 #######################
 # PRIVATE             #
 #######################
-    def __reset(self):
-        """
-            Add default CSS rule
-        """
-        if not App().settings.get_value("night-mode"):
-            return
-        content_manager = self.get_user_content_manager()
-        content_manager.remove_all_style_sheets()
-        user_style_sheet = WebKit2.UserStyleSheet(
-                     "body {\
-                        color: #EAEAEA !important;\
-                        background-color: #353535 !important\
-                      }\
-                      a {\
-                        color: #F0FFFE !important;\
-                      }\
-                      a:hover {\
-                        color: white !important;\
-                      }",
-                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                     WebKit2.UserStyleLevel.USER,
-                     None,
-                     None)
-        content_manager.add_style_sheet(user_style_sheet)
-
     def __load_user_css(self, css):
         """
             Load CSS as user style
@@ -134,13 +137,17 @@ class WebViewNightMode:
                      None)
         content_manager = self.get_user_content_manager()
         content_manager.add_style_sheet(user_style_sheet)
+        if self.__loading_css == 0:
+            if self.__load_finished:
+                self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
+            GLib.timeout_add(250, self.set_opacity, 1)
 
     def __on_stylesheet_populated(self, stylesheet):
         """
             Load stylesheet
             @param stylesheet as StyleSheet
         """
+        self.__loading_css -= 1
         css_rules = stylesheet.css_rules
         if css_rules is not None:
-            # print("css://", css_rules.css_text)
             self.__load_user_css(css_rules.css_text)
