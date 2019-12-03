@@ -51,10 +51,8 @@ class CSSRuleList:
         """
             Get css text for rules
         """
-        text = ""
-        for rule in self.__rules:
-            text += rule.css_text
-        return text
+        css = [rule.css_text for rule in self.__rules]
+        return "".join(css)
 
     @property
     def populated(self):
