@@ -36,45 +36,34 @@ class CSSStyleRule:
         search = search = re.search('^([^{]*){(.*)}', css)
         if search is not None:
             self.__selector = search.group(1).strip()
-            properties = search.group(2)
-            # Search for color
-            color = re.search(
-                '[;\s]*color[ ]*:([^;]*)', properties)
-            # Search for background color, url() first
-            background_color = re.search(
-                '[;\s]*background-color[^:]*:[ ]*(url\([^\)]*\))', properties)
-            if background_color is None:
-                background_color = re.search(
-                    '[;\s]*background-color[^:]*:([^;]*)', properties)
-            # Search for background-image, url() first
-            background_image = re.search(
-                '[;\s]*background-image[^:]*:[ ]*(url\([^\)]*\))', properties)
-            if background_image is None:
-                background_image = re.search(
-                    '[;\s]*background-image[^:]*:([^;]*)', properties)
-            # Search for background, url() first
-            background = re.search(
-                '[;\s]*background[^-: ]*:[ ]*(url\([^\)]*\))', properties)
-            if background is None:
-                background = re.search(
-                    '[;\s]*background[^-: ]*:([ ]*[^;]*)', properties)
-            border = re.search(
-                '[;\s]*border[^;:]*:([^;]*)', properties)
-            if color is not None:
-                self.__color_str = color.group(1).strip()
+            declarations = search.group(2)
+            for declaration in declarations.split(";"):
+                if declaration.find(":") == -1:
+                    continue
+                (prop, value) = declaration.split(":", 1)
+                prop = prop.strip()
+                if prop == "color":
+                    self.__color_str = value.strip()
+                elif prop == "background-color":
+                    self.__background_color_str = value.strip()
+                elif prop == "background":
+                    self.__background_str = value.strip()
+                elif prop == "background-image":
+                    self.__background_image_str = value.strip()
+                elif prop.startswith("border"):
+                    self.__border_str = value.strip()
+            background_set = False
+            if self.__color_str is not None:
                 self.__update_color()
-            if background_color is not None:
-                self.__background_color_str = background_color.group(1).strip()
+            if self.__background_color_str is not None:
+                background_set = True
                 self.__update_background_color()
-            if background is not None:
-                self.__background_str = background.group(1).strip()
-                self.__update_background(background_color is not None)
-            if background_image is not None:
-                self.__background_image_str = background_image.group(1).strip()
-                self.__update_background_image(background_color is not None or
-                                               background is not None)
-            if border is not None:
-                self.__border_str = border.group(1).strip()
+            if self.__background_str is not None:
+                self.__update_background(background_set)
+                background_set = True
+            if self.__background_image_str is not None:
+                self.__update_background_image(background_set)
+            if self.__border_str is not None:
                 self.__update_border_color()
 
     @property
@@ -268,7 +257,7 @@ class CSSStyleRule:
             @param rule as str
             @return bool
         """
-        values = ["inherit", "transparent",
+        values = ["inherit", "transparent", "data:",
                   "none", "unset", "currentcolor"]
         for value in values:
             if rule.find(value) != -1:
