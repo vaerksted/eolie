@@ -10,6 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import re
 
 from eolie.css_rule_style import CSSStyleRule
 from eolie.css_rule_media import CSSMediaRule
@@ -74,17 +75,22 @@ class CSSRuleList:
             @param css as str
             @return [str]
         """
+        children = []
         css = css.replace("\n", "").strip()
+        # Remove comments
+        css = re.sub("\/\*[^*]*[^/]*\*\/", "", css)
+        css_split = css.split("}")
         bracket_count = 0
         children = []
-        subcss = ""
-        for c in css:
-            subcss += c
-            if c == "{":
-                bracket_count += 1
-            elif c == "}":
-                bracket_count -= 1
-                if bracket_count == 0:
-                    children.append(subcss)
-                    subcss = ""
+        subcss = []
+        while css_split:
+            item = css_split.pop(0)
+            for import_css in re.findall("@import[^;]*;", item):
+                children.append(import_css)
+                item.replace(import_css, "")
+            bracket_count += item.count("{") - 1
+            subcss.append(item)
+            if bracket_count == 0:
+                children.append("%s}" % "}".join(subcss))
+                subcss = []
         return children

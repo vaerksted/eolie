@@ -31,7 +31,7 @@ class CSSImportRule:
         """
         self.__stylesheet = None
         try:
-            parsed = urlparse(self.__uri)
+            parsed = urlparse(uri)
             search = re.search('@import url\(["\']([^"\']*)', css)
             css = search.group(1)
             if css.startswith("//"):
@@ -40,7 +40,7 @@ class CSSImportRule:
                 parent = dirname(parsed.path)
                 css_uri = "%s://%s%s/%s" % (
                     parsed.scheme, parsed.netloc, parent, css)
-            from eole.css_stylesheet import StyleSheet
+            from eolie.css_stylesheet import StyleSheet
             self.__stylesheet = StyleSheet(uri=css_uri,
                                            cancellable=cancellable)
             self.__stylesheet.populate()
