@@ -101,6 +101,8 @@ class WebViewNightMode:
         """
             Add default CSS rule
         """
+        if not App().settings.get_value("night-mode"):
+            return
         content_manager = self.get_user_content_manager()
         content_manager.remove_all_style_sheets()
         user_style_sheet = WebKit2.UserStyleSheet(
