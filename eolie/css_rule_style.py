@@ -42,7 +42,7 @@ class CSSStyleRule:
                 '[;\s]*color[ ]*:([^;]*)', properties)
             # Search for background color, url() first
             background_color = re.search(
-                '[;\s]*background-image[^:]*:[ ]*(url\([^\)]*\))', properties)
+                '[;\s]*background-color[^:]*:[ ]*(url\([^\)]*\))', properties)
             if background_color is None:
                 background_color = re.search(
                     '[;\s]*background-color[^:]*:([^;]*)', properties)
