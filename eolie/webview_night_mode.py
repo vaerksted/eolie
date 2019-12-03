@@ -11,9 +11,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import WebKit2, Gio, GLib
+from gi.repository.Gio import FILE_ATTRIBUTE_TIME_MODIFIED
+
+from hashlib import md5
+from time import time
 
 from eolie.helper_task import TaskHelper
-from eolie.define import App, EolieLoadEvent
+from eolie.define import App, EolieLoadEvent, EOLIE_CACHE_PATH
 from eolie.css_stylesheet import StyleSheet
 
 
@@ -53,14 +57,15 @@ class WebViewNightMode:
             Load CSS URI as user style
             @param message as str
         """
-        self.__loading_css += 1
         uri = message.replace("@EOLIE_CSS_URI@", "")
-        for stylesheet in self.__stylesheets:
-            if stylesheet.uri == uri:
-                return
-        stylesheet = StyleSheet(uri=uri)
-        stylesheet.connect("populated", self.__on_stylesheet_populated)
-        self.__task_helper.run(stylesheet.populate)
+        if not self.__load_from_cache(uri):
+            self.__loading_css += 1
+            for stylesheet in self.__stylesheets:
+                if stylesheet.uri == uri:
+                    return
+            stylesheet = StyleSheet(uri=uri)
+            stylesheet.connect("populated", self.__on_stylesheet_populated)
+            self.__task_helper.run(stylesheet.populate)
 
     def load_css_text(self, message):
         """
@@ -125,9 +130,31 @@ class WebViewNightMode:
 #######################
 # PRIVATE             #
 #######################
+    def __load_from_cache(self, uri):
+        """
+            Load CSS from cache
+            @param uri as str
+            @return bool
+        """
+        encoded = md5(uri.encode("utf-8")).hexdigest()
+        filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
+        f = Gio.File.new_for_path(filepath)
+        if f.query_exists():
+            info = f.query_info(FILE_ATTRIBUTE_TIME_MODIFIED,
+                                Gio.FileQueryInfoFlags.NONE,
+                                None)
+            mtime = int(info.get_attribute_as_string("time::modified"))
+            if time() - mtime < 86400:
+                (status, contents, tags) = f.load_contents(None)
+                if status:
+                    self.__load_user_css(contents.decode("utf-8"))
+                    return True
+        return False
+
     def __load_user_css(self, css):
         """
             Load CSS as user style
+            @param css as str
         """
         user_style_sheet = WebKit2.UserStyleSheet(
                      css,
@@ -150,4 +177,15 @@ class WebViewNightMode:
         self.__loading_css -= 1
         css_rules = stylesheet.css_rules
         if css_rules is not None:
-            self.__load_user_css(css_rules.css_text)
+            css_text = css_rules.css_text
+            self.__load_user_css(css_text)
+            if stylesheet.uri is not None:
+                encoded = md5(stylesheet.uri.encode("utf-8")).hexdigest()
+                filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
+                f = Gio.File.new_for_path(filepath)
+                fstream = f.replace(None, False,
+                                    Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                    None)
+                if fstream is not None:
+                    fstream.write(css_text.encode("utf-8"), None)
+                    fstream.close()
