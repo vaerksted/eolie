@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from gettext import gettext as _
 from datetime import datetime
 
-from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH, EolieLoadEvent
+from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
 from eolie.helper_task import TaskHelper
 
 
@@ -210,7 +210,7 @@ class Context:
                 request.finish(f.read(), -1, None)
         except Exception as e:
             request.get_web_view().emit("load-failed",
-                                        EolieLoadEvent.FINISHED,
+                                        WebKit2.LoadEvent.FINISHED,
                                         uri,
                                         GLib.Error(str(e)))
 

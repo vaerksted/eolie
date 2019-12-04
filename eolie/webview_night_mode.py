@@ -17,7 +17,7 @@ from hashlib import md5
 from time import time
 
 from eolie.helper_task import TaskHelper
-from eolie.define import App, EolieLoadEvent, EOLIE_CACHE_PATH
+from eolie.define import App, EOLIE_CACHE_PATH
 from eolie.css_stylesheet import StyleSheet
 
 
@@ -77,8 +77,6 @@ class WebViewNightMode:
             stylesheet = StyleSheet(content=content)
             stylesheet.connect("populated", self.__on_stylesheet_populated)
             self.__task_helper.run(stylesheet.populate)
-        else:
-            self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
 
     def night_mode(self):
         """
@@ -109,32 +107,31 @@ class WebViewNightMode:
         """
             Run JS helpers
             @param webview as WebView
-            @param event as EolieLoadEvent
+            @param event as WebKit2.LoadEvent
         """
         content_manager = self.get_user_content_manager()
-        if event == EolieLoadEvent.STARTED:
+        if event == WebKit2.LoadEvent.STARTED:
             self.__load_finished = False
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
-        elif event == EolieLoadEvent.COMMITTED:
+        elif event == WebKit2.LoadEvent.COMMITTED:
             self.run_javascript("""
                     html = document.querySelector("html");
                     if (html !== null) {
                         html.style.display = "none";
                     }""", None, None)
             content_manager.remove_all_style_sheets()
-            self.night_mode()
-        elif event == EolieLoadEvent.FINISHED:
-            self.__load_finished = True
-            if self.__loading_css == 0:
-                self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
-        elif event == EolieLoadEvent.LOADED_CSS:
             content_manager.add_style_sheet(self.__default_stylesheet)
-            self.run_javascript("""
-                    html = document.querySelector("html");
-                    if (html !== null) {
-                        html.style.display = "block";
-                    }""", None, None)
+            self.night_mode()
+        elif event == WebKit2.LoadEvent.FINISHED:
+            if self.__loading_css == 0:
+                self.run_javascript("""
+                        html = document.querySelector("html");
+                        if (html !== null) {
+                            html.style.display = "block";
+                        }""", None, None)
+            else:
+                return True
 
 #######################
 # PRIVATE             #
@@ -174,8 +171,7 @@ class WebViewNightMode:
         content_manager = self.get_user_content_manager()
         content_manager.add_style_sheet(user_style_sheet)
         if self.__loading_css == 0:
-            if self.__load_finished:
-                self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
+            self.emit("load-changed", WebKit2.LoadEvent.FINISHED)
 
     def __on_stylesheet_populated(self, stylesheet):
         """

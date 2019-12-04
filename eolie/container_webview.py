@@ -10,11 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import GLib
+from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
-from eolie.define import App, EolieLoadEvent
+from eolie.define import App
 
 
 class WebViewContainer:
@@ -116,8 +116,6 @@ class WebViewContainer:
             @param value GparamFloat
         """
         value = webview.get_estimated_load_progress()
-        if webview.loading_css > 0:
-            value -= 0.1 / webview.loading_css
         self._window.toolbar.title.entry.progress.set_fraction(value)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed):
@@ -142,12 +140,12 @@ class WebViewContainer:
         """
             Update UI based on current event
             @param webview as WebView
-            @param event as EolieLoadEvent
+            @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(webview.uri)
         self._window.toolbar.title.entry.set_uri(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
-        if event == EolieLoadEvent.STARTED:
+        if event == WebKit2.LoadEvent.STARTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
             if wanted_scheme:
                 self._window.toolbar.title.entry.icons.set_loading(True)
@@ -156,9 +154,9 @@ class WebViewContainer:
                 self._window.toolbar.title.start_search()
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
-        elif event == EolieLoadEvent.COMMITTED:
+        elif event == WebKit2.LoadEvent.COMMITTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
-        elif event == EolieLoadEvent.LOADED_CSS:
+        elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
             # Give focus to webview

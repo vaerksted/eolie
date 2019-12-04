@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType, EolieLoadEvent
+from eolie.define import App, LoadingType
 from eolie.utils import get_ftp_cmd
 from eolie.logger import Logger
 
@@ -92,24 +92,24 @@ class WebViewNavigation:
         """
             Update internals
             @param webview as WebView
-            @param event as EolieLoadEvent
+            @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(self.uri)
-        if event == EolieLoadEvent.STARTED:
+        if event == WebKit2.LoadEvent.STARTED:
             if parsed.scheme in ["http", "https"]:
                 self._initial_uri = self.uri.rstrip('/')
             else:
                 self._initial_uri = None
             self.__update_bookmark_metadata(self.uri)
-        elif event == EolieLoadEvent.REDIRECTED:
+        elif event == WebKit2.LoadEvent.REDIRECTED:
             self.__update_bookmark_metadata(self.uri)
-        elif event == EolieLoadEvent.COMMITTED:
+        elif event == WebKit2.LoadEvent.COMMITTED:
             self.emit("uri-changed", self.uri)
             App().history.set_page_state(self.uri)
             if self._initial_uri != self.uri:
                 self.__update_bookmark_metadata(self.uri)
             self.update_zoom_level()
-        elif event == EolieLoadEvent.FINISHED:
+        elif event == WebKit2.LoadEvent.FINISHED:
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)

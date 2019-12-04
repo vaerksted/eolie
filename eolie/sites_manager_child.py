@@ -10,12 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib
+from gi.repository import Gtk, Gdk, GLib, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
-from eolie.define import App, EolieLoadEvent
+from eolie.define import App
 from eolie.logger import Logger
 
 
@@ -137,14 +137,14 @@ class SitesManagerChild(Gtk.ListBoxRow):
         """
             Update widget content
             @param webview as WebView
-            @param event as EolieLoadEvent
+            @param event as WebKit2.LoadEvent
         """
-        if event in [EolieLoadEvent.STARTED,
-                     EolieLoadEvent.COMMITTED]:
+        if event in [WebKit2.LoadEvent.STARTED,
+                     WebKit2.LoadEvent.COMMITTED]:
             self.__image.set_from_icon_name(
                 "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
             self.__image.get_style_context().add_class("image-rotate")
-        elif event == EolieLoadEvent.FINISHED:
+        elif event == WebKit2.LoadEvent.FINISHED:
             self.__set_favicon(webview)
 
     @property

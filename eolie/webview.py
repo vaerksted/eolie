@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gtk, Gio, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType, EolieLoadEvent
+from eolie.define import App, LoadingType
 from eolie.context import Context
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -578,12 +578,12 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
         """
             Update internals
             @param webview as WebView
-            @param event as EolieLoadEvent
+            @param event as WebKit2.LoadEvent
         """
         WebViewCredentials._on_load_changed(self, webview, event)
         WebViewHelpers._on_load_changed(self, webview, event)
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
         WebViewNightMode._on_load_changed(self, webview, event)
-        if event == EolieLoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.COMMITTED:
             self._uri = webview.get_uri()
