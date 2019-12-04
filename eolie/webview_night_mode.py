@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio, GLib
+from gi.repository import WebKit2, Gio
 from gi.repository.Gio import FILE_ATTRIBUTE_TIME_MODIFIED
 
 from hashlib import md5
@@ -111,21 +111,30 @@ class WebViewNightMode:
             @param webview as WebView
             @param event as EolieLoadEvent
         """
+        content_manager = self.get_user_content_manager()
         if event == EolieLoadEvent.STARTED:
             self.__load_finished = False
-            self.set_opacity(0)
-            content_manager = self.get_user_content_manager()
-            content_manager.remove_all_style_sheets()
-            content_manager.add_style_sheet(self.__default_stylesheet)
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
         elif event == EolieLoadEvent.COMMITTED:
+            self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "none";
+                    }""", None, None)
+            content_manager.remove_all_style_sheets()
             self.night_mode()
         elif event == EolieLoadEvent.FINISHED:
             self.__load_finished = True
             if self.__loading_css == 0:
                 self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
-                GLib.timeout_add(250, self.set_opacity, 1)
+        elif event == EolieLoadEvent.LOADED_CSS:
+            content_manager.add_style_sheet(self.__default_stylesheet)
+            self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "block";
+                    }""", None, None)
 
 #######################
 # PRIVATE             #
@@ -167,7 +176,6 @@ class WebViewNightMode:
         if self.__loading_css == 0:
             if self.__load_finished:
                 self.emit("load-changed", EolieLoadEvent.LOADED_CSS)
-            GLib.timeout_add(250, self.set_opacity, 1)
 
     def __on_stylesheet_populated(self, stylesheet):
         """
