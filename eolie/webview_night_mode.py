@@ -130,8 +130,6 @@ class WebViewNightMode:
                         if (html !== null) {
                             html.style.display = "block";
                         }""", None, None)
-            else:
-                return True
 
 #######################
 # PRIVATE             #
