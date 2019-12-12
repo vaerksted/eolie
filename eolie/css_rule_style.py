@@ -257,7 +257,7 @@ class CSSStyleRule:
             @param rule as str
             @return bool
         """
-        values = ["inherit", "transparent", "data:",
+        values = ["inherit", "transparent", "data:", "url",
                   "none", "unset", "currentcolor"]
         for value in values:
             if rule.find(value) != -1:
@@ -282,8 +282,6 @@ class CSSStyleRule:
             self.__background_color_str = None
         elif self.__should_override(self.__background_color_str):
             self.__background_color_str = "#353535 !important"
-        elif self.__background_color_str.find("url") != -1:
-            self.__background_color_str = None
         else:
             hsla = self.__get_color_from_rule(self.__background_color_str)
             if hsla[1] > 0.2:
@@ -302,8 +300,6 @@ class CSSStyleRule:
             self.__background_str = None
         elif self.__should_override(self.__background_str) or background_set:
             self.__background_str = "none !important"
-        elif self.__background_str.find("url") != -1:
-            self.__background_str = None
         else:
             hsla = self.__get_color_from_rule(self.__background_str)
             hsla = self.__get_background_color_for_lightness(hsla[2])
