@@ -156,7 +156,7 @@ class WebViewContainer:
             self._window.toolbar.title.entry.icons.show_readable_button(False)
         elif event == WebKit2.LoadEvent.COMMITTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
-        elif event == WebKit2.LoadEvent.FINISHED and webview.loading_css == 0:
+        elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
             # Give focus to webview

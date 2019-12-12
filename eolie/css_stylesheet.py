@@ -25,11 +25,11 @@ class StyleSheet(GObject.Object):
         "populated": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
-    def __init__(self, uri=None, content=None, cancellable=None):
+    def __init__(self, uri=None, contents=None, cancellable=None):
         """
             Init StyleSheet
             @param uri as str
-            @param content as str
+            @param contents as str
             @param cancellable as Gio.Cancellable
         """
         GObject.Object.__init__(self)
@@ -38,20 +38,36 @@ class StyleSheet(GObject.Object):
         else:
             self.__cancellable = cancellable
         self.__uri = uri
-        self.__contents = content
+        self.__contents = contents
         self.__css_rules = None
+        self.__started_time = 0
 
     def populate(self):
         """
             Populate styleheet
         """
-        if self.__uri is not None:
+        if self.__uri is not None and self.__contents is None:
             self.__contents = self.__get_uri_contents(self.__uri)
         if self.__contents is not None:
             self.__css_rules = CSSRuleList(self.__contents,
                                            self.__uri,
                                            self.__cancellable)
         GLib.idle_add(self.emit, "populated")
+
+    def set_started_time(self, started_time):
+        """
+            Set started time
+            @param started time as int
+        """
+        self.__started_time = started_time
+
+    @property
+    def started_time(self):
+        """
+            Get started time
+            @return int
+        """
+        return self.__started_time
 
     @property
     def css_rules(self):
@@ -68,6 +84,14 @@ class StyleSheet(GObject.Object):
             @return str
         """
         return self.__uri
+
+    @property
+    def contents(self):
+        """
+            Get contents
+            @return str
+        """
+        return self.__contents
 
     @property
     def populated(self):

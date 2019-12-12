@@ -11,14 +11,11 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import WebKit2, Gio
-from gi.repository.Gio import FILE_ATTRIBUTE_TIME_MODIFIED
 
-from hashlib import md5
 from time import time
 
-from eolie.helper_task import TaskHelper
-from eolie.define import App, EOLIE_CACHE_PATH
-from eolie.css_stylesheet import StyleSheet
+from eolie.define import App
+from eolie.css_stylesheets import StyleSheets
 
 
 class WebViewNightMode:
@@ -30,11 +27,15 @@ class WebViewNightMode:
         """
             Init night mode
         """
-        self.__loading_css = 0
-        self.__load_finished = False
-        self.__stylesheets = []
-        self.__task_helper = TaskHelper()
+        self.__night_mode = False
+        self.__started_time = 0
         self.__cancellable = Gio.Cancellable.new()
+        self.__stylesheets = StyleSheets()
+        self.__stylesheets.set_cancellable(self.__cancellable)
+        self.__stylesheets.connect("populated",
+                                   self.__on_stylesheets_populated)
+        self.__stylesheets.connect("invalidated",
+                                   self.__on_stylsheets_invalidated)
         self.get_style_context().add_class("night-mode")
         self.__default_stylesheet = WebKit2.UserStyleSheet(
                      "body {\
@@ -57,48 +58,31 @@ class WebViewNightMode:
             Load CSS URI as user style
             @param message as str
         """
-        uri = message.replace("@EOLIE_CSS_URI@", "")
-        if not self.__load_from_cache(uri):
-            self.__loading_css += 1
-            for stylesheet in self.__stylesheets:
-                if stylesheet.uri == uri:
-                    return
-            stylesheet = StyleSheet(uri=uri)
-            stylesheet.connect("populated", self.__on_stylesheet_populated)
-            self.__task_helper.run(stylesheet.populate)
+        self.__stylesheets.load_css_uri(message, self.__started_time)
 
     def load_css_text(self, message):
         """
             Load CSS text as user style
+            @param message as str
         """
-        content = message.replace("@EOLIE_CSS_TEXT@", "")
-        if content:
-            self.__loading_css += 1
-            stylesheet = StyleSheet(content=content)
-            stylesheet.connect("populated", self.__on_stylesheet_populated)
-            self.__task_helper.run(stylesheet.populate)
+        self.__stylesheets.load_css_text(message, self.__started_time)
 
     def night_mode(self):
         """
             Handle night mode
         """
-        night_mode = App().settings.get_value("night-mode")
-        netloc_night_mode = App().websettings.get("night_mode", self.uri)
-        if (night_mode and netloc_night_mode is not False) or\
-                netloc_night_mode:
-            self.run_javascript_from_gresource(
-                    "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
-        else:
+        self.__load_night_mode()
+        if not self.__night_mode:
             self.__stylesheets = []
             self.get_user_content_manager().remove_all_style_sheets()
 
     @property
-    def loading_css(self):
+    def stylesheets(self):
         """
-            Get loading CSS count
-            @return int
+            Get stylesheets object
+            @return StyleSheets
         """
-        return self.__loading_css
+        return self.__stylesheets
 
 #######################
 # PROTECTED           #
@@ -109,85 +93,58 @@ class WebViewNightMode:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        content_manager = self.get_user_content_manager()
         if event == WebKit2.LoadEvent.STARTED:
-            self.__load_finished = False
+            self.__started_time = int(time())
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
+            self.__stylesheets.set_cancellable(self.__cancellable)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.run_javascript("""
-                    html = document.querySelector("html");
-                    if (html !== null) {
-                        html.style.display = "none";
-                    }""", None, None)
-            content_manager.remove_all_style_sheets()
-            content_manager.add_style_sheet(self.__default_stylesheet)
-            self.night_mode()
+            self.__load_night_mode()
         elif event == WebKit2.LoadEvent.FINISHED:
-            if self.__loading_css == 0:
-                self.run_javascript("""
-                        html = document.querySelector("html");
-                        if (html !== null) {
-                            html.style.display = "block";
-                        }""", None, None)
+            pass
 
 #######################
 # PRIVATE             #
 #######################
-    def __load_from_cache(self, uri):
+    def __load_night_mode(self):
         """
-            Load CSS from cache
-            @param uri as str
-            @return bool
+            Load night mode
         """
-        encoded = md5(uri.encode("utf-8")).hexdigest()
-        filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
-        f = Gio.File.new_for_path(filepath)
-        if f.query_exists():
-            info = f.query_info(FILE_ATTRIBUTE_TIME_MODIFIED,
-                                Gio.FileQueryInfoFlags.NONE,
-                                None)
-            mtime = int(info.get_attribute_as_string("time::modified"))
-            if time() - mtime < 86400:
-                (status, contents, tags) = f.load_contents(None)
-                if status:
-                    self.__load_user_css(contents.decode("utf-8"))
-                    return True
-        return False
+        night_mode = App().settings.get_value("night-mode")
+        netloc_night_mode = App().websettings.get("night_mode", self.uri)
+        self.__night_mode = (night_mode and netloc_night_mode is not False) or\
+            netloc_night_mode
+        self.run_javascript_from_gresource(
+            "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
 
-    def __load_user_css(self, css):
+    def __on_stylesheets_populated(self, stylesheets):
         """
-            Load CSS as user style
-            @param css as str
+            Apply stylesheets
+            @param stylesheets as StyleSheets
         """
-        user_style_sheet = WebKit2.UserStyleSheet(
-                     css,
-                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                     WebKit2.UserStyleLevel.USER,
-                     None,
-                     None)
         content_manager = self.get_user_content_manager()
+        content_manager.remove_all_style_sheets()
+        content_manager.add_style_sheet(self.__default_stylesheet)
+        user_style_sheet = WebKit2.UserStyleSheet(
+                 stylesheets.get_css_text(self.__started_time),
+                 WebKit2.UserContentInjectedFrames.ALL_FRAMES,
+                 WebKit2.UserStyleLevel.USER,
+                 None,
+                 None)
         content_manager.add_style_sheet(user_style_sheet)
-        if self.__loading_css == 0:
-            self.emit("load-changed", WebKit2.LoadEvent.FINISHED)
+        self.run_javascript("""
+            html = document.querySelector("html");
+            if (html !== null) {
+                html.style.display = "block";
+            }""", None, None)
 
-    def __on_stylesheet_populated(self, stylesheet):
+    def __on_stylsheets_invalidated(self, stylesheets):
         """
-            Load stylesheet
-            @param stylesheet as StyleSheet
+            Hide page
+            @param stylesheets as StyleSheets
         """
-        self.__loading_css -= 1
-        css_rules = stylesheet.css_rules
-        if css_rules is not None:
-            css_text = css_rules.css_text
-            self.__load_user_css(css_text)
-            if stylesheet.uri is not None:
-                encoded = md5(stylesheet.uri.encode("utf-8")).hexdigest()
-                filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
-                f = Gio.File.new_for_path(filepath)
-                fstream = f.replace(None, False,
-                                    Gio.FileCreateFlags.REPLACE_DESTINATION,
-                                    None)
-                if fstream is not None:
-                    fstream.write(css_text.encode("utf-8"), None)
-                    fstream.close()
+        self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "none";
+                    }""", None, None)
