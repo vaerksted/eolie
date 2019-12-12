@@ -60,7 +60,7 @@ class CSSMediaRule:
         if self.__rules is None:
             return True
         else:
-            self.__rules.populated
+            return self.__rules.populated
 
 #######################
 # PRIVATE             #

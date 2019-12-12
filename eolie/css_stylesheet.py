@@ -40,6 +40,7 @@ class StyleSheet(GObject.Object):
         self.__uri = uri
         self.__contents = contents
         self.__css_rules = None
+        self.__css_text = None
         self.__started_time = 0
 
     def populate(self):
@@ -53,6 +54,13 @@ class StyleSheet(GObject.Object):
                                            self.__uri,
                                            self.__cancellable)
         GLib.idle_add(self.emit, "populated")
+
+    def set_css_text(self, css_text):
+        """
+            Set css text
+            @param css_text as str
+        """
+        self.__css_text = css_text
 
     def set_started_time(self, started_time):
         """
@@ -70,12 +78,17 @@ class StyleSheet(GObject.Object):
         return self.__started_time
 
     @property
-    def css_rules(self):
+    def css_text(self):
         """
-            Get css rules
-            @return CSSRuleList
+            Get css text
+            @return str
         """
-        return self.__css_rules
+        if self.__css_text is not None:
+            return self.__css_text
+        elif self.__css_rules is not None:
+            self.__css_text = self.__css_rules.css_text
+            return self.__css_text
+        return ""
 
     @property
     def uri(self):
@@ -99,7 +112,8 @@ class StyleSheet(GObject.Object):
             True if stylesheet is populated
             @return bool
         """
-        return self.__css_rules is not None and self.__css_rules.populated
+        return self.__css_text is not None or (
+            self.__css_rules is not None and self.__css_rules.populated)
 
 #######################
 # PRIVATE             #

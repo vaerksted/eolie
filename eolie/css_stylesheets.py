@@ -65,11 +65,12 @@ class StyleSheets(GObject.Object):
                 stylesheet = StyleSheet(uri=uri)
                 stylesheet.connect("populated", self.__on_stylesheet_populated)
                 self.__stylesheets[uri] = stylesheet
+                stylesheet.set_started_time(started_time)
                 self.__task_helper.run(stylesheet.populate)
             else:
                 self.__stylesheets[uri] = stylesheet
+                stylesheet.set_started_time(started_time)
                 self.__check_populated()
-            stylesheet.set_started_time(started_time)
         if count != len(self.__stylesheets):
             self.emit("invalidated")
 
@@ -105,9 +106,7 @@ class StyleSheets(GObject.Object):
         for key in list(self.__stylesheets.keys()):
             stylesheet = self.__stylesheets[key]
             if stylesheet.started_time == started_time:
-                css_rules = stylesheet.css_rules
-                if css_rules is not None:
-                    css.append(css_rules.css_text)
+                css.append(stylesheet.css_text)
             else:
                 del self.__stylesheets[key]
         return "".join(css)
@@ -129,7 +128,7 @@ class StyleSheets(GObject.Object):
         """
         if not self.__populated:
             for uri in self.__stylesheets.keys():
-                if self.__stylesheets[uri] is None:
+                if not self.__stylesheets[uri].populated:
                     return
             self.__populated = True
             GLib.idle_add(self.emit, "populated")
@@ -151,7 +150,8 @@ class StyleSheets(GObject.Object):
             if time() - mtime < 86400:
                 (status, contents, tags) = f.load_contents(None)
                 if status:
-                    stylesheet = StyleSheet(uri=uri, contents=contents)
+                    stylesheet = StyleSheet(uri=uri)
+                    stylesheet.set_css_text(contents.decode("utf-8"))
                     return stylesheet
         return None
 
@@ -160,19 +160,14 @@ class StyleSheets(GObject.Object):
             Load stylesheet
             @param stylesheet as StyleSheet
         """
-        css_rules = stylesheet.css_rules
-        if css_rules is not None:
-            css_text = css_rules.css_text
-            if stylesheet.uri is not None:
-                encoded = md5(stylesheet.uri.encode("utf-8")).hexdigest()
-                filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
-                f = Gio.File.new_for_path(filepath)
-                fstream = f.replace(None, False,
-                                    Gio.FileCreateFlags.REPLACE_DESTINATION,
-                                    None)
-                if fstream is not None:
-                    fstream.write(css_text.encode("utf-8"), None)
-                    fstream.close()
-            self.__check_populated()
-        else:
-            self.__stylesheets[stylesheet.uri] = ""
+        if stylesheet.uri is not None:
+            encoded = md5(stylesheet.uri.encode("utf-8")).hexdigest()
+            filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
+            f = Gio.File.new_for_path(filepath)
+            fstream = f.replace(None, False,
+                                Gio.FileCreateFlags.REPLACE_DESTINATION,
+                                None)
+            if fstream is not None:
+                fstream.write(stylesheet.css_text.encode("utf-8"), None)
+                fstream.close()
+        self.__check_populated()
