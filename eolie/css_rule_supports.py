@@ -57,10 +57,10 @@ class CSSSupportsRule:
             True if rule is populated
             @return bool
         """
-        for rule in self.__rules:
-            if not rule.populated:
-                return False
-        return True
+        if self.__rules is None:
+            return True
+        else:
+            self.__rules.populated
 
 #######################
 # PRIVATE             #
