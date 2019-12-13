@@ -28,7 +28,6 @@ class StyleSheets(GObject.Object):
 
     __gsignals__ = {
         "populated": (GObject.SignalFlags.RUN_FIRST, None, ()),
-        "invalidated": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -38,7 +37,7 @@ class StyleSheets(GObject.Object):
         GObject.Object.__init__(self)
         self.__task_helper = TaskHelper()
         self.__cancellable = None
-        self.__populated = False
+        self.__populated = True
         self.__stylesheets = {}
 
     def set_cancellable(self, cancellable):
@@ -54,12 +53,12 @@ class StyleSheets(GObject.Object):
             @param started_time as int
             @param message as str
         """
-        self.__populated = False
-        count = len(self.__stylesheets)
         uri = message.replace("@EOLIE_CSS_URI@", "")
         if uri in self.__stylesheets.keys():
             self.__stylesheets[uri].set_started_time(started_time)
+            GLib.idle_add(self.emit, "populated")
         else:
+            self.__populated = False
             stylesheet = self.__load_from_cache(uri)
             if stylesheet is None:
                 stylesheet = StyleSheet(uri=uri)
@@ -71,8 +70,6 @@ class StyleSheets(GObject.Object):
                 self.__stylesheets[uri] = stylesheet
                 stylesheet.set_started_time(started_time)
                 self.__check_populated()
-        if count != len(self.__stylesheets):
-            self.emit("invalidated")
 
     def load_css_text(self, message, started_time):
         """
@@ -80,21 +77,19 @@ class StyleSheets(GObject.Object):
             @param started_time as int
             @param message as str
         """
-        self.__populated = False
-        count = len(self.__stylesheets)
         contents = message.replace("@EOLIE_CSS_TEXT@", "")
         if contents:
             uri = md5(contents.encode("utf-8")).hexdigest()
             if uri in self.__stylesheets.keys():
                 self.__stylesheets[uri].set_started_time(started_time)
+                GLib.idle_add(self.emit, "populated")
                 return
+            self.__populated = False
             stylesheet = StyleSheet(contents=contents)
             self.__stylesheets[uri] = stylesheet
             stylesheet.set_started_time(started_time)
             stylesheet.connect("populated", self.__on_stylesheet_populated)
             self.__task_helper.run(stylesheet.populate)
-        if count != len(self.__stylesheets):
-            self.emit("invalidated")
 
     def get_css_text(self, started_time):
         """

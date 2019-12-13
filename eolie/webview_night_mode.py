@@ -34,8 +34,6 @@ class WebViewNightMode:
         self.__stylesheets.set_cancellable(self.__cancellable)
         self.__stylesheets.connect("populated",
                                    self.__on_stylesheets_populated)
-        self.__stylesheets.connect("invalidated",
-                                   self.__on_stylsheets_invalidated)
         self.get_style_context().add_class("night-mode")
         self.__default_stylesheet = WebKit2.UserStyleSheet(
                      "body {\
@@ -99,9 +97,19 @@ class WebViewNightMode:
             self.__cancellable = Gio.Cancellable.new()
             self.__stylesheets.set_cancellable(self.__cancellable)
         elif event == WebKit2.LoadEvent.COMMITTED:
+            self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "none";
+                    }""", None, None)
             self.__load_night_mode()
         elif event == WebKit2.LoadEvent.FINISHED:
-            pass
+            if self.__stylesheets.populated:
+                self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "block";
+                    }""", None, None)
 
 #######################
 # PRIVATE             #
@@ -137,14 +145,3 @@ class WebViewNightMode:
             if (html !== null) {
                 html.style.display = "block";
             }""", None, None)
-
-    def __on_stylsheets_invalidated(self, stylesheets):
-        """
-            Hide page
-            @param stylesheets as StyleSheets
-        """
-        self.run_javascript("""
-                    html = document.querySelector("html");
-                    if (html !== null) {
-                        html.style.display = "none";
-                    }""", None, None)
