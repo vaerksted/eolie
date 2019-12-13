@@ -4,7 +4,9 @@ var config = { childList: true, subtree: true };
 function getLinks(head) {
     links = head.getElementsByTagName("link");
     for(let i=0; i<links.length; i++) {
-        alert("@EOLIE_CSS_URI@" + links[i].href);
+        if (links[i].rel == "stylesheet") {
+            alert("@EOLIE_CSS_URI@" + links[i].href);
+        }
     }
 }
 
