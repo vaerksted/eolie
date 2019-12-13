@@ -56,11 +56,9 @@ class CSSStyleRule:
             if self.__color_str is not None:
                 self.__update_color()
             if self.__background_color_str is not None:
-                background_set = True
-                self.__update_background_color()
+                background_set = self.__update_background_color()
             if self.__background_str is not None:
-                self.__update_background(background_set)
-                background_set = True
+                background_set = self.__update_background(background_set)
             if self.__background_image_str is not None:
                 self.__update_background_image(background_set)
             if self.__border_str is not None:
@@ -268,7 +266,7 @@ class CSSStyleRule:
         """
             True if color should be overrided
         """
-        values = ["initial", "var(", "linear-", "radial-", "repeat", "webkit"]
+        values = ["initial", "var(", "gradient", "repeat", "webkit"]
         for value in values:
             if rule.find(value) != -1:
                 return True
@@ -277,11 +275,14 @@ class CSSStyleRule:
     def __update_background_color(self):
         """
             Update background color for night mode
+            @return background_set as bool
         """
         if self.__should_ignore(self.__background_color_str):
             self.__background_color_str = None
+            return False
         elif self.__should_override(self.__background_color_str):
             self.__background_color_str = "#353535 !important"
+            return True
         else:
             hsla = self.__get_color_from_rule(self.__background_color_str)
             if hsla[1] > 0.2:
@@ -290,21 +291,26 @@ class CSSStyleRule:
                 hsla = self.__get_background_color_for_lightness(hsla[2])
             hsla_str = self.__get_hsla_to_css_string(hsla)
             self.__background_color_str = "%s !important" % hsla_str
+            return True
 
     def __update_background(self, background_set):
         """
             Update background for night mode
             @param background_set as bool
+            @return background_set as bool
         """
         if self.__should_ignore(self.__background_str):
             self.__background_str = None
+            return False
         elif self.__should_override(self.__background_str) or background_set:
             self.__background_str = "none !important"
+            return True
         else:
             hsla = self.__get_color_from_rule(self.__background_str)
             hsla = self.__get_background_color_for_lightness(hsla[2])
             hsla_str = self.__get_hsla_to_css_string(hsla)
             self.__background_str = "%s !important" % hsla_str
+            return True
 
     def __update_background_image(self, background_set):
         """
