@@ -71,7 +71,6 @@ class WebViewNightMode:
         """
         self.__load_night_mode()
         if not self.__night_mode:
-            self.__stylesheets = []
             self.get_user_content_manager().remove_all_style_sheets()
 
     @property
@@ -91,6 +90,8 @@ class WebViewNightMode:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        if not self.__night_mode:
+            return
         if event == WebKit2.LoadEvent.STARTED:
             self.__started_time = int(time())
             self.__cancellable.cancel()
@@ -122,8 +123,9 @@ class WebViewNightMode:
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
         self.__night_mode = (night_mode and netloc_night_mode is not False) or\
             netloc_night_mode
-        self.run_javascript_from_gresource(
-            "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
+        if self.__night_mode:
+            self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
 
     def __on_stylesheets_populated(self, stylesheets):
         """
