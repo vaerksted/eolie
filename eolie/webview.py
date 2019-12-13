@@ -24,6 +24,7 @@ from eolie.webview_artwork import WebViewArtwork
 from eolie.webview_state import WebViewState
 from eolie.webview_credentials import WebViewCredentials
 from eolie.webview_helpers import WebViewHelpers
+from eolie.webview_night_mode import WebViewNightMode
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -38,8 +39,13 @@ class WebView(WebKit2.WebView):
             New webview
             @param window as Window
         """
+        content_manager = WebKit2.UserContentManager.new()
+        for content_filter in App().content_filters:
+            if content_filter is not None:
+                content_manager.add_filter(content_filter)
+
         webview = WebKit2.WebView.new_with_user_content_manager(
-            App().content_manager)
+            content_manager)
         webview.__class__ = WebViewMeta
         webview.__init(None, window)
         return webview
@@ -419,6 +425,7 @@ class WebView(WebKit2.WebView):
             @param window as Window
         """
         WebViewHelpers.__init__(self)
+        WebViewNightMode.__init__(self)
         WebViewState.__init__(self)
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
@@ -481,7 +488,8 @@ class WebView(WebKit2.WebView):
                                       True)
             if App().settings.get_value("developer-extras"):
                 settings.set_property("enable-developer-extras", True)
-                settings.set_enable_write_console_messages_to_stdout(True)
+                settings.set_enable_write_console_messages_to_stdout(
+                    App().settings.get_value("debug"))
             settings.set_property("enable-offline-web-application-cache", True)
             settings.set_property("enable-page-cache", True)
             settings.set_property("enable-resizable-text-areas", True)
@@ -558,7 +566,7 @@ class WebView(WebKit2.WebView):
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
                   WebViewSignals, WebViewArtwork, WebViewState,
-                  WebViewCredentials, WebViewHelpers):
+                  WebViewCredentials, WebViewHelpers, WebViewNightMode):
 
     def __init__(self):
         pass
@@ -576,5 +584,6 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
         WebViewHelpers._on_load_changed(self, webview, event)
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
+        WebViewNightMode._on_load_changed(self, webview, event)
         if event == WebKit2.LoadEvent.COMMITTED:
             self._uri = webview.get_uri()

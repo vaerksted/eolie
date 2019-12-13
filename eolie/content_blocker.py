@@ -96,8 +96,8 @@ class ContentBlocker(GObject.Object):
     @property
     def exceptions(self):
         """
-            Get adblock exceptions
-            @return AdblockExceptions
+            Get exceptions
+            @return ContentBlockerExceptions
         """
         return self.__exceptions
 

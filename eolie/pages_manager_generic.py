@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, WebKit2, Pango
+from gi.repository import Gtk, Pango, WebKit2
 
 from eolie.label_indicator import LabelIndicator
 from eolie.define import ArtSize, MARGIN_SMALL, MARGIN

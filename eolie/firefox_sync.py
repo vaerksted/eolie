@@ -349,8 +349,8 @@ class SyncWorker(GObject.Object):
             if Gio.NetworkMonitor.get_default().get_network_available() and\
                     self.__username and not self.__syncing_pendings:
                 self.__syncing_pendings = True
-                Logger.debug("Elements to push to Firefox sync: %s",
-                             self.__pending_records)
+                Logger.sync_debug("Elements to push to Firefox sync: %s",
+                                  self.__pending_records)
                 self.__check_worker()
                 bulk_keys = self.__get_session_bulk_keys()
                 for key in self.__pending_records.keys():

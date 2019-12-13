@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, GLib
+from gi.repository import GLib, WebKit2
 
 from urllib.parse import urlparse
 
@@ -115,7 +115,7 @@ class WebViewContainer:
             @param webview as WebView
             @param value GparamFloat
         """
-        value = self.__current_webview.get_estimated_load_progress()
+        value = webview.get_estimated_load_progress()
         self._window.toolbar.title.entry.progress.set_fraction(value)
 
     def __on_back_forward_list_changed(self, bf_list, added, removed):

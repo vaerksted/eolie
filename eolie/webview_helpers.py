@@ -10,18 +10,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import Gio, WebKit2
 
 from urllib.parse import urlparse
-from base64 import b64encode
-import re
-from os.path import dirname
 
 from eolie.helper_passwords import PasswordsHelper
-from eolie.helper_task import TaskHelper
 from eolie.utils import get_baseuri
 from eolie.logger import Logger
-from eolie.define import App
 
 
 class WebViewHelpers:
@@ -31,27 +26,9 @@ class WebViewHelpers:
 
     def __init__(self):
         """
-            Init credentials
+            Init helpers
         """
-        self.__night_mode_css = False
-        self.__task_helper = TaskHelper()
         self.__passwords_helper = PasswordsHelper()
-        self.__cancellable = Gio.Cancellable.new()
-        self.__messages_count = 0
-
-    def load_css_message(self, message):
-        """
-            Load CSS message in page
-            @param message as str
-        """
-        uri = message.replace("@EOLIE_CSS_URI@", "")
-        # We ignore fonts from Google, not supported by <style/>
-        if uri.find("fonts.googleapis.com") != -1:
-            self.__show_webpage()
-            return
-        self.__messages_count += 1
-        self.__task_helper.load_uri_content(uri, self.__cancellable,
-                                            self.__on_load_uri_content)
 
     def set_forms_content(self, uuid):
         """
@@ -59,41 +36,6 @@ class WebViewHelpers:
             @parma uuid as str
         """
         self.__passwords_helper.get_by_uuid(uuid, self.__on_get_password_by)
-
-    def night_mode(self):
-        """
-            Handle night mode
-        """
-        night_mode = App().settings.get_value("night-mode")
-        netloc_night_mode = App().websettings.get("night_mode", self.uri)
-        if (night_mode and netloc_night_mode is not False) or\
-                netloc_night_mode:
-            if not self.__night_mode_css:
-                self.__night_mode_css = True
-                user_style_sheet = WebKit2.UserStyleSheet(
-                     "body {\
-                        color: #EAEAEA !important;\
-                        background-color: #353535 !important\
-                      }\
-                      * {\
-                        border-color: #555555 !important\
-                      }\
-                      a {\
-                        color: #F0FFFE !important;\
-                      }\
-                      a:hover {\
-                        color: white !important;\
-                      }",
-                     WebKit2.UserContentInjectedFrames.ALL_FRAMES,
-                     WebKit2.UserStyleLevel.USER,
-                     None,
-                     None)
-                App().content_manager.add_style_sheet(user_style_sheet)
-            self.run_javascript_from_gresource(
-                    "/org/gnome/Eolie/javascript/NightMode.js", None, None)
-        else:
-            App().content_manager.remove_all_style_sheets()
-            self.__night_mode_css = False
 
 #######################
 # PROTECTED           #
@@ -104,26 +46,13 @@ class WebViewHelpers:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        if event == WebKit2.LoadEvent.STARTED:
-            self.__cancellable.cancel()
-            self.__cancellable = Gio.Cancellable.new()
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self.night_mode()
-        elif event == WebKit2.LoadEvent.FINISHED:
+        if event == WebKit2.LoadEvent.FINISHED:
             self.__run_insecure(webview.uri)
             self.__run_set_forms(webview.uri)
 
 #######################
 # PRIVATE             #
 #######################
-    def __show_webpage(self):
-        """
-            Force webpage to show
-        """
-        if self.__messages_count == 0:
-            self.run_javascript("html = document.querySelector('html');\
-                                 html.style.display = 'block';", None, None)
-
     def __run_insecure(self, uri):
         """
             Run a script checking for password inputs while in http
@@ -182,39 +111,3 @@ class WebViewHelpers:
         js = js.replace("@USERNAME@", attributes["login"])
         js = js.replace("@PASSWORD@", password)
         self.run_javascript(js, None, None)
-
-    def __on_load_uri_content(self, uri, status, contents):
-        """
-            Inject CSS in page
-            @param uri as str
-            @param status as bool
-            @param content as bytes
-        """
-        try:
-            if status:
-                # Try to detect imports
-                # Injecting import in <style/> does not work
-                data = contents.decode("utf-8")
-                parsed = urlparse(uri)
-                for css in re.findall('@import url\("([^"\']*)', data):
-                    if not css.startswith("http"):
-                        parent = dirname(parsed.path)
-                        css_uri = "%s://%s%s/%s" % (
-                            parsed.scheme, parsed.netloc, parent, css)
-                        self.__task_helper.load_uri_content(
-                            css_uri, self.__cancellable,
-                            self.__on_load_uri_content)
-
-                data = re.sub('(@[^}]*})', '', data)
-                if data == "":
-                    return
-                f = Gio.File.new_for_uri(
-                    "resource:///org/gnome/Eolie/javascript/InjectCSS.js")
-                (js_status, js_contents, tags) = f.load_contents(None)
-                js = js_contents.decode("utf-8")
-                js = js.replace("@CSS@", b64encode(contents).decode("utf-8"))
-                self.run_javascript(js, None, None)
-        except Exception as e:
-            Logger.error("WebViewHelpers::__on_load_uri_content(): %s", e)
-        self.__messages_count -= 1
-        self.__show_webpage()

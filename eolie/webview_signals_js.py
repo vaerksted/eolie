@@ -55,7 +55,9 @@ class WebViewJsSignals:
             self.__js_blocker_timeout_id = None
         message = dialog.get_message()
         if message.startswith("@EOLIE_CSS_URI@"):
-            webview.load_css_message(message)
+            webview.load_css_uri(message)
+        elif message.startswith("@EOLIE_CSS_TEXT@"):
+            webview.load_css_text(message)
         # Credentials message
         elif message.startswith("@EOLIE_SUBMIT@"):
             webview.add_credentials(message)

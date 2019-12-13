@@ -159,7 +159,7 @@ class Art:
         if cached_path:
             cached_uri += cached_path
         encoded = md5(cached_uri.encode("utf-8")).hexdigest()
-        filepath = "%s/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
+        filepath = "%s/art/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
     def uncache(self, uri, suffix):
@@ -201,7 +201,7 @@ class Art:
         """
         current_time = time()
         try:
-            d = Gio.File.new_for_path(EOLIE_CACHE_PATH)
+            d = Gio.File.new_for_path("%s/art" % EOLIE_CACHE_PATH)
             children = d.enumerate_children("standard::name",
                                             Gio.FileQueryInfoFlags.NONE,
                                             None)
@@ -217,18 +217,6 @@ class Art:
         except Exception as e:
             Logger.error("Art::vacuum(): %s", e)
 
-    @property
-    def base_uri(self):
-        """
-            Get cache base uri
-            @return str
-        """
-        return GLib.filename_to_uri(EOLIE_CACHE_PATH)
-
-#######################
-# PROTECTED           #
-#######################
-
 #######################
 # PRIVATE             #
 #######################
@@ -236,8 +224,11 @@ class Art:
         """
             Create cache dir
         """
-        if not GLib.file_test(EOLIE_CACHE_PATH, GLib.FileTest.IS_DIR):
+        if not GLib.file_test("%s/art" % EOLIE_CACHE_PATH,
+                              GLib.FileTest.IS_DIR):
             try:
                 GLib.mkdir_with_parents(EOLIE_CACHE_PATH, 0o0750)
+                GLib.mkdir_with_parents("%s/art" % EOLIE_CACHE_PATH, 0o0750)
+                GLib.mkdir_with_parents("%s/css" % EOLIE_CACHE_PATH, 0o0750)
             except Exception as e:
                 Logger.error("Art::__create_cache(): %s", e)
