@@ -101,20 +101,8 @@ class WebViewNightMode:
             self.__cancellable = Gio.Cancellable.new()
             self.__stylesheets.set_cancellable(self.__cancellable)
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.run_javascript("""
-                    html = document.querySelector("html");
-                    if (html !== null) {
-                        html.style.display = "none";
-                    }""", None, None)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
-        elif event == WebKit2.LoadEvent.FINISHED:
-            if self.__stylesheets.populated:
-                self.run_javascript("""
-                    html = document.querySelector("html");
-                    if (html !== null) {
-                        html.style.display = "block";
-                    }""", None, None)
 
 #######################
 # PRIVATE             #
@@ -143,8 +131,3 @@ class WebViewNightMode:
                  None,
                  None)
         content_manager.add_style_sheet(user_style_sheet)
-        self.run_javascript("""
-            html = document.querySelector("html");
-            if (html !== null) {
-                html.style.display = "block";
-            }""", None, None)
