@@ -134,7 +134,11 @@ class StyleSheet(GObject.Object):
                 bytes += buf
                 buf = stream.read_bytes(1024, self.__cancellable).get_data()
             stream.close()
-            return bytes.decode("utf-8")
+            try:
+                return bytes.decode("utf-8")
+            except:
+                return bytes.decode("iso8859-1")
         except Exception as e:
-            Logger.error("StyleSheet::__get_uri_contents(): %s" % e)
+            Logger.error("StyleSheet::__get_uri_contents(): %s -> %s" %
+                         (e, uri))
         return None

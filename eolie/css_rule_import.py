@@ -55,8 +55,12 @@ class CSSImportRule:
     def css_text(self):
         """
             Get css text for rules
+            @return str
         """
-        return self.__stylesheet.css_text
+        if self.__stylesheet is None:
+            return ""
+        else:
+            return self.__stylesheet.css_text
 
     @property
     def populated(self):
