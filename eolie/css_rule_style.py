@@ -13,6 +13,7 @@
 import re
 from colorsys import rgb_to_hls
 
+from eolie.logger import Logger
 from eolie.define import COLORS
 
 
@@ -277,22 +278,28 @@ class CSSStyleRule:
             Update background color for night mode
             @return background_set as bool
         """
-        should_override = self.__should_override(self.__background_color_str)
-        if not should_override and\
-                self.__should_ignore(self.__background_color_str):
-            self.__background_color_str = None
-            return False
-        elif should_override:
-            self.__background_color_str = "#353535 !important"
-            return True
-        else:
-            hsla = self.__get_color_from_rule(self.__background_color_str)
-            if hsla[1] > 0.2:
-                hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+        try:
+            should_override = self.__should_override(
+                self.__background_color_str)
+            if not should_override and\
+                    self.__should_ignore(self.__background_color_str):
+                self.__background_color_str = None
+                return False
+            elif should_override:
+                self.__background_color_str = "#353535 !important"
+                return True
             else:
-                hsla = self.__get_background_color_for_lightness(hsla[2])
-            hsla_str = self.__get_hsla_to_css_string(hsla)
-            self.__background_color_str = "%s !important" % hsla_str
+                hsla = self.__get_color_from_rule(self.__background_color_str)
+                if hsla[1] > 0.2:
+                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+                else:
+                    hsla = self.__get_background_color_for_lightness(hsla[2])
+                hsla_str = self.__get_hsla_to_css_string(hsla)
+                self.__background_color_str = "%s !important" % hsla_str
+                return True
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_background_color(): %s", e)
+            self.__background_color_str = "#353535 !important"
             return True
 
     def __update_background(self, background_set):
@@ -301,18 +308,24 @@ class CSSStyleRule:
             @param background_set as bool
             @return background_set as bool
         """
-        should_override = self.__should_override(self.__background_str)
-        if not should_override and self.__should_ignore(self.__background_str):
-            self.__background_str = None
-            return False
-        elif should_override or background_set:
-            self.__background_str = "none !important"
-            return True
-        else:
-            hsla = self.__get_color_from_rule(self.__background_str)
-            hsla = self.__get_background_color_for_lightness(hsla[2])
-            hsla_str = self.__get_hsla_to_css_string(hsla)
-            self.__background_str = "%s !important" % hsla_str
+        try:
+            should_override = self.__should_override(self.__background_str)
+            if not should_override and self.__should_ignore(
+                    self.__background_str):
+                self.__background_str = None
+                return False
+            elif should_override or background_set:
+                self.__background_str = "none !important"
+                return True
+            else:
+                hsla = self.__get_color_from_rule(self.__background_str)
+                hsla = self.__get_background_color_for_lightness(hsla[2])
+                hsla_str = self.__get_hsla_to_css_string(hsla)
+                self.__background_str = "%s !important" % hsla_str
+                return True
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_background(): %s", e)
+            self.__background_str = "#353535 !important"
             return True
 
     def __update_background_image(self, background_set):
@@ -320,38 +333,51 @@ class CSSStyleRule:
             Update background-image for night mode
             @param background_set as bool
         """
-        should_override = self.__should_override(self.__background_image_str)
-        if not should_override and\
-                self.__should_ignore(self.__background_image_str):
-            self.__background_image_str = None
-        elif should_override or background_set:
-            self.__background_image_str = "none !important"
+        try:
+            should_override = self.__should_override(
+                self.__background_image_str)
+            if not should_override and\
+                    self.__should_ignore(self.__background_image_str):
+                self.__background_image_str = None
+            elif should_override or background_set:
+                self.__background_image_str = "none !important"
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_background_image(): %s", e)
+            self.__background_image_str = "#353535 !important"
 
     def __update_color(self):
         """
             Update color for night mode
         """
-        if self.__should_ignore(self.__color_str):
-            self.__color_str = None
-        elif self.__should_override(self.__color_str):
-            self.__color_str = "#EAEAEA !important"
-        else:
-            hsla = self.__get_color_from_rule(self.__color_str)
-            if hsla is None:
+        try:
+            if self.__should_ignore(self.__color_str):
                 self.__color_str = None
+            elif self.__should_override(self.__color_str):
+                self.__color_str = "#EAEAEA !important"
             else:
-                hsla = self.__get_hsla_to_css_string(
-                        (hsla[0], hsla[1], 0.8, hsla[3]))
-                self.__color_str = "%s !important" % hsla
+                hsla = self.__get_color_from_rule(self.__color_str)
+                if hsla is None:
+                    self.__color_str = None
+                else:
+                    hsla = self.__get_hsla_to_css_string(
+                            (hsla[0], hsla[1], 0.8, hsla[3]))
+                    self.__color_str = "%s !important" % hsla
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_color(): %s", e)
+            self.__color_str = "#EAEAEA !important"
 
     def __update_border_color(self):
         """
             Update border color for night mode
         """
-        hsla = self.__get_color_from_rule(self.__border_str)
-        if hsla is not None:
-            hsla = self.__get_hsla_to_css_string(
-                    (hsla[0], hsla[1], 0.3, hsla[3]))
-            self.__border_str = "%s !important" % hsla
-        else:
+        try:
+            hsla = self.__get_color_from_rule(self.__border_str)
+            if hsla is not None:
+                hsla = self.__get_hsla_to_css_string(
+                        (hsla[0], hsla[1], 0.3, hsla[3]))
+                self.__border_str = "%s !important" % hsla
+            else:
+                self.__border_str = None
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_border_color(): %s", e)
             self.__border_str = None

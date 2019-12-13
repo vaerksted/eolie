@@ -34,7 +34,11 @@ class CSSImportRule:
             parsed = urlparse(uri)
             search = re.search('@import url\(["\']([^"\']*)', css)
             css = search.group(1)
-            if css.startswith("//"):
+            if css.startswith(".."):
+                path_split = parsed.path.split("/")
+                css_uri = "%s://%s%s/%s" % (parsed.scheme, parsed.netloc,
+                                            "/".join(path_split[:-1]), css)
+            elif css.startswith("//"):
                 css_uri = "%s:%s" % (parsed.scheme, css)
             elif not css.startswith("http"):
                 parent = dirname(parsed.path)
