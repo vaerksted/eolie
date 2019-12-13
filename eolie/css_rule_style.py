@@ -290,8 +290,8 @@ class CSSStyleRule:
                 return True
             else:
                 hsla = self.__get_color_from_rule(self.__background_color_str)
-                if hsla[1] > 0.4:
-                    hsla = (hsla[0], hsla[1], 0.1, hsla[3])
+                if hsla[1] > 0.2:
+                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
                 else:
                     hsla = self.__get_background_color_for_lightness(hsla[2])
                 hsla_str = self.__get_hsla_to_css_string(hsla)
