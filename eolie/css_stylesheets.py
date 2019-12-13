@@ -28,6 +28,7 @@ class StyleSheets(GObject.Object):
 
     __gsignals__ = {
         "populated": (GObject.SignalFlags.RUN_FIRST, None, ()),
+        "not-cached": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
     def __init__(self):
@@ -61,6 +62,7 @@ class StyleSheets(GObject.Object):
             self.__populated = False
             stylesheet = self.__load_from_cache(uri)
             if stylesheet is None:
+                self.emit("not-cached")
                 stylesheet = StyleSheet(uri=uri)
                 stylesheet.connect("populated", self.__on_stylesheet_populated)
                 self.__stylesheets[uri] = stylesheet

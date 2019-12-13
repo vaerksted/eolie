@@ -32,6 +32,8 @@ class WebViewNightMode:
         self.__cancellable = Gio.Cancellable.new()
         self.__stylesheets = StyleSheets()
         self.__stylesheets.set_cancellable(self.__cancellable)
+        self.__stylesheets.connect("not-cached",
+                                   self.__on_stylesheets_not_cached)
         self.__stylesheets.connect("populated",
                                    self.__on_stylesheets_populated)
         self.get_style_context().add_class("night-mode")
@@ -116,6 +118,17 @@ class WebViewNightMode:
         netloc_night_mode = App().websettings.get("night_mode", self.uri)
         return night_mode and netloc_night_mode in [1, None]
 
+    def __on_stylesheets_not_cached(self, stylesheets):
+        """
+            Apply stylesheets
+            @param stylesheets as StyleSheets
+        """
+        self.run_javascript("""
+                    html = document.querySelector("html");
+                    if (html !== null) {
+                        html.style.display = "none";
+                    }""", None, None)
+
     def __on_stylesheets_populated(self, stylesheets):
         """
             Apply stylesheets
@@ -131,3 +144,8 @@ class WebViewNightMode:
                  None,
                  None)
         content_manager.add_style_sheet(user_style_sheet)
+        self.run_javascript("""
+            html = document.querySelector("html");
+            if (html !== null) {
+                html.style.display = "block";
+            }""", None, None)
