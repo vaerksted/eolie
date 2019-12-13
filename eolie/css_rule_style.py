@@ -105,7 +105,7 @@ class CSSStyleRule:
             @return float
         """
         if value.find("%") != -1:
-            return int(value[:-1]) / 100
+            return float(value[:-1]) / 100
         return float(value)
 
     def __get_rgba_as_int(self, value):
