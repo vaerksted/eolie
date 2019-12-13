@@ -52,7 +52,7 @@ class CSSImportRule:
         """
             Get css text for rules
         """
-        return self.__stylesheet.css_rules.css_text
+        return self.__stylesheet.css_text
 
     @property
     def populated(self):

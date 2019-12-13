@@ -1,11 +1,7 @@
 var observer = new MutationObserver(subscriber);
-var config = {  attributes : true, attributeFilter : ['style'] };
+var config = { childList: true, subtree: true };
 
 function getCSS() {
-    if (document.styleSheets.length == 0) {
-        alert("@EOLIE_CSS_TEXT@");
-        return;
-    }
     for(let i=0; i<document.styleSheets.length; i++) {
         let css_text = "";
         style = document.styleSheets[i]
@@ -30,8 +26,8 @@ function subscriber(mutations) {
 }
 
 getCSS();
+head = document.querySelector("head");
+observer.observe(head, config);
 window.addEventListener("DOMContentLoaded", (event) => {
     getCSS();
-    head = document.querySelector("head");
-    observer.observe(head, config);
 });

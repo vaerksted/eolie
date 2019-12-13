@@ -266,7 +266,7 @@ class CSSStyleRule:
         """
             True if color should be overrided
         """
-        values = ["initial", "var(", "gradient", "repeat", "webkit"]
+        values = ["initial", "var(", "gradient", "webkit"]
         for value in values:
             if rule.find(value) != -1:
                 return True
@@ -277,10 +277,12 @@ class CSSStyleRule:
             Update background color for night mode
             @return background_set as bool
         """
-        if self.__should_ignore(self.__background_color_str):
+        should_override = self.__should_override(self.__background_color_str)
+        if not should_override and\
+                self.__should_ignore(self.__background_color_str):
             self.__background_color_str = None
             return False
-        elif self.__should_override(self.__background_color_str):
+        elif should_override:
             self.__background_color_str = "#353535 !important"
             return True
         else:
@@ -299,10 +301,11 @@ class CSSStyleRule:
             @param background_set as bool
             @return background_set as bool
         """
-        if self.__should_ignore(self.__background_str):
+        should_override = self.__should_override(self.__background_str)
+        if not should_override and self.__should_ignore(self.__background_str):
             self.__background_str = None
             return False
-        elif self.__should_override(self.__background_str) or background_set:
+        elif should_override or background_set:
             self.__background_str = "none !important"
             return True
         else:
@@ -317,10 +320,11 @@ class CSSStyleRule:
             Update background-image for night mode
             @param background_set as bool
         """
-        if self.__should_ignore(self.__background_image_str):
+        should_override = self.__should_override(self.__background_image_str)
+        if not should_override and\
+                self.__should_ignore(self.__background_image_str):
             self.__background_image_str = None
-        elif self.__should_override(self.__background_image_str) or\
-                background_set:
+        elif should_override or background_set:
             self.__background_image_str = "none !important"
 
     def __update_color(self):
