@@ -1,33 +1,27 @@
 var observer = new MutationObserver(subscriber);
 var config = { childList: true, subtree: true };
 
-function getCSS() {
-    for(let i=0; i<document.styleSheets.length; i++) {
-        let css_text = "";
-        style = document.styleSheets[i]
-        if (style.disabled == false) {
-            if (style.href === null) {
-                for(var item in style.cssRules) {    
-                    rules = style.cssRules[item]
-                    if(rules.cssText != undefined)
-                        css_text = css_text + rules.cssText;
-                    }
-                alert("@EOLIE_CSS_TEXT@" + css_text)
-            }
-            else {
-                alert("@EOLIE_CSS_URI@" + style.href)
-            }
-        }
+function getLinks(head) {
+    links = head.getElementsByTagName("link");
+    for(let i=0; i<links.length; i++) {
+        alert("@EOLIE_CSS_URI@" + links[i].href);
+    }
+}
+
+function getStyles(head) {
+    styles = head.getElementsByTagName("style");
+    for(let i=0; i<styles.length; i++) {
+        alert("@EOLIE_CSS_TEXT@" + styles[i].innerText)
     }
 }
 
 function subscriber(mutations) {
-    getCSS()
+    head = document.querySelector("head");
+    getLinks(head);
+    getStyles(head);
 }
 
-getCSS();
 head = document.querySelector("head");
+getLinks(head);
+getStyles(head);
 observer.observe(head, config);
-window.addEventListener("DOMContentLoaded", (event) => {
-    getCSS();
-});
