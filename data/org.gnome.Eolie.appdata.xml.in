@@ -10,7 +10,7 @@
     <p>Eolie is a new GNOME web browser.</p>
   </description>
   <releases>
-    <release version="0.9.94" date="2019-11-18" />
+    <release version="0.9.95" date="2019-12-16" />
   </releases>
   <screenshots>
     <screenshot type="default">
