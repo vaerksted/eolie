@@ -28,6 +28,7 @@ class CSSStyleRule:
             @param css as str
         """
         self.__selector = ""
+        self.__variables = []
         self.__color_str = None
         self.__background_color_str = None
         self.__background_image_str = None
@@ -42,8 +43,13 @@ class CSSStyleRule:
                 if declaration.find(":") == -1:
                     continue
                 (prop, value) = declaration.split(":", 1)
+                if not self.__contains_color(value):
+                    continue
                 prop = prop.strip()
-                if prop == "color":
+                # This is a variable
+                if prop.startswith("--") and value.find("var(") == -1:
+                    self.__variables.append((prop, value))
+                elif prop == "color":
                     self.__color_str = value.strip()
                 elif prop == "background-color":
                     self.__background_color_str = value.strip()
@@ -64,6 +70,8 @@ class CSSStyleRule:
                 self.__update_background_image(background_set)
             if self.__border_str is not None:
                 self.__update_border_color()
+            if self.__variables:
+                self.__update_variables_color()
 
     @property
     def css_text(self):
@@ -71,19 +79,21 @@ class CSSStyleRule:
             Get css text for rules
             @return str
         """
-        text = ""
+        rules = []
         if self.__color_str is not None:
-            text += "color: %s;" % self.__color_str
+            rules.append("color: %s" % self.__color_str)
         if self.__background_color_str is not None:
-            text += "background-color: %s;" % self.__background_color_str
+            rules.append("background-color: %s" % self.__background_color_str)
         if self.__background_image_str is not None:
-            text += "background-image: %s;" % self.__background_image_str
+            rules.append("background-image: %s" % self.__background_image_str)
         if self.__background_str is not None:
-            text += "background: %s;" % self.__background_str
+            rules.append("background: %s" % self.__background_str)
         if self.__border_str is not None:
-            text += "border-color: %s;" % self.__border_str
-        if text:
-            return "%s{ %s } " % (self.__selector, text)
+            rules.append("border-color: %s" % self.__border_str)
+        for (prop, value) in self.__variables:
+            rules.append("%s : %s" % (prop, value))
+        if rules:
+            return "%s{ %s } " % (self.__selector, ";".join(rules))
         else:
             return ""
 
@@ -98,6 +108,22 @@ class CSSStyleRule:
 #######################
 # PRIVATE             #
 #######################
+    def __contains_color(self, value):
+        """
+            True if value contains a color
+            @param value as str
+            @return bool
+        """
+        if value.find("hsl") != -1 or\
+                value.find("rgb") != -1 or\
+                value.find("#") != -1:
+            return True
+        else:
+            for color in COLORS.keys():
+                if value.find(color) != -1:
+                    return True
+        return False
+
     def __get_hsla_as_float(self, value):
         """
             Convert percent str to float, keep value if no percent
@@ -381,3 +407,26 @@ class CSSStyleRule:
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_border_color(): %s", e)
             self.__border_str = None
+
+    def __update_variables_color(self):
+        """
+            Update variables color for night mode
+        """
+        variables = []
+        for (prop, value) in self.__variables:
+            try:
+                hsla = self.__get_color_from_rule(value)
+                if hsla[2] > 0.75:
+                    value = self.__get_hsla_to_css_string(
+                            (0, 0, 0.21, hsla[3]))
+                elif hsla[2] > 0.5:
+                    value = self.__get_hsla_to_css_string(
+                            (0, 0, 1 - hsla[2], hsla[3]))
+                else:
+                    value = self.__get_hsla_to_css_string(
+                            (hsla[0], hsla[1], 0.5 + hsla[2], hsla[3]))
+            except Exception as e:
+                Logger.warning(
+                    "CSSStyleRule::__update_variables_color(): %s", e)
+            variables.append((prop, "%s !important" % value))
+        self.__variables = variables
