@@ -7,9 +7,9 @@ Eolie is a new GNOME web browser.
 - For translators: https://hosted.weblate.org/projects/gnumdk
 
 It provides:
-- Firefox sync support
+- Firefox Sync support
 - Secret password store
-- A modern ui
+- A modern UI
 
 ## Depends on
 
@@ -26,15 +26,15 @@ It provides:
 - Webkit introspection support
 
 ## Special python modules
-For full support, please install this python modules:
+For full support, please install these Python modules:
 ```
 # pip3 install requests-hawk PyFxA pycrypto beautifulsoup4 cryptography
 ```
 
 ## For packagers
-Full deps here: https://github.com/flathub/org.gnome.Eolie
+Full list of dependencies here: https://github.com/flathub/org.gnome.Eolie
 
-## Building from git
+## Building from Git
 
 ```
 $ git clone https://gitlab.gnome.org/World/eolie.git
@@ -60,7 +60,7 @@ Instead of `make install` you might want to use `checkinstall`
 # checkinstall
 ```
 
-This will allow you to uninstall eolie as a package, for example with `apt-get uninstall eolie`.
+This will allow you to uninstall Eolie as a package, for example with `apt-get uninstall eolie`.
 
 ### On Fedora
 
