@@ -55,19 +55,14 @@ class CSSStyleRule:
                     self.__background_color_str = value.strip()
                 elif prop == "background":
                     self.__background_str = value.strip()
-                elif prop == "background-image":
-                    self.__background_image_str = value.strip()
                 elif prop.startswith("border"):
                     self.__border_str = value.strip()
-            background_set = False
             if self.__color_str is not None:
                 self.__update_color()
             if self.__background_color_str is not None:
-                background_set = self.__update_background_color()
+                self.__update_background_color()
             if self.__background_str is not None:
-                background_set = self.__update_background(background_set)
-            if self.__background_image_str is not None:
-                self.__update_background_image(background_set)
+                self.__update_background()
             if self.__border_str is not None:
                 self.__update_border_color()
             if self.__variables:
@@ -84,8 +79,6 @@ class CSSStyleRule:
             rules.append("color: %s" % self.__color_str)
         if self.__background_color_str is not None:
             rules.append("background-color: %s" % self.__background_color_str)
-        if self.__background_image_str is not None:
-            rules.append("background-image: %s" % self.__background_image_str)
         if self.__background_str is not None:
             rules.append("background: %s" % self.__background_str)
         if self.__border_str is not None:
@@ -114,10 +107,18 @@ class CSSStyleRule:
             @param value as str
             @return bool
         """
+        ignores = ["inherit", "transparent", "data:", "url",
+                   "none", "unset", "currentcolor"]
+        # tan color can conflicts with !important
+        for ignore in ignores:
+            if value.find(ignore) != -1:
+                return False
+        # Check hsl/rgb/# colors
         if value.find("hsl") != -1 or\
                 value.find("rgb") != -1 or\
                 value.find("#") != -1:
             return True
+        # Check named colors
         else:
             for color in COLORS.keys():
                 if value.find(color) != -1:
@@ -276,118 +277,53 @@ class CSSStyleRule:
         """
         return (0, 0, 0.21 + l / 100, 1)
 
-    def __should_ignore(self, rule):
-        """
-            True if color should be ignored
-            @param rule as str
-            @return bool
-        """
-        values = ["inherit", "transparent", "data:", "url",
-                  "none", "unset", "currentcolor"]
-        for value in values:
-            if rule.find(value) != -1:
-                return True
-        return False
-
-    def __should_override(self, rule):
-        """
-            True if color should be overrided
-        """
-        values = ["initial", "var(", "gradient", "webkit"]
-        for value in values:
-            if rule.find(value) != -1:
-                return True
-        return False
-
     def __update_background_color(self):
         """
             Update background color for night mode
             @return background_set as bool
         """
         try:
-            should_override = self.__should_override(
-                self.__background_color_str)
-            if not should_override and\
-                    self.__should_ignore(self.__background_color_str):
-                self.__background_color_str = None
-                return False
-            elif should_override:
-                self.__background_color_str = "#353535 !important"
-                return True
+            hsla = self.__get_color_from_rule(self.__background_color_str)
+            if hsla[3] < 0.4:
+                return
+            elif hsla[1] > 0.2:
+                hsla = (hsla[0], hsla[1], 0.3, hsla[3])
             else:
-                hsla = self.__get_color_from_rule(self.__background_color_str)
-                if hsla[1] > 0.2:
-                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
-                else:
-                    hsla = self.__get_background_color_for_lightness(hsla[2])
-                hsla_str = self.__get_hsla_to_css_string(hsla)
-                self.__background_color_str = "%s !important" % hsla_str
-                return True
+                hsla = self.__get_background_color_for_lightness(hsla[2])
+            hsla_str = self.__get_hsla_to_css_string(hsla)
+            self.__background_color_str = "%s !important" % hsla_str
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background_color(): %s", e)
             self.__background_color_str = "#353535 !important"
-            return True
 
-    def __update_background(self, background_set):
+    def __update_background(self):
         """
             Update background for night mode
-            @param background_set as bool
-            @return background_set as bool
         """
         try:
-            should_override = self.__should_override(self.__background_str)
-            if not should_override and self.__should_ignore(
-                    self.__background_str):
-                self.__background_str = None
-                return False
-            elif should_override or background_set:
-                self.__background_str = "none !important"
-                return True
-            else:
-                hsla = self.__get_color_from_rule(self.__background_str)
-                hsla = self.__get_background_color_for_lightness(hsla[2])
-                hsla_str = self.__get_hsla_to_css_string(hsla)
-                self.__background_str = "%s !important" % hsla_str
-                return True
+            hsla = self.__get_color_from_rule(self.__background_str)
+            if hsla[3] < 0.4:
+                return
+            hsla = self.__get_background_color_for_lightness(hsla[2])
+            hsla_str = self.__get_hsla_to_css_string(hsla)
+            self.__background_str = "%s !important" % hsla_str
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background(): %s", e)
             self.__background_str = "#353535 !important"
             return True
-
-    def __update_background_image(self, background_set):
-        """
-            Update background-image for night mode
-            @param background_set as bool
-        """
-        try:
-            should_override = self.__should_override(
-                self.__background_image_str)
-            if not should_override and\
-                    self.__should_ignore(self.__background_image_str):
-                self.__background_image_str = None
-            elif should_override or background_set:
-                self.__background_image_str = "none !important"
-        except Exception as e:
-            Logger.warning("CSSStyleRule::__update_background_image(): %s", e)
-            self.__background_image_str = "#353535 !important"
 
     def __update_color(self):
         """
             Update color for night mode
         """
         try:
-            if self.__should_ignore(self.__color_str):
+            hsla = self.__get_color_from_rule(self.__color_str)
+            if hsla is None:
                 self.__color_str = None
-            elif self.__should_override(self.__color_str):
-                self.__color_str = "#EAEAEA !important"
             else:
-                hsla = self.__get_color_from_rule(self.__color_str)
-                if hsla is None:
-                    self.__color_str = None
-                else:
-                    hsla = self.__get_hsla_to_css_string(
-                            (hsla[0], hsla[1], 0.8, hsla[3]))
-                    self.__color_str = "%s !important" % hsla
+                hsla = self.__get_hsla_to_css_string(
+                        (hsla[0], hsla[1], 0.8, hsla[3]))
+                self.__color_str = "%s !important" % hsla
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_color(): %s", e)
             self.__color_str = "#EAEAEA !important"
