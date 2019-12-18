@@ -57,7 +57,7 @@ class StyleSheets(GObject.Object):
         uri = message.replace("@EOLIE_CSS_URI@", "")
         if uri in self.__stylesheets.keys():
             self.__stylesheets[uri].set_started_time(started_time)
-            GLib.idle_add(self.emit, "populated")
+            self.__check_populated()
         else:
             self.__populated = False
             stylesheet = self.__load_from_cache(uri)
@@ -84,7 +84,7 @@ class StyleSheets(GObject.Object):
             uri = md5(contents.encode("utf-8")).hexdigest()
             if uri in self.__stylesheets.keys():
                 self.__stylesheets[uri].set_started_time(started_time)
-                GLib.idle_add(self.emit, "populated")
+                self.__check_populated()
                 return
             self.__populated = False
             stylesheet = StyleSheet(contents=contents)
