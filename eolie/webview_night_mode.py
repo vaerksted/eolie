@@ -42,6 +42,10 @@ class WebViewNightMode:
                         color: #EAEAEA !important;\
                         background-color: #353535 !important\
                       }\
+                      *[style] {\
+                        color: #EAEAEA !important;\
+                        background: #353535 !important;\
+                      }\
                       a {\
                         color: #F0FFFE !important;\
                       }\
