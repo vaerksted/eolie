@@ -277,14 +277,6 @@ class CSSStyleRule:
                                                hsla[2] * 100,
                                                hsla[3])
 
-    def __get_background_color_for_lightness(self, l):
-        """
-            Get background color for lightness
-            @param l as float
-            return (int, float, float, float)
-        """
-        return (0, 0, 0.21 + l / 100, 1)
-
     def __update_background_color(self):
         """
             Update background color for night mode
@@ -299,7 +291,7 @@ class CSSStyleRule:
                 elif hsla[1] > 0.2:
                     hsla = (hsla[0], hsla[1], 0.3, hsla[3])
                 else:
-                    hsla = self.__get_background_color_for_lightness(hsla[2])
+                    hsla = (0, 0, 0.21, 1)
                 hsla_str = self.__get_hsla_to_css_string(hsla)
                 self.__background_color_str =\
                     self.__background_color_str.replace(
@@ -319,7 +311,7 @@ class CSSStyleRule:
                 hsla = colors[key]
                 if hsla[3] < 0.4:
                     continue
-                hsla = self.__get_background_color_for_lightness(hsla[2])
+                hsla = (0, 0, 0.21, 1)
                 hsla_str = self.__get_hsla_to_css_string(hsla)
                 self.__background_str =\
                     self.__background_str.replace(

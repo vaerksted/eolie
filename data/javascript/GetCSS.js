@@ -18,12 +18,12 @@ function getStyles(head) {
 }
 
 function subscriber(mutations) {
-    head = document.querySelector("head");
-    getLinks(head);
-    getStyles(head);
+    html = document.querySelector("html");
+    getLinks(html);
+    getStyles(html);
 }
 
-head = document.querySelector("head");
-getLinks(head);
-getStyles(head);
-observer.observe(head, config);
+html = document.querySelector("html");
+getLinks(html);
+getStyles(html);
+observer.observe(html, config);
