@@ -173,17 +173,18 @@ class CSSStyleRule:
                 # HSL/RGB + A
                 return split + slash_split[1]
 
-    def __get_hex_color_from_rule(self, rule):
+    def __get_hex_colors_from_rule(self, rule):
         """
-            Get RGBA color as hexa from rule
+            Get RGBA colors as hexa from rule
             @param rule as str
-            @return (r, g, b, a) as (int, int, int, int)
+            @return {"hex_color": (int, int, int, int)}
         """
+        results = {}
         # Extract values from hexadecimal notation
-        found = re.search('#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})',
-                          rule)
-        if found is not None:
-            hexa = found[0][1:]
+        colors = re.findall(
+            '(#[0-9A-Fa-f]{8}|#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3})', rule)
+        for color in colors:
+            hexa = color[1:]
             a = 1
             # Translate short version of hexa string
             if len(hexa) == 3:
@@ -194,69 +195,76 @@ class CSSStyleRule:
             rgb = tuple(int(hexa[i:i+2], 16) for i in (0, 2, 4))
             if len(hexa) == 8:
                 a = round(255 / int(hexa[6, 8], 16))
-            return rgb + (a,)
-        return None
+            results[color] = (rgb + (a,))
+        return results
 
-    def __get_rgba_color_from_rule(self, rule):
+    def __get_rgba_colors_from_rule(self, rule):
         """
-            Get RGBA color from rule
+            Get RGBA colors from rule
             @param rule str
+            @return {"rgba_color": (int, int, int, int)}
         """
+        results = {}
         # Extract values from rgb() and rgba()
-        found = re.findall('rgb.?\(([^\)]*)', rule)
-        if not found:
-            return None
+        colors = re.findall('(rgb.?\([^\)]*\))', rule)
+        for color in colors:
+            color_tuple = re.search('rgb.?\(([^\)]*)', color)
+            if color_tuple is None:
+                continue
+            split = self.__get_split(color_tuple[1])
+            r = self.__get_rgba_as_int(split[0])
+            g = self.__get_rgba_as_int(split[1])
+            b = self.__get_rgba_as_int(split[2])
+            # Indentical to hsla float calculation
+            a = 1
+            if len(split) == 4:
+                a = self.__get_hsla_as_float(split[3])
+            results[color] = (r, g, b, a)
+        return results
 
-        split = self.__get_split(found[0])
-        r = self.__get_rgba_as_int(split[0])
-        g = self.__get_rgba_as_int(split[1])
-        b = self.__get_rgba_as_int(split[2])
-        # Indentical to hsla float calculation
-        a = 1
-        if len(split) == 4:
-            a = self.__get_hsla_as_float(split[3])
-        return (r, g, b, a)
-
-    def __get_hsla_color_from_rule(self, rule):
+    def __get_hsla_colors_from_rule(self, rule):
         """
-            Get HSLA color from rule
-            @param rule str
+            Get HSLA colors from rule
+            @return {"hsla_color": (int, float, float, float)}
         """
+        results = {}
         # Extract values from hsl() and hsla()
-        found = re.findall('hsl.?\(([^\)]*)', rule)
-        if not found:
-            return None
+        colors = re.findall('(hsl.?\([^\)]*\))', rule)
+        for color in colors:
+            color_tuple = re.search('hsl.?\(([^\)]*)', color)
+            if color_tuple is None:
+                continue
+            split = self.__get_split(color_tuple[1])
+            h = self.__get_deg(split[0])
+            s = self.__get_hsla_as_float(split[1])
+            l = self.__get_hsla_as_float(split[2])
+            a = 1
+            if len(split) == 4:
+                a = self.__get_hsla_as_float(split[3])
+            results[color] = (h, s, l, a)
+        return results
 
-        split = self.__get_split(found[0])
-        h = self.__get_deg(split[0])
-        s = self.__get_hsla_as_float(split[1])
-        l = self.__get_hsla_as_float(split[2])
-        a = 1
-        if len(split) == 4:
-            a = self.__get_hsla_as_float(split[3])
-        return (h, s, l, a)
-
-    def __get_color_from_rule(self, rule):
+    def __get_colors_from_rule(self, rule):
         """
-            Get RGBA color from rule
+            Get RGBA colors from rule
             @param rule as str
-            @return (h, s, l, a) as (int, int, int, int)
+            @return [(h, s, l, a)] as [(int, float, float, float)]
         """
-        rgba = self.__get_hex_color_from_rule(rule)
-        if rgba is None:
-            rgba = self.__get_rgba_color_from_rule(rule)
-        if rgba is None:
-            for color in COLORS.keys():
-                if rule.find(color) != -1:
-                    rgba = COLORS[color] + (1,)
-        if rgba is None:
-            hsla = self.__get_hsla_color_from_rule(rule)
-        else:
+        hex_colors = self.__get_hex_colors_from_rule(rule)
+        rgba_colors = self.__get_rgba_colors_from_rule(rule)
+        named_colors = {}
+        for color in COLORS.keys():
+            if rule.find(color) != -1:
+                named_colors[color] = COLORS[color] + (1,)
+        colors = {**hex_colors, **rgba_colors, **named_colors}
+        for key in colors.keys():
+            rgba = colors[key]
             (h, l, s) = rgb_to_hls(rgba[0] / 255,
                                    rgba[1] / 255,
                                    rgba[2] / 255)
-            hsla = (h, s, l, rgba[3])
-        return hsla
+            colors[key] = (h, s, l, rgba[3])
+        hsla_colors = self.__get_hsla_colors_from_rule(rule)
+        return {**colors, **hsla_colors}
 
     def __get_hsla_to_css_string(self, hsla):
         """
@@ -283,15 +291,20 @@ class CSSStyleRule:
             @return background_set as bool
         """
         try:
-            hsla = self.__get_color_from_rule(self.__background_color_str)
-            if hsla[3] < 0.4:
-                return
-            elif hsla[1] > 0.2:
-                hsla = (hsla[0], hsla[1], 0.3, hsla[3])
-            else:
-                hsla = self.__get_background_color_for_lightness(hsla[2])
-            hsla_str = self.__get_hsla_to_css_string(hsla)
-            self.__background_color_str = "%s !important" % hsla_str
+            colors = self.__get_colors_from_rule(self.__background_color_str)
+            for key in colors.keys():
+                hsla = colors[key]
+                if hsla[3] < 0.4:
+                    continue
+                elif hsla[1] > 0.2:
+                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+                else:
+                    hsla = self.__get_background_color_for_lightness(hsla[2])
+                hsla_str = self.__get_hsla_to_css_string(hsla)
+                self.__background_color_str =\
+                    self.__background_color_str.replace(
+                        key, hsla_str)
+            self.__background_color_str += " !important"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background_color(): %s", e)
             self.__background_color_str = "#353535 !important"
@@ -301,12 +314,17 @@ class CSSStyleRule:
             Update background for night mode
         """
         try:
-            hsla = self.__get_color_from_rule(self.__background_str)
-            if hsla[3] < 0.4:
-                return
-            hsla = self.__get_background_color_for_lightness(hsla[2])
-            hsla_str = self.__get_hsla_to_css_string(hsla)
-            self.__background_str = "%s !important" % hsla_str
+            colors = self.__get_colors_from_rule(self.__background_str)
+            for key in colors.keys():
+                hsla = colors[key]
+                if hsla[3] < 0.4:
+                    continue
+                hsla = self.__get_background_color_for_lightness(hsla[2])
+                hsla_str = self.__get_hsla_to_css_string(hsla)
+                self.__background_str =\
+                    self.__background_str.replace(
+                        key, hsla_str)
+            self.__background_str += " !important"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background(): %s", e)
             self.__background_str = "#353535 !important"
@@ -317,13 +335,15 @@ class CSSStyleRule:
             Update color for night mode
         """
         try:
-            hsla = self.__get_color_from_rule(self.__color_str)
-            if hsla is None:
-                self.__color_str = None
-            else:
-                hsla = self.__get_hsla_to_css_string(
-                        (hsla[0], hsla[1], 0.8, hsla[3]))
-                self.__color_str = "%s !important" % hsla
+            colors = self.__get_colors_from_rule(self.__color_str)
+            for key in colors.keys():
+                hsla = colors[key]
+                hsla_str = self.__get_hsla_to_css_string(
+                    (hsla[0], hsla[1], 0.8, hsla[3]))
+                self.__color_str =\
+                    self.__color_str.replace(
+                        key, hsla_str)
+            self.__color_str += " !important"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_color(): %s", e)
             self.__color_str = "#EAEAEA !important"
@@ -333,13 +353,15 @@ class CSSStyleRule:
             Update border color for night mode
         """
         try:
-            hsla = self.__get_color_from_rule(self.__border_str)
-            if hsla is not None:
-                hsla = self.__get_hsla_to_css_string(
+            colors = self.__get_colors_from_rule(self.__border_str)
+            for key in colors.keys():
+                hsla = colors[key]
+                hsla_str = self.__get_hsla_to_css_string(
                         (hsla[0], hsla[1], 0.3, hsla[3]))
-                self.__border_str = "%s !important" % hsla
-            else:
-                self.__border_str = None
+                self.__border_str =\
+                    self.__border_str.replace(
+                        key, hsla_str)
+            self.__border_str += " !important"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_border_color(): %s", e)
             self.__border_str = None
