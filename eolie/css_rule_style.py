@@ -123,6 +123,11 @@ class CSSStyleRule:
             @param value as str
             @return bool
         """
+        ignores = ["inherit", "transparent", "data:",
+                   "none", "unset", "currentcolor"]
+        for ignore in ignores:
+            if value.find(ignore) != -1:
+                return False
         # Check hsl/rgb/# colors
         if value.find("hsl") != -1 or\
                 value.find("rgb") != -1 or\
