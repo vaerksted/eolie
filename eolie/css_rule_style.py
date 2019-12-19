@@ -114,6 +114,7 @@ class CSSStyleRule:
             @return str
         """
         value = re.sub('[ ]*!.*important', '', value)
+        value = re.sub('url.*\([^\)]*\)', 'url()', value)
         return value.strip()
 
     def __contains_color(self, value):
@@ -122,12 +123,6 @@ class CSSStyleRule:
             @param value as str
             @return bool
         """
-        ignores = ["inherit", "transparent", "data:", "url",
-                   "none", "unset", "currentcolor"]
-        # tan color can conflicts with !important
-        for ignore in ignores:
-            if value.find(ignore) != -1:
-                return False
         # Check hsl/rgb/# colors
         if value.find("hsl") != -1 or\
                 value.find("rgb") != -1 or\
