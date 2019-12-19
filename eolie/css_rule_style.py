@@ -402,7 +402,7 @@ class CSSStyleRule:
         variables = []
         for (prop, value) in self.__variables:
             try:
-                hsla = self.__get_color_from_rule(value)
+                hsla = self.__get_colors_from_rule(value)
                 if hsla[2] > 0.75:
                     value = self.__get_hsla_to_css_string(
                             (0, 0, 0.21, hsla[3]))
