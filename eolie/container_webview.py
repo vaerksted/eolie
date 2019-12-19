@@ -66,7 +66,9 @@ class WebViewContainer:
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.actions.set_actions(self.__current_webview)
         self._window.toolbar.title.entry.set_uri(webview.uri)
-        self._window.toolbar.title.entry.set_title(webview.title)
+        parsed = urlparse(webview.uri)
+        self._window.toolbar.title.entry.set_title("%s: %s" % (parsed.netloc,
+                                                               webview.title))
         if webview.get_uri() is None and\
                 webview.uri is not None and\
                 webview.related is None:
@@ -95,7 +97,9 @@ class WebViewContainer:
             @param webview as WebView
             @param title as str
         """
-        self._window.toolbar.title.entry.set_title(title)
+        parsed = urlparse(webview.uri)
+        self._window.toolbar.title.entry.set_title("%s: %s" % (parsed.netloc,
+                                                               title))
 
     def __on_uri_changed(self, webview, uri):
         """
