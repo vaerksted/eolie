@@ -53,6 +53,8 @@ class CSSStyleRule:
                     self.__color_str = value.strip()
                 elif prop == "background-color":
                     self.__background_color_str = value.strip()
+                elif prop == "background-image":
+                    self.__background_image_str = value.strip()
                 elif prop == "background":
                     self.__background_str = value.strip()
                 elif prop.startswith("border"):
@@ -61,6 +63,8 @@ class CSSStyleRule:
                 self.__update_color()
             if self.__background_color_str is not None:
                 self.__update_background_color()
+            if self.__background_image_str is not None:
+                self.__update_background_image()
             if self.__background_str is not None:
                 self.__update_background()
             if self.__border_str is not None:
@@ -79,6 +83,8 @@ class CSSStyleRule:
             rules.append("color: %s" % self.__color_str)
         if self.__background_color_str is not None:
             rules.append("background-color: %s" % self.__background_color_str)
+        if self.__background_image_str is not None:
+            rules.append("background-image: %s" % self.__background_image_str)
         if self.__background_str is not None:
             rules.append("background: %s" % self.__background_str)
         if self.__border_str is not None:
@@ -280,10 +286,11 @@ class CSSStyleRule:
     def __update_background_color(self):
         """
             Update background color for night mode
-            @return background_set as bool
         """
         try:
             colors = self.__get_colors_from_rule(self.__background_color_str)
+            if not colors:
+                return None
             for key in colors.keys():
                 hsla = colors[key]
                 if hsla[3] < 0.4:
@@ -296,10 +303,35 @@ class CSSStyleRule:
                 self.__background_color_str =\
                     self.__background_color_str.replace(
                         key, hsla_str)
-            self.__background_color_str += " !important"
+            self.__background_color_str += " !important;"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background_color(): %s", e)
-            self.__background_color_str = "#353535 !important"
+            self.__background_color_str = "#353535 !important;"
+
+    def __update_background_image(self):
+        """
+            Update background image for night mode
+        """
+        try:
+            colors = self.__get_colors_from_rule(self.__background_image_str)
+            if not colors:
+                return None
+            for key in colors.keys():
+                hsla = colors[key]
+                if hsla[3] < 0.4:
+                    continue
+                elif hsla[1] > 0.2:
+                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+                else:
+                    hsla = (0, 0, 0.21, 1)
+                hsla_str = self.__get_hsla_to_css_string(hsla)
+                self.__background_image_str =\
+                    self.__background_image_str.replace(
+                        key, hsla_str)
+            self.__background_image_str += " !important;"
+        except Exception as e:
+            Logger.warning("CSSStyleRule::__update_background_image(): %s", e)
+            self.__background_image_str = "#353535 !important;"
 
     def __update_background(self):
         """
@@ -307,6 +339,8 @@ class CSSStyleRule:
         """
         try:
             colors = self.__get_colors_from_rule(self.__background_str)
+            if not colors:
+                return None
             for key in colors.keys():
                 hsla = colors[key]
                 if hsla[3] < 0.4:
@@ -316,11 +350,10 @@ class CSSStyleRule:
                 self.__background_str =\
                     self.__background_str.replace(
                         key, hsla_str)
-            self.__background_str += " !important"
+            self.__background_str += " !important;"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_background(): %s", e)
-            self.__background_str = "#353535 !important"
-            return True
+            self.__background_str = "#353535 !important;"
 
     def __update_color(self):
         """
@@ -328,6 +361,8 @@ class CSSStyleRule:
         """
         try:
             colors = self.__get_colors_from_rule(self.__color_str)
+            if not colors:
+                return None
             for key in colors.keys():
                 hsla = colors[key]
                 hsla_str = self.__get_hsla_to_css_string(
@@ -335,10 +370,10 @@ class CSSStyleRule:
                 self.__color_str =\
                     self.__color_str.replace(
                         key, hsla_str)
-            self.__color_str += " !important"
+            self.__color_str += " !important;"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_color(): %s", e)
-            self.__color_str = "#EAEAEA !important"
+            self.__color_str = "#EAEAEA !important;"
 
     def __update_border_color(self):
         """
@@ -346,6 +381,8 @@ class CSSStyleRule:
         """
         try:
             colors = self.__get_colors_from_rule(self.__border_str)
+            if not colors:
+                return None
             for key in colors.keys():
                 hsla = colors[key]
                 hsla_str = self.__get_hsla_to_css_string(
@@ -353,10 +390,10 @@ class CSSStyleRule:
                 self.__border_str =\
                     self.__border_str.replace(
                         key, hsla_str)
-            self.__border_str += " !important"
+            self.__border_str += " !important;"
         except Exception as e:
             Logger.warning("CSSStyleRule::__update_border_color(): %s", e)
-            self.__border_str = None
+            self.__border_str = "#EAEAEA !important;"
 
     def __update_variables_color(self):
         """
@@ -378,5 +415,5 @@ class CSSStyleRule:
             except Exception as e:
                 Logger.warning(
                     "CSSStyleRule::__update_variables_color(): %s", e)
-            variables.append((prop, "%s !important" % value))
+            variables.append((prop, "%s !important;" % value))
         self.__variables = variables
