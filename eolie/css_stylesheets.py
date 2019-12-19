@@ -73,22 +73,23 @@ class StyleSheets(GObject.Object):
                 stylesheet.set_started_time(started_time)
                 self.__check_populated()
 
-    def load_css_text(self, message, started_time):
+    def load_css_text(self, message, uri, started_time):
         """
             Load CSS text as user style
             @param started_time as int
+            @param uri as str
             @param message as str
         """
         contents = message.replace("@EOLIE_CSS_TEXT@", "")
         if contents:
-            uri = md5(contents.encode("utf-8")).hexdigest()
-            if uri in self.__stylesheets.keys():
-                self.__stylesheets[uri].set_started_time(started_time)
+            css_hash = md5(contents.encode("utf-8")).hexdigest()
+            if css_hash in self.__stylesheets.keys():
+                self.__stylesheets[css_hash].set_started_time(started_time)
                 self.__check_populated()
                 return
             self.__populated = False
-            stylesheet = StyleSheet(contents=contents)
-            self.__stylesheets[uri] = stylesheet
+            stylesheet = StyleSheet(uri=uri, contents=contents)
+            self.__stylesheets[css_hash] = stylesheet
             stylesheet.set_started_time(started_time)
             stylesheet.connect("populated", self.__on_stylesheet_populated)
             self.__task_helper.run(stylesheet.populate)

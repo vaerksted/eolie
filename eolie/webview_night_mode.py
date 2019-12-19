@@ -65,7 +65,9 @@ class WebViewNightMode:
             Load CSS text as user style
             @param message as str
         """
-        self.__stylesheets.load_css_text(message, self.__started_time)
+        self.__stylesheets.load_css_text(message,
+                                         self.uri,
+                                         self.__started_time)
 
     def night_mode(self):
         """

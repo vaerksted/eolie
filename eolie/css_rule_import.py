@@ -32,7 +32,7 @@ class CSSImportRule:
         self.__stylesheet = None
         try:
             parsed = urlparse(uri)
-            search = re.search('@import url\(["\']([^"\']*)', css)
+            search = re.search('@import url\(["\']?([^"\')]*)', css)
             css = search.group(1)
             if css.startswith(".."):
                 path_split = parsed.path.split("/")
