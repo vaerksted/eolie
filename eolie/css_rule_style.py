@@ -50,15 +50,15 @@ class CSSStyleRule:
                 if prop.startswith("--") and value.find("var(") == -1:
                     self.__variables.append((prop, value))
                 elif prop == "color":
-                    self.__color_str = value.strip()
+                    self.__color_str = self.__get_clean_value(value)
                 elif prop == "background-color":
-                    self.__background_color_str = value.strip()
+                    self.__background_color_str = self.__get_clean_value(value)
                 elif prop == "background-image":
-                    self.__background_image_str = value.strip()
+                    self.__background_image_str = self.__get_clean_value(value)
                 elif prop == "background":
-                    self.__background_str = value.strip()
+                    self.__background_str = self.__get_clean_value(value)
                 elif prop.startswith("border"):
-                    self.__border_str = value.strip()
+                    self.__border_str = self.__get_clean_value(value)
             if self.__color_str is not None:
                 self.__update_color()
             if self.__background_color_str is not None:
@@ -107,6 +107,15 @@ class CSSStyleRule:
 #######################
 # PRIVATE             #
 #######################
+    def __get_clean_value(self, value):
+        """
+            Remove unwanted parts from value
+            @param value as str
+            @return str
+        """
+        value = re.sub('[ ]*!.*important', '', value)
+        return value.strip()
+
     def __contains_color(self, value):
         """
             True if value contains a color
