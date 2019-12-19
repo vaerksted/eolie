@@ -402,16 +402,21 @@ class CSSStyleRule:
         variables = []
         for (prop, value) in self.__variables:
             try:
-                hsla = self.__get_colors_from_rule(value)
-                if hsla[2] > 0.75:
-                    value = self.__get_hsla_to_css_string(
-                            (0, 0, 0.21, hsla[3]))
-                elif hsla[2] > 0.5:
-                    value = self.__get_hsla_to_css_string(
+                colors = self.__get_colors_from_rule(value)
+                if not colors:
+                    continue
+                for key in colors.keys():
+                    hsla = colors[key]
+                    if hsla[2] > 0.75:
+                        hsla_str = self.__get_hsla_to_css_string(
+                                (0, 0, 0.21, hsla[3]))
+                    elif hsla[2] > 0.5:
+                        hsla_str = self.__get_hsla_to_css_string(
                             (0, 0, 1 - hsla[2], hsla[3]))
-                else:
-                    value = self.__get_hsla_to_css_string(
+                    else:
+                        hsla_str = self.__get_hsla_to_css_string(
                             (hsla[0], hsla[1], 0.5 + hsla[2], hsla[3]))
+                    value = value.replace(key, hsla_str)
             except Exception as e:
                 Logger.warning(
                     "CSSStyleRule::__update_variables_color(): %s", e)
