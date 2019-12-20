@@ -168,8 +168,6 @@ class WebViewCredentials:
                     password != self.__pass_form_value:
                 self.__in_secrets_login = attributes["login"]
                 self.__uuid = attributes["uuid"]
-            else:
-                self.__ctime = 0
         except Exception as e:
             Logger.error("WebViewCredentials::__on_get_password(): %s", e)
 
