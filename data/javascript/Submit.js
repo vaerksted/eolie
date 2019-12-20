@@ -35,16 +35,18 @@ elementsArray.forEach(function(elem) {
                 }
             }
         }
-        let message = "@EOLIE_SUBMIT@\n";
-        message += username_input_name;
-        message += "\n";
-        message += username_input_value;
-        message += "\n";
-        message += password_input_name;
-        message += "\n";
-        message += password_input_value;
-        message += "\n";
-        message += form_uri;
-        alert(message);
+        if (password_input_name !== undefined && username_input_name !== undefined) {
+            let message = "@EOLIE_SUBMIT@\n";
+            message += username_input_name;
+            message += "\n";
+            message += username_input_value;
+            message += "\n";
+            message += password_input_name;
+            message += "\n";
+            message += password_input_value;
+            message += "\n";
+            message += form_uri;
+            alert(message);
+        }
     });
 });
