@@ -57,6 +57,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
         self.__entry.connect("populate-popup", self.__on_entry_populate_popup)
+        self.__entry.connect("icon-release", self.__on_entry_icon_release)
         self.__entry_gesture = GesturesHelper(
             self.__entry,
             primary_press_callback=self.__on_entry_press)
@@ -552,31 +553,39 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             item.show()
             menu.attach(item, 0, 1, 3, 4)
 
+    def __on_entry_icon_release(self, entry, position, event):
+        """
+            Show popover related to icon
+            @param entry as Gtk.Entry
+            @param position as Gtk.EntryIconPosition
+            @param event as Gdk.EventButton
+        """
+        if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
+                "dialog-password-symbolic":
+            self.__update_secure_content_indicator()
+            from eolie.popover_credentials import CredentialsPopover
+            credentials_popover = CredentialsPopover(self.__window)
+            credentials_popover.set_relative_to(self.__entry)
+            credentials_popover.set_pointing_to(
+                self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
+            credentials_popover.popup()
+        else:
+            from eolie.popover_tls import TLSPopover
+            tls_popover = TLSPopover(self.__window)
+            tls_popover.set_relative_to(self.__entry)
+            tls_popover.set_pointing_to(
+                self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
+            tls_popover.popup()
+
     def __on_entry_press(self, x, y, event):
         """
             Show popover if hidden
             @param x as int
             @param y as int
-            @param event as Gdk.Event
+            @param event as Gdk.EventButton
         """
-        if x < 30:
-            if self.__entry.get_icon_name(Gtk.EntryIconPosition.PRIMARY) ==\
-                    "dialog-password-symbolic":
-                self.__update_secure_content_indicator()
-                from eolie.popover_credentials import CredentialsPopover
-                credentials_popover = CredentialsPopover(self.__window)
-                credentials_popover.set_relative_to(self.__entry)
-                credentials_popover.set_pointing_to(
-                    self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
-                credentials_popover.popup()
-            else:
-                from eolie.popover_tls import TLSPopover
-                tls_popover = TLSPopover(self.__window)
-                tls_popover.set_relative_to(self.__entry)
-                tls_popover.set_pointing_to(
-                    self.__entry.get_icon_area(Gtk.EntryIconPosition.PRIMARY))
-                tls_popover.popup()
-        elif not self.__popover.get_visible():
+        # 30 for primary icon
+        if x > 30 and not self.__popover.get_visible():
             self.__on_entry_focus_in(self.__entry, event)
             self.__popover.popup("bookmarks")
 
