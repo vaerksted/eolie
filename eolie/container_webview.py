@@ -66,6 +66,10 @@ class WebViewContainer:
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.actions.set_actions(self.__current_webview)
         self._window.toolbar.title.entry.set_uri(webview.uri)
+        self._window.toolbar.title.entry.icons.show_geolocation(False)
+        self._window.toolbar.title.entry.icons.show_readable_button(False)
+        self._window.toolbar.title.entry.icons.set_loading(False)
+        self._window.toolbar.title.entry.progress.hide()
         parsed = urlparse(webview.uri)
         self._window.toolbar.title.entry.set_title("%s: %s" % (parsed.netloc,
                                                                webview.title))
