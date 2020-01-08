@@ -183,7 +183,7 @@ class WebViewNavigation:
             @param request as WebKit2.PermissionRequest
         """
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
-            if self.ephemeral:
+            if self.is_ephemeral:
                 request.deny()
             else:
                 uri = webview.uri
