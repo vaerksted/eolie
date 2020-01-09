@@ -330,9 +330,9 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                         .split(',')[1:]
             self.__popover.add_suggestions(sgs)
 
-    def __populate_completion(self, uri):
+    def __populate_completion(self, value):
         """
-            @param uri as str
+            @param value as str
             @thread safe
         """
         # Thread handling
@@ -359,16 +359,16 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             self.__completion_model_clear_timeout_id = \
                 GLib.timeout_add(1000, model_clear_timeout)
 
-        if self.__entry.get_text() == uri:
+        if self.__entry.get_text() == value:
             # Look for a match in history
-            match = App().history.get_match(uri)
+            match = App().history.get_match(value)
             if match is not None:
                 if self.__cancellable.is_cancelled():
                     return
                 match_parsed = urlparse(match)
                 netloc = match_parsed.netloc.replace("www.", "")
-                if netloc.find(uri) == 0:
-                    if match_parsed.path.find(uri.split("/")[-1]) != -1:
+                if netloc.find(value) == 0:
+                    if match_parsed.path.find(value.split("/")[-1]) != -1:
                         model_append([netloc + match_parsed.path])
                     else:
                         model_append([netloc])
@@ -376,13 +376,13 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             if App().settings.get_value("dns-prediction"):
                 # Try some DNS request, FIXME Better list?
                 from socket import gethostbyname
-                parsed = urlparse(uri)
+                parsed = urlparse(value)
                 if parsed.netloc:
-                    uri = parsed.netloc
+                    value = parsed.netloc
                 for suffix in self.__dns_suffixes:
                     for prefix in ["www.", ""]:
                         try:
-                            lookup = "%s%s.%s" % (prefix, uri, suffix)
+                            lookup = "%s%s.%s" % (prefix, value, suffix)
                             gethostbyname(lookup)
                             model_append([lookup.replace("www.", "")])
                             return
