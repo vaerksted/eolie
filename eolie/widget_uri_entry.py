@@ -351,13 +351,13 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             if self.__completion_model_append_timeout_id is not None:
                 GLib.source_remove(self.__completion_model_append_timeout_id)
             self.__completion_model_append_timeout_id = \
-                GLib.timeout_add(250, model_append_timeout, array)
+                GLib.idle_add(model_append_timeout, array)
 
         def model_clear():
             if self.__completion_model_clear_timeout_id is not None:
                 GLib.source_remove(self.__completion_model_clear_timeout_id)
             self.__completion_model_clear_timeout_id = \
-                GLib.timeout_add(1000, model_clear_timeout)
+                GLib.timeout_add(100, model_clear_timeout)
 
         if self.__entry.get_text() == value:
             # Look for a match in history
