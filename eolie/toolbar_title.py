@@ -13,7 +13,6 @@
 from gi.repository import Gtk
 
 from gettext import gettext as _
-from urllib.parse import urlparse
 
 from eolie.define import App
 from eolie.widget_uri_entry import UriEntry
@@ -33,8 +32,6 @@ class ToolbarTitle(Gtk.EventBox):
         self.__window = window
         self.__width = -1
         self.__input_warning_shown = False
-        self.connect("enter-notify-event", self.__on_enter_notify_event)
-        self.connect("leave-notify-event", self.__on_leave_notify_event)
         self.__entry = UriEntry(window)
         self.__entry.show()
         self.add(self.__entry)
@@ -126,39 +123,3 @@ class ToolbarTitle(Gtk.EventBox):
 #######################
 # PRIVATE             #
 #######################
-    def __on_enter_notify_event(self, widget, event):
-        """
-            Update entry
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        if self.__entry.popover.is_visible():
-            return
-        uri = self.__window.container.webview.uri
-        parsed = urlparse(uri)
-        if parsed.scheme in ["http", "https", "file"]:
-            self.__entry.set_text_entry(uri)
-        else:
-            self.__entry.set_default_placeholder()
-
-    def __on_leave_notify_event(self, widget, event):
-        """
-            Update entry
-            @param controller as Gtk.EventControllerMotion
-            @param widget as Gtk.Widget
-            @param event as Gdk.Event
-        """
-        if self.__entry.popover.is_visible():
-            return
-        allocation = widget.get_allocation()
-        if event.x <= 0 or\
-           event.x >= allocation.width or\
-           event.y <= 0 or\
-           event.y >= allocation.height:
-            self.__entry.placeholder.set_opacity(0.8)
-            uri = self.__window.container.webview.uri
-            parsed = urlparse(uri)
-            if parsed.scheme in ["http", "https", "file"]:
-                self.__entry.set_text_entry("")
-            else:
-                self.__entry.set_default_placeholder()
