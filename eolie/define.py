@@ -87,12 +87,10 @@ class Type:
     TAG = -8
     UNCLASSIFIED = -9
     WEBVIEW = -10
-    COMPLETION = -11
-    SEPARATOR = -12
+    SEPARATOR = -11
 
 
 class Score:
-    COMPLETION = 2000
     SUGGESTION = 1000
     WEBVIEW = 500
 

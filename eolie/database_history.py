@@ -477,7 +477,7 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
+            request += " ORDER BY length(uri) ASC LIMIT ?"
             try:
                 result = sql.execute(request, filters)
                 items += list(result)
@@ -495,7 +495,7 @@ class DatabaseHistory:
                     request += " title LIKE ? OR uri LIKE ?"
                     if words_copy:
                         request += " OR "
-            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
+            request += " ORDER BY length(uri) ASC LIMIT ?"
             try:
                 result = sql.execute(request, filters)
                 items += list(result)

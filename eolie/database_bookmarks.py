@@ -914,8 +914,7 @@ class DatabaseBookmarks:
                 word = words_copy.pop(0)
                 if word:
                     request += " (title LIKE ? OR uri LIKE ?) AND"
-            request += " guid != uri ORDER BY mtime DESC,\
-                        popularity DESC LIMIT ?"
+            request += " guid != uri ORDER BY length(uri) ASC LIMIT ?"
 
             result = sql.execute(request, filters)
             items += list(result)
@@ -935,7 +934,7 @@ class DatabaseBookmarks:
                         request += " OR "
             if words:
                 request += ")"
-            request += " ORDER BY mtime DESC, popularity DESC LIMIT ?"
+            request += " ORDER BY length(uri) ASC LIMIT ?"
             result = sql.execute(request, filters)
             items += list(result)
 

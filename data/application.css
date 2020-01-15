@@ -265,10 +265,6 @@
     padding: 0px;
 }
 
-.row-suggestion {
-    background-color: alpha(@theme_selected_bg_color, 0.2);
-}
-
 .box-shadow {
     box-shadow: 1px 1px 5px 5px alpha(black, 0.3);
 }

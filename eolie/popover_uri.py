@@ -23,15 +23,13 @@ from eolie.define import App, Type, TimeSpan, TimeSpanValues
 from eolie.popover_uri_row import Row
 from eolie.popover_uri_events import UriPopoverEvents
 from eolie.popover_uri_content import UriPopoverContent
-from eolie.popover_uri_completion import UriPopoverCompletion
 from eolie.popover_uri_suggestions import UriPopoverSuggestions
 from eolie.popover_uri_webviews import UriPopoverWebviews
 from eolie.popover_uri_input import Input
 
 
 class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
-                 UriPopoverCompletion, UriPopoverSuggestions,
-                 UriPopoverWebviews):
+                 UriPopoverSuggestions, UriPopoverWebviews):
     """
         Show user bookmarks or search
     """
@@ -44,7 +42,6 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         Gtk.Popover.__init__(self)
         UriPopoverEvents.__init__(self)
         UriPopoverContent.__init__(self)
-        UriPopoverCompletion.__init__(self)
         UriPopoverSuggestions.__init__(self)
         UriPopoverWebviews.__init__(self)
         self.__cancellable = Gio.Cancellable.new()
@@ -118,7 +115,6 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         for child in self._search_box.get_children():
             child.destroy()
         self.search_value(value, self.__cancellable)
-        self.add_completion(value, self.__cancellable)
         self.add_suggestions(value, self.__cancellable)
         self.add_webviews(value, self.__cancellable)
         self._stack.set_visible_child_name("search")
