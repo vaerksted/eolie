@@ -10,13 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango, Gio
 
 from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App
+from eolie.helper_task import TaskHelper
 from eolie.popover_uri import UriPopover
 from eolie.widget_smooth_progressbar import SmoothProgressBar
 from eolie.widget_uri_entry_icons import UriEntryIcons
@@ -36,7 +37,9 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         Gtk.Overlay.__init__(self)
         self.get_style_context().add_class("input")
+        self.__cancellable = Gio.Cancellable.new()
         self.__window = window
+        self.__task_helper = TaskHelper()
         self.__input_warning_shown = False
         self.__entry_changed_id = None
         self.__secure_content = True
@@ -78,6 +81,15 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.add_overlay(grid)
         self.add_overlay(self.__progress)
         self.set_overlay_pass_through(grid, True)
+
+        # Inline completion
+        self.__completion_model = Gtk.ListStore(str)
+        self.__completion = Gtk.EntryCompletion.new()
+        self.__completion.set_model(self.__completion_model)
+        self.__completion.set_text_column(0)
+        self.__completion.set_inline_completion(True)
+        self.__completion.set_popup_completion(False)
+        self.__entry.set_completion(self.__completion)
 
         self.__popover = UriPopover(window)
         self.__popover.set_relative_to(self.__entry)
@@ -288,6 +300,55 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                     Gtk.EntryIconPosition.PRIMARY,
                     "system-search-symbolic")
 
+    def __populate_completion(self, value):
+        """
+            @param value as str
+            @thread safe
+        """
+        def get_iterator():
+            iterator = self.__completion_model.get_iter_first()
+            if iterator is None:
+                iterator = self.__completion_model.insert(0)
+            return iterator
+
+        # Look for a match in history
+        match = App().history.get_match(value)
+        if match is not None and not self.__cancellable.is_cancelled():
+            iterator = get_iterator()
+            match_str = match.split("://")[-1].split("www.")[-1]
+            self.__completion_model.set_value(iterator,
+                                              0,
+                                              match_str)
+            self.__completion.insert_prefix()
+        elif App().settings.get_value("dns-prediction") and\
+                not self.__cancellable.is_cancelled():
+            # Try some DNS request, FIXME Better list?
+            from socket import gethostbyname
+            parsed = urlparse(value)
+            if parsed.netloc:
+                value = parsed.netloc
+            for suffix in self.__dns_suffixes:
+                if self.__cancellable.is_cancelled():
+                    break
+                for prefix in ["www.", ""]:
+                    if self.__cancellable.is_cancelled():
+                        break
+                    try:
+                        lookup = "%s%s.%s" % (prefix, value, suffix)
+                        gethostbyname(lookup)
+                        iterator = get_iterator()
+                        self.__completion_model.set_value(
+                                              iterator,
+                                              0,
+                                              lookup.replace("www.", ""))
+                        self.__completion.insert_prefix()
+                        return
+                    except:
+                        pass
+        else:
+            # Only happen if nothing matched
+            self.__completion_model.clear()
+
     def __on_popover_closed(self, popover):
         """
             Clean titlebar
@@ -307,6 +368,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Delayed entry changed
             @param entry as Gtk.Entry
         """
+        self.__cancellable.cancel()
+        self.__cancellable = Gio.Cancellable.new()
         value = entry.get_text()
         if value:
             self.__placeholder.set_opacity(0)
@@ -331,6 +394,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         self.__entry_changed_id = None
         self.__window.container.webview.add_text_entry(value)
+        self.__task_helper.run(self.__populate_completion, value)
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
