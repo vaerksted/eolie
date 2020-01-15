@@ -373,9 +373,12 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Delayed entry changed
             @param entry as Gtk.Entry
         """
+        value = entry.get_text()
+        for completion in self.__completion_model:
+            if completion[0] == value:
+                return
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
-        value = entry.get_text()
         if value:
             self.__placeholder.set_opacity(0)
             if not self.__popover.is_visible():
