@@ -48,6 +48,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         UriPopoverSuggestions.__init__(self)
         UriPopoverWebviews.__init__(self)
         self.__cancellable = Gio.Cancellable.new()
+        self._task_helper = TaskHelper()
         self.set_modal(False)
         window.register(self, False)
         self._window = window
@@ -107,19 +108,19 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         else:
             GLib.idle_add(self._stack.set_visible_child_name, child)
 
-    def set_search_text(self, search):
+    def set_search_text(self, value):
         """
             Set search model
-            @param search as str
+            @param value as str
         """
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
         for child in self._search_box.get_children():
             child.destroy()
-        self._set_search_text(search)
-        self.add_completion(search, self.__cancellable)
-        self.add_suggestions(search, self.__cancellable)
-        self.add_webviews(search, self.__cancellable)
+        self.search_value(value, self.__cancellable)
+        self.add_completion(value, self.__cancellable)
+        self.add_suggestions(value, self.__cancellable)
+        self.add_webviews(value, self.__cancellable)
         self._stack.set_visible_child_name("search")
 
     @property
@@ -322,8 +323,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
                     datetime.strptime(date, "%d/%m/%Y").timetuple())
             else:
                 atime = int(time() - TimeSpanValues[active_id] / 1000000)
-            task_helper = TaskHelper()
-            task_helper.run(self.__clear_history, atime)
+            self._task_helper.run(self.__clear_history, atime)
         infobar.hide()
 
 #######################

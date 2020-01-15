@@ -33,41 +33,17 @@ class UriPopoverContent:
         self._bookmarks_model = Gio.ListStore()
         self._history_model = Gio.ListStore()
 
+    def search_value(self, value, cancellable):
+        """
+           Search value
+           @param value as str
+           @param cancellable as Gio.Cancellable
+        """
+        self._task_helper.run(self.__search_value, value, cancellable)
+
 #######################
 # PROTECTED           #
 #######################
-    def _set_search_text(self, search):
-        """
-            Set search model
-            @param search as str
-        """
-        if search == '':
-            result = App().history.search(search, 50)
-        else:
-            result = App().history.search(search, 15)
-            result += App().bookmarks.search(search, 15)
-
-        GLib.idle_add(self._add_searches, result, search)
-
-    def _add_searches(self, searches, search):
-        """
-            Add searches to model
-            @param [(title, uri, score)] as [(str, str, int)]
-            @param search as str
-        """
-        if searches:
-            (rowid, title, uri, score) = searches.pop(0)
-            item = Item()
-            item.set_property("id", rowid)
-            item.set_property("type", Type.SEARCH)
-            item.set_property("title", title)
-            item.set_property("uri", uri)
-            item.set_property("score", score)
-            child = Row(item, self._window)
-            child.show()
-            self._search_box.add(child)
-            GLib.idle_add(self._add_searches, searches, search)
-
     def _add_bookmarks(self, bookmarks):
         """
             Add bookmarks to model
@@ -180,6 +156,40 @@ class UriPopoverContent:
 #######################
 # PRIVATE             #
 #######################
+    def __search_value(self, value, cancellable):
+        """
+            Search for value in DB
+            @param value as str
+            @param cancellable as Gio.Cancellable
+        """
+        if value == '':
+            result = App().history.search(value, 50)
+        else:
+            result = App().history.search(value, 15)
+            result += App().bookmarks.search(value, 15)
+        GLib.idle_add(self.__add_searches, result, cancellable)
+
+    def __add_searches(self, result, cancellable):
+        """
+            Add searches to model
+            @param result as [(str, str, int)]
+            @param cancellable as Gio.Cancellable
+        """
+        if cancellable.is_cancelled():
+            return
+        if result:
+            (rowid, title, uri, score) = result.pop(0)
+            item = Item()
+            item.set_property("id", rowid)
+            item.set_property("type", Type.SEARCH)
+            item.set_property("title", title)
+            item.set_property("uri", uri)
+            item.set_property("score", score)
+            child = Row(item, self._window)
+            child.show()
+            self._search_box.add(child)
+            GLib.idle_add(self.__add_searches, result, cancellable)
+
     def __on_row_activated(self, row):
         """
             Select row

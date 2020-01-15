@@ -16,7 +16,6 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.define import Type, App, Score
-from eolie.helper_task import TaskHelper
 from eolie.popover_uri_item import Item
 from eolie.popover_uri_row import Row
 
@@ -30,7 +29,6 @@ class UriPopoverCompletion:
         """
             Init handler
         """
-        self.__task_helper = TaskHelper()
         self.__dns_suffixes = ["com", "org"]
         for string in reversed(GLib.get_language_names()):
             if len(string) == 2:
@@ -53,7 +51,7 @@ class UriPopoverCompletion:
             @param value as str
             @param cancellable as Gio.Cancellable
         """
-        self.__task_helper.run(self.__do_completion, value, cancellable)
+        self._task_helper.run(self.__do_completion, value, cancellable)
 
 #######################
 # PRIVATE             #
