@@ -335,30 +335,45 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param value as str
             @thread safe
         """
-        if self.__entry.get_text() == value:
-            # Look for a match in history
-            match = App().history.get_match(value)
-            if match is not None and not self.__cancellable.is_cancelled():
-                self.__completion_model.append([match.split("://")[-1]])
-                return
-            if App().settings.get_value("dns-prediction") and\
-                    not self.__cancellable.is_cancelled():
-                # Try some DNS request, FIXME Better list?
-                from socket import gethostbyname
-                parsed = urlparse(value)
-                if parsed.netloc:
-                    value = parsed.netloc
-                for suffix in self.__dns_suffixes:
-                    for prefix in ["www.", ""]:
-                        try:
-                            lookup = "%s%s.%s" % (prefix, value, suffix)
-                            gethostbyname(lookup)
-                            self.__completion_model.append(
-                                [lookup.replace("www.", "")])
-                            return
-                        except:
-                            if self.__cancellable.is_cancelled():
-                                return
+        def get_iterator():
+            iterator = self.__completion_model.get_iter_first()
+            if iterator is None:
+                iterator = self.__completion_model.insert(0)
+            return iterator
+
+        # Look for a match in history
+        match = App().history.get_match(value)
+        if match is not None and not self.__cancellable.is_cancelled():
+            iterator = get_iterator()
+            match_str = match.split("://")[-1].split("www.")[-1]
+            self.__completion_model.set_value(iterator,
+                                              0,
+                                              match_str)
+        elif App().settings.get_value("dns-prediction") and\
+                not self.__cancellable.is_cancelled():
+            # Try some DNS request, FIXME Better list?
+            from socket import gethostbyname
+            parsed = urlparse(value)
+            if parsed.netloc:
+                value = parsed.netloc
+            for suffix in self.__dns_suffixes:
+                if self.__cancellable.is_cancelled():
+                    break
+                for prefix in ["www.", ""]:
+                    if self.__cancellable.is_cancelled():
+                        break
+                    try:
+                        lookup = "%s%s.%s" % (prefix, value, suffix)
+                        gethostbyname(lookup)
+                        iterator = get_iterator()
+                        self.__completion_model.set_value(
+                                              iterator,
+                                              0,
+                                              lookup.replace("www.", ""))
+                        return
+                    except:
+                        pass
+        else:
             # Only happen if nothing matched
             self.__completion_model.clear()
 

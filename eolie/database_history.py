@@ -334,7 +334,7 @@ class DatabaseHistory:
             @return str
         """
         with SqlCursor(self) as sql:
-            filter = ("http%://{}%".format(uri),)
+            filter = ("http%://%{}%".format(uri),)
             result = sql.execute("SELECT uri\
                                   FROM history\
                                   WHERE uri like ?\
