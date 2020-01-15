@@ -26,8 +26,6 @@ class Item(GObject.GObject):
                              default=0)
     score = GObject.Property(type=int,
                              default=0)
-    search = GObject.Property(type=str,
-                              default="")
 
     def __init__(self):
         GObject.GObject.__init__(self)

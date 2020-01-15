@@ -30,53 +30,8 @@ class UriPopoverContent:
             Init handler
         """
         self._input = None
-        self.__search = ""
         self._bookmarks_model = Gio.ListStore()
         self._history_model = Gio.ListStore()
-
-    def add_webviews(self, webviews):
-        """
-            Add a row representing webview
-            @param webviews as [WebView]
-        """
-        if self._stack.get_visible_child_name() != "search":
-            return
-        for webview in webviews:
-            item = Item()
-            item.set_property("type", Type.WEBVIEW)
-            item.set_property("title", webview.title)
-            item.set_property("uri", webview.uri)
-            item.set_property("search", self.__search)
-            item.set_property("score", Type.WEBVIEW)
-            child = Row(item, self._window)
-            child.show()
-            self._search_box.insert(child, 0)
-
-    def add_suggestions(self, suggestions, score=Type.SUGGESTION, force=False):
-        """
-            Add suggestion to search
-            @param suggestion as [str]
-            @param score as int
-            @param force as bool
-        """
-        if self._stack.get_visible_child_name() != "search":
-            return
-        for suggestion in suggestions[:2]:
-            if suggestion and (suggestion != self.__search or force):
-                item = Item()
-                item.set_property("type", Type.SUGGESTION)
-                item.set_property("title", suggestion)
-                item.set_property("uri",
-                                  App().search.get_search_uri(suggestion))
-                item.set_property("search", self.__search)
-                item.set_property("score", score)
-                child = Row(item, self._window)
-                child.show()
-                self._search_box.insert(child, 1)
-                # We do not need to sort Type.SUGGESTION score because
-                # this happend at the end
-                if score == Type.SEARCH:
-                    self.__do_sort_search()
 
 #######################
 # PROTECTED           #
@@ -86,7 +41,6 @@ class UriPopoverContent:
             Set search model
             @param search as str
         """
-        self.__search = search
         if search == '':
             result = App().history.search(search, 50)
         else:
@@ -98,27 +52,21 @@ class UriPopoverContent:
     def _add_searches(self, searches, search):
         """
             Add searches to model
-            @param [(title, uri, score)] as [(str, strn int)]
+            @param [(title, uri, score)] as [(str, str, int)]
             @param search as str
         """
-        # Another search running, quit
-        if search != self.__search:
-            return
-        elif searches:
+        if searches:
             (rowid, title, uri, score) = searches.pop(0)
             item = Item()
             item.set_property("id", rowid)
             item.set_property("type", Type.SEARCH)
             item.set_property("title", title)
             item.set_property("uri", uri)
-            item.set_property("search", self.__search)
             item.set_property("score", score)
             child = Row(item, self._window)
             child.show()
             self._search_box.add(child)
             GLib.idle_add(self._add_searches, searches, search)
-        else:
-            self.__do_sort_search()
 
     def _add_bookmarks(self, bookmarks):
         """
@@ -232,28 +180,6 @@ class UriPopoverContent:
 #######################
 # PRIVATE             #
 #######################
-    def __do_sort_search(self):
-        """
-            Run a new sort after cleaning obsolete results
-            @param force as bool
-        """
-        for child in self._search_box.get_children():
-            if child.item.get_property("search") != self.__search:
-                child.destroy()
-        self._search_box.set_sort_func(self.__sort_search)
-        self._search_box.invalidate_sort()
-        self._search_box.set_sort_func(None)
-
-    def __sort_search(self, row1, row2):
-        """
-            Sort search
-            @param row1 as Row
-            @param row2 as Row
-        """
-        pos1 = row1.item.get_property("score")
-        pos2 = row2.item.get_property("score")
-        return pos2 > pos1 or pos2 == Type.SEARCH
-
     def __on_row_activated(self, row):
         """
             Select row

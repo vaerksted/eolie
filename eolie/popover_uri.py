@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib
+from gi.repository import Gtk, GLib, Gio
 
 from gettext import gettext as _
 from time import mktime, time
@@ -23,10 +23,15 @@ from eolie.define import App, Type, TimeSpan, TimeSpanValues
 from eolie.popover_uri_row import Row
 from eolie.popover_uri_events import UriPopoverEvents
 from eolie.popover_uri_content import UriPopoverContent
+from eolie.popover_uri_completion import UriPopoverCompletion
+from eolie.popover_uri_suggestions import UriPopoverSuggestions
+from eolie.popover_uri_webviews import UriPopoverWebviews
 from eolie.popover_uri_input import Input
 
 
-class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
+class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
+                 UriPopoverCompletion, UriPopoverSuggestions,
+                 UriPopoverWebviews):
     """
         Show user bookmarks or search
     """
@@ -39,6 +44,10 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         Gtk.Popover.__init__(self)
         UriPopoverEvents.__init__(self)
         UriPopoverContent.__init__(self)
+        UriPopoverCompletion.__init__(self)
+        UriPopoverSuggestions.__init__(self)
+        UriPopoverWebviews.__init__(self)
+        self.__cancellable = Gio.Cancellable.new()
         self.set_modal(False)
         window.register(self, False)
         self._window = window
@@ -59,6 +68,7 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         self._history_box.bind_model(self._history_model,
                                      self.__on_item_create)
         self._search_box = builder.get_object("search_box")
+        self._search_box.set_sort_func(self.__sort_search)
         self._stack = builder.get_object("stack")
         self.__tags = builder.get_object("tags")
         self._tags_box = builder.get_object("tags_box")
@@ -102,8 +112,14 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
             Set search model
             @param search as str
         """
+        self.__cancellable.cancel()
+        self.__cancellable = Gio.Cancellable.new()
+        for child in self._search_box.get_children():
+            child.destroy()
         self._set_search_text(search)
-        self.add_suggestions([search], Type.SEARCH, True)
+        self.add_completion(search, self.__cancellable)
+        self.add_suggestions(search, self.__cancellable)
+        self.add_webviews(search, self.__cancellable)
         self._stack.set_visible_child_name("search")
 
     @property
@@ -324,6 +340,16 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent):
         if App().sync_worker is not None:
             for history_id in App().history.get_empties():
                 App().history.remove(history_id)
+
+    def __sort_search(self, row1, row2):
+        """
+            Sort search
+            @param row1 as Row
+            @param row2 as Row
+        """
+        pos1 = row1.item.get_property("score")
+        pos2 = row2.item.get_property("score")
+        return pos2 > pos1
 
     def __sort_tags(self, row1, row2):
         """

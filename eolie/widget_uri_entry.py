@@ -10,13 +10,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Gdk, GLib, Gio, Pango
+from gi.repository import Gtk, Gdk, GLib, Pango
 
 from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.helper_task import TaskHelper
 from eolie.define import App
 from eolie.popover_uri import UriPopover
 from eolie.widget_smooth_progressbar import SmoothProgressBar
@@ -37,21 +36,11 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         Gtk.Overlay.__init__(self)
         self.get_style_context().add_class("input")
-        self.__task_helper = TaskHelper()
         self.__window = window
         self.__input_warning_shown = False
         self.__entry_changed_id = None
-        self.__suggestion_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = None
-
-        self.__cancellable = Gio.Cancellable.new()
-        self.__dns_suffixes = ["com", "org"]
-        for string in reversed(GLib.get_language_names()):
-            if len(string) == 2:
-                self.__dns_suffixes.insert(0, string)
-                break
-
         self.__entry = Gtk.Entry.new()
         self.__entry.show()
         self.__entry.get_style_context().add_class("uribar")
@@ -90,17 +79,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.add_overlay(self.__progress)
         self.set_overlay_pass_through(grid, True)
 
-        # Inline completion
-        self.__completion_model_append_timeout_id = None
-        self.__completion_model_clear_timeout_id = None
-        self.__completion_model = Gtk.ListStore(str)
-        self.__completion = Gtk.EntryCompletion.new()
-        self.__completion.set_model(self.__completion_model)
-        self.__completion.set_text_column(0)
-        self.__completion.set_inline_completion(True)
-        self.__completion.set_popup_completion(False)
-        self.__entry.set_completion(self.__completion)
-
         self.__popover = UriPopover(window)
         self.__popover.set_relative_to(self.__entry)
         self.__popover.connect("closed", self.__on_popover_closed)
@@ -126,7 +104,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             return
         if self.__signal_id is not None:
             self.__entry.disconnect(self.__signal_id)
-        self.__completion_model.clear()
         # Do not show this in titlebar
         parsed = urlparse(text)
         if parsed.scheme in ["populars", "about"]:
@@ -276,7 +253,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Focus out widget
         """
         webview = self.__window.container.webview
-        self.__completion_model.clear()
         self.__placeholder.set_opacity(0.8)
         self.set_text_entry("")
         uri = webview.uri
@@ -312,99 +288,11 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                     Gtk.EntryIconPosition.PRIMARY,
                     "system-search-symbolic")
 
-    def __on_search_suggestion(self, uri, status, content, encoding, value):
-        """
-            Add suggestions
-            @param uri as str
-            @param status as bool
-            @param content as bytes
-            @param encoding as str
-            @param value as str
-        """
-        current_text = self.__entry.get_text()
-        if status and value == current_text:
-            string = content.decode(encoding)
-            # format: '["{"words"}",["result1","result2"]]'
-            sgs = string.replace('[', '')\
-                        .replace(']', '')\
-                        .replace('"', '')\
-                        .split(',')[1:]
-            self.__popover.add_suggestions(sgs)
-
-    def __populate_completion(self, value):
-        """
-            @param value as str
-            @thread safe
-        """
-        def get_iterator():
-            iterator = self.__completion_model.get_iter_first()
-            if iterator is None:
-                iterator = self.__completion_model.insert(0)
-            return iterator
-
-        # Look for a match in history
-        match = App().history.get_match(value)
-        if match is not None and not self.__cancellable.is_cancelled():
-            iterator = get_iterator()
-            match_str = match.split("://")[-1].split("www.")[-1]
-            self.__completion_model.set_value(iterator,
-                                              0,
-                                              match_str)
-        elif App().settings.get_value("dns-prediction") and\
-                not self.__cancellable.is_cancelled():
-            # Try some DNS request, FIXME Better list?
-            from socket import gethostbyname
-            parsed = urlparse(value)
-            if parsed.netloc:
-                value = parsed.netloc
-            for suffix in self.__dns_suffixes:
-                if self.__cancellable.is_cancelled():
-                    break
-                for prefix in ["www.", ""]:
-                    if self.__cancellable.is_cancelled():
-                        break
-                    try:
-                        lookup = "%s%s.%s" % (prefix, value, suffix)
-                        gethostbyname(lookup)
-                        iterator = get_iterator()
-                        self.__completion_model.set_value(
-                                              iterator,
-                                              0,
-                                              lookup.replace("www.", ""))
-                        return
-                    except:
-                        pass
-        else:
-            # Only happen if nothing matched
-            self.__completion_model.clear()
-
-    def __search_in_current_views(self, value):
-        """
-            Search views matching value and add them to popover
-            @param value as str
-            @thread safe
-        """
-        webviews = []
-        for webview in self.__window.container.webviews:
-            if self.__cancellable.is_cancelled():
-                break
-            uri = webview.uri
-            if uri is None:
-                continue
-            parsed = urlparse(uri)
-            if parsed.netloc.lower().find(value) != -1:
-                webviews.append(webview)
-        if webviews:
-            GLib.idle_add(self.__popover.add_webviews, webviews)
-
     def __on_popover_closed(self, popover):
         """
             Clean titlebar
             @param popover as Gtk.popover
         """
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable.new()
-        self.__completion_model.clear()
         webview = self.__window.container.webview
         if popover == self.__popover:
             webview.grab_focus()
@@ -419,11 +307,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Delayed entry changed
             @param entry as Gtk.Entry
         """
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable.new()
         value = entry.get_text()
         if value:
-            self.__task_helper.run(self.__populate_completion, value)
             self.__placeholder.set_opacity(0)
             if not self.__popover.is_visible():
                 self.__popover.popup("bookmarks")
@@ -446,39 +331,15 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         self.__entry_changed_id = None
         self.__window.container.webview.add_text_entry(value)
-        network = Gio.NetworkMonitor.get_default().get_network_available()
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
             self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
             self.__popover.set_search_text(value)
-
-        # Remove any pending suggestion search
-        if self.__suggestion_id is not None:
-            GLib.source_remove(self.__suggestion_id)
-            self.__suggestion_id = None
-        # Search for suggestions if needed
-        if App().settings.get_value("enable-suggestions") and\
-                value and not is_uri and network:
-            self.__suggestion_id = GLib.timeout_add(
-                100,
-                self.__on_suggestion_timeout,
-                value)
-        self.__task_helper.run(self.__search_in_current_views, value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
-
-    def __on_suggestion_timeout(self, value):
-        """
-            Search suggestions
-            @param value as str
-        """
-        self.__suggestion_id = None
-        App().search.search_suggestions(value,
-                                        self.__cancellable,
-                                        self.__on_search_suggestion)
 
     def __on_entry_focus_in(self, entry, event):
         """
@@ -628,7 +489,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                     GLib.source_remove(self.__entry_changed_id)
                     self.__entry_changed_id = None
                 webview.grab_focus()
-                self.__completion_model.clear()
                 return True
 
     def _handle_width_allocate(self, allocation):
