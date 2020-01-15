@@ -44,6 +44,11 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry_changed_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = None
+        self.__dns_suffixes = ["com", "org"]
+        for string in reversed(GLib.get_language_names()):
+            if len(string) == 2:
+                self.__dns_suffixes.insert(0, string)
+                break
         self.__entry = Gtk.Entry.new()
         self.__entry.show()
         self.__entry.get_style_context().add_class("uribar")
