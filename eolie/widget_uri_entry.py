@@ -335,45 +335,14 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param value as str
             @thread safe
         """
-        # Thread handling
-        def model_append_timeout(array):
-            self.__completion_model_append_timeout_id = None
-            self.__completion_model.append(array)
-
-        def model_clear_timeout():
-            self.__completion_model_clear_timeout_id = None
-            self.__completion_model.clear()
-
-        def model_append(array):
-            if self.__completion_model_clear_timeout_id is not None:
-                GLib.source_remove(self.__completion_model_clear_timeout_id)
-                self.__completion_model_clear_timeout_id = None
-            if self.__completion_model_append_timeout_id is not None:
-                GLib.source_remove(self.__completion_model_append_timeout_id)
-            self.__completion_model_append_timeout_id = \
-                GLib.idle_add(model_append_timeout, array)
-
-        def model_clear():
-            if self.__completion_model_clear_timeout_id is not None:
-                GLib.source_remove(self.__completion_model_clear_timeout_id)
-            self.__completion_model_clear_timeout_id = \
-                GLib.timeout_add(100, model_clear_timeout)
-
         if self.__entry.get_text() == value:
             # Look for a match in history
             match = App().history.get_match(value)
-            if match is not None:
-                if self.__cancellable.is_cancelled():
-                    return
-                match_parsed = urlparse(match)
-                netloc = match_parsed.netloc.replace("www.", "")
-                if netloc.find(value) == 0:
-                    if match_parsed.path.find(value.split("/")[-1]) != -1:
-                        model_append([netloc + match_parsed.path])
-                    else:
-                        model_append([netloc])
-                    return
-            if App().settings.get_value("dns-prediction"):
+            if match is not None and not self.__cancellable.is_cancelled():
+                self.__completion_model.append([match.split("://")[-1]])
+                return
+            if App().settings.get_value("dns-prediction") and\
+                    not self.__cancellable.is_cancelled():
                 # Try some DNS request, FIXME Better list?
                 from socket import gethostbyname
                 parsed = urlparse(value)
@@ -384,13 +353,14 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                         try:
                             lookup = "%s%s.%s" % (prefix, value, suffix)
                             gethostbyname(lookup)
-                            model_append([lookup.replace("www.", "")])
+                            self.__completion_model.append(
+                                [lookup.replace("www.", "")])
                             return
                         except:
                             if self.__cancellable.is_cancelled():
                                 return
             # Only happen if nothing matched
-            model_clear()
+            self.__completion_model.clear()
 
     def __search_in_current_views(self, value):
         """
@@ -430,6 +400,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Delayed entry changed
             @param entry as Gtk.Entry
         """
+        self.__cancellable.cancel()
+        self.__cancellable = Gio.Cancellable.new()
         value = entry.get_text()
         if not value:
             webview = self.__window.container.webview
@@ -452,7 +424,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         if self.__entry_changed_id is not None:
             GLib.source_remove(self.__entry_changed_id)
         self.__entry_changed_id = GLib.timeout_add(
-            250,
+            100,
             self.__on_entry_changed_timeout,
             entry,
             value)
@@ -471,9 +443,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         # Populate completion model
         task_helper.run(self.__populate_completion, value)
 
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable.new()
-
         network = Gio.NetworkMonitor.get_default().get_network_available()
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
@@ -490,7 +459,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         if App().settings.get_value("enable-suggestions") and\
                 value and not is_uri and network:
             self.__suggestion_id = GLib.timeout_add(
-                50,
+                100,
                 self.__on_suggestion_timeout,
                 value)
         task_helper.run(self.__search_in_current_views, value)

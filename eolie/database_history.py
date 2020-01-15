@@ -334,13 +334,12 @@ class DatabaseHistory:
             @return str
         """
         with SqlCursor(self) as sql:
+            filter = ("http%://{}%".format(uri),)
             result = sql.execute("SELECT uri\
                                   FROM history\
                                   WHERE uri like ?\
-                                  ORDER BY popularity DESC,\
-                                  length(uri) ASC\
-                                  LIMIT 1",
-                                 ("%" + uri + "%",))
+                                  ORDER BY length(uri) ASC\
+                                  LIMIT 1", filter)
             v = result.fetchone()
             if v is not None:
                 return v[0]
