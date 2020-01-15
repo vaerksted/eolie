@@ -37,6 +37,16 @@ class UriPopoverCompletion:
                 self.__dns_suffixes.insert(0, string)
                 break
 
+    def load_completion(self):
+        """
+            Load any existing completion row
+            @return loaded as bool
+        """
+        for child in self._search_box.get_children():
+            if child.item.get_property("type") == Type.COMPLETION:
+                self._window.container.load_uri(child.item.get_property("uri"))
+                return True
+
     def add_completion(self, value, cancellable):
         """
             Add completion for value

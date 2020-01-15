@@ -467,23 +467,24 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             elif keyval in [Gdk.KEY_Return, Gdk.KEY_KP_Enter]:
                 webview.clear_text_entry()
                 GLib.idle_add(self.__window.close_popovers)
-                parsed = urlparse(uri)
-                # Search a missing scheme
-                if uri.find(".") != -1 and\
-                        uri.find(" ") == -1 and\
-                        not parsed.scheme:
-                    # Add missing www.
-                    if not uri.startswith("www."):
-                        db_uri = App().history.get_match("://www." + uri)
-                        if db_uri is not None:
-                            uri = "www." + uri
-                    # Add missing scheme
-                    db_uri = App().history.get_match("https://" + uri)
-                    if db_uri is None:
-                        uri = "http://" + uri
-                    else:
-                        uri = "https://" + uri
-                self.__window.container.load_uri(uri)
+                if not self.__popover.load_completion():
+                    parsed = urlparse(uri)
+                    # Search a missing scheme
+                    if uri.find(".") != -1 and\
+                            uri.find(" ") == -1 and\
+                            not parsed.scheme:
+                        # Add missing www.
+                        if not uri.startswith("www."):
+                            db_uri = App().history.get_match("://www." + uri)
+                            if db_uri is not None:
+                                uri = "www." + uri
+                        # Add missing scheme
+                        db_uri = App().history.get_match("https://" + uri)
+                        if db_uri is None:
+                            uri = "http://" + uri
+                        else:
+                            uri = "https://" + uri
+                    self.__window.container.load_uri(uri)
                 self.__window.container.set_expose(False)
                 if self.__entry_changed_id is not None:
                     GLib.source_remove(self.__entry_changed_id)
