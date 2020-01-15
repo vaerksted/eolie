@@ -37,6 +37,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         Gtk.Overlay.__init__(self)
         self.get_style_context().add_class("input")
+        self.__task_helper = TaskHelper()
         self.__window = window
         self.__input_warning_shown = False
         self.__entry_changed_id = None
@@ -385,13 +386,16 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         """
         webviews = []
         for webview in self.__window.container.webviews:
+            if self.__cancellable.is_cancelled():
+                break
             uri = webview.uri
             if uri is None:
                 continue
             parsed = urlparse(uri)
             if parsed.netloc.lower().find(value) != -1:
                 webviews.append(webview)
-        GLib.idle_add(self.__popover.add_webviews, webviews)
+        if webviews:
+            GLib.idle_add(self.__popover.add_webviews, webviews)
 
     def __on_popover_closed(self, popover):
         """
@@ -418,24 +422,14 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
         value = entry.get_text()
-        if not value:
+        if value:
+            self.__task_helper.run(self.__populate_completion, value)
+            self.__placeholder.set_opacity(0)
+            if not self.__popover.is_visible():
+                self.__popover.popup("bookmarks")
+        else:
             webview = self.__window.container.webview
             webview.clear_text_entry()
-        # Text change comes from completion validation ie Enter
-        for completion in self.__completion_model:
-            if completion[0] == value:
-                return
-        parsed = urlparse(value)
-        is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
-        uri = self.__window.container.webview.uri
-        parsed = urlparse(uri)
-        if value:
-            self.__placeholder.set_opacity(0)
-            # We are doing a search, show popover
-            if not is_uri and not self.__popover.is_visible():
-                self.__popover.popup("bookmarks")
-        elif parsed.scheme in ["populars", "about"]:
-            self.set_default_placeholder()
         if self.__entry_changed_id is not None:
             GLib.source_remove(self.__entry_changed_id)
         self.__entry_changed_id = GLib.timeout_add(
@@ -450,14 +444,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param entry as Gtk.Entry
             @param value as str
         """
-        task_helper = TaskHelper()
         self.__entry_changed_id = None
-
         self.__window.container.webview.add_text_entry(value)
-
-        # Populate completion model
-        task_helper.run(self.__populate_completion, value)
-
         network = Gio.NetworkMonitor.get_default().get_network_available()
         parsed = urlparse(value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
@@ -477,7 +465,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                 100,
                 self.__on_suggestion_timeout,
                 value)
-        task_helper.run(self.__search_in_current_views, value)
+        self.__task_helper.run(self.__search_in_current_views, value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
