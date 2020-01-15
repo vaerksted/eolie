@@ -16,7 +16,6 @@ import sqlite3
 import itertools
 from urllib.parse import urlparse
 from threading import Lock
-from re import sub
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import EOLIE_DATA_PATH, Type
@@ -461,7 +460,7 @@ class DatabaseHistory:
             @param limit as int
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
-        words = sub("[^\w]", " ", search.lower()).split()
+        words = search.lower().split()
         items = []
         with SqlCursor(self) as sql:
             filters = ()
@@ -477,24 +476,6 @@ class DatabaseHistory:
                     request += " (title LIKE ? OR uri LIKE ?)"
                     if words_copy:
                         request += " AND "
-            request += " ORDER BY length(uri) ASC LIMIT ?"
-            try:
-                result = sql.execute(request, filters)
-                items += list(result)
-            except:
-                Logger.error("DatabaseHistory::search(): %s -> %s",
-                             (request, filters))
-
-            # And then search containing one item
-            request = "SELECT rowid, title, uri FROM history"
-            if words:
-                request += " WHERE"
-                words_copy = list(words)
-                while words_copy:
-                    word = words_copy.pop(0)
-                    request += " title LIKE ? OR uri LIKE ?"
-                    if words_copy:
-                        request += " OR "
             request += " ORDER BY length(uri) ASC LIMIT ?"
             try:
                 result = sql.execute(request, filters)

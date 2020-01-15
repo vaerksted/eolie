@@ -16,7 +16,6 @@ import sqlite3
 import itertools
 from urllib.parse import urlparse
 from threading import Lock
-from re import sub
 
 from eolie.utils import noaccents, get_random_string
 from eolie.define import EOLIE_DATA_PATH, Type
@@ -898,7 +897,7 @@ class DatabaseBookmarks:
             @param limit as int
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
-        words = sub("[^\w]", " ", search.lower()).split()
+        words = search.lower().split()
         items = []
         with SqlCursor(self) as sql:
             filters = ()
@@ -919,25 +918,6 @@ class DatabaseBookmarks:
             result = sql.execute(request, filters)
             items += list(result)
 
-            # Search items matching any word
-            request = "SELECT rowid, title, uri\
-                       FROM bookmarks WHERE\
-                       guid != uri"
-            words_copy = list(words)
-            if words:
-                request += " AND ("
-            while words_copy:
-                word = words_copy.pop(0)
-                if word:
-                    request += "title LIKE ? OR uri LIKE ?"
-                    if words_copy:
-                        request += " OR "
-            if words:
-                request += ")"
-            request += " ORDER BY length(uri) ASC LIMIT ?"
-            result = sql.execute(request, filters)
-            items += list(result)
-
         # Do some scoring calculation on items
         scored_items = []
         uris = []
@@ -945,7 +925,7 @@ class DatabaseBookmarks:
             uri = item[2]
             if uri in uris:
                 continue
-            score = 0
+            score = 100
             title = item[1].lower()
             parsed = urlparse(uri)
             if not parsed.path:
