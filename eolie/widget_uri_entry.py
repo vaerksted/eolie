@@ -543,11 +543,11 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                         not parsed.scheme:
                     # Add missing www.
                     if not uri.startswith("www."):
-                        db_uri = App().history.get_match("://www." + uri)
+                        db_uri = App().history.get_match("www." + uri)
                         if db_uri is not None:
                             uri = "www." + uri
                     # Add missing scheme
-                    db_uri = App().history.get_match("https://" + uri)
+                    db_uri = App().history.get_match(uri, True)
                     if db_uri is None:
                         uri = "http://" + uri
                     else:

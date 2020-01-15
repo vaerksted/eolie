@@ -326,14 +326,18 @@ class DatabaseHistory:
                                   WHERE mtime > ?", (mtime,))
             return list(itertools.chain(*result))
 
-    def get_match(self, uri):
+    def get_match(self, uri, ssl_force=False):
         """
             Try to get best uri matching
             @parma uri as str
+            @param ssl_force as bool
             @return str
         """
         with SqlCursor(self) as sql:
-            filter = ("http%://%{}%".format(uri),)
+            if ssl_force:
+                filter = ("https://%{}%".format(uri),)
+            else:
+                filter = ("http%://%{}%".format(uri),)
             result = sql.execute("SELECT uri\
                                   FROM history\
                                   WHERE uri like ?\
