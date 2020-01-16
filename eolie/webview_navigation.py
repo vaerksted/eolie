@@ -113,6 +113,8 @@ class WebViewNavigation:
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
+            self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/HandleInput.js", None, None)
             if App().show_tls:
                 try:
                     from OpenSSL import crypto

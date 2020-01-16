@@ -18,6 +18,9 @@
     <file compressed="true">javascript/SetForms.js</file>
     <file compressed="true">javascript/Submit.js</file>
     <file compressed="true">javascript/GetCSS.js</file>
+    <file compressed="true">javascript/HandleInput.js</file>
+    <file compressed="true">javascript/HandleInputNext.js</file>
+    <file compressed="true">javascript/HandleInputPrev.js</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkEdit.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>

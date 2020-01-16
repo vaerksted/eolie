@@ -348,10 +348,17 @@ class Window(Gtk.ApplicationWindow, WindowState):
             @param state as Gtk.ModifierType
             @param event as Gdk.EventKey
         """
-        if state & Gdk.ModifierType.CONTROL_MASK and\
-                keyval == Gdk.KEY_Tab:
-            if not self.container.in_expose:
+        if state & Gdk.ModifierType.CONTROL_MASK:
+            if keyval == Gdk.KEY_Tab and not self.container.in_expose:
                 self.container.pages_manager.update_sort()
+            elif keyval == Gdk.KEY_z:
+                self.container.webview.run_javascript_from_gresource(
+                    "/org/gnome/Eolie/javascript/HandleInputPrev.js",
+                    None, None)
+            elif keyval == Gdk.KEY_Z:
+                self.container.webview.run_javascript_from_gresource(
+                    "/org/gnome/Eolie/javascript/HandleInputNext.js",
+                    None, None)
 
     def __on_key_released(self, controller, keyval, keycode, state):
         """
