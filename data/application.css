@@ -110,14 +110,12 @@
     border-radius: 2px;
     outline-width: 0px;
     opacity: 0.9;
-    transition: background-color 200ms linear, border-color 200ms linear, opacity 200ms linear;
 }
 
 .sidebar-item:hover {
     border: 3px solid shade(@theme_selected_bg_color, 1.4);
     padding: 0px;
     opacity: 1;
-    transition: none;
 }
 
 .sidebar-item:visited {
