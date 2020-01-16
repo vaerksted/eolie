@@ -163,7 +163,7 @@ class UriPopoverContent:
             @param cancellable as Gio.Cancellable
         """
         if value == '':
-            result = App().history.search(value, 50)
+            result = App().history.get_populars(25)
         else:
             result = App().history.search(value, 15)
             result += App().bookmarks.search(value, 15)

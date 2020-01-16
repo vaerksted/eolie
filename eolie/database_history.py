@@ -360,9 +360,22 @@ class DatabaseHistory:
                          SET title=?\
                          WHERE rowid=?", (title, history_id,))
 
-    def get_populars(self, netloc, limit):
+    def get_populars(self, limit):
         """
-            Get popular bookmarks
+            Get popular items in history
+            @param limit as int
+            @return [(id, title, uri, score)] as [(int, str, str, int)]
+        """
+        with SqlCursor(self) as sql:
+            request = "SELECT rowid, title, uri, 1 FROM history\
+                       ORDER BY popularity DESC LIMIT ?"
+            result = sql.execute(request, (limit,))
+            return list(result)
+        return []
+
+    def get_populars_by_netloc(self, netloc, limit):
+        """
+            Get popular items by netloc
             @param netloc as str
             @param limit as bool
             @return [(id, title, uri)]

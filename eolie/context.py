@@ -74,7 +74,7 @@ class Context:
         else:
             reset_function = "reset_history"
             for (item_id, uri,
-                 netloc, title, count) in App().history.get_populars(
+                 netloc, title, count) in App().history.get_populars_by_netloc(
                     parsed.netloc,
                     wanted):
                 items.append((title, uri, netloc, count))
