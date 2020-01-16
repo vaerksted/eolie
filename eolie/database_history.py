@@ -382,14 +382,12 @@ class DatabaseHistory:
         """
         with SqlCursor(self) as sql:
             if netloc:
-                # Hack: we return history.mtime as count because we know
-                # it will not be used
                 result = sql.execute("\
                                 SELECT rowid,\
                                        uri,\
                                        uri,\
                                        title,\
-                                       mtime\
+                                       1\
                                 FROM history\
                                 WHERE netloc=?\
                                 AND popularity!=0\
