@@ -105,22 +105,25 @@
 
 .sidebar-item {
     border: 1px solid alpha(@theme_fg_color, 0.5);
+    padding: 2px;
     background-color: shade(@theme_bg_color, 1.3);
-    padding: 3px;
     border-radius: 2px;
     outline-width: 0px;
-    transition: background-color 500ms linear, border-color 500ms linear;
+    opacity: 0.9;
+    transition: background-color 200ms linear, border-color 200ms linear, opacity 200ms linear;
 }
 
-
 .sidebar-item:hover {
-    border: 1px solid alpha(@theme_fg_color, 0.9);
+    border: 3px solid shade(@theme_selected_bg_color, 1.4);
+    padding: 0px;
+    opacity: 1;
+    transition: none;
 }
 
 .sidebar-item:visited {
-    border-color: @theme_selected_bg_color;
-    background-color: @theme_selected_bg_color;
-    
+    border: 3px solid @theme_selected_bg_color;
+    padding: 0px;
+    opacity: 1;
 }
 
 .site-manager-child {
