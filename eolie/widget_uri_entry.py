@@ -325,7 +325,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             self.__completion_model.set_value(iterator,
                                               0,
                                               match_str)
-            self.__completion.insert_prefix()
+            GLib.idle_add(self.__completion.insert_prefix)
         elif App().settings.get_value("dns-prediction") and\
                 not self.__cancellable.is_cancelled():
             # Try some DNS request, FIXME Better list?
@@ -347,7 +347,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                                               iterator,
                                               0,
                                               lookup.replace("www.", ""))
-                        self.__completion.insert_prefix()
+                        GLib.idle_add(self.__completion.insert_prefix)
                         return
                     except:
                         pass
