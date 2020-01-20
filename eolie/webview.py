@@ -150,23 +150,6 @@ class WebView(WebKit2.WebView):
         self.update_zoom_level()
         return current
 
-    def set_title(self, title):
-        """
-            Set title, will be returned by title property until title is set
-            by WebView
-            @param title as str
-        """
-        self._title = title
-        self.emit("title-changed", title)
-
-    def set_uri(self, uri):
-        """
-            Set delayed uri
-            @param uri as str
-        """
-        self._uri = uri
-        self.emit("uri-changed", uri)
-
     def update_spell_checking(self, uri):
         """
             Update spell checking
@@ -353,27 +336,6 @@ class WebView(WebKit2.WebView):
         return self.__shown
 
     @property
-    def title(self):
-        """
-            Get title (loaded or unloaded)
-            @return str
-        """
-        title = self.get_title()
-        if title is None:
-            title = self._title
-        if title is None:
-            title = self.uri
-        return title
-
-    @property
-    def uri(self):
-        """
-            Get uri (loaded or unloaded)
-            @return str
-        """
-        return self._uri
-
-    @property
     def netloc(self):
         """
             Get netloc
@@ -441,7 +403,6 @@ class WebView(WebKit2.WebView):
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readability = False
-        self._uri = None
         self._initial_uri = None
         self._title = None
         self.__related = related
@@ -585,5 +546,3 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
         WebViewNightMode._on_load_changed(self, webview, event)
-        if event == WebKit2.LoadEvent.COMMITTED:
-            self._uri = webview.get_uri()

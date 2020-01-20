@@ -41,8 +41,6 @@ class WebViewNavigation:
                      self.__on_insecure_content_detected)
         self.connect("run-as-modal", self.__on_run_as_modal)
         self.connect("permission_request", self.__on_permission_request)
-        self.connect("notify::title", self.__on_title_changed)
-        self.connect("notify::uri", self.__on_uri_changed)
 
     def load_uri(self, uri):
         """
@@ -195,31 +193,6 @@ class WebViewNavigation:
             request.allow()
         return True
 
-    def __on_uri_changed(self, webview, param):
-        """
-            Handle JS updates
-            @param webview as WebKit2.WebView
-            @param param as GObject.ParamSpec
-        """
-        # Js update
-        if not self.is_loading():
-            self._initial_uri = None
-            uri = webview.get_property(param.name)
-            self._uri = uri
-            # JS bookmark (Bookmarklet)
-            if not uri.startswith("javascript:") and not self.error:
-                self.emit("uri-changed", uri)
-
-    def __on_title_changed(self, webview, param):
-        """
-            We launch Readability.js at page loading finished.
-            @param webview as WebKit2.WebView
-            @param param as GObject.ParamSpec
-        """
-        title = webview.get_property(param.name)
-        if title:
-            self.emit("title-changed", title)
-
     def __on_decide_policy(self, webview, decision, decision_type):
         """
             Navigation policy
@@ -307,7 +280,6 @@ class WebViewNavigation:
                 self.__set_user_agent(navigation_uri)
                 self.discard_error()
                 decision.use()
-                self._uri = navigation_uri
                 return False
         else:
             self.new_page(navigation_uri, LoadingType.BACKGROUND)

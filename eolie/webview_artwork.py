@@ -38,7 +38,7 @@ class WebViewArtwork:
         self.__is_snapshot_valid = False
         self.__favicon_db = self.get_context().get_favicon_database()
         self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
-        self.connect("notify::uri", self.__on_uri_changed)
+        self.connect("uri-changed", self.__on_uri_changed)
         self.connect("scroll-event", self.__on_scroll_event)
 
     def set_favicon(self):

@@ -49,7 +49,10 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         WebViewJsSignals.__init__(self)
         self.reset_last_click_event()
         self.__cancellable = Gio.Cancellable()
-        self.connect("title-changed", self.__on_title_changed)
+        self.__uri = ""
+        self.__title = ""
+        self.connect("notify::title", self.__on_title_changed)
+        self.connect("notify::uri", self.__on_uri_changed)
         self.connect("scroll-event", self.__on_scroll_event)
         self.connect("run-file-chooser", self.__on_run_file_chooser)
         self.connect("button-press-event", self.__on_button_press_event)
@@ -61,6 +64,38 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         self._last_click_event_x = 0
         self._last_click_event_y = 0
         self._last_click_time = 0
+
+    def set_title(self, title):
+        """
+            Set title
+            @param title as str
+        """
+        self.__title = title
+        self.emit("title-changed", title)
+
+    def set_uri(self, uri):
+        """
+            Set delayed uri
+            @param uri as str
+        """
+        self.__uri = uri
+        self.emit("uri-changed", uri)
+
+    @property
+    def uri(self):
+        """
+            Get webview uri
+            @return str
+        """
+        return self.__uri
+
+    @property
+    def title(self):
+        """
+            Get webview title
+            @return str
+        """
+        return self.__title
 
 #######################
 # PRIVATE             #
@@ -132,19 +167,33 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             event.delta_x *= 2
             event.delta_y *= 2
 
-    def __on_title_changed(self, webview, title):
+    def __on_uri_changed(self, webview, param):
         """
-            Append title to history
-            @param webview as WebView
-            @param title as str
+            Handle JS updates
+            @param webview as WebKit2.WebView
+            @param param as GObject.ParamSpec
         """
-        parsed = urlparse(webview.uri)
-        if self.error or\
-                webview.is_ephemeral or\
-                parsed.scheme not in ["http", "https"]:
-            return
-        mtime = round(time(), 2)
-        history_id = App().history.add(title, webview.uri, mtime)
-        App().history.set_page_state(webview.uri, mtime)
-        if App().sync_worker is not None:
-            App().sync_worker.push_history(history_id)
+        uri = webview.get_property(param.name)
+        if not uri.startswith("javascript:") and not self.error:
+            self.__uri = uri
+            self.emit("uri-changed", self.__uri)
+
+    def __on_title_changed(self, webview, param):
+        """
+            We launch Readability.js at page loading finished.
+            @param webview as WebKit2.WebView
+            @param param as GObject.ParamSpec
+        """
+        self.__title = webview.get_property(param.name)
+        self.emit("title-changed", self.__title)
+        if self.__title:
+            parsed = urlparse(self.uri)
+            if self.error or\
+                    webview.is_ephemeral or\
+                    parsed.scheme not in ["http", "https"]:
+                return
+            mtime = round(time(), 2)
+            history_id = App().history.add(self.__title, self.__uri, mtime)
+            App().history.set_page_state(self.__uri, mtime)
+            if App().sync_worker is not None:
+                App().sync_worker.push_history(history_id)
