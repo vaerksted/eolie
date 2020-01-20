@@ -45,6 +45,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__secure_content = True
         self.__size_allocation_timeout = None
         self.__dns_suffixes = ["com", "org"]
+        self.__current_value = ""
         for string in reversed(GLib.get_language_names()):
             if len(string) == 2:
                 self.__dns_suffixes.insert(0, string)
@@ -374,6 +375,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
+        do_completion = len(value) > len(self.__current_value)
+        self.__current_value = value
         for completion in self.__completion_model:
             if completion[0] == value:
                 return
@@ -392,23 +395,25 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             100,
             self.__on_entry_changed_timeout,
             entry,
-            value)
+            do_completion)
 
-    def __on_entry_changed_timeout(self, entry, value):
+    def __on_entry_changed_timeout(self, entry, do_completion):
         """
             Update popover search if needed
             @param entry as Gtk.Entry
-            @param value as str
+            @param do_completion as bool
         """
         self.__entry_changed_id = None
-        self.__window.container.webview.add_text_entry(value)
-        self.__task_helper.run(self.__populate_completion, value)
-        parsed = urlparse(value)
+        self.__window.container.webview.add_text_entry(self.__current_value)
+        if do_completion:
+            self.__task_helper.run(self.__populate_completion,
+                                   self.__current_value)
+        parsed = urlparse(self.__current_value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
             self.__popover.set_search_text(parsed.netloc + parsed.path)
         else:
-            self.__popover.set_search_text(value)
+            self.__popover.set_search_text(self.__current_value)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY, "")
