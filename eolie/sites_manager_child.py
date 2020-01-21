@@ -85,12 +85,9 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__indicator_label.add()
             self.__indicator_label.mark(webview)
             self.__netloc_label.set_text(get_safe_netloc(webview.uri))
-            # URI is None, webview not loaded, get favicon from cache
-            if webview.get_uri() is None:
-                uri = webview.uri
-                favicon_path = App().art.get_favicon_path(uri)
-                if favicon_path is not None:
-                    self.__image.set_from_file(favicon_path)
+            favicon_path = App().art.get_favicon_path(webview.uri)
+            if favicon_path is not None:
+                self.__image.set_from_file(favicon_path)
 
     def remove_webview(self, webview):
         """

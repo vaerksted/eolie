@@ -152,7 +152,9 @@ class WebViewArtwork:
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        if not webview.is_loading() and not webview.is_ephemeral:
+        if webview.get_uri() is not None and\
+                not webview.is_loading() and\
+                not webview.is_ephemeral:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,

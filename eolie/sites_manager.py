@@ -76,7 +76,7 @@ class SitesManager(Gtk.Grid):
         # Force update
         if webview.uri:
             self.__on_webview_load_changed(webview,
-                                           WebKit2.LoadEvent.STARTED)
+                                           WebKit2.LoadEvent.COMMITTED)
         webview.connect("load-changed", self.__on_webview_load_changed)
         webview.connect("destroy", self.__on_webview_destroy)
 
@@ -307,7 +307,9 @@ class SitesManager(Gtk.Grid):
                 empty_child.destroy()
             child.add_webview(webview)
             self.update_visible_child()
-        child.on_webview_load_changed(webview, event)
+        # Webview really loaded
+        if webview.get_uri() is not None:
+            child.on_webview_load_changed(webview, event)
 
     def __on_row_activated(self, listbox, child):
         """
