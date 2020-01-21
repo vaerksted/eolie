@@ -129,7 +129,7 @@ class WebViewArtwork:
             resized = resize_favicon(surface)
             self.__save_favicon_to_cache(resized,
                                          uri)
-            if self.loaded_uri is not None:
+            if self.loaded_uri is not None and uri != self.loaded_uri:
                 self.__save_favicon_to_cache(resized,
                                              self.loaded_uri)
 
@@ -174,7 +174,7 @@ class WebViewArtwork:
         else:
             prefix = "start_light"
         App().art.save_artwork(self.uri, surface, prefix)
-        if self.loaded_uri is not None:
+        if self.loaded_uri is not None and self.uri != self.loaded_uri:
             App().art.save_artwork(self.loaded_uri, surface, prefix)
 
     def __on_scroll_event(self, widget, event):
