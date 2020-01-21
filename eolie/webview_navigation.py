@@ -277,7 +277,7 @@ class WebViewNavigation:
             else:
                 # Keep initial loaded URI only for populars://
                 if webview.uri == "populars:":
-                    self.__loaded_uri = self.uri
+                    self.__loaded_uri = navigation_uri.rstrip("/")
                 else:
                     self.__loaded_uri = None
                 self.discard_error()
