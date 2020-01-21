@@ -15,7 +15,6 @@ from gi.repository import GLib, WebKit2, Gio
 from urllib.parse import urlparse
 
 from eolie.define import App
-from eolie.logger import Logger
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
@@ -36,24 +35,8 @@ class WebViewArtwork:
         self.__snapshot_id = None
         self.__scroll_event_id = None
         self.__is_snapshot_valid = False
-        self.__favicon_db = self.get_context().get_favicon_database()
-        self.__favicon_db.connect("favicon-changed", self.__on_favicon_changed)
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("scroll-event", self.__on_scroll_event)
-
-    def set_favicon(self):
-        """
-            Set favicon based on current webview favicon
-        """
-        parsed = urlparse(self.uri)
-        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
-            return
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable()
-        self.__favicon_db.get_favicon(self.uri,
-                                      self.__cancellable,
-                                      self.__on_get_favicon,
-                                      self.uri)
 
     @property
     def surface(self):
@@ -92,11 +75,27 @@ class WebViewArtwork:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
                                                   self.__set_snapshot)
-            self.set_favicon()
+            self.__set_favicon()
 
 #######################
 # PRIVATE             #
 #######################
+    def __set_favicon(self):
+        """
+            Set favicon based on current webview favicon
+        """
+        parsed = urlparse(self.uri)
+        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
+            return
+        surface = self.get_favicon()
+        if surface is not None:
+            surface = get_round_surface(surface,
+                                        self.get_scale_factor(),
+                                        surface.get_width() / 4)
+            self.__set_favicon_from_surface(surface, self.uri)
+        else:
+            self.__set_favicon_from_surface(None, self.uri)
+
     def __set_snapshot(self):
         """
             Set webpage preview
@@ -157,39 +156,6 @@ class WebViewArtwork:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
                                                   self.__set_snapshot)
-            self.__on_favicon_changed(self.__favicon_db, webview.uri)
-
-    def __on_get_favicon(self, favicon_db, result, uri):
-        """
-            Get result and set from it
-            @param favicon_db as WebKit2.FaviconDatabase
-            @param result as Gio.AsyncResult
-            @param uri as str
-        """
-        try:
-            surface = favicon_db.get_favicon_finish(result)
-            if surface is not None:
-                surface = get_round_surface(surface,
-                                            self.get_scale_factor(),
-                                            surface.get_width() / 4)
-            self.__set_favicon_from_surface(surface,
-                                            uri)
-        except Exception as e:
-            Logger.debug("WebViewArtwork::__on_get_favicon(): %s", e)
-            self.__set_favicon_from_surface(None, uri)
-
-    def __on_favicon_changed(self, favicon_db, uri, *ignore):
-        """
-            Reload favicon
-            @param favicon_db as WebKit2.FaviconDatabase
-            @param uri as str
-        """
-        if uri != self.uri or self.is_ephemeral:
-            return
-        self.__favicon_db.get_favicon(uri,
-                                      None,
-                                      self.__on_get_favicon,
-                                      uri)
 
     def __on_snapshot(self, surface, save):
         """
