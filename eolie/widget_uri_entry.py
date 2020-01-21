@@ -319,7 +319,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
 
         # Look for a match in history
         match = App().history.get_match(value)
-        if match is not None and not self.__cancellable.is_cancelled():
+        if match is not None and self.__current_value == value:
             iterator = get_iterator()
             match_str = match.split("://")[-1].split("www.")[-1]
             self.__completion_model.set_value(iterator,
@@ -327,7 +327,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                                               match_str)
             GLib.idle_add(self.__completion.insert_prefix)
         elif App().settings.get_value("dns-prediction") and\
-                not self.__cancellable.is_cancelled():
+                self.__current_value == value:
             # Try some DNS request, FIXME Better list?
             from socket import gethostbyname
             parsed = urlparse(value)
