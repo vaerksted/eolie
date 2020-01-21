@@ -53,24 +53,7 @@ class WebViewArtwork:
         self.__favicon_db.get_favicon(self.uri,
                                       self.__cancellable,
                                       self.__on_get_favicon,
-                                      self.uri,
-                                      self._initial_uri)
-
-    def set_current_favicon(self):
-        """
-            Set favicon based on current webview favicon
-            Use this for JS update (do not update initial uri)
-        """
-        parsed = urlparse(self.uri)
-        if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
-            return
-        self.__cancellable.cancel()
-        self.__cancellable = Gio.Cancellable()
-        self.__favicon_db.get_favicon(self.uri,
-                                      self.__cancellable,
-                                      self.__on_get_favicon,
-                                      self.uri,
-                                      None)
+                                      self.uri)
 
     @property
     def surface(self):
@@ -123,8 +106,7 @@ class WebViewArtwork:
         parsed = urlparse(self.uri)
         save = parsed.scheme in ["http", "https"]
         bookmark_id = App().bookmarks.get_id(self.uri)
-        ibookmark_id = App().bookmarks.get_id(self._initial_uri)
-        if bookmark_id is None and ibookmark_id is None:
+        if bookmark_id is None:
             save = False
         self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                           WebKit2.SnapshotOptions.NONE,
@@ -133,13 +115,12 @@ class WebViewArtwork:
                           self.__on_snapshot,
                           save)
 
-    def __set_favicon_from_surface(self, surface, uri, initial_uri):
+    def __set_favicon_from_surface(self, surface, uri):
         """
             Set favicon for surface
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
-            @param initial_uri as str
         """
         # Get a default favicon
         if surface is None:
@@ -148,30 +129,22 @@ class WebViewArtwork:
         if surface is not None:
             resized = resize_favicon(surface)
             self.__save_favicon_to_cache(resized,
-                                         uri,
-                                         initial_uri)
+                                         uri)
+            if self.loaded_uri is not None:
+                self.__save_favicon_to_cache(resized,
+                                             self.loaded_uri)
 
-    def __save_favicon_to_cache(self, surface, uri, initial_uri):
+    def __save_favicon_to_cache(self, surface, uri):
         """
             Save favicon to cache
             @param surface as cairo.Surface
             @param uri as str
-            @param initial_uri as str
         """
         # Save favicon for URI
         self.__helper.run(App().art.save_artwork,
                           uri,
                           surface,
                           "favicon")
-        # Only update initial URI if netloc did not changed
-        if initial_uri is not None:
-            initial_parsed = urlparse(initial_uri)
-            parsed = urlparse(uri)
-            if parsed.netloc == initial_parsed.netloc:
-                self.__helper.run(App().art.save_artwork,
-                                  initial_uri,
-                                  surface,
-                                  "favicon")
 
     def __on_uri_changed(self, webview, param):
         """
@@ -186,14 +159,12 @@ class WebViewArtwork:
                                                   self.__set_snapshot)
             self.__on_favicon_changed(self.__favicon_db, webview.uri)
 
-    def __on_get_favicon(self, favicon_db, result, uri,
-                         initial_uri, first=True):
+    def __on_get_favicon(self, favicon_db, result, uri, first=True):
         """
             Get result and set from it
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
-            @param initial_uri as str
             @internal first as bool
         """
         try:
@@ -203,8 +174,7 @@ class WebViewArtwork:
                                             self.get_scale_factor(),
                                             surface.get_width() / 4)
             self.__set_favicon_from_surface(surface,
-                                            uri,
-                                            initial_uri)
+                                            uri)
         except Exception as e:
             Logger.debug("WebViewArtwork::__on_get_favicon(): %s", e)
             if first:
@@ -215,10 +185,9 @@ class WebViewArtwork:
                                                   None,
                                                   self.__on_get_favicon,
                                                   uri,
-                                                  self._initial_uri,
                                                   False)
                 else:
-                    self.__set_favicon_from_surface(None, uri, initial_uri)
+                    self.__set_favicon_from_surface(None, uri)
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
@@ -231,8 +200,7 @@ class WebViewArtwork:
         self.__favicon_db.get_favicon(uri,
                                       None,
                                       self.__on_get_favicon,
-                                      uri,
-                                      self._initial_uri)
+                                      uri)
 
     def __on_snapshot(self, surface, save):
         """
@@ -246,18 +214,13 @@ class WebViewArtwork:
         self.emit("snapshot-changed", surface)
         if not save or self.error:
             return
-        uri = self.uri
-        # We also cache initial URI
-        uris = [uri.rstrip("/")]
-        if self._initial_uri is not None and\
-                self._initial_uri not in uris:
-            uris.append(self._initial_uri)
         if App().settings.get_value("night-mode"):
             prefix = "start_dark"
         else:
             prefix = "start_light"
-        for uri in uris:
-            App().art.save_artwork(uri, surface, prefix)
+        App().art.save_artwork(self.uri, surface, prefix)
+        if self.loaded_uri is not None:
+            App().art.save_artwork(self.loaded_uri, surface, prefix)
 
     def __on_scroll_event(self, widget, event):
         """

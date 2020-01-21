@@ -78,7 +78,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             Set delayed uri
             @param uri as str
         """
-        self.__uri = uri
+        self.__uri = uri.rstrip("/")
         self.emit("uri-changed", uri)
 
     @property
@@ -173,10 +173,11 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        uri = webview.get_property(param.name)
+        uri = webview.get_property(param.name).rstrip("/")
         if not uri.startswith("javascript:") and not self.error:
             self.__uri = uri
-            self.emit("uri-changed", self.__uri)
+            self.emit("uri-changed", uri)
+            self._set_user_agent(uri)
 
     def __on_title_changed(self, webview, param):
         """

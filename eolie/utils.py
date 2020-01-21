@@ -96,21 +96,6 @@ def get_safe_netloc(uri):
     return netloc
 
 
-def remove_www(netloc):
-    """
-        Remove www from an urllib parse netloc
-        @param netloc as str
-        @return str
-    """
-    if netloc:
-        split = netloc.split(".")
-        if split[0] == "www":
-            split.pop(0)
-        return ".".join(split)
-    else:
-        return ""
-
-
 def wanted_loading_type(index):
     """
         Return window type based on current index

@@ -403,7 +403,6 @@ class WebView(WebKit2.WebView):
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
         self._readability = False
-        self._initial_uri = None
         self._title = None
         self.__related = related
         self.__shown = False

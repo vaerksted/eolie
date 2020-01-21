@@ -35,6 +35,7 @@ class WebViewNavigation:
         """
             Init navigation
         """
+        self.__loaded_uri = None
         self.__insecure_content_detected = False
         self.connect("decide-policy", self.__on_decide_policy)
         self.connect("insecure-content-detected",
@@ -83,31 +84,45 @@ class WebViewNavigation:
             self.set_uri(uri)
             GLib.idle_add(WebKit2.WebView.load_uri, self, uri)
 
+    @property
+    def loaded_uri(self):
+        """
+            Get loaded uri
+            @return str/None
+        """
+        return self.__loaded_uri
+
 #######################
 # PROTECTED           #
 #######################
+    def _set_user_agent(self, uri):
+        """
+            Set user agent for uri
+            @param uri as str
+        """
+        user_agent = App().websettings.get("user_agent", uri)
+        settings = self.get_settings()
+        if user_agent:
+            settings.set_user_agent(user_agent)
+        else:
+            settings.set_user_agent_with_application_details("Eolie",
+                                                             None)
+
     def _on_load_changed(self, webview, event):
         """
             Update internals
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
-        parsed = urlparse(self.uri)
         if event == WebKit2.LoadEvent.STARTED:
-            if parsed.scheme in ["http", "https"]:
-                self._initial_uri = self.uri.rstrip('/')
-            else:
-                self._initial_uri = None
-            self.__update_bookmark_metadata(self.uri)
+            self.__loaded_uri = self.uri
         elif event == WebKit2.LoadEvent.REDIRECTED:
-            self.__update_bookmark_metadata(self.uri)
+            self.__loaded_uri = None
         elif event == WebKit2.LoadEvent.COMMITTED:
-            self.emit("uri-changed", self.uri)
-            App().history.set_page_state(self.uri)
-            if self._initial_uri != self.uri:
-                self.__update_bookmark_metadata(self.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
+            App().history.set_page_state(self.uri)
+            self.__update_bookmark_metadata(self.uri)
             self.update_spell_checking(self.uri)
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
@@ -152,19 +167,6 @@ class WebViewNavigation:
         if App().bookmarks.get_id(uri) is not None:
             App().bookmarks.set_access_time(uri, round(time(), 2))
             App().bookmarks.set_more_popular(uri)
-
-    def __set_user_agent(self, uri):
-        """
-            Set user agent for uri
-            @param uri as str
-        """
-        user_agent = App().websettings.get("user_agent", uri)
-        settings = self.get_settings()
-        if user_agent:
-            settings.set_user_agent(user_agent)
-        else:
-            settings.set_user_agent_with_application_details("Eolie",
-                                                             None)
 
     def __on_run_as_modal(self, webview):
         Logger.info("WebView::__on_run_as_modal(): TODO")
@@ -260,7 +262,6 @@ class WebViewNavigation:
                 return False
             else:
                 self.discard_error()
-                self.__set_user_agent(navigation_uri)
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -277,7 +278,6 @@ class WebViewNavigation:
                 decision.ignore()
                 return True
             else:
-                self.__set_user_agent(navigation_uri)
                 self.discard_error()
                 decision.use()
                 return False

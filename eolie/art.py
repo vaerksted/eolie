@@ -17,7 +17,7 @@ from time import time
 from urllib.parse import urlparse
 
 from eolie.define import EOLIE_CACHE_PATH, ArtSize
-from eolie.utils import remove_www, get_round_surface
+from eolie.utils import get_round_surface
 from eolie.logger import Logger
 
 
@@ -154,11 +154,7 @@ class Art:
         parsed = urlparse(uri)
         if uri is None or not parsed.netloc:
             return None
-        cached_uri = remove_www(parsed.netloc)
-        cached_path = parsed.path.rstrip("/")
-        if cached_path:
-            cached_uri += cached_path
-        encoded = md5(cached_uri.encode("utf-8")).hexdigest()
+        encoded = md5(uri.encode("utf-8")).hexdigest()
         filepath = "%s/art/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
