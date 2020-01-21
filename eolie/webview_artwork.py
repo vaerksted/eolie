@@ -37,6 +37,7 @@ class WebViewArtwork:
         self.__is_snapshot_valid = False
         self.connect("uri-changed", self.__on_uri_changed)
         self.connect("scroll-event", self.__on_scroll_event)
+        self.connect("notify::favicon", self.__on_webview_favicon_changed)
 
     @property
     def surface(self):
@@ -75,14 +76,14 @@ class WebViewArtwork:
                 GLib.source_remove(self.__snapshot_id)
             self.__snapshot_id = GLib.timeout_add(2500,
                                                   self.__set_snapshot)
-            self.__set_favicon()
 
 #######################
 # PRIVATE             #
 #######################
-    def __set_favicon(self):
+    def __on_webview_favicon_changed(self, webview, *ignore):
         """
             Set favicon based on current webview favicon
+            @param webview as WebView
         """
         parsed = urlparse(self.uri)
         if self.is_ephemeral or parsed.scheme not in ["http", "https"]:
