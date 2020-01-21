@@ -155,11 +155,7 @@ class WebViewContainer:
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
             self._window.toolbar.title.entry.set_title(webview.uri)
-            if wanted_scheme:
-                self._window.toolbar.title.entry.icons.set_loading(True)
-            else:
-                # Give focus to url bar
-                self._window.toolbar.title.start_search()
+            self._window.toolbar.title.entry.icons.set_loading(True)
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
         elif event == WebKit2.LoadEvent.COMMITTED:
@@ -170,6 +166,8 @@ class WebViewContainer:
             # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(webview.grab_focus)
+            else:
+                self._window.toolbar.title.start_search()
             self.check_readability(webview)
 
     def __on_enter_fullscreen(self, webview):
