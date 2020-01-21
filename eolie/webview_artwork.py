@@ -102,12 +102,12 @@ class WebViewArtwork:
             Set webpage preview
         """
         self.__snapshot_id = None
-        # Only save http page if bookmarked
-        parsed = urlparse(self.uri)
-        save = parsed.scheme in ["http", "https"]
-        bookmark_id = App().bookmarks.get_id(self.uri)
-        if bookmark_id is None:
-            save = False
+        # Only save page if bookmarked
+        save = False
+        for uri in [self.uri, self.loaded_uri]:
+            if uri is not None and App().bookmarks.get_id(uri) is not None:
+                save = True
+                break
         self.get_snapshot(WebKit2.SnapshotRegion.VISIBLE,
                           WebKit2.SnapshotOptions.NONE,
                           self.__cancellable,
