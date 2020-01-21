@@ -16,7 +16,6 @@ from math import pi
 import unicodedata
 import string
 import cairo
-import sqlite3
 from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
@@ -162,30 +161,6 @@ def on_query_tooltip(label, x, y, keyboard, tooltip):
     if layout.is_ellipsized():
         tooltip.set_markup(label.get_label())
         return True
-
-
-def get_favicon_best_uri(favicons_path, uri):
-    """
-        Search in WebKit DB for best uri
-        @param favicons_path as str
-        @param uri as str
-        @return str
-    """
-    favicon_uri = None
-    try:
-        parsed = urlparse(uri)
-        for uri in [parsed.netloc + parsed.path, parsed.netloc]:
-            sql = sqlite3.connect(favicons_path, 600.0)
-            result = sql.execute("SELECT url\
-                                  FROM PageURL\
-                                  WHERE url LIKE ?", ("%{}%".format(uri),))
-            v = result.fetchone()
-            if v is not None:
-                favicon_uri = v[0]
-                break
-    except Exception as e:
-        Logger.error("get_favicon_best_uri(): %s", e)
-    return favicon_uri
 
 
 def resize_favicon(favicon):

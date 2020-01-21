@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from eolie.define import App
 from eolie.logger import Logger
 from eolie.helper_task import TaskHelper
-from eolie.utils import get_snapshot, resize_favicon, get_favicon_best_uri
+from eolie.utils import get_snapshot, resize_favicon
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
 
 
@@ -159,13 +159,12 @@ class WebViewArtwork:
                                                   self.__set_snapshot)
             self.__on_favicon_changed(self.__favicon_db, webview.uri)
 
-    def __on_get_favicon(self, favicon_db, result, uri, first=True):
+    def __on_get_favicon(self, favicon_db, result, uri):
         """
             Get result and set from it
             @param favicon_db as WebKit2.FaviconDatabase
             @param result as Gio.AsyncResult
             @param uri as str
-            @internal first as bool
         """
         try:
             surface = favicon_db.get_favicon_finish(result)
@@ -177,17 +176,7 @@ class WebViewArtwork:
                                             uri)
         except Exception as e:
             Logger.debug("WebViewArtwork::__on_get_favicon(): %s", e)
-            if first:
-                favicons_path = App().favicons_path + "/WebpageIcons.db"
-                best_uri = get_favicon_best_uri(favicons_path, uri)
-                if best_uri is not None:
-                    self.__favicon_db.get_favicon(best_uri,
-                                                  None,
-                                                  self.__on_get_favicon,
-                                                  uri,
-                                                  False)
-                else:
-                    self.__set_favicon_from_surface(None, uri)
+            self.__set_favicon_from_surface(None, uri)
 
     def __on_favicon_changed(self, favicon_db, uri, *ignore):
         """
