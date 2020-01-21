@@ -123,9 +123,9 @@ class Art:
         """
         if ephemeral:
             return "user-not-tracked-symbolic"
-        elif uri == "populars://":
+        elif uri == "populars:":
             return "emote-love-symbolic"
-        elif uri == "about://":
+        elif uri == "about:":
             return "web-browser-symbolic"
         else:
             return None
