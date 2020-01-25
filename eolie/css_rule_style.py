@@ -305,7 +305,10 @@ class CSSStyleRule:
                 if hsla[3] < 0.4:
                     continue
                 elif hsla[1] > 0.2:
-                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+                    if hsla[2] > 0.7:
+                        hsla = (hsla[0], hsla[1], 0.1, hsla[3])
+                    else:
+                        hsla = (hsla[0], hsla[1], 0.3, hsla[3])
                 else:
                     hsla = (0, 0, 0.21, 1)
                 hsla_str = self.__get_hsla_to_css_string(hsla)
@@ -330,7 +333,10 @@ class CSSStyleRule:
                 if hsla[3] < 0.4:
                     continue
                 elif hsla[1] > 0.2:
-                    hsla = (hsla[0], hsla[1], 0.3, hsla[3])
+                    if hsla[2] > 0.7:
+                        hsla = (hsla[0], hsla[1], 0.1, hsla[3])
+                    else:
+                        hsla = (hsla[0], hsla[1], 0.3, hsla[3])
                 else:
                     hsla = (0, 0, 0.21, 1)
                 hsla_str = self.__get_hsla_to_css_string(hsla)
