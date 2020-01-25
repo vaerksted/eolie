@@ -109,6 +109,12 @@ class StyleSheets(GObject.Object):
                 del self.__stylesheets[key]
         return "".join(css)
 
+    def reset(self):
+        """
+            Reset stylesheet state
+        """
+        self.__populated = False
+
     @property
     def populated(self):
         """

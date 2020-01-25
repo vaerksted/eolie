@@ -29,7 +29,7 @@ class WebViewNightMode:
         """
         self.__night_mode = False
         self.__started_time = 0
-        self.__css_uri = ""
+        self.__css_uri = None
         self.__cancellable = Gio.Cancellable.new()
         self.__stylesheets = StyleSheets()
         self.__stylesheets.set_cancellable(self.__cancellable)
@@ -76,6 +76,8 @@ class WebViewNightMode:
         """
             Handle night mode
         """
+        self.__stylesheets.reset()
+        self.__css_uri = None
         if self.__should_apply_night_mode():
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
@@ -103,6 +105,7 @@ class WebViewNightMode:
             self.get_user_content_manager().remove_all_style_sheets()
             return
         if event == WebKit2.LoadEvent.STARTED:
+            self.__css_uri = None
             self.__started_time = int(time())
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
