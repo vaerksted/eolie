@@ -460,8 +460,11 @@ class Application(Gtk.Application, NightApplication):
                         webview = WebViewState.new_from_state(webview_state,
                                                               window)
                         webview.show()
-                        loading_type = wanted_loading_type(
-                            len(window.container.webviews))
+                        if webview_state.is_pinned:
+                            loading_type = LoadingType.BACKGROUND
+                        else:
+                            loading_type = wanted_loading_type(
+                                len(window.container.webviews))
                         window.container.add_webview(webview, loading_type)
                         session = WebKit2.WebViewSessionState(
                             GLib.Bytes.new(webview_state.session))
