@@ -278,7 +278,9 @@ class WebViewNavigation:
                 # Keep initial loaded URI only for populars://
                 if webview.uri == "populars:":
                     self.__loaded_uri = navigation_uri.rstrip("/")
-                else:
+                # No idea why but happens on http://www.commitstrip.com/
+                # when clicking it from populars://
+                elif webview.uri != navigation_uri:
                     self.__loaded_uri = None
                 self.discard_error()
                 decision.use()
