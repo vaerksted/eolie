@@ -1,6 +1,6 @@
-let elementsArray = document.querySelectorAll("form");
+let elementsArraySubmit = document.querySelectorAll("form");
 
-elementsArray.forEach(function(elem) {
+elementsArraySubmit.forEach(function(elem) {
     elem.addEventListener("submit", function() {
         const types = ["text", "email", "search"];
         const names = ["login", "user", "email"];
