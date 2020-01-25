@@ -59,6 +59,7 @@ class WebViewNightMode:
             Load CSS URI as user style
             @param message as str
         """
+        self.__css_uri = self.uri
         self.__stylesheets.load_css_uri(message, self.__started_time)
 
     def load_css_text(self, message):
@@ -66,6 +67,7 @@ class WebViewNightMode:
             Load CSS text as user style
             @param message as str
         """
+        self.__css_uri = self.uri
         self.__stylesheets.load_css_text(message,
                                          self.uri,
                                          self.__started_time)
@@ -105,8 +107,9 @@ class WebViewNightMode:
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable.new()
             self.__stylesheets.set_cancellable(self.__cancellable)
+        elif event == WebKit2.LoadEvent.REDIRECTED:
+            self.__css_uri = None
         elif webview.uri != self.__css_uri:
-            self.__css_uri = webview.uri
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/GetCSS.js", None, None)
 
