@@ -215,6 +215,10 @@
     transition: color 500ms linear;
 }
 
+.pinned {
+    color: shade(@theme_selected_bg_color, 1.5);
+}
+
 .download-button {
     padding: 2px;
     min-width: 28px;

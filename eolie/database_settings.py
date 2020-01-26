@@ -13,6 +13,7 @@
 from gi.repository import GLib
 
 import sqlite3
+import itertools
 from urllib.parse import urlparse
 from threading import Lock
 
@@ -29,6 +30,7 @@ class DatabaseSettings:
     __UPGRADES = {
         1: "ALTER TABLE settings ADD accept_tls INT NOT NULL DEFAULT 0",
         2: "ALTER TABLE settings ADD night_mode INT NOT NULL DEFAULT 0",
+        3: "ALTER TABLE settings ADD pinned INT NOT NULL DEFAULT 0",
     }
 
     # SQLite documentation:
@@ -44,6 +46,7 @@ class DatabaseSettings:
                                            zoom INT,
                                            accept_tls INT NOT NULL DEFAULT 0,
                                            night_mode INT NOT NULL DEFAULT 0,
+                                           pinned INT NOT NULL DEFAULT 0,
                                            geolocation INT,
                                            user_agent TEXT
                                            )'''
@@ -145,6 +148,15 @@ class DatabaseSettings:
                     return []
             else:
                 return None
+
+    def get_pinned_uris(self):
+        """
+            Get pinned uris
+            return [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri FROM settings WHERE pinned=1")
+            return list(itertools.chain(*result))
 
     def add_language(self, code, uri):
         """

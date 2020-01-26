@@ -448,6 +448,8 @@ class Application(Gtk.Application, NightApplication):
             @return active window as Window
         """
         try:
+            pinned_uris = self.websettings.get_pinned_uris()
+            # Add saved webviews
             from eolie.window_state import WindowState, WindowStateStruct
             window_states = load(
                 open(EOLIE_DATA_PATH + "/session_states.bin", "rb"))
@@ -457,14 +459,12 @@ class Application(Gtk.Application, NightApplication):
                 if state.webview_states:
                     window = WindowState.new_from_state(state)
                     for webview_state in state.webview_states:
+                        pinned_uris.remove(webview_state.uri)
                         webview = WebViewState.new_from_state(webview_state,
                                                               window)
                         webview.show()
-                        if webview_state.is_pinned:
-                            loading_type = LoadingType.BACKGROUND
-                        else:
-                            loading_type = wanted_loading_type(
-                                len(window.container.webviews))
+                        loading_type = wanted_loading_type(
+                            len(window.container.webviews))
                         window.container.add_webview(webview, loading_type)
                         session = WebKit2.WebViewSessionState(
                             GLib.Bytes.new(webview_state.session))
@@ -476,6 +476,10 @@ class Application(Gtk.Application, NightApplication):
                 window = WindowState.new_from_state(state)
                 window.connect("delete-event", self.__on_delete_event)
                 window.show()
+            # Add pinned webviews
+            for uri in pinned_uris:
+                window.container.add_webview_for_uri(uri,
+                                                     LoadingType.BACKGROUND)
         except Exception as e:
             Logger.error("Application::__restore_state(): %s", e)
 

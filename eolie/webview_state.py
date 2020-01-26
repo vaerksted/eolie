@@ -19,7 +19,6 @@ class WebViewStateStruct:
         self.title = ""
         self.atime = 0
         self.is_ephemeral = False
-        self.is_pinned = False
         self.session = None
 
 
@@ -42,7 +41,6 @@ class WebViewState:
         webview.set_uri(state.uri)
         webview.set_title(state.title)
         webview.set_atime(state.atime)
-        webview.set_pinned(state.is_pinned)
         # TODO session
         return webview
 
@@ -58,13 +56,12 @@ class WebViewState:
             Get state
             @return WebViewStateStruct
         """
-        if App().settings.get_value("remember-session") or self.is_pinned:
+        if App().settings.get_value("remember-session"):
             state = WebViewStateStruct()
             state.uri = self.uri
             state.title = self.title
             state.atime = self.atime
             state.is_ephemeral = self.is_ephemeral
-            state.is_pinned = self.is_pinned
             state.session = self.get_session_state().serialize().get_data()
             return state
         else:

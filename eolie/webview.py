@@ -257,13 +257,6 @@ class WebView(WebKit2.WebView):
         """
         self.__atime = atime
 
-    def set_pinned(self, pinned):
-        """
-            Set window pinned
-            @param pinned as bool
-        """
-        self.__pinned = pinned
-
     def add_child(self, child):
         """
             Add a child to webview
@@ -286,14 +279,6 @@ class WebView(WebKit2.WebView):
             @param window as Window
         """
         self.__window = window
-
-    @property
-    def is_pinned(self):
-        """
-            True if window is pinned
-            @return bool
-        """
-        return self.__pinned
 
     @property
     def readability(self):
@@ -398,7 +383,6 @@ class WebView(WebKit2.WebView):
         self.__atime = 0
         self.__children = []
         self.__parent = None
-        self.__pinned = False
         # WebKitGTK doesn't provide an API to get selection, so try to guess
         # it from clipboard FIXME Get it from extensions
         self.__selection = ""
