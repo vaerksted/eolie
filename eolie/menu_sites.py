@@ -74,6 +74,22 @@ class SitesMenu(Gtk.Grid):
             item.set_action_name("win.user_agent")
             item.show()
             self.add(item)
+        # Pinned state
+        uri = webviews[0].uri
+        pinned = App().websettings.get("pinned", uri)
+        action = Gio.SimpleAction.new_stateful(
+                    "pinned",
+                    None,
+                    GLib.Variant.new_boolean(pinned))
+        action.connect("change-state",
+                       self.__on_pinned_change_state,
+                       uri)
+        self.__window.add_action(action)
+        item = Gtk.ModelButton.new()
+        item.set_property("text", _("Pinned site"))
+        item.set_action_name("win.pinned")
+        item.show()
+        self.add(item)
         # Close site
         action = Gio.SimpleAction.new("close_site")
         action.connect("activate", self.__on_close_activate)
@@ -84,18 +100,19 @@ class SitesMenu(Gtk.Grid):
         item.show()
         self.add(item)
 
-    def do_hide(self):
-        """
-            Remove actions on hide
-        """
-        Gtk.Grid.do_hide(self)
-        self.__window.remove_action("switch_page")
-        self.__window.remove_action("user_agent")
-        self.__window.remove_action("close_site")
-
 #######################
 # PRIVATE             #
 #######################
+    def __on_pinned_change_state(self, action, param, uri):
+        """
+            Set option value
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param uri as str
+        """
+        action.set_state(param)
+        App().websettings.set("pinned", uri, param)
+
     def __on_close_activate(self, action, param):
         """
             Close wanted page
