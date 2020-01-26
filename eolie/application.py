@@ -482,6 +482,10 @@ class Application(Gtk.Application, NightApplication):
             for uri in pinned_netlocs:
                 window.container.add_webview_for_uri(uri,
                                                      LoadingType.BACKGROUND)
+            # Make first webview visible
+            if window.container.webviews:
+                window.container.set_visible_webview(
+                    window.container.webviews[0])
         except Exception as e:
             Logger.error("Application::__restore_state(): %s", e)
 
