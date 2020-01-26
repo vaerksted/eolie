@@ -200,11 +200,10 @@ class BookmarkEditWidget(Gtk.Bin):
             self.__flowbox.add(tag)
         if not back_enabled:
             builder.get_object("back_button").hide()
-        widget = builder.get_object("widget")
         bookmark_rating = BookmarkRatingWidget(bookmark_id)
         bookmark_rating.show()
-        widget.attach(bookmark_rating, 4, 1, 1, 1)
-        self.add(widget)
+        builder.get_object("bookmark_grid").attach(bookmark_rating, 2, 1, 1, 1)
+        self.add(builder.get_object("widget"))
         self.connect("unmap", self.__on_unmap)
         self.__updated = False
 

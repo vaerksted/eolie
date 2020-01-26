@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkEventBox" id="widget">
@@ -41,6 +41,10 @@
             <property name="opacity">0.20000000000000001</property>
             <property name="halign">end</property>
             <property name="valign">center</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="margin_top">5</property>
+            <property name="margin_bottom">5</property>
             <signal name="button-press-event" handler="_on_close_button_press" swapped="no"/>
             <child>
               <object class="GtkImage" id="image">
