@@ -155,8 +155,8 @@ class SettingsDialog:
         storage = App().settings.get_enum("history-storage")
         history_combo.set_active_id(str(storage))
 
-        night_mode_switch = builder.get_object("night_mode_switch")
-        night_mode_switch.set_state(
+        night_mode_button = builder.get_object("night_mode_button")
+        night_mode_button.set_active(
             App().settings.get_value("auto-night-mode"))
 
         self.__populars_count = builder.get_object("populars_count")
@@ -453,14 +453,13 @@ class SettingsDialog:
             uri = ""
         App().settings.set_value("download-uri", GLib.Variant("s", uri))
 
-    def _on_night_mode_state_set(self, switch, value):
+    def _on_night_mode_toggled(self, button):
         """
             Save auto night mode
-            @param switch as Gtk.Switch
-            @param value as bool
+            @param button as Gtk.ToggleButton
         """
         App().settings.set_value("auto-night-mode",
-                                 GLib.Variant("b", value))
+                                 GLib.Variant("b", button.get_active()))
 
     def _on_key_release_event(self, widget, event):
         """
