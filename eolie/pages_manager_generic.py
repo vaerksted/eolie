@@ -13,7 +13,7 @@
 from gi.repository import Gtk, Pango, WebKit2
 
 from eolie.label_indicator import LabelIndicator
-from eolie.define import ArtSize, MARGIN_SMALL, MARGIN, App
+from eolie.define import ArtSize, MARGIN_SMALL, MARGIN
 from eolie.utils import on_query_tooltip, update_popover_internals
 from eolie.helper_signals import SignalsHelper, signals
 from eolie.helper_gestures import GesturesHelper
@@ -47,16 +47,6 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
         close_button.set_property("halign", Gtk.Align.END)
         close_button.connect("clicked", self.__on_close_button_clicked)
 
-        self.__pin_button = Gtk.Button.new_from_icon_name(
-                                                   "view-pin-symbolic",
-                                                   Gtk.IconSize.MENU)
-        self.__pin_button.show()
-        self.__pin_button.set_relief(Gtk.ReliefStyle.NONE)
-        self.__pin_button.get_style_context().add_class("no-border-button")
-        self.__pin_button.set_property("valign", Gtk.Align.CENTER)
-        self.__pin_button.set_property("halign", Gtk.Align.END)
-        self.__pin_button.connect("clicked", self.__on_pin_button_clicked)
-
         self.__indicator_label = LabelIndicator(False)
         self.__indicator_label.show()
         self.__indicator_label.mark(webview)
@@ -87,7 +77,6 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
         grid.set_vexpand(True)
         grid.set_property("valign", Gtk.Align.END)
         grid.set_property("margin", MARGIN_SMALL)
-        grid.add(self.__pin_button)
         grid.add(self.__indicator_label)
         grid.add(close_button)
 
@@ -190,8 +179,6 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             self.__indicator_image.get_style_context().add_class(
                 "image-rotate")
         else:
-            pinned = App().websettings.get("pinned", self.__webview.uri)
-            self.__update_pin_button(pinned)
             self.__indicator_image.set_from_surface(None)
             self.__indicator_image.get_style_context().remove_class(
                 "image-rotate")
@@ -219,27 +206,6 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
 #######################
 # PRIVATE             #
 #######################
-    def __update_pin_button(self, pinned):
-        """
-            Update pinned button
-            @param pinned as bool
-        """
-        if pinned:
-            self.__pin_button.get_image().get_style_context().add_class(
-                "pinned")
-        else:
-            self.__pin_button.get_image().get_style_context().remove_class(
-                "pinned")
-
-    def __on_pin_button_clicked(self, button):
-        """
-            Pin/Unpin page
-            @param button as Gtk.Button
-        """
-        pinned = App().websettings.get("pinned", self.__webview.uri)
-        App().websettings.set("pinned", self.__webview.uri, not pinned)
-        self.__update_pin_button(not pinned)
-
     def __on_close_button_clicked(self, button):
         """
             Destroy self
