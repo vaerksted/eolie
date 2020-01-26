@@ -37,7 +37,7 @@ class DatabaseSettings:
     # this make VACUUM not destroy rowids...
     __create_settings = '''CREATE TABLE settings (
                                            id INTEGER PRIMARY KEY,
-                                           uri TEXT NOT NULL,
+                                           netloc TEXT NOT NULL,
                                            chooser_uri TEXT,
                                            languages TEXT,
                                            zoom INT,
@@ -95,16 +95,16 @@ class DatabaseSettings:
             netloc = get_safe_netloc(uri)
             with SqlCursor(self, True) as sql:
                 result = sql.execute("SELECT rowid FROM settings\
-                                      WHERE uri=?", (netloc,))
+                                      WHERE netloc=?", (netloc,))
                 v = result.fetchone()
                 if v is not None:
                     sql.execute("UPDATE settings\
                                  SET %s=?\
-                                 WHERE uri=?" % option,
+                                 WHERE netloc=?" % option,
                                 (status, netloc))
                 else:
                     sql.execute("INSERT INTO settings\
-                                          (uri, %s)\
+                                          (netloc, %s)\
                                           VALUES (?, ?)" % option,
                                 (netloc, status))
         except Exception as e:
@@ -119,7 +119,7 @@ class DatabaseSettings:
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT %s FROM settings\
-                                  WHERE uri=?" % option,
+                                  WHERE netloc=?" % option,
                                  (get_safe_netloc(uri),))
             v = result.fetchone()
             if v is not None:
@@ -135,7 +135,7 @@ class DatabaseSettings:
         """
         with SqlCursor(self) as sql:
             result = sql.execute("SELECT languages FROM settings\
-                                  WHERE uri=?", (get_safe_netloc(uri),))
+                                  WHERE netloc=?", (get_safe_netloc(uri),))
             v = result.fetchone()
             if v is not None:
                 languages = v[0]
@@ -146,13 +146,13 @@ class DatabaseSettings:
             else:
                 return None
 
-    def get_pinned_uris(self):
+    def get_pinned_netlocs(self):
         """
-            Get pinned uris
+            Get pinned netlocs
             return [str]
         """
         with SqlCursor(self) as sql:
-            result = sql.execute("SELECT uri FROM settings WHERE pinned=1")
+            result = sql.execute("SELECT netloc FROM settings WHERE pinned=1")
             return list(itertools.chain(*result))
 
     def add_language(self, code, uri):
@@ -172,8 +172,8 @@ class DatabaseSettings:
                         codes.append(code)
                     sql.execute("UPDATE settings\
                                  SET languages=?\
-                                 WHERE uri=?", (";".join(codes),
-                                                get_safe_netloc(uri)))
+                                 WHERE netloc=?", (";".join(codes),
+                                                   get_safe_netloc(uri)))
                 else:
                     sql.execute("INSERT INTO settings\
                                           (uri, languages)\
@@ -194,8 +194,8 @@ class DatabaseSettings:
             with SqlCursor(self, True) as sql:
                 sql.execute("UPDATE settings\
                                  SET languages=?\
-                                 WHERE uri=?", (";".join(codes),
-                                                get_safe_netloc(uri)))
+                                 WHERE netloc=?", (";".join(codes),
+                                                   get_safe_netloc(uri)))
 
     def get_cursor(self):
         """
