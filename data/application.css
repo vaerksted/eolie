@@ -179,35 +179,10 @@
     background-color: alpha(red, 0.5);
 }
 
-.tag-base {
-    box-shadow: none;
-	background-image: none;
-	border-style: solid;
-	border-image-source: none;
-    border-bottom-width: 1px;
-    border-top-width: 1px;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    background-color: white;
-    border: 1px solid shade(@theme_bg_color, 0.8);
-    color: black;
-    border-radius: 3px;
-}
-
-.tag-add {
+.tag {
     border-radius: 0px;
-}
-
-.tag-content {
-    box-shadow: none;
-	min-height: 0px;
-	min-width: 0px;
-	background-image: none;
-    color: black;
-    border: none;
-    padding: 5px;
-    font-size: 90%;
-    background-color: transparent;
+    min-height: 0px;
+    min-width: 0px;
 }
 
 .selected {

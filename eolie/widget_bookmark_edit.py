@@ -19,25 +19,6 @@ from eolie.define import App
 from eolie.widget_bookmark_rating import BookmarkRatingWidget
 
 
-class MyEntry(Gtk.Entry):
-    """
-        Limited width Gtk Entry
-    """
-
-    def __init__(self):
-        """
-            Init entry
-        """
-        Gtk.Entry.__init__(self)
-        self.get_style_context().add_class("tag-content")
-
-    def do_get_preferred_width(self):
-        """
-            Max width to 100
-        """
-        return (75, 75)
-
-
 class TagWidget(Gtk.FlowBoxChild):
     """
         Tag widget with some visual effects
@@ -51,24 +32,22 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         Gtk.FlowBoxChild.__init__(self)
         self.__bookmark_id = bookmark_id
-        self.get_style_context().add_class("tag")
-        builder = Gtk.Builder()
-        builder.add_from_resource("/org/gnome/Eolie/TagWidget.ui")
-        builder.connect_signals(self)
-        self.__label = builder.get_object("label")
-        self.__entry = MyEntry()
-        self.__entry.set_has_frame(False)
+        grid = Gtk.Grid()
+        grid.show()
+        grid.get_style_context().add_class("linked")
+        self.__entry = Gtk.Entry()
         self.__entry.connect("activate", self.__on_entry_activate)
+        self.__entry.get_style_context().add_class("tag")
         self.__entry.show()
-        self.__stack = builder.get_object("stack")
-        self.__stack.add(self.__entry)
-        self.__close_button = builder.get_object("close_button")
-        self.set_property("halign", Gtk.Align.START)
-        self.set_property("valign", Gtk.Align.START)
-        self.__widget = builder.get_object("widget")
-        self.add(self.__widget)
-        self.__label.set_text(title)
         self.__entry.set_text(title)
+        self.__button = Gtk.Button.new_from_icon_name("window-close-symbolic",
+                                                      Gtk.IconSize.BUTTON)
+        self.__button.show()
+        self.__button.get_style_context().add_class("tag")
+        self.__button.connect("clicked", self.__on_button_clicked)
+        grid.add(self.__entry)
+        grid.add(self.__button)
+        self.add(grid)
 
     @property
     def label(self):
@@ -76,16 +55,15 @@ class TagWidget(Gtk.FlowBoxChild):
             Get label
             @return str
         """
-        return self.__label.get_text()
+        return self.__entry.get_text()
 
 #######################
-# PROTECTED           #
+# PRIVATE             #
 #######################
-    def _on_close_button_press(self, eventbox, event):
+    def __on_button_clicked(self, button):
         """
             Remove tag
-            @param eventbox as Gtk.EventBox
-            @param event as Gtk.Event
+            @param button as Gtk.Button
         """
         tag_title = self.__entry.get_text()
         tag_id = App().bookmarks.get_tag_id(tag_title)
@@ -95,40 +73,6 @@ class TagWidget(Gtk.FlowBoxChild):
         self.destroy()
         return True
 
-    def _on_button_press_event(self, eventbox, event):
-        """
-            Show entry
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.event
-        """
-        self.__stack.set_visible_child(self.__entry)
-
-    def _on_enter_notify_event(self, eventbox, event):
-        """
-            Show buttons
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.event
-        """
-        self.__close_button.set_opacity(0.9)
-        eventbox.get_style_context().add_class("tag-hover")
-
-    def _on_leave_notify_event(self, eventbox, event):
-        """
-            Hide buttons
-            @param eventbox as Gtk.EventBox
-            @param event as Gdk.event
-        """
-        allocation = eventbox.get_allocation()
-        if event.x <= 0 or\
-           event.x >= allocation.width or\
-           event.y <= 0 or\
-           event.y >= allocation.height:
-            eventbox.get_style_context().remove_class("tag-hover")
-            self.__close_button.set_opacity(0.2)
-
-#######################
-# PRIVATE             #
-#######################
     def __on_entry_activate(self, entry):
         """
             Save tag name based on entry content
