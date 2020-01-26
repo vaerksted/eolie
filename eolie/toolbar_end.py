@@ -16,8 +16,6 @@ from gettext import gettext as _
 
 from eolie.define import App
 from eolie.popover_downloads import DownloadsPopover
-from eolie.helper_passwords import PasswordsHelper
-from eolie.logger import Logger
 
 
 class ProgressBar(Gtk.ProgressBar):
@@ -57,7 +55,6 @@ class ToolbarEnd(Gtk.Bin):
         self.__menu_button = builder.get_object("menu_button")
         self.__download_button = builder.get_object("download_button")
         self.__settings_button = builder.get_object("settings_button")
-        self.__sync_button = builder.get_object("sync_button")
         self.__tls_button = builder.get_object("tls_button")
         if fullscreen:
             builder.get_object("fullscreen_button").show()
@@ -72,12 +69,6 @@ class ToolbarEnd(Gtk.Bin):
         overlay.add_overlay(self.__progress)
         overlay.set_overlay_pass_through(self.__progress, True)
         self.add(builder.get_object("end"))
-
-    def show_sync_button(self):
-        """
-            Show sync button allowing user to start sync
-        """
-        self.__sync_button.show()
 
     def show_tls_button(self, show):
         """
@@ -189,15 +180,6 @@ class ToolbarEnd(Gtk.Bin):
         popover.set_modal(False)
         self.__window.register(popover)
         popover.popup()
-
-    def _on_sync_button_clicked(self, button):
-        """
-            Start sync
-            @param button as Gtk.Button
-        """
-        helper = PasswordsHelper()
-        helper.get_sync(self.__on_get_sync)
-        button.hide()
 
     def _on_tls_button_clicked(self, button):
         """
@@ -331,19 +313,3 @@ class ToolbarEnd(Gtk.Bin):
         if self.__image_change_state_id is not None:
             self.__images_action.disconnect(self.__image_change_state_id)
             self.__image_change_state_id = None
-
-    def __on_get_sync(self, attributes, password, uri, index, count):
-        """
-            Start sync
-            @param attributes as {}
-            @param password as str
-            @param uri as None
-            @param index as int
-            @param count as int
-        """
-        try:
-            App().sync_worker.new_session()
-            App().sync_worker.login(attributes, password)
-        except Exception as e:
-            Logger.error("ToolbarEnd::__on_get_sync(): %s", e)
-            self.__sync_button.show()
