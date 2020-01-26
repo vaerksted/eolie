@@ -449,6 +449,7 @@ class Application(Gtk.Application, NightApplication):
         """
         try:
             pinned_netlocs = self.websettings.get_pinned_netlocs()
+            startup_uris = self.bookmarks.get_startup_uris()
             # Add saved webviews
             from eolie.window_state import WindowState, WindowStateStruct
             window_states = load(
@@ -462,6 +463,8 @@ class Application(Gtk.Application, NightApplication):
                         parsed = urlparse(webview_state.uri)
                         if parsed.netloc in pinned_netlocs:
                             pinned_netlocs.remove(parsed.netloc)
+                        if webview_state.uri in startup_uris:
+                            startup_uris.remove(webview_state.uri)
                         webview = WebViewState.new_from_state(webview_state,
                                                               window)
                         webview.show()
@@ -478,8 +481,12 @@ class Application(Gtk.Application, NightApplication):
                 window = WindowState.new_from_state(state)
                 window.connect("delete-event", self.__on_delete_event)
                 window.show()
-            # Add pinned webviews
-            for uri in pinned_netlocs:
+            # Add pinned websites
+            for netloc in pinned_netlocs:
+                window.container.add_webview_for_uri("http://%s" % netloc,
+                                                     LoadingType.BACKGROUND)
+            # Add startup webpage
+            for uri in startup_uris:
                 window.container.add_webview_for_uri(uri,
                                                      LoadingType.BACKGROUND)
             # Make first webview visible

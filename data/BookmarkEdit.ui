@@ -186,12 +186,31 @@
           <object class="GtkEntry" id="uri_entry">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="has_focus">True</property>
+            <property name="is_focus">True</property>
+            <property name="can_default">True</property>
+            <property name="receives_default">True</property>
             <property name="hexpand">True</property>
             <signal name="changed" handler="_on_entry_changed" swapped="no"/>
           </object>
           <packing>
             <property name="left_attach">1</property>
             <property name="top_attach">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkCheckButton" id="startup_button">
+            <property name="label" translatable="yes">Load at startup</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="draw_indicator">True</property>
+            <signal name="toggled" handler="_on_load_at_startup_toggled" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">2</property>
+            <property name="width">3</property>
           </packing>
         </child>
         <child>

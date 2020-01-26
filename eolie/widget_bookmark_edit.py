@@ -181,7 +181,8 @@ class BookmarkEditWidget(Gtk.Bin):
         self.__uri_entry = builder.get_object("uri_entry")
         self.__title_entry.set_text(App().bookmarks.get_title(bookmark_id))
         self.__uri_entry.set_text(App().bookmarks.get_uri(bookmark_id))
-
+        builder.get_object("startup_button").set_active(
+            App().bookmarks.get_startup(bookmark_id))
         self.__new_tag_entry = builder.get_object("new_tag_entry")
         # Init new tag completion model
         self.__completion_model = Gtk.ListStore(str)
@@ -268,6 +269,13 @@ class BookmarkEditWidget(Gtk.Bin):
             @param entry as Gtk.Entry
         """
         self.__updated = True
+
+    def _on_load_at_startup_toggled(self, button):
+        """
+            Set bookmark startup state
+            @param button as Gtk.ToggleButton
+        """
+        App().bookmarks.set_startup(self.__bookmark_id, button.get_active())
 
 #######################
 # PRIVATE             #

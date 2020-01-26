@@ -28,7 +28,8 @@ class DatabaseUpgrade:
         # value is sql request
         if t == Type.BOOKMARK:
             self.__UPGRADES = {
-                1: self.__upgrade_bookmarks_1
+                1: self.__upgrade_bookmarks_1,
+                2: "ALTER TABLE bookmarks ADD startup INT NOT NULL DEFAULT 0",
             }
         elif t == Type.HISTORY:
             self.__UPGRADES = {

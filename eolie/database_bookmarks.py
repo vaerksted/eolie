@@ -120,7 +120,6 @@ class DatabaseBookmarks:
         """
             Remove bookmark from db
             @param bookmark id as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("DELETE FROM bookmarks\
@@ -535,6 +534,32 @@ class DatabaseBookmarks:
                 return v[0]
             return 5
 
+    def get_startup(self, bookmark_id):
+        """
+            True if bookmark needs to be loaded at startup
+            @param bookmark_id as int
+            @return bool
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT startup\
+                                  FROM bookmarks\
+                                  WHERE rowid=?", (bookmark_id,))
+            v = result.fetchone()
+            if v is not None:
+                return bool(v[0])
+            return False
+
+    def get_startup_uris(self):
+        """
+            Get URIS to load at startup
+            @param bookmark_id as int
+            @return [str]
+        """
+        with SqlCursor(self) as sql:
+            result = sql.execute("SELECT uri FROM bookmarks\
+                                  WHERE startup=1")
+            return list(itertools.chain(*result))
+
     def set_guid(self, bookmark_id, guid):
         """
             Set bookmark guid
@@ -573,12 +598,22 @@ class DatabaseBookmarks:
             Set bookmark popularity
             @param bookmark id as int
             @param popularity as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET popularity=?\
                          WHERE rowid=?", (popularity, bookmark_id,))
+
+    def set_startup(self, bookmark_id, startup):
+        """
+            Set bookmark startup value
+            @param bookmark id as int
+            @param startup as bool
+        """
+        with SqlCursor(self, True) as sql:
+            sql.execute("UPDATE bookmarks\
+                         SET startup=?\
+                         WHERE rowid=?", (startup, bookmark_id,))
 
     def set_parent(self, bookmark_id, parent_guid, parent_name):
         """
@@ -618,7 +653,6 @@ class DatabaseBookmarks:
             Set bookmark sync time
             @param bookmark id as int
             @param mtime as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
@@ -629,7 +663,6 @@ class DatabaseBookmarks:
             Set bookmark position
             @param bookmark id as int
             @param mtime as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
@@ -664,7 +697,6 @@ class DatabaseBookmarks:
             Add tag to bookmark
             @param tag id as int
             @param bookmark id as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("INSERT INTO bookmarks_tags\
@@ -676,7 +708,6 @@ class DatabaseBookmarks:
             Remove tag from bookmark
             @param tag id as int
             @param bookmark id as int
-            @param commit as bool
         """
         with SqlCursor(self, True) as sql:
             sql.execute("DELETE from bookmarks_tags\
