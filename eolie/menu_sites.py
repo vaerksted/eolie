@@ -111,7 +111,7 @@ class SitesMenu(Gtk.Grid):
             @param uri as str
         """
         action.set_state(param)
-        App().websettings.set("pinned", uri, param)
+        App().websettings.set("pinned", uri, param.get_boolean())
 
     def __on_close_activate(self, action, param):
         """
