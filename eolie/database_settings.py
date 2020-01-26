@@ -28,9 +28,6 @@ class DatabaseSettings:
         Store various settings for webpage
     """
     __UPGRADES = {
-        1: "ALTER TABLE settings ADD accept_tls INT NOT NULL DEFAULT 0",
-        2: "ALTER TABLE settings ADD night_mode INT NOT NULL DEFAULT 0",
-        3: "ALTER TABLE settings ADD pinned INT NOT NULL DEFAULT 0",
     }
 
     # SQLite documentation:
@@ -45,7 +42,7 @@ class DatabaseSettings:
                                            languages TEXT,
                                            zoom INT,
                                            accept_tls INT NOT NULL DEFAULT 0,
-                                           night_mode INT NOT NULL DEFAULT 0,
+                                           night_mode INT,
                                            pinned INT NOT NULL DEFAULT 0,
                                            geolocation INT,
                                            user_agent TEXT
@@ -58,7 +55,7 @@ class DatabaseSettings:
         """
         self.thread_lock = Lock()
         new_version = len(self.__UPGRADES)
-        self.__DB_PATH = "%s/websettings.db" % EOLIE_DATA_PATH
+        self.__DB_PATH = "%s/settings.db" % EOLIE_DATA_PATH
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
