@@ -149,8 +149,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         bookmark_id = App().bookmarks.get_id(uri)
         self.__icons.set_bookmarked(bookmark_id is not None)
         if not self.__popover.is_visible():
-            self.__placeholder.set_opacity(0.8)
             self.set_text_entry("")
+        self.__placeholder.set_opacity(0.8)
 
     def set_title(self, title):
         """
