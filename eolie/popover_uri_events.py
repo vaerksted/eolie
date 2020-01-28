@@ -42,7 +42,7 @@ class UriPopoverEvents:
             self._input = Input.TAGS
             self._tags_box.get_style_context().add_class("kbd-input")
             self._bookmarks_box.get_style_context().remove_class("kbd-input")
-            self._window.toolbar.title.set_text_entry("")
+            self._window.toolbar.title.entry.set_text_entry("")
             return True
         elif keyval == Gdk.KEY_Right and self._input == Input.TAGS:
             self._input = Input.BOOKMARKS
