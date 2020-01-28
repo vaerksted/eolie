@@ -70,9 +70,7 @@ class WebViewContainer:
         self._window.toolbar.title.entry.icons.show_readable_button(False)
         self._window.toolbar.title.entry.icons.set_loading(False)
         self._window.toolbar.title.entry.progress.hide()
-        parsed = urlparse(webview.uri)
-        self._window.toolbar.title.entry.set_title("%s: %s" % (parsed.netloc,
-                                                               webview.title))
+        self._window.toolbar.title.entry.set_title(webview.title)
         if webview.get_uri() is None and\
                 webview.uri is not None and\
                 webview.related is None:
@@ -101,9 +99,7 @@ class WebViewContainer:
             @param webview as WebView
             @param title as str
         """
-        parsed = urlparse(webview.uri)
-        self._window.toolbar.title.entry.set_title("%s: %s" % (parsed.netloc,
-                                                               title))
+        self._window.toolbar.title.entry.set_title(title)
 
     def __on_uri_changed(self, webview, uri):
         """
@@ -151,15 +147,11 @@ class WebViewContainer:
             @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(webview.uri)
-        self._window.toolbar.title.entry.set_uri(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            self._window.toolbar.title.entry.set_title(webview.uri)
             self._window.toolbar.title.entry.icons.set_loading(True)
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
-        elif event == WebKit2.LoadEvent.COMMITTED:
-            self._window.toolbar.title.entry.set_title(webview.uri)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)

@@ -70,8 +70,9 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             Set title
             @param title as str
         """
-        self.__title = title
-        self.emit("title-changed", title)
+        if title:
+            self.__title = title
+            self.emit("title-changed", title)
 
     def set_uri(self, uri):
         """
@@ -185,13 +186,19 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             @param webview as WebKit2.WebView
             @param param as GObject.ParamSpec
         """
-        self.__title = webview.get_property(param.name)
-        self.emit("title-changed", self.__title)
-        if self.__title:
-            parsed = urlparse(self.uri)
+        title = webview.get_property(param.name)
+        if title:
+            parsed = urlparse(webview.uri)
+            is_http = parsed.scheme in ["http", "https"]
+            if is_http:
+                self.__title = "%s: %s" % (parsed.netloc, title)
+                self.emit("title-changed", self.__title)
+            else:
+                self.__title = ""
+                self.emit("title-changed", None)
             if self.error or\
                     webview.is_ephemeral or\
-                    parsed.scheme not in ["http", "https"]:
+                    not is_http:
                 return
             mtime = round(time(), 2)
             history_id = App().history.add(self.__title, self.__uri, mtime)

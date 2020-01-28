@@ -148,30 +148,24 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__update_secure_content_indicator()
         bookmark_id = App().bookmarks.get_id(uri)
         self.__icons.set_bookmarked(bookmark_id is not None)
+        if not self.__popover.is_visible():
+            self.__placeholder.set_opacity(0.8)
+            self.set_text_entry("")
 
     def set_title(self, title):
         """
             Set toolbar title
             @param title as str
         """
-        self.__window.set_title(title)
-        markup = False
-        # Do not show this in titlebar
-        uri = self.__window.container.webview.uri
-        parsed = urlparse(uri)
-        if parsed.scheme in ["populars", "about"]:
+        if title is None:
+            self.__window.set_title("Eolie")
             self.set_default_placeholder()
-            return
-        if title:
-            if markup:
-                self.__placeholder.set_markup(title)
-            else:
-                self.__placeholder.set_text(title)
         else:
-            self.__placeholder.set_text(uri)
-        if not self.__popover.is_visible():
-            self.__placeholder.set_opacity(0.8)
-            self.set_text_entry("")
+            self.__window.set_title(title)
+            self.__placeholder.set_text(title)
+            if not self.__popover.is_visible():
+                self.__placeholder.set_opacity(0.8)
+                self.set_text_entry("")
 
     def set_insecure_content(self):
         """
