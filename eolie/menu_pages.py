@@ -127,7 +127,7 @@ class PagesMenu(Gio.Menu):
             @param opened_pages as [(str, str)]
         """
         for (uri, title) in opened_pages:
-            self.add_action(title, uri, None)
+            self.add_action(title, uri)
 
     def __clean_actions(self):
         """
