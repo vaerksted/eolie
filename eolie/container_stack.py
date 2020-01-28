@@ -118,9 +118,7 @@ class StackContainer:
         self._window.set_focus(None)
         was_current = webview == self._window.container.webview
         if not webview.is_ephemeral:
-            App().pages_menu.add_action(webview.title,
-                                        webview.uri,
-                                        webview.get_session_state())
+            App().pages_menu.add_action(webview.title, webview.uri)
 
         webview.destroy()
         # Don't show 0 as we are going to open a new one

@@ -59,12 +59,11 @@ class PagesMenu(Gio.Menu):
             if action is not None:
                 action.activate(None)
 
-    def add_action(self, title, uri, state):
+    def add_action(self, title, uri):
         """
             Add a new action to menu
             @param title as str
             @param uri as str
-            @param state as WebKit2.WebViewSessionState
         """
         # Close all item
         if not uri:
@@ -75,9 +74,7 @@ class PagesMenu(Gio.Menu):
         encoded = sha256(uri.encode("utf-8")).hexdigest()
         action = Gio.SimpleAction(name=encoded)
         App().add_action(action)
-        action.connect('activate',
-                       self.__on_action_clicked,
-                       (uri, state))
+        action.connect("activate", self.__on_action_clicked, uri)
         if len(title) > 40:
             title = title[0:40] + "…"
         item = Gio.MenuItem.new(title, "app.%s" % encoded)
@@ -168,17 +165,14 @@ class PagesMenu(Gio.Menu):
         App().active_window.container.add_webviews(items)
         self.__closed_section.remove_all()
 
-    def __on_action_clicked(self, action, variant, data):
+    def __on_action_clicked(self, action, variant, uri):
         """
             Add to playlists
             @param Gio.SimpleAction
             @param GVariant
             @param data as (str, WebKit2.WebViewSessionState)
         """
-        uri = data[0]
-        state = data[1]
-        App().active_window.container.add_webview(uri,
-                                                  LoadingType.FOREGROUND,
-                                                  False,
-                                                  state)
+        App().active_window.container.add_webview_for_uri(
+                                                  uri,
+                                                  LoadingType.FOREGROUND)
         self.remove_action(uri)
