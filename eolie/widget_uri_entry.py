@@ -75,6 +75,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__placeholder.set_hexpand(True)
         self.__placeholder.set_ellipsize(Pango.EllipsizeMode.END)
         self.__placeholder.get_style_context().add_class("placeholder")
+        self.__placeholder.set_opacity(0.8)
 
         grid = Gtk.Grid()
         grid.show()
@@ -133,7 +134,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         if text:
             self.__placeholder.set_opacity(0)
         else:
-            self.__placeholder.set_opacity(1)
+            self.__placeholder.set_opacity(0.8)
         self.__signal_id = self.__entry.connect("changed",
                                                 self.__on_entry_changed)
 
@@ -148,9 +149,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__update_secure_content_indicator()
         bookmark_id = App().bookmarks.get_id(uri)
         self.__icons.set_bookmarked(bookmark_id is not None)
-        if not self.__popover.is_visible():
-            self.set_text_entry("")
-        self.__placeholder.set_opacity(0.8)
 
     def set_title(self, title):
         """
@@ -163,9 +161,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         else:
             self.__window.set_title(title)
             self.__placeholder.set_text(title)
-            if not self.__popover.is_visible():
-                self.__placeholder.set_opacity(0.8)
-                self.set_text_entry("")
+            self.set_text_entry("")
 
     def set_insecure_content(self):
         """
@@ -200,7 +196,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             return
         self.set_text_entry("")
         self.__placeholder.set_text(_("Search or enter address"))
-        self.__placeholder.set_opacity(0.8)
         self.__entry.set_icon_from_icon_name(Gtk.EntryIconPosition.PRIMARY,
                                              "system-search-symbolic")
         self.__entry.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
@@ -265,7 +260,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Focus out widget
         """
         webview = self.__window.container.webview
-        self.__placeholder.set_opacity(0.8)
         self.set_text_entry("")
         uri = webview.uri
         if uri is not None:
@@ -355,13 +349,12 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param popover as Gtk.popover
         """
         webview = self.__window.container.webview
-        if popover == self.__popover:
-            webview.grab_focus()
-            self.__focus_out()
-            value = self.__entry.get_text().lstrip().rstrip()
-            if value:
-                webview.add_text_entry(value)
-            self.__entry.delete_selection()
+        webview.grab_focus()
+        self.__focus_out()
+        value = self.__entry.get_text().lstrip().rstrip()
+        if value:
+            webview.add_text_entry(value)
+        self.__entry.delete_selection()
 
     def __on_entry_changed(self, entry):
         """
