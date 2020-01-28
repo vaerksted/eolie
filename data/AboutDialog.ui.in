@@ -10,7 +10,7 @@
     <property name="type_hint">dialog</property>
     <property name="program_name">Eolie</property>
     <property name="version">@VERSION@</property>
-    <property name="copyright">Copyright © 2016-2019 Cédric Bellegarde</property>
+    <property name="copyright">Copyright © 2016-2020 Cédric Bellegarde</property>
     <property name="comments" translatable="yes">A web browser for GNOME.</property>
     <property name="website">@PACKAGE_URL@</property>
     <property name="website_label" translatable="yes">Visit Eolie website</property>
