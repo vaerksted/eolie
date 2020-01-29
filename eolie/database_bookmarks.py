@@ -587,7 +587,7 @@ class DatabaseBookmarks:
             @param bookmark id as int
             @param uri as str
         """
-        with SqlCursor(self) as sql:
+        with SqlCursor(self, True) as sql:
             sql.execute("UPDATE bookmarks\
                          SET uri=?\
                          WHERE rowid=?", (uri.rstrip('/'), bookmark_id,))
