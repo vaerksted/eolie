@@ -84,6 +84,7 @@ class UriPopoverEvents:
                 if self._input == Input.TAGS:
                     item_id = rows[0].item.get_property("id")
                     self._set_bookmarks(item_id)
+                return True
             else:
                 idx = -1 if keyval == Gdk.KEY_Up else 1
                 for row in rows:
