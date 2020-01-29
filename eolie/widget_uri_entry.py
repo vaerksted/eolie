@@ -365,11 +365,12 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param entry as Gtk.Entry
         """
         value = entry.get_text()
-        do_completion = len(value) > len(self.__current_value)
-        self.__current_value = value
+        # Block completion
         for completion in self.__completion_model:
             if completion[0] == value:
                 return
+        do_completion = len(value) > len(self.__current_value)
+        self.__current_value = value
         self.__cancellable.cancel()
         self.__cancellable = Gio.Cancellable.new()
         if value:
