@@ -535,7 +535,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                 # Search a missing scheme
                 if uri.find(".") != -1 and\
                         uri.find(" ") == -1 and\
-                        not parsed.scheme:
+                        parsed.scheme not in ["http", "https"]:
                     # Add missing www.
                     if not uri.startswith("www."):
                         db_uri = App().history.get_match("www." + uri)
