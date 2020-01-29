@@ -163,7 +163,8 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             @param webview as WebView
             @param title as str
         """
-        self.__indicator_label.set_text(title)
+        if title:
+            self.__indicator_label.set_text(title)
 
     def _on_webview_load_changed(self, webview, event):
         """
