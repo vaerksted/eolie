@@ -305,8 +305,11 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                 iterator = self.__completion_model.insert(0)
             return iterator
 
-        # Look for a match in history
-        match = App().history.get_match(value)
+        # Look for a match in bookmarks
+        match = App().bookmarks.get_match(value)
+        if match is None:
+            # Look for a match in history
+            match = App().history.get_match(value)
         if match is not None and self.__current_value == value:
             iterator = get_iterator()
             match_str = match.split("://")[-1].split("www.")[-1]

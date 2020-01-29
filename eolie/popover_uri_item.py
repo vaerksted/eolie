@@ -24,8 +24,6 @@ class Item(GObject.GObject):
                            default="")
     atime = GObject.Property(type=int,
                              default=0)
-    score = GObject.Property(type=int,
-                             default=0)
 
     def __init__(self):
         GObject.GObject.__init__(self)

@@ -14,7 +14,6 @@ from gi.repository import GLib, Gio
 
 import sqlite3
 import itertools
-from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
@@ -669,6 +668,28 @@ class DatabaseBookmarks:
                          SET position=? where rowid=?", (position,
                                                          bookmark_id))
 
+    def get_match(self, uri, ssl_force=False):
+        """
+            Try to get best uri matching
+            @parma uri as str
+            @param ssl_force as bool
+            @return str
+        """
+        with SqlCursor(self) as sql:
+            if ssl_force:
+                filter = ("https://%{}%".format(uri),)
+            else:
+                filter = ("http%://%{}%".format(uri),)
+            result = sql.execute("SELECT uri\
+                                  FROM bookmarks\
+                                  WHERE uri like ?\
+                                  ORDER BY length(uri) ASC\
+                                  LIMIT 1", filter)
+            v = result.fetchone()
+            if v is not None:
+                return v[0]
+            return None
+
     def set_tag_title(self, tag_id, title):
         """
             Set tag id title
@@ -926,7 +947,7 @@ class DatabaseBookmarks:
             Search string in db (uri and title)
             @param search as str
             @param limit as int
-            @return [(id, title, uri, score)] as [(int, str, str, int)]
+            @return [(id, title, uri)] as [(int, str, str)]
         """
         words = search.lower().split()
         items = []
@@ -947,36 +968,8 @@ class DatabaseBookmarks:
             request += " guid != uri ORDER BY length(uri) ASC LIMIT ?"
 
             result = sql.execute(request, filters)
-            items += list(result)
-
-        # Do some scoring calculation on items
-        scored_items = []
-        uris = []
-        for item in items:
-            uri = item[2]
-            if uri in uris:
-                continue
-            score = 100
-            title = item[1].lower()
-            parsed = urlparse(uri)
-            if not parsed.path:
-                score += 2
-            elif not parsed.query:
-                score += 2
-            for word in words:
-                lower_word = word.lower()
-                # If netloc match word, +1
-                if parsed.netloc.find(lower_word) != -1:
-                    score += len(lower_word) * 2
-                # URI match
-                elif uri.find(lower_word) != -1:
-                    score += len(lower_word)
-                # Title match
-                elif title.find(lower_word) != -1:
-                    score += len(lower_word) * 2
-            scored_items.append((item[0], item[1], item[2], score))
-            uris.append(uri)
-        return scored_items
+            items = list(result)
+        return items
 
     def get_cursor(self):
         """

@@ -66,7 +66,6 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         self._history_box.bind_model(self._history_model,
                                      self.__on_item_create)
         self._search_box = builder.get_object("search_box")
-        self._search_box.set_sort_func(self.__sort_search)
         self._stack = builder.get_object("stack")
         self.__tags = builder.get_object("tags")
         self._tags_box = builder.get_object("tags_box")
@@ -336,16 +335,6 @@ class UriPopover(Gtk.Popover, UriPopoverEvents, UriPopoverContent,
         if App().sync_worker is not None:
             for history_id in App().history.get_empties():
                 App().history.remove(history_id)
-
-    def __sort_search(self, row1, row2):
-        """
-            Sort search
-            @param row1 as Row
-            @param row2 as Row
-        """
-        pos1 = row1.item.get_property("score")
-        pos2 = row2.item.get_property("score")
-        return pos2 > pos1
 
     def __sort_tags(self, row1, row2):
         """

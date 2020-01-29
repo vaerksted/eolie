@@ -162,11 +162,11 @@ class UriPopoverContent:
             @param value as str
             @param cancellable as Gio.Cancellable
         """
-        if value == '':
+        if value == "":
             result = App().history.get_populars(25)
         else:
-            result = App().history.search(value, 15)
-            result += App().bookmarks.search(value, 15)
+            result = App().bookmarks.search(value, 15)
+            result += App().history.search(value, 15)
         GLib.idle_add(self.__add_searches, result, cancellable)
 
     def __add_searches(self, result, cancellable):
@@ -178,13 +178,12 @@ class UriPopoverContent:
         if cancellable.is_cancelled():
             return
         if result:
-            (rowid, title, uri, score) = result.pop(0)
+            (rowid, title, uri) = result.pop(0)
             item = Item()
             item.set_property("id", rowid)
             item.set_property("type", Type.SEARCH)
             item.set_property("title", title)
             item.set_property("uri", uri)
-            item.set_property("score", score)
             child = Row(item, self._window)
             child.show()
             self._search_box.add(child)

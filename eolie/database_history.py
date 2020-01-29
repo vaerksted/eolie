@@ -367,7 +367,7 @@ class DatabaseHistory:
             @return [(id, title, uri, score)] as [(int, str, str, int)]
         """
         with SqlCursor(self) as sql:
-            request = "SELECT rowid, title, uri, 1 FROM history\
+            request = "SELECT rowid, title, uri FROM history\
                        ORDER BY popularity DESC LIMIT ?"
             result = sql.execute(request, (limit,))
             return list(result)
@@ -473,7 +473,7 @@ class DatabaseHistory:
             Search string in db (uri and title)
             @param search as str
             @param limit as int
-            @return [(id, title, uri, score)] as [(int, str, str, int)]
+            @return [(id, title, uri)] as [(int, str, str)]
         """
         words = search.lower().split()
         items = []
@@ -494,39 +494,11 @@ class DatabaseHistory:
             request += " ORDER BY length(uri) ASC LIMIT ?"
             try:
                 result = sql.execute(request, filters)
-                items += list(result)
+                items = list(result)
             except:
                 Logger.error("DatabaseHistory::search(): %s -> %s",
                              (request, filters))
-
-        # Do some scoring calculation on items
-        scored_items = []
-        uris = []
-        for item in items:
-            uri = item[2]
-            if uri in uris:
-                continue
-            score = 0
-            title = item[1].lower()
-            parsed = urlparse(uri)
-            if not parsed.path:
-                score += 2
-            elif not parsed.query:
-                score += 2
-            for word in words:
-                lower_word = word.lower()
-                # If netloc match word, +1
-                if parsed.netloc.find(lower_word) != -1:
-                    score += len(lower_word) * 2
-                # URI match
-                elif uri.find(lower_word) != -1:
-                    score += len(lower_word)
-                # Title match
-                elif title.find(lower_word) != -1:
-                    score += len(lower_word) * 2
-            scored_items.append((item[0], item[1], item[2], score))
-            uris.append(uri)
-        return scored_items
+        return items
 
     def reset_popularity(self, uri):
         """

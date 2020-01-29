@@ -14,7 +14,7 @@ from gi.repository import GLib
 
 from urllib.parse import urlparse
 
-from eolie.define import Type, App, Score
+from eolie.define import Type, App
 from eolie.popover_uri_item import Item
 from eolie.popover_uri_row import Row
 
@@ -65,7 +65,6 @@ class UriPopoverSuggestions:
                 item.set_property("title", suggestion)
                 item.set_property("uri",
                                   App().search.get_search_uri(suggestion))
-                item.set_property("score", Score.SUGGESTION)
                 child = Row(item, self._window)
                 child.show()
                 self._search_box.insert(child, 0)
