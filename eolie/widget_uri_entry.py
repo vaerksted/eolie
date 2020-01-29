@@ -526,7 +526,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         else:
             # Close popover and save current entry
             if keyval == Gdk.KEY_Escape:
-                self.__entry.delete_text(0, -1)
+                self.set_text_entry("")
                 webview.clear_text_entry()
                 GLib.idle_add(self.__window.close_popovers)
                 return True
