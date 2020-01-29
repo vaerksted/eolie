@@ -194,7 +194,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
                 self.__title = "%s: %s" % (parsed.netloc, title)
                 self.emit("title-changed", self.__title)
             else:
-                self.__title = ""
+                self.__title = title
                 self.emit("title-changed", None)
             if self.error or\
                     webview.is_ephemeral or\
