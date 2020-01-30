@@ -62,6 +62,7 @@ class StackContainer:
         # window is not visible
         if loading_type == LoadingType.FOREGROUND and not self.in_expose:
             self.set_visible_webview(webview)
+            self._window.toolbar.title.entry.set_title(webview.uri)
         # Do not count container webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.pages_manager.children)
