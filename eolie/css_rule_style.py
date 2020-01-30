@@ -34,11 +34,13 @@ class CSSStyleRule:
         self.__background_image_str = None
         self.__background_str = None
         self.__border_str = None
+        self.__has_background_url = False
         # Get selectors
         search = search = re.search('^([^{]*){(.*)}', css)
         if search is not None:
             self.__selector = search.group(1).strip()
             declarations = search.group(2)
+            self.__has_background_url = declarations.find("url(") != -1
             for declaration in declarations.split(";"):
                 if declaration.find(":") == -1:
                     continue
@@ -92,7 +94,12 @@ class CSSStyleRule:
         for (prop, value) in self.__variables:
             rules.append("%s : %s" % (prop, value))
         if rules:
-            return "%s{ %s } " % (self.__selector, ";".join(rules))
+            css_text = "%s{ %s } " % (self.__selector, ";".join(rules))
+            if self.__has_background_url:
+                css_text += """%s > *
+                    {text-shadow: 0px 0px 5px black
+                    !important}""" % self.__selector
+            return css_text
         else:
             return ""
 
