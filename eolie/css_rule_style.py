@@ -124,7 +124,7 @@ class CSSStyleRule:
             @return bool
         """
         ignores = ["inherit", "transparent", "data:",
-                   "none", "unset", "currentcolor"]
+                   "unset", "currentcolor"]
         for ignore in ignores:
             if value.find(ignore) != -1:
                 return False
