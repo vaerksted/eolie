@@ -48,9 +48,10 @@ class ModifyUADialog:
         column.pack_start(renderer0, True)
         column.add_attribute(renderer0, "text", 0)
         view.append_column(column)
-        user_agent = App().websettings.get_user_agent(self.__uri)
-        self.__select_matching(user_agent)
-        self.__entry.set_text(user_agent)
+        user_agent = App().websettings.get("user_agent", self.__uri)
+        if user_agent is not None:
+            self.__select_matching(user_agent)
+            self.__entry.set_text(user_agent)
 
     def run(self):
         """
