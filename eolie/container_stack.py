@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Gtk, GLib
 
 from gettext import gettext as _
 
@@ -29,6 +29,7 @@ class StackContainer:
         """
             Init container
         """
+        self.__close_timeout_id = None
         self._stack = Stack()
         self._stack.set_hexpand(True)
         self._stack.set_vexpand(True)
@@ -100,6 +101,9 @@ class StackContainer:
         """
         webview.run_javascript("document.activeElement.tagName;", None,
                                self.__on_get_active_element, webview)
+        self.__close_timeout_id = GLib.timeout_add(3000,
+                                                   self.close_webview,
+                                                   webview)
 
     def close_webview(self, webview):
         """
@@ -107,6 +111,7 @@ class StackContainer:
             @param view as View
             @param animate as bool
         """
+        self.__close_timeout_id = None
         # Get children less view
         webviews = [child for child in self._stack.get_children()]
         if webview not in webviews:
@@ -215,6 +220,9 @@ class StackContainer:
             dialog.response(Gtk.ResponseType.CANCEL)
 
         try:
+            if self.__close_timeout_id is not None:
+                GLib.source_remove(self.__close_timeout_id)
+                self.__close_timeout_id = None
             data = source.run_javascript_finish(result)
             name = data.get_js_value().to_string()
             if name == "TEXTAREA":
