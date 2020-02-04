@@ -101,10 +101,7 @@ class Context:
             idx += 1
             if count == 1:  # No navigaiftion for one page
                 netloc = uri
-            if App().settings.get_value("night-mode"):
-                path = App().art.get_path(uri, "start_dark")
-            else:
-                path = App().art.get_path(uri, "start_light")
+            path = App().art.get_path(uri, "start")
             if path is None or\
                     not GLib.file_test(path, GLib.FileTest.IS_REGULAR):
                 continue

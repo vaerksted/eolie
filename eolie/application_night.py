@@ -105,7 +105,3 @@ class NightApplication:
         night_mode = settings.get_value("night-mode")
         settings = Gtk.Settings.get_default()
         settings.set_property("gtk-application-prefer-dark-theme", night_mode)
-        for window in self.windows:
-            GLib.idle_add(window.toolbar.title.entry.update_style)
-            for webview in window.container.webviews:
-                webview.night_mode()

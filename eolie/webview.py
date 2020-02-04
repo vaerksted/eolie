@@ -24,7 +24,6 @@ from eolie.webview_artwork import WebViewArtwork
 from eolie.webview_state import WebViewState
 from eolie.webview_credentials import WebViewCredentials
 from eolie.webview_helpers import WebViewHelpers
-from eolie.webview_night_mode import WebViewNightMode
 from eolie.list import LinkedList
 from eolie.logger import Logger
 
@@ -372,7 +371,6 @@ class WebView(WebKit2.WebView):
             @param window as Window
         """
         WebViewHelpers.__init__(self)
-        WebViewNightMode.__init__(self)
         WebViewState.__init__(self)
         WebViewErrors.__init__(self)
         WebViewNavigation.__init__(self)
@@ -510,7 +508,7 @@ class WebView(WebKit2.WebView):
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
                   WebViewSignals, WebViewArtwork, WebViewState,
-                  WebViewCredentials, WebViewHelpers, WebViewNightMode):
+                  WebViewCredentials, WebViewHelpers):
 
     def __init__(self):
         pass
@@ -528,4 +526,3 @@ class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
         WebViewHelpers._on_load_changed(self, webview, event)
         WebViewNavigation._on_load_changed(self, webview, event)
         WebViewArtwork._on_load_changed(self, webview, event)
-        WebViewNightMode._on_load_changed(self, webview, event)
