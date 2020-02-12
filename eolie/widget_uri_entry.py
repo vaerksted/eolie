@@ -299,52 +299,58 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             @param value as str
             @thread safe
         """
+        def populate(match, value):
+            if match is not None and self.__current_value == value:
+                iterator = get_iterator()
+                match_str = match.split("://")[-1].split("www.")[-1]
+                self.__completion_model.set_value(iterator,
+                                                  0,
+                                                  match_str)
+                self.__completion.insert_prefix()
+            elif App().settings.get_value("dns-prediction") and\
+                    self.__current_value == value:
+                # Try some DNS request, FIXME Better list?
+                from socket import gethostbyname
+                parsed = urlparse(value)
+                if parsed.netloc:
+                    value = parsed.netloc
+                for suffix in self.__dns_suffixes:
+                    if self.__cancellable.is_cancelled():
+                        break
+                    for prefix in ["www.", ""]:
+                        if self.__cancellable.is_cancelled():
+                            break
+                        try:
+                            lookup = "%s%s.%s" % (prefix, value, suffix)
+                            gethostbyname(lookup)
+                            iterator = get_iterator()
+                            self.__completion_model.set_value(
+                                                  iterator,
+                                                  0,
+                                                  lookup.replace("www.", ""))
+                            self.__completion.insert_prefix()
+                            return
+                        except:
+                            pass
+            else:
+                # Only happen if nothing matched
+                self.__completion_model.clear()
+
+        def look_for_match(value):
+            # Look for a match in bookmarks
+            match = App().bookmarks.get_match(value)
+            if match is None:
+                # Look for a match in history
+                match = App().history.get_match(value)
+            GLib.idle_add(populate, match, value)
+
         def get_iterator():
             iterator = self.__completion_model.get_iter_first()
             if iterator is None:
                 iterator = self.__completion_model.insert(0)
             return iterator
 
-        # Look for a match in bookmarks
-        match = App().bookmarks.get_match(value)
-        if match is None:
-            # Look for a match in history
-            match = App().history.get_match(value)
-        if match is not None and self.__current_value == value:
-            iterator = get_iterator()
-            match_str = match.split("://")[-1].split("www.")[-1]
-            self.__completion_model.set_value(iterator,
-                                              0,
-                                              match_str)
-            GLib.idle_add(self.__completion.insert_prefix)
-        elif App().settings.get_value("dns-prediction") and\
-                self.__current_value == value:
-            # Try some DNS request, FIXME Better list?
-            from socket import gethostbyname
-            parsed = urlparse(value)
-            if parsed.netloc:
-                value = parsed.netloc
-            for suffix in self.__dns_suffixes:
-                if self.__cancellable.is_cancelled():
-                    break
-                for prefix in ["www.", ""]:
-                    if self.__cancellable.is_cancelled():
-                        break
-                    try:
-                        lookup = "%s%s.%s" % (prefix, value, suffix)
-                        gethostbyname(lookup)
-                        iterator = get_iterator()
-                        self.__completion_model.set_value(
-                                              iterator,
-                                              0,
-                                              lookup.replace("www.", ""))
-                        GLib.idle_add(self.__completion.insert_prefix)
-                        return
-                    except:
-                        pass
-        else:
-            # Only happen if nothing matched
-            self.__completion_model.clear()
+        self.__task_helper.run(look_for_match, value)
 
     def __on_popover_closed(self, popover):
         """
@@ -397,8 +403,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry_changed_id = None
         self.__window.container.webview.add_text_entry(self.__current_value)
         if do_completion:
-            self.__task_helper.run(self.__populate_completion,
-                                   self.__current_value)
+            self.__populate_completion(self.__current_value)
         parsed = urlparse(self.__current_value)
         is_uri = parsed.scheme in ["about, http", "file", "https", "populars"]
         if is_uri:
