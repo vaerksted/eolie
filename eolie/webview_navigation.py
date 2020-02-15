@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App, LoadingType
-from eolie.utils import get_ftp_cmd
+from eolie.utils import get_ftp_cmd, emit_signal
 from eolie.logger import Logger
 
 
@@ -116,7 +116,7 @@ class WebViewNavigation:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.COMMITTED:
-            self.emit("title-changed", webview.uri)
+            emit_signal(self, "title-changed", webview.uri)
             self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             App().history.set_page_state(self.uri)
@@ -284,7 +284,7 @@ class WebViewNavigation:
                 elif webview.uri != navigation_uri:
                     self.__loaded_uri = None
                 self.discard_error()
-                self.emit("title-changed", navigation_uri)
+                emit_signal(self, "title-changed", navigation_uri)
                 decision.use()
                 return False
         else:

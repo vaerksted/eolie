@@ -15,6 +15,7 @@ from gi.repository import Gio, GObject, GLib, WebKit2
 import json
 
 from eolie.helper_task import TaskHelper
+from eolie.utils import emit_signal
 from eolie.define import EOLIE_DATA_PATH, App
 from eolie.content_blocker_exceptions import ContentBlockerExceptions
 from eolie.logger import Logger
@@ -156,7 +157,7 @@ class ContentBlocker(GObject.Object):
         try:
             self.__filter = store.save_finish(result)
             if self.enabled:
-                self.emit("set-filter", self.__filter)
+                emit_signal(self, "set-filter", self.__filter)
         except Exception as e:
             Logger.error("ContentBlocker::__on_store_load(): %s", e)
 
@@ -169,7 +170,7 @@ class ContentBlocker(GObject.Object):
         try:
             self.__filter = store.load_finish(result)
             if self.enabled:
-                self.emit("set-filter", self.__filter)
+                emit_signal(self, "set-filter", self.__filter)
         except Exception as e:
             Logger.error("ContentBlocker::__on_store_save(): %s", e)
 
@@ -182,4 +183,4 @@ class ContentBlocker(GObject.Object):
         if self.enabled:
             self.load()
         else:
-            self.emit("unset-filter", self.__filter)
+            emit_signal(self, "unset-filter", self.__filter)

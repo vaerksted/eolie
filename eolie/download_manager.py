@@ -15,6 +15,7 @@ from gi.repository import GObject, GLib, Gio, Gtk
 from time import time
 
 from eolie.define import App
+from eolie.utils import emit_signal
 
 
 class DownloadManager(GObject.GObject):
@@ -141,7 +142,7 @@ class DownloadManager(GObject.GObject):
 
         webkit_uri = GLib.uri_unescape_string(destination_uri, None)
         download.set_destination(webkit_uri)
-        self.emit('download-start', str(download))
+        emit_signal(self, "download-start", str(download))
         # Notify user about download
         window = App().active_window
         if window is not None:
@@ -153,8 +154,8 @@ class DownloadManager(GObject.GObject):
         """
         self.remove(download)
         self.__finished.append(download)
-        self.emit('download-finish')
-        if App().settings.get_value('open-downloads'):
+        emit_signal(self, "download-finish")
+        if App().settings.get_value("open-downloads"):
             destination = download.get_destination()
             f = Gio.File.new_for_uri(destination)
             if f.query_exists():

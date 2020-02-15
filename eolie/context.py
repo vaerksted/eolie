@@ -18,6 +18,7 @@ from datetime import datetime
 
 from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
 from eolie.helper_task import TaskHelper
+from eolie.utils import emit_signal
 
 
 class Context:
@@ -206,10 +207,11 @@ class Context:
             else:
                 request.finish(f.read(), -1, None)
         except Exception as e:
-            request.get_web_view().emit("load-failed",
-                                        WebKit2.LoadEvent.FINISHED,
-                                        uri,
-                                        GLib.Error(str(e)))
+            emit_signal(request.get_web_view(),
+                        "load-failed",
+                        WebKit2.LoadEvent.FINISHED,
+                        uri,
+                        GLib.Error(str(e)))
 
     def __on_internal_scheme(self, request):
         """

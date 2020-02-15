@@ -16,6 +16,7 @@ import sqlite3
 
 from eolie.define import EOLIE_DATA_PATH, COOKIES_PATH
 from eolie.logger import Logger
+from eolie.utils import emit_signal
 
 
 class Cookie(GObject.GObject):
@@ -113,7 +114,7 @@ class Row(Gtk.ListBoxRow):
             up = True
         try:
             name = data.get_text()
-            self.emit("moved", name, up)
+            emit_signal(self, "moved", name, up)
         except:
             pass
 

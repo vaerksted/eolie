@@ -16,7 +16,7 @@ from gettext import gettext as _
 from datetime import datetime
 
 from eolie.define import App, Type, LoadingType, MARGIN_SMALL
-from eolie.utils import wanted_loading_type
+from eolie.utils import wanted_loading_type, emit_signal
 
 
 class Row(Gtk.ListBoxRow):
@@ -226,7 +226,7 @@ class Row(Gtk.ListBoxRow):
                     self.__window.close_popovers()
                     break
         else:
-            self.emit("activate")
+            emit_signal(self, "activate")
             # We force focus to stay on title entry
             GLib.idle_add(self.__window.toolbar.title.entry.focus)
 
@@ -235,7 +235,7 @@ class Row(Gtk.ListBoxRow):
             Edit self
             @param button as Gtk.Button
         """
-        self.emit("edited")
+        emit_signal(self, "edited")
 
     def __on_open_clicked(self, button):
         """

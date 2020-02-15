@@ -16,6 +16,7 @@ from math import pi
 import unicodedata
 import string
 import cairo
+from threading import current_thread
 from urllib.parse import urlparse
 from random import choice
 from base64 import b64encode
@@ -105,6 +106,19 @@ def wanted_loading_type(index):
         return LoadingType.BACKGROUND
     else:
         return LoadingType.OFFLOAD
+
+
+def emit_signal(obj, signal, *args):
+    """
+        Emit signal
+        @param obj as GObject.Object
+        @param signal as str
+        @thread safe
+    """
+    if current_thread().getName() == "MainThread":
+        obj.emit(signal, *args)
+    else:
+        GLib.idle_add(obj.emit, signal, *args)
 
 
 def get_round_surface(image, scale_factor, radius):

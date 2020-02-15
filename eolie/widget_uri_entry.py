@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App
+from eolie.utils import emit_signal
 from eolie.helper_task import TaskHelper
 from eolie.popover_uri import UriPopover
 from eolie.widget_smooth_progressbar import SmoothProgressBar
@@ -522,7 +523,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                 value = current + ".com"
             if value is not None:
                 self.set_text_entry(value)
-                self.__entry.emit("changed")
+                emit_signal(self.__entry, "changed")
             return
 
         # Forward event to popover, if not used, handle input

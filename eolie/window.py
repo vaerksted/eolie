@@ -15,7 +15,7 @@ from gi.repository import Gtk, GLib, Gio, Gdk
 from eolie.define import App, LoadingType
 from eolie.toolbar import Toolbar
 from eolie.container import Container
-from eolie.utils import get_current_monitor_model
+from eolie.utils import get_current_monitor_model, emit_signal
 from eolie.helper_task import TaskHelper
 from eolie.logger import Logger
 from eolie.window_state import WindowState
@@ -400,7 +400,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.toolbar.title.start_search()
         elif string == "close_page":
             if self.is_fullscreen:
-                self.container.webview.emit("leave-fullscreen")
+                emit_signal(self.container.webview, "leave-fullscreen")
                 Gtk.ApplicationWindow.unfullscreen(self)
             self.__container.try_close_webview(self.container.webview)
         elif string == "reload":

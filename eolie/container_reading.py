@@ -12,6 +12,8 @@
 
 from gi.repository import WebKit2, Gio
 
+from eolie.utils import emit_signal
+
 
 class ReadingContainer:
     """
@@ -75,7 +77,7 @@ class ReadingContainer:
         """
         if self.reading:
             self.toggle_reading()
-        webview.emit("readability-status", webview.readability)
+        emit_signal(webview, "readability-status", webview.readability)
         self.check_readability(webview)
 
     @property

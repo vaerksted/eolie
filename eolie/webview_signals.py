@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from time import time
 
 from eolie.define import App
+from eolie.utils import emit_signal
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
 
@@ -72,7 +73,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         """
         if title:
             self.__title = title
-            self.emit("title-changed", title)
+            emit_signal(self, "title-changed", title)
 
     def set_uri(self, uri):
         """
@@ -80,7 +81,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             @param uri as str
         """
         self.__uri = uri.rstrip("/")
-        self.emit("uri-changed", uri)
+        emit_signal(self, "uri-changed", uri)
 
     @property
     def uri(self):
@@ -177,7 +178,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
         uri = webview.get_property(param.name).rstrip("/")
         if not uri.startswith("javascript:") and not self.error:
             self.__uri = uri
-            self.emit("uri-changed", uri)
+            emit_signal(self, "uri-changed", uri)
             self._set_user_agent(uri)
 
     def __on_title_changed(self, webview, param):
@@ -192,10 +193,10 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             is_http = parsed.scheme in ["http", "https"]
             if is_http:
                 self.__title = "%s: %s" % (parsed.netloc, title)
-                self.emit("title-changed", self.__title)
+                emit_signal(self, "title-changed", self.__title)
             else:
                 self.__title = title
-                self.emit("title-changed", None)
+                emit_signal(self, "title-changed", None)
             if self.error or\
                     webview.is_ephemeral or\
                     not is_http:

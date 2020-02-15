@@ -24,6 +24,7 @@ from eolie.define import App, EOLIE_DATA_PATH
 from eolie.sqlcursor import SqlCursor
 from eolie.helper_passwords import PasswordsHelper
 from eolie.logger import Logger
+from eolie.utils import emit_signal
 
 
 TOKENSERVER_URL = "https://token.services.mozilla.com/"
@@ -521,7 +522,7 @@ class SyncWorker(GObject.Object):
         if self.__syncing:
             return
         Logger.sync_debug("Start pulling")
-        GLib.idle_add(self.emit, "syncing", True)
+        emit_signal(self, "syncing", True)
         self.__syncing = True
         self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
@@ -585,7 +586,7 @@ class SyncWorker(GObject.Object):
             Logger.sync_debug("Stop pulling")
         except Exception as e:
             Logger.error("SyncWorker::__pull(): %s", e)
-        GLib.idle_add(self.emit, "syncing", False)
+        emit_signal(self, "syncing", False)
         self.__syncing = False
 
     def __push(self):
@@ -596,7 +597,7 @@ class SyncWorker(GObject.Object):
         if self.__syncing:
             return
         Logger.sync_debug("Start pushing")
-        GLib.idle_add(self.emit, "syncing", True)
+        emit_signal(self, "syncing", True)
         self.__syncing = True
         self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
@@ -626,7 +627,7 @@ class SyncWorker(GObject.Object):
             Logger.sync_debug("Stop pushing")
         except Exception as e:
             Logger.error("SyncWorker::__push(): %s", e)
-        GLib.idle_add(self.emit, "syncing", False)
+        emit_signal(self, "syncing", False)
         self.__syncing = False
 
     def __pull_bookmarks(self, bulk_keys):
