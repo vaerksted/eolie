@@ -298,21 +298,27 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         def populate(match, value):
             if match is not None and self.__current_value == value:
                 iterator = get_iterator()
-                match_str = match.split("://")[-1].split("www.")[-1]
                 self.__completion_model.set_value(iterator,
                                                   0,
-                                                  match_str)
+                                                  match)
                 self.__completion.insert_prefix()
             else:
                 # Only happen if nothing matched
                 self.__completion_model.clear()
 
         def look_for_match(value):
+            parsed = urlparse(value)
             # Look for a match in bookmarks
             match = App().bookmarks.get_match(value)
             if match is None:
                 # Look for a match in history
                 match = App().history.get_match(value)
+            match = match.split("://")[-1].split("www.")[-1]
+            # We want result to match value slashes
+            slash_count = parsed.path.count("/")
+            split = match.split("/")[:-slash_count - 1]
+            if split:
+                match = "/".join(split)
             GLib.idle_add(populate, match, value)
 
         def get_iterator():
