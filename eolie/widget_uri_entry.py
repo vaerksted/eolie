@@ -313,8 +313,8 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             if match is None:
                 # Look for a match in history
                 match = App().history.get_match(value)
-            match = match.split("://")[-1].split("www.")[-1]
             if match is not None:
+                match = match.split("://")[-1].split("www.")[-1]
                 # We want result to match value slashes
                 slash_count = parsed.path.count("/")
                 split = match.split("/")[:-slash_count - 1]
