@@ -176,7 +176,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             @param param as GObject.ParamSpec
         """
         uri = webview.get_property(param.name).rstrip("/")
-        if not uri.startswith("javascript:") and not self.error:
+        if not uri.startswith("javascript:"):
             self.__uri = uri
             emit_signal(self, "uri-changed", uri)
             self._set_user_agent(uri)
