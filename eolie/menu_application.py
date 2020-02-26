@@ -36,16 +36,6 @@ class ApplicationMenu(Gio.Menu):
                        self.__on_private_clicked)
         self.append(_("New private page"), "app.new-private")
 
-        value = App().settings.get_value("night-mode")
-        action = Gio.SimpleAction.new_stateful(
-            "night-mode",
-            None,
-            GLib.Variant.new_boolean(value))
-        App().add_action(action)
-        action.connect("change-state",
-                       self.__on_night_mode_change_state)
-        self.append(_("Night mode"), "app.night-mode")
-
         # Blockers submenu
         blockers_menu = Gio.Menu()
         for (label, blocker) in [
@@ -82,6 +72,16 @@ class ApplicationMenu(Gio.Menu):
         sidebar_action.connect("change-state", self.__on_sidebar_change_state)
         App().add_action(sidebar_action)
         section.append(_("_Sidebar"), "app.sidebar")
+
+        value = App().settings.get_value("night-mode")
+        action = Gio.SimpleAction.new_stateful(
+            "night-mode",
+            None,
+            GLib.Variant.new_boolean(value))
+        App().add_action(action)
+        action.connect("change-state",
+                       self.__on_night_mode_change_state)
+        section.append(_("Night mode"), "app.night-mode")
 
         shortcuts_action = Gio.SimpleAction.new("shortcuts", None)
         shortcuts_action.connect("activate", self.__on_shortcuts_activate)
