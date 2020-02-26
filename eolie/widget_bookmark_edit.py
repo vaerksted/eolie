@@ -68,12 +68,6 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         if button.get_style_context().has_class("suggested-action"):
             title = self.__entry.get_text()
-            if self.__title == title:
-                return
-            # We do not handle tag fusion TODO
-            tag_id = App().bookmarks.get_tag_id(title)
-            if tag_id is not None:
-                return
             App().bookmarks.rename_tag(self.__title, title)
             # Update mtime for all tagged bookmarks
             if App().sync_worker is not None:
@@ -100,11 +94,18 @@ class TagWidget(Gtk.FlowBoxChild):
             Update button state
             @param entry as Gtk.Entry
         """
+        self.__button.set_sensitive(True)
         style_context = self.__button.get_style_context()
         image = self.__button.get_image()
-        if entry.get_text() == self.__title:
+        title = entry.get_text()
+        tag_id = App().bookmarks.get_tag_id(title)
+        if title == self.__title:
             style_context.remove_class("suggested-action")
             image.set_from_icon_name("window-close-symbolic",
+                                     Gtk.IconSize.BUTTON)
+        elif tag_id is not None or not title:
+            self.__button.set_sensitive(False)
+            image.set_from_icon_name("dialog-error-symbolic",
                                      Gtk.IconSize.BUTTON)
         else:
             style_context.add_class("suggested-action")
