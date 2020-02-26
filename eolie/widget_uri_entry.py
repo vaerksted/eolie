@@ -314,11 +314,12 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                 # Look for a match in history
                 match = App().history.get_match(value)
             match = match.split("://")[-1].split("www.")[-1]
-            # We want result to match value slashes
-            slash_count = parsed.path.count("/")
-            split = match.split("/")[:-slash_count - 1]
-            if split:
-                match = "/".join(split)
+            if match is not None:
+                # We want result to match value slashes
+                slash_count = parsed.path.count("/")
+                split = match.split("/")[:-slash_count - 1]
+                if split:
+                    match = "/".join(split)
             GLib.idle_add(populate, match, value)
 
         def get_iterator():
