@@ -20,13 +20,15 @@ function handleInput(textarea) {
     }
 }
 
-function subscriber(mutations) {
-    let addedNodesLength = mutationRecord.addedNodes.length;
-    let textareas = [];
-    for (let i = 0; i < addedNodesLength; i++) {
-        element = mutationRecord.addedNodes[i];
-        if (element.tagName.toLowerCase() == 'textarea') {
-            textareas.push(element);
+function subscriber(mutationsList) {
+    for(var mutationRecord of mutationsList) {
+        let addedNodesLength = mutationRecord.addedNodes.length;
+        let textareas = [];
+        for (let i = 0; i < addedNodesLength; i++) {
+            element = mutationRecord.addedNodes[i];
+            if (element.tagName !== undefined && element.tagName.toLowerCase() == 'textarea') {
+                textareas.push(element);
+            }
         }
     }
     handleTextareas(textareas);
