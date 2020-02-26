@@ -103,6 +103,13 @@
     background-color: shade(@theme_bg_color, 1.3);
 }
 
+.sidebar-item-image-overlay {
+    border-radius: 50%;
+    padding: 10px;
+    background-color: alpha(black, 0.8);
+    color: white;
+}
+
 .sidebar-item {
     transition: box-shadow 200ms linear;
     border: 2px solid alpha(@theme_fg_color, 0.3);

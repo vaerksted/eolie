@@ -61,9 +61,10 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             self.__indicator_label.set_text(webview.title)
 
         self.__indicator_image = Gtk.Image.new()
-        self.__indicator_image.show()
         self.__indicator_image.set_property("halign", Gtk.Align.CENTER)
         self.__indicator_image.set_property("valign", Gtk.Align.CENTER)
+        self.__indicator_image.get_style_context().add_class(
+            "sidebar-item-image-overlay")
 
         self.__background_image = Gtk.Image.new_from_surface(webview.surface)
         self.__background_image.show()
@@ -151,10 +152,12 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             @param webview as WebView
             @param playing as bool
         """
-        if playing:
+        if webview.is_playing_audio():
             self.__indicator_image.set_from_icon_name(
-                "audio-speakers-symbolic", Gtk.IconSize.BUTTON)
+                "audio-speakers-symbolic", Gtk.IconSize.DND)
+            self.__indicator_image.show()
         else:
+            self.__indicator_image.hide()
             self.__indicator_image.set_from_surface(None)
 
     def _on_webview_title_changed(self, webview, title):
@@ -176,13 +179,15 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
             self.__background_image.set_from_surface(None)
             self.__indicator_image.set_from_surface(None)
             self.__indicator_image.set_from_icon_name(
-                "emblem-synchronizing-symbolic", Gtk.IconSize.MENU)
+                "emblem-synchronizing-symbolic", Gtk.IconSize.DND)
             self.__indicator_image.get_style_context().add_class(
                 "image-rotate")
+            self.__indicator_image.show()
         else:
             self.__indicator_image.set_from_surface(None)
             self.__indicator_image.get_style_context().remove_class(
                 "image-rotate")
+            self.__indicator_image.hide()
 
     def _on_webview_snapshot_changed(self, webview, surface):
         """

@@ -249,7 +249,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param playing as bool
         """
-        if playing:
+        if webview.is_playing_audio():
             self.__image.set_from_icon_name("audio-speakers-symbolic",
                                             Gtk.IconSize.BUTTON)
         else:
