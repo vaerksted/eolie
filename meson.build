@@ -2,6 +2,12 @@ project('eolie', 'c',
   version: '0.9.97',
   meson_version: '>= 0.48.0',
 )
+
+revision = run_command('bin/revision.sh').stdout().strip()
+if revision == ''
+  revision=meson.project_version()
+endif
+
 i18n = import('i18n')
 python = import('python3')
 project_id = 'org.gnome.Eolie'
@@ -35,6 +41,7 @@ conf.set('PYTHON_EXEC_DIR', join_paths(get_option('prefix'), python.sysconfig_pa
 conf.set('PYTHON', python_bin.path())
 conf.set('libexecdir', LIBEXEC_DIR)
 conf.set('VERSION', meson.project_version())
+conf.set('REVISION', revision)
 
 subdir('data')
 subproject('po')
