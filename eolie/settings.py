@@ -168,10 +168,6 @@ class SettingsDialog:
         remember_passwords = builder.get_object("remember_passwords_check")
         remember_passwords.set_active(
             App().settings.get_value("remember-passwords"))
-
-        dns_prediction_check = builder.get_object("dns_prediction_check")
-        dns_prediction_check.set_active(
-            App().settings.get_value("dns-prediction"))
         autoplay_check = builder.get_object("autoplay_check")
         autoplay_check.set_active(
             App().settings.get_value("autoplay-videos"))
@@ -245,14 +241,6 @@ class SettingsDialog:
         popover.populate()
         popover.set_relative_to(button)
         popover.popup()
-
-    def _on_dns_prediction_toggled(self, button):
-        """
-            Save state
-            @param button as Gtk.ToggleButton
-        """
-        App().settings.set_value("dns-prediction",
-                                 GLib.Variant("b", button.get_active()))
 
     def _on_autoplay_toggled(self, button):
         """
