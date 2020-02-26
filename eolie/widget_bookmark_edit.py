@@ -37,7 +37,6 @@ class TagWidget(Gtk.FlowBoxChild):
         grid.show()
         grid.get_style_context().add_class("linked")
         self.__entry = Gtk.Entry()
-        self.__entry.connect("activate", self.__on_entry_activate)
         self.__entry.get_style_context().add_class("tag")
         self.__entry.show()
         self.__entry.set_text(title)
@@ -45,10 +44,11 @@ class TagWidget(Gtk.FlowBoxChild):
                                                       Gtk.IconSize.BUTTON)
         self.__button.show()
         self.__button.get_style_context().add_class("tag")
-        self.__button.connect("clicked", self.__on_button_clicked)
         grid.add(self.__entry)
         grid.add(self.__button)
         self.add(grid)
+        self.__entry.connect("changed", self.__on_entry_changed)
+        self.__button.connect("clicked", self.__on_button_clicked)
 
     @property
     def label(self):
@@ -63,41 +63,53 @@ class TagWidget(Gtk.FlowBoxChild):
 #######################
     def __on_button_clicked(self, button):
         """
-            Remove tag
+            Save/Remove tag
             @param button as Gtk.Button
         """
-        tag_title = self.__entry.get_text()
-        tag_id = App().bookmarks.get_tag_id(tag_title)
-        if tag_id is not None:
-            App().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
-        App().bookmarks.clean_tags()
-        self.destroy()
-        return True
-
-    def __on_entry_activate(self, entry):
-        """
-            Save tag name based on entry content
-            @param entry as Gtk.Entry
-        """
-        title = self.__entry.get_text()
-        if self.__title == title:
-            return
-        # We do not handle tag fusion TODO
-        tag_id = App().bookmarks.get_tag_id(title)
-        if tag_id is not None:
-            return
-        App().bookmarks.rename_tag(self.__title, title)
-        # Update mtime for all tagged bookmarks
-        if App().sync_worker is not None:
-            mtime = round(time(), 2)
+        if button.get_style_context().has_class("suggested-action"):
+            title = self.__entry.get_text()
+            if self.__title == title:
+                return
+            # We do not handle tag fusion TODO
             tag_id = App().bookmarks.get_tag_id(title)
             if tag_id is not None:
-                for (bookmark_id, bookmark_uri, bookmark_title) in\
-                        App().bookmarks.get_bookmarks(tag_id):
-                    App().bookmarks.set_mtime(bookmark_id, mtime + 1)
-                    App().sync_worker.push_bookmark(bookmark_id)
-        self.__entry.set_text(title)
-        self.__title = title
+                return
+            App().bookmarks.rename_tag(self.__title, title)
+            # Update mtime for all tagged bookmarks
+            if App().sync_worker is not None:
+                mtime = round(time(), 2)
+                tag_id = App().bookmarks.get_tag_id(title)
+                if tag_id is not None:
+                    for (bookmark_id, bookmark_uri, bookmark_title) in\
+                            App().bookmarks.get_bookmarks(tag_id):
+                        App().bookmarks.set_mtime(bookmark_id, mtime + 1)
+                        App().sync_worker.push_bookmark(bookmark_id)
+            self.__entry.set_text(title)
+            self.__title = title
+            self.__on_entry_changed(self.__entry)
+        else:
+            tag_title = self.__entry.get_text()
+            tag_id = App().bookmarks.get_tag_id(tag_title)
+            if tag_id is not None:
+                App().bookmarks.del_tag_from(tag_id, self.__bookmark_id)
+            App().bookmarks.clean_tags()
+            self.destroy()
+
+    def __on_entry_changed(self, entry):
+        """
+            Update button state
+            @param entry as Gtk.Entry
+        """
+        style_context = self.__button.get_style_context()
+        image = self.__button.get_image()
+        if entry.get_text() == self.__title:
+            style_context.remove_class("suggested-action")
+            image.set_from_icon_name("window-close-symbolic",
+                                     Gtk.IconSize.BUTTON)
+        else:
+            style_context.add_class("suggested-action")
+            image.set_from_icon_name("object-select-symbolic",
+                                     Gtk.IconSize.BUTTON)
 
 
 class BookmarkEditWidget(Gtk.Bin):
