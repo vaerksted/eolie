@@ -414,8 +414,8 @@ class WebView(WebKit2.WebView):
                                       App().settings.get_value(
                                           "font-serif").get_string())
             settings.set_property("auto-load-images", True)
-            # settings.set_hardware_acceleration_policy(
-            #    WebKit2.HardwareAccelerationPolicy.NEVER)
+            settings.set_hardware_acceleration_policy(
+                WebKit2.HardwareAccelerationPolicy.NEVER)
             settings.set_property("enable-site-specific-quirks", True)
             settings.set_property("allow-universal-access-from-file-urls",
                                   False)
