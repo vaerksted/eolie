@@ -32,6 +32,7 @@ class TagWidget(Gtk.FlowBoxChild):
         """
         Gtk.FlowBoxChild.__init__(self)
         self.__bookmark_id = bookmark_id
+        self.__title = title
         grid = Gtk.Grid()
         grid.show()
         grid.get_style_context().add_class("linked")
@@ -79,14 +80,13 @@ class TagWidget(Gtk.FlowBoxChild):
             @param entry as Gtk.Entry
         """
         title = self.__entry.get_text()
-        previous = self.__label.get_text()
-        if previous == title:
+        if self.__title == title:
             return
         # We do not handle tag fusion TODO
         tag_id = App().bookmarks.get_tag_id(title)
         if tag_id is not None:
             return
-        App().bookmarks.rename_tag(previous, title)
+        App().bookmarks.rename_tag(self.__title, title)
         # Update mtime for all tagged bookmarks
         if App().sync_worker is not None:
             mtime = round(time(), 2)
@@ -96,8 +96,8 @@ class TagWidget(Gtk.FlowBoxChild):
                         App().bookmarks.get_bookmarks(tag_id):
                     App().bookmarks.set_mtime(bookmark_id, mtime + 1)
                     App().sync_worker.push_bookmark(bookmark_id)
-        self.__label.set_text(title)
-        self.__stack.set_visible_child(self.__label)
+        self.__entry.set_text(title)
+        self.__title = title
 
 
 class BookmarkEditWidget(Gtk.Bin):
