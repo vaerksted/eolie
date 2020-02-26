@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, Pango, WebKit2
 
-from eolie.label_indicator import LabelIndicator
+from eolie.widget_label_indicator import LabelIndicator
 from eolie.define import ArtSize, MARGIN_SMALL, MARGIN
 from eolie.utils import on_query_tooltip, update_popover_internals
 from eolie.helper_signals import SignalsHelper, signals

@@ -468,6 +468,7 @@ class Application(Gtk.Application, NightApplication):
                         webview = WebViewState.new_from_state(webview_state,
                                                               window)
                         webview.show()
+                        webview.set_shown(True)
                         loading_type = wanted_loading_type(
                             len(window.container.webviews))
                         window.container.add_webview(webview, loading_type)
@@ -483,16 +484,20 @@ class Application(Gtk.Application, NightApplication):
                 window.show()
             # Add pinned websites
             for netloc in pinned_netlocs:
-                window.container.add_webview_for_uri("http://%s" % netloc,
+                webview = window.container.add_webview_for_uri(
+                                                     "http://%s" % netloc,
                                                      LoadingType.BACKGROUND)
+                webview.set_shown(True)
             # Add startup webpage
             for uri in startup_uris:
-                window.container.add_webview_for_uri(uri,
+                webview = window.container.add_webview_for_uri(
+                                                     uri,
                                                      LoadingType.BACKGROUND)
+                webview.set_shown(True)
             # Make first webview visible
             if window.container.webviews:
-                window.container.set_visible_webview(
-                    window.container.webviews[0])
+                GLib.idle_add(window.container.set_visible_webview,
+                              window.container.webviews[0])
         except Exception as e:
             Logger.error("Application::__restore_state(): %s", e)
 

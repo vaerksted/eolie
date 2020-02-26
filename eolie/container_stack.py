@@ -41,6 +41,7 @@ class StackContainer:
             @param uri as str
             @param loading_type as Gdk.LoadingType
             @param is_ephemeral as bool
+            @return WebView
         """
         state = WebViewStateStruct()
         state.uri = uri
@@ -48,6 +49,7 @@ class StackContainer:
         webview = WebViewState.new_from_state(state, self._window)
         webview.show()
         self.add_webview(webview, loading_type)
+        return webview
 
     def add_webview(self, webview, loading_type):
         """
