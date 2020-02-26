@@ -62,7 +62,7 @@ class ReadingContainer:
         """
         # Load Readability
         js1 = Gio.File.new_for_uri(
-            "resource:///org/gnome/Eolie/Readability.js")
+            "resource:///org/gnome/Eolie/Readability-readerable.js")
         js2 = Gio.File.new_for_uri(
             "resource:///org/gnome/Eolie/Readability_check.js")
         (status, content1, tags) = js1.load_contents()
