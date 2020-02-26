@@ -29,6 +29,7 @@ class PagesManagerBox(Gtk.EventBox):
         """
         Gtk.EventBox.__init__(self)
         self.__window = window
+        self.__hovered_child = None
         self.__current_child = None
         # Sort pages by netloc
         self.__sort_pages = []
@@ -67,8 +68,9 @@ class PagesManagerBox(Gtk.EventBox):
         viewport.add(self.__box)
         grid.add(self.__scrolled)
         grid.add(self.__search_bar)
-
         self.add(grid)
+        self.__event_controller = Gtk.EventControllerMotion.new(self.__box)
+        self.__event_controller.connect("motion", self.__on_box_motion)
 
     def add_webview(self, webview):
         """
@@ -307,6 +309,32 @@ class PagesManagerBox(Gtk.EventBox):
                 (filter == "private://" and row.webview.ephemeral):
             return True
         return False
+
+    def __unselect_selected(self):
+        """
+            Unselect selected child
+        """
+        if self.__hovered_child is not None:
+            self.__hovered_child.unset_state_flags(
+                Gtk.StateFlags.PRELIGHT)
+            self.__hovered_child = None
+
+    def __on_box_motion(self, event_controller, x, y):
+        """
+            Update current selected child
+            @param event_controller as Gtk.EventControllerMotion
+            @param x as int
+            @param y as int
+        """
+        child = self.__box.get_child_at_pos(x, y)
+        if child == self.__hovered_child:
+            return
+        elif child is not None:
+            child.set_state_flags(Gtk.StateFlags.PRELIGHT, False)
+            self.__unselect_selected()
+            self.__hovered_child = child
+        else:
+            self.__unselect_selected()
 
     def __on_search_changed(self, entry):
         """
