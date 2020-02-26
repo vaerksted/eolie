@@ -174,11 +174,6 @@
          <summary>Tell websites I do not want to be tracked</summary>
          <description />
       </key>
-      <key type="b" name="dns-prediction">
-         <default>true</default>
-         <summary>DNS prediction</summary>
-         <description />
-      </key>
       <key type="b" name="autoplay-videos">
          <default>true</default>
          <summary>Autoplay videos</summary>

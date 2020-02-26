@@ -45,12 +45,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry_changed_id = None
         self.__secure_content = True
         self.__size_allocation_timeout = None
-        self.__dns_suffixes = ["com", "org"]
         self.__current_value = ""
-        for string in reversed(GLib.get_language_names()):
-            if len(string) == 2:
-                self.__dns_suffixes.insert(0, string)
-                break
         self.__entry = Gtk.Entry.new()
         self.__entry.show()
         self.__entry.get_style_context().add_class("uribar")
@@ -308,31 +303,6 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
                                                   0,
                                                   match_str)
                 self.__completion.insert_prefix()
-            elif App().settings.get_value("dns-prediction") and\
-                    self.__current_value == value:
-                # Try some DNS request, FIXME Better list?
-                from socket import gethostbyname
-                parsed = urlparse(value)
-                if parsed.netloc:
-                    value = parsed.netloc
-                for suffix in self.__dns_suffixes:
-                    if self.__cancellable.is_cancelled():
-                        break
-                    for prefix in ["www.", ""]:
-                        if self.__cancellable.is_cancelled():
-                            break
-                        try:
-                            lookup = "%s%s.%s" % (prefix, value, suffix)
-                            gethostbyname(lookup)
-                            iterator = get_iterator()
-                            self.__completion_model.set_value(
-                                                  iterator,
-                                                  0,
-                                                  lookup.replace("www.", ""))
-                            self.__completion.insert_prefix()
-                            return
-                        except:
-                            pass
             else:
                 # Only happen if nothing matched
                 self.__completion_model.clear()
