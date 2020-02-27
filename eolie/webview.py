@@ -353,14 +353,6 @@ class WebView(WebKit2.WebView):
         """
         return self.__window
 
-    @property
-    def selection(self):
-        """
-            Get current selection
-            @return str
-        """
-        return self.__selection
-
 #######################
 # PRIVATE             #
 #######################
@@ -381,9 +373,6 @@ class WebView(WebKit2.WebView):
         self.__atime = 0
         self.__children = []
         self.__parent = None
-        # WebKitGTK doesn't provide an API to get selection, so try to guess
-        # it from clipboard FIXME Get it from extensions
-        self.__selection = ""
         self._readability = False
         self._title = None
         self.__related = related
