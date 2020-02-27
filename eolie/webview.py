@@ -263,7 +263,7 @@ class WebView(WebKit2.WebView):
         """
         if child not in self.__children:
             self.__children.insert(0, child)
-            child.connect("destroy", lambda x: self.__children.remove(x))
+            child.connect("destroy", self.__on_child_destroy)
 
     def set_shown(self, shown):
         """
@@ -438,6 +438,7 @@ class WebView(WebKit2.WebView):
                     "enable-back-forward-navigation-gestures", True)
         self.connect("create", self.__on_create)
         self.connect("load-changed", self._on_load_changed)
+        self.connect("destroy", self.__on_destroy)
 
     def __set_system_fonts(self, settings):
         """
@@ -493,6 +494,24 @@ class WebView(WebKit2.WebView):
                 LoadingType.FOREGROUND)
         else:
             self.window.container.popup_webview(webview)
+
+    def __on_destroy(self, webview):
+        """
+            Prevent GC
+            @param webview as WebView
+        """
+        self.__parent = None
+        self.__related = None
+        for child in self.__children:
+            child.disconnect_by_func(self.__on_child_destroy)
+
+    def __on_child_destroy(self, webview):
+        """
+            Remove from children
+            @param webview as WebView
+        """
+        if webview in self.__children:
+            self.__children.remove(webview)
 
 
 class WebViewMeta(WebViewNavigation, WebView, WebViewErrors,
