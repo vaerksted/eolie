@@ -235,12 +235,14 @@ class Application(Gtk.Application, NightApplication):
         """
         value = self.settings.get_value("start-page").get_string()
         if value in ["popular_hist", "popular_book"]:
-            value = "populars://"
+            start_page = "populars://"
         elif value == "blank":
-            value = "about:blank"
+            start_page = "about:blank"
+        elif value == "search":
+            start_page = self.search.uri
         else:
-            value = self.search.uri
-        return value
+            start_page = value
+        return start_page
 
     @property
     def active_window(self):
