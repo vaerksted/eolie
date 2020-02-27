@@ -44,7 +44,8 @@ class DatabaseBookmarks:
                                                atime REAL NOT NULL,
                                                guid TEXT NOT NULL,
                                                mtime REAL NOT NULL,
-                                               position INT DEFAULT 0
+                                               position INT DEFAULT 0,
+                                               startup INT DEFAULT 0
                                                )'''
     __create_tags = '''CREATE TABLE tags (id INTEGER PRIMARY KEY,
                                           title TEXT NOT NULL)'''
