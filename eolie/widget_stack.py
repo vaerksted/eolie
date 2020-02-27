@@ -31,7 +31,8 @@ class Stack(Gtk.Overlay):
             Add widget to stack
             @param webview as WebView
         """
-        webview.connect("snapshot-changed", self.__on_snapshot_changed)
+        webview.connect("snapshot-changed", self.__on_webview_snapshot_changed)
+        webview.connect("destroy", self.__on_webview_destroy)
         self.add_overlay(webview)
         self.reorder_overlay(webview, 0)
         if self.__visible_child is None:
@@ -59,7 +60,15 @@ class Stack(Gtk.Overlay):
 #######################
 # PRIVATE             #
 #######################
-    def __on_snapshot_changed(self, webview, surface):
+    def __on_webview_destroy(self, webview):
+        """
+            Reset visible child
+            @param webview as WebView
+        """
+        if self.__visible_child == webview:
+            self.__visible_child = None
+
+    def __on_webview_snapshot_changed(self, webview, surface):
         """
             We can now hide this view if not visible one
             @param webview as WebView
