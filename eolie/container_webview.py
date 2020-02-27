@@ -91,6 +91,7 @@ class WebViewContainer:
             webview.get_back_forward_list().disconnect(self.__bfl_signal_id)
         self.__signal_ids = []
         self.__bfl_signal_id = None
+        self.__current_webview = None
 
 #######################
 # PRIVATE             #
@@ -102,6 +103,7 @@ class WebViewContainer:
         """
         self.__signal_ids = []
         self.__bfl_signal_id = None
+        self.__current_webview = None
 
     def __on_title_changed(self, webview, title):
         """
@@ -140,7 +142,8 @@ class WebViewContainer:
             @param removed as WebKit2.BackForwardListItem
             @param webview as WebView
         """
-        self._window.toolbar.actions.set_actions(self.__current_webview)
+        if self.__current_webview is not None:
+            self._window.toolbar.actions.set_actions(self.__current_webview)
 
     def __on_readability_status(self, webview, status):
         """
