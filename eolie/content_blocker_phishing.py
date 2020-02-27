@@ -39,10 +39,13 @@ class PhishingContentBlocker(ContentBlocker):
             ContentBlocker.__init__(self, "block-phishing")
             f = Gio.File.new_for_path(
                     "%s/block-phishing.json" % self._JSON_PATH)
-            info = f.query_info(SCAN_QUERY_INFO,
-                                Gio.FileQueryInfoFlags.NONE,
-                                None)
-            mtime = int(info.get_attribute_as_string("time::modified"))
+            if f.query_exists():
+                info = f.query_info(SCAN_QUERY_INFO,
+                                    Gio.FileQueryInfoFlags.NONE,
+                                    None)
+                mtime = int(info.get_attribute_as_string("time::modified"))
+            else:
+                mtime = 0
             if App().settings.get_value("block-phishing"):
                 GLib.timeout_add_seconds(7200, self.__download_task, True)
                 if time() - mtime > 7200:
