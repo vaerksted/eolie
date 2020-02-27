@@ -59,6 +59,8 @@ class WebViewContainer:
         self.__signal_ids.append(
             webview.connect("mouse-target-changed",
                             self.__on_mouse_target_changed))
+        self.__signal_ids.append(
+            webview.connect("destroy", self.__on_destroy))
         self.__bfl_signal_id = webview.get_back_forward_list().connect(
                 "changed",
                 self.__on_back_forward_list_changed)
@@ -81,7 +83,7 @@ class WebViewContainer:
             Dismiss webview from handlers
             @param webview as WebView
         """
-        if webview != self.__current_webview:
+        if self.__current_webview is None or webview != self.__current_webview:
             return
         for signal_id in self.__signal_ids:
             webview.disconnect(signal_id)
@@ -93,6 +95,14 @@ class WebViewContainer:
 #######################
 # PRIVATE             #
 #######################
+    def __on_destroy(self, webview):
+        """
+            No more signals handlers
+            @param webview as WebView
+        """
+        self.__signal_ids = []
+        self.__bfl_signal_id = None
+
     def __on_title_changed(self, webview, title):
         """
             Update title

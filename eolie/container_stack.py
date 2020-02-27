@@ -199,7 +199,6 @@ class StackContainer:
             Remove webview from monitored webviews
             @param webview as WebView
         """
-        self.dismiss_webview(webview)
         self.pages_manager.remove_webview(webview)
         self.sites_manager.remove_webview(webview)
 
