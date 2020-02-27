@@ -12,7 +12,7 @@
 
 from gi.repository import Gtk, Gdk, GLib, WebKit2
 
-from eolie.label_indicator import LabelIndicator
+from eolie.widget_label_indicator import LabelIndicator
 from eolie.utils import resize_favicon, update_popover_internals, emit_signal
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
 from eolie.define import App
