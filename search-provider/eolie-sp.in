@@ -61,7 +61,7 @@ class Server:
 
         args = list(parameters.unpack())
         for i, sig in enumerate(self.method_inargs[method_name]):
-            if sig is 'h':
+            if sig == 'h':
                 msg = invocation.get_message()
                 fd_list = msg.get_unix_fd_list()
                 args[i] = fd_list.get(args[i])
@@ -193,7 +193,7 @@ class SearchEolieService(Server, Gio.Application):
         search = " ".join(terms)
         try:
             # Search for bookmarks
-            for (id, title, uri, score) in self.bookmarks.search(search, 20):
+            for (id, title, uri) in self.bookmarks.search(search, 20):
                 ids.append(str(self.bookmarks.get_id(uri)))
         except Exception as e:
             print(e)
