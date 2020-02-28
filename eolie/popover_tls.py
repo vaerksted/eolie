@@ -52,7 +52,7 @@ class TLSPopover(Gtk.Popover):
             (valid, tls, error) = webview.get_tls_info()
             if valid:
                 text = ""
-                title_label.set_text(_("Connexion is secure"))
+                title_label.set_text(_("The connexion is secure"))
                 cert_pem = tls.get_property("certificate-pem")
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_pem)
                 subject = cert.get_subject()
@@ -71,7 +71,7 @@ class TLSPopover(Gtk.Popover):
                         GLib.markup_escape_text(subject.O)
                 cert_label.set_markup(text)
             else:
-                title_label.set_text(_("Connexion is unsecure"))
+                title_label.set_text(_("The connexion is unsecure"))
         except Exception as e:
             title_label.set_text(str(e))
         self.add(grid)
