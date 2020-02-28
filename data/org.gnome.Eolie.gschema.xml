@@ -126,7 +126,7 @@
       </key>
       <key type="s" name="font-sans-serif">
          <default>"Sans 10"</default>
-         <summary>Sans serif font</summary>
+         <summary>Sans-serif font</summary>
          <description />
       </key>
       <key type="s" name="font-serif">
