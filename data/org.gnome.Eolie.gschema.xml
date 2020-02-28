@@ -161,7 +161,7 @@
       </key>
       <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
          <default>"no_third_party"</default>
-         <summary>Cookies storage type</summary>
+         <summary>Cookie storage type</summary>
          <description />
       </key>
       <key enum="org.gnome.Eolie.History" name="history-storage">
