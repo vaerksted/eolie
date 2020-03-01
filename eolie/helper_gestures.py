@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2019 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
+# Copyright (c) 2014-2020 Cedric Bellegarde <cedric.bellegarde@adishatz.org>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -29,6 +29,7 @@ class GesturesHelper():
             @params as callbacks
         """
         self.__widget = widget
+        widget.connect("destroy", self.__on_destroy)
         self.__primary_long_callback = primary_long_callback
         self.__secondary_long_callback = secondary_long_callback
         self.__primary_press_callback = primary_press_callback
@@ -91,6 +92,20 @@ class GesturesHelper():
 #######################
 # PRIVATE             #
 #######################
+    def __on_destroy(self, widget):
+        """
+            Remove ref cycle
+            @param widget as Gtk.Widget
+        """
+        self.__primary_long_callback = None
+        self.__secondary_long_callback = None
+        self.__primary_press_callback = None
+        self.__secondary_press_callback = None
+        self.__tertiary_press_callback = None
+        self.__long_press = None
+        self.__multi_press = None
+        self.__widget = None
+
     def __on_long_pressed(self, gesture, x, y):
         """
             Check long pressed button
