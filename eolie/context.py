@@ -86,16 +86,21 @@ class Context:
         # Update start
         html_start = start_content.decode("utf-8")
         html_start = html_start.replace("@TITLE@", _("Popular pages"))
-        fake = Gtk.Entry.new()
-        style_context = fake.get_style_context()
-        (found, color) = style_context.lookup_color("theme_selected_bg_color")
-        if found:
-            color.alpha = 0.2
+        if App().settings.get_value("night-mode"):
             html_start = html_start.replace("@BACKGROUND_COLOR@",
-                                            color.to_string())
+                                            "#353535")
         else:
-            html_start = html_start.replace("@BACKGROUND_COLOR@",
-                                            "rgba(74,144,217,0.2)")
+            fake = Gtk.Entry.new()
+            style_context = fake.get_style_context()
+            (found, color) = style_context.lookup_color(
+                "theme_selected_bg_color")
+            if found:
+                color.alpha = 0.2
+                html_start = html_start.replace("@BACKGROUND_COLOR@",
+                                                color.to_string())
+            else:
+                html_start = html_start.replace("@BACKGROUND_COLOR@",
+                                                "rgba(74,144,217,0.2)")
         idx = 0
         for (title, uri, netloc, count) in items:
             element_id = "element_%s" % idx
