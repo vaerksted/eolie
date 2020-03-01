@@ -29,6 +29,7 @@ class GesturesHelper():
             @params as callbacks
         """
         self.__widget = widget
+        self.__multi_pressed = False
         widget.connect("destroy", self.__on_destroy)
         self.__primary_long_callback = primary_long_callback
         self.__secondary_long_callback = secondary_long_callback
@@ -125,11 +126,7 @@ class GesturesHelper():
             @param x as int
             @param y as int
         """
-        if gesture.get_current_button() == 3:
-            sequence = gesture.get_current_sequence()
-            event = gesture.get_last_event(sequence)
-            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
-            self._on_secondary_press_gesture(x, y, event)
+        self.__multi_pressed = True
 
     def __on_multi_released(self, gesture, n_press, x, y):
         """
@@ -139,6 +136,9 @@ class GesturesHelper():
             @param x as int
             @param y as int
         """
+        if not self.__multi_pressed:
+            return
+        self.__multi_pressed = False
         sequence = gesture.get_current_sequence()
         event = gesture.get_last_event(sequence)
         if gesture.get_current_button() == 1:
