@@ -86,6 +86,13 @@ class WebView(WebKit2.WebView):
         else:
             settings.set_property(key, value)
 
+    def reload_bypass_cache(self):
+        """
+            Reload page, destroy night mode cache
+        """
+        self.remove_night_mode_cache()
+        WebKit2.WebView.reload_bypass_cache(self)
+
     def update_zoom_level(self):
         """
             Update zoom level

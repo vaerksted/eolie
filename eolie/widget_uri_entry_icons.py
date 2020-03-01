@@ -181,7 +181,7 @@ class UriEntryIcons(Gtk.Grid):
         """
         icon_name = self.__reload_stop_button.get_image().get_icon_name()[0]
         if icon_name == 'view-refresh-symbolic':
-            self.__window.container.webview.reload()
+            self.__window.container.webview.reload_bypass_cache()
         else:
             self.__window.container.webview.stop_loading()
 

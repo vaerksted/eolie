@@ -84,6 +84,12 @@ class WebViewNightMode:
         else:
             self.get_user_content_manager().remove_all_style_sheets()
 
+    def remove_night_mode_cache(self):
+        """
+            Remove cache for current stylesheets
+        """
+        self.__stylesheets.remove_cache()
+
     @property
     def stylesheets(self):
         """

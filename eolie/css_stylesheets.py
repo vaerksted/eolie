@@ -11,14 +11,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from gi.repository import Gio, GObject, GLib
-from gi.repository.Gio import FILE_ATTRIBUTE_TIME_MODIFIED
 
 from hashlib import md5
-from time import time
 
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_CACHE_PATH
 from eolie.css_stylesheet import StyleSheet
+from eolie.logger import Logger
 
 
 class StyleSheets(GObject.Object):
@@ -109,6 +108,20 @@ class StyleSheets(GObject.Object):
                 del self.__stylesheets[key]
         return "".join(css)
 
+    def remove_cache(self):
+        """
+            Remove cache for current stylesheets
+        """
+        try:
+            for uri in self.__stylesheets.keys():
+                encoded = md5(uri.encode("utf-8")).hexdigest()
+                filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
+                f = Gio.File.new_for_path(filepath)
+                if f.query_exists():
+                    f.delete(None)
+        except Exception as e:
+            Logger.error("StyleSheets::remove_cache(): %s", e)
+
     def reset(self):
         """
             Reset stylesheet state
@@ -143,20 +156,18 @@ class StyleSheets(GObject.Object):
             @param uri as str
             @return StyleSheet
         """
-        encoded = md5(uri.encode("utf-8")).hexdigest()
-        filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
-        f = Gio.File.new_for_path(filepath)
-        if f.query_exists():
-            info = f.query_info(FILE_ATTRIBUTE_TIME_MODIFIED,
-                                Gio.FileQueryInfoFlags.NONE,
-                                None)
-            mtime = int(info.get_attribute_as_string("time::modified"))
-            if time() - mtime < 86400:
+        try:
+            encoded = md5(uri.encode("utf-8")).hexdigest()
+            filepath = "%s/css/%s.css" % (EOLIE_CACHE_PATH, encoded)
+            f = Gio.File.new_for_path(filepath)
+            if f.query_exists():
                 (status, contents, tags) = f.load_contents(None)
                 if status:
                     stylesheet = StyleSheet(uri=uri)
                     stylesheet.set_css_text(contents.decode("utf-8"))
                     return stylesheet
+        except Exception as e:
+            Logger.error("StyleSheets::__load_from_cache(): %s", e)
         return None
 
     def __on_stylesheet_populated(self, stylesheet):
