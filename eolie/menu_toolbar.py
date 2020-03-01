@@ -75,6 +75,19 @@ class ToolbarMenu(Gtk.PopoverMenu):
                                netloc,
                                blocker)
                 window.add_action(action)
+            # Night mode
+            night_mode = App().settings.get_value("night-mode")
+            netloc_night_mode = App().websettings.get("night_mode", uri)
+            builder.get_object("night_mode").show()
+            enabled = night_mode and netloc_night_mode in [1, None]
+            action = Gio.SimpleAction.new_stateful(
+                    "night-mode",
+                    None,
+                    GLib.Variant.new_boolean(enabled))
+            action.connect("change-state",
+                           self.__on_night_mode_change_state,
+                           uri)
+            window.add_action(action)
             # Languages
             builder.get_object("spell-checking").show()
             languages_menu = LanguagesMenu(uri)
@@ -173,3 +186,14 @@ class ToolbarMenu(Gtk.PopoverMenu):
         content_blocker.exceptions.save()
         content_blocker.update()
         self.__window.container.webview.reload()
+
+    def __on_night_mode_change_state(self, action, param, uri):
+        """
+            Set night mode value
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param uri as str
+        """
+        action.set_state(param)
+        App().websettings.set("night_mode", uri, param.get_boolean())
+        self.__window.container.webview.night_mode()

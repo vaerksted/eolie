@@ -172,9 +172,13 @@ class WebViewArtwork:
         emit_signal(self, "snapshot-changed", surface)
         if not save or self.error:
             return
-        App().art.save_artwork(self.uri, surface, "start")
+        if App().settings.get_value("night-mode"):
+            prefix = "start_dark"
+        else:
+            prefix = "start_light"
+        App().art.save_artwork(self.uri, surface, prefix)
         if self.loaded_uri is not None and self.uri != self.loaded_uri:
-            App().art.save_artwork(self.loaded_uri, surface, "start")
+            App().art.save_artwork(self.loaded_uri, surface, prefix)
 
     def __on_scroll_event(self, widget, event):
         """

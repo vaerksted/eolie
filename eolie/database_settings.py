@@ -42,6 +42,7 @@ class DatabaseSettings:
                                            languages TEXT,
                                            zoom INT,
                                            accept_tls INT NOT NULL DEFAULT 0,
+                                           night_mode INT,
                                            pinned INT NOT NULL DEFAULT 0,
                                            geolocation INT,
                                            user_agent TEXT
