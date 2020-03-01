@@ -29,7 +29,7 @@ class GesturesHelper():
             @params as callbacks
         """
         self.__widget = widget
-        self.__multi_pressed = False
+        self.__allow_multi_released = False
         widget.connect("destroy", self.__on_destroy)
         self.__primary_long_callback = primary_long_callback
         self.__secondary_long_callback = secondary_long_callback
@@ -39,6 +39,7 @@ class GesturesHelper():
         self.__long_press = Gtk.GestureLongPress.new(widget)
         self.__long_press.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         self.__long_press.connect("pressed", self.__on_long_pressed)
+        self.__long_press.connect("cancelled", self.__on_long_cancelled)
         self.__long_press.set_button(0)
         self.__multi_press = Gtk.GestureMultiPress.new(widget)
         self.__multi_press.connect("released", self.__on_multi_released)
@@ -109,7 +110,7 @@ class GesturesHelper():
 
     def __on_long_pressed(self, gesture, x, y):
         """
-            Check long pressed button
+            Run callback for long pressed
             @param gesture as Gtk.Gesture
             @param x as int
             @param y as int
@@ -119,14 +120,26 @@ class GesturesHelper():
         else:
             self._on_secondary_long_press_gesture(x, y)
 
+    def __on_long_cancelled(self, gesture):
+        """
+            Allow multi released
+            @param gesture as Gtk.Gesture
+        """
+        self.__allow_multi_released = True
+
     def __on_multi_pressed(self, gesture, n_press, x, y):
         """
+            For headerbar hack
             @param gesture as Gtk.Gesture
             @param n_press as int
             @param x as int
             @param y as int
         """
-        self.__multi_pressed = True
+        if gesture.get_current_button() == 3:
+            sequence = gesture.get_current_sequence()
+            event = gesture.get_last_event(sequence)
+            gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+            self._on_secondary_press_gesture(x, y, event)
 
     def __on_multi_released(self, gesture, n_press, x, y):
         """
@@ -136,9 +149,9 @@ class GesturesHelper():
             @param x as int
             @param y as int
         """
-        if not self.__multi_pressed:
+        if not self.__allow_multi_released:
             return
-        self.__multi_pressed = False
+        self.__allow_multi_released = False
         sequence = gesture.get_current_sequence()
         event = gesture.get_last_event(sequence)
         if gesture.get_current_button() == 1:
