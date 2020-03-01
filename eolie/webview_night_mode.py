@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import WebKit2, Gio, GLib
 
 from time import time
 
@@ -142,7 +142,7 @@ class WebViewNightMode:
         self.run_javascript("""
                     html = document.querySelector("html");
                     if (html !== null) {
-                        html.style.display = "none";
+                        html.style.opacity = 0;
                     }""", None, None)
 
     def __on_stylesheets_populated(self, stylesheets):
@@ -160,8 +160,8 @@ class WebViewNightMode:
                  None,
                  None)
         content_manager.add_style_sheet(user_style_sheet)
-        self.run_javascript("""
+        GLib.timeout_add(250, self.run_javascript, """
             html = document.querySelector("html");
             if (html !== null) {
-                html.style.display = "block";
+                html.style.opacity = 1;
             }""", None, None)
