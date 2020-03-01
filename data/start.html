@@ -34,7 +34,7 @@ body {
     position: relative;
     vertical-align: top;
     margin: 10px;
-    border: 1px solid #eeeeec;
+    border: 1px solid grey;
     border-radius: 1px;
     opacity: 1.0;
     max-width: 300px;
@@ -45,8 +45,9 @@ body {
 }
 
 .child:hover {
+    transition: box-shadow 200ms linear;
     -webkit-filter: brightness(105%);
-    box-shadow: 0px 0px 10px 3px rgb(53, 132, 228);
+    box-shadow: 0px 0px 10px 5px rgba(53, 132, 228, 0.5);
 }
 
 .caption {
