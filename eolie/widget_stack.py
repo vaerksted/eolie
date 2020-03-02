@@ -25,15 +25,12 @@ class Stack(Gtk.Overlay):
         """
         Gtk.Overlay.__init__(self)
         self.__visible_child = None
-        # https://gitlab.gnome.org/GNOME/pygobject/issues/387
-        self.__webviews = []
 
     def add(self, webview):
         """
             Add widget to stack
             @param webview as WebView
         """
-        self.__webviews.append(webview)
         webview.connect("snapshot-changed", self.__on_webview_snapshot_changed)
         webview.connect("destroy", self.__on_webview_destroy)
         self.add_overlay(webview)
@@ -70,8 +67,6 @@ class Stack(Gtk.Overlay):
         """
         if self.__visible_child == webview:
             self.__visible_child = None
-        if webview in self.__webviews:
-            self.__webviews.remove(webview)
 
     def __on_webview_snapshot_changed(self, webview, surface):
         """
