@@ -28,7 +28,6 @@ class WebViewContainer:
         """
         self.__current_webview = None
         self.__signal_ids = []
-        self.__bfl_signal_id = None
 
     def set_visible_webview(self, webview):
         """
@@ -61,9 +60,6 @@ class WebViewContainer:
                             self.__on_mouse_target_changed))
         self.__signal_ids.append(
             webview.connect("destroy", self.__on_destroy))
-        self.__bfl_signal_id = webview.get_back_forward_list().connect(
-                "changed",
-                self.__on_back_forward_list_changed)
         accept_tls = App().websettings.get("accept_tls", webview.uri)
         self._window.toolbar.end.show_tls_button(accept_tls)
         self._window.toolbar.actions.set_actions(self.__current_webview)
@@ -87,10 +83,7 @@ class WebViewContainer:
             return
         for signal_id in self.__signal_ids:
             webview.disconnect(signal_id)
-        if self.__bfl_signal_id is not None:
-            webview.get_back_forward_list().disconnect(self.__bfl_signal_id)
         self.__signal_ids = []
-        self.__bfl_signal_id = None
         self.__current_webview = None
 
 #######################
@@ -102,7 +95,6 @@ class WebViewContainer:
             @param webview as WebView
         """
         self.__signal_ids = []
-        self.__bfl_signal_id = None
         self.__current_webview = None
 
     def __on_title_changed(self, webview, title):
@@ -134,17 +126,6 @@ class WebViewContainer:
         value = webview.get_estimated_load_progress()
         self._window.toolbar.title.entry.progress.set_fraction(value)
 
-    def __on_back_forward_list_changed(self, bf_list, added, removed):
-        """
-            Update actions
-            @param bf_list as WebKit2.BackForwardList
-            @param added as WebKit2.BackForwardListItem
-            @param removed as WebKit2.BackForwardListItem
-            @param webview as WebView
-        """
-        if self.__current_webview is not None:
-            self._window.toolbar.actions.set_actions(self.__current_webview)
-
     def __on_readability_status(self, webview, status):
         """
             Show/hide toolbar indicator
@@ -174,6 +155,8 @@ class WebViewContainer:
             else:
                 self._window.toolbar.title.start_search()
             self.check_readability(webview)
+        else:
+            self._window.toolbar.actions.set_actions(self.__current_webview)
 
     def __on_enter_fullscreen(self, webview):
         """
