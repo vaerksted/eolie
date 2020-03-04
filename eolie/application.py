@@ -25,6 +25,7 @@ from urllib.parse import urlparse
 from time import time
 from getpass import getuser
 from signal import signal, SIGINT, SIGTERM
+import gc
 
 from eolie.application_night import NightApplication
 from eolie.settings import Settings
@@ -124,8 +125,9 @@ class Application(Gtk.Application, NightApplication):
         if self.get_is_remote():
             Gdk.notify_startup_complete()
         if GLib.environ_getenv(GLib.get_environ(), "DEBUG_LEAK") is not None:
-            import gc
             gc.set_debug(gc.DEBUG_LEAK)
+        else:
+            gc.disable()
 
     def do_startup(self):
         """
@@ -202,7 +204,6 @@ class Application(Gtk.Application, NightApplication):
             self.sync_worker.stop()
             self.sync_worker.save_pendings()
         if GLib.environ_getenv(GLib.get_environ(), "DEBUG_LEAK") is not None:
-            import gc
             gc.collect()
             for x in gc.garbage:
                 s = str(x)
