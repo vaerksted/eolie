@@ -123,6 +123,9 @@ class Application(Gtk.Application, NightApplication):
         self.register(None)
         if self.get_is_remote():
             Gdk.notify_startup_complete()
+        if GLib.environ_getenv(GLib.get_environ(), "DEBUG_LEAK") is not None:
+            import gc
+            gc.set_debug(gc.DEBUG_LEAK)
 
     def do_startup(self):
         """
@@ -198,6 +201,12 @@ class Application(Gtk.Application, NightApplication):
         if self.sync_worker is not None:
             self.sync_worker.stop()
             self.sync_worker.save_pendings()
+        if GLib.environ_getenv(GLib.get_environ(), "DEBUG_LEAK") is not None:
+            import gc
+            gc.collect()
+            for x in gc.garbage:
+                s = str(x)
+                print(type(x), "\n  ", s)
         if vacuum:
             task_helper = TaskHelper()
             task_helper.run(self.__vacuum,
