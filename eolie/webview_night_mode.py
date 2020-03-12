@@ -48,6 +48,11 @@ class WebViewNightMode:
                       }\
                       a:hover {\
                         color: white !important;\
+                      }\
+                      input, select {\
+                        color: #EAEAEA !important;\
+                        background-color: #353535 !important;\
+                        border: 1px solid grey;\
                       }",
                      WebKit2.UserContentInjectedFrames.ALL_FRAMES,
                      WebKit2.UserStyleLevel.USER,
