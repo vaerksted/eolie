@@ -39,13 +39,11 @@ class WebView(WebKit2.WebView):
             New webview
             @param window as Window
         """
-        content_manager = WebKit2.UserContentManager.new()
-        for content_filter in App().content_filters:
-            if content_filter is not None:
-                content_manager.add_filter(content_filter)
+        context = WebKit2.WebContext(
+            process_swap_on_cross_site_navigation_enabled=True)
+        Context(context)
 
-        webview = WebKit2.WebView.new_with_user_content_manager(
-            content_manager)
+        webview = WebKit2.WebView.new_with_context(context)
         webview.__class__ = WebViewMeta
         webview.__init(None, window)
         return webview
@@ -389,6 +387,10 @@ class WebView(WebKit2.WebView):
         self.set_hexpand(True)
         self.set_vexpand(True)
         self.clear_text_entry()
+        content_manager = self.get_user_content_manager()
+        for content_filter in App().content_filters:
+            if content_filter is not None:
+                content_manager.add_filter(content_filter)
         if related is None:
             # Set settings
             settings = self.get_settings()

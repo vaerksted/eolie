@@ -41,7 +41,6 @@ from eolie.database_history import DatabaseHistory
 from eolie.database_bookmarks import DatabaseBookmarks
 from eolie.database_settings import DatabaseSettings
 from eolie.sqlcursor import SqlCursor
-from eolie.context import Context
 from eolie.search import Search
 from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
@@ -350,9 +349,6 @@ class Application(Gtk.Application, NightApplication):
                     "org.gnome.Eolie.desktop")
             except:
                 pass
-
-        # Init default context
-        Context(WebKit2.WebContext().get_default())
 
         shortcut_action = Gio.SimpleAction.new('shortcut',
                                                GLib.VariantType.new('s'))
