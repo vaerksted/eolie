@@ -39,7 +39,7 @@ class WebViewNightMode:
                                    self.__on_stylesheets_populated)
         self.get_style_context().add_class("night-mode")
         self.__default_stylesheet = WebKit2.UserStyleSheet(
-                     "body {\
+                     "body, table, figure {\
                         color: #EAEAEA !important;\
                         background-color: #353535 !important\
                       }\
