@@ -49,6 +49,9 @@ class WebViewNightMode:
                       a:hover {\
                         color: white !important;\
                       }\
+                      p[style] {\
+                           background-color: #303030 !important\
+                      }\
                       input, select {\
                         color: #EAEAEA !important;\
                         background-color: #353535 !important;\
