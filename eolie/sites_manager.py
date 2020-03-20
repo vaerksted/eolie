@@ -100,7 +100,7 @@ class SitesManager(Gtk.Grid):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.self.get_state_flags() & Gtk.StateFlags.VISITED:
+            if child.get_state_flags() & Gtk.StateFlags.VISITED:
                 current = child
             child.unset_state_flags(Gtk.StateFlags.VISITED)
         index = current.get_index()
@@ -125,7 +125,7 @@ class SitesManager(Gtk.Grid):
         current = None
         children = self.__box.get_children()
         for child in children:
-            if child.self.get_state_flags() & Gtk.StateFlags.VISITED:
+            if child.get_state_flags() & Gtk.StateFlags.VISITED:
                 current = child
             child.unset_state_flags(Gtk.StateFlags.VISITED)
         index = current.get_index()
