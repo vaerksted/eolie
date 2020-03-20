@@ -54,6 +54,9 @@ class StyleSheets(GObject.Object):
             @param message as str
         """
         uri = message.replace("@EOLIE_CSS_URI@", "")
+        if not uri:
+            self.emit("populated")
+            return
         if uri in self.__stylesheets.keys():
             self.__stylesheets[uri].set_started_time(started_time)
             self.__check_populated()
