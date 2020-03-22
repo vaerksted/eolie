@@ -52,7 +52,7 @@ class WebViewNightMode:
                       p[style] {\
                            background-color: #303030 !important\
                       }\
-                      input, select {\
+                      input, select, button{\
                         color: #EAEAEA !important;\
                         background-color: #353535 !important;\
                         border: 1px solid grey;\
