@@ -36,12 +36,15 @@ class CSSStyleRule:
         self.__border_str = None
         self.__has_background_url = False
         # Get selectors
-        search = search = re.search('^([^{]*){(.*)}', css)
+        search = re.search('^([^{]*){(.*)}', css)
         if search is not None:
             self.__selector = search.group(1).strip()
             declarations = search.group(2)
             self.__has_background_url = declarations.find("url(") != -1
             for declaration in declarations.split(";"):
+                # Search for selector (debug)
+                # if self.__selector == ".site":
+                #    print(search)
                 if declaration.find(":") == -1:
                     continue
                 (prop, value) = declaration.split(":", 1)
