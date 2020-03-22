@@ -42,9 +42,6 @@ class CSSStyleRule:
             declarations = search.group(2)
             self.__has_background_url = declarations.find("url(") != -1
             for declaration in declarations.split(";"):
-                # Search for selector (debug)
-                # if self.__selector == ".site":
-                #    print(search)
                 if declaration.find(":") == -1:
                     continue
                 (prop, value) = declaration.split(":", 1)
