@@ -36,7 +36,7 @@ class CSSStyleRule:
         self.__border_str = None
         self.__has_background_url = False
         # Get selectors
-        search = search = re.search('^([^{]*){(.*)}', css)
+        search = re.search('^([^{]*){(.*)}', css)
         if search is not None:
             self.__selector = search.group(1).strip()
             declarations = search.group(2)

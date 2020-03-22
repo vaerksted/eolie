@@ -34,6 +34,8 @@ class CSSRuleList:
         self.__rules = []
         for child in self.__get_children(css):
             child = child.strip()
+            # Remove any comment
+            child = re.sub(".*\*\/", "", child)
             if child.startswith("@media"):
                 rule = CSSMediaRule(child, uri, cancellable)
             elif child.startswith("@supports"):
@@ -77,8 +79,6 @@ class CSSRuleList:
         """
         children = []
         css = css.replace("\n", "").strip()
-        # Remove comments
-        css = re.sub("\/\*[^*]*[^/]*\*\/", "", css)
         css_split = css.split("}")
         bracket_count = 0
         children = []
