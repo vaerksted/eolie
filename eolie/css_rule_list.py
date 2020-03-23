@@ -35,7 +35,7 @@ class CSSRuleList:
         for child in self.__get_children(css):
             child = child.strip()
             # Remove any comment
-            child = re.sub(".*\*\/", "", child)
+            child = re.sub("\/\*[^*]*[^/]*\*\/", "", child)
             if child.startswith("@media"):
                 rule = CSSMediaRule(child, uri, cancellable)
             elif child.startswith("@supports"):
