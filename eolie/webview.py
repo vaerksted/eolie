@@ -287,6 +287,13 @@ class WebView(WebKit2.WebView):
         """
         self.__window = window
 
+    def stop_loading(self):
+        """
+            Stop loading webview
+        """
+        self._loading = False
+        WebKit2.WebView.stop_loading(self)
+
     @property
     def readability(self):
         """
@@ -380,6 +387,7 @@ class WebView(WebKit2.WebView):
         WebViewCredentials.__init__(self)
         self.__window = window
         self.__atime = 0
+        self._loading = False
         self.__children = []
         self.__parent = None
         self._readability = False
