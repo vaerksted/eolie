@@ -1,5 +1,5 @@
 project('eolie', 'c',
-  version: '0.9.98.1',
+  version: '0.9.99',
   meson_version: '>= 0.48.0',
 )
 
