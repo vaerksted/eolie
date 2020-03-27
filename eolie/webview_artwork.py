@@ -65,6 +65,7 @@ class WebViewArtwork:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.STARTED:
+            self._loading = True
             self.__is_snapshot_valid = False
             self.__cancellable.cancel()
             self.__cancellable = Gio.Cancellable()
@@ -74,8 +75,11 @@ class WebViewArtwork:
         elif event == WebKit2.LoadEvent.FINISHED:
             if self.__snapshot_id is not None:
                 GLib.source_remove(self.__snapshot_id)
-            self.__snapshot_id = GLib.timeout_add(2500,
-                                                  self.__set_snapshot)
+                self.__snapshot_id = None
+            if self._loading:
+                self.__snapshot_id = GLib.timeout_add(2500,
+                                                      self.__set_snapshot)
+            self._loading = False
 
 #######################
 # PRIVATE             #
