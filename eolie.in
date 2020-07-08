@@ -34,8 +34,15 @@ def install_excepthook():
 if __name__ == "__main__":
     install_excepthook()
     
-    locale.bindtextdomain('eolie', localedir)
-    locale.textdomain('eolie')
+    try:
+        locale.bindtextdomain('eolie', localedir)
+        locale.textdomain('eolie')
+    except AttributeError as e:
+        # Python built without gettext support doesn't have bindtextdomain()
+        # and textdomain()
+        print("Couldn't bind the gettext translation domain. Some translations"
+        " won't work.\n{}".format(e))
+
     gettext.bindtextdomain('eolie', localedir)
     gettext.textdomain('eolie')
 
