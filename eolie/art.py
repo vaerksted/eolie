@@ -154,7 +154,8 @@ class Art:
         parsed = urlparse(uri)
         if uri is None or not parsed.netloc:
             return None
-        encoded = md5(uri.encode("utf-8")).hexdigest()
+        path = "%{}{}%".format(parsed.netloc, parsed.path)
+        encoded = md5(path.encode("utf-8")).hexdigest()
         filepath = "%s/art/%s_%s.png" % (EOLIE_CACHE_PATH, encoded, suffix)
         return filepath
 
