@@ -14,6 +14,7 @@ from gi.repository import GLib, Gio
 
 import sqlite3
 import itertools
+from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.utils import noaccents, get_random_string
@@ -207,9 +208,13 @@ class DatabaseBookmarks:
         if uri is None:
             return None
         with SqlCursor(self) as sql:
+            parsed = urlparse(uri.rstrip('/'))
+            if not parsed.netloc:
+                return None
+            search = "%{}{}%".format(parsed.netloc, parsed.path)
             result = sql.execute("SELECT rowid\
                                   FROM bookmarks\
-                                  WHERE uri=?", (uri.rstrip('/'),))
+                                  WHERE uri like ?", (search,))
             v = result.fetchone()
             if v is not None:
                 return v[0]
