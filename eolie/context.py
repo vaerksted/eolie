@@ -14,11 +14,9 @@ from gi.repository import GLib, Gio, Gtk, WebKit2
 
 from urllib.parse import urlparse
 from gettext import gettext as _
-from datetime import datetime
 
 from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
 from eolie.helper_task import TaskHelper
-from eolie.utils import emit_signal
 
 
 class Context:
@@ -50,7 +48,6 @@ class Context:
         context.register_uri_scheme("populars", self.__on_populars_scheme)
         context.register_uri_scheme("internal", self.__on_internal_scheme)
         context.register_uri_scheme("accept", self.__on_accept_scheme)
-        context.register_uri_scheme("file", self.__on_file_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.set_sandbox_enabled(True)
         # We allow DownloadPopover to connect before default context
@@ -135,92 +132,6 @@ class Context:
         html = html_start.encode("utf-8") + end_content
         stream = Gio.MemoryInputStream.new_from_data(html)
         request.finish(stream, -1, "text/html")
-
-    def __on_file_scheme(self, request):
-        """
-            Show populars web pages
-            @param request as WebKit2.URISchemeRequest
-        """
-        try:
-            uri = request.get_uri()
-            parent = "/".join(uri.rstrip("/").split("/")[:-1])
-            f = Gio.File.new_for_uri(uri)
-            info = f.query_info("standard::type",
-                                Gio.FileQueryInfoFlags.NOFOLLOW_SYMLINKS,
-                                None)
-            if info.get_file_type() == Gio.FileType.DIRECTORY:
-                start = Gio.File.new_for_uri(
-                    "resource:///org/gnome/Eolie/start_file.html")
-                end = Gio.File.new_for_uri(
-                    "resource:///org/gnome/Eolie/end_file.html")
-                (status, start_content, tag) = start.load_contents(None)
-                (status, end_content, tag) = end.load_contents(None)
-                html_start = start_content.decode("utf-8")
-                html_start = html_start.replace("@PATH@", f.get_path())
-                html_start = html_start.replace("@NAME@", _("Name"))
-                html_start = html_start.replace("@SIZE@", _("Size"))
-                html_start = html_start.replace("@LAST_MODIFICATION@",
-                                                _("Last modification"))
-                if parent:
-                    html_start += '<tr>'\
-                                  '<td><a class="dir" href="%s">%s</a></td>'\
-                                  '<td></td>'\
-                                  '<td></td></tr>' % (
-                                      parent, "..")
-                try:
-                    infos = f.enumerate_children(
-                        "standard::name,standard::size,"
-                        "standard::type,time::modified",
-                        Gio.FileQueryInfoFlags.NONE,
-                        None)
-                    dirs = {}
-                    files = {}
-                    for info in infos:
-                        name = info.get_name()
-                        if f.get_path() == "/":
-                            filename = "/%s" % name
-                        else:
-                            filename = "%s/%s" % (f.get_path(), name)
-                        uri = GLib.filename_to_uri(filename)
-                        mtime = info.get_attribute_uint64("time::modified")
-                        size = round((info.get_size() / 1024), 2)
-                        date_str = datetime.fromtimestamp(mtime).strftime(
-                            "%Y-%m-%d %H:%M:%S")
-                        if info.get_file_type() == Gio.FileType.DIRECTORY:
-                            dirs[uri] = (name, size, date_str)
-                        else:
-                            files[uri] = (name, size, date_str)
-                    for uri, (name, size, date_str) in sorted(dirs.items()):
-                        html_start += '<tr>'\
-                                      '<td><a class="dir" href="%s">'\
-                                      '%s</a></td>'\
-                                      '<td>%s KB</td>'\
-                                      '<td>%s</td></tr>' % (
-                                          uri, name, size, date_str)
-                    for uri, (name, size, date_str) in sorted(files.items()):
-                        html_start += '<tr>'\
-                                      '<td><a class="file" href="%s">'\
-                                      '%s</a></td>'\
-                                      '<td>%s KB</td>'\
-                                      '<td>%s</td></tr>' % (
-                                          uri, name, size, date_str)
-                except Exception as e:
-                    infos = []
-                    html_start += '<tr>'\
-                                  '<td>%s</td>'\
-                                  '<td></td>'\
-                                  '<td></td></tr>' % e
-                html = html_start.encode("utf-8") + end_content
-                stream = Gio.MemoryInputStream.new_from_data(html)
-                request.finish(stream, -1, "text/html")
-            else:
-                request.finish(f.read(), -1, None)
-        except Exception as e:
-            emit_signal(request.get_web_view(),
-                        "load-failed",
-                        WebKit2.LoadEvent.FINISHED,
-                        uri,
-                        GLib.Error(str(e)))
 
     def __on_internal_scheme(self, request):
         """
