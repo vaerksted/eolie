@@ -72,11 +72,14 @@ class WebViewContainer:
         self._window.toolbar.title.entry.icons.show_readable_button(False)
         self._window.toolbar.title.entry.icons.set_loading(False)
         self._window.toolbar.title.entry.progress.hide()
-        self._window.toolbar.title.entry.set_title(webview.title)
         if webview.get_uri() is None and\
                 webview.uri is not None and\
                 webview.related is None:
             webview.load_uri(webview.uri)
+        if webview.uri == "populars:":
+            self._window.toolbar.title.entry.set_default_placeholder()
+        else:
+            self._window.toolbar.title.entry.set_title(webview.title)
 
     def dismiss_webview(self, webview):
         """
@@ -162,17 +165,16 @@ class WebViewContainer:
         parsed = urlparse(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
+            if not wanted_scheme:
+                GLib.idle_add(self._window.toolbar.title.start_search)
             self._window.toolbar.title.entry.icons.set_loading(True)
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
-            # Give focus to webview
             if wanted_scheme:
                 GLib.idle_add(webview.grab_focus)
-            else:
-                self._window.toolbar.title.start_search()
             self.check_readability(webview)
 
     def __on_enter_fullscreen(self, webview):

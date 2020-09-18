@@ -115,9 +115,11 @@ class WebViewNavigation:
             @param webview as WebView
             @param event as WebKit2.LoadEvent
         """
+        parsed = urlparse(webview.uri)
         if event == WebKit2.LoadEvent.COMMITTED:
-            emit_signal(self, "title-changed", webview.uri)
-            self.update_zoom_level()
+            if parsed.scheme in ["http", "https"]:
+                emit_signal(self, "title-changed", webview.uri)
+                self.update_zoom_level()
         elif event == WebKit2.LoadEvent.FINISHED:
             App().history.set_page_state(self.uri)
             self.__update_bookmark_metadata(self.uri)

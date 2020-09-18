@@ -151,10 +151,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
             Set toolbar title
             @param title as str
         """
-        if title is None:
-            self.__window.set_title("Eolie")
-            self.set_default_placeholder()
-        else:
+        if title:
             self.__window.set_title(title)
             self.__placeholder.set_text(title)
             self.set_text_entry("")
