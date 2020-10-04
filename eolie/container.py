@@ -106,7 +106,7 @@ class Container(Gtk.Paned,
                 App().active_window,
                 "https://www.patreon.com/gnumdk",
                 Gdk.CURRENT_TIME)])
-        self.add_overlay(notification)
+        self.overlay.add_overlay(notification)
         notification.show()
         notification.set_reveal_child(True)
         App().settings.set_value("donation",
