@@ -84,10 +84,10 @@ class WebViewErrors:
             @param uri as str
             @param error as GLib.Error
         """
+        self.__error = True
         # Ignore HTTP errors
         if error.code > 101:
             return False
-        self.__error = True
         network_available = Gio.NetworkMonitor.get_default(
         ).get_network_available()
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
