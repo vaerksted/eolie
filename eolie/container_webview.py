@@ -165,11 +165,12 @@ class WebViewContainer:
         parsed = urlparse(webview.uri)
         wanted_scheme = parsed.scheme in ["http", "https", "file"]
         if event == WebKit2.LoadEvent.STARTED:
-            if not wanted_scheme:
-                GLib.idle_add(self._window.toolbar.title.start_search)
             self._window.toolbar.title.entry.icons.set_loading(True)
             self._window.toolbar.title.entry.icons.show_geolocation(False)
             self._window.toolbar.title.entry.icons.show_readable_button(False)
+        elif event == WebKit2.LoadEvent.COMMITTED:
+            if not wanted_scheme:
+                GLib.idle_add(self._window.toolbar.title.start_search)
         elif event == WebKit2.LoadEvent.FINISHED:
             self._window.toolbar.title.entry.icons.set_loading(False)
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
