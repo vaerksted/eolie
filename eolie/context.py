@@ -15,6 +15,7 @@ from gi.repository import GLib, Gio, Gtk, WebKit2
 from urllib.parse import urlparse
 from gettext import gettext as _
 
+from eolie.logger import Logger
 from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
 from eolie.helper_task import TaskHelper
 
@@ -50,6 +51,15 @@ class Context:
         context.register_uri_scheme("accept", self.__on_accept_scheme)
         context.get_security_manager().register_uri_scheme_as_local("populars")
         context.set_sandbox_enabled(True)
+        values = App().settings.get_value("notification-domains")
+        try:
+            origins = []
+            for value in values:
+                (scheme, netloc) = value.split(";")
+                origins.append(WebKit2.SecurityOrigin(scheme, netloc, 0))
+            context.initialize_notification_permissions(origins, [])
+        except Exception as e:
+            Logger.error("Context::__init__(): %s", e)
         # We allow DownloadPopover to connect before default context
         context.connect_after("download-started", self.__on_download_started)
 

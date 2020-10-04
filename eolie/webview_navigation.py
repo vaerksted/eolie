@@ -12,6 +12,7 @@
 
 from gi.repository import GLib, Gtk, Gio, WebKit2, Gdk
 
+from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
@@ -184,6 +185,13 @@ class WebViewNavigation:
             @param webview as WebKit2.WebView
             @param request as WebKit2.PermissionRequest
         """
+        def on_allow_notifications(parsed):
+            values = list(App().settings.get_value("notification-domains"))
+            values.append("%s;%s" % (parsed.scheme, parsed.netloc))
+            App().settings.set_value("notification-domains",
+                                     GLib.Variant("as", values))
+            request.allow()
+
         if isinstance(request, WebKit2.GeolocationPermissionRequest):
             if self.is_ephemeral:
                 request.deny()
@@ -191,8 +199,15 @@ class WebViewNavigation:
                 uri = webview.uri
                 self.window.toolbar.title.show_geolocation(uri, request)
         elif isinstance(request, WebKit2.NotificationPermissionRequest):
-            # Can use Gnome Shell notification policy
-            request.allow()
+            parsed = urlparse(webview.uri)
+            from eolie.container_notification import ContainerNotification
+            notification = ContainerNotification(
+                _("Allow notifications for %s") % parsed.netloc,
+                [_("Allow")],
+                [lambda: on_allow_notifications(parsed)])
+            self.window.container.overlay.add_overlay(notification)
+            notification.show()
+            notification.set_reveal_child(True)
         return True
 
     def __on_decide_policy(self, webview, decision, decision_type):

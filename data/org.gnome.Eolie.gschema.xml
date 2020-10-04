@@ -159,6 +159,11 @@
          <summary>Default zoom level</summary>
          <description />
       </key>
+      <key type="as" name="notification-domains">
+         <default>[]</default>
+         <summary>Domains allowed to notify user</summary>
+         <description />
+      </key>
       <key enum="org.gnome.Eolie.Cookie" name="cookie-storage">
          <default>"no_third_party"</default>
          <summary>Cookie storage type</summary>
