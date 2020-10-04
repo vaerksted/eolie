@@ -192,7 +192,10 @@ class StackContainer:
             Get current webview
             @return webview
         """
-        return self._stack.get_visible_child()
+        if self._reading_webview is None:
+            return self._stack.get_visible_child()
+        else:
+            return self._reading_webview
 
 #######################
 # PRIVATE             #

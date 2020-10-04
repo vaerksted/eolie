@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gtk, Gio, GLib
+from gi.repository import WebKit2, Gio, GLib
 
 from urllib.parse import urlparse
 from time import time
@@ -96,12 +96,10 @@ class WebView(WebKit2.WebView):
             Update zoom level
         """
         try:
-            zoom_level = self.window.zoom_level
             if self.__related is not None:
-                window = self.__related.get_ancestor(Gtk.Window)
-                if window is not None and hasattr(window, "zoom_level"):
-                    zoom_level = window.zoom_level
+                zoom_level = self.__related.window.zoom_level
             else:
+                zoom_level = self.window.zoom_level
                 _zoom_level = App().websettings.get("zoom", self.uri)
                 if _zoom_level is not None:
                     zoom_level = _zoom_level / 100
@@ -122,12 +120,16 @@ class WebView(WebKit2.WebView):
             Zoom in view
             @return current zoom after zoom in
         """
-        current = App().websettings.get("zoom", self.uri)
+        parsed = urlparse(self.uri)
+        if parsed.netloc in ["http", "https"]:
+            current = App().websettings.get("zoom", self.uri)
+        else:
+            current = int(self.get_zoom_level() * 100)
         if current is None:
             current = int(self.window.zoom_level * 100)
         current += 10
         App().websettings.set("zoom", self.uri, current)
-        self.update_zoom_level()
+        self.set_zoom_level(current / 100)
         return current
 
     def zoom_out(self):
@@ -135,14 +137,18 @@ class WebView(WebKit2.WebView):
             Zoom out view
             @return current zoom after zoom out
         """
-        current = App().websettings.get("zoom", self.uri)
+        parsed = urlparse(self.uri)
+        if parsed.netloc in ["http", "https"]:
+            current = App().websettings.get("zoom", self.uri)
+        else:
+            current = int(self.get_zoom_level() * 100)
         if current is None:
             current = int(self.window.zoom_level * 100)
         current -= 10
         if current == 0:
             return 10
         App().websettings.set("zoom", self.uri, current)
-        self.update_zoom_level()
+        self.set_zoom_level(current / 100)
         return current
 
     def zoom_default(self):
@@ -152,7 +158,7 @@ class WebView(WebKit2.WebView):
         """
         current = int(self.window.zoom_level * 100)
         App().websettings.set("zoom", self.uri, None)
-        self.update_zoom_level()
+        self.set_zoom_level(current / 100)
         return current
 
     def update_spell_checking(self, uri):

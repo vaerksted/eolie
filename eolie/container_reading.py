@@ -10,9 +10,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import WebKit2, Gio
+from gi.repository import Gio
 
 from eolie.utils import emit_signal
+from eolie.webview import WebView
 
 
 class ReadingContainer:
@@ -24,7 +25,7 @@ class ReadingContainer:
         """
             Init container
         """
-        self.__reading_webview = None
+        self._reading_webview = None
         self.__related_webview = None
         self.__related_webview_id = None
 
@@ -33,7 +34,7 @@ class ReadingContainer:
             Toggle reading mode
             @return status as bool
         """
-        if self.__reading_webview is None:
+        if self._reading_webview is None:
             js1 = Gio.File.new_for_uri(
                 "resource:///org/gnome/Eolie/Readability.js")
             js2 = Gio.File.new_for_uri(
@@ -51,8 +52,8 @@ class ReadingContainer:
                 self.__related_webview.disconnect(self.__related_webview_id)
             self.__related_webview = None
             self.__related_webview_id = None
-            self.__reading_webview.destroy()
-            self.__reading_webview = None
+            self._reading_webview.destroy()
+            self._reading_webview = None
             return False
 
     def check_readability(self, webview):
@@ -86,7 +87,7 @@ class ReadingContainer:
             True if reading
             @return bool
         """
-        return self.__reading_webview is not None
+        return self._reading_webview is not None
 
 #######################
 # PRIVATE             #
@@ -119,12 +120,13 @@ class ReadingContainer:
         document_font_name = system.get_value("document-font-name").get_string(
         )
         document_font_size = str(int(document_font_name[-2:]) * 1.3) + "pt"
-        if self.__reading_webview is None:
-            self.__reading_webview = WebKit2.WebView.new()
-            self.__reading_webview.connect("decide-policy",
-                                           self.__on_decide_policy)
-            self.__reading_webview.show()
-            self.overlay.add_overlay(self.__reading_webview)
+        if self._reading_webview is None:
+            self._reading_webview = WebView.new(webview.window)
+            self._reading_webview.set_zoom_level(webview.get_zoom_level())
+            self._reading_webview.connect("decide-policy",
+                                          self.__on_decide_policy)
+            self._reading_webview.show()
+            self.overlay.add_overlay(self._reading_webview)
             html = "<html><head>\
                     <style type='text/css'>\
                     *:not(img) {font-size: %s;\
@@ -138,4 +140,4 @@ class ReadingContainer:
             html += "<title>%s</title>" % webview.title
             html += content
             html += "</html>"
-            self.__reading_webview.load_html(html, None)
+            self._reading_webview.load_html(html, None)
