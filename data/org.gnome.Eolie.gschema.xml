@@ -144,6 +144,11 @@
          <summary>Open this page on startup</summary>
          <description />
       </key>
+      <key type="s" name="firefox-sync-server">
+         <default>"token.services.mozilla.com"</default>
+         <summary>Firefox server FQDN</summary>
+         <description />
+      </key>
       <key type="i" name="min-font-size">
          <default>5</default>
          <summary>Minimum font size</summary>

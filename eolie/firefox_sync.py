@@ -27,8 +27,8 @@ from eolie.logger import Logger
 from eolie.utils import emit_signal
 
 
-TOKENSERVER_URL = "https://token.services.mozilla.com/"
-FXA_SERVER_URL = "https://api.accounts.mozilla.com"
+TOKENSERVER_URL = "https://%s/" %\
+    App().settings.get_value("firefox-sync-server").get_string()
 
 
 class SyncWorker(GObject.Object):
