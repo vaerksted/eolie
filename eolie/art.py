@@ -209,7 +209,7 @@ class Art:
                                         Gio.FileQueryInfoFlags.NONE,
                                         None)
                     mtime = info.get_attribute_uint64("time::modified")
-                    if current_time - mtime > 2592000:
+                    if current_time - mtime > 31536000:
                         f.delete()
         except Exception as e:
             Logger.error("Art::vacuum(): %s", e)
