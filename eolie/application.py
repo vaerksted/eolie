@@ -128,14 +128,6 @@ class Application(Gtk.Application, NightApplication):
         else:
             gc.disable()
 
-    def do_startup(self):
-        """
-            Init application
-        """
-        Gtk.Application.do_startup(self)
-        if not self.get_windows():
-            self.__init()
-
     def get_new_window(self):
         """
             Return a new window
@@ -539,6 +531,7 @@ class Application(Gtk.Application, NightApplication):
 
         # Only restore state on first run
         if not self.windows:
+            self.__init()
             self.__restore_state()
 
         # Setup at least one window
