@@ -22,14 +22,16 @@ class UriEntryIcons(Gtk.Grid):
         Entry for main URI bar
     """
 
-    def __init__(self, window):
+    def __init__(self, entry, window):
         """
             Init toolbar
+            @param entry as Gtk.Entry
             @param window as Window
         """
         Gtk.Grid.__init__(self)
         self.set_margin_end(2)
         self.set_margin_start(2)
+        self.__entry = entry
         self.__window = window
 
         separator = Gtk.Separator.new(Gtk.Orientation.VERTICAL)
@@ -205,6 +207,7 @@ class UriEntryIcons(Gtk.Grid):
         if icon_name == "edit-clear-symbolic":
             self.__entry.delete_text(0, -1)
             webview.clear_text_entry()
+            self.__entry.grab_focus()
         else:
             bookmark_id = App().bookmarks.get_id(webview.uri)
             if bookmark_id is None:

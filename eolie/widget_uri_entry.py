@@ -62,7 +62,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
         self.__entry_controller.connect("key-pressed",
                                         self.__on_entry_key_pressed)
 
-        self.__icons = UriEntryIcons(window)
+        self.__icons = UriEntryIcons(self.__entry, window)
         self.__icons.show()
 
         self.__placeholder = Gtk.Label.new()
