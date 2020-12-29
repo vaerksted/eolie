@@ -56,28 +56,38 @@ class ContentBlockerExceptions:
         except Exception as e:
             Logger.error("AdblockExceptions::save(): %s", e)
 
-    def add_domain_exception(self, domain):
+    def add_domain_exception(self, domain, url_filter=".*"):
         """
             Add an exception for domain
             @param domain as str
         """
-        rule = self.__get_rule_for_domain(domain)
+        rule = self.__get_rule_for_domain(domain, url_filter)
         self.__rules.append(rule)
 
-    def remove_domain_exception(self, domain):
+    def remove_domain_exception(self, domain, url_filter=".*"):
         """
             Remove an exception for domain
             @param domain as str
         """
-        rule = self.__get_rule_for_domain(domain)
+        rule = self.__get_rule_for_domain(domain, url_filter)
         if rule in self.__rules:
             self.__rules.remove(rule)
 
-    def is_domain_exception(self, domain):
+    def remove_all_domain_exceptions(self, domain):
+        """
+            Remove all exceptions for a domain
+            @param domain as str
+        """
+        for rule in list(self.__rules):
+            if rule["trigger"]["if-domain"] == ["*%s" % domain]:
+                self.remove_domain_exception(
+                    domain, rule["trigger"]["url-filter"])
+
+    def is_domain_exception(self, domain, url_filter=".*"):
         """
             True if domain exception exists
         """
-        rule = self.__get_rule_for_domain(domain)
+        rule = self.__get_rule_for_domain(domain, url_filter)
         return rule in self.__rules
 
     @property
@@ -91,16 +101,17 @@ class ContentBlockerExceptions:
 #######################
 # PRIVATE             #
 #######################
-    def __get_rule_for_domain(self, domain):
+    def __get_rule_for_domain(self, domain, url_filter):
         """
             Return rule for domain
             @param domain as str
+            @param url_filter as str
             @return {}
         """
         value = "*%s" % domain
         return {
             "trigger": {
-                "url-filter": ".*",
+                "url-filter": url_filter,
                 "if-domain": [value]
             },
             "action": {

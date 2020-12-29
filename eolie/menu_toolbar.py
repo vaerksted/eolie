@@ -16,6 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.menu_languages import LanguagesMenu
+from eolie.menu_scripts import ScriptsMenu
 from eolie.define import App
 from eolie.utils import get_safe_netloc
 
@@ -58,8 +59,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
         if parsed.scheme in ["http", "https"]:
             # Add blocker actions
             for blocker in ["block-ads", "block-popups",
-                            "block-images", "block-medias",
-                            "block-scripts"]:
+                            "block-images", "block-medias"]:
                 if not App().settings.get_value(blocker):
                     continue
                 builder.get_object(blocker).show()
@@ -88,6 +88,13 @@ class ToolbarMenu(Gtk.PopoverMenu):
                            self.__on_night_mode_change_state,
                            uri)
             window.add_action(action)
+            # Scripts
+            if App().settings.get_value("block-scripts"):
+                builder.get_object("scripts").show()
+                scripts_menu = ScriptsMenu(uri, self.__window)
+                scripts_menu.show()
+                self.add(scripts_menu)
+                self.child_set_property(scripts_menu, "submenu", "scripts")
             # Languages
             builder.get_object("spell-checking").show()
             languages_menu = LanguagesMenu(uri)

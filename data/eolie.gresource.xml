@@ -15,6 +15,7 @@
     <file compressed="true">Readability-readerable.js</file>
     <file compressed="true">javascript/FormMenu.js</file>
     <file compressed="true">javascript/GetCSS.js</file>
+    <file compressed="true">javascript/GetScripts.js</file>
     <file compressed="true">javascript/HandleInput.js</file>
     <file compressed="true">javascript/HandleInputNext.js</file>
     <file compressed="true">javascript/HandleInputPrev.js</file>

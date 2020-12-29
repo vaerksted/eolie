@@ -242,6 +242,11 @@
     background-color: transparent;
 }
 
+.menu-listbox > * {
+    padding: 5px;
+}
+
+
 .row {
     /* https://bugzilla.gnome.org/show_bug.cgi?id=763517 */
     transition: none;
