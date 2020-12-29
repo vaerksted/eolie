@@ -12,10 +12,11 @@
 
 from gi.repository import Gtk, GLib, GtkSpell
 
+from eolie.helper_gestures import GesturesHelper
 from eolie.define import App
 
 
-class LanguageRow(Gtk.EventBox):
+class LanguageRow(Gtk.ListBoxRow, GesturesHelper):
     """
         Language row (Allowing to select a language for uri)
     """
@@ -37,38 +38,43 @@ class LanguageRow(Gtk.EventBox):
         label.set_hexpand(True)
         label.set_property("halign", Gtk.Align.START)
         label.show()
-        check = Gtk.CheckButton()
-        check.connect("toggled", self.__on_check_toggled)
-        check.show()
-        grid.add(check)
+        self.__check = Gtk.CheckButton()
+        self.__check.show()
+        grid.add(self.__check)
         grid.add(label)
-        self.add(grid)
-        self.connect("button-press-event", self.__on_button_press_event, check)
+        eventbox = Gtk.EventBox.new()
+        eventbox.show()
+        eventbox.add(grid)
+        self.add(eventbox)
+        GesturesHelper.__init__(self, eventbox)
         user_code = ""
         codes = App().websettings.get_languages(uri)
-        if codes is None:
+        if not codes:
             codes = []
             locales = GLib.get_language_names()
             if locales:
                 user_code = locales[0].split(".")[0]
                 codes = [user_code]
-        check.set_active(codes is not None and code in codes)
-        # Here we force add of default language
-        if user_code == code:
-            check.toggled()
+        self.__check.set_active(codes is not None and code in codes)
+        self.__check.connect("toggled", self.__on_check_toggled)
+        GesturesHelper.__init__(self, eventbox)
+
+#######################
+# PROTECTED           #
+#######################
+    def _on_primary_press_gesture(self, x, y, event):
+        """
+            Toggle check button
+            @param x as int
+            @param y as int
+            @param event as Gdk.Event
+        """
+        toggled = not self.__check.get_active()
+        self.__check.set_active(toggled)
 
 #######################
 # PRIVATE             #
 #######################
-    def __on_button_press_event(self, row, event, check):
-        """
-            Toggle check box
-            @param row as LanguageRow
-            @param event as Gdk.ButtonEvent
-            @param check as Gtk.CheckButton
-        """
-        check.toggled()
-
     def __on_check_toggled(self, check):
         """
             Save state
