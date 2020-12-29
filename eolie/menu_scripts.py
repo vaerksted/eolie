@@ -112,7 +112,7 @@ class ScriptsMenu(Gtk.Grid):
         Menu allowing user to enable scripts for URI
     """
 
-    __ALLOW_ALL = _("Allow all")
+    __ALLOW_ALL = _("Allow all scripts")
 
     def __init__(self, uri, window):
         """
