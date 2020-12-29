@@ -151,8 +151,11 @@ class ScriptsMenu(Gtk.Grid):
             @return bool
         """
         content_blocker = App().get_content_blocker("block-scripts")
-        script_parsed = urlparse(script)
-        uri = ".*%s%s.*" % (script_parsed.netloc, script_parsed.path)
+        if script == ".*":
+            uri = ".*"
+        else:
+            script_parsed = urlparse(script)
+            uri = "%s%s.*" % (script_parsed.netloc, script_parsed.path)
         return content_blocker.exceptions.is_domain_exception(netloc, uri)
 
     def __on_map(self, listbox):
@@ -210,7 +213,7 @@ class ScriptsMenu(Gtk.Grid):
                 _row.set_sensitive(not row.is_active)
         else:
             script_parsed = urlparse(row.uri)
-            uri = ".*%s%s.*" % (script_parsed.netloc, script_parsed.path)
+            uri = "%s%s.*" % (script_parsed.netloc, script_parsed.path)
         if row.is_active:
             content_blocker.exceptions.add_domain_exception(
                 parsed.netloc, uri)
@@ -218,3 +221,5 @@ class ScriptsMenu(Gtk.Grid):
             content_blocker.exceptions.remove_domain_exception(
                 parsed.netloc, uri)
         content_blocker.exceptions.save()
+        content_blocker.update()
+        self.__window.container.webview.reload()
