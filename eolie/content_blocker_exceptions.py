@@ -56,22 +56,35 @@ class ContentBlockerExceptions:
         except Exception as e:
             Logger.error("AdblockExceptions::save(): %s", e)
 
-    def add_domain_exception(self, domain, url_filter=".*"):
+    def add_domain_exception(self, domain, url_filter=".*", internal=False):
         """
             Add an exception for domain
             @param domain as str
+            @param url_filter as str
+            @param internal as bool
         """
-        rule = self.__get_rule_for_domain(domain, url_filter)
-        self.__rules.append(rule)
+        if internal:
+            rule = self.__get_rule_for_internal_domain(domain, url_filter)
+            if rule in self.__rules:
+                self.__rules.remove(rule)
+        else:
+            rule = self.__get_rule_for_domain(domain, url_filter)
+            self.__rules.append(rule)
 
-    def remove_domain_exception(self, domain, url_filter=".*"):
+    def remove_domain_exception(self, domain, url_filter=".*", internal=False):
         """
             Remove an exception for domain
             @param domain as str
+            @param url_filter as str
+            @param internal as bool
         """
-        rule = self.__get_rule_for_domain(domain, url_filter)
-        if rule in self.__rules:
-            self.__rules.remove(rule)
+        if internal:
+            rule = self.__get_rule_for_internal_domain(domain, url_filter)
+            self.__rules.append(rule)
+        else:
+            rule = self.__get_rule_for_domain(domain, url_filter)
+            if rule in self.__rules:
+                self.__rules.remove(rule)
 
     def remove_all_domain_exceptions(self, domain):
         """
@@ -83,12 +96,20 @@ class ContentBlockerExceptions:
                 self.remove_domain_exception(
                     domain, rule["trigger"]["url-filter"])
 
-    def is_domain_exception(self, domain, url_filter=".*"):
+    def is_domain_exception(self, domain, url_filter=".*", internal=False):
         """
             True if domain exception exists
+            @parma domain as str
+            @param url_filter as str
+            @param internal as bool
+            @return bool
         """
-        rule = self.__get_rule_for_domain(domain, url_filter)
-        return rule in self.__rules
+        if internal:
+            rule = self.__get_rule_for_internal_domain(domain, url_filter)
+            return rule not in self.__rules
+        else:
+            rule = self.__get_rule_for_domain(domain, url_filter)
+            return rule in self.__rules
 
     @property
     def rules(self):
@@ -116,5 +137,23 @@ class ContentBlockerExceptions:
             },
             "action": {
                 "type": "ignore-previous-rules"
+            }
+        }
+
+    def __get_rule_for_internal_domain(self, domain, url_filter):
+        """
+            Return rule for domain
+            @param domain as str
+            @param url_filter as str
+            @return {}
+        """
+        value = "*%s" % domain
+        return {
+            "trigger": {
+                "url-filter": url_filter,
+                "if-domain": [value]
+            },
+            "action": {
+                "type": "block"
             }
         }

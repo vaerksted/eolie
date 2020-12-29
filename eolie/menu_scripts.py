@@ -143,11 +143,12 @@ class ScriptsMenu(Gtk.Grid):
 #######################
 # PRIVATE             #
 #######################
-    def __is_script_active(self, script, netloc):
+    def __is_script_active(self, script, netloc, internal):
         """
             True if script active for netloc
             @param script as str
             @param netloc as str
+            @param internal as bool
             @return bool
         """
         content_blocker = App().get_content_blocker("block-scripts")
@@ -156,7 +157,9 @@ class ScriptsMenu(Gtk.Grid):
         else:
             script_parsed = urlparse(script)
             uri = "%s%s.*" % (script_parsed.netloc, script_parsed.path)
-        return content_blocker.exceptions.is_domain_exception(netloc, uri)
+        result = content_blocker.exceptions.is_domain_exception(
+            netloc, uri, internal)
+        return result
 
     def __on_map(self, listbox):
         """
@@ -183,26 +186,30 @@ class ScriptsMenu(Gtk.Grid):
         except Exception as e:
             Logger.warning("ScriptsMenu::__on_get_scripts(): %s", e)
         parsed = urlparse(self.__window.container.webview.uri)
-        allow_all_active = self.__is_script_active('.*', parsed.netloc)
+        allow_all_active = self.__is_script_active('.*', parsed.netloc, False)
         row = ScriptRow(self.__ALLOW_ALL, allow_all_active)
-        row.connect("activated", self.__on_row_activated)
+        row.connect("activated", self.__on_row_activated, False)
         row.show()
         self.__listbox.add(row)
         for script in scripts:
-            if not script or script.find(parsed.netloc) != -1:
+            if not script:
                 continue
+            internal = script.find(parsed.netloc) != -1
             row = ScriptRow(script,
-                            self.__is_script_active(script, parsed.netloc))
-            row.connect("activated", self.__on_row_activated)
+                            self.__is_script_active(script,
+                                                    parsed.netloc,
+                                                    internal))
+            row.connect("activated", self.__on_row_activated, internal)
             if allow_all_active:
                 row.set_sensitive(False)
             row.show()
             self.__listbox.add(row)
 
-    def __on_row_activated(self, row):
+    def __on_row_activated(self, row, internal):
         """
             Update exceptions
             @param row as ScriptRow
+            @param internal as bool
         """
         parsed = urlparse(self.__window.container.webview.uri)
         content_blocker = App().get_content_blocker("block-scripts")
@@ -216,10 +223,10 @@ class ScriptsMenu(Gtk.Grid):
             uri = "%s%s.*" % (script_parsed.netloc, script_parsed.path)
         if row.is_active:
             content_blocker.exceptions.add_domain_exception(
-                parsed.netloc, uri)
+                parsed.netloc, uri, internal)
         else:
             content_blocker.exceptions.remove_domain_exception(
-                parsed.netloc, uri)
+                parsed.netloc, uri, internal)
         content_blocker.exceptions.save()
         content_blocker.update()
         self.__window.container.webview.reload()
