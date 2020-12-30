@@ -26,19 +26,15 @@ class ToolbarMenu(Gtk.PopoverMenu):
         Gtk.PopoverMenu showing main menu
     """
 
-    def __init__(self, uri, window, toolbar):
+    def __init__(self, uri, window):
         """
             Init self
             @param uri as str
             @param window as Window
-            THIS IS FUCKING IDIOT, MOVE CODE FROM TOOLBAR HERE NOW BUTTONS
-            ARE NOT IN TOOLBAR ANYMORE
-            @param toolbar as ToolbarEnd
         """
         Gtk.PopoverMenu.__init__(self)
         self.__uri = uri
         self.__window = window
-        self.__toolbar = toolbar
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarMenu.ui")
         fullscreen_button = builder.get_object("fullscreen_button")
@@ -121,14 +117,18 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Print current page
             @param button as Gtk.button
         """
-        self.__toolbar._on_print_button_clicked(button)
+        button.get_ancestor(Gtk.Popover).hide()
+        action = self.__window.lookup_action("shortcut")
+        action.activate(GLib.Variant("s", "print"))
 
     def _on_save_button_clicked(self, button):
         """
             Save current page
             @param button as Gtk.Button
         """
-        self.__toolbar._on_save_button_clicked(button)
+        button.get_ancestor(Gtk.Popover).hide()
+        action = self.__window.lookup_action("shortcut")
+        action.activate(GLib.Variant("s", "save"))
 
     def _on_zoom_button_clicked(self, button):
         """

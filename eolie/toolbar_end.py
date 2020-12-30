@@ -204,29 +204,12 @@ class ToolbarEnd(Gtk.Bin):
         if not button.get_active() or not uri:
             return
         from eolie.menu_toolbar import ToolbarMenu
-        popover = ToolbarMenu(uri, self.__window, self)
+        popover = ToolbarMenu(uri, self.__window)
         popover.set_relative_to(button)
         popover.set_modal(False)
         self.__window.register(popover)
         popover.connect("closed", self.__on_popover_closed, button)
         popover.popup()
-
-    def _on_save_button_clicked(self, button):
-        """
-            Save current page
-            @param button as Gtk.Button
-        """
-        button.get_ancestor(Gtk.Popover).hide()
-        self.save_page()
-
-    def _on_print_button_clicked(self, button):
-        """
-            Print current page
-            @param button as Gtk.button
-        """
-        button.get_ancestor(Gtk.Popover).hide()
-        action = self.__window.lookup_action("shortcut")
-        action.activate(GLib.Variant("s", "print"))
 
 #######################
 # PRIVATE             #
