@@ -26,11 +26,6 @@
     <property name="can-focus">False</property>
     <property name="icon-name">emblem-system-symbolic</property>
   </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="icon-name">emblem-system-symbolic</property>
-  </object>
   <object class="GtkImage" id="image3">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
@@ -525,7 +520,7 @@
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Accept cookies</property>
                 <child>
-                  <!-- n-columns=2 n-rows=1 -->
+                  <!-- n-columns=1 n-rows=1 -->
                   <object class="GtkGrid">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
@@ -547,21 +542,6 @@
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
-                        <property name="top-attach">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="open-downloads_button2">
-                        <property name="name">open-downloads</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">False</property>
-                        <property name="valign">center</property>
-                        <property name="image">image2</property>
-                        <signal name="clicked" handler="_on_manage_cookies_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="left-attach">1</property>
                         <property name="top-attach">0</property>
                       </packing>
                     </child>
@@ -625,8 +605,8 @@
               <object class="HdyActionRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title" translatable="yes">History</property>
-                <property name="subtitle" translatable="yes">Your navigation data</property>
+                <property name="title" translatable="yes">Navigation data</property>
+                <property name="subtitle" translatable="yes">How much time we keep it?</property>
                 <child>
                   <!-- n-columns=2 n-rows=1 -->
                   <object class="GtkGrid">

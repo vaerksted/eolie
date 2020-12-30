@@ -256,18 +256,6 @@ class SettingsDialog:
         self.stack.add(dialog)
         self.stack.set_visible_child(dialog)
 
-    def _on_manage_cookies_clicked(self, button):
-        """
-            Show cookies popover
-            @param button as Gtk.button
-        """
-        from eolie.dialog_cookies import CookiesDialog
-        dialog = CookiesDialog()
-        dialog.show()
-        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
-        self.stack.add(dialog)
-        self.stack.set_visible_child(dialog)
-
     def _on_manage_passwords_clicked(self, button):
         """
             Launch searhorse
