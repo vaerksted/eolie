@@ -93,7 +93,7 @@
               <object class="HdyExpanderRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title">Fonts</property>
+                <property name="title" translatable="yes">Fonts</property>
                 <child>
                   <object class="HdyActionRow">
                     <property name="visible">True</property>
@@ -221,7 +221,6 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Start page</property>
-                <property name="subtitle" translatable="yes">Web page shown on startup</property>
                 <child>
                   <!-- n-columns=1 n-rows=2 -->
                   <object class="GtkGrid">
@@ -301,7 +300,7 @@
               <object class="HdyActionRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title" translatable="yes">Download folder</property>
+                <property name="title" translatable="yes">Folder</property>
                 <property name="activatable-widget">download_chooser</property>
                 <child>
                   <object class="GtkFileChooserButton" id="download_chooser">
@@ -499,8 +498,7 @@
               <object class="HdyActionRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title" translatable="yes">Cookies</property>
-                <property name="subtitle" translatable="yes">Allow web sites to track you</property>
+                <property name="title" translatable="yes">Accept cookies</property>
                 <child>
                   <!-- n-columns=2 n-rows=1 -->
                   <object class="GtkGrid">
@@ -672,7 +670,7 @@
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Enable synchronization</property>
                 <property name="activatable-widget">do-not-track_boolean</property>
-                <property name="subtitle">This will sync your history and passwords</property>
+                <property name="subtitle" translatable="yes">This will sync your history and passwords</property>
                 <child>
                   <object class="GtkSwitch" id="enable-firefox-sync_boolean">
                     <property name="name">enable-firefox-sync</property>
@@ -716,7 +714,7 @@
               <object class="HdyExpanderRow" id="configure_row">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title">Configure</property>
+                <property name="title" translatable="yes">Configure</property>
                 <child>
                   <object class="HdyActionRow" id="username_row">
                     <property name="visible">True</property>
@@ -752,7 +750,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="title" translatable="yes">Code</property>
-                    <property name="subtitle" translatable="yes">If two factor auth enabled on your Firefox account</property>
+                    <property name="subtitle" translatable="yes">Two factor auth</property>
                     <child>
                       <object class="GtkEntry" id="code_entry">
                         <property name="visible">True</property>
