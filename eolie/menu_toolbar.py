@@ -75,6 +75,16 @@ class ToolbarMenu(Gtk.PopoverMenu):
                                netloc,
                                blocker)
                 window.add_action(action)
+            # Audio policy
+            netloc_audio = App().websettings.get("audio", uri)
+            action = Gio.SimpleAction.new_stateful(
+                    "audio-policy",
+                    None,
+                    GLib.Variant.new_boolean(netloc_audio))
+            action.connect("change-state",
+                           self.__on_audio_policy_change_state,
+                           uri)
+            window.add_action(action)
             # Night mode
             night_mode = App().settings.get_value("night-mode")
             netloc_night_mode = App().websettings.get("night_mode", uri)
@@ -204,3 +214,15 @@ class ToolbarMenu(Gtk.PopoverMenu):
         action.set_state(param)
         App().websettings.set("night_mode", uri, param.get_boolean())
         self.__window.container.webview.night_mode()
+
+    def __on_audio_policy_change_state(self, action, param, uri):
+        """
+            Set audio policy for URI
+            @param action as Gio.SimpleAction
+            @param param as GLib.Variant
+            @param uri as str
+        """
+        action.set_state(param)
+        value = param.get_boolean()
+        App().websettings.set("audio", uri, value)
+        self.__window.container.webview.update_sound_policy()

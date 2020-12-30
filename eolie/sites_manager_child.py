@@ -78,8 +78,8 @@ class SitesManagerChild(Gtk.ListBoxRow):
         if webview not in self.__webviews:
             self.__webviews.append(webview)
             webview.connect("load-changed", self.on_webview_load_changed)
-            webview.connect("notify::is-playing-audio",
-                            self.__on_webview_notify_is_playing_audio)
+            webview.connect("is-playing-audio",
+                            self.__on_webview_is_playing_audio)
             webview.connect("notify::favicon",
                             self.__on_webview_favicon_changed)
             self.__indicator_label.add()
@@ -98,8 +98,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             self.__webviews.remove(webview)
             webview.disconnect_by_func(self.__on_webview_favicon_changed)
             webview.disconnect_by_func(self.on_webview_load_changed)
-            webview.disconnect_by_func(
-                self.__on_webview_notify_is_playing_audio)
+            webview.disconnect_by_func(self.__on_webview_is_playing_audio)
             self.__indicator_label.remove()
             self.__indicator_label.mark(webview)
             if self.__webviews:
@@ -247,7 +246,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
                     surface = get_char_surface(get_safe_netloc(webview.uri)[0])
                     self.__image.set_from_surface(surface)
 
-    def __on_webview_notify_is_playing_audio(self, webview, playing):
+    def __on_webview_is_playing_audio(self, webview, playing):
         """
             Update favicon
             @param webview as WebView

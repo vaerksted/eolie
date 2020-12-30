@@ -26,6 +26,7 @@ from eolie.webview_credentials import WebViewCredentials
 from eolie.webview_helpers import WebViewHelpers
 from eolie.webview_night_mode import WebViewNightMode
 from eolie.list import LinkedList
+from eolie.utils import emit_signal
 from eolie.logger import Logger
 
 
@@ -107,6 +108,27 @@ class WebView(WebKit2.WebView):
             Logger.error("WebView::update_zoom_level(): %s", e)
         Logger.debug("Update zoom level: %s", zoom_level)
         self.set_zoom_level(zoom_level)
+
+    def is_playing_audio(self):
+        """
+            Do not return True if sound disabled
+        """
+        value = App().websettings.get("audio", self.uri)
+        if value:
+            return WebKit2.WebView.is_playing_audio(self)
+        else:
+            return False
+
+    def update_sound_policy(self):
+        """
+            Update sound policy
+        """
+        value = App().websettings.get("audio", self.uri)
+        self.__window.container.webview.set_is_muted(not value)
+        if value:
+            emit_signal(self, "is-playing-audio", self.is_playing_audio())
+        else:
+            emit_signal(self, "is-playing-audio", False)
 
     def print(self):
         """
@@ -463,6 +485,8 @@ class WebView(WebKit2.WebView):
                     "enable-back-forward-navigation-gestures", True)
         self.connect("create", self.__on_create)
         self.connect("load-changed", self._on_load_changed)
+        self.connect("notify::is-playing-audio",
+                     self.__on_notify_is_playing_audio)
         self.connect("destroy", self.__on_destroy)
 
     def __set_system_fonts(self, settings):
@@ -529,6 +553,18 @@ class WebView(WebKit2.WebView):
         self.__related = None
         for child in self.__children:
             child.disconnect_by_func(self.__on_child_destroy)
+
+    def __on_notify_is_playing_audio(self, webview, param):
+        """
+            Send custom signal
+            @param webview as WebView
+            @param param as GParam
+        """
+        value = App().websettings.get("audio", self.uri)
+        if value:
+            emit_signal(self, "is-playing-audio", self.is_playing_audio())
+        else:
+            emit_signal(self, "is-playing-audio", False)
 
     def __on_child_destroy(self, webview):
         """

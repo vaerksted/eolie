@@ -88,6 +88,7 @@ class Type:
     UNCLASSIFIED = -9
     WEBVIEW = -10
     SEPARATOR = -11
+    SETTINGS = -12
 
 
 class Score:

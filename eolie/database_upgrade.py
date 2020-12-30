@@ -41,6 +41,10 @@ class DatabaseUpgrade:
                 5: "CREATE INDEX idx_orderby ON history(mtime, popularity)",
                 6: "CREATE INDEX idx_where ON history(uri, title)"
             }
+        elif t == Type.SETTINGS:
+            self.__UPGRADES = {
+                1: "ALTER TABLE settings ADD audio INT NOT NULL DEFAULT 1",
+            }
 
     def upgrade(self, db):
         """

@@ -28,6 +28,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
     """
 
     gsignals = {
+        "is-playing-audio": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
         "readability-content": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
         "readability-status": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
         "title-changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),

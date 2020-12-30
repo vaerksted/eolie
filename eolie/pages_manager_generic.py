@@ -96,8 +96,7 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
 
         return [
             (webview, "snapshot-changed", "_on_webview_snapshot_changed"),
-            (webview, "notify::is-playing-audio",
-                      "_on_webview_notify_is_playing_audio"),
+            (webview, "is-playing-audio", "_on_webview_is_playing_audio"),
             (webview, "title-changed", "_on_webview_title_changed"),
             (webview, "load-changed", "_on_webview_load_changed"),
             (webview, "destroy", "_on_webview_destroyed")
@@ -146,7 +145,7 @@ class PagesManagerGenericChild(SignalsHelper, GesturesHelper):
         popover.forall(update_popover_internals)
         popover.show()
 
-    def _on_webview_notify_is_playing_audio(self, webview, playing):
+    def _on_webview_is_playing_audio(self, webview, playing):
         """
             Update favicon
             @param webview as WebView

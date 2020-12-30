@@ -18,8 +18,9 @@ from urllib.parse import urlparse
 from threading import Lock
 
 from eolie.sqlcursor import SqlCursor
-from eolie.define import EOLIE_DATA_PATH
+from eolie.define import EOLIE_DATA_PATH, Type
 from eolie.logger import Logger
+from eolie.database_upgrade import DatabaseUpgrade
 from eolie.utils import get_safe_netloc
 
 
@@ -27,8 +28,6 @@ class DatabaseSettings:
     """
         Store various settings for webpage
     """
-    __UPGRADES = {
-    }
 
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
@@ -54,8 +53,8 @@ class DatabaseSettings:
             @param suffix as str
         """
         self.thread_lock = Lock()
-        new_version = len(self.__UPGRADES)
         self.__DB_PATH = "%s/settings.db" % EOLIE_DATA_PATH
+        upgrade = DatabaseUpgrade(Type.SETTINGS)
         if not GLib.file_test(self.__DB_PATH, GLib.FileTest.IS_REGULAR):
             try:
                 if not GLib.file_test(EOLIE_DATA_PATH, GLib.FileTest.IS_DIR):
@@ -63,23 +62,11 @@ class DatabaseSettings:
                 # Create db schema
                 with SqlCursor(self, True) as sql:
                     sql.execute(self.__create_settings)
-                    sql.execute("PRAGMA user_version=%s" % new_version)
+                    sql.execute("PRAGMA user_version=%s" % upgrade.version)
             except Exception as e:
                 Logger.error("DatabaseSettings::__init__(): %s", e)
-        # DB upgrade, TODO Make it generic between class
-        version = 0
-        with SqlCursor(self, True) as sql:
-            result = sql.execute("PRAGMA user_version")
-            v = result.fetchone()
-            if v is not None:
-                version = v[0]
-            if version < new_version:
-                for i in range(version + 1, new_version + 1):
-                    try:
-                        sql.execute(self.__UPGRADES[i])
-                    except:
-                        Logger.error("Settings DB upgrade %s failed", i)
-                sql.execute("PRAGMA user_version=%s" % new_version)
+        else:
+            upgrade.upgrade(self)
 
     def set(self, option, uri, status):
         """
