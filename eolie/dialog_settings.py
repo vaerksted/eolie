@@ -66,6 +66,17 @@ class SettingsDialog:
                     widget.set_name(key)
                     self.__locked.append(widget)
         self.__set_default_zoom_level(builder.get_object("default_zoom_level"))
+        download_chooser = builder.get_object("download_chooser")
+        dir_uri = App().settings.get_value("download-uri").get_string()
+        if not dir_uri:
+            directory = GLib.get_user_special_dir(
+                GLib.UserDirectory.DIRECTORY_DOWNLOAD)
+            if directory is not None:
+                dir_uri = GLib.filename_to_uri(directory, None)
+        if dir_uri:
+            download_chooser.set_uri(dir_uri)
+        else:
+            download_chooser.set_uri("file://" + GLib.getenv("HOME"))
         builder.connect_signals(self)
         for setting in self.__BOOLEAN:
             button = builder.get_object("%s_boolean" % setting)

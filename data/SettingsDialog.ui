@@ -93,7 +93,7 @@
               <object class="HdyExpanderRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title" translatable="yes">Fonts</property>
+                <property name="title">Fonts</property>
                 <child>
                   <object class="HdyActionRow">
                     <property name="visible">True</property>
@@ -714,7 +714,7 @@
               <object class="HdyExpanderRow" id="configure_row">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="title" translatable="yes">Configure</property>
+                <property name="title">Configure</property>
                 <child>
                   <object class="HdyActionRow" id="username_row">
                     <property name="visible">True</property>
