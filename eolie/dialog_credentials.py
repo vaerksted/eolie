@@ -13,7 +13,7 @@
 from gi.repository import Gtk, GObject, Pango, GLib
 
 from eolie.helper_passwords import PasswordsHelper
-from eolie.define import App
+from eolie.define import App, MARGIN_SMALL
 from eolie.utils import emit_signal
 
 
@@ -48,14 +48,14 @@ class Row(Gtk.ListBoxRow):
         grid.set_column_spacing(10)
         grid.set_hexpand(True)
         grid.set_property("valign", Gtk.Align.CENTER)
-        uri = Gtk.Label.new("%s@%s" % (item.get_property("username"),
-                                       item.get_property("uri")))
+        uri = Gtk.Label.new("%s -> %s" % (item.get_property("username"),
+                                          item.get_property("uri")))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
+        uri.set_property("margin", MARGIN_SMALL)
         uri.set_property("halign", Gtk.Align.START)
         uri.set_hexpand(True)
         uri.set_property("has-tooltip", True)
         uri.connect("query-tooltip", self.__on_query_tooltip)
-        uri.set_max_width_chars(40)
         uri.show()
         delete_button = Gtk.Button.new_from_icon_name(
             "user-trash-symbolic",

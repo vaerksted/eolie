@@ -10,11 +10,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, GObject, Gdk
+from gi.repository import Gtk, GLib, GObject, Gdk, Pango
 
 import sqlite3
 
-from eolie.define import EOLIE_DATA_PATH, COOKIES_PATH
+from eolie.define import EOLIE_DATA_PATH, COOKIES_PATH, MARGIN_SMALL
 from eolie.logger import Logger
 from eolie.utils import emit_signal
 
@@ -48,7 +48,8 @@ class Row(Gtk.ListBoxRow):
         markup = "%s <b>%s</b>" % (item.get_property("name"), value)
         self.__label = Gtk.Label.new()
         self.__label.set_markup(markup)
-        self.__label.set_max_width_chars(20)
+        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__label.set_property("margin", MARGIN_SMALL)
         self.__label.set_property("halign", Gtk.Align.START)
         self.__label.show()
         eventbox = Gtk.EventBox()
