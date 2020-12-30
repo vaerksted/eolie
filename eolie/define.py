@@ -34,6 +34,27 @@ MARGIN = 15
 MARGIN_SMALL = 5
 
 
+class TimeSpan:
+    HOUR = "0"
+    DAY = "1"
+    WEEK = "2"
+    FOUR_WEEK = "3"
+    YEAR = "4"
+    FOREVER = "5"
+    NEVER = "6"
+    CUSTOM = "7"
+
+
+TimeSpanValues = {
+    TimeSpan.HOUR: GLib.TIME_SPAN_HOUR,
+    TimeSpan.DAY: GLib.TIME_SPAN_DAY,
+    TimeSpan.WEEK: GLib.TIME_SPAN_DAY * 7,
+    TimeSpan.FOUR_WEEK: GLib.TIME_SPAN_DAY * 7 * 4,
+    TimeSpan.YEAR: GLib.TIME_SPAN_DAY * 365,
+    TimeSpan.FOREVER: 0
+}
+
+
 class ArtSize:
     FAVICON_MIN = 16
     FAVICON = 22
