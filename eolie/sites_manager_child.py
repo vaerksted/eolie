@@ -226,22 +226,26 @@ class SitesManagerChild(Gtk.ListBoxRow):
             Set webview favicon
             @param webview as WebView
         """
-        self.__image.get_style_context().remove_class("image-rotate")
-        artwork = App().art.get_icon_theme_artwork(webview.uri,
-                                                   webview.is_ephemeral)
-        if artwork is not None:
-            self.__image.set_from_icon_name(
-                artwork, Gtk.IconSize.LARGE_TOOLBAR)
+        if webview.is_playing_audio():
+            self.__image.set_from_icon_name("audio-speakers-symbolic",
+                                            Gtk.IconSize.BUTTON)
         else:
-            surface = webview.get_favicon()
-            if surface is not None:
-                surface = get_round_surface(surface,
-                                            webview.get_scale_factor(),
-                                            surface.get_width() / 4)
-                self.__image.set_from_surface(resize_favicon(surface))
+            self.__image.get_style_context().remove_class("image-rotate")
+            artwork = App().art.get_icon_theme_artwork(webview.uri,
+                                                       webview.is_ephemeral)
+            if artwork is not None:
+                self.__image.set_from_icon_name(
+                    artwork, Gtk.IconSize.LARGE_TOOLBAR)
             else:
-                surface = get_char_surface(get_safe_netloc(webview.uri)[0])
-                self.__image.set_from_surface(surface)
+                surface = webview.get_favicon()
+                if surface is not None:
+                    surface = get_round_surface(surface,
+                                                webview.get_scale_factor(),
+                                                surface.get_width() / 4)
+                    self.__image.set_from_surface(resize_favicon(surface))
+                else:
+                    surface = get_char_surface(get_safe_netloc(webview.uri)[0])
+                    self.__image.set_from_surface(surface)
 
     def __on_webview_notify_is_playing_audio(self, webview, playing):
         """
@@ -249,11 +253,7 @@ class SitesManagerChild(Gtk.ListBoxRow):
             @param webview as WebView
             @param playing as bool
         """
-        if webview.is_playing_audio():
-            self.__image.set_from_icon_name("audio-speakers-symbolic",
-                                            Gtk.IconSize.BUTTON)
-        else:
-            self.__set_favicon(webview)
+        self.__set_favicon(webview)
 
     def __on_webview_favicon_changed(self, webview, *ignore):
         """
