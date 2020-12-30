@@ -226,6 +226,7 @@ class SettingsDialog:
         from eolie.dialog_clear_data import ClearDataDialog
         dialog = ClearDataDialog()
         dialog.show()
+        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
         self.stack.add(dialog)
         self.stack.set_visible_child(dialog)
 

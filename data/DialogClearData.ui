@@ -21,21 +21,6 @@
         <property name="orientation">vertical</property>
         <property name="spacing">12</property>
         <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="halign">start</property>
-            <property name="label" translatable="yes">You can select a period of time to clear data for all websites modified in that period. If you choose from the beginning of time, then you can also clear data only for particular websites.</property>
-            <property name="wrap">True</property>
-            <property name="max-width-chars">50</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
@@ -47,38 +32,6 @@
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="spacing">12</property>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Clear selected personal data _from:</property>
-                    <property name="use-underline">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkComboBoxText" id="timespan_combo1">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="active">4</property>
-                    <items>
-                      <item translatable="yes">the past hour</item>
-                      <item translatable="yes">the past day</item>
-                      <item translatable="yes">the past week</item>
-                      <item translatable="yes">the past four weeks</item>
-                      <item translatable="yes">the beginning</item>
-                    </items>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -92,34 +45,16 @@
                 <property name="can-focus">True</property>
                 <property name="vexpand">True</property>
                 <child>
-                  <object class="GtkTreeView" id="treeview">
+                  <object class="GtkViewport">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="headers-visible">False</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
-                    </child>
+                    <property name="can-focus">False</property>
                     <child>
-                      <object class="GtkTreeViewColumn" id="active_column1">
-                        <child>
-                          <object class="GtkCellRendererToggle" id="check_renderer1">
-                            <signal name="toggled" handler="_on_item_toggled" swapped="no"/>
-                          </object>
-                          <attributes>
-                            <attribute name="active">0</attribute>
-                            <attribute name="inconsistent">4</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="name_column1">
-                        <child>
-                          <object class="GtkCellRendererText"/>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
-                        </child>
+                      <object class="GtkListBox" id="listbox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="selection-mode">multiple</property>
+                        <property name="activate-on-single-click">False</property>
+                        <signal name="row-selected" handler="_on_row_selected" swapped="no"/>
                       </object>
                     </child>
                   </object>
@@ -217,6 +152,7 @@
       <object class="GtkButton" id="clear_button">
         <property name="label" translatable="yes">C_lear</property>
         <property name="visible">True</property>
+        <property name="sensitive">False</property>
         <property name="can-focus">True</property>
         <property name="receives-default">False</property>
         <property name="halign">end</property>
