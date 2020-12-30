@@ -77,6 +77,7 @@ class ToolbarMenu(Gtk.PopoverMenu):
                 window.add_action(action)
             # Audio policy
             netloc_audio = App().websettings.get("audio", uri)
+            builder.get_object("audio_policy").show()
             action = Gio.SimpleAction.new_stateful(
                     "audio-policy",
                     None,

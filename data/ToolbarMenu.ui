@@ -415,8 +415,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkModelButton" id="audio-policy">
-        <property name="visible">True</property>
+      <object class="GtkModelButton" id="audio_policy">
         <property name="can-focus">True</property>
         <property name="receives-default">True</property>
         <property name="action-name">win.audio-policy</property>
