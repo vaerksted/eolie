@@ -44,12 +44,10 @@ class Row(Gtk.ListBoxRow):
         self.__item = item
         self.__helper = helper
         self.get_style_context().add_class("row")
-        grid = Gtk.Grid()
-        grid.set_column_spacing(10)
-        grid.set_hexpand(True)
-        grid.set_property("valign", Gtk.Align.CENTER)
-        uri = Gtk.Label.new("%s -> %s" % (item.get_property("username"),
-                                          item.get_property("uri")))
+        uri = Gtk.Label.new()
+        uri.set_markup("%s <span alpha='40000'>%s</span>" % (
+            GLib.markup_escape_text(item.get_property("uri")),
+            GLib.markup_escape_text(item.get_property("username"))))
         uri.set_ellipsize(Pango.EllipsizeMode.END)
         uri.set_property("margin", MARGIN_SMALL)
         uri.set_property("halign", Gtk.Align.START)
@@ -57,17 +55,7 @@ class Row(Gtk.ListBoxRow):
         uri.set_property("has-tooltip", True)
         uri.connect("query-tooltip", self.__on_query_tooltip)
         uri.show()
-        delete_button = Gtk.Button.new_from_icon_name(
-            "user-trash-symbolic",
-            Gtk.IconSize.MENU)
-        delete_button.get_image().set_opacity(0.5)
-        delete_button.connect("clicked", self.__on_delete_clicked)
-        delete_button.get_style_context().add_class("overlay-button")
-        delete_button.show()
-        grid.add(uri)
-        grid.add(delete_button)
-        grid.show()
-        self.add(grid)
+        self.add(uri)
 
     def delete(self):
         """
@@ -133,6 +121,8 @@ class CredentialsDialog(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/DialogCredentials.ui')
         builder.connect_signals(self)
+        self.__search_bar = builder.get_object("search_bar")
+        self.__remove_button = builder.get_object("remove_button")
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
         self.__listbox.set_sort_func(self.__sort_func)
@@ -157,13 +147,29 @@ class CredentialsDialog(Gtk.Bin):
         self.__filter = entry.get_text()
         self.__listbox.invalidate_filter()
 
-    def _on_remove_all_clicked(self, button):
+    def _on_remove_clicked(self, button):
         """
             Remove all passwords
             @param button as Gtk.Button
         """
-        for child in self.__listbox.get_children():
-            child.delete()
+        for row in self.__listbox.get_selected_rows():
+            row.delete()
+
+    def _on_row_selected(self, listbox, row):
+        """
+            Update clear button state
+            @param listbox as Gtk.ListBox
+            @param row as Gtk.ListBoxRow
+        """
+        self.__remove_button.set_sensitive(
+            len(listbox.get_selected_rows()) != 0)
+
+    def _on_search_toggled(self, button):
+        """
+            Show entry
+            @param button as Gtk.Button
+        """
+        self.__search_bar.set_search_mode(button.get_active())
 
 #######################
 # PRIVATE             #

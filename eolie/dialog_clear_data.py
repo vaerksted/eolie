@@ -63,8 +63,8 @@ class ClearDataDialog(Gtk.Bin):
         self.__search = ""
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/DialogClearData.ui")
-        self.__search_bar = builder.get_object("search_bar")
         builder.connect_signals(self)
+        self.__search_bar = builder.get_object("search_bar")
         self.__clear_button = builder.get_object("clear_button")
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_sort_func(self.__sort_func)

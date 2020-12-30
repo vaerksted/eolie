@@ -75,7 +75,7 @@ class NotificationsDialog(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/DialogNotifications.ui')
         builder.connect_signals(self)
-        self.__clear_button = builder.get_object("clear_button")
+        self.__remove_button = builder.get_object("remove_button")
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
         self.__listbox.set_sort_func(self.__sort_func)
@@ -118,7 +118,7 @@ class NotificationsDialog(Gtk.Bin):
             @param listbox as Gtk.ListBox
             @param row as Gtk.ListBoxRow
         """
-        self.__clear_button.set_sensitive(
+        self.__remove_button.set_sensitive(
             len(listbox.get_selected_rows()) != 0)
 
 #######################
