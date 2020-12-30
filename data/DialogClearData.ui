@@ -96,10 +96,15 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="headers-visible">False</property>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection"/>
+                    </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="active_column1">
                         <child>
-                          <object class="GtkCellRendererToggle" id="check_renderer1"/>
+                          <object class="GtkCellRendererToggle" id="check_renderer1">
+                            <signal name="toggled" handler="_on_item_toggled" swapped="no"/>
+                          </object>
                           <attributes>
                             <attribute name="active">0</attribute>
                             <attribute name="inconsistent">4</attribute>

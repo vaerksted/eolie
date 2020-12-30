@@ -77,7 +77,7 @@ class ClearDataDialog(Gtk.Bin):
         """
         iterator = self.__filter.get_iter(path)
         item = self.__filter.get_value(iterator, self.__ModelColumn.DATA)
-        # We are a parent, only toggled is children available
+        # We are a parent, only toggled if children available
         if item is None:
             child = self.__filter.iter_children(iterator)
             if child is None and self.__timespan_value == 0:
@@ -121,6 +121,9 @@ class ClearDataDialog(Gtk.Bin):
             Clear data
             @param button as Gtk.Button
         """
+        self.__parent_iters = {}
+        self.__model.clear()
+        self.__populate()
         context = WebKit2.WebContext.get_default()
         data_manager = context.get_property("website-data-manager")
         # Remove items
