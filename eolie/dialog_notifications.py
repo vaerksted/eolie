@@ -75,6 +75,7 @@ class NotificationsDialog(Gtk.Bin):
         builder = Gtk.Builder()
         builder.add_from_resource('/org/gnome/Eolie/DialogNotifications.ui')
         builder.connect_signals(self)
+        self.__search_bar = builder.get_object("search_bar")
         self.__remove_button = builder.get_object("remove_button")
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
@@ -120,6 +121,13 @@ class NotificationsDialog(Gtk.Bin):
         """
         self.__remove_button.set_sensitive(
             len(listbox.get_selected_rows()) != 0)
+
+    def _on_search_toggled(self, button):
+        """
+            Show entry
+            @param button as Gtk.Button
+        """
+        self.__search_bar.set_search_mode(button.get_active())
 
 #######################
 # PRIVATE             #
