@@ -280,7 +280,6 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="valign">center</property>
-                    <property name="text" translatable="yes">5</property>
                     <property name="adjustment">adjustment3</property>
                     <property name="value">5</property>
                     <signal name="value-changed" handler="_on_range_changed" swapped="no"/>
@@ -396,7 +395,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Default zoom level</property>
-                <property name="subtitle" translatable="yes">Zomm level for current screen</property>
+                <property name="subtitle" translatable="yes">Zoom level for current screen</property>
                 <child>
                   <object class="GtkSpinButton" id="default_zoom_level">
                     <property name="name">default-zoom-level</property>
@@ -404,7 +403,6 @@
                     <property name="can-focus">True</property>
                     <property name="valign">center</property>
                     <property name="width-chars">5</property>
-                    <property name="text" translatable="yes">30</property>
                     <property name="adjustment">adjustment2</property>
                     <property name="value">30</property>
                   </object>
@@ -484,7 +482,6 @@
               <object class="HdyActionRow">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="tooltip-text" translatable="yes">You need to reset collection</property>
                 <property name="title" translatable="yes">Autoplay videos</property>
                 <property name="activatable-widget">autoplay-videos_boolean</property>
                 <child>
@@ -503,7 +500,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Cookies</property>
-                <property name="subtitle" translatable="yes">Allows web sites to track you</property>
+                <property name="subtitle" translatable="yes">Allow web sites to track you</property>
                 <child>
                   <!-- n-columns=2 n-rows=1 -->
                   <object class="GtkGrid">
