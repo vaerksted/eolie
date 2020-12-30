@@ -99,6 +99,14 @@ class SettingsDialog:
         """
         self.__settings_dialog.show()
 
+    @property
+    def stack(self):
+        """
+            Get main stack
+            @return Gtk.Stack
+        """
+        return self.__settings_dialog.get_child()
+
 #######################
 # PROTECTED           #
 #######################
@@ -216,8 +224,10 @@ class SettingsDialog:
             @param button as Gtk.button
         """
         from eolie.dialog_clear_data import ClearDataDialog
-        dialog = ClearDataDialog(self.__settings_dialog)
-        dialog.run()
+        dialog = ClearDataDialog()
+        dialog.show()
+        self.stack.add(dialog)
+        self.stack.set_visible_child(dialog)
 
     def _on_manage_cookies_clicked(self, button):
         """
@@ -225,19 +235,23 @@ class SettingsDialog:
             @param button as Gtk.button
         """
         from eolie.dialog_cookies import CookiesDialog
-        dialog = CookiesDialog(False, self.__settings_dialog)
-        dialog.run()
+        dialog = CookiesDialog()
+        dialog.show()
+        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
+        self.stack.add(dialog)
+        self.stack.set_visible_child(dialog)
 
     def _on_manage_passwords_clicked(self, button):
         """
             Launch searhorse
             @param button as Gtk.Button
         """
-        from eolie.popover_passwords import PasswordsPopover
-        popover = PasswordsPopover()
-        popover.populate()
-        popover.set_relative_to(button)
-        popover.popup()
+        from eolie.dialog_credentials import CredentialsDialog
+        dialog = CredentialsDialog()
+        dialog.show()
+        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
+        self.stack.add(dialog)
+        self.stack.set_visible_child(dialog)
 
     def _on_sync_now_clicked(self, button):
         """
@@ -443,3 +457,14 @@ class SettingsDialog:
             @param message as str
         """
         self.__status_row.set_subtitle(_("Syncing %s") % message)
+
+    def __on_sub_dialog_destroyed(self, widget):
+        """
+            Restore previous dialog
+            @param widget as Gtk.Widget
+        """
+        for child in self.stack.get_children():
+            if child != widget:
+                self.stack.set_visible_child(child)
+                break
+        GLib.timeout_add(1000, widget.destroy)

@@ -146,70 +146,61 @@ class Row(Gtk.ListBoxRow):
         self.get_style_context().remove_class("drag-down")
 
 
-class CookiesDialog:
+class CookiesDialog(Gtk.Bin):
     """
         A cookie management dialog
     """
 
-    def __init__(self, hide_cookies, parent):
+    __gsignals__ = {
+        "destroy-me": (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
+
+    def __init__(self):
         """
             Init widget
-            @param hide_cookies as bool
-            @param parent as Gtk.Window
         """
-        self.__hide_cookies = hide_cookies
+        Gtk.Bin.__init__(self)
         self.__filter = ""
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/DialogCookies.ui")
-        self.__dialog = builder.get_object("dialog")
-        self.__dialog.set_transient_for(parent)
         self.__entry = builder.get_object("entry")
         self.__cookies = builder.get_object("cookies")
         self.__delete_button = builder.get_object("delete_button")
-        if self.__hide_cookies:
-            builder.get_object("cookies_box").hide()
-            builder.get_object("box").set_hexpand(True)
-            builder.get_object("box").set_vexpand(True)
-            self.__delete_button.hide()
-            self.__dialog.set_size_request(300, 400)
-        else:
-            self.__cookies.set_filter_func(self.__filter_func)
-            self.__dialog.set_size_request(600, 500)
         builder.connect_signals(self)
-
-    def run(self):
-        """
-            Run dialog
-        """
+        self.add(builder.get_object("widget"))
         self.__populate()
-        self.__dialog.run()
-        self.__dialog.destroy()
 
 #######################
 # PROTECTED           #
 #######################
-    def _on_dialog_response(self, dialog, response_id):
+    def _on_back_clicked(self, button):
         """
-            Save user agent
-            @param dialog as Gtk.Dialog
-            @param response_id as int
+            Ask to be destroyed
+            @param button as Gtk.Button
+        """
+        emit_signal(self, "destroy-me")
+
+    def _on_delete_clicked(self, button):
+        """
+            Delete selected cookies
+            @param button as Gtk.Button
         """
         try:
-            if response_id != Gtk.ResponseType.DELETE_EVENT:
-                rows = self.__cookies.get_selected_rows()
-                path = COOKIES_PATH % (EOLIE_DATA_PATH,
-                                       "default")
-                request = "DELETE FROM moz_cookies WHERE "
-                filters = ()
-                for row in rows:
-                    request += "host=? OR "
-                    filters += (row.item.name,)
-                request += " 0"
-                sql = sqlite3.connect(path, 600.0)
-                sql.execute(request, filters)
-                sql.commit()
+            rows = self.__cookies.get_selected_rows()
+            path = COOKIES_PATH % (EOLIE_DATA_PATH,
+                                   "default")
+            request = "DELETE FROM moz_cookies WHERE "
+            filters = ()
+            for row in rows:
+                request += "host=? OR "
+                filters += (row.item.name,)
+                row.destroy()
+            request += " 0"
+            sql = sqlite3.connect(path, 600.0)
+            sql.execute(request, filters)
+            sql.commit()
         except Exception as e:
-            Logger.error("CookiesDialog::_on_dialog_response(): %s", e)
+            Logger.error("CookiesDialog::_on_delete_clicked(): %s", e)
 
     def _on_entry_changed(self, entry):
         """

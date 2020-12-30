@@ -14,6 +14,7 @@ from gi.repository import Gtk, GObject, Pango, GLib
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
+from eolie.utils import emit_signal
 
 
 class Item(GObject.GObject):
@@ -113,37 +114,41 @@ class Row(Gtk.ListBoxRow):
         widget.set_tooltip_markup(text)
 
 
-class PasswordsPopover(Gtk.Popover):
+class CredentialsDialog(Gtk.Bin):
     """
-        Show saved passwords
+        Show saved credentials
     """
+
+    __gsignals__ = {
+        "destroy-me": (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
 
     def __init__(self):
         """
-            Init popover
+            Init dialog
         """
-        Gtk.Popover.__init__(self)
+        Gtk.Bin.__init__(self)
         self.__filter = ""
         self.__helper = PasswordsHelper()
-        self.set_position(Gtk.PositionType.BOTTOM)
         builder = Gtk.Builder()
-        builder.add_from_resource('/org/gnome/Eolie/PopoverPasswords.ui')
+        builder.add_from_resource('/org/gnome/Eolie/DialogCredentials.ui')
         builder.connect_signals(self)
         self.__listbox = builder.get_object("listbox")
         self.__listbox.set_filter_func(self.__filter_func)
         self.__listbox.set_sort_func(self.__sort_func)
         self.add(builder.get_object('widget'))
-        self.set_size_request(400, 300)
-
-    def populate(self):
-        """
-            Populate popover
-        """
         self.__helper.get_all(self.__add_password)
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_back_clicked(self, button):
+        """
+            Ask to be destroyed
+            @param button as Gtk.Button
+        """
+        emit_signal(self, "destroy-me")
+
     def _on_search_changed(self, entry):
         """
             Update filter

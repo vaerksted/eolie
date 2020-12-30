@@ -10,19 +10,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, WebKit2
+from gi.repository import Gtk, GLib, WebKit2, GObject
 
 from gettext import gettext as _
 
 from eolie.define import TimeSpanValues
+from eolie.utils import emit_signal
 from eolie.logger import Logger
 
 
-class ClearDataDialog:
+class ClearDataDialog(Gtk.Bin):
     """
         A clear data dialog
         THANKS TO EPIPHANY DEVS FOR UI FILE!
     """
+
+    __gsignals__ = {
+        "destroy-me": (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
 
     class __ModelColumn:
         TOGGLE = 0
@@ -31,23 +36,18 @@ class ClearDataDialog:
         DATA = 3
         INCONSISTENT = 4
 
-    def __init__(self, parent):
+    def __init__(self):
         """
             Init widget
-            @param parent as Gtk.Window
         """
+        Gtk.Bin.__init__(self)
         self.__search = ""
         self.__parent_iters = {}
         self.__timespan_value = 0
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/DialogClearData.ui")
+        self.__search_bar = builder.get_object("search_bar")
         builder.connect_signals(self)
-        self.__dialog = builder.get_object("dialog")
-        self.__dialog.set_transient_for(parent)
-        self.__stack = builder.get_object("stack")
-        self.__stack.set_visible_child_name("view")
-        headerbar = builder.get_object("headerbar")
-        self.__dialog.set_titlebar(headerbar)
         self.__model = Gtk.TreeStore(bool,                 # Selected
                                      int,                  # Type
                                      str,                  # Value
@@ -56,18 +56,19 @@ class ClearDataDialog:
         self.__filter = self.__model.filter_new()
         self.__filter.set_visible_func(self.__on_treeview_filter)
         builder.get_object("treeview").set_model(self.__filter)
-
-    def run(self):
-        """
-            Run dialog
-        """
         self.__populate()
-        self.__dialog.run()
-        self.__dialog.destroy()
+        self.add(builder.get_object("widget"))
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_back_clicked(self, button):
+        """
+            Ask to be destroyed
+            @param button as Gtk.Button
+        """
+        emit_signal(self, "destroy-me")
+
     def _on_item_toggled(self, renderer, path):
         """
             Check item and update parent/child
@@ -115,14 +116,11 @@ class ClearDataDialog:
         self.__search = entry.get_text()
         self.__filter.refilter()
 
-    def _on_dialog_response(self, dialog, response_id):
+    def _on_clear_clicked(self, button):
         """
             Clear data
-            @param dialog as Gtk.Dialog
-            @param response_id as int
+            @param button as Gtk.Button
         """
-        if response_id == Gtk.ResponseType.DELETE_EVENT:
-            return
         context = WebKit2.WebContext.get_default()
         data_manager = context.get_property("website-data-manager")
         # Remove items
@@ -154,6 +152,13 @@ class ClearDataDialog:
                     types |= WebKit2.WebsiteDataTypes(
                         item[self.__ModelColumn.TYPE])
             data_manager.clear(types, self.__timespan_value, None, None)
+
+    def _on_search_toggled(self, button):
+        """
+            Show entry
+            @param button as Gtk.Button
+        """
+        self.__search_bar.set_search_mode(button.get_active())
 
 #######################
 # PRIVATE             #

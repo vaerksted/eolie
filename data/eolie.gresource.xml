@@ -27,6 +27,7 @@
      <file compressed="true" preprocess="xml-stripblanks">BookmarkRatingWidget.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogClearData.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogCookies.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogCredentials.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogImportBookmarks.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogModifyUA.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
@@ -37,7 +38,6 @@
      <file compressed="true" preprocess="xml-stripblanks">PopoverGeolocation.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverImages.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverJavaScript.ui</file>
-     <file compressed="true" preprocess="xml-stripblanks">PopoverPasswords.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverUri.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverWebView.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">QuitDialog.ui</file>
