@@ -75,6 +75,7 @@ class UriEntry(Gtk.Overlay, SizeAllocationHelper):
 
         grid = Gtk.Grid()
         grid.show()
+        grid.set_valign(Gtk.Align.CENTER)
         grid.add(self.__placeholder)
         grid.add(self.__icons)
 
