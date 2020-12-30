@@ -1,0 +1,7 @@
+beautifulsoup4
+PyGObject
+pycairo
+PyFxA
+requests-hawk
+pycrypto
+cryptography
