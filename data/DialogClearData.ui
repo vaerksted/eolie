@@ -17,7 +17,6 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="vexpand">True</property>
-        <property name="border-width">15</property>
         <property name="orientation">vertical</property>
         <property name="spacing">12</property>
         <child>
@@ -149,8 +148,8 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="clear_button">
-        <property name="label" translatable="yes">C_lear</property>
+      <object class="GtkButton" id="remove_button">
+        <property name="label" translatable="yes">Remove</property>
         <property name="visible">True</property>
         <property name="sensitive">False</property>
         <property name="can-focus">True</property>
@@ -158,9 +157,10 @@
         <property name="halign">end</property>
         <property name="valign">center</property>
         <property name="margin-end">5</property>
+        <property name="margin-top">5</property>
         <property name="margin-bottom">5</property>
         <property name="use-underline">True</property>
-        <signal name="clicked" handler="_on_clear_clicked" swapped="no"/>
+        <signal name="clicked" handler="_on_remove_clicked" swapped="no"/>
         <style>
           <class name="destructive-action"/>
           <class name="text-button"/>
