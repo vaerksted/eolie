@@ -30,6 +30,7 @@
      <file compressed="true" preprocess="xml-stripblanks">DialogCredentials.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogImportBookmarks.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogModifyUA.ui</file>
+     <file compressed="true" preprocess="xml-stripblanks">DialogNotifications.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">DialogSearchEngine.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">LanguagesMenu.ui</file>
      <file compressed="true" preprocess="xml-stripblanks">PopoverCookies.ui</file>

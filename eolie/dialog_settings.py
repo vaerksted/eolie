@@ -232,6 +232,18 @@ class SettingsDialog:
         self.stack.add(dialog)
         self.stack.set_visible_child(dialog)
 
+    def _on_configure_notifications_clicked(self, button):
+        """
+            Show Web engines configurator
+            @param button as Gtk.Button
+        """
+        from eolie.dialog_notifications import NotificationsDialog
+        dialog = NotificationsDialog()
+        dialog.show()
+        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
+        self.stack.add(dialog)
+        self.stack.set_visible_child(dialog)
+
     def _on_clear_personnal_data_clicked(self, button):
         """
             Show clear personnal data dialog
