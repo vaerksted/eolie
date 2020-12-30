@@ -10,13 +10,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, GObject
+from gi.repository import Gtk, GLib, GObject, Pango
 
 from gettext import gettext as _
 from urllib.parse import urlparse
 
 from eolie.search import Search
-from eolie.define import App
+from eolie.define import App, MARGIN_SMALL
+from eolie.utils import emit_signal
 from eolie.logger import Logger
 
 
@@ -51,7 +52,8 @@ class Row(Gtk.ListBoxRow):
         Gtk.ListBoxRow.__init__(self)
         self.__item = item
         self.__label = Gtk.Label.new(item.get_property("name"))
-        self.__label.set_max_width_chars(20)
+        self.__label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.__label.set_property("margin", MARGIN_SMALL)
         self.__label.set_property("halign", Gtk.Align.START)
         self.__label.show()
         self.add(self.__label)
@@ -88,21 +90,22 @@ class Row(Gtk.ListBoxRow):
         return self.__item
 
 
-class SearchEngineDialog:
+class SearchEngineDialog(Gtk.Bin):
     """
         A search engine dialog
         THANKS TO EPIPHANY DEVS FOR UI FILE!
     """
+    __gsignals__ = {
+        "destroy-me": (GObject.SignalFlags.RUN_FIRST, None, ())
+    }
 
-    def __init__(self, parent):
+    def __init__(self):
         """
             Init widget
-            @param parent as Gtk.Window
         """
+        Gtk.Bin.__init__(self)
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/DialogSearchEngine.ui")
-        self.__dialog = builder.get_object("dialog")
-        self.__dialog.set_transient_for(parent)
         self.__edit_box = builder.get_object("edit_box")
         self.__listbox = builder.get_object("list_box")
         self.__name_entry = builder.get_object("name_entry")
@@ -114,32 +117,20 @@ class SearchEngineDialog:
         self.__remove_button = builder.get_object("remove_button")
         self.__remove_button.set_sensitive(False)
         builder.connect_signals(self)
-
-    def run(self):
-        """
-            Run dialog
-        """
         self.__populate()
-        self.__dialog.run()
-        # Save engines
-        engines = {}
-        for child in self.__listbox.get_children():
-            if child.is_valid:
-                name = child.item.get_property("name")
-                uri = child.item.get_property("uri")
-                search = child.item.get_property("search")
-                keyword = child.item.get_property("keyword")
-                encoding = child.item.get_property("encoding")
-                bang = child.item.get_property("bang")
-                if name and search:
-                    engines[name] = [uri, search, keyword, encoding, bang]
-        App().search.save_engines(engines)
-        App().search.update_default_engine()
-        self.__dialog.destroy()
+        self.connect("destroy", self.__on_destroy)
+        self.add(builder.get_object("widget"))
 
 #######################
 # PROTECTED           #
 #######################
+    def _on_back_clicked(self, button):
+        """
+            Ask to be destroyed
+            @param button as Gtk.Button
+        """
+        emit_signal(self, "destroy-me")
+
     def _on_default_switch_state_set(self, switch, state):
         """
             Update engine state
@@ -311,3 +302,23 @@ class SearchEngineDialog:
                 self.__listbox.add(child)
         except Exception as e:
             Logger.error("DialogSearchEngine::__populate(): %s", e)
+
+    def __on_destroy(self, widget):
+        """
+            Save engines
+            @param widget as Gtk.Widget
+        """
+        # Save engines
+        engines = {}
+        for child in self.__listbox.get_children():
+            if child.is_valid:
+                name = child.item.get_property("name")
+                uri = child.item.get_property("uri")
+                search = child.item.get_property("search")
+                keyword = child.item.get_property("keyword")
+                encoding = child.item.get_property("encoding")
+                bang = child.item.get_property("bang")
+                if name and search:
+                    engines[name] = [uri, search, keyword, encoding, bang]
+        App().search.save_engines(engines)
+        App().search.update_default_engine()

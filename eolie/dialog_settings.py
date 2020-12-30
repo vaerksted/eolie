@@ -226,8 +226,11 @@ class SettingsDialog:
             @param button as Gtk.Button
         """
         from eolie.dialog_search_engine import SearchEngineDialog
-        dialog = SearchEngineDialog(self.__settings_dialog)
-        dialog.run()
+        dialog = SearchEngineDialog()
+        dialog.show()
+        dialog.connect("destroy-me", self.__on_sub_dialog_destroyed)
+        self.stack.add(dialog)
+        self.stack.set_visible_child(dialog)
 
     def _on_clear_personnal_data_clicked(self, button):
         """
