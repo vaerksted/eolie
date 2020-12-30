@@ -268,7 +268,7 @@ class Window(Handy.ApplicationWindow, WindowState):
         size = window.get_size()
         # Allow respecting GNOME IHM, should tile on screen == 1280px
         self.toolbar.end.move_control_in_menu(size[0] < 700)
-        self.toolbar.title.set_width(size[0] / 3)
+        self.toolbar.title.set_width(size[0] / 5)
         if self.__timeout_configure:
             GLib.source_remove(self.__timeout_configure)
             self.__timeout_configure = None
