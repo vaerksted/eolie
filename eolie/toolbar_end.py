@@ -126,18 +126,6 @@ class ToolbarEnd(Gtk.Bin):
         filechooser.connect("response", self.__on_save_response)
         filechooser.run()
 
-    def move_control_in_menu(self, b):
-        """
-            Move home and download buttons in menu
-            @param b as bool
-        """
-        if b:
-            self.__home_button.hide()
-            self.set_hexpand(False)
-        else:
-            self.__home_button.show()
-            self.set_hexpand(True)
-
     @property
     def home_button(self):
         """

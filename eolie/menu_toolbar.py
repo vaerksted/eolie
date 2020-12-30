@@ -31,6 +31,8 @@ class ToolbarMenu(Gtk.PopoverMenu):
             Init self
             @param uri as str
             @param window as Window
+            THIS IS FUCKING IDIOT, MOVE CODE FROM TOOLBAR HERE NOW BUTTONS
+            ARE NOT IN TOOLBAR ANYMORE
             @param toolbar as ToolbarEnd
         """
         Gtk.PopoverMenu.__init__(self)
@@ -39,8 +41,6 @@ class ToolbarMenu(Gtk.PopoverMenu):
         self.__toolbar = toolbar
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/ToolbarMenu.ui")
-        if not toolbar.home_button.is_visible():
-            builder.get_object("toolbar_items").show()
         fullscreen_button = builder.get_object("fullscreen_button")
         if self.__window.is_fullscreen:
             fullscreen_button.set_active(True)
@@ -116,13 +116,6 @@ class ToolbarMenu(Gtk.PopoverMenu):
 #######################
 # PROTECTED           #
 #######################
-    def _on_home_button_clicked(self, button):
-        """
-            Go to home page
-            @param button as Gtk.Button
-        """
-        self.__toolbar._on_home_button_clicked(button)
-
     def _on_print_button_clicked(self, button):
         """
             Print current page
@@ -136,13 +129,6 @@ class ToolbarMenu(Gtk.PopoverMenu):
             @param button as Gtk.Button
         """
         self.__toolbar._on_save_button_clicked(button)
-
-    def _on_download_button_toggled(self, button):
-        """
-            Show download popover
-            @param button as Gtk.Button
-        """
-        self.__toolbar._on_download_button_toggled(self.__toolbar.menu_button)
 
     def _on_zoom_button_clicked(self, button):
         """

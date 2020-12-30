@@ -266,8 +266,6 @@ class Window(Handy.ApplicationWindow, WindowState):
             @param: event as Gdk.Event
         """
         size = window.get_size()
-        # Allow respecting GNOME IHM, should tile on screen == 1280px
-        self.toolbar.end.move_control_in_menu(size[0] < 700)
         self.toolbar.title.set_width(size[0] / 5)
         if self.__timeout_configure:
             GLib.source_remove(self.__timeout_configure)
@@ -309,8 +307,7 @@ class Window(Handy.ApplicationWindow, WindowState):
         """
         if event.changed_mask & Gdk.WindowState.MAXIMIZED:
             size = widget.get_size()
-            self.toolbar.end.move_control_in_menu(size[0] < 700)
-            self.toolbar.title.set_width(size[0] / 3)
+            self.toolbar.title.set_width(size[0] / 5)
         self.__window_state = event.new_window_state
 
     def __on_motion_notify_event(self, widget, event):
