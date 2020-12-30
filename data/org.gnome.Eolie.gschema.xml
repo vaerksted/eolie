@@ -6,12 +6,19 @@
       <value nick="no_third_party" value="2" />
    </enum>
   <enum id="org.gnome.Eolie.History">
-      <value nick="day" value="1" />
-      <value nick="week" value="2" />
-      <value nick="4week" value="3" />
-      <value nick="year" value="4" />
-      <value nick="forever" value="5" />
-      <value nick="never" value="6" />
+      <value nick="day" value="0" />
+      <value nick="week" value="1" />
+      <value nick="4week" value="2" />
+      <value nick="year" value="3" />
+      <value nick="forever" value="4" />
+      <value nick="never" value="5" />
+   </enum>
+   <enum id="org.gnome.Eolie.StartPage">
+      <value nick="search" value="0" />
+      <value nick="popular_history" value="1" />
+      <value nick="popular_bookmarks" value="2" />
+      <value nick="blank" value="3" />
+      <value nick="custom" value="4" />
    </enum>
    <schema path="/org/gnome/Eolie/" id="org.gnome.Eolie" gettext-domain="eolie">
       <key type="b" name="debug">
@@ -139,11 +146,6 @@
          <summary>Monospace font</summary>
          <description />
       </key>
-      <key type="s" name="start-page">
-         <default>"search"</default>
-         <summary>Open this page on startup</summary>
-         <description />
-      </key>
       <key type="s" name="firefox-sync-server">
          <default>"token.services.mozilla.com"</default>
          <summary>Firefox server FQDN</summary>
@@ -179,9 +181,24 @@
          <summary>History storage type</summary>
          <description />
       </key>
+      <key enum="org.gnome.Eolie.StartPage" name="start-page">
+         <default>"search"</default>
+         <summary>Default start page</summary>
+         <description />
+      </key>
+      <key type="s" name="start-page-custom">
+         <default>""</default>
+         <summary>Custom start page</summary>
+         <description />
+      </key>
       <key type="b" name="do-not-track">
          <default>true</default>
          <summary>Tell websites I do not want to be tracked</summary>
+         <description />
+      </key>
+      <key type="b" name="enable-firefox-sync">
+         <default>false</default>
+         <summary>Enable Firefox Sync</summary>
          <description />
       </key>
       <key type="b" name="autoplay-videos">

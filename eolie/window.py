@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, GLib, Gio, Gdk
+from gi.repository import Gtk, GLib, Gio, Gdk, Handy
 
 from eolie.define import App, LoadingType
 from eolie.toolbar import Toolbar
@@ -21,7 +21,7 @@ from eolie.logger import Logger
 from eolie.window_state import WindowState
 
 
-class Window(Gtk.ApplicationWindow, WindowState):
+class Window(Handy.ApplicationWindow, WindowState):
     """
         Main window
     """
@@ -33,10 +33,10 @@ class Window(Gtk.ApplicationWindow, WindowState):
             @param size as (int, int)
             @param is_maximized as bool
         """
-        Gtk.ApplicationWindow.__init__(self,
-                                       application=App(),
-                                       title="Eolie",
-                                       icon_name="org.gnome.Eolie")
+        Handy.ApplicationWindow.__init__(self,
+                                         application=App(),
+                                         title="Eolie",
+                                         icon_name="org.gnome.Eolie")
         WindowState.__init__(self)
         self.__monitor_model = ""
         self.__popovers = []
@@ -154,7 +154,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
         """
             Change window toolbar color
         """
-        style = self.__toolbar.headerbar.get_style_context()
+        style = self.__toolbar.get_style_context()
         if mark:
             style.add_class("toolbar-mark")
         else:
@@ -234,15 +234,19 @@ class Window(Gtk.ApplicationWindow, WindowState):
         """
             Setup window content
         """
+        grid = Gtk.Grid()
+        grid.set_orientation(Gtk.Orientation.VERTICAL)
+        grid.show()
         self.__toolbar = Toolbar(self)
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
         self.__toolbar.show()
         self.__container = Container(self)
         self.__container.show()
-        self.set_titlebar(self.__toolbar)
-        self.__toolbar.headerbar.set_show_close_button(True)
-        self.add(self.__container)
+        self.__toolbar.set_show_close_button(True)
+        grid.add(self.__toolbar)
+        grid.add(self.__container)
+        self.add(grid)
 
     def __setup_window(self, is_maximized):
         """
@@ -406,7 +410,7 @@ class Window(Gtk.ApplicationWindow, WindowState):
             self.container.webview.reload()
         elif string == "settings":
             # Rework all this code to use actions like in Lollypop
-            from eolie.settings import SettingsDialog
+            from eolie.dialog_settings import SettingsDialog
             dialog = SettingsDialog(self)
             dialog.show()
         elif string == "home":

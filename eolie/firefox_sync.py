@@ -37,7 +37,7 @@ class SyncWorker(GObject.Object):
     """
 
     __gsignals__ = {
-        'syncing': (GObject.SignalFlags.RUN_FIRST, None, (bool,))
+        "syncing": (GObject.SignalFlags.RUN_FIRST, None, (str,))
     }
 
     def check_modules():
@@ -60,6 +60,7 @@ class SyncWorker(GObject.Object):
         """
         GObject.Object.__init__(self)
         self.__sync_cancellable = Gio.Cancellable()
+        self.__timeout_id = None
         self.__username = ""
         self.__password = ""
         self.__token = ""
@@ -83,7 +84,8 @@ class SyncWorker(GObject.Object):
                                       "passwords": [],
                                       "bookmarks": []}
         self.__helper = PasswordsHelper()
-        self.set_credentials()
+        if App().settings.get_value("enable-firefox-sync"):
+            self.set_credentials()
 
     def login(self, attributes, password, code):
         """
@@ -147,8 +149,10 @@ class SyncWorker(GObject.Object):
         def loop():
             self.pull()
             return True
-        self.pull()
-        GLib.timeout_add_seconds(3600, loop)
+        if App().settings.get_value("enable-firefox-sync"):
+            self.pull()
+            if self.__timeout_id is None:
+                self.__timeout_id = GLib.timeout_add_seconds(3600, loop)
 
     def pull(self, force=False):
         """
@@ -247,6 +251,9 @@ class SyncWorker(GObject.Object):
             Stop update, if force, kill session too
             @param force as bool
         """
+        if self.__timeout_id is not None:
+            GLib.source_remove(self.__timeout_id)
+            self.__timeout_id = None
         self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
         if force:
@@ -283,6 +290,7 @@ class SyncWorker(GObject.Object):
                 return True
         except Exception as e:
             Logger.error("SyncWorker::status(): %s", e)
+        return False
 
     @property
     def username(self):
@@ -359,6 +367,15 @@ class SyncWorker(GObject.Object):
                         try:
                             record = self.__pending_records[key].pop(0)
                             Logger.sync_debug("syncing %s", record)
+                            if "bmkUri" in record.keys():
+                                emit_signal(self, "syncing",
+                                            record["bmkUri"])
+                            elif "histUri" in record.keys():
+                                emit_signal(self, "syncing",
+                                            record["histUri"])
+                            elif "hostname" in record.keys():
+                                emit_signal(self, "syncing",
+                                            record["hostname"])
                             self.__firefox_sync.add(record, key, bulk_keys)
                         except:
                             self.__pending_records[key].append(record)
@@ -522,7 +539,6 @@ class SyncWorker(GObject.Object):
         if self.__syncing:
             return
         Logger.sync_debug("Start pulling")
-        emit_signal(self, "syncing", True)
         self.__syncing = True
         self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
@@ -586,7 +602,6 @@ class SyncWorker(GObject.Object):
             Logger.sync_debug("Stop pulling")
         except Exception as e:
             Logger.error("SyncWorker::__pull(): %s", e)
-        emit_signal(self, "syncing", False)
         self.__syncing = False
 
     def __push(self):
@@ -597,7 +612,6 @@ class SyncWorker(GObject.Object):
         if self.__syncing:
             return
         Logger.sync_debug("Start pushing")
-        emit_signal(self, "syncing", True)
         self.__syncing = True
         self.__sync_cancellable.cancel()
         self.__sync_cancellable = Gio.Cancellable()
@@ -627,7 +641,6 @@ class SyncWorker(GObject.Object):
             Logger.sync_debug("Stop pushing")
         except Exception as e:
             Logger.error("SyncWorker::__push(): %s", e)
-        emit_signal(self, "syncing", False)
         self.__syncing = False
 
     def __pull_bookmarks(self, bulk_keys):
@@ -824,7 +837,6 @@ class SyncWorker(GObject.Object):
             self.__token = record["token"]
             self.__uid = record["uid"]
             self.__keyB = b64decode(record["keyB"])
-            self.pull()
         except Exception as e:
             Logger.error("SyncWorker::__set_credentials(): %s" % e)
 

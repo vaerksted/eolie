@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk
+from gi.repository import Handy
 
 from eolie.toolbar_actions import ToolbarActions
 from eolie.toolbar_title import ToolbarTitle
@@ -18,7 +18,7 @@ from eolie.toolbar_end import ToolbarEnd
 from eolie.helper_gestures import GesturesHelper
 
 
-class Toolbar(Gtk.EventBox):
+class Toolbar(Handy.HeaderBar):
     """
         Eolie toolbar
     """
@@ -29,24 +29,21 @@ class Toolbar(Gtk.EventBox):
             @param window as Window
             @param fullscreen as bool
         """
-        Gtk.EventBox.__init__(self)
+        Handy.HeaderBar.__init__(self)
         self.__window = window
-        self.__headerbar = Gtk.HeaderBar()
-        self.__headerbar.show()
-        self.__headerbar.set_title("Eolie")
+        self.set_title("Eolie")
         self.__toolbar_actions = ToolbarActions(window, fullscreen)
         self.__toolbar_actions.show()
         self.__toolbar_title = ToolbarTitle(window)
         self.__toolbar_title.show()
         self.__toolbar_end = ToolbarEnd(window, fullscreen)
         self.__toolbar_end.show()
-        self.__headerbar.pack_start(self.__toolbar_actions)
-        self.__headerbar.set_custom_title(self.__toolbar_title)
-        self.__headerbar.pack_end(self.__toolbar_end)
+        self.pack_start(self.__toolbar_actions)
+        self.set_custom_title(self.__toolbar_title)
+        self.pack_end(self.__toolbar_end)
         self.__gesture = GesturesHelper(
             self,
             primary_press_callback=self.__on_press)
-        self.add(self.__headerbar)
 
     @property
     def headerbar(self):

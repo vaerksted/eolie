@@ -95,6 +95,14 @@ class Score:
     WEBVIEW = 500
 
 
+class StartPage:
+    SEARCH = 0
+    POPULARITY_HISTORY = 1
+    POPULARITY_BOOKMARKS = 2
+    BLANK = 3
+    CUSTOM = 4
+
+
 COLORS = {
     "aliceblue": (240, 248, 255),
     "antiquewhite": (250, 235, 215),

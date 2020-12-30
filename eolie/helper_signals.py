@@ -57,15 +57,25 @@ class SignalsHelper():
         if not hasattr(self, "_connected"):
             self._connected = {}
             self.__signal_ids = []
+            self.__allow_duplicate = []
             self.__cached = {}
+
+    def allow_duplicate(self, callback_str):
+        """
+            Allow duplicate signal emit for callback while hidden
+            @param callback_str as str
+        """
+        callback = getattr(self, callback_str)
+        if callback not in self.__allow_duplicate:
+            self.__allow_duplicate.append(callback)
 
     def init(self, signals):
         """
             Init signals
             @param signals as []
         """
-        self._connect_signals(signals)
-        self.__init(signals)
+        self._connect_signals(signals, False)
+        self.__init(signals, False)
 
     def init_map(self, signals):
         """
@@ -74,29 +84,34 @@ class SignalsHelper():
         """
         self.__signal_ids.append(
                      self.connect("map",
-                                  lambda x: self._connect_signals(signals)))
-        self.__init(signals)
+                                  lambda x: self._connect_signals(
+                                    signals, True)))
+        self.__init(signals, True)
 
 #######################
 # PROTECTED           #
 #######################
-    def _connect_signals(self, signals):
+    def _connect_signals(self, signals, on_map):
         """
             Connect signals
             @param signals as []
+            @param on_map on bool
         """
         for (obj, signal, callback_str) in signals:
             if obj is None:
-                Logger.warning("Can't connect signal: %s -> %s",
-                               signal, callback_str)
+                Logger.debug("Can't connect signal: %s -> %s",
+                             signal, callback_str)
                 continue
             name = "%s_%s" % (obj, signal)
             if name in self._connected.keys():
                 continue
             callback = getattr(self, callback_str)
-            self._connected[name] = obj.connect(signal,
-                                                self.__on_signal,
-                                                callback)
+            if on_map:
+                self._connected[name] = obj.connect(signal,
+                                                    self.__on_signal,
+                                                    callback)
+            else:
+                self._connected[name] = obj.connect(signal, callback)
 
     def _disconnect_signals(self, signals):
         """
@@ -118,13 +133,15 @@ class SignalsHelper():
 #######################
 # PRIVATE             #
 #######################
-    def __init(self, signals):
+    def __init(self, signals, on_map):
         """
             Init signals
             @param signals as []
+            @param on_map on bool
         """
-        self.connect("map", self.__on_map)
-        self.connect("unmap", self.__on_unmap)
+        if on_map:
+            self.connect("map", self.__on_map)
+            self.connect("unmap", self.__on_unmap)
         self.connect("destroy",
                      lambda x: self._disconnect_signals(signals))
 
@@ -153,7 +170,7 @@ class SignalsHelper():
         """
         callback = args[-1]
         callback_args = args[:-1]
-        if self.get_mapped():
+        if self.get_mapped() or callback in self.__allow_duplicate:
             callback(obj, *callback_args)
         else:
             self.__cached[callback] = (obj, callback_args)

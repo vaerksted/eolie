@@ -36,7 +36,6 @@ class UriEntryIcons(Gtk.Grid):
 
         separator = Gtk.Separator.new(Gtk.Orientation.VERTICAL)
         separator.show()
-        separator.set_vexpand(True)
         separator.set_size_request(-1, 32)
         separator.set_margin_top(MARGIN_SMALL)
         separator.set_margin_bottom(MARGIN_SMALL)

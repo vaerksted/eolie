@@ -16,7 +16,8 @@ gi.require_version('WebKit2', '4.0')
 gi.require_version('Soup', '2.4')
 gi.require_version('Secret', '1')
 gi.require_version('GtkSpell', '3.0')
-from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2
+gi.require_version("Handy", "1")
+from gi.repository import Gtk, Gio, GLib, Gdk, WebKit2, Handy
 
 from threading import current_thread
 from gettext import gettext as _
@@ -46,6 +47,7 @@ from eolie.download_manager import DownloadManager
 from eolie.menu_pages import PagesMenu
 from eolie.helper_task import TaskHelper
 from eolie.define import EOLIE_DATA_PATH, TimeSpan, TimeSpanValues, LoadingType
+from eolie.define import StartPage
 from eolie.utils import is_unity, wanted_loading_type
 from eolie.logger import Logger
 from eolie.webview_state import WebViewState
@@ -200,9 +202,9 @@ class Application(Gtk.Application, NightApplication):
                 s = str(x)
                 print(type(x), "\n  ", s)
         if vacuum:
-            task_helper = TaskHelper()
-            task_helper.run(self.__vacuum,
-                            callback=(lambda x: Gio.Application.quit(self),))
+            self.task_helper.run(
+                        self.__vacuum,
+                        callback=(lambda x: Gio.Application.quit(self),))
         else:
             Gio.Application.quit(self)
 
@@ -234,15 +236,17 @@ class Application(Gtk.Application, NightApplication):
             Get start page
             @return uri as str
         """
-        value = self.settings.get_value("start-page").get_string()
-        if value in ["popular_hist", "popular_book"]:
+        value = self.settings.get_enum("start-page")
+        if value in [StartPage.POPULARITY_HISTORY,
+                     StartPage.POPULARITY_BOOKMARKS]:
             start_page = "populars://"
-        elif value == "blank":
+        elif value == StartPage.BLANK:
             start_page = "about:blank"
-        elif value == "search":
+        elif value == StartPage.SEARCH:
             start_page = self.search.uri
         else:
-            start_page = value
+            start_page = self.settings.get_value(
+                "start-page-custom").get_string()
         return start_page
 
     @property
@@ -284,6 +288,7 @@ class Application(Gtk.Application, NightApplication):
         """
             Init main application
         """
+        Handy.init()
         self.settings = Settings.new()
         NightApplication.__init__(self)
 
@@ -323,6 +328,7 @@ class Application(Gtk.Application, NightApplication):
         settings = WebKit2.Settings.new()
         self.search = Search(settings.get_user_agent())
 
+        self.task_helper = TaskHelper()
         self.download_manager = DownloadManager()
         self.pages_menu = PagesMenu()
 

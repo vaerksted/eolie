@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from gettext import gettext as _
 
 from eolie.logger import Logger
-from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH
+from eolie.define import App, COOKIES_PATH, EOLIE_DATA_PATH, StartPage
 from eolie.helper_task import TaskHelper
 
 
@@ -74,9 +74,9 @@ class Context:
         uri = request.get_uri()
         parsed = urlparse(uri)
         items = []
-        start_page = App().settings.get_value("start-page").get_string()
+        start_page = App().settings.get_enum("start-page")
         wanted = App().settings.get_value("max-popular-items").get_int32()
-        if start_page == "popular_book":
+        if start_page == StartPage.POPULARITY_BOOKMARKS:
             reset_function = "reset_bookmark"
             for (item_id, uri, title) in App().bookmarks.get_populars(wanted):
                 items.append((title, uri, "", 1))

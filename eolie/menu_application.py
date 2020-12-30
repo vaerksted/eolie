@@ -103,7 +103,7 @@ class ApplicationMenu(Gio.Menu):
             @param action as Gio.SimpleAction
             @param param as GLib.Variant
         """
-        from eolie.settings import SettingsDialog
+        from eolie.dialog_settings import SettingsDialog
         dialog = SettingsDialog(self.__window)
         dialog.show()
 
