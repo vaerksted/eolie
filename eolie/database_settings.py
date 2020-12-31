@@ -44,7 +44,8 @@ class DatabaseSettings:
                                            night_mode INT,
                                            pinned INT NOT NULL DEFAULT 0,
                                            geolocation INT,
-                                           user_agent TEXT
+                                           user_agent TEXT,
+                                           audio INT NOT NULL DEFAULT 1
                                            )'''
 
     def __init__(self):
