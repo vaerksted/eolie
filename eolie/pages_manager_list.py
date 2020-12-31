@@ -94,7 +94,9 @@ class PagesManagerList(Gtk.ScrolledWindow):
         if self.__listbox.get_children():
             self.__calculate_height()
         else:
-            self.get_ancestor(Gtk.Popover).destroy()
+            popover = self.get_ancestor(Gtk.Popover)
+            if popover is not None:
+                popover.destroy()
 
     def __on_row_activated(self, listbox, row):
         """
