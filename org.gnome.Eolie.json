@@ -40,8 +40,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.18.2.tar.xz",
-          "sha256": "36969ad44c5f0756a8a90215410710d6c39713d58f6cee13d663be9774557f49"
+          "url": "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.16.0.tar.xz",
+          "sha256": "dfac119043a9cfdcacd7acde77f674ab172cf2537b5812be52f49e9cddc53d9a"
         }
       ]
     },
@@ -58,8 +58,8 @@
       "sources": [
         {
           "type": "archive",
-          "url": "https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.18.2.tar.xz",
-          "sha256": "a337a022ed472209b38cab5918dc2f4e7a6adc1f4afacd226a6345e5cb668bdb"
+          "url": "https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.16.0.tar.xz",
+          "sha256": "e30964c5f031c32289e0b25e176c3c95a5737f2052dfc81d0f7427ef0233a4c2"
         }
       ]
     },
