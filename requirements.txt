@@ -24,6 +24,6 @@ shellescape
 python-dateutil
 setuptools_scm
 chardet
-urllib3
 certifi
 soupsieve
+pyopenssl
