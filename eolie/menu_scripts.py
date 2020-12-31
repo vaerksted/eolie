@@ -10,7 +10,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from gi.repository import Gtk, Pango, GObject
+from gi.repository import Gtk, GObject
 
 from gettext import gettext as _
 from urllib.parse import urlparse
@@ -44,8 +44,6 @@ class ScriptRow(Gtk.ListBoxRow, GesturesHelper):
         label = Gtk.Label.new(uri)
         label.set_hexpand(True)
         label.set_property("halign", Gtk.Align.START)
-        label.set_max_width_chars(30)
-        label.set_ellipsize(Pango.EllipsizeMode.START)
         label.set_tooltip_text(uri)
         label.show()
         self.__check = Gtk.CheckButton()
@@ -131,14 +129,19 @@ class ScriptsMenu(Gtk.Grid):
         self.__back_button.set_property("inverted", True)
         self.__back_button.set_property("centered", True)
         self.__back_button.set_property("text", _("Scripts"))
+        self.__scrolled = Gtk.ScrolledWindow.new()
+        self.__scrolled.show()
+        self.__scrolled.set_size_request(-1, 300)
+        self.__scrolled.set_shadow_type(Gtk.ShadowType.NONE)
         self.__listbox = Gtk.ListBox.new()
         self.__listbox.show()
         self.__listbox.get_style_context().add_class("menu-listbox")
         self.__listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.__listbox.connect("map", self.__on_map)
         self.set_property("margin", 5)
+        self.__scrolled.add(self.__listbox)
         self.add(self.__back_button)
-        self.add(self.__listbox)
+        self.add(self.__scrolled)
 
 #######################
 # PRIVATE             #
