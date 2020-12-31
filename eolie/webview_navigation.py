@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType
+from eolie.define import App, LoadingType, LoadingState
 from eolie.utils import get_ftp_cmd, emit_signal
 from eolie.logger import Logger
 
@@ -50,7 +50,6 @@ class WebViewNavigation:
             @param uri as str
         """
         parsed = urlparse(uri)
-        self.discard_error()
         # If not an URI, start a search
         is_uri = parsed.scheme in ["about", "http",
                                    "https", "file", "populars"]
@@ -117,12 +116,16 @@ class WebViewNavigation:
             @param event as WebKit2.LoadEvent
         """
         parsed = urlparse(webview.uri)
-        if event == WebKit2.LoadEvent.COMMITTED:
+        if event == WebKit2.LoadEvent.STARTED:
+            self._loading_state = LoadingState.LOADING
+        elif event == WebKit2.LoadEvent.COMMITTED:
             if parsed.scheme in ["http", "https"]:
                 emit_signal(self, "title-changed", webview.uri)
                 self.update_zoom_level()
                 self.update_sound_policy()
         elif event == WebKit2.LoadEvent.FINISHED:
+            if self._loading_state != LoadingState.STOPPED:
+                self._loading_state = LoadingState.NONE
             App().history.set_page_state(self.uri)
             self.__update_bookmark_metadata(self.uri)
             self.update_spell_checking(self.uri)
@@ -277,7 +280,6 @@ class WebViewNavigation:
                 decision.use()
                 return False
             else:
-                self.discard_error()
                 decision.use()
                 return False
         elif mouse_button == 1:
@@ -295,7 +297,6 @@ class WebViewNavigation:
                 return True
             else:
                 self.__loaded_uri = navigation_uri.rstrip("/")
-                self.discard_error()
                 emit_signal(self, "title-changed", navigation_uri)
                 decision.use()
                 return False

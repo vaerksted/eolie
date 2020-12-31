@@ -15,7 +15,7 @@ from gi.repository import WebKit2, Gio, GLib
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App, LoadingType
+from eolie.define import App, LoadingType, LoadingState
 from eolie.context import Context
 from eolie.webview_errors import WebViewErrors
 from eolie.webview_navigation import WebViewNavigation
@@ -317,8 +317,16 @@ class WebView(WebKit2.WebView):
         """
             Stop loading webview
         """
-        self._loading = False
+        self._loading_state = LoadingState.STOPPED
         WebKit2.WebView.stop_loading(self)
+
+    @property
+    def loading_state(self):
+        """
+            Get loading state
+            @return LoadingState
+        """
+        return self._loading_state
 
     @property
     def readability(self):
@@ -413,7 +421,7 @@ class WebView(WebKit2.WebView):
         WebViewCredentials.__init__(self)
         self.__window = window
         self.__atime = 0
-        self._loading = False
+        self._loading_state = LoadingState.NONE
         self.__children = []
         self.__parent = None
         self._readability = False

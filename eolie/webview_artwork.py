@@ -14,7 +14,7 @@ from gi.repository import GLib, WebKit2, Gio
 
 from urllib.parse import urlparse
 
-from eolie.define import App
+from eolie.define import App, LoadingState
 from eolie.helper_task import TaskHelper
 from eolie.utils import get_snapshot, resize_favicon, emit_signal
 from eolie.utils import get_round_surface, get_char_surface, get_safe_netloc
@@ -174,7 +174,8 @@ class WebViewArtwork:
         self.__surface = surface
         self.__is_snapshot_valid = True
         emit_signal(self, "snapshot-changed", surface)
-        if not save or self.error:
+        if not save or self.loading_state in [LoadingState.ERROR,
+                                              LoadingState.STOPPED]:
             return
         if App().settings.get_value("night-mode"):
             prefix = "start_dark"

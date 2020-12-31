@@ -16,7 +16,7 @@ from gettext import gettext as _
 from urllib.parse import urlparse
 from time import time
 
-from eolie.define import App
+from eolie.define import App, LoadingState
 from eolie.utils import emit_signal
 from eolie.webview_signals_menu import WebViewMenuSignals
 from eolie.webview_signals_js import WebViewJsSignals
@@ -198,7 +198,7 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             else:
                 self.__title = title
                 emit_signal(self, "title-changed", None)
-            if self.error or\
+            if self.loading_state == LoadingState.ERROR or\
                     webview.is_ephemeral or\
                     not is_http:
                 return

@@ -14,7 +14,7 @@ from gi.repository import GLib, Gio
 
 from gettext import gettext as _
 
-from eolie.define import App
+from eolie.define import App, LoadingState
 
 
 class WebViewErrors:
@@ -27,7 +27,6 @@ class WebViewErrors:
             Init errors
         """
         self.__bad_tls = None  # Keep invalid TLS certificate
-        self.__error = False
         self.connect("load-failed", self.__on_load_failed)
         self.connect("load-failed-with-tls-errors", self.__on_load_failed_tls)
         self.connect("web-process-crashed", self.__on_web_process_crashed)
@@ -37,20 +36,6 @@ class WebViewErrors:
             Reset invalid certificate
         """
         self.__bad_tls = None
-
-    def discard_error(self):
-        """
-            Discard current error status
-        """
-        self.__error = False
-
-    @property
-    def error(self):
-        """
-            Is webview in error
-            @return bool
-        """
-        return self.__error
 
     @property
     def bad_tls(self):
@@ -84,7 +69,7 @@ class WebViewErrors:
             @param uri as str
             @param error as GLib.Error
         """
-        self.__error = True
+        self._loading_state = LoadingState.ERROR
         # Ignore HTTP errors
         if error.code > 101:
             return False
@@ -133,7 +118,7 @@ class WebViewErrors:
             @param certificate as Gio.TlsCertificate
             @parma errors as Gio.TlsCertificateFlags
         """
-        self.__error = True
+        self._loading_state = LoadingState.ERROR
         self.__bad_tls = certificate
         accept_uri = uri.replace("https://", "accept://")
         if App().websettings.get("accept_tls", uri):
@@ -184,7 +169,7 @@ class WebViewErrors:
             We just crashed :-(
             @param webview as WebKit2.WebView
         """
-        self.__error = True
+        self._loading_state = LoadingState.ERROR
         f = Gio.File.new_for_uri("resource:///org/gnome/Eolie/error.css")
         (status, css_content, tag) = f.load_contents(None)
         css = css_content.decode("utf-8")

@@ -91,6 +91,13 @@ class Type:
     SETTINGS = -12
 
 
+class LoadingState:
+    NONE = 0
+    LOADING = 1
+    STOPPED = 2
+    ERROR = 3
+
+
 class Score:
     SUGGESTION = 1000
     WEBVIEW = 500
