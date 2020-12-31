@@ -30,13 +30,6 @@
     {
       "name": "gst-libav",
       "buildsystem": "meson",
-      "config-opts": [
-        "--disable-gtk-doc"
-      ],
-      "cleanup": [
-        "*.la",
-        "/share/gtk-doc"
-      ],
       "sources": [
         {
           "type": "archive",
@@ -48,13 +41,6 @@
     {
       "name": "gst-plugins-ugly",
       "buildsystem": "meson",
-      "config-opts": [
-        "--disable-gtk-doc"
-      ],
-      "cleanup": [
-        "*.la",
-        "/share/gtk-doc"
-      ],
       "sources": [
         {
           "type": "archive",
