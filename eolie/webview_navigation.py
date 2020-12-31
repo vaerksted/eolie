@@ -124,7 +124,8 @@ class WebViewNavigation:
                 self.update_zoom_level()
                 self.update_sound_policy()
         elif event == WebKit2.LoadEvent.FINISHED:
-            if self._loading_state != LoadingState.STOPPED:
+            if self._loading_state not in [LoadingState.STOPPED,
+                                           LoadingState.ERROR]:
                 self._loading_state = LoadingState.NONE
             App().history.set_page_state(self.uri)
             self.__update_bookmark_metadata(self.uri)
