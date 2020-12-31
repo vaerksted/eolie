@@ -29,7 +29,6 @@
   "modules": [
     {
       "name": "gst-libav",
-      "buildsystem": "meson",
       "config-opts": [
         "--disable-gtk-doc"
       ],
@@ -47,7 +46,6 @@
     },
     {
       "name": "gst-plugins-ugly",
-      "buildsystem": "meson",
       "config-opts": [
         "--disable-gtk-doc"
       ],
