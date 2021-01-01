@@ -130,6 +130,15 @@ class WebViewNavigation:
             App().history.set_page_state(self.uri)
             self.__update_bookmark_metadata(self.uri)
             self.update_spell_checking(self.uri)
+            user_script = App().settings.get_value(
+                "user-script-uri").get_string()
+            f = Gio.File.new_for_uri(user_script)
+            if f.query_exists():
+                try:
+                    (status, contents, tags) = f.load_contents(None)
+                    self.run_javascript(contents.decode("utf-8"), None, None)
+                except:
+                    pass
             self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/Extensions.js", None, None)
             self.run_javascript_from_gresource(

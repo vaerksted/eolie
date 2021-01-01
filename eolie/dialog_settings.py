@@ -77,6 +77,8 @@ class SettingsDialog:
             download_chooser.set_uri(dir_uri)
         else:
             download_chooser.set_uri("file://" + GLib.getenv("HOME"))
+        script_uri = App().settings.get_value("user-script-uri").get_string()
+        builder.get_object("user_script_chooser").set_uri(script_uri)
         builder.connect_signals(self)
         for setting in self.__BOOLEAN:
             button = builder.get_object("%s_boolean" % setting)
@@ -183,7 +185,7 @@ class SettingsDialog:
             else:
                 self.__start_page_custom_entry.hide()
 
-    def _on_selection_changed(self, chooser):
+    def _on_download_selection_changed(self, chooser):
         """
             Save uri
             @chooser as Gtk.FileChooserButton
@@ -192,6 +194,16 @@ class SettingsDialog:
         if uri is None:
             uri = ""
         App().settings.set_value("download-uri", GLib.Variant("s", uri))
+
+    def _on_user_script_selection_changed(self, chooser):
+        """
+            Save uri
+            @chooser as Gtk.FileChooserButton
+        """
+        uri = chooser.get_uri()
+        if uri is None:
+            uri = ""
+        App().settings.set_value("user-script-uri", GLib.Variant("s", uri))
 
     def _on_font_sans_serif_set(self, fontbutton):
         """

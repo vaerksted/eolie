@@ -191,6 +191,11 @@
          <summary>Custom start page</summary>
          <description />
       </key>
+      <key type="s" name="user-script-uri">
+         <default>""</default>
+         <summary>Custom JS script</summary>
+         <description />
+      </key>
       <key type="b" name="do-not-track">
          <default>true</default>
          <summary>Tell websites I do not want to be tracked</summary>

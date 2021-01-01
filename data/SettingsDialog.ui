@@ -310,7 +310,7 @@
                     <property name="valign">center</property>
                     <property name="action">select-folder</property>
                     <property name="title" translatable="yes">Select download folder</property>
-                    <signal name="selection-changed" handler="_on_selection_changed" swapped="no"/>
+                    <signal name="selection-changed" handler="_on_download_selection_changed" swapped="no"/>
                   </object>
                 </child>
               </object>
@@ -458,6 +458,25 @@
                     <property name="valign">center</property>
                     <property name="image">image7</property>
                     <signal name="clicked" handler="_on_configure_notifications_clicked" swapped="no"/>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="HdyActionRow">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="title" translatable="yes">JavaScript</property>
+                <property name="activatable-widget">user_script_chooser</property>
+                <property name="subtitle" translatable="yes">Custom script</property>
+                <child>
+                  <object class="GtkFileChooserButton" id="user_script_chooser">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="halign">end</property>
+                    <property name="valign">center</property>
+                    <property name="title" translatable="yes">Select download folder</property>
+                    <signal name="selection-changed" handler="_on_user_script_selection_changed" swapped="no"/>
                   </object>
                 </child>
               </object>
