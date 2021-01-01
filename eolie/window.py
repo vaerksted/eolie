@@ -384,7 +384,7 @@ class Window(Handy.ApplicationWindow, WindowState):
         """
         string = param.get_string()
         if string == "uri":
-            if self.is_fullscreen:
+            if self.is_fullscreen and self.__fullscreen_revealer is not None:
                 self.__fullscreen_revealer.set_reveal_child(True)
             self.toolbar.title.entry.focus()
         elif string == "fullscreen":
