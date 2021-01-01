@@ -180,18 +180,17 @@ class WebViewContainer:
 
     def __on_enter_fullscreen(self, webview):
         """
-            Hide sidebar (conflict with fs)
+            Go fullscreen
             @param webview as WebView
         """
-        self.sites_manager.hide()
+        self._window.fullscreen(False)
 
     def __on_leave_fullscreen(self, webview):
         """
-            Show sidebar (conflict with fs)
+            Leave fullscreen
             @param webview as WebView
         """
-        if App().settings.get_value("show-sidebar"):
-            self.sites_manager.show()
+        self._window.unfullscreen(False)
 
     def __on_insecure_content_detected(self, webview, event):
         """

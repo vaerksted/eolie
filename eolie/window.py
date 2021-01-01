@@ -99,6 +99,7 @@ class Window(Handy.ApplicationWindow, WindowState):
         self.__fullscreen_revealer.show()
         self.__container.overlay.add_overlay(self.__fullscreen_revealer)
         self.__container.sites_manager.hide()
+        self.__toolbar.hide()
         if force:
             Gtk.ApplicationWindow.fullscreen(self)
         self.connect("motion-notify-event", self.__on_motion_notify_event)
@@ -117,6 +118,7 @@ class Window(Handy.ApplicationWindow, WindowState):
             self.__container.sites_manager.show()
         self.__fullscreen_toolbar = None
         self.__fullscreen_revealer = None
+        self.__toolbar.show()
         # Do not count container.webviews as destroy may be pending on somes
         # Reason: we do not remove/destroy view to let stack animation run
         count = len(self.container.pages_manager.children)
