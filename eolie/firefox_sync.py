@@ -48,11 +48,14 @@ class SyncWorker(GObject.Object):
         from importlib import util
         fxa = util.find_spec("fxa")
         crypto = util.find_spec("Crypto")
+        hawk = util.find_spec("requests_hawk")
         if fxa is None:
             Logger.info("PyFxA missing: pip3 install --user pyfxa")
         if crypto is None:
             Logger.info("Cyrpto missing: pip3 install --user pycrypto")
-        return fxa is not None and crypto is not None
+        if hawk is None:
+            Logger.info("Hawk missing: pip3 install --user requests_hawk")
+        return fxa is not None and crypto is not None and hawk is not None
 
     def __init__(self):
         """
