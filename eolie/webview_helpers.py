@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
 from eolie.define import App
-from eolie.utils import get_baseuri
+from eolie.utils import get_baseuri, emit_signal
 from eolie.logger import Logger
 
 
@@ -29,6 +29,7 @@ class WebViewHelpers:
         """
             Init helpers
         """
+        self.__readability_status = False
         self.__passwords_helper = PasswordsHelper()
 
     def set_forms_content(self, uuid):
@@ -37,6 +38,29 @@ class WebViewHelpers:
             @parma uuid as str
         """
         self.__passwords_helper.get_by_uuid(uuid, self.__on_get_password_by)
+
+    def check_readability(self):
+        """
+            Check webview readability
+            @param webview as WebView
+        """
+        # Load Readability
+        js1 = Gio.File.new_for_uri(
+            "resource:///org/gnome/Eolie/Readability-readerable.js")
+        js2 = Gio.File.new_for_uri(
+            "resource:///org/gnome/Eolie/Readability_check.js")
+        (status, content1, tags) = js1.load_contents()
+        (status, content2, tags) = js2.load_contents()
+        script = content1.decode("utf-8") + content2.decode("utf-8")
+        self.run_javascript(script, None, self.__on_readability_status)
+
+    @property
+    def readability_status(self):
+        """
+            True if webview readable
+            @return bool
+        """
+        return self.__readability_status
 
 #######################
 # PROTECTED           #
@@ -85,6 +109,19 @@ class WebViewHelpers:
         self.run_javascript_from_gresource(
                 "/org/gnome/Eolie/javascript/FormMenu.js",
                 None, self.__on_get_forms)
+
+    def __on_readability_status(self, source, result):
+        """
+            Get readability status
+            @param source as GObject.Object
+            @param result as Gio.AsyncResult
+        """
+        try:
+            data = source.run_javascript_from_gresource_finish(result)
+            self.__readability_status = bool(data.get_js_value().to_string())
+            emit_signal(self, "readability-status", self.__readability_status)
+        except Exception as e:
+            Logger.error("WebViewHelpers::__on_readability_status(): %s", e)
 
     def __on_get_forms(self, source, result):
         """

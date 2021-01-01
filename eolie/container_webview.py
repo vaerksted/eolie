@@ -176,7 +176,7 @@ class WebViewContainer:
             self._window.toolbar.title.entry.progress.set_fraction(1.0)
             if wanted_scheme:
                 GLib.idle_add(webview.grab_focus)
-            self.check_readability(webview)
+            webview.check_readability()
 
     def __on_enter_fullscreen(self, webview):
         """

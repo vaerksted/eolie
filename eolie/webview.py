@@ -329,14 +329,6 @@ class WebView(WebKit2.WebView):
         return self._loading_state
 
     @property
-    def readability(self):
-        """
-            True if webview readable
-            @return bool
-        """
-        return self._readability
-
-    @property
     def atime(self):
         """
             Get access time
@@ -424,7 +416,6 @@ class WebView(WebKit2.WebView):
         self._loading_state = LoadingState.NONE
         self.__children = []
         self.__parent = None
-        self._readability = False
         self._title = None
         self.__related = related
         self.__shown = False

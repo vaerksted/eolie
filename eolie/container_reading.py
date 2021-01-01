@@ -12,8 +12,12 @@
 
 from gi.repository import Gio
 
+from gettext import gettext as _
+from base64 import b64decode
+
 from eolie.utils import emit_signal
 from eolie.webview import WebView
+from eolie.logger import Logger
 
 
 class ReadingContainer:
@@ -42,10 +46,9 @@ class ReadingContainer:
             (status, content1, tags) = js1.load_contents()
             (status, content2, tags) = js2.load_contents()
             script = content1.decode("utf-8") + content2.decode("utf-8")
-            self.webview.run_javascript(script, None, None)
+            self.webview.run_javascript(script, None,
+                                        self.__on_readability_content)
             self.__related_webview = self.webview
-            self.__related_webview_id = self.__related_webview.connect(
-                "readability-content", self.__on_readability_content)
             return True
         else:
             if self.__related_webview_id is not None:
@@ -56,21 +59,6 @@ class ReadingContainer:
             self._reading_webview = None
             return False
 
-    def check_readability(self, webview):
-        """
-            Check webview readability
-            @param webview as WebView
-        """
-        # Load Readability
-        js1 = Gio.File.new_for_uri(
-            "resource:///org/gnome/Eolie/Readability-readerable.js")
-        js2 = Gio.File.new_for_uri(
-            "resource:///org/gnome/Eolie/Readability_check.js")
-        (status, content1, tags) = js1.load_contents()
-        (status, content2, tags) = js2.load_contents()
-        script = content1.decode("utf-8") + content2.decode("utf-8")
-        webview.run_javascript(script, None, None)
-
     def set_visible_webview(self, webview):
         """
             Set visible webview
@@ -78,8 +66,8 @@ class ReadingContainer:
         """
         if self.reading:
             self.toggle_reading()
-        emit_signal(webview, "readability-status", webview.readability)
-        self.check_readability(webview)
+        emit_signal(webview, "readability-status", webview.readability_status)
+        webview.check_readability()
 
     @property
     def reading(self):
@@ -110,12 +98,19 @@ class ReadingContainer:
             webview.destroy()
             return False
 
-    def __on_readability_content(self, webview, content):
+    def __on_readability_content(self, webview, result):
         """
-            Show reading view
+            Show reading content
             @param webview as WebView
-            @param content as str
+            @param result as Gio.AsyncResult
         """
+        try:
+            data = webview.run_javascript_from_gresource_finish(result)
+            bytes = data.get_js_value().to_string_as_bytes()
+            content = b64decode(bytes.get_data()).decode("utf-8")
+        except Exception as e:
+            Logger.error("ReadingContainer::__on_readability_content(): %s", e)
+            content = _("Nothing to display")
         system = Gio.Settings.new("org.gnome.desktop.interface")
         document_font_name = system.get_value("document-font-name").get_string(
         )

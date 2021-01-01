@@ -67,13 +67,6 @@ class WebViewJsSignals:
         # Focus message
         elif message.startswith("@EOLIE_FOCUS_MESSAGE@"):
             self.window.toolbar.title.show_input_warning(self)
-        # Reader js message
-        elif message.startswith("@EOLIE_READER@"):
-            self.emit("readability-content",
-                      message.replace("@EOLIE_READER@", ""))
-        elif message.startswith("@EOLIE_READERABLE@"):
-            self._readability = True
-            self.emit("readability-status", True)
         # OpenSearch message
         elif message.startswith("@EOLIE_OPENSEARCH@"):
             uri = message.replace("@EOLIE_OPENSEARCH@", "")
