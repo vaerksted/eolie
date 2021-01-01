@@ -1169,7 +1169,8 @@ class SyncClient(object):
         self.__api_endpoint = credentials['api_endpoint']
         self.__auth = HawkAuth(algorithm=credentials['hashalg'],
                                id=credentials['id'],
-                               key=credentials['key'])
+                               key=credentials['key'],
+                               always_hash_content=False)
 
     def _request(self, method, url, **kwargs):
         """
