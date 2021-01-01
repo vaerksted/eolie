@@ -51,6 +51,8 @@ class SettingsDialog:
         builder = Gtk.Builder()
         builder.add_from_resource("/org/gnome/Eolie/SettingsDialog.ui")
         self.__settings_dialog = builder.get_object("settings_dialog")
+        self.__firefox_sync_button = builder.get_object(
+            "enable-firefox-sync_boolean")
         self.__start_page_custom_entry = builder.get_object(
             "start-page-custom_entry")
         # Firefox sync
@@ -335,6 +337,13 @@ class SettingsDialog:
 #######################
 # PRIVATE             #
 #######################
+    def __get_sync_status(self):
+        """
+            Get sync status
+            return int
+        """
+        return App().sync_worker.status
+
     def __check_sync_status(self):
         """
             Check worker status
@@ -342,6 +351,17 @@ class SettingsDialog:
         if App().sync_worker is not None:
             App().task_helper.run(self.__get_sync_status,
                                   callback=(self.__on_get_sync_status,))
+        else:
+            App().settings.set_value("enable-firefox-sync",
+                                     GLib.Variant("b", False))
+            self.__firefox_sync_button.set_sensitive(False)
+            from eolie.firefox_sync import SyncWorker
+            if not SyncWorker.check_modules():
+                cmd =\
+                 "$ pip3 install requests-hawk PyFxA pycrypto cryptography"
+                self.__status_row.set_subtitle(cmd)
+            else:
+                self.__status_row.set_subtitle(_("Not running"))
 
     def __lock_for_setting(self, setting, sensitive):
         """
@@ -352,16 +372,6 @@ class SettingsDialog:
         for locked in self.__locked:
             if locked.get_name() == setting:
                 locked.set_sensitive(sensitive)
-
-    def __get_sync_status(self):
-        """
-            Get sync status
-            return int
-        """
-        if App().sync_worker is not None:
-            return App().sync_worker.status
-        else:
-            return -1
 
     def __connect_firefox_sync(self, username, password, code):
         """
@@ -470,16 +480,6 @@ class SettingsDialog:
         if status:
             self.__status_row.set_subtitle(_("Connected"))
             App().sync_worker.pull_loop()
-        else:
-            from eolie.firefox_sync import SyncWorker
-            if not SyncWorker.check_modules():
-                cmd = "<b>$ pip3 install requests-hawk\n"\
-                      "PyFxA pycrypto cryptography</b>"
-                self.__status_row.set_subtitle(
-                    _("Syncing is not available"
-                        " on your computer:\n%s") % cmd)
-            else:
-                self.__status_row.set_subtitle(_("Not running"))
 
     def __on_syncing(self, worker, message):
         """
