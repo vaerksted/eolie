@@ -301,8 +301,6 @@ class SettingsDialog:
         if button.get_style_context().has_class("suggested-action"):
             button.get_style_context().remove_class("destructive-action")
             self.__status_row.set_subtitle(_("Connecting…"))
-            self.__result_image.set_from_icon_name("content-loading-symbolic",
-                                                   Gtk.IconSize.MENU)
             App().task_helper.run(self.__connect_firefox_sync,
                                   self.__username_entry.get_text(),
                                   self.__password_entry.get_text(),
@@ -379,6 +377,7 @@ class SettingsDialog:
             @param username as str
             @param password as str
             @param code as str
+            @return bool
         """
         try:
             App().sync_worker.new_session()
@@ -386,7 +385,9 @@ class SettingsDialog:
             return True
         except Exception as e:
             Logger.error("SettingsDialog::__connect_firefox_sync(): %s", e)
-            return False
+            if str(e) == "Unverified account":
+                return -1
+        return False
 
     def __set_default_zoom_level(self, widget):
         """
@@ -451,8 +452,11 @@ class SettingsDialog:
             Show result to user
             @param result as bool
         """
-        if result:
+        if result is True:
             self.__status_row.set_subtitle(_("Connected"))
+        elif result == -1:
+            self.__status_row.set_subtitle(
+                _("Check your email and connect again"))
         else:
             self.__status_row.set_subtitle(_("Failed"))
 
