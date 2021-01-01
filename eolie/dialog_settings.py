@@ -104,7 +104,8 @@ class SettingsDialog:
         self.__multi_press.connect("key-released", self.__on_key_released)
         self.__passwords_helper.get_sync(self.__on_get_sync)
         self.__check_sync_status()
-        App().sync_worker.connect("syncing", self.__on_syncing)
+        if App().sync_worker is not None:
+            App().sync_worker.connect("syncing", self.__on_syncing)
 
     def show(self):
         """
@@ -128,7 +129,8 @@ class SettingsDialog:
             Clean up
             @param widget as Gtk.Widget
         """
-        App().sync_worker.disconnect_by_func(self.__on_syncing)
+        if App().sync_worker is not None:
+            App().sync_worker.disconnect_by_func(self.__on_syncing)
 
     def _on_boolean_state_set(self, widget, state):
         """
@@ -143,7 +145,8 @@ class SettingsDialog:
             self.__lock_for_setting(setting, not state)
         elif setting in self.__LOCKED_OFF.keys():
             self.__lock_for_setting(setting, state)
-        if setting == "enable-firefox-sync":
+        if setting == "enable-firefox-sync" and\
+                App().sync_worker is not None:
             if state:
                 App().sync_worker.set_credentials()
                 App().sync_worker.pull_loop()
@@ -336,8 +339,9 @@ class SettingsDialog:
         """
             Check worker status
         """
-        App().task_helper.run(self.__get_sync_status,
-                              callback=(self.__on_get_sync_status,))
+        if App().sync_worker is not None:
+            App().task_helper.run(self.__get_sync_status,
+                                  callback=(self.__on_get_sync_status,))
 
     def __lock_for_setting(self, setting, sensitive):
         """
