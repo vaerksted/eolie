@@ -15,6 +15,7 @@ from gi.repository import Gio, WebKit2
 from urllib.parse import urlparse
 
 from eolie.helper_passwords import PasswordsHelper
+from eolie.define import App
 from eolie.utils import get_baseuri
 from eolie.logger import Logger
 
@@ -47,6 +48,19 @@ class WebViewHelpers:
             @param event as WebKit2.LoadEvent
         """
         if event == WebKit2.LoadEvent.FINISHED:
+            user_script = App().settings.get_value(
+                "user-script-uri").get_string()
+            f = Gio.File.new_for_uri(user_script)
+            if f.query_exists():
+                try:
+                    (status, contents, tags) = f.load_contents(None)
+                    self.run_javascript(contents.decode("utf-8"), None, None)
+                except:
+                    pass
+            self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/Extensions.js", None, None)
+            self.run_javascript_from_gresource(
+                "/org/gnome/Eolie/javascript/HandleInput.js", None, None)
             self.__run_insecure(webview.uri)
             self.__run_set_forms(webview.uri)
 
