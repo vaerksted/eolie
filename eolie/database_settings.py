@@ -29,6 +29,8 @@ class DatabaseSettings:
         Store various settings for webpage
     """
 
+    # Allows to return someting if not result
+    __DEFAULTS = {"audio": 1}
     # SQLite documentation:
     # In SQLite, a column with type INTEGER PRIMARY KEY
     # is an alias for the ROWID.
@@ -112,6 +114,8 @@ class DatabaseSettings:
             v = result.fetchone()
             if v is not None:
                 return v[0]
+            if option in self.__DEFAULTS.keys():
+                return self.__DEFAULTS[option]
             return None
 
     def get_languages(self, uri):
