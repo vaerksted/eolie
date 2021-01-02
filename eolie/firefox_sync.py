@@ -155,7 +155,7 @@ class SyncWorker(GObject.Object):
         if App().settings.get_value("enable-firefox-sync"):
             self.pull()
             if self.__timeout_id is None:
-                self.__timeout_id = GLib.timeout_add_seconds(3600, loop)
+                self.__timeout_id = GLib.timeout_add_seconds(600, loop)
 
     def pull(self, force=False):
         """
