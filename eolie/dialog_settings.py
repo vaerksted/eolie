@@ -287,10 +287,18 @@ class SettingsDialog:
 
     def _on_sync_now_clicked(self, button):
         """
-            Sync now with Firefox Sync
+            Sync now with Firefox Sync (full)
             @param button as Gtk.Button
         """
         App().sync_worker.pull(True)
+        App().sync_worker.push()
+
+    def _on_sync_activated(self, row):
+        """
+            Sync now with Firefox Sync
+            @param row as Hdy.ActionRow
+        """
+        App().sync_worker.pull()
         App().sync_worker.push()
 
     def _on_sync_button_clicked(self, button):

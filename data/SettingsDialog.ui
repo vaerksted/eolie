@@ -722,13 +722,14 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="title" translatable="yes">Sync now</property>
-                <property name="activatable-widget">send-to_button</property>
+                <signal name="activated" handler="_on_sync_activated" swapped="no"/>
                 <child>
                   <object class="GtkButton" id="send-to_button">
                     <property name="name">open-downloads</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">False</property>
+                    <property name="tooltip-text" translatable="yes">Full sync</property>
                     <property name="valign">center</property>
                     <property name="image">image6</property>
                     <signal name="clicked" handler="_on_sync_now_clicked" swapped="no"/>

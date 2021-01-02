@@ -3,7 +3,7 @@ PyGObject
 pycairo
 PyFxA
 requests
-requests-hawk
+requests-hawk >= 1.1.0
 pycrypto
 cryptography
 setuptools
