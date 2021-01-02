@@ -249,6 +249,8 @@ class Window(Handy.ApplicationWindow, WindowState):
         grid.add(self.__toolbar)
         grid.add(self.__container)
         self.add(grid)
+        self.get_style_context().connect(
+            "changed", lambda x: self.__toolbar.title.entry.update_style())
 
     def __setup_window(self, is_maximized):
         """
