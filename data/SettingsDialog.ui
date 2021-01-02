@@ -558,6 +558,7 @@
                           <item id="1" translatable="yes">Never accept</item>
                           <item id="2" translatable="yes">Only from visited sites</item>
                         </items>
+                        <signal name="changed" handler="_on_combo_changed" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
@@ -649,6 +650,7 @@
                           <item id="5" translatable="yes">Forever</item>
                           <item id="6" translatable="yes">Do not keep</item>
                         </items>
+                        <signal name="changed" handler="_on_combo_changed" swapped="no"/>
                       </object>
                       <packing>
                         <property name="left-attach">0</property>
