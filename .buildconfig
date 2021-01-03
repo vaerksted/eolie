@@ -1,10 +1,10 @@
 [default]
 name=Default
 runtime=host
+toolchain=default
 config-opts=
 run-opts=
-prefix=/usr/local
+prefix=/home/gnumdk/.cache/gnome-builder/install/eolie/host
 app-id=
 postbuild=
 prebuild=
-default=true

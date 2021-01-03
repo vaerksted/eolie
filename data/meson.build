@@ -22,6 +22,14 @@ install_data(
   install_dir: 'share/glib-2.0/schemas'
 )
 
+# Not available in GNOME Platform
+if get_option('flatpak').enabled()
+  install_data(
+    'org.gnome.settings-daemon.plugins.color.gschema.xml',
+    install_dir: 'share/glib-2.0/schemas'
+  )
+endif
+
 # Merging the translations with the desktop file
 i18n.merge_file(
   output: project_id + '.desktop',
