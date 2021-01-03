@@ -49,7 +49,8 @@ if __name__ == "__main__":
     resource = Gio.resource_load(os.path.join(pkgdatadir, 'eolie.gresource'))
     Gio.Resource._register(resource)
 
-    app = Application("@VERSION@", pkgdatadir)
+    app_id = None if "@APPID@" == "None" else "@APPID@"
+    app = Application("@REVISION@", pkgdatadir, app_id)
     if 'EOLIE_TRACE' in os.environ:
         graphviz = GraphvizOutput()
         graphviz.output_file = 'eolie.png'

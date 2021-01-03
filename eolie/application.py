@@ -60,15 +60,17 @@ class Application(Gtk.Application, NightApplication):
 
     __FAVICONS_PATH = "/tmp/eolie_%s" % getuser()
 
-    def __init__(self, version, data_dir):
+    def __init__(self, version, data_dir, app_id):
         """
             Create application
             @param version as str
             @param data_dir as str
+            @param app_id as str
         """
         self.__version = version
         self.__state_cache = []
         self.__data_dir = data_dir
+        self.__app_id = app_id
         self.__content_blockers = []
         signal(SIGINT, lambda a, b: self.quit())
         signal(SIGTERM, lambda a, b: self.quit())
@@ -81,7 +83,7 @@ class Application(Gtk.Application, NightApplication):
             exit("You need WebKit2GTK >= 2.20")
         Gtk.Application.__init__(
             self,
-            application_id="org.gnome.Eolie",
+            application_id=app_id,
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
         self.set_property("register-session", True)
         # Fix proxy for python
@@ -307,6 +309,15 @@ class Application(Gtk.Application, NightApplication):
         styleContext = Gtk.StyleContext()
         styleContext.add_provider_for_screen(screen, cssProvider,
                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        # Devel version, load devel theme
+        if self.__app_id is None:
+            css = ".progressbar progress { background-color: red; }"
+            cssProvider = Gtk.CssProvider()
+            cssProvider.load_from_data(css.encode("utf-8"))
+            screen = Gdk.Screen.get_default()
+            styleContext = Gtk.StyleContext()
+            styleContext.add_provider_for_screen(
+                screen, cssProvider, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
         self.history = DatabaseHistory()
         self.bookmarks = DatabaseBookmarks()
         self.websettings = DatabaseSettings()
