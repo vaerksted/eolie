@@ -1,4 +1,5 @@
 *~
+/.buildconfig
 /python-webextension/*.o
 /python-webextension/*.so
 /python-webextension/*.py
