@@ -439,9 +439,9 @@ class Window(Handy.ApplicationWindow, WindowState):
         elif string == "print":
             self.container.webview.print()
         elif string == "private":
-            self.container.add_webview(App().start_page,
-                                       LoadingType.FOREGROUND,
-                                       True)
+            self.container.add_webview_for_uri(App().start_page,
+                                               LoadingType.FOREGROUND,
+                                               True)
         elif string == "last_page":
             App().pages_menu.activate_last_action()
         elif string == "zoom_in":
