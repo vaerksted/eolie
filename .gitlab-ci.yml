@@ -8,7 +8,7 @@ flatpak:
     image: 'registry.gitlab.gnome.org/gnome/gnome-runtime-images/gnome:3.38'
     variables:
         MANIFEST_PATH: "org.gnome.Eolie.json"
-        FLATPAK_MODULE: "eolie"
+        FLATPAK_MODULE: "Eolie"
         RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
         APP_ID: "org.gnome.Eolie"
     extends: .flatpak
