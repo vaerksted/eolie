@@ -1,4 +1,5 @@
 *~
+/local
 /_build
 /.buildconfig
 /python-webextension/*.o
