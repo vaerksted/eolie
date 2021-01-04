@@ -10,6 +10,5 @@ flatpak:
         MANIFEST_PATH: "org.gnome.Eolie.json"
         FLATPAK_MODULE: "eolie"
         RUNTIME_REPO: "https://flathub.org/repo/flathub.flatpakrepo"
-        MESON_ARGS: "-Ddevel=enabled -Dflatpak=enabled"
         APP_ID: "org.gnome.Eolie"
     extends: .flatpak
