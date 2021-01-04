@@ -267,8 +267,8 @@
             "name" : "Eolie",
             "buildsystem" : "meson",
             "config-opts" : [
-                "-Dflatpak=true",
-                "-Ddevel=true"
+                "-Dflatpak=enabled",
+                "-Ddevel=enabled"
             ],
             "sources" : [
                 {
