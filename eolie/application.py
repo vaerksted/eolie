@@ -93,16 +93,11 @@ class Application(Gtk.Application, NightApplication):
             from os import environ
             environ["all_proxy"] = proxy
             environ["ALL_PROXY"] = proxy
-        # Ideally, we will be able to delete this once Flatpak has a solution
-        # for SSL certificate management inside of applications.
+        # Flatpak Hacks
         if GLib.file_test("/app", GLib.FileTest.EXISTS):
-            paths = ["/etc/ssl/certs/ca-certificates.crt",
-                     "/etc/pki/tls/cert.pem",
-                     "/etc/ssl/cert.pem"]
-            for path in paths:
-                if GLib.file_test(path, GLib.FileTest.EXISTS):
-                    GLib.setenv("SSL_CERT_FILE", path, True)
-                    break
+            # Set /tmp for GLib, /tmp not accessible in flatpak
+            tmp = GLib.environ_getenv(GLib.get_environ(), "XDG_RUNTIME_DIR")
+            GLib.setenv("TMPDIR", "%s/app/org.gnome.Eolie" % tmp, True)
         self.sync_worker = None  # Not initialised
         self.show_tls = False
         self.cursors = {}
