@@ -28,17 +28,12 @@ class PasswordsHelper:
         """
         # Initial password lookup, prevent a lock issue in Flatpak backend
         if GLib.file_test("/app", GLib.FileTest.EXISTS):
-            def on_secret_search(*ignore):
-                pass
             SecretSchema = {"type": Secret.SchemaAttributeType.STRING}
             SecretAttributes = {"type": "eolie web login"}
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            Secret.password_lookup(schema,
-                                   SecretAttributes,
-                                   None,
-                                   on_secret_search)
+            Secret.password_lookup_sync(schema, SecretAttributes)
 
     def get_all(self, callback, *args):
         """
