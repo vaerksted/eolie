@@ -227,18 +227,23 @@
                 },
                 {
                     "type" : "file",
+                    "url" : "https://files.pythonhosted.org/packages/14/6d/096dc269d105ba374d6bfd3ecb22b516795ca0572499820dadc8178d9ae1/PyJWT-2.0.0.tar.gz",
+                    "sha256" : "7a2b271c6dac2fda9e0c33d176c4253faba2c6c6b3a99c7f28a32c3c97522779"
+                },
+                {
+                    "type" : "file",
                     "url" : "https://files.pythonhosted.org/packages/60/db/645aa9af249f059cc3a368b118de33889219e0362141e75d4eaf6f80f163/pycrypto-2.6.1.tar.gz",
                     "sha256" : "f2ce1e989b272cfcb677616763e0a2e7ec659effa67a88aa92b3a65528f60a3c"
                 },
                 {
                     "type" : "file",
-                    "url" : "https://files.pythonhosted.org/packages/cf/93/002ded7990d847f730cd9b63fec2f5de98d72fc752408be14173b4e763a5/PyFxA-0.7.1.tar.gz",
-                    "sha256" : "616689486d8d63956aa40836cffafde6e7590cdeb200badabaaf3c17d5b26cce"
+                    "url" : "https://files.pythonhosted.org/packages/19/58/9c34650d9ef75ac93348306d0888174af8c18be7e98f1273653142b2fcee/PyFxA-0.7.7.tar.gz",
+                    "sha256" : "6c85cd08cf05f7138dee1cf2a8a1d68fd428b7b5ad488917c70a2a763d651cdb"
                 },
                 {
                     "type" : "file",
-                    "url" : "https://files.pythonhosted.org/packages/8a/62/e89d4e23847f74f56c66a0ae76c17e356338a0fe7bd352842647f5877a07/requests-hawk-1.0.0.tar.gz",
-                    "sha256" : "aef0dff8053dcae2057774516386bed0a3bc03fabea9e18f3aa98f02672ea5d0"
+                    "url" : "https://files.pythonhosted.org/packages/d8/26/1fde4d22835e3872a5ec5bb6f92aae213147190f7a9dcb7f271e351dae75/requests-hawk-1.1.0.tar.gz",
+                    "sha256" : "1a5e61cab14627f1b5ba7de0e3fb2b681007ff7b2a49110d504e5cd6d7fd62d6"
                 },
                 {
                     "type" : "file",
