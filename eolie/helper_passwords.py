@@ -26,9 +26,19 @@ class PasswordsHelper:
         """
             Init helper
         """
-        self.__secret = None
-        Secret.Service.get(Secret.ServiceFlags.NONE, None,
-                           self.__on_get_secret)
+        # Initial password lookup, prevent a lock issue in Flatpak backend
+        if GLib.file_test("/app", GLib.FileTest.EXISTS):
+            def on_secret_search(*ignore):
+                pass
+            SecretSchema = {"type": Secret.SchemaAttributeType.STRING}
+            SecretAttributes = {"type": "eolie web login"}
+            schema = Secret.Schema.new("org.gnome.Eolie",
+                                       Secret.SchemaFlags.NONE,
+                                       SecretSchema)
+            Secret.password_lookup(schema,
+                                   SecretAttributes,
+                                   None,
+                                   on_secret_search)
 
     def get_all(self, callback, *args):
         """
@@ -37,7 +47,6 @@ class PasswordsHelper:
             @param args
         """
         try:
-            self.__wait_for_secret(self.get_all, callback, *args)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
             }
@@ -47,13 +56,15 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema, SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_secret_search,
-                                 None,
-                                 callback,
-                                 *args)
+            Secret.password_search(schema, SecretAttributes,
+                                   Secret.SearchFlags.ALL |
+                                   Secret.SearchFlags.UNLOCK |
+                                   Secret.SearchFlags.LOAD_SECRETS,
+                                   None,
+                                   self.__on_secret_search,
+                                   None,
+                                   callback,
+                                   *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::get_all(): %s", e)
 
@@ -67,8 +78,6 @@ class PasswordsHelper:
             @param args
         """
         try:
-            self.__wait_for_secret(self.get, uri, userform,
-                                   passform, callback, *args)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "hostname": Secret.SchemaAttributeType.STRING,
@@ -86,13 +95,15 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema, SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_secret_search,
-                                 uri,
-                                 callback,
-                                 *args)
+            Secret.password_search(schema, SecretAttributes,
+                                   Secret.SearchFlags.ALL |
+                                   Secret.SearchFlags.UNLOCK |
+                                   Secret.SearchFlags.LOAD_SECRETS,
+                                   None,
+                                   self.__on_secret_search,
+                                   uri,
+                                   callback,
+                                   *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::get(): %s", e)
 
@@ -104,7 +115,6 @@ class PasswordsHelper:
             @param args
         """
         try:
-            self.__wait_for_secret(self.get, uuid, callback, *args)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "uuid": Secret.SchemaAttributeType.STRING,
@@ -117,13 +127,15 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema, SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_secret_search,
-                                 uuid,
-                                 callback,
-                                 *args)
+            Secret.password_search(schema, SecretAttributes,
+                                   Secret.SearchFlags.ALL |
+                                   Secret.SearchFlags.UNLOCK |
+                                   Secret.SearchFlags.LOAD_SECRETS,
+                                   None,
+                                   self.__on_secret_search,
+                                   uuid,
+                                   callback,
+                                   *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::get_by_uuid(): %s", e)
 
@@ -133,7 +145,6 @@ class PasswordsHelper:
             @param callback as function
         """
         try:
-            self.__wait_for_secret(self.get_sync, callback, *args)
             SecretSchema = {
                 "sync": Secret.SchemaAttributeType.STRING
             }
@@ -143,13 +154,14 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema, SecretAttributes,
-                                 Secret.SearchFlags.NONE,
-                                 None,
-                                 self.__on_secret_search,
-                                 None,
-                                 callback,
-                                 *args)
+            Secret.password_search(schema, SecretAttributes,
+                                   Secret.SearchFlags.UNLOCK |
+                                   Secret.SearchFlags.LOAD_SECRETS,
+                                   None,
+                                   self.__on_secret_search,
+                                   None,
+                                   callback,
+                                   *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::get_sync(): %s", e)
 
@@ -170,16 +182,6 @@ class PasswordsHelper:
         if uri is None:
             return
         try:
-            self.__wait_for_secret(self.store,
-                                   user_form_name,
-                                   user_form_value,
-                                   pass_form_name,
-                                   pass_form_value,
-                                   hostname_uri,
-                                   uri,
-                                   uuid,
-                                   callback,
-                                   *args)
             # Clear item if exists
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
@@ -200,13 +202,12 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema,
-                                 SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_search_clear,
-                                 callback,
-                                 *args)
+            Secret.password_clear(schema,
+                                  SecretAttributes,
+                                  None,
+                                  self.__on_clear_search,
+                                  callback,
+                                  *args)
 
             schema_string = "org.gnome.Eolie: %s > %s" % (user_form_value,
                                                           hostname_uri)
@@ -250,10 +251,6 @@ class PasswordsHelper:
             @param data
         """
         try:
-            self.__wait_for_secret(self.store_sync,
-                                   login,
-                                   password,
-                                   callback)
             schema_string = "org.gnome.Eolie.sync"
             SecretSchema = {
                 "sync": Secret.SchemaAttributeType.STRING,
@@ -283,7 +280,6 @@ class PasswordsHelper:
             @param callback as function
         """
         try:
-            self.__wait_for_secret(self.clear, uuid)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING,
                 "uuid": Secret.SchemaAttributeType.STRING
@@ -295,13 +291,12 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema,
-                                 SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_search_clear,
-                                 callback,
-                                 *args)
+            Secret.password_clear(schema,
+                                  SecretAttributes,
+                                  None,
+                                  self.__on_clear_search,
+                                  callback,
+                                  *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::clear(): %s", e)
 
@@ -320,13 +315,12 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema,
-                                 SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_search_clear,
-                                 callback,
-                                 *args)
+            Secret.password_clear(schema,
+                                  SecretAttributes,
+                                  None,
+                                  self.__on_clear_search,
+                                  callback,
+                                  *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::clear_sync(): %s", e)
 
@@ -335,7 +329,6 @@ class PasswordsHelper:
             Clear passwords
         """
         try:
-            self.__wait_for_secret(self.clear_all)
             SecretSchema = {
                 "type": Secret.SchemaAttributeType.STRING
             }
@@ -345,75 +338,30 @@ class PasswordsHelper:
             schema = Secret.Schema.new("org.gnome.Eolie",
                                        Secret.SchemaFlags.NONE,
                                        SecretSchema)
-            self.__secret.search(schema,
-                                 SecretAttributes,
-                                 Secret.SearchFlags.ALL,
-                                 None,
-                                 self.__on_search_clear)
+            Secret.password_clear(schema,
+                                  SecretAttributes,
+                                  None,
+                                  self.__on_clear_search)
         except Exception as e:
             Logger.debug("PasswordsHelper::clear_all(): %s", e)
 
 #######################
 # PRIVATE             #
 #######################
-    def __wait_for_secret(self, call, *args):
-        """
-            Wait for secret
-            @param call as function to call
-            @param args
-            @raise exception if waiting
-        """
-        # Wait for secret
-        if self.__secret is None:
-            GLib.timeout_add(250, call, *args)
-        if self.__secret in [None, -1]:
-            raise Exception("Waiting Secret service")
-
-    def __on_load_secret(self, source, result, uri,
-                         index, count, callback, *args):
-        """
-            Set username/password input
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-            @param uri as str
-            @param index as int
-            @param count as int
-            @param callback as function
-            @param args
-        """
-        secret = source.get_secret()
-        if secret is not None:
-            attributes = source.get_attributes()
-            keys = attributes.keys()
-            # We ignore old Eolie passwords
-            if "userform" in keys or\
-                    "sync" in keys:
-                callback(attributes,
-                         secret.get().decode('utf-8'),
-                         uri,
-                         index,
-                         count,
-                         *args)
-            else:
-                callback(None, None, uri, 0, 0, *args)
-        else:
-            callback(None, None, uri, 0, 0, *args)
-
-    def __on_search_clear(self, source, result, callback=None, *args):
+    def __on_clear_search(self, source, result, callback=None, *args):
         """
             Clear passwords
             @param source as GObject.Object
             @param result as Gio.AsyncResult
+            @param callback as function
         """
         try:
             if result is not None:
-                items = source.search_finish(result)
-                for item in items:
-                    item.delete(None, None)
+                Secret.password_clear_finish(result)
             if callback is not None:
                 callback(*args)
         except Exception as e:
-            Logger.debug("PasswordsHelper::__on_search_clear(): %s", e)
+            Logger.error("PasswordsHelper::__on_clear_search(): %s" % e)
 
     def __on_secret_search(self, source, result, uri, callback, *args):
         """
@@ -425,35 +373,23 @@ class PasswordsHelper:
             @param args
         """
         try:
+            items = []
             if result is not None:
-                items = self.__secret.search_finish(result)
+                items = Secret.password_search_finish(result)
                 count = len(items)
                 index = 0
                 for item in items:
-                    item.load_secret(None,
-                                     self.__on_load_secret,
-                                     uri,
-                                     index,
-                                     count,
-                                     callback,
-                                     *args)
+                    attributes = item.get_attributes()
+                    secret = item.retrieve_secret_sync()
+                    callback(attributes,
+                             secret.get().decode('utf-8'),
+                             uri,
+                             index,
+                             count,
+                             *args)
                     index += 1
-                if not items:
-                    callback(None, None, uri, 0, 0, *args)
-            else:
+            if not items:
                 callback(None, None, uri, 0, 0, *args)
         except Exception as e:
             Logger.debug("PasswordsHelper::__on_secret_search(): %s", e)
             callback(None, None, uri, 0, 0, *args)
-
-    def __on_get_secret(self, source, result):
-        """
-            Store secret proxy
-            @param source as GObject.Object
-            @param result as Gio.AsyncResult
-        """
-        try:
-            self.__secret = Secret.Service.get_finish(result)
-        except Exception as e:
-            self.__secret = -1
-            Logger.debug("PasswordsHelper::__on_get_secret(): %s", e)
