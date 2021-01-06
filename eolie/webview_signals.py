@@ -198,7 +198,8 @@ class WebViewSignals(WebViewMenuSignals, WebViewJsSignals):
             else:
                 self.__title = title
                 emit_signal(self, "title-changed", None)
-            if self.loading_state == LoadingState.ERROR or\
+            if self.loading_state in [LoadingState.ERROR,
+                                      LoadingState.STOPPED] or\
                     webview.is_ephemeral or\
                     not is_http:
                 return
