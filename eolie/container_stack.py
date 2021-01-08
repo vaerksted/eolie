@@ -124,7 +124,6 @@ class StackContainer:
         webviews.remove(webview)
         webviews_count = len(webviews)
         App().history.set_page_state(webview.uri)
-        self._window.close_popovers()
         # Needed to unfocus titlebar
         self._window.set_focus(None)
         was_current = webview == self._window.container.webview
